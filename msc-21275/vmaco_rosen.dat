@@ -1,0 +1,452 @@
+ ************************************************************************
+
+     ITERATIONS =    1     NUMBER OF CALLS TO VMACO =    1
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=  -1.0000000E+00 X( 2)=   1.0000000E+00
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    4.0000000E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =    2     NUMBER OF CALLS TO VMACO =    5
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=  -9.9480736E-01 X( 2)=   1.0000000E+00
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    3.9899859E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =    3     NUMBER OF CALLS TO VMACO =    7
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=  -8.9428675E-01 X( 2)=   7.9946566E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    3.5883305E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =    4     NUMBER OF CALLS TO VMACO =   10
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=  -8.2015198E-01 X( 2)=   6.5548432E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    3.3424170E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =    5     NUMBER OF CALLS TO VMACO =   12
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=  -7.5540578E-01 X( 2)=   5.3700352E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    3.1945765E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =    6     NUMBER OF CALLS TO VMACO =   13
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=  -6.6376209E-01 X( 2)=   3.8770378E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    3.0476952E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =    7     NUMBER OF CALLS TO VMACO =   14
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=  -6.2201703E-01 X( 2)=   3.4436405E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    2.8119142E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =    8     NUMBER OF CALLS TO VMACO =   15
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=  -4.9235046E-01 X( 2)=   2.2331345E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    2.2635739E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =    9     NUMBER OF CALLS TO VMACO =   17
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=  -3.9388934E-01 X( 2)=   1.1742215E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    2.0852575E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   10     NUMBER OF CALLS TO VMACO =   18
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=  -1.9408193E-01 X( 2)=  -5.4015666E-03
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    1.6113286E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   11     NUMBER OF CALLS TO VMACO =   19
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=  -1.4318901E-01 X( 2)=   5.5824444E-02
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    1.4316411E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   12     NUMBER OF CALLS TO VMACO =   20
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   4.6679065E-02 X( 2)=  -3.7132755E-02
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    1.0633616E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   13     NUMBER OF CALLS TO VMACO =   21
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=  -4.4422075E-03 X( 2)=   2.9124320E-05
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    1.0089042E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   14     NUMBER OF CALLS TO VMACO =   22
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   6.8438038E-02 X( 2)=  -5.2886833E-03
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    8.7775266E-01
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   15     NUMBER OF CALLS TO VMACO =   24
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   1.1182282E-01 X( 2)=  -3.9874595E-03
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    8.1605661E-01
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   16     NUMBER OF CALLS TO VMACO =   25
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   2.5682822E-01 X( 2)=   1.9485647E-02
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    7.6829773E-01
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   17     NUMBER OF CALLS TO VMACO =   26
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   2.1072134E-01 X( 2)=   2.9343585E-02
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    6.4564091E-01
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   18     NUMBER OF CALLS TO VMACO =   27
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   2.5370347E-01 X( 2)=   5.6409374E-02
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    5.6328839E-01
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   19     NUMBER OF CALLS TO VMACO =   28
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   4.4927186E-01 X( 2)=   1.5921056E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    4.8507270E-01
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   20     NUMBER OF CALLS TO VMACO =   29
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   3.7409687E-01 X( 2)=   1.3927552E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    3.9180002E-01
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   21     NUMBER OF CALLS TO VMACO =   30
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   4.3048713E-01 X( 2)=   1.8046001E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    3.2670608E-01
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   22     NUMBER OF CALLS TO VMACO =   32
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   4.6712866E-01 X( 2)=   2.0947368E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    2.9158279E-01
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   23     NUMBER OF CALLS TO VMACO =   34
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   5.3360838E-01 X( 2)=   2.6810771E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    2.4517751E-01
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   24     NUMBER OF CALLS TO VMACO =   35
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   5.9489149E-01 X( 2)=   3.3435261E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    2.0230682E-01
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   25     NUMBER OF CALLS TO VMACO =   36
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   6.5488631E-01 X( 2)=   4.1984868E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    1.2725285E-01
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   26     NUMBER OF CALLS TO VMACO =   37
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   7.3664308E-01 X( 2)=   5.2966255E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    8.6206108E-02
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   27     NUMBER OF CALLS TO VMACO =   38
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   8.0240959E-01 X( 2)=   6.4517677E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    3.9215047E-02
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   28     NUMBER OF CALLS TO VMACO =   40
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   8.3288538E-01 X( 2)=   6.9080293E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    2.8765464E-02
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   29     NUMBER OF CALLS TO VMACO =   41
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   9.1411948E-01 X( 2)=   8.2189125E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    2.6208071E-02
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   30     NUMBER OF CALLS TO VMACO =   42
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   8.8288683E-01 X( 2)=   7.7673405E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    1.4474556E-02
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   31     NUMBER OF CALLS TO VMACO =   43
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   9.0273231E-01 X( 2)=   8.1306803E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    9.8060630E-03
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   32     NUMBER OF CALLS TO VMACO =   44
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   9.6645343E-01 X( 2)=   9.2881042E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    3.8521374E-03
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   33     NUMBER OF CALLS TO VMACO =   45
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   9.6401107E-01 X( 2)=   9.2862517E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    1.3431153E-03
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   34     NUMBER OF CALLS TO VMACO =   46
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   9.8305547E-01 X( 2)=   9.6605033E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    2.9920888E-04
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   35     NUMBER OF CALLS TO VMACO =   47
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   9.9779892E-01 X( 2)=   9.9510747E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    2.9366602E-05
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   36     NUMBER OF CALLS TO VMACO =   48
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   9.9919355E-01 X( 2)=   9.9840611E-01
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    6.8406541E-07
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   37     NUMBER OF CALLS TO VMACO =   49
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   1.0000050E+00 X( 2)=   1.0000070E+00
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    9.1324637E-10
+ ************************************************************************
+ 
+ ------------------------------------------------------------------------
+
+ THE VARIABLE METRIC ALGORITHM HAS DETERMINED AN OPTIMAL SOLUTION WITHIN 
+ THE ACCURACY DESIRED                                                    
+ *** ISTAT =  1 ***
+ ------------------------------------------------------------------------
+

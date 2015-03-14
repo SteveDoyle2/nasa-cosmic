@@ -1,0 +1,417 @@
+  { $INCLUDE : 'compile.inc' }
+  { $INCLUDE : 'getparam.int' }
+  { $INCLUDE : 'vbpas.int' }
+  { $INCLUDE : 'dspas.int' }
+  { $INCLUDE : 'sfpas.int' }
+  { $INCLUDE : 'dialog.int' }
+  { $INCLUDE : 'display.int' }
+  { $INCLUDE : 'utility.int'}
+  { $INCLUDE : 'ldb.int' }
+  { $INCLUDE : 'execute.int' }
+  { $INCLUDE : 'sldetc.int' }
+  { $INCLUDE : 'sld.int' }
+  { $INCLUDE : 'option.int' }
+
+  implementation of option;
+
+  USES getparam;
+
+  USES vbpas;
+
+  USES dspas;
+
+  USES sfpas;
+
+  USES dialog;
+
+  USES display;
+
+  USES ldb;
+
+  USES execute;
+
+  USES utility;
+
+  USES sldetc;
+
+  USES sld;
+
+
+  procedure cdefault;
+   var
+        i          : integer;
+        inkey      : byte;
+        inchar     : twobyte;
+        f          : text;
+        msg        : suplstring(25);
+        def        : suplstring2(2);
+        range      : supset(4);
+        x,y        : supinteger(8);
+    begin
+               msg[1] :='                              ';
+               msg[1].len := 30;
+               concat(msg[1], 'Chart Default Menu');
+               msg[2] :=' ';
+               msg[3] :='                                                                 ';
+               msg[3].len := 65;
+               concat(msg[3], 'Default');
+               msg[4] :=' ';
+               msg[5] :='   Printer Selection';
+               msg[6] :='        1 = IBM 80 column graphics printer';
+               msg[7] :='        2 = EPSON or any other IBM graphics printer';
+               msg[8] :='        3 = IBM color graphics printer';
+               msg[9] :='        4 = OKIDATA or IDS graphics printer';
+               msg[10]:='        5 = HP laser printer';
+               msg[11]:=' ';
+               msg[12]:=' ';
+               msg[13]:='   Disk Drive Selection';
+               msg[14]:='        A';
+               msg[15]:='        B';
+               msg[16]:='        C';
+               msg[17]:='        D';
+               msg[18]:='        E';
+               msg[19]:=' ';
+               msg[20]:=' ';
+               msg[21]:=' ';
+               msg[22]:='Modify default options as needed - press return key for next option';
+               msg[23]:='When finished, press F10 to get back to Main Menu';
+               msg[24]:=' ';
+               msg[25]:='                                                                 ';
+               msg[25].len := 64;
+               concat(msg[25], '9Help 10Exit');
+               def[1][1]:=' ';
+               def[1][2]:=prtnum;
+               def[2][1]:=' ';
+               def[2][2]:=drive;
+               def[1].len := 2;
+               def[2].len := 2;
+               y[1] := 4;
+               y[2] := 12
+               x[1] := 66;
+               x[2] := 66;
+               range[1] := ['0'..'9'];
+               range[2] := ['1'..chr(48+5)];
+               range[3] := [' '];
+               range[4] := ['A','B','C','D','E','a','b','c','d','e'];
+               color := 1;
+               cpflg := true;
+               repeat
+                 multimenu(msg,25,0,2,def,x,y,range,inkey,2);
+                inkey:= fctn_map^[1][inkey-58];
+                 if inkey=1 then
+                 begin
+                 case def[1][2] of
+                '1': begin
+                      equipprt[1][1] := chr(27);
+                      equipprt[1][2] := chr(65);
+                      equipprt[1][3] := chr(8);
+                      equipprt[1][4] := chr(27);
+                      equipprt[1][5] := '2';
+                      equipprt[1].len:= 5;
+                      equipprt[2][1] := chr(27);
+                      equipprt[2][2] := 'L';
+                      equipprt[2][3] := chr(32);
+                      equipprt[2][4] := chr(3);
+                      equipprt[2].len:= 4;
+                      equipprt[3][1] := chr(27);
+                      equipprt[3][2] := chr(65);
+                      equipprt[3][3] := chr(12);
+                      equipprt[3][4] := chr(27);
+                      equipprt[3][5] := '2';
+                      equipprt[3].len:= 5;
+                     end;
+                '2': begin
+                      equipprt[1][1] := chr(27);
+                      equipprt[1][2] := chr(65);
+                      equipprt[1][3] := chr(8);
+                      equipprt[1].len:= 3;
+                      equipprt[2][1] := chr(27);
+                      equipprt[2][2] := 'L';
+                      equipprt[2][3] := chr(32);
+                      equipprt[2][4] := chr(3);
+                      equipprt[2].len:= 4;
+                      equipprt[3][1] := chr(27);
+                      equipprt[3][2] := chr(65);
+                      equipprt[3][3] := chr(12);
+                      equipprt[3].len:= 3;
+                     end;
+                '3': begin
+                      equipprt[1][1] := chr(27);
+                      equipprt[1][2] := '3';
+                      equipprt[1][3] := chr(14);
+                      equipprt[1].len:= 3;
+                      equipprt[2][1] := chr(27);
+                      equipprt[2][2] := 'L';
+                      equipprt[2][3] := chr(32);
+                      equipprt[2][4] := chr(3);
+                      equipprt[2].len:= 4;
+                      equipprt[3][1] := chr(27);
+                      equipprt[3][2] := '0';
+                      equipprt[3].len:= 2;
+                     end;
+                '4': begin
+                      equipprt[1][1] := chr(3);
+                      equipprt[1].len:= 1;
+                      equipprt[2][1] := chr(3);
+                      equipprt[2][2] := chr(14);
+                      equipprt[2].len:= 2;
+                      equipprt[3][1] := chr(3);
+                      equipprt[3][2] := chr(2);
+                      equipprt[3].len:= 2;
+                     end;
+                '5': begin
+                      equipprt[1][1] := chr(27);
+                      equipprt[1].len:=1;
+                      concat(equipprt[1], '&a15C');
+                      concat(equipprt[1], chr(27));
+                      concat(equipprt[1], '&a5R');
+                      concat(equipprt[1], chr(27));
+                      concat(equipprt[1], '*t75R');
+                      concat(equipprt[1], chr(27));
+                      concat(equipprt[1], '*r1A');
+                      equipprt[1].len := 22;
+                      equipprt[2][1] := chr(27);
+                      equipprt[2].len:= 1;
+                      concat(equipprt[2], '*b50W');
+                      equipprt[2].len:= 6;
+                      equipprt[3][1] := chr(27);
+                      equipprt[3].len:= 1;
+                      concat(equipprt[3], '*rB');
+                      concat(equipprt[3], chr(12));
+                      equipprt[3].len:= 5;
+                     end;
+                  end;
+                prtnum := def[1][2];
+                drive  := def[2][2];
+                assign (f,'prt.drv');
+                f.trap := true;
+                f.errs := 0;
+                rewrite (f);
+                if f.errs = 0 then
+                  begin
+                    for i:=1 to 3 do
+                      writeln(f, equipprt[i]);
+                    writeln(f, drive);
+                    writeln(f,prtnum);
+                  end;
+                if f.errs <> 0 then
+                  begin
+                    there(0,23);
+                    write('Disk full error. Default change impossible. Press any key to continue.');
+                    get_input(inchar);
+                    there(0,23);
+                    write('                                                                          ');
+                    inkey := 1;
+                    f.errs := 0;
+                  end;
+                close (f);
+              end;
+              until inkey = 1;
+    end;
+
+  procedure select;
+
+    var 
+        f,g        : text;
+        buf        : lstring(200);
+        dum, dum1  : entity;
+        no_more    : boolean;
+        n, i, j    : integer;
+        reply      : supinteger(20);
+        msg        : suplstring(25);
+        inkey,cn   : byte;
+        inchar     : twobyte;
+        ch         : char;
+        derr       : boolean;
+  
+   procedure diskerr;
+      begin
+        there(0,23);
+        writeln('Disk full error. Upload/Download impossible. Press any key to continue.        ');
+        get_input(inchar);
+        derr:=true;
+      end;
+
+    begin
+        rtype := 2;
+       name:=null;
+        endflag := false;
+        update  := false;
+        repeat
+            derr:=false;
+            screen ( 3 );
+            colors ( 0, 1 );
+            n := 1;
+
+msg[1] := '                                        ';
+msg[1].len := (80-cname.len-6) div 2;
+concat ( msg[1], cname );
+concat ( msg[1], ' Chart' );
+msg[2] := '                                        ';
+msg[2].len := ((80-cname.len-6) div 2) - 8;
+concat ( msg[1], msg[2] );
+concat ( msg[1], 'ver 3.1' );
+msg[2] := ' ';
+msg[3] := '            Written by General Software Corporation for Code 522.2';
+msg[4] := ' ';
+msg[5] := 'Options';
+msg[6] := ' ';
+msg[7] := '         F1      CREATE a new chart';
+msg[8] := '         F2      REVIEW/REVISE an existing chart';
+msg[9] := '         F3      DIRECTORY of charts';
+msg[10]:= '         F4      CREATE a new chart (for experienced user)';
+msg[11]:= ' ';
+msg[12]:= '         F5      UPLOAD/DOWNLOAD to/from the host';
+msg[13]:= ' ';
+msg[14]:= '         F6      CREATE/REVISE a Slide Show';
+msg[15]:= '         F7      PRINT/VIEW a Slide Show';
+msg[16]:= ' ';
+msg[17]:= ' ';
+msg[18]:= '         F8      CHANGE defaults (drive/printer)';
+msg[19]:= ' ';
+msg[20]:= '         F9      HELP';
+msg[21]:= ' ';
+msg[22]:= '         F10     EXIT to DOS';
+msg[23]:=' ';
+msg[24]:= 'Select option by pressing function key:';
+
+            menu ( msg, 24, 0, 1, 11, 10, n, reply, 1);
+            if (n=1)and((gtype='eva')or(gtype='tat')or(gtype='pal')) then
+              begin
+                there ( 0, 23 );
+                write ( 'Data to be downloaded from host ( Y or N )? ');
+                ch := ' ';
+                repeat
+                    get_input(inchar);
+                   ch := chr ( inchar[1] );
+                    if ch > ' ' then write ( ch );
+                    while not (inchar[1] in [13,8]) do
+                    get_input(inchar);
+                    if inchar[1] = 8 then [write(chr(8),' ',chr(8));ch:=' '];
+                  until (('Y'=ch)or('N'=ch))or((ch='y')or(ch='n'))or(ch=chr(13));
+                  if ch in ['Y','y'] then n := 12;
+           end;
+          case n of
+          1: begin
+               name := gtype;
+               concat ( name, '.sam' );
+               update := false;
+             end;
+       4,11:  update := false;
+       5: begin
+               ldbman(inkey, gtype, upl, dum, name);
+               if inkey = 37 then
+                begin
+                  name := gtype;
+                  concat (name, '.001' );
+                end 
+               else if name <> null then
+                  begin
+                    assign ( f, name );
+                    reset ( f );
+                    name.len := name.len - 3;
+                    concat ( name, '001' );
+                    assign ( g, name );
+                    g.trap:=true;
+                    g.errs:=0;
+                    rewrite ( g );
+                    while not ( eof ( f ) ) do
+                      begin
+                        readln ( f, buf );
+                        writeln ( g, buf );
+                      end;
+                    if g.errs <> 0 then diskerr;
+                    close ( f );
+                    close ( g );
+                  end;
+               if (not derr) and (not failed) and (name<>null) then
+               begin
+                assign ( f, 'gohost.bat' );
+                f.trap := true;
+                f.errs := 0;
+                rewrite( f );
+                writeln( f, 'hostcomm' );
+                writeln( f, 'graph.bat' );
+                if f.errs <> 0 then diskerr;
+                close  ( f );
+                if not derr then
+                begin
+                assign ( f, 'ctoh.dat' );
+                f.trap:=true;
+                f.errs:=0;
+                rewrite( f );
+                writeln( f, gtype );
+                if inkey = 37 then 
+                       writeln(f,'dl')
+                     else writeln(f, 'ul');
+                writeln( f, name );
+                if f.errs <>0 then diskerr;
+                close  ( f );
+                end;
+               end;
+                if derr then name := null
+                 else if (not failed) and (name<>null) then
+                 endflag := true;
+             end;
+        12: begin
+              name := gtype;
+              concat ( name, '.001' );
+              assign ( f, 'gohost.bat' );
+              f.trap := true;
+              f.errs := 0;
+              rewrite( f );
+              writeln( f, 'hostcomm' );
+              writeln( f, 'graph.bat' );
+              if f.errs <> 0 then diskerr;
+              close  ( f );
+              if not derr then
+              begin
+                assign ( f, 'ctoh.dat' );
+                f.trap:=true;
+                f.errs:=0;
+                rewrite( f );
+                writeln( f, gtype );
+                writeln(f,'hd');
+                writeln( f, name );
+                if f.errs <>0 then diskerr;
+                close  ( f );
+              end;
+              if derr then name := null
+                else endflag := true;
+             end;
+          2: begin
+             ldbman ( inkey, gtype, ret, dum, name);
+             update := true
+             end;
+          3: begin
+             ldbman ( inkey, gtype, mnt, dum, name );
+             name.len := 0
+             end;
+          6: begin
+               inkey := 101;
+               plotchoice := 1;
+               sldperform( inkey, sldname, dum, cn, dum1 );
+               name := null;
+             end;
+          7: begin
+               inkey := 103;
+               plotchoice := 1;
+               sldperform( inkey, sldname, dum, cn, dum1 );
+               name := null;
+             end;
+          8: cdefault;
+          9: help(1);
+         10: begin
+             assign ( f, 'gohost.bat' );
+             rewrite( f );
+             close  ( f );
+             endflag := true;
+             end;
+          otherwise
+          end;
+        until ( n = 1 ) or ( n = 4 ) or ( n = 10) or ( name <> null );
+        screen ( 2 );
+    end;
+
+  end.
+

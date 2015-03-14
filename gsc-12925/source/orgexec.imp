@@ -1,0 +1,754 @@
+  { $INCLUDE : 'compile.inc' }
+  { $INCLUDE : 'vbpas.int' }
+  { $INCLUDE : 'getparam.int' }
+  { $INCLUDE : 'dspas.int' }
+  { $INCLUDE : 'dialog.int' }
+  { $INCLUDE : 'utility.int' }
+  { $INCLUDE : 'sfpas.int' }
+  { $INCLUDE : 'alterl.int' }
+  { $INCLUDE : 'execute.int' }
+  { $INCLUDE : 'orgalts.int' }
+  { $INCLUDE : 'orgaltd.int' }
+  { $INCLUDE : 'orgexec.int' }
+
+  implementation of orgexec;
+
+  USES vbpas;
+
+  USES getparam;
+
+  USES dialog;
+
+  USES utility;
+
+  USES sfpas;
+
+  USES orgalts;
+
+  USES alterl;
+
+  USES execute;
+
+  USES orgaltd;
+
+  const
+      prompt_line = 22;
+
+  var
+      temp  : entity;
+
+  (********************************************************)
+
+  procedure exit;
+    begin
+      current := first^.up;
+      add_node ( current, 21 );
+      with current^ do
+	begin
+	  field^.len := 3;
+	  field^[1] := chr(skeleton^[8]+48);
+	  field^[2] := chr(skeleton^[9]+48);
+	  field^[3] := chr(skeleton^[10]+48);
+	end;
+    end;
+
+  (********************************************************)
+
+  procedure enter;
+    begin
+      current := first^.up;
+      delete ( current );
+    end;
+
+  (********************************************************)
+
+  procedure redraw;
+
+    begin
+	  alter_display_space ( first );
+	  if code <> 2 then [rtype := 2; reduce (rtype, color);];
+    end;
+
+  (********************************************************)
+  procedure what_level ( var current, first : entity );
+
+    var
+      i,j,l  : integer;
+      temp   : entity;
+      deputy : boolean;
+
+    begin
+      if current^.etype in [7..21] then
+	begin
+	  temp := first^.down^.down^.down^.down^.down;
+	  i := 0;
+	  j := 0;
+	  l := -1;
+	  deputy := false;
+	  if temp^.down^.etype = 7 then [ i:=1; j:=1; deputy:=true; ];
+	  while temp <> current do
+	    begin
+	      temp := temp^.down;
+	      if temp^.etype = 9 then
+		begin
+		if deputy then
+		  if j=2 then i := i + 1
+		   else j := 2
+		 else [j := 1; i := i + 1;];
+		end;
+	      if temp^.etype=13 then [if l=-1 then i:=1 else i:=i+1;j:=j-l;l:=0;];
+	      if temp^.etype = 17 then [j := j + 1;l := l + 1];
+	    end;
+	  if current^.etype in [13..20] then
+	    begin
+	      current_level := i;
+	      current_sub_level := l;
+	    end
+	   else
+	    begin
+	      current_level := 0;
+	      current_sub_level := 0;
+	    end;
+	  icol := i;
+	  irow := j;
+	end
+       else
+	 begin
+	   current_level := 0;
+	   current_sub_level := 0;
+	   irow := 0;
+	   icol := 0;
+	 end;
+    end;
+
+ (*******************************************************)
+
+ procedure sldredraw;
+   
+ var
+    i  : integer;
+ begin
+    add2         := false;
+    destroy      := false;
+    dimension[-1]:= 0    ;
+    dimension[0] := 0    ;
+    last_ins     := 0    ;
+    color        := skeleton^[10];
+    for i := 1 to upper ( dimension ) do dimension[i] := -1;
+    current_level:= 0    ;
+    current_sub_level := 0;
+    first_line   := node_data^[7].ytext;
+    leftnode     := 1;  lnode := 1;
+    icol         := 0;  
+    topnode      := 1;  tnode := 1;
+    irow         := 0;
+    nmids        := 3;
+    nlows        := 3;
+    last_line    := 21;
+    delkey       := true;
+    saved        := true;
+    rtype        := 2;
+    current      := first^.up ;
+    skeleton^[8] := ord ( current^.field^[1] ) - 48 ;
+    skeleton^[9] := ord ( current^.field^[2] ) - 48 ;
+    skeleton^[10]:= ord ( current^.field^[3] ) - 48 ;
+    delete ( current );
+    current      := first^.down;
+    while not (current^.etype in [1,21]) do
+        begin
+            case current^.etype of
+               7 : dimension[-1]  := dimension[-1] + 1 ;
+               9 : dimension[0]   := dimension[ 0] + 1 ;
+              13 : begin
+                     current_level := current_level + 1;
+                     dimension[current_level] := 0 ;
+                   end;
+              17 : dimension[current_level]:=dimension[current_level]+1;
+              otherwise
+            end; (* case *)
+            current := current^.down;
+        end; (* while *)
+     imids := current_level ;
+     istfs := dimension[0]  ;
+     if imids > skeleton^[8] then skeleton^[8] := imids;
+     if istfs > skeleton^[8] then skeleton^[8] := istfs;
+     for i := 1 to 12 do 
+      node_data^[8+i].input_length := skeleton^[10+skeleton^[8]]
+              - ord((i<5)or(i>8))+4*ord((i mod 4) = 0);
+     nmids := 81 div (node_data^[16].input_length + 1);
+     current_level := 0;
+     first_item    := first^.down^.down^.down^.down;
+     redraw ( 1, current, first );
+  end; (* sldredraw *)
+
+  (********************************************************)
+
+
+  function  insert ( var current      : entity;
+		     var current_node : byte;
+		     var first	      : entity ): boolean;
+
+  var
+       i, j	  : integer;
+       status	  : boolean;
+       inchar	  : twobyte;
+
+  begin
+    status := true;
+    last_ins := current_node;
+    inchar[1] := 0;
+    case current_node of
+      7: if (dimension[-1]>4)or(not (current^.etype in [5..8])) then status := false
+			      else
+	 begin
+	   dimension[-1] := dimension[-1] + 1;
+	   add_node ( current, 7 );
+	   temp := current;
+	   j	:= temp^.up^.ytext + 1;
+	   temp^.down^.ytext := j;
+	   temp^.ytext	     := j;
+	 end;
+
+      9: if (dimension[0]>5)or(not (current^.etype in [5..12]))or(not (current^.down^.etype in [9..21,1])) then status := false
+			     else
+	  begin
+	  if (istfs = skeleton^[8])and(skeleton^[10+skeleton^[8]]>skeleton^[11+skeleton^[8]]) then
+	    begin
+	      there(0,prompt_line);
+	      write(messages^[32]);
+	      get_input(inchar);
+	      there(0,prompt_line);
+	      write('                                                                               ');
+	    end;
+	  if chr(inchar[1]) in ['y','Y',chr(0)] then
+	 begin
+	   dimension[0] := dimension[0] + 1;
+	   add_node ( current, 9 );
+	   temp := current;
+	   if not (current^.up^.etype in [5..8]) then
+	     current^.xtext:=current^.up^.xtext+node_data^[12].input_length+1;
+	   istfs:=istfs+1;
+	   if istfs > skeleton^[8] then skeleton^[8]:=istfs;
+	   for i := 1 to 12 do
+	     node_data^[8+i].input_length:=skeleton^[10+skeleton^[8]]
+		 -ord((i<5)or(i>8))+4*ord((i mod 4)=0);
+	   nmids := 81 div (node_data^[16].input_length+1);
+	    end
+	     else status := false;
+	 end;
+
+     13: if (dimension[6] <> -1)or(current^.down^.etype in [2..12]) then status := false
+			       else
+	  begin
+	  if (imids = skeleton^[8])and(skeleton^[10+skeleton^[8]]>skeleton^[11+skeleton^[8]]) then
+	    begin
+	      there(0,prompt_line);
+	      write(messages^[32]);
+	      get_input(inchar);
+	      there(0,prompt_line);
+	      write('                                                                               ');
+	    end;
+	  if chr(inchar[1]) in ['y','Y',chr(0)] then
+	 begin
+	   current_level := current_level + 1;
+	   if dimension[current_level] <> -1 then
+	   for i := 5 downto current_level do
+	       dimension[i+1] := dimension[i];
+	   add_node ( current, 13 );
+	   temp := current;
+	   dimension[current_level] := 0;
+	   if (current^.down^.down^.down^.down^.etype=17)
+				 or
+		       (current^.up^.etype=16) then
+	    [ dimension[current_level] := dimension[current_level-1]- current_sub_level;
+	      dimension[current_level-1] := current_sub_level; ];
+	   current_sub_level := 0;
+	   if not (current^.up^.etype in [5..12]) then
+	     current^.xtext := current^.up^.xtext+node_data^[16].input_length+1;
+	   imids:=imids+1;
+	   if imids > skeleton^[8] then skeleton^[8]:=imids;
+	   for i := 1 to 12 do
+	     node_data^[8+i].input_length:=skeleton^[10+skeleton^[8]]
+		 -ord((i<5)or(i>8))+4*ord((i mod 4)=0);
+	   nmids := 81 div (node_data^[16].input_length+1);
+	    end
+	     else status := false;
+	 end;
+     17: if (dimension[current_level]>4)or(not(current^.etype in [13..20]) then status := false
+				       else
+	     begin
+	       dimension[current_level]:=dimension[current_level]+1;
+	       current_sub_level := current_sub_level + 1;
+	       add_node ( current, 17 );
+	       temp := current;
+	       current^.xtext := current^.up^.xtext;
+	     end;
+    end;
+    if status then
+       begin
+	 what_level ( current, first );
+	 if current_node <> 7 then
+	    begin
+	      j := node_data^[5+(irow-topnode+1)*2+(ord((irow-topnode+1)=3)*2)].ytext+ord(irow=topnode);
+	      temp^.down^.down^.down^.ytext := j+3;
+	      temp^.down^.down^.ytext	    := j+2;
+	      temp^.down^.ytext 	    := j+1;
+	      temp^.ytext		    := j;
+	      temp^.down^.down^.down^.xtext := temp^.xtext;
+	      temp^.down^.down^.xtext	    := temp^.xtext;
+	      temp^.down^.xtext 	    := temp^.xtext;
+	    end;
+{	 if current^.ytext > last_line then
+	    begin
+	      move ( first_item, 'd',
+		     node_data^[first_item^.etype].nfields );
+	      first_item^.ytext := first_line;
+	      temp := first_item;
+	    end;}
+	 if (not (current^.down^.down^.down^.down^.etype in [1..3,21]))
+	   or (irow>topnode+nlows-1)or(irow<topnode)or(icol<leftnode)or
+	   (icol>leftnode+nmids-1) or (inchar[1] <> 0) then
+	 alter_screen ( first, temp, 1 );
+    end;
+    current_node := current^.etype;
+    insert := status;
+  end;
+
+  (********************************************************)
+
+  procedure perform2;
+
+  var
+       i, j, k, n : integer;
+       m	  : integer;
+       status	  : mode;
+       buffer	  : lstring ( 127 );
+       length	  : byte;
+       buf	  : lstring(80);
+
+  procedure org_upd;
+
+  var
+
+     temp   : entity;
+     inkey2,i : byte;
+     current_node1 : byte;
+
+  begin
+    if (status=txt) and add2 and (length=0) then status := fctkey;
+
+    if status=fctkey then
+       begin { fctkey }
+	 if add2 then
+	    begin
+	      destroy := true;
+	      add2     := false;
+	      delkey := false;
+	      temp := current;
+	      if inkey in [23,25,26,28] then
+		begin
+		  perform(inkey,current,current_node,first);
+		  while (inkey=28)and(current^.etype in [14..16,18..20]) do
+		   perform(inkey,current,current_node,first);
+		  if current^.etype in [13..20] then
+		  if current=temp then current:=current^.up
+		   else if current^.up=temp then current:=current^.up^.up;
+		   else if current^.up^.up=temp then current:=current^.up^.up^.up;
+		   else if current^.up^.up^.up=temp then current:=current^.up^.up^.up^.up;
+		end;
+	      inkey2  := 47;  { delete }
+	      current_node := temp^.etype;
+            current_node1 := temp^.etype;
+	      perform2 ( inkey2, temp, current_node, first );
+	      if inkey in [23,25,26,28] then
+		[what_level(current,first);inkey := 255]
+	       else current := temp;
+	      if (inkey in [43,44]) then
+		repeat
+		  current := current^.up;
+		until not (current^.etype in skipfield);
+	      if inkey in [0,36,47] then 
+               begin
+                 inkey := 0;
+                 if (current_node1=current_node) and (current_node in [9,13,17]) then
+                 alter_screen(first,current,1);
+               end;
+	      current_node := current^.etype;
+	      if inkey = 255 then
+		alter_screen(first,current,1);
+	    end;
+	end { fctkey }
+	  else
+	begin { txt, mixed modes }
+	  if length > 0 then
+	     begin
+	       with current^ do begin
+		   if buffer.len <> field^.len then
+		      saved := false
+		   else begin
+		      for i := 1 to buffer.len do
+			 if buffer[i] <> field^[i] then saved := false;
+		   end;
+		end; (* with *)
+	       alter_entity_list ( current, buffer, buffer.len, 0 );
+	     end;
+	  if status=txt then inkey := 36
+			else
+	     begin { mixed mode }
+	       if add2 then
+		  begin
+		    add2 := false;
+		    destroy := true;
+		  end;
+	     end;
+	end;
+	if inkey in [1,4,5] then current_node := 0;
+  end;
+
+  (********************************************************)
+  procedure inloop;
+
+    var
+      i : integer;
+      last_node : byte;
+
+    begin
+	last_node  := 0;
+	current_node  := current^.etype;
+	  while not ( inkey in [1,3..5,42] ) do
+	    begin
+	      if (node_data^[last_node].valid_key_set_id=
+		  node_data^[current_node].valid_key_set_id)and
+		 (node_data^[current_node].prtmsg=
+		  node_data^[last_node].prtmsg)and(promptupd=2)and
+		 (inkey in [0,22..28,36]) then
+		promptupd := 3 else last_node := current_node;
+	      inkey := 0;
+	      with current^ do
+		begin
+		  length := field^.len;
+		  buffer.len := length;
+		  for i := 1 to length do buffer[i] := field^[i];
+		end;
+	      with node_data^[current_node] do
+		incom(prompt_line,prtmsg,buf,-1,rtype,character_size,
+		      current^.xtext,current^.ytext,data_type,
+		      input_length,valid_key_set_id,esc,backspace,
+		      cursor_left,cursor_right,ins,del,status,buffer,
+		      length,inkey);
+	      org_upd;
+
+	      perform2 ( inkey,current,current_node,first );
+	      perform  ( inkey, current, current_node, first )
+	    end;
+    end;
+  (********************************************************)
+
+
+  begin
+     case inkey of
+
+	41: begin   { text }
+	      alter_screen (first,current,0);
+	      buf := null;
+	      current := first;
+	      current_node := current^.etype;
+	      inloop;
+	      if not (inkey in [3,1,0]) then redraw(1,current,first);
+	      if inkey in [4,5] then inkey := 255;
+	    end;
+    43..46: begin  { insert }
+	      current_node := 7 * ord (inkey=43) + 9 * ord (inkey=44) +
+			     13 * ord (inkey=45) + 17 * ord (inkey=46);
+	      case current^.etype of
+	      5,7,11,15,19: current := current^.down;
+		  10,14,18: current := current^.down^.down;
+		  9,13,17: current := current^.down^.down^.down;
+	      otherwise
+	      end;
+	      if inkey = 45 then
+		 while current^.down^.etype = 17 do
+		     current := current^.down^.down^.down^.down;
+	      add2 := insert ( current, current_node, first );
+	      destroy := not add2;
+	    end;
+	47: begin  { delete }
+	      case current^.etype of
+		8,10,14,18: current := current^.up;
+		  11,15,19: current := current^.up^.up;
+		  12,16,20: current := current^.up^.up^.up;
+	      otherwise
+	      end;
+
+	      case current^.etype of
+		7: begin
+		     delete ( current );
+		     dimension[-1] := dimension[-1] - 1;
+		     if current^.etype=13 then
+			begin
+			  current_level := 1;
+			  current_sub_level := 0;
+			end;
+		   end;
+
+		9: begin
+		     delete ( current );
+		     dimension[0] := dimension[0] - 1;
+		     istfs := istfs-1;
+		     if current^.etype=13 then
+			begin
+			  current_level := 1;
+			  current_sub_level := 0;
+			end;
+		   end;
+
+	       13: begin
+		     for i := current_level to 5 do
+			 dimension[i] := dimension[i+1];
+		     dimension[6] := -1;
+		     repeat
+		       delete ( current );
+		     until current^.etype <> 17;
+		     current_sub_level := 0;
+		     if current^.etype in [1,21] then current_level := 0;
+		     imids := imids-1;
+		   end;
+
+	       17: begin
+		     delete ( current );
+		     dimension[current_level] := dimension[current_level] - 1;
+		     if current^.etype=13 then
+			begin
+			  current_level := current_level + 1;
+			  current_sub_level := 0;
+			end;
+		     if current^.etype in [1,21] then
+			begin
+			  current_level := 0;
+			  current_sub_level := 0;
+			end;
+		   end;
+	      otherwise
+	      end;
+
+	      k := 1;
+	      temp := current;
+	      if current^.up^.etype=6 then
+		begin
+		  first_item := first^.down^.down^.down^.down^.down^.down;
+		  k := 0;
+		end
+		  else
+		begin
+		  if current^.up^.etype in [6,8] then i := 2
+						 else i := 4;
+		  move ( temp, 'u', i );
+		end;
+	     what_level ( current, first );
+	     if delkey then
+	      alter_screen ( first, temp, k );
+	      delkey := true;
+	    end;
+	36: {if (current^.down^.etype<>1)and(current^.down^.etype<>21)then}
+	    begin  { move cursor down }
+	      if (current=last_item) and (current^.down^.etype in [5..20]) then
+		 if current^.ytext=last_line then
+		 begin
+		   move ( first_item, 'd', node_data^[first_item^.etype].nfields );
+		   first_item^.ytext := first_line;
+		 end;
+	      case current_node of
+	    6,8,12: if current^.down^.etype=13 then current_level := 1;
+	    16,20: case current^.down^.etype of
+		     13: begin
+			   current_level := current_level + 1;
+			   current_sub_level := 0;
+			 end;
+		     17: current_sub_level := current_sub_level + 1;
+		   1,21: begin
+			   current_level := 0;
+			   current_sub_level := 0;
+			 end;
+		   otherwise
+		   end;
+	      otherwise
+	      end;
+	      repeat
+		current := current^.down;
+	      until not (current^.etype in skipfield);
+	    end
+{	   else
+	    if current <> first then
+	      begin
+		current_level := 0;
+		current_sub_level := 0;
+		current := first;
+		first_item := first^.down^.down^.down^.down^.down^.down;
+		alter_screen ( first, first_item, 1 );
+	      end};
+23,25,26,28: begin
+	      perform ( inkey, current, current_node, first );
+	      what_level ( current, first );
+	      if ((icol<leftnode)or(icol>leftnode+nmids-1)or(irow<topnode)or(irow>topnode+nlows-1))and((irow<>0)or(icol<>0)) then
+		alter_screen ( first, current, 1 );
+	    end;
+       22: if current <> first then
+	       begin  { move cursor home }
+		 current_level := 0;
+		 current_sub_level := 0;
+		 current := first;
+		 first_item := first^.down^.down^.down^.down^.down^.down;
+		 irow := 0;
+		 icol := 0;
+		 leftnode := 0;
+		 topnode := 0;
+		 if not (first_item^.etype in [7..20]) then first_item := nil;
+		 alter_screen ( first, first_item, 1 );
+	       end;
+       27: begin
+	   temp := first^.up;
+	   while temp^.etype in skipfield do temp := temp^.up;
+	   if current <> temp then
+	       begin  { move cursor end }
+		 current_level := 0;
+		 current_sub_level := 0;
+		 current := temp;
+		 irow := 0;
+		 icol := 0;
+		 if temp^.etype in [6,8] then last_item := temp^.up
+					 else  { etype: 12, 16, 20 }
+		    last_item := temp^.up^.up^.up;
+		 if not(last_item^.etype in [6..20]) then last_item := nil;
+		 if last_item <> nil then
+		   begin
+		     icol := 6;
+		     while dimension[icol]=-1 do icol := icol-1;
+		     irow := dimension[icol];
+		     current_level := icol;
+		     current_sub_level := irow;
+		     what_level ( last_item, first );
+		     alter_screen ( first, current, 1 );
+		   end;
+	       end;
+	   end;
+
+(*	    41 : begin
+		   assign (f,'graph.hlp');
+		   f.trap := true;
+		   f.errs := 0;
+		   reset (f);
+		   if f.errs =0 then
+		     begin
+		       for i :=1 to 7 do
+			 read (f,helppage);
+		       help (helppage);
+		     end
+		   else
+		     begin
+		       there (0,23);
+		       writeln ('Graph.hlp not found ... Press any key to continue                              ');
+		       get_input (inchar);
+		     end;
+		   close (f);
+		   alter_screen ( first,current,0 );
+		 end;*)
+	    otherwise  begin end;
+
+     end; {case}
+     if inkey in [0,22,23,25..28,36,47] then current_node:=current^.etype;
+     if inkey in [0,36] then
+	begin
+	  add2 := false;
+	  if current_node in [1,21] then
+	     begin
+	       if destroy then
+		  begin
+		    case current^.up^.etype of
+		    6,8,12: if last_ins <> 13 then
+			   begin
+			     add2 := true;
+			     if (last_ins=9)or(current^.up^.etype=12)
+			       then current_node := 13
+			       else current_node := 9;
+			   end;
+		    16,20: begin
+			     if (dimension[6]=-1) and (last_ins<>13) then
+				begin
+				  add2 := true;
+				  current_node := 13;
+				end;
+			   end;
+		    otherwise
+		    end;
+		  end
+		     else
+		  begin
+		    add2 := true;
+		    case current^.up^.etype of
+		    6,8: current_node := 7;
+		      12: current_node := 9;
+		  16,20: current_node := 17;
+		    end;
+		  end
+	     end
+	       else
+	     begin
+	       if (current_node in [7,9,13,17]) and (last_ins<>0) then
+		  if destroy then
+		     begin
+		     end
+		       else
+		     begin
+		       add2 := true;
+		       current_node := last_ins;
+		     end;
+	     end;
+	     if add2 then
+		begin
+		  last_ins := current_node;
+		  case current^.etype of
+		   13: case current^.up^.etype of
+		  6,8,12,16: current_level := current_level - 1;
+			20: begin
+			      current_level := current_level - 1;
+			      current_sub_level := dimension[current_level];
+			    end;
+		       otherwise
+		       end;
+		   17: current_sub_level := current_sub_level - 1;
+		 1,21:	if current^.up^.etype in [16,20] then
+			   begin
+			     i := 6;
+			     while dimension[i] = -1 do i := i - 1;
+			     current_level := i;
+			     current_sub_level := dimension[i];
+			   end;
+		  otherwise
+		  end;
+		  current  := current^.up;
+		  if current_node = 13 then
+		     while current^.down^.etype = 17 do
+			current := current^.down^.down^.down^.down;
+		  add2 := insert ( current, current_node, first );
+		  destroy := not add2;
+		end
+	       else
+		begin
+		what_level ( current, first );
+		if (icol<leftnode)or(icol>leftnode+nmids-1)or
+		   (irow<topnode)or(irow>topnode+nlows-1) then
+		  if (icol<>0)and(irow<>0) then
+		    alter_screen(first,current,1)
+		   else
+		    if current = first then
+		    begin
+		      topnode := 1;
+		      leftnode := 1;
+		      alter_screen(first,current,1);
+		    end;
+		end;
+	end;
+     if inkey in [22,23,25..28,36] then inkey := 0;
+  end;
+  end.
+

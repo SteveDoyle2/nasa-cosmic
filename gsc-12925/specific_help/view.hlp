@@ -1,0 +1,35 @@
+cancel.hlp
+continue.hlp
+
+
+window.hlp
+plot.hlp
+print.hlp
+
+
+
+The View Mode displays the slides one at a time.  To go to the next slide in
+the slide show press F2 Continue.  If viewing an individual chart or the last
+chart in a show the F2 key will return to the PRINT/VIEW a Slide Show Menu.
+To create a plotter format file (VDM) used for the Slide Show diskette, press
+F6 and you will be prompted to give a name to save the file under.  F7 Print
+is used to print just this one chart.
+
+
+
+To obtain help for any of the following subjects,  press the function key next
+to the desired subject.
+
+        F1  Cancel
+        F2  Continue
+ 
+ 
+        F5  Window Mode
+        F6  Plotter file output (VDM format for Slide Show diskette)
+        F7  Print
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

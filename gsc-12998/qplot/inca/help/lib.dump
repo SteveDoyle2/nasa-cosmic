@@ -1,0 +1,434 @@
+2 GENERATE          
+
+     This modifier provides a variety of ways to easily create new 
+transfer functions.  The functions so generated are STATIC, and thus
+are not dependent on other constants.  Use the FUNCTION COMPUTE 
+command and the expression format if you wish to make dynamic 
+functions.
+
+     Format:     FUNCTION  GENERATE  [modifiers]
+
+3 ALGEBRAIC_OPERATOR
+
+     The modifiers contained in this modifier are used for simple
+algebraic and triginometric operations.  The argument must be a 
+constant (no roots) function or an expression which evaulates to a 
+constant function.
+
+     Format:     FUNCTION  GENERATE  ALGEBRAIC_OPERATOR  [modifier]
+
+4 COS               
+
+     This operator takes the cosine of a constant (K-plane) function.
+It is useful for calculating other constants, particularily in the Z
+plane.  The argument is in radians. 
+
+     Format:     FUNCTION  GENERATE  ALGEBRAIC_OPERATOR  COS
+     Expression: $COS (angle-in-radians)
+
+4 COSD              
+
+     This operator takes the cosine of a constant (K-plane) function. 
+It is useful for calculating other constants, particularily in the Z
+plane.  The argument is in degrees. 
+
+     Format:     FUNCTION  GENERATE  ALGEBRAIC_OPERATOR  COSD
+     Expression: $COSD (angle-in-degrees)
+
+4 EXP               
+
+     This operator calculates the exponential function (exp(x)), that
+is, the inverse of the natural logarithm.  The parameter must be a
+constant (K-plane) function.  This operator is useful for calculating
+other constants.  
+
+     Format:     FUNCTION  GENERATE  ALGEBRAIC_OPERATOR  EXP
+     Expression: $EXP (const)
+
+4 EXP10             
+
+     This operator calculates 10 raised to a given power, that is, the
+inverse of the base 10 logarithm.  The parameter must be a constant
+(K-plane) function.  This operator is useful for calculating other
+constants. 
+
+     Format:     FUNCTION  GENERATE  ALGEBRAIC_OPERATOR  EXP10
+     Expression: $EXP10 (const)
+
+4 LOG               
+
+     This operator takes the base e (natural) logarithm of a constant
+(K-plane) function.  It is useful for calculating other constants. 
+The parameter must be greater than or equal to zero. 
+
+     Format:     FUNCTION  GENERATE  ALGEBRAIC_OPERATOR  LOG
+     Expression: $LOG (const)
+
+4 LOG10             
+
+     This operator takes the base 10 logarithm of a constant (K-plane)
+function.  It is useful for calculating other constants.  The parameter
+must be greater than or equal to zero. 
+
+     Format:     FUNCTION  GENERATE  ALGEBRAIC_OPERATOR  LOG10
+     Expression: $LOG10 (const)
+
+4 SIN               
+
+     This operator takes the sine of a constant (K-plane) function. 
+It is useful for calculating other constants, particularily in the Z
+plane.  The argument is in radians. 
+
+     Format:     FUNCTION  GENERATE  ALGEBRAIC_OPERATOR  SIN
+     Expression: $SIN (angle-in-radians)
+
+4 SIND              
+
+     This operator takes the sine of a constant (K-plane) function. 
+It is useful for calculating other constants, particularily in the Z
+plane.  The argument is in degrees. 
+
+     Format:     FUNCTION  GENERATE  ALGEBRAIC_OPERATOR  SIND
+     Expression: $SIND (angle-in-degrees)
+
+4 SQRT              
+
+     This operator takes the square root of a constant (K-plane)
+function. It is useful for calculating other constants.  The argument
+must be greater than or equal to zero. 
+
+     Format:     FUNCTION  GENERATE  ALGEBRAIC_OPERATOR  [modifier]
+     Expression: $SQRT (const)    
+
+3 CONVERSION        
+
+     This modifier allows conversion from one plane to another.  If
+the original plane is the S plane, an optional zero order hold and/or
+advance factor may be added.  For more information, check the
+conversion subtopic of expressions or the INCA theory manual. 
+The operators $Z, $ZH, $W, and $WH allow conversion of functions 
+from one plane to another.  The conversion process involved is 
+described below.  
+
+     Format:     FUNCTION  GENERATE  CONVERSION
+     Expression: $W (S-function, sampleperiod [,advancefactor])
+                 $W (Z-function)
+                 $W (W-function, sampleperiod)
+                 $WH (S-function, sampleperiod [,advancefactor])
+                 $Z (S-function, sampleperiod [,advancefactor])
+                 $Z (Z-function, sampleperiod)
+                 $Z (W-function)
+                 $ZH (S-function, sampleperiod [,advancefactor])
+
+4 $W                
+
+     This operator allows a function in the S or Z plane to be 
+converted to the W plane.  It also allows a sample period to be 
+assigned to a function already in the W plane.  
+
+     If the function is in the S plane, the operands include the name
+of the function to be converted, the sampling period, and the
+(optional) advanced modifier.  The operation is performed by first
+converting from S to Z, and then converting from Z to W. 
+
+     If the function is in the Z plane, there is only one operand
+since the sampling period is already defined.  If the function is in
+the W plane, there are two operands, the second being the sample
+period.  This operand must be constant (no zeroes or poles) and
+greater than zero.  
+
+     The W-plane conversion is a bilinear transformation.  
+Everywhere a Z appears in the function, it is replaced by the 
+expression  (1+w*T/2) / (1-w*T/2), where T is the sample period. 
+
+4 $WH               
+
+     This operator allows a function in the S plane (NOT Z plane) to 
+be converted to the W plane with the inclusion of a zero order hold.
+
+4 $Z                
+
+     This operator allows a function in the S or W plane to be 
+converted to the Z plane.  It also allows a sample period to be 
+assigned to a function already in the Z plane.  
+
+     If the function is in the S plane, the operands include the name
+of the function to be converted, the sampling period, and the
+(optional) advanced modifier.  If the function is in the Z plane,
+there are two operands, the second being the sample period.  This
+operand must be constant (no zeroes or poles) and greater than zero. 
+
+     The conversion from the S plane to the Z plane is quite 
+complicated.  In addition to the S plane function, the sample period 
+is needed (this must be a constant or a K plane function).  A zero 
+order hold may be included in the conversion process if desired.  This 
+is implemented by using the $ZH operator instead of the $Z operator.  
+An optional advance factor is allowed (which must also be a constant 
+or K plane function).  The advance factor allows users to do the 
+so-called advanced or modified Z-transform.
+
+The process of conversion consists of the following steps.  Here the 
+letter A is pole, T is the sample period, and D is the advance factor, 
+and K is the numerator of the partial fraction.
+
+     1)   Divide function by S if zero order hold is included.
+     2)   Calculate partial fraction expansion of function.
+     3)   Convert denominator of expanded function, by using 
+          expression   s+A  -->   z-exp(A*T).
+     4)   Convert numerator of expanded function, by using
+          expression    K   -->   K * exp(-A*D*T).......
+            .
+            .
+            .
+     5)   Add the terms of the partial fraction together and 
+          factor the numerator.
+     6)   Multiply function by (Z-1)/Z if zero order hold is included.
+
+More detailed information is available in the INCA Theory Manual.
+
+     If the function is in the W plane, there is only one operand
+since the sampling period is already defined.  The conversion from the
+W plane to the Z plane is a bilinear transformation.  Everywhere a W
+appears in the function, it is replaced by the expression  (2/T) *
+(z-1) / (z+1), where T is the sample period. 
+
+4 $ZH               
+
+     This operator allows a function in the S plane (NOT W plane) to 
+be converted to the Z plane with the inclusion of a zero order hold.
+
+3 DYNAMIC_EQUATION  
+
+     This modifier allows a function to be defined in terms of other
+functions and constants.  The result function is the equation -- it is
+recomputed each time the function in question is needed. If you define
+a function in terms of itself, an infinite recursion loop will be
+create, resulting in an error condition.  The expression can be any
+valid INCA expression.  See the main topic Expressions for more
+details and examples. 
+
+     Format:     FUNCTION  GENERATE  DYNAMIC_EQUATION  
+                                             [function[:]=expression]
+
+3 FILTER            
+
+     The FILTER modifier will create a new STATIC function.  There are
+several common filters listed below.  Two inputs are required for most
+filters -- Bandwidth and Order.  The bandwidth is entered in radians
+per second, and has a default value of 1.  The order is usually a
+count of the number of poles.  The default value is 2. 
+
+     Format:     FUNCTION  GENERATE  FILTER  filter-type
+
+4 BESSEL            
+
+     The Bessel filter is an all-pole constant time delay filter.  
+It exhibits linear phase response characteristics over the filter 
+pass band.  The phase linearity characteristics are superior to the 
+Butterworth and Chebyshev filters, but the amplitude resonse is 
+inferior.  
+
+     To design a Bessel filter, the following specifications are 
+required:
+
+     1)  Bandwidth (r/s)
+     2)  Order
+
+     Format:     FUNCTION  GENERATE  FILTER  BESSEL
+
+4 BUTTERWORTH       
+
+     The Butterworth filter is designed to meet frequency-response
+amplitude specifications such that the transfer function H(jw) is
+taken to have n poles, to have all its zeros at w=infinity, to have a
+bandwidth ranging from zero to w=W, and to have an amplitude
+characteristic which has the value 1.0 at w=0 and is as flat as
+possible at the passband center.  The Butterworth filter is a set of
+poles evenly spaced on a semi-circle in the left half plane.  There
+are two parameters. 
+
+     1)  Bandwidth (r/s)
+     2)  Order (maximum is 20)
+
+     Format:     FUNCTION  GENERATE  FILTER  BUTTERWORTH
+
+4 CHEBYSHEV         
+
+     A chebyshev filter is an all-pole filter with the following 
+characteristics:
+
+     1)   An equal amount of ripple in the pass band (equiripple)
+     2)   Monotonically decreasing with frequency above the pass band
+     3)   Steepest possible cutoff rate in the transmission band.
+
+     The following specifications are required:
+
+     1)   Bandwidth (r/s)
+     2)   Order
+     3)   Ripple (in dB)     (default = 0.5)
+
+     Format:     FUNCTION  GENERATE  FILTER  CHEBYSHEV
+
+4 ITAE              
+
+     An ITAE (minimum Integral of Time-multiplied Absolute Error)
+filter is a set of poles designed to reduce the transmission error. 
+There are two parameters. 
+
+     1)  Bandwidth (r/s)
+     2)  Order (maximum is 8)
+
+     Format:     FUNCTION  GENERATE  FILTER  ITAE
+
+3 INPUT             
+
+     Format:     FUNCTION  GENERATE  INPUT  [input-type]
+
+4 ACCELERATION      
+
+     This operator will produce the Laplace transform corresponding to 
+a constant acceleration.  The parameter must be a constant expression, 
+with no zeroes or poles.
+
+     Format:     FUNCTION  GENERATE  INPUT  ACCELERATION  [acc-const]
+     Expression: $ACC (acc-const)
+
+4 COMBINATION       
+
+     This operator will produce the Laplace transform corresponding to
+a summation of step, ramp, and acceleration components.  The
+parameters must be constant expressions, with no zeroes or poles. 
+Additional components can be added as desired to represent the rate of 
+change of acceleration, and so on.
+
+     Format:     FUNCTION  GENERATE  INPUT  COMBINATION
+     Expression: $SRA (step-const [,ramp-const [,acc-const ...]])
+
+4 IMPULSE           
+
+     This modifier will create an impulse function.  It has no
+equivalent expression operator.  It is equivalent to a constant
+function of gain one.
+
+     Format:     FUNCTION  GENERATE  INPUT  IMPULSE
+     Expression: 1
+
+4 DAMPED_OSCILLATOR 
+
+     This operator will produce the Laplace transform corresponding to
+a damped oscillator.  The parameters must be constant expressions,
+with no zeroes or poles.  The frequency must be given in radians per 
+second, and the phase is given in radians.  This operator is evaluated 
+as:
+                    cos(th) * (s+a) - sin(th) * w
+                    -----------------------------
+                      (s+a) ^ 2    +    w ^ 2
+
+     Format:     FUNCTION  GENERATE  INPUT  DAMPED_OSCILATOR  
+                                                           [acc-const]
+     Expression: $DOSC (frequency [,phase-in-radians [,damping]])
+                 $DOSCD (frequency [,phase-in-degrees [,damping]])
+
+4 RAMP              
+
+     This operator will produce the Laplace transform corresponding to 
+a constant ramp.  The parameter must be a constant expression, with no 
+zeroes or poles.
+
+     Format:     FUNCTION  GENERATE  INPUT  RAMP  [ramp-const]
+     Expression: $RAMP (ramp-const)
+
+4 STEP              
+
+     This operator will produce the Laplace transform corresponding to 
+a constant step.  The parameter must be a constant expression, with no 
+zeroes or poles.
+
+     Format:     FUNCTION  GENERATE  INPUT  STEP  [step-const]
+     Expression: $STEP (step-const)
+
+3 MISCELLANEOUS     
+
+     Various uncategorizable function types are lumped together
+in this modifier.  For more information see the individual modifiers.
+
+     Format:     FUNCTION  GENERATE  MISCELLANEOUS  [modifier]
+
+4 CLOSED_LOOP       
+
+     The CLOOP operator may be used to calculate a closed loop
+transfer function in a simplified manner. The compensation, plant, and 
+feedback functions are the three operands, and must all be
+present.  The system is of this form:
+
+            +       ------------     ------------
+   -----------O----| comp. fcn. |---| plant fcn. |--------------->
+              ^     ------------     ------------    |
+              | -       -------------------          |
+               --------| feedback function |---------
+                        -------------------
+
+     Format:     FUNCTION  GENERATE  MISCELLANEOUS  CLOSED_LOOP
+     Expression: $CLOOP (comp-fcn, plant-fcn, feedback-fcn)
+
+5 evaluation        
+
+     The result of the $CLOOP operator is computed using the following
+equation. 
+
+               CLTF = $CLOOP (CF,PF,FF)
+               CLTF = (CF * PF) / (1 + (CF * PF * FF))
+
+     Where CF is the compensation function, PF is the plant 
+function, and FF is the feedback function.  If we let 
+
+                    CF = P/Q,   PF = R/S,   FF = U/V
+  
+then,
+                                 (P * R * V)
+             CLTF   =     -------------------------
+                          (Q * S * V) + (P * R * U)
+
+5 examples         
+
+     The following examples illustrate the use of the $CLOOP operator.
+All functions must be in the same plane, or in the K plane.
+
+               CLTF = $CLOOP(1,g,h)       equiv. to  g/(1+g*h)
+               CLTF = $CLOOP(23,g*g2,h)   equiv. to  23*g*g2/(1+23*g*g2*h)
+
+4 PD_CONTROL_LAW    
+
+     This operator allows the user to develop a position and rate 
+(derivative) or PD control law.  To design the controller, the user 
+must know the Bode or DC gain of the rest of the control loop.  If the 
+rest of the loop consists of just the plant, the loop gain of the 
+system is the reciprocal of the system inertia.
+
+There are three parameters:
+
+     1)  Controller bandwidth (r/s)
+     2)  Damping ratio (default = 0.707...)
+     3)  Loop gain (recriprocal of inertia).
+
+     Format:     FUNCTION  GENERATE  MISCELLANEOUS  PD_CONTROL_LAW
+     Expression: $PD (bandwidth, damping-ratio, gain)
+
+4 PID_CONTROL_LAW   
+
+     This operator allows the user to design a Position-plus-Integral-
+plus-Derivative (PID) Control Law.  To design the controler, the user
+must know the Bode or DC gain of the rest of the control loop.  If the
+rest of the loop consists of just the plant, the loop gain is the
+reciprocal of the inertia. 
+
+There are three parameters:
+
+     1)  Controller bandwidth (r/s)
+     2)  Damping ratio (default = 0.707...)
+     3)  Loop gain (recriprocal of inertia).
+     4)  Integral Loop Weighting factor.  (Default = 1)
+
+     Format:     FUNCTION  GENERATE  MISCELLANEOUS  PID_CONTROL_LAW
+     Expression: $PID (bandwidth, damping-ratio, gain, ...)
+

@@ -1,0 +1,32 @@
+   interface;
+   
+   unit wbsalts (alter_screen, first_item, first_line, last_item,
+                 last_line, dimension, current_level, topnode,
+                 current_sub_level, leftnode, irow, icol, imids,
+                 nmids, nlows, delkey, tnode, lnode );
+
+   USES  utility;
+
+   const nlows = 5;
+
+   var
+      first_line         : integer;
+      last_line          : integer;
+      first_item         : entity;
+      last_item          : entity;
+      dimension          : array[1..10] of -1..10;
+      current_level      : integer;
+      current_sub_level  : integer;
+      topnode            : integer;
+      leftnode           : integer;
+      irow,icol          : integer;
+      delkey             : boolean;
+      lnode, tnode       : integer;
+      nmids, imids       : integer;
+ 
+   procedure alter_screen (var first       : entity;
+                           var current     : entity;
+                               mode        : integer );
+  begin
+  end;
+

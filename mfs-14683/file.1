@@ -1,0 +1,469 @@
+$IBFTC
+      DIMENSION J(200),PA(200),PL(200),B1(200),B2(200),PI(200),PW(200), NA010005
+     1DI(200),FL(200),OD(200),WD(200),PU(200),TU(200),VU(200),XM(200),  NA010010
+     2PTU(200),TTU(200),CV(200),HR(200),TT(20),VS(20),CG(20),CP(20),    NA010015
+     3CI(20),HE(20),HS(200)                                             NA010020
+    1 READ          ( 5,  2)NS,NT,NI,NV,AC,AC1,AC2,SD,R,GA,P,T,TE,W     NA010025
+    2 FORMAT(4I6,4E12.4/6E12.4)                                         NA010030
+      DO  4  I=1,NT                                                     NA010035
+    4 READ          ( 5,  6)TT(I),VS(I),CP(I),CG(I),CI(I),HE(I)         NA010040
+    6 FORMAT(6F12.4)                                                    NA010045
+      DO  8  N=1,NS                                                     NA010050
+    8 READ          ( 5, 10)PL(N),OD(N),PI(N),PW(N),CV(N),HR(N),B1(N),B2NA010055
+     1(N),DI(N),FL(N),PA(N),J(N)                                        NA010060
+   10 FORMAT(11F6.2,1I6)                                                NA010065
+      IF(NV) 18, 18, 12                                                 NA010070
+   12 W=W*SD/60.                                                        NA010075
+      DO 16  N=1,NS                                                     NA010080
+      IF(FL(N)) 16, 16, 14                                              NA010085
+   14 FL(N)=FL(N)*SD/60.                                                NA010090
+   16 CONTINUE                                                          NA010095
+   18 IF(NI) 50, 50, 20                                                 NA010100
+   20 WRITE           ( 6, 22)P,T,TE,R,GA,SD,AC,AC1                     NA010105
+   22 FORMAT(1H17X,8HPRESSURE,4X,11HINLET TEMP.,4X,13HAMBIENT TEMP.,3X,1NA010110
+     12HGAS CONSTANT,4X,5HGAMMA,4X,7HDENSITY,4X,8HACCURACY,5X,5HTEMP./9XNA010115
+     2,4HPS1A,9X,5HDEG F,12X,5HDEG F,6X,14HR=LBF-FT/LBM-R,3X,5HCP/CV,3X,NA010120
+     39HLBS/CU-FT,5X,3HPSI,6X,9HINCREMENT/5X,F10.3,F11.1,F17.1,F18.3,F11NA010125
+     4.3,3F11.5)                                                        NA010130
+      WRITE           ( 6, 24)                                          NA010135
+   24 FORMAT(1H-7X,1HN,4X,1HJ,5X,4HPAMB,8X,27HLENGTH  INSUL  INLET   EXINA010140
+     1T,3X,2HOD,5X,4HWALL,7X,2HCD,5X,2HOR,5X,3HDIA,5X,4HFLOW)           NA010145
+      DO  34  N=1,NS                                                    NA010150
+      IF(PL(N)) 30, 30, 26                                              NA010155
+   26 WRITE           ( 6, 28)N,J(N),PA(N),PL(N),PI(N),B1(N),B2(N),OD(N)NA010160
+     1,PW(N),FL(N)                                                      NA010165
+   28 FORMAT(1H 3X,2I5,F11.3,F12.2,4F7.3,F8.4,26X,F8.4)                 NA010170
+      GO TO  34                                                         NA010175
+   30 WRITE           ( 6, 32)N,J(N),PA(N),OD(N),PW(N),B2(N),B1(N),DI(N)NA010180
+     1,FL(N)                                                            NA010185
+   32 FORMAT(1H 3X,2I5,F11.3,33X,F7.3,F8.4, F9.3,F7.3,F9.4,F8.4)        NA010190
+   34 CONTINUE                                                          NA010195
+   36 WRITE           ( 6, 38)                                          NA010200
+   38 FORMAT(1H-16X,4HTEMP,7X,9HVISCOSITY,8X,2HCP,10X,5HGAS K,8X,7HINSULNA010205
+     1 K,6X,9HCON. FILM/1H 18X,1HF,8X,9HLBS/FT-HR,5X,8HBTU/LB-F,4X,40HBTNA010210
+     2U/HR-FT-F   BTU/HR-FT-F  KXA-1/4 POWER)                           NA010215
+      DO 40  I=1,NT                                                     NA010220
+   40 WRITE           ( 6, 42)TT(I),VS(I),CP(I),CG(I),CI(I),HE(I)       NA010225
+   42 FORMAT(1H 10X,F10.1,5F14.4)                                       NA010230
+   50 E=GA/(GA-1.)                                                      NA010235
+      WRITE           ( 6,900)                                          NA010240
+  900 FORMAT(1H1 3X,1HN,6X,3HPTU,9X,3HTTU,9X,2HPU,10X,2HTU,10X,2HWD,10X,NA010245
+     12HDI,7X,2HP3,11X,2HPE)                                            NA010250
+      E2=1./E                                                           NA010255
+      E3=2./GA                                                          NA010260
+      E4=(GA-1.)/2.                                                     NA010265
+      E6=32.174*GA*R                                                    NA010270
+      E7=144./R                                                         NA010275
+      SR=1./(1.+E4)**E                                                  NA010280
+      N=1                                                               NA010285
+   60 DS=OD(N)+2.*PI(N)                                                 NA010290
+      DF=OD(N)-2.*PW(N)                                                 NA010295
+      A=.005454*DF**2                                                   NA010300
+      XI=10.428/(DS*ALOG10(DS/DF))                                      NA010305
+      PU(N)=P                                                           NA010310
+      TU(N)=T                                                           NA010315
+      K=0                                                               NA010320
+   70 C= SQRT(E6*(T+459.7))                                             NA010325
+      D=E7*P/(T+459.7)                                                  NA010330
+      WD(N)=W                                                           NA010335
+      V=W/(A*D)                                                         NA010340
+      VU(N)=V                                                           NA010345
+      XM(N)=V/C                                                         NA010350
+      E5=1.+E4*XM(N)**2                                                 NA010355
+      PTU(N)=P*E5**E                                                    NA010360
+      TTU(N)=(T+459.7)*E5                                               NA010365
+      GO TO  78                                                         NA010370
+   72 PTU(N)=PT2                                                        NA010375
+      TTU(N)=TT2                                                        NA010380
+      DS=OD(N)+2.*PI(N)                                                 NA010385
+      DF=OD(N)-2.*PW(N)                                                 NA010390
+      A=.005454*DF**2                                                   NA010395
+      XI=10.428/(DS*ALOG10(DS/DF))                                      NA010400
+      IF(FL(N)) 71, 71, 69                                              NA010405
+   69 W=FL(N)                                                           NA010410
+   71 V=W/(A*D)                                                         NA010415
+      AE=V/C                                                            NA010420
+      P=PT2*SR                                                          NA010425
+      T=TT2/(1.+E4)                                                     NA010430
+      D=E7*P/T                                                          NA010435
+      C= SQRT(E6*T)                                                     NA010440
+      WS=A*D*C                                                          NA010445
+      WE=WS-W                                                           NA010450
+      IF(WE) 73, 73, 74                                                 NA010455
+   73 W=WS                                                              NA010460
+      AM=1.                                                             NA010465
+      GO TO 76                                                          NA010470
+   74 E5=1.+E4*AE**2                                                    NA010475
+      P=PT2/E5**E                                                       NA010480
+      T=TT2/E5                                                          NA010485
+      D=E7*P/T                                                          NA010490
+      C= SQRT(E6*T)                                                     NA010495
+      AM=W/(A*D*C)                                                      NA010500
+      AD= ABS(AE-AM)-.1*AC                                              NA010505
+      IF(AD)  76, 76, 75                                                NA010510
+   75 AE=.5*(AE+AM)                                                     NA010515
+      GO TO  74                                                         NA010520
+   76 T=T-459.7                                                         NA010525
+      TU(N)=T                                                           NA010530
+      PU(N)=P                                                           NA010535
+      XM(N)=AM                                                          NA010540
+      VU(N)=W/(A*D)                                                     NA010545
+      WD(N)=W                                                           NA010550
+      V=VU(N)                                                           NA010555
+   78 WRITE           ( 6,910)N,PTU(N),TTU(N),PU(N),TU(N),WD(N),DI(N),  NA010560
+     1P3,PE                                                             NA010565
+  910 FORMAT(1H 1I4,6F12.4,2E13.6)                                      NA010570
+      IF(PL(N))  80,100,200                                             NA010575
+   80 P2=P                                                              NA010580
+      T2=T                                                              NA010585
+      TT2=TTU(N)                                                        NA010590
+      PT2=PTU(N)                                                        NA010595
+      AM=XM(N)                                                          NA010600
+      GO TO 300                                                         NA010605
+  100 O1= SQRT(64.348*E/(R*(T+459.7)))                                  NA010610
+      IF(FL(N)) 150,150,102                                             NA010615
+  102 IF(P3) 104, 80,104                                                NA010620
+  104 PT=SR*P                                                           NA010625
+      AM=1.                                                             NA010630
+      T2=TTU(N)/(1.+E4)                                                 NA010635
+      D=E7*PT/T2                                                        NA010640
+      C= SQRT(E6*T2)                                                    NA010645
+      OE=W/(C*D)                                                        NA010650
+      IF(B1(N)) 108,106,106                                             NA010655
+  106 OR=B1(N)                                                          NA010660
+      GO TO 110                                                         NA010665
+  108 OR=.862*(OE/A)**1.69                                              NA010670
+  110 P2=PT+OR*(P-PT)                                                   NA010675
+      P3=PU(N+1)-P3                                                     NA010680
+      PS=P3-P2                                                          NA010685
+      IF(PS) 700,700,112                                                NA010690
+  112 PD=P-P2                                                           NA010695
+      C2=(A-OE)*PS/PD                                                   NA010700
+  114 O=OE+C2                                                           NA010705
+      PT=SR*P                                                           NA010710
+  116 PR=(P/PT)**E2                                                     NA010715
+      W2=PT*144.*O1*O* SQRT((PR*(PR-1.))/(1.-(O/A)**2*(PT/P)**E3))      NA010720
+      C1=(W2-W)*(P-PT)/W2                                               NA010725
+      PD=C1-.04*AC                                                      NA010730
+      IF(PD)120,120,118                                                 NA010735
+  118 PT=PT+C1                                                          NA010740
+      GO TO 116                                                         NA010745
+  120 IF(B1(N)) 124,122,122                                             NA010750
+  122 OR=B1(N)                                                          NA010755
+      GO TO 126                                                         NA010760
+  124 OR=.862*(O/A)**1.69                                               NA010765
+  126 P2=PT+OR*(P-PT)                                                   NA010770
+      PC= ABS(P2-P3)-.05*AC                                             NA010775
+      IF(PC) 130,130,128                                                NA010780
+  128 PD=P2-P3+PS                                                       NA010785
+      C2=C2*PS/PD                                                       NA010790
+      GO TO 114                                                         NA010795
+  130 DI(N)= SQRT(O/(.005454*B2(N)))                                    NA010800
+      P3=0.                                                             NA010805
+      GO TO 158                                                         NA010810
+  150 O=.005454*DI(N)**2*B2(N)                                          NA010815
+      O2=W/(144.*O1*O)                                                  NA010820
+      P2=SR*P                                                           NA010825
+      PR=1.+E4                                                          NA010830
+      PT=O2* SQRT((1.-(O/A)**2*(P2/P)**E3)/(PR*(PR-1.)))                NA010835
+      PD=PT-P2-.01*AC                                                   NA010840
+      IF(PD) 152,152,170                                                NA010845
+  152 PT=SR*P                                                           NA010850
+  154 PR=(P/PT)**E2                                                     NA010855
+      W2=PT*144.*O1*O* SQRT((PR*(PR-1.))/(1.-(O/A)**2*(PT/P)**E3))      NA010860
+      C1=(W2-W)*(P-PT)/W2                                               NA010865
+      PD=C1-.04*AC                                                      NA010870
+      IF(PD)158,158,156                                                 NA010875
+  156 PT=PT+C1                                                          NA010880
+      GO TO 154                                                         NA010885
+  158 TG=T+459.7                                                        NA010890
+  160 D=E7*PT/TG                                                        NA010895
+      VU(N)=W/(O*D)                                                     NA010900
+      C= SQRT(E6*TG)                                                    NA010905
+      XM(N)=VU(N)/C                                                     NA010910
+      T2=TTU(N)/(1.+E4*XM(N)**2)                                        NA010915
+      TC= ABS(TG-T2)-.2                                                 NA010920
+      IF(TC) 180,180,162                                                NA010925
+  162 TG=.5*(TG+T2)                                                     NA010930
+      GO TO 160                                                         NA010935
+  170 PT=SR*P                                                           NA010940
+      XM(N)=1.                                                          NA010945
+      T2=(TTU(N))/(1.+E4)                                               NA010950
+      D=E7*PT/T2                                                        NA010955
+      C= SQRT(E6*T2)                                                    NA010960
+      W=C*D*O                                                           NA010965
+      AE=O/A                                                            NA010970
+      GO TO 74                                                          NA010975
+  180 IF(B1(N)) 184,182,182                                             NA010980
+  182 OR=B1(N)                                                          NA010985
+      GO TO 186                                                         NA010990
+  184 OR=.862*(O/A)**1.69                                               NA010995
+  186 P2=PT+OR*(P-PT)                                                   NA011000
+      TG=T2                                                             NA011005
+  188 D=E7*P2/TG                                                        NA011010
+      V=W/(A*D)                                                         NA011015
+      C= SQRT(E6*TG)                                                    NA011020
+      AM=V/C                                                            NA011025
+      T2=TTU(N)/(1.+E4*AM**2)                                           NA011030
+      TC= ABS(T2-TG)-.2                                                 NA011035
+      IF(TC) 192,192,190                                                NA011040
+  190 TG=.5*(T2+TG)                                                     NA011045
+      GO TO 188                                                         NA011050
+  192 T2=T2-459.7                                                       NA011055
+      E5=1.+E4*AM**2                                                    NA011060
+      PT2=P2*E5**E                                                      NA011065
+      TT2=TTU(N)                                                        NA011070
+      GO TO 300                                                         NA011075
+  200 IF(B1(N)) 202,204,206                                             NA011080
+  202 P2=P+B1(N)*D*V**2/9266.1                                          NA011085
+      T2=T                                                              NA011090
+      D=E7*P2/(T+459.7)                                                 NA011095
+      AM=W/(A*D*C)                                                      NA011100
+      E5=1.+E4*AM**2                                                    NA011105
+      PT2=P*E5**E                                                       NA011110
+      TT2=(T2+459.7)*E5                                                 NA011115
+      GO TO 300                                                         NA011120
+  204 PT=PTU(N)                                                         NA011125
+      TT1=TTU(N)                                                        NA011130
+      GO TO 208                                                         NA011135
+  206 P=P-B1(N)*D*V**2/9266.1                                           NA011140
+      D=E7*P/(T+459.7)                                                  NA011145
+      AM=W/(A*D*C)                                                      NA011150
+      E5=1.+E4*AM**2                                                    NA011155
+      TT1=(T+459.7)*E5                                                  NA011160
+      PT=P*E5**E                                                        NA011165
+  208 CL=0.                                                             NA011170
+      G=W/A                                                             NA011175
+      TW=TE+XI*CI(1)/(2.*XI*CI(1)+1.)*(T-TE)                            NA011180
+  210 TM=.5*(TW+TE)                                                     NA011185
+      T2=T-AC1*(T-TE)                                                   NA011190
+      TL=(T-T2)/ ALOG((T-TE)/(T2-TE))                                   NA011195
+      DO 216 I=2,NT                                                     NA011200
+      TD=TT(I)-TM                                                       NA011205
+      IF(TD) 216,212,214                                                NA011210
+  212 HO=HE(I)                                                          NA011215
+      GO TO 217                                                         NA011220
+  214 HO=HE(I-1)+(HE(I)-HE(I-1))*(TM-TT(I-1))/(TT(I)-TT(I-1))           NA011225
+      GO TO 217                                                         NA011230
+  216 CONTINUE                                                          NA011235
+      GO TO 720                                                         NA011240
+  217 HS(N)=CV(N)*HO* ABS(TW-TE)**.25+(HR(N)*.1713E-8*((TW+459.7)**2+(TENA011245
+     1+459.7)**2)*((TW+459.7)+(TE+459.7)))+DI(N)/(TW-TE)*3600.          NA011250
+  218 QA=HS(N)*(TW-TE)                                                  NA011255
+      IF(PI(N)) 220,220,222                                             NA011260
+  220 TP=TW                                                             NA011265
+      GO TO 236                                                         NA011270
+  222 TA=2.*TW-TE                                                       NA011275
+  224 TM=.5*(TA+TW)                                                     NA011280
+      DO 230 I=2,NT                                                     NA011285
+      TD=TT(I)-TM                                                       NA011290
+      IF(TD) 230,226,228                                                NA011295
+  226 CS=CI(I)                                                          NA011300
+      GO TO 232                                                         NA011305
+  228 CS=CI(I-1)+(CI(I)-CI(I-1))*(TM-TT(I-1))/(TT(I)-TT(I-1))           NA011310
+      GO TO 232                                                         NA011315
+  230 CONTINUE                                                          NA011320
+      GO TO 720                                                         NA011325
+  232 UI=XI*CS                                                          NA011330
+      TP=TW+QA/UI                                                       NA011335
+      TD= ABS(TP-TA)-.1                                                 NA011340
+      IF(TD) 236,236,234                                                NA011345
+  234 TA=.5*(TA+TP)                                                     NA011350
+      GO TO 224                                                         NA011355
+  236 TA=TP+TW-TE                                                       NA011360
+  238 TM=.5*(TA+TP)                                                     NA011365
+      DO 244 I=2,NT                                                     NA011370
+      TD=TT(I)-TM                                                       NA011375
+      IF(TD) 244,240,242                                                NA011380
+  240 VC=VS(I)                                                          NA011385
+      SP=CP(I)                                                          NA011390
+      CD=CG(I)                                                          NA011395
+      GO TO 246                                                         NA011400
+  242 TM=(TM-TT(I-1))/(TT(I)-TT(I-1))                                   NA011405
+      VC=VS(I-1)+(VS(I)-VS(I-1))*TM                                     NA011410
+      SP=CP(I-1)+(CP(I)-CP(I-1))*TM                                     NA011415
+      CD=CG(I-1)+(CG(I)-CG(I-1))*TM                                     NA011420
+      GO TO 246                                                         NA011425
+  244 CONTINUE                                                          NA011430
+      GO TO 720                                                         NA011435
+  246 RN=300.*G*DF/VC                                                   NA011440
+      TB=RN-10000.                                                      NA011445
+      IF(TB) 247,247,249                                                NA011450
+  247 H=.8+V*.221                                                       NA011455
+      GO TO 251                                                         NA011460
+  249 H=.276*CD/DS*RN**.8*(SP*VC/CD)**.4                                NA011465
+  251 TG=TP+QA/H                                                        NA011470
+      TD= ABS(TG-TA)-.1                                                 NA011475
+      IF(TD) 250,250,248                                                NA011480
+  248 TA=.5*(TA+TG)                                                     NA011485
+      GO TO 238                                                         NA011490
+  250 TD= ABS(T-TG)-.1                                                  NA011495
+      IF(TD) 254,254,252                                                NA011500
+  252 C1=TE+(TW-TE)*(T-TE)/(TG-TE)-TW                                   NA011505
+      TW=TW+C1                                                          NA011510
+      GO TO 210                                                         NA011515
+  254 DO 260 I=2,NT                                                     NA011520
+      TD=TT(I)-T                                                        NA011525
+      IF(TD) 260,256,258                                                NA011530
+  256 SP=CP(I)                                                          NA011535
+      GO TO 262                                                         NA011540
+  258 SP=CP(I-1)+(CP(I)-CP(I-1))*(T-TT(I-1))/(TT(I)-TT(I-1))            NA011545
+      GO TO 262                                                         NA011550
+  260 CONTINUE                                                          NA011555
+      GO TO 720                                                         NA011560
+  262 IF(TL) 261,263,261                                                NA011565
+  261 DL=165012.*W*SP/(DS*QA*TL)*(T-TE)*(T-T2)                          NA011570
+      GO TO 265                                                         NA011575
+  263 DL=PL(N)                                                          NA011580
+  265 TB=RN-2100.                                                       NA011585
+      IF(TB) 264,264,266                                                NA011590
+  264 FR=64./RN                                                         NA011595
+      GO TO 268                                                         NA011600
+  266 FR=.0056+.5/RN**.32                                               NA011605
+  268 FP=P**2-R*(T+459.7)*G**2/667096.*FR*DL/DF                         NA011610
+      CL=CL+DL                                                          NA011615
+      IF(FP) 290,290,270                                                NA011620
+  270 P2= SQRT(FP)                                                      NA011625
+      D=E7*P2/(T2+459.7)                                                NA011630
+      C= SQRT(E6*(T2+459.7))                                            NA011635
+      V2=G/D                                                            NA011640
+      AM=V2/C                                                           NA011645
+      E5=1.+E4*AM**2                                                    NA011650
+      PT2=PT-(P-P2)                                                     NA011655
+      P2=PT2/E5**E                                                      NA011660
+      TT2=TT1-(T-T2)                                                    NA011665
+      T2=TT2/E5-459.7                                                   NA011670
+      D=E7*P2/(T2+459.7)                                                NA011675
+      C= SQRT(E6*(T2+459.7))                                            NA011680
+      PM=PL(N)-CL                                                       NA011685
+      IF(PM) 274,276,272                                                NA011690
+  272 P=P2                                                              NA011695
+      T=T2                                                              NA011700
+      PT=PT2                                                            NA011705
+      TT1=TT2                                                           NA011710
+      GO TO 210                                                         NA011715
+  274 T2=T2-(T-T2)*PM/DL                                                NA011720
+      FP=P**2-(P**2-FP)*(PL(N)-CL+DL)/DL                                NA011725
+      CL=PL(N)                                                          NA011730
+      GO TO 270                                                         NA011735
+  276 IF(B2(N)) 280,280,278                                             NA011740
+  278 P2=P2-B2(N)*D*V2**2/9266.1                                        NA011745
+      D=E7*P2/(T2+459.7)                                                NA011750
+      AM=G/(D*C)                                                        NA011755
+      E5=1.+E4*AM**2                                                    NA011760
+      PT2=P*E5**E                                                       NA011765
+      TT2=(T2+459.7)*E5                                                 NA011770
+  280 SO=AM-1.                                                          NA011775
+      IF(SO) 300,300,282                                                NA011780
+  282 W=A*D*C                                                           NA011785
+      PT2=PTU(N)                                                        NA011790
+      TT2=TTU(N)                                                        NA011795
+      GO TO  72                                                         NA011800
+  290 DO 292 LP=N,NS                                                    NA011805
+      IF (J(LP)) 292,292,294                                            NA011810
+  292 CONTINUE                                                          NA011815
+      GO TO 500                                                         NA011820
+  294 LC=J(LP)-N                                                        NA011825
+      IF(LC) 296,296,316                                                NA011830
+  296 N=J(LP)                                                           NA011835
+      W=.8*WD(N)                                                        NA011840
+      PT2=PTU(N)                                                        NA011845
+      TT2=TTU(N)                                                        NA011850
+      IF(FL(N)) 72, 72,722                                              NA011855
+  300 IF(J(N))301,302,304                                               NA011860
+  301 K=N                                                               NA011865
+  302 N=N+1                                                             NA011870
+      GO TO 72                                                          NA011875
+  304 PE= ABS(P2-PA(N))-AC                                              NA011880
+      L=J(N)                                                            NA011885
+      PT2=PTU(L)                                                        NA011890
+      TT2=TTU(L)                                                        NA011895
+      IF(PE) 400,400,306                                                NA011900
+  306 IF(FL(L)) 310,310,308                                             NA011905
+  308 P3=P2-PA(N)                                                       NA011910
+      PU(N+1)=P2                                                        NA011915
+  309 N=L                                                               NA011920
+      D=E7*PU(N)/(TU(N)+459.7)                                          NA011925
+      GO TO 72                                                          NA011930
+  310 LE=K-L                                                            NA011935
+      IF(LE) 312,312,314                                                NA011940
+  312 K=L                                                               NA011945
+  314 WC=(PTU(K)-PA(N))*(PTU(K)+PA(N))/((PTU(K)-P2)*(PTU(K)+P2))        NA011950
+      K=0                                                               NA011955
+      IF(WC) 316,316,318                                                NA011960
+  316 W=.8*WD(1)                                                        NA011965
+      GO TO 730                                                         NA011970
+  318 W=W* SQRT(WC)                                                     NA011975
+      NR=N-L-1                                                          NA011980
+      IF(NR) 309,309,320                                                NA011985
+  320 DO 324 K2=1,NR                                                    NA011990
+      N5=N-K2                                                           NA011995
+      IF(J(N5)) 324,324,322                                             NA012000
+  322 W=W+WD(N5)                                                        NA012005
+  324 CONTINUE                                                          NA012010
+      GO TO 309                                                         NA012015
+  400 TU(N)=T2                                                          NA012020
+      NM=N-NS                                                           NA012025
+      IF(NM) 402,500,500                                                NA012030
+  402 W=WD(L-1)-WD(L)                                                   NA012035
+      IF(W) 404,404,302                                                 NA012040
+  404 W=1.2*WD(1)                                                       NA012045
+  730 IF(FL(1)) 740,740,722                                             NA012050
+  740 N=1                                                               NA012055
+      P=PU(N)                                                           NA012060
+      T=TU(N)                                                           NA012065
+      GO TO 60                                                          NA012070
+  700 WRITE           ( 6,702)                                          NA012075
+  702 FORMAT(1H1 25HFIXED FLOW EXCEEDS MACH 1)                          NA012080
+      GO TO 504                                                         NA012085
+  720 WRITE           ( 6,721)                                          NA012090
+  721 FORMAT(1H1 22HARGUMENT EXCEEDS TABLE)                             NA012095
+      GO TO 504                                                         NA012100
+  722 WRITE           ( 6,724)                                          NA012105
+  724 FORMAT(1H1 21HINSUFFICIENT PRESSURE)                              NA012110
+      GO TO 504                                                         NA012115
+  500 NC=M+1                                                            NA012120
+      WRITE           ( 6,502)NC                                        NA012125
+  502 FORMAT(1H1 11HCASE NUMBER,1I4)                                    NA012130
+      NC=0                                                              NA012135
+  504 W=WD(1)                                                           NA012140
+      IF(NV) 512,512,506                                                NA012145
+  506 DO 508 N=1,NS                                                     NA012150
+  508 WD(N)=WD(N)*60./SD                                                NA012155
+      WRITE           ( 6,510)                                          NA012160
+  510 FORMAT(1H0 9X,1HN,8X,4HFLOW,10X,8HPRESSURE,6X,11HTEMPERATURE,7X,8HNA012165
+     1VELOCITY,7X,10HEXTERNAL H,5X,8HDIAMETER/1H 18X,4HSCFM,12X,4HPS1A,1NA012170
+     22X,1HF,14X,6HFT/SEC,7X,13HBTU/HR-SQFT-F,4X,6HINCHES)              NA012175
+      GO TO 516                                                         NA012180
+  512 WRITE           ( 6,514)                                          NA012185
+  514 FORMAT(1H0 9X,1HN,8X,4HFLOW,10X,8HPRESSURE,6X,11HTEMPERATURE,7X,8HNA012190
+     1VELOCITY,7X,10HEXTERNAL H,5X,8HDIAMETER/1H 17X,6HLB/SEC,11X,4HPSIANA012195
+     2,12X,1HF,14X,6HFT/SEC,7X,13HBTU/HR-SQFT-F,4X,6HINCHES)            NA012200
+  516 DO 518 N=1,NS                                                     NA012205
+  518 WRITE           ( 6,520)N,WD(N),PU(N),TU(N),VU(N),HS(N),DI(N)     NA012210
+  520 FORMAT(1H 1I10,6E16.6)                                            NA012215
+      READ          ( 5,600)M,PUM,TUM,TEM,PIM,PAM                       NA012220
+  600 FORMAT(1I12,5F12.4)                                               NA012225
+      IF(M) 601,603,603                                                 NA012230
+  601 M=-M                                                              NA012235
+      GO TO 1                                                           NA012240
+  603 P=PU(1)                                                           NA012245
+      T=TU(1)                                                           NA012250
+      IF(PUM)  604,604,602                                              NA012255
+  602 P=PUM                                                             NA012260
+  604 IF(TUM) 606,608,606                                               NA012265
+  606 T=TUM                                                             NA012270
+  608 IF(TEM) 610,612,610                                               NA012275
+  610 TE=TEM                                                            NA012280
+  612 IF(PIM) 618,618,614                                               NA012285
+  614 DO 616 N=1,NS                                                     NA012290
+  616 PI(N)=PIM                                                         NA012295
+  618 IF(PAM) 626,626,620                                               NA012300
+  620 DO 624 N=2,NS                                                     NA012305
+      IF(J(N)) 624,624,622                                              NA012310
+  622 PA(N)=PAM                                                         NA012315
+  624 CONTINUE                                                          NA012320
+  626 N=1                                                               NA012325
+      GO TO 60                                                          NA012330
+      END                                                               NA012335
+$DATA

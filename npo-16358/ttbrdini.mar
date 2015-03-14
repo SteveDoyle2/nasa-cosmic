@@ -1,0 +1,183 @@
+	.TITLE	TTBRDINI - Routines to handle terminal broadcasts
+	.SUBTITLE	TTBRDINI - Terminal broadcast handler initialization
+
+;DM   This is a package which enables a program to intercept messages that
+;DM   are broadcast to its terminal without having them actually appear on
+;DM   the terminal.  This allows them to be examined/thrown-away or whatever
+;DM   by a user routine.  It consists of the following routines:
+;DME  TTBRDINI - Initializes things
+;DME  TTBRDEND - Shuts things down
+;DME  TTBRDAST - AST to handle messages received
+;DME  TTSPAWN  - Spawns off a sub-process correctly.
+;DM
+;DM   Programmer  Jon Vavrus -  4 APR 1983
+;M
+;M         An initial call is made to TTBRDINI with an argument list
+;M    consisting of the address of a user routine to be called when a
+;M    broadcast message is received.  There is an exit handler established
+;M    to handle the necessary clean-up, thus no termination routine is
+;M    provided.  If an error occurs on initialization TTBRDINI will return
+;M    an even valued integer as its function value.
+;
+;	CALLED ROUTINES
+;
+;C    TTBRDEND - This cleans things up on exit.
+;C    TTBRDAST - This is invoked on receipt of a broadcast message.
+
+	$IODEF
+	$JPIDEF
+	$MSGDEF
+	$TTDEF
+	$TT2DEF
+
+		.PSECT	TT_BRD_DATA,LONG,RD,WRT,NOEXE
+
+DEV:		.LONG	16,.+4			; Descriptor for terminal
+		.BLKB	16			; device name
+END_BLOCK:	.LONG	0			; Exit handler descriptor block
+		.LONG	TTBRDEND
+		.LONG	1
+		.LONG	PID
+GETJPI_LIST:	.WORD	16,JPI$_PID		; GETJPI list
+		.LONG	PID
+		.LONG	0,0
+MBX_BUFFER:	.BLKB	128			; Buffer for mailbox
+MBX_CHAN:	.LONG				; Mailbox channel
+MBX_IOSB:	.QUAD				; Mailbox IOSB
+MBX_NAME:	.LONG	8,.+4			; Mailbox logical name
+		.BLKB	8			; Process ID will go here
+		.ASCII	\_TTMBX\
+MSG_DSC:	.BLKL	2			; Message descriptor
+PID:		.LONG
+TT:		.ASCID	\TT\			; Terminal logical name
+TT_CHAN:	.LONG				; Terminal channel
+TT_CHAR:	.BLKL	3			; Terminal characteristics
+USER_ROUTINE:	.LONG				; Storage for user routine
+						; address
+
+	.PSECT		TT_BRD_CODE,BYTE,RD,NOWRT,EXE
+
+	.ENTRY		TTBRDINI,^M<>
+
+;	This is the initialization routine.  It should be called with one
+;	argument.  This should be the address of the routine to be called
+;	when a broadcast message is received.
+
+	MOVL		4(AP),USER_ROUTINE	; Save routine address
+	$TRNLOG_S	LOGNAM=TT,RSLLEN=DEV,RSLBUF=DEV
+	BLBC		R0,3$
+	$GETJPI_S	ITMLST=GETJPI_LIST	; Get process name
+	PUSHL		#8
+	PUSHAQ		MBX_NAME
+	PUSHAL		PID
+	CALLS		#3,G^OTS$CVT_L_TZ
+	MOVL		#14,MBX_NAME		; Create mailbox
+	$CREMBX_S	CHAN=MBX_CHAN,MAXMSG=#128,BUFQUO=#128,-
+			LOGNAM=MBX_NAME
+	BLBS		R0,6$
+3$:	BRW		10$
+6$:	$ASSIGN_S	CHAN=TT_CHAN,DEVNAM=DEV,MBXNAM=MBX_NAME
+	BLBC		R0,3$			; Assign channel
+	$QIOW_S		CHAN=TT_CHAN,FUNC=#IO$_SENSEMODE,-
+			P1=TT_CHAR,P2=#12	; Set TT2$M_BRDCSTMBX
+	BLBC		R0,10$
+	BISL2		#TT2$M_BRDCSTMBX,<TT_CHAR+8>
+	BISL2		#TT$M_NOBRDCST,<TT_CHAR+4>
+	$QIOW_S		CHAN=TT_CHAN,FUNC=#IO$_SETMODE,-
+			P1=TT_CHAR,P2=#12
+	BLBC		R0,10$
+	$DCLEXH_S	DESBLK=END_BLOCK	; Declare exit handler
+	$QIO_S		CHAN=MBX_CHAN,FUNC=#IO$_READVBLK,-
+			IOSB=MBX_IOSB,ASTADR=TTBRDAST,ASTPRM=4(AP),-
+			P1=MBX_BUFFER,P2=#128
+10$:	RET
+
+	.SUBTITLE	TTBRDAST
+;
+;	TTBRDAST
+;
+;DM
+;DM   TTBRDAST is the actual AST routine invoked on message receipt.
+;M
+;M         TTBRDAST will call the user routine correctly.
+;
+;	CALLED ROUTINES
+;
+;C    BRDCST  - User routine to field broadcast messages.
+
+	.ENTRY		TTBRDAST,^M<>
+
+;	This is the AST which actually calls the user routine.
+
+	PUSHR		#^M<R0,R1>
+	CMPW		#SS$_ABORT,MBX_IOSB
+	BEQL		20$
+	CMPW		#SS$_CANCEL,MBX_IOSB
+	BEQL		20$
+	CMPW		#MSG$_TRMBRDCST,MBX_BUFFER
+	BNEQ		10$
+	MOVZWL		<MBX_BUFFER+20>,MSG_DSC	; Set up message descriptor
+	MOVAL		<MBX_BUFFER+22>,<MSG_DSC+4>
+	PUSHAQ		MSG_DSC			; Call user routine
+	CALLS		#1,@4(AP)
+10$:	$QIO_S		CHAN=MBX_CHAN,FUNC=#IO$_READVBLK,-
+			IOSB=MBX_IOSB,ASTADR=TTBRDAST,ASTPRM=4(AP),-
+			P1=MBX_BUFFER,P2=#128
+20$:	POPR		#^M<R0,R1>
+	RET
+
+	.SUBTITLE	TTBRDEND - CLOSES THINGS DOWN
+;
+;	TTBRDEND
+;
+;DM
+;DM   TTBRDEND returns broadcast message processing to the normal procedure.
+;M
+;M         TTBRDEND is never really called but, rather, it is queued as an
+;M    exit handler and invoked on image exit.
+
+	.ENTRY		TTBRDEND,^M<>
+
+;	This is a termination handler which is designed to restore the terminal
+;	to the proper configuration.
+
+	$CANCEL_S	CHAN=MBX_CHAN		; Kill mailbox
+	$DASSGN_S	CHAN=MBX_CHAN
+	$QIOW_S		CHAN=TT_CHAN,FUNC=#IO$_SENSEMODE,-
+			P1=TT_CHAR,P2=#12	; Reset terminal
+	BLBC		R0,10$
+	BICL2		#TT2$M_BRDCSTMBX,<TT_CHAR+8>
+	BICL2		#TT$M_NOBRDCST,<TT_CHAR+4>
+	$QIOW_S		CHAN=TT_CHAN,FUNC=#IO$_SETMODE,-
+			P1=TT_CHAR,P2=#12
+10$:	$DASSGN_S	CHAN=TT_CHAN		; Get rid of channel
+	RET
+
+	.SUBTITLE	TTSPAWN - SPAWNS A SUB-PROCESS
+;
+;	TTSPAWN
+;
+;DM
+;DM   TTSPAWN spawns a sub-process.
+;M
+;M         TTSPAWN takes no arguments and causes a sub-process running
+;M    DCL to be spawned from the current process and given control.
+;M    A direct call to LIB$SPAWN is not possible because of the structure
+;M    which has been set up to handle broadcast messages.
+
+	.ENTRY		TTSPAWN,^M<>
+
+;	This routine spawns a sub-process.
+
+	$CANCEL_S	CHAN=MBX_CHAN		; Get rid of mailbox
+	$DASSGN_S	CHAN=TT_CHAN
+	CALLG		(AP),G^LIB$SPAWN	; Spawn away
+	BLBC		R0,10$
+	PUSHL		R0			; Bring back MBX
+	$ASSIGN_S	CHAN=TT_CHAN,DEVNAM=DEV,MBXNAM=MBX_NAME
+	$QIOW_S		CHAN=MBX_CHAN,FUNC=#IO$_SETMODE!IO$M_WRTATTN,-
+			P1=TTBRDAST,P2=USER_ROUTINE	; Enable AST
+	POPL		R0
+10$:	RET
+	
+	.END

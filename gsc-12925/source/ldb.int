@@ -1,0 +1,25 @@
+  interface;
+
+  unit ldb (ldbman, func, ret, mnt, man, upd, add, del, ren, dir, sav,
+            ssl, srt, upl, name1,
+            olddd, cname, page, failed, exited);
+
+  USES utility;
+
+
+    type
+      func= (ret,mnt,man,upd,add,del,ren,dir,sav,ssl,srt,upl);
+
+    var
+      name1   : lstring(8);
+      olddd   : char;
+      cname   : lstring(25);
+      page    : integer;
+      failed  : boolean;
+      exited  : boolean;
+
+    procedure ldbman (var inkey1: byte;var gtype: lstring; funct: func;
+                      var e: entity; var fname: lstring );
+  begin
+  end;
+

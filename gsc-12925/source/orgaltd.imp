@@ -1,0 +1,641 @@
+  { $INCLUDE : 'compile.inc' }
+  { $INCLUDE : 'vbpas.int' }
+  { $INCLUDE : 'sfpas.int' }
+  { $INCLUDE : 'getparam.int' }
+  { $INCLUDE : 'utility.int' }
+  { $INCLUDE : 'orgalts.int' }
+  { $INCLUDE : 'dspas.int' }
+  { $INCLUDE : 'display.int' }
+  { $INCLUDE : 'execute.int' }
+  { $INCLUDE : 'orgexec.int' }
+  { $INCLUDE : 'orgaltd.int' }
+
+  implementation of orgaltd;
+
+  USES vbpas;
+
+  USES sfpas;
+
+  USES getparam;
+
+  USES utility;
+
+  USES orgalts;
+
+  USES dspas;
+
+  USES display;
+
+  USES execute;
+
+  USES orgexec;
+
+  var
+    msg      : suplstring(25);
+
+  procedure format;
+
+    var
+      i, j, k, n: integer;
+      buffer	: lstring(40);
+      reply	: supinteger(3);
+      def	: suplstring2(3);
+      x,y	: supinteger(3);
+      range	: supset(6);
+      width	: integer;
+      month	: integer;
+      numperiod : integer;
+      error	: boolean;
+      current_node:byte;
+      buf	: lstring(1);
+
+    begin
+    if (plotchoice <> 2) then
+       begin
+	 msg[1] := '                         Organization Chart Format Options';
+	 msg[2] := ' ';
+	 msg[3] := '                                Default                                 Default';
+	 msg[4] := '                                       ';
+	 msg[5] := 'Number of divisions    ( 1 - 6 ) :     ';
+	 msg[6] := '                                       ';
+	 msg[7] := '  NOTE : increasing this number in     ';
+	 msg[8] := '         later revisions may result    ';
+	 msg[9] := '         in text descriptions being    ';
+	 msg[10]:= '         shortened   --See Help--      ';
+	 msg[11]:= '                                       ';
+	 msg[12]:= '                                       ';
+	 msg[13]:= '                                       ';
+	 msg[14]:= '                                       ';
+	 msg[15]:= '                                       ';
+	 msg[16]:= '                                       ';
+	 msg[17]:= '                                       ';
+	 msg[18]:= '                                       ';
+	 msg[19]:= '                                       ';
+	 msg[20]:= '                                       ';
+	 for i := 4 to 20 do concat ( msg[i], chr(219) );
+	 concat (msg[14],' GSFC symbol ( n = no, y = yes ):');
+	 concat (msg[16],' Background Color');
+	 concat (msg[17],'      x = black     w = white');
+	 concat (msg[18],'      r = red       m = magenta');
+	 concat (msg[19],'      b = blue      c = cyan');
+	 concat (msg[20],'      g = green     y = yellow');
+	 msg[21]:= ' ';
+	 msg[22]:= 'Modify default options as needed - press return key for next option.';
+	 msg[23]:= 'Select F2 to begin creating chart.';
+	 msg[24] := ' ';
+	 msg[25] := null;
+	 buf.len := 1;
+	 for i := 1 to 10 do
+	   if fctn_map^[1][i] <> 0 then
+	     begin
+	       if i < 10 then [ buf[1] := chr(i+48); concat(msg[25], buf);]
+			 else concat ( msg[25], '10' );
+	       if fctn_map^[1][i] = 7 then concat( msg[25], 'End ' );
+	       concat ( msg[25], fctn_tag^[fctn_map^[1][i]] );
+	       if i < 10 then concat ( msg[25], ' ' );
+	       if i = 2 then while msg[25].len < 21 do concat(msg[25],' ');
+	       if i = 7 then while msg[25].len < 60 do concat(msg[25],' ');
+	     end; (* for i , if fctn_map *)
+
+	 def[1][1] := chr ( ( skeleton^[8] div 10 ) + 48 );
+	 if def[1][1] = '0' then def[1][1] := ' ';
+	 def[1][2] := chr ( ( skeleton^[8] mod 10 ) + 48 );
+	 def[2][1] := ' ';
+	 if skeleton^[9] = 2 then def[2][2] := 'y'
+	   else def[2][2] := 'n';
+	 def[3][1] := ' ';
+	 case skeleton^[10] of
+	   0 : def[3][2] := 'x';
+	   1 : def[3][2] := 'b';
+	   2 : def[3][2] := 'g';
+	   3 : def[3][2] := 'c';
+	   4 : def[3][2] := 'r';
+	   5 : def[3][2] := 'm';
+	   6 : def[3][2] := 'y';
+	   7 : def[3][2] := 'w';
+	   otherwise
+	  end;
+	 for i := 1 to 3 do
+	   def[i].len := 2;
+	 y[1] := 4;
+	 y[2] := 13;
+	 y[3] := 15;
+	 x[1] := 36;
+	 x[2] := 76;
+	 x[3] := 76;
+	 range[1] := ['0'..'9'];
+	 if imids > 0 then range[2] := [chr(48+imids)..chr(10+48)]
+	  else range[2] := ['1'..chr(10+48)];
+	 if imids < istfs then range[2] := [chr(48+istfs)..chr(10+48)];
+                                           
+	 range[3] := [' '];
+	 range[4] := ['y','Y','n','N'];
+	 range[5] := [' '];
+	 range[6] := ['x','X','r','R','b','B','g','G','w','W','m','M','c','C','y','Y'];
+       repeat
+	 multimenu ( msg, 25, 0, 3, def, x, y, range, inkey, 2 );
+	 error := false;
+	for n := 1 to 3 do
+	  case n of
+	    1 : if def[1][1] = ' ' then
+		  skeleton^[8] := ord ( def[1][2] ) - 48
+		 else
+		  skeleton^[8]:=ord(def[1][2])-48+(ord(def[1][1])-48)*10;
+	    2 : case def[2][2] of
+		  'y','Y' : skeleton^[9] := 2;
+		  'n','N' : skeleton^[9] := 1;
+		  otherwise
+		 end;
+	    3 : case def[3][2] of
+		  'x','X' : skeleton^[10] := 0;
+		  'b','B' : skeleton^[10] := 1;
+		  'g','G' : skeleton^[10] := 2;
+		  'c','C' : skeleton^[10] := 3;
+		  'r','R' : skeleton^[10] := 4;
+		  'm','M' : skeleton^[10] := 5;
+		  'y','Y' : skeleton^[10] := 6;
+		  'w','W' : skeleton^[10] := 7;
+		  otherwise
+		 end;
+	    otherwise
+	   end;
+	until not error;
+	 current := first^.down;
+	 color := skeleton^[10];
+	 inkey := fctn_map^[1][inkey-58];
+
+	 if inkey in [1,4,5] then current_node := 0
+			     else current_node := current^.etype;
+
+	 for n := 1 to 12 do
+	   node_data^[8+n].input_length := skeleton^[10+skeleton^[8]]
+				-ord((n<5)or(n>8))+4*ord((n mod 4)=0);
+	 nmids := 81 div ( node_data^[16].input_length + 1 );
+
+	 if inkey = 7 then inkey := 3;
+	 if not (inkey in [1,2,4,5,7,41]) then redraw(1,current,first);
+
+	 perform2 ( inkey, current, current_node, first );
+	 perform  ( inkey, current, current_node, first );
+
+	 if inkey in [4,5] then redraw (1, current, first ) ;
+       end;
+    end;
+
+  procedure alter_display_space;
+
+  var
+
+      n_assistants  : integer;
+      n_staffs	    : integer;
+      n_midlevels   : integer;
+      max_low	    : integer;
+      i 	    : integer;
+      box0_width    : integer;
+      box0_height   : integer;
+      box1_width    : integer;
+      box1_height   : integer;
+      box2_width    : integer;
+      box2_height   : integer;
+      spixb0	    : integer;
+      line_gap	    : integer;
+      line_gap2     : integer;
+      sline	    : integer;
+      slineb0	    : integer;
+      filler	    : integer;
+      staff_gap     : integer;
+      staff_offset  : integer;
+      staff_inc     : integer;
+      spix_1h	    : integer;
+      sline_1h	    : integer;
+      spixb1	    : integer;
+      slineb1	    : integer;
+      sline_2h	    : integer;
+      spix_2h	    : integer;
+      mid_gap	    : integer;
+      spixmb	    : integer;
+      slinemb	    : integer;
+      spixlb	    : integer;
+      slinelb	    : integer;
+      low_inc	    : integer;
+      mid_inc	    : integer;
+      sline_3h	    : integer;
+      spix_3h	    : integer;
+
+      temp		: entity;
+      current_level	: integer;
+      current_sub_level : integer;
+
+      x1, y1, x2, y2	: integer;
+
+
+  (************************************************************)
+
+  procedure draw_box ( var x1, y1 : integer );
+
+  var
+      x2, y2 : integer;
+      x3, y3 : integer;
+      buffer : lstring(255);
+      empty  : boolean;
+      temp2  : entity;
+      i, j, k: integer;
+
+  (************************************************************)
+
+  procedure ds_write ( x0, y0, size : integer );
+
+  var
+      max    : integer;
+      n      : integer;
+      w      : integer;
+
+
+  begin
+    case size of
+      0: w := 8;
+      1: w := 6;
+      2: w := 10;
+      3: w := 14;
+    otherwise
+	 w := 6;
+      size := 1;
+    end;
+
+    with temp^ do
+      begin
+	max := node_data^[etype].input_length;
+	if field^.len > max then field^.len := max;
+	n := ord ( max - field^.len );
+	x0 := ( (n*w) div 4 ) * 2 + x0;
+	dstext ( x0, y0, size, 3, field^, field^.len, 0 );
+      end;
+  end;
+
+  (************************************************************)
+
+  begin
+
+
+    case temp^.etype of
+      5: begin
+	   x2 := x1 + box0_width;
+	   y2 := y1 + box0_height;
+	 end;
+     13: begin
+	   x2 := x1 + box1_width;
+	   y2 := y1 + box1_height;
+	 end;
+   9,17: begin
+	   x2 := x1 + box2_width;
+	   y2 := y1 + box2_height;
+	 end;
+    end;
+
+    dsbar ( x1, y1, x2, y2, 3, 0 );
+
+    if temp^.etype = 5 then
+       begin
+	 x3 := x1 + 2;
+	 y3 := y1 + 2;
+	 i := 1;
+	 while i <= temp^.field^.len do
+	   begin
+	     buffer[i] := temp^.field^[i];
+	     i := i + 1;
+	   end;
+	 j := ord (node_data^[5].input_length ) + 4;
+	 for k := i to j do buffer[k] := '.';
+	 buffer.len := j;
+	 dstext ( x3, y3, 0, 3, buffer, j, 0 );
+	 temp := temp^.down;
+	 x3 := x3 + j*8 + 2;
+	 dstext ( x3, y3, 1, 3, temp^.field^, temp^.field^.len, 0 );
+	 if temp^.down^.etype=7 then
+	    begin
+	      y3 := y3 + 8;
+	      dsline ( x1+2, y3, x2-2, y3, 3, 1, 0 );
+	    end;
+	 while temp^.down^.etype=7 do
+	   begin
+	     temp := temp^.down;
+	     y3 := y3 + 2;
+	     for i := 1 to temp^.field^.len do
+		 buffer[i] := temp^.field^[i];
+	     j := ord ( node_data^[7].input_length ) + 4;
+	     for k := i to j do buffer[k] := '.';
+	     x3 := x1 + 2;
+	     buffer.len := j;
+	     dstext ( x3, y3, 0, 3, buffer, j, 0 );
+	     temp := temp^.down;
+	     x3 := x3 + j*8 + 2;
+	     dstext ( x3, y3, 1, 3, temp^.field^, temp^.field^.len,0);
+	     if temp^.down^.etype=7 then
+		begin
+		  y3 := y3 + 8;
+		  dsline ( x1+2, y3, x2-2, y3, 3, 1, 0 );
+		end;
+	   end;
+       end
+	 else
+       begin
+	 empty := true;
+	 i := 1;
+	 k := 0;
+	 while empty and (i<=temp^.field^.len) do
+	   begin
+	     if temp^.field^[i] <> ' ' then empty := false;
+	     i := i + 1;
+	   end;
+	 if not empty then k := k + 1;
+	 i := 1;
+	 empty := true;
+	 temp2 := temp^.down;
+	 while empty and (i<=temp2^.field^.len) do
+	   begin
+	     if temp2^.field^[i] <> ' ' then empty := false;
+	     i := i + 1;
+	   end;
+	 if not empty then k := k + 10;
+	 i := 1;
+	 empty := true;
+	 temp2 := temp2^.down;
+	 while empty and (i<=temp2^.field^.len) do
+	   begin
+	     if temp2^.field^[i] <> ' ' then empty := false;
+	     i := i + 1;
+	   end;
+	 if not empty then k := k + 100;
+	 case k of
+	   0: temp := temp^.down^.down^.down;
+    1,10,100: begin
+		x3 := x1 + 2;
+		y3 := y1 + 12;
+		case k of
+		  1: begin
+		       ds_write ( x3, y3, 0 );
+		       temp := temp^.down^.down^.down;
+		     end;
+		 10: begin
+		       temp := temp^.down;
+		       ds_write ( x3, y3, 0 );
+		       temp := temp^.down^.down;
+		     end;
+		100: begin
+		       temp := temp^.down^.down;
+		       ds_write ( x3, y3, 0 );
+		       temp := temp^.down;
+		     end;
+		end;
+	      end;
+  11,101,110: begin
+		x3 := x1 + 2;
+		y3 := y1 + 6;
+		case k of
+		  11: begin
+			ds_write ( x3, y3, 0 );
+			temp := temp^.down;
+			y3 := y3 + 10;
+			ds_write ( x3, y3, 0 );
+			temp := temp^.down^.down;
+		      end;
+		 101: begin
+			ds_write ( x3, y3, 0 );
+			y3 := y3 + 10;
+			temp := temp^.down^.down;
+			ds_write ( x3, y3, 0 );
+			temp := temp^.down;
+		      end;
+		 110: begin
+			temp := temp^.down;
+			ds_write ( x3, y3, 0 );
+			temp := temp^.down;
+			y3 := y3 + 10;
+			ds_write ( x3, y3, 0 );
+			temp := temp^.down;
+		      end;
+		end;
+	      end;
+	 111: begin
+		x3 := x1 + 2;
+		y3 := y1 + 2;
+		for i := 1 to 3 do
+		    begin
+		      ds_write ( x3, y3, 0 );
+		      y3 := y3 + 10;
+		      temp := temp^.down;
+		    end;
+	      end;
+	 end;
+	 y2 := y2 - 10;
+	 dsline ( x1, y2, x2, y2, 3, 1, 0 );
+	 ds_write ( x1+2+((node_data^[15].input_length*8-node_data^[16].input_length*6) div 2), y2+2, 1 );
+       end;
+
+  end;
+
+  (************************************************************)
+
+  begin
+
+    if plotchoice <> 2 then
+      begin
+	screen(3);
+	colors(0,color);
+	there(0,0);
+	write('Drawing in Progress...');
+	dsinit;
+      end;
+
+    filler := skeleton^[1];
+    n_assistants := dimension[-1];
+    n_staffs	 := dimension[0];
+    n_midlevels  := 0;
+    max_low	 := 0;
+    i := 1;
+    while (i<=6) and (dimension[i]<>-1) do
+      begin
+	n_midlevels := n_midlevels + 1;
+	if dimension[i] > max_low then max_low := dimension[i];
+	i := i + 1;
+      end;
+
+
+  (*box0_width	:= 1 + 1 + 20*8 + 4*8 + 20*6 + 1 + 1;*)
+    box0_width := 316;
+
+  (*box0_height := 1 + 1 + 8 + n_assistants * ( 1 + 1 + 8 ) + 1 + 1;*)
+    box0_height := 12 + n_assistants*10;
+
+  (*box1_width	:= 1 + 1 + 12*8 + 1 + 1;*)
+    box1_width	:= node_data^[13].input_length*8+4;
+
+  (*box1_height := 1 + 1 + 8 + 1 + 8 + 1 + 8 + 1 + 1 + 8 + 1 + 1;*)
+    box1_height := 40;
+
+    box2_width	:= box1_width - 8;
+
+    box2_height := box1_height;
+
+    spixb0 := ( (640-box0_width) div 4 ) * 2;
+
+  (*line_gap := 400-16-filler-box0_height-box1_height*(max_low+2);*)
+    line_gap := 384-filler-box0_height;
+    for i := 1 to max_low+2 do line_gap := line_gap - box1_height;
+    line_gap := line_gap div (max_low+3);
+
+    line_gap2 := ( line_gap div 4 ) * 2;
+
+    sline := (line_gap div 4)*2;
+
+    slineb0 := sline + 16;
+
+    if n_staffs<1 then staff_gap=8 else
+    staff_gap := ( ( ( 640 - ((n_staffs+1) div 2)*2*box2_width ) div (((n_staffs+1) div 2)*2) ) div 2 ) * 2;
+
+    staff_inc	 := staff_gap + box2_width;
+
+    staff_offset := staff_inc div 2;
+
+    case n_staffs of
+      1,2: spix_1h := 320 - staff_offset;
+      3,4: spix_1h := 320 - staff_offset - staff_inc;
+      5,6: spix_1h := 320 - staff_offset - 2*staff_inc;
+    otherwise
+	   spix_1h := 0;
+    end;
+    spix_1h := ( spix_1h div 2 ) * 2;
+
+    spixb1 := spix_1h - ( box2_width div 2 );
+
+    sline_1h := slineb0 + box0_height + line_gap2;
+
+    slineb1  := sline_1h + line_gap2;
+
+    sline_2h := sline_1h + 2*line_gap2 + box1_height;
+
+    if n_midlevels <> 0 then
+    begin (********************)
+
+    mid_gap :=(((640-n_midlevels*box1_width) div n_midlevels) div 2)*2;
+
+    spixmb  := mid_gap div 2;
+
+    spix_2h := spixmb + (box1_width div 2);
+
+    slinemb := sline_2h + line_gap2;
+
+    spixlb  := spixmb + 8;
+
+    slinelb := slinemb + box1_height + line_gap2;
+
+    spix_3h := spixmb + 4;
+
+    sline_3h := slinelb + (box2_height div 2);
+
+    low_inc  := box2_height + line_gap2;
+
+    mid_inc  := box1_width  + mid_gap;
+
+    end;  (********************)
+
+
+    temp     := first;
+    current_level := 0;
+    current_sub_level := 0;
+
+    repeat
+      case temp^.etype of
+	1: begin
+	     x1 := ( (640-ord(temp^.field^.len)*14) div 4 ) * 2;
+	     y1 := sline;
+	     dstext ( x1, y1, 3, 3, temp^.field^, temp^.field^.len,0);
+	   end;
+	5: begin
+	     draw_box ( spixb0, slineb0 );
+	     i := temp^.down^.etype;
+	     if i in [9,13] then
+		begin
+		  y2 := sline_1h;
+		  if i=13 then y2 := sline_2h;
+		  dsline (320, slineb0+box0_height, 320, y2, 3, 1, 0);
+		end;
+	   end;
+	9: begin
+	     spix_1h := spix_1h + ord ( temp^.up^.etype=12 )*staff_inc;
+	     if (temp^.down^.down^.down^.down^.etype=9)
+			       or
+			 (n_staffs=1) then
+		begin
+		  x2 := spix_1h + staff_inc;
+		  x2 := x2 - ord(n_staffs=1)*( (staff_inc div 4) * 2 );
+		  dsline ( spix_1h, sline_1h, x2, sline_1h, 3, 1, 0 );
+		end;
+	     dsline ( spix_1h, sline_1h, spix_1h, slineb1, 3, 1, 0 );
+	     spixb1 := spixb1 + ord ( temp^.up^.etype=12 )*staff_inc;
+	     draw_box ( spixb1, slineb1 );
+	     if temp^.down^.etype=13 then
+		dsline ( 320, sline_1h, 320, sline_2h, 3, 1, 0 );
+	   end;
+       13: begin
+	     current_level := current_level + 1;
+	     i := ord ( current_level <> 1 )*mid_inc;
+	     spix_2h := spix_2h + i;
+	     spix_3h := spix_3h + i;
+	     spixmb  := spixmb	+ i;
+	     spixlb  := spixlb	+ i;
+	     if current_level <> n_midlevels then
+		begin
+		  x2 := spix_2h + mid_inc;
+		  dsline ( spix_2h, sline_2h, x2, sline_2h, 3, 1, 0 );
+		end;
+	     dsline ( spix_2h, sline_2h, spix_2h, slinemb, 3, 1, 0 );
+	     draw_box ( spixmb, slinemb );
+	     if temp^.down^.etype = 17 then
+		begin
+		  x1 := spix_3h;
+		  y1 := slinemb + box1_height;
+		  dsline ( x1, y1, x1, sline_3h, 3, 1, 0 );
+		  dsline ( x1, sline_3h, spixlb, sline_3h, 3, 1, 0 );
+		end;
+	   end;
+       17: begin
+	     current_sub_level := current_sub_level + 1;
+	     y1 := slinelb + (current_sub_level-1)*low_inc;
+	     draw_box ( spixlb, y1 );
+	     if temp^.down^.etype <> 17 then
+		begin
+		  current_sub_level := 0;
+		end
+		  else
+		begin
+		  x1 := spix_3h;
+		  y1 := sline_3h +
+			( current_sub_level - 1 ) * low_inc;
+		  y2 := y1 + low_inc;
+		  dsline ( x1, y1, x1, y2, 3, 1, 0 );
+		  dsline ( x1, y2, spixlb, y2, 3, 1, 0 );
+		end;
+	   end;
+	2: begin
+	     with temp^ do
+	       dstext ( x,y+slineb0,1,3,field^,field^.len,0 );
+	     temp := temp^.down;
+	     with temp^ do
+	       dstext ( x,y+slineb0,1,3,field^,field^.len,0 );
+	     temp := temp^.down;
+	     with temp^ do
+	       dstext ( x,y+slineb0,1,3,field^,field^.len,0 );
+	     if skeleton^[9]=2 then
+	       dsymbol ( skeleton^[6], skeleton^[7], 3, 0, 0, 1 );
+	   end;
+      21: with temp^ do
+	    dstext ( x, y, 1, 3, field^, field^.len, 0 );
+	otherwise
+      end;
+      temp := temp^.down;
+
+    until temp=first;
+  end;
+  end.
+

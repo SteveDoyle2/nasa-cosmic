@@ -1,0 +1,124 @@
+
+
+				Cumulative Binomial Programs:
+
+
+	The programs which accompany this documentation calculate cumulative binomial 
+	probability distributions for arbitrary inputs.  The first program, CUMBIN, 	
+	calculates a cumulative binomial probability, i.e. the probability that a 
+	system of n components has at least k operating if the probability that any 
+	one is operating is p and the components are independent.  Equivalently, this 
+	is the reliability of a k-out-of-n system having independent components with 
+	common reliability p.  The second program, NEWTONP, calculates the probability 
+	p required to yield a given system reliability V for a k-out-of-n system.  The 
+	third program, CROSSER, calculates the point at which the reliability of a 
+	k-out-of-n system equals the common reliability of the n components.  These 
+	programs are designed to work well with all integer values 0 < k <= n.  A 
+	complete description of the problem, method of solution, and implementation of 
+	these programs is contained in a memorandum which accompanies this information.  
+		
+	The cumulative binomial programs are written in C.  They were compiled on an 
+	IBM AT with a numeric co-processor using Microsoft C 5.0.  Because the source 
+	code is written using standard C structures and functions, these programs 
+	should work when compiled on most C compilers.  Listings are provided in the 
+	accompanying memorandum.    
+	
+	Any of the programs can be used independently of the others.  To use any of 
+	the programs, the user simply runs the executable version and inputs the 
+	information requested by the program:
+	
+		(1)	The first question is how many like components comprise the 
+			system, i.e. what is n.  The user must input a positive integer.
+	
+		(2)	Next the minimum number which must operate for the system to 
+			operate, k, is requested.  An integer greater than 0 and less
+			than or equal to n must be entered.
+	
+		(3)	Lastly, CUMBIN requires the common component reliability, p,   
+			while NEWTONP requires the system reliability, V.  Both p and V
+			are positive real numbers less than unity.
+	
+		(4)	NEWTONP and CROSSER each require the acceptable error allowed 
+			in the result.
+	
+	The programs then calculate and list the result.  The NEWTONP and CROSSER 
+	programs also list the number of iterations of Newton's method required to 
+	calculate the answer within the given error.  Each program then asks the user 
+	if he/she wishes to use the program again; if so, the user responds with a "y".
+	The programs are not designed to weed out incorrect inputs (e.g., negative 
+	numbers, inconsistant inputs, or real inputs when they should be integers), so 
+	the user should take care to make sure the inputs are correct.
+	
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	Following are some example runs.  The user calls the programs and responds to 
+	the program prompts: after the equal signs for numerical entries and after the 
+	"run another case?" question.
+	
+		C>cumbin
+		This program calculates the reliability of a k-out-of-n system
+		with component reliability p.
+		Enter N = 7
+		Enter K = 5
+		Enter p = .9
+	
+		 P( K >= 5; N = 7; p = 0.900000000000) = 0.974308500000
+	
+		Would you like to run another case (y or n)?y
+		Enter N = 50000
+		Enter K = 10000
+		Enter p = .2
+	
+		 P( K >= 10000; N = 50000; p = 0.200000000000) = 0.501784119209
+		
+		Would you like to run another case (y or n)?n
+	
+		C>newtonp
+		This program calculates the common component reliability p
+		required to yield a given system reliability V of a k-out-of-n
+		system within a given error Epsilon.
+		Enter N = 50000
+		Enter K = 10000
+		Enter V = .501784
+		Enter Epsilon = .00001
+		
+		The required component reliability is 0.19999999946546
+		3 iterations were required for the calculation.
+	
+		Would you like to run another case (y or n)?n
+	
+		C>crosser
+		This program calculates the common component reliability P
+		required to yield the same system reliability P of a k-out-of-n
+		system within a given error Epsilon.
+		Enter N = 50000
+		Enter K = 10000
+		Enter Epsilon = .00001
+	
+		The component and system reliability is 0.19847963208395
+		5 iterations were required for the calculation.
+	
+		Would you like to run another case (y or n)?n
+	
+	The second calculation of CUMBIN is verified, within the error Epsilon, by 
+	performing the "inverse" calculation with NEWTONP.  CROSSER is then invoked to 
+	calculate the point at which the probability of success of the system equals 
+	the probability of success of a component.  
+	
+	
+	
+		

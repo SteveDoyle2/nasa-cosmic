@@ -1,0 +1,1388 @@
+************
+File USER$U1B:[DEMO.JPL]SUBS1.FOR;161
+    4        *  IBDC,ICDC,KC,IAC,IBC,ICC,IDC,ICCX,I7,IPIKFR,IPIKTO,PIKUP)
+    5   C*****THIS SUBROUTINE ADDS J NUMBER OF BLANK SURFACES AND MOVES ALL THE
+    6   C*****ORIGINAL DATA FORWARD
+    7         CHARACTER*4 COMMAND(100),PIKUP(200)
+    8         CHARACTER*13 GLASS(0:225)
+    9   C	I1 = NUMA (NUM APERTURES) ADJUSTED FOR RECTANGLES AND ELLIPSES.
+   10         INTEGER*4 I1,I2,I3,I4,I6,I8,I10,J,L,ISURF,ICCY(0:225),ITHC(0:225)
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]SUBS1.FOR;1
+    4        *  IBDC,ICDC,KC,IAC,IBC,ICC,IDC,ICCX)
+    5   C*****THIS SUBROUTINE ADDS J NUMBER OF BLANK SURFACES AND MOVES ALL THE
+    6   C*****ORIGINAL DATA FORWARD
+    7         CHARACTER*4 COMMAND(100)
+    8         CHARACTER*13 GLASS(0:225)
+    9         INTEGER*4 I1,I2,I3,I4,I6,I8,I10,J,L,ISURF,ICCY(0:225),ITHC(0:225)
+************
+************
+File USER$U1B:[DEMO.JPL]SUBS1.FOR;161
+   14         INTEGER*4 IBC(66),ICC(66),IDC(66),ICCX(30),IPIKFR(200),IPIKTO(200)
+   15         REAL*8 CURVEY(0:225),THICKNS(0:225),XDE(100),YDE(100),ADE(100)
+   16         REAL*8 BDE(100),CDE(100)
+   17         LOGICAL DEC,NDFLAG
+   18   C
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]SUBS1.FOR;1
+   13         INTEGER*4 IBC(66),ICC(66),IDC(66),ICCX(30)
+   14         REAL*8 CURVEY(0:225),THICKNS(0:225),XDE(100),YDE(100),ADE(100)
+   15         REAL*8 BDE(100),CDE(100)
+   16         LOGICAL DEC
+   17   C
+************
+************
+File USER$U1B:[DEMO.JPL]SUBS1.FOR;161
+   52   C MUST ADJUST PICKUPS ACCORDING TO A COMPLICATED SET OF RULES IN ORDER TO
+   53   C ACCOUNT FOR ADDED SURFACES. LOOP THROUGH NUMBER OF PICKUPS. BBC 10/84.
+   54         DO 230,K=1,I10
+   55           NDFLAG = .FALSE.
+   56   C IF PICKUP IS PAST THE ADDED SURFACES, THEN ADD THE NUMBER OF ADDED SURFACES
+   57   C TO EACH PICKUP POINTER. BBC 10/84.
+   58           IF (IPIKFR(K) .GT. L) THEN
+   59             IPIKFR(K)=IPIKFR(K)+J
+   60   C IF WE ARE AT THE POSITION OF THE ADDED SURFACES THEN ADJUST THE PICKUP
+   61   C POINTERS ACCORDING TO THE RULES. BBC 10/84.
+   62           ELSE IF (IPIKFR(K) .EQ. L) THEN
+   63             DO 227,IXX=1,I2
+   64               IF (IPIKFR(K) .EQ. NDECE(IXX)) THEN
+   65                 IF (PIKUP(K).EQ.'XD  '.AND..NOT.NDFLAG) THEN
+   66                   IPIKFR(K) = IPIKFR(K) + J
+   67                   NDFLAG = .TRUE.
+   68                 END IF
+   69                 IF (PIKUP(K).EQ.'YD  '.AND..NOT.NDFLAG) THEN
+   70                   IPIKFR(K) = IPIKFR(K) + J
+   71                   NDFLAG = .TRUE.
+   72                 END IF
+   73                 IF (PIKUP(K).EQ.'ALPH'.AND..NOT.NDFLAG) THEN
+   74                   IPIKFR(K) = IPIKFR(K) + J - 1
+   75                   NDFLAG = .TRUE.
+   76                 END IF
+   77                 IF (PIKUP(K).EQ.'BETA'.AND.J.GT.2.AND..NOT.NDFLAG) THEN
+   78                   IPIKFR(K) = IPIKFR(K) + J - 2
+   79                   NDFLAG = .TRUE.
+   80                 ELSE IF (PIKUP(K).EQ.'BETA'.AND..NOT.NDFLAG) THEN
+   81                   IPIKFR(K) = IPIKFR(K) + J - 1
+   82                   NDFLAG = .TRUE.
+   83                 END IF
+   84                 IF (PIKUP(K).EQ.'GAMM'.AND.J.GT.2.AND..NOT.NDFLAG) THEN
+   85                   IPIKFR(K) = IPIKFR(K) + J - 3
+   86                   NDFLAG = .TRUE.
+   87                 ELSE IF (PIKUP(K).EQ.'GAMM'.AND.J.GT.1.AND.
+   88        *          .NOT.NDFLAG) THEN
+   89                   IPIKFR(K) = IPIKFR(K) + J - 2
+   90                   NDFLAG = .TRUE.
+   91                 ELSE IF (PIKUP(K).EQ.'GAMM'.AND..NOT.NDFLAG) THEN
+   92                   IPIKFR(K) = IPIKFR(K) + J - 1
+   93                   NDFLAG = .TRUE.
+   94                 END IF
+   95               END IF
+   96   227       CONTINUE
+   97   	END IF
+   98   C ADJUST THE PICKUP "TO" VALUES. BBC 10/84.
+   99           IF (IPIKTO(K) .GE. L) IPIKTO(K)=IPIKTO(K)+J
+  100   230   CONTINUE
+  101         DO 250,K=I4,1,-1
+  102           KC(K+J)=KC(K)
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]SUBS1.FOR;1
+   51         DO 250,K=I4,L,-1
+   52           KC(K+J)=KC(K)
+************
+************
+File USER$U1B:[DEMO.JPL]SUBS1.FOR;161
+  109           IF (NTORIC(K) .GE. L) ICCX(K+J)=ICCX(K)
+  110   260   CONTINUE
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]SUBS1.FOR;1
+   59           ICCX(K+J)=ICCX(K)
+   60   260   CONTINUE
+************
+************
+File USER$U1B:[DEMO.JPL]SUBS1.FOR;161
+  114         KK = 1
+  115   285   IF (KK .LT. I2+J+1) THEN
+  116           IF (NDECE(KK) .EQ. L) THEN
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]SUBS1.FOR;1
+   64         DO 350,KK=1,I2+J
+   65           IF (NDECE(KK) .EQ. L) THEN
+************
+************
+File USER$U1B:[DEMO.JPL]SUBS1.FOR;161
+  133   	KK = KK + 1
+  134         ELSE
+  135           GOTO 330
+  136         END IF
+  137         GOTO 285
+  138   330   I2=I2+J
+  139         IF (DEC) THEN
+  140   C BBC 9/18/84. MOVE THESE NUMBERS DOWN ONE SPACE.
+  141           DO 350, IXX=ISURF,I+J,-1
+  142             IXDC(IXX+1)=IXDC(IXX)
+  143             IYDC(IXX+1)=IYDC(IXX)
+  144             IADC(IXX+1)=IADC(IXX)
+  145             IBDC(IXX+1)=IBDC(IXX)
+  146             ICDC(IXX+1)=ICDC(IXX)
+  147   350     CONTINUE
+  148           COMMAND(I+J)='DEC '
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]SUBS1.FOR;1
+   82   350   CONTINUE
+   83         I2=I2+J
+   84         IF (DEC) THEN
+   85           COMMAND(I+J)='DEC '
+************
+************
+File USER$U1B:[DEMO.JPL]SUBS1.FOR;161
+  160             COMMAND(I+K)='RTIL'
+  161             XDE(I+K)=0.0
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]SUBS1.FOR;1
+   97             COMMAND(I+K)='TILT'
+   98             XDE(I+K)=0.0
+************
+************
+File USER$U1B:[DEMO.JPL]SUBS1.FOR;161
+  201               BDE(I)=-BDE(I)  !EITHER BDE OR CDE IS ZERO
+  202               CDE(I)=-CDE(I)
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]SUBS1.FOR;1
+  138               BDE(I)=-BDE(I)  /*EITHER BDE OR CDE IS ZERO
+  139               CDE(I)=-CDE(I)
+************
+************
+File USER$U1B:[DEMO.JPL]SUBS1.FOR;161
+  208           ELSE  ! J EQ 1
+  209             ADE(I)=-ADE(I)  ! ONLY ONE ANGLE IS NON-ZERO
+  210             BDE(I)=-BDE(I)
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]SUBS1.FOR;1
+  145           ELSE  /* J EQ 1
+  146             ADE(I)=-ADE(I)  /* ONLY ONE ANGLE IS NON-ZERO
+  147             BDE(I)=-BDE(I)
+************
+************
+File USER$U1B:[DEMO.JPL]SUBS1.FOR;161
+  255               BDE(I)=-BDE(I)  !EITHER BDE OR CDE IS ZERO
+  256               CDE(I)=-CDE(I)
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]SUBS1.FOR;1
+  192               BDE(I)=-BDE(I)  /*EITHER BDE OR CDE IS ZERO
+  193               CDE(I)=-CDE(I)
+************
+************
+File USER$U1B:[DEMO.JPL]SUBS1.FOR;161
+  284   	FROM = FROM -1
+  285   	TO = TO -1
+  286         END IF
+  287         IF (CODE(TO) .NE. 100) THEN
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]SUBS1.FOR;1
+  221           FROM=FROM-1  /*BECAUSE VARIABLES SUCH AS IAC,IBC,IXDC,IYDC ARE
+  222           TO =TO-1     /*DIMENSIONED DIFFERENTLY THAN ICCY AND ITHC WE MUST
+  223         END IF         /*ACCOUNT FOR THAT MY MOVING THEM BACK IN THEIR ARRAYS
+  224         IF (CODE(TO) .NE. 100) THEN
+************
+************
+File USER$U1B:[DEMO.JPL]SUBS1.FOR;161
+  295         FROM=SAVEF  ! RETURNS ORIGINAL VALUE
+  296         TO=SAVETO
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]SUBS1.FOR;1
+  232         FROM=SAVEF  /* RETURNS ORIGINAL VALUE
+  233         TO=SAVETO
+************
+************
+File USER$U1B:[DEMO.JPL]SUBS1.FOR;161
+  299   C
+  300         SUBROUTINE CCNEGATE(I2,I10,IPIKTO,NDECE,IPIKFR,COMMAND,PIKA,
+  301        *  IXDC,IYDC,IADC,IBDC,ICDC,ICCY,ITHC,PIKUP,ISURF)
+  302   C THIS SUBROUTINE WAS ADDED TO CHANGE CONTROL CODES BASED ON CERTAIN CONDITIONS
+  303   C       SUBROUTINE BY BRIAN B. CARLIN
+  304   C       TECHNICAL SYSTEMS OPERATIONS
+  305   C       SANTA BARBARA RESEARCH CENTER
+  306   C       OCTOBER 9, 1984
+  307   C
+  308         CHARACTER*4 COMMAND(100),PIKUP(200)
+  309         INTEGER*4 IXDC(100),IYDC(100),IADC(100),IBDC(100),ICDC(100)
+  310         INTEGER*4 I2,I10,I,J,K,NDECE(100),IPIKTO(200),IPIKFR(200)
+  311         INTEGER*4 ICCY(0:225),ITHC(0:225),ISURF
+  312         REAL*4 PIKA(200)
+  313   C SEARCH THROUGH DECENTERED SURFACES.
+  314         DO 30,I=1,I2
+  315   C MATCH ALL PICKUPS TO DECENTERED SURFACE DATA.
+  316           DO 20,J=1,I10
+  317   C MATCH TO PICKUP?
+  318             IF (IPIKTO(J).EQ.NDECE(I)) THEN
+  319   C IF SO, THEN FIND THE FROM PICKUP
+  320               DO 10,K=I+1,I2
+  321   C MATCH FROM PICKUP?
+  322                 IF (IPIKFR(J).EQ.NDECE(K)) THEN
+  323   C SHOULD ANY OF THE DECENTER CONTROL CODES BE MODIFIED?
+  324                   IF (((COMMAND(K).EQ.COMMAND(I).OR.COMMAND(K).EQ.'DEC '
+  325        *            .OR.COMMAND(I).EQ.'DEC ').AND.PIKA(J).EQ.-1.) .OR.
+  326        *            ((COMMAND(K).NE.COMMAND(I).AND.COMMAND(K).NE.'DEC '
+  327        *            .AND.COMMAND(I).NE.'DEC ').AND.PIKA(J).EQ.1.)) THEN
+  328                     IF (IXDC(K).NE.100 .AND. PIKUP(J)(1:2).EQ.'XD')
+  329        *              IXDC(K) = IXDC(K) * (-1)
+  330                     IF (IYDC(K).NE.100 .AND. PIKUP(J)(1:2).EQ.'YD')
+  331        *              IYDC(K) = IYDC(K) * (-1)
+  332                     IF (IADC(K).NE.100 .AND. PIKUP(J)(1:4).EQ.'ALPH')
+  333        *              IADC(K) = IADC(K) * (-1)
+  334                     IF (IBDC(K).NE.100 .AND. PIKUP(J)(1:4).EQ.'BETA')
+  335        *              IBDC(K) = IBDC(K) * (-1)
+  336                     IF (ICDC(K).NE.100 .AND. PIKUP(J)(1:4).EQ.'GAMM')
+  337        *              ICDC(K) = ICDC(K) * (-1)
+  338                   END IF
+  339                 END IF
+  340     10        CONTINUE
+  341             END IF
+  342     20    CONTINUE
+  343     30  CONTINUE
+  344         DO 50,J=1,ISURF
+  345           DO 40,K=1,I10
+  346             IF(IPIKFR(K).EQ.J.AND.ICCY(J).NE.100.AND.PIKA(K).EQ.-1..AND.
+  347        *      ICCY(J).GT.0) THEN
+  348               ICCY(J)=ICCY(J) * (-1)
+  349             END IF
+  350             IF(IPIKFR(K).EQ.J.AND.ITHC(J).NE.100.AND.PIKA(K).EQ.-1..AND.
+  351        *      ITHC(J).GT.0) THEN
+  352               ITHC(J)=ITHC(J) * (-1)
+  353             END IF
+  354     40    CONTINUE
+  355     50  CONTINUE
+  356         RETURN
+  357         END
+  358   
+  359   C      SUBROUTINE ZOOM(I2,NDECE,NCONF,ZOOMTBL,I,RVAL,ACVAL,CFG)
+  360   C      INTEGER I,I2,NDECE(100),NCONF(30),J,CFG
+  361   C      REAL*8 RVAL(100),ACVAL,ZOOMTBL(5,30)
+  362   C      DO 10, J=1,I2
+  363   C        IF (NDECE(J) .EQ. NCONF(I)) ZOOMTBL(1,I) = RVAL(J)
+  364   C10    CONTINUE
+  365   C      DO 20, J=2,5
+  366   C        ZOOMTBL(J,I) = ZOOMTBL(1,I)
+  367   C20    CONTINUE
+  368   C      ZOOMTBL(CFG,I) = ACVAL
+  369   C      RETURN
+  370   C      END
+  371   
+  372   C      SUBROUTINE ZOOM2(I4,NASP,NCONF,ZOOMTBL,I,RVAL,ACVAL,CFG)
+  373   C      INTEGER I,I4,NASP(66),NCONF(30),J,CFG
+  374   C      REAL*8 RVAL(66),ACVAL,ZOOMTBL(5,30)
+  375   C      DO 10, J=1,I4
+  376   C        IF (NASP(J) .EQ. NCONF(I)) ZOOMTBL(1,I) = RVAL(J)
+  377   C10    CONTINUE
+  378   C      DO 20, J=2,5
+  379   C        ZOOMTBL(J,I) = ZOOMTBL(1,I)
+  380   C20    CONTINUE
+  381   C      ZOOMTBL(CFG,I) = ACVAL
+  382   C      RETURN
+  383   C      END
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]SUBS1.FOR;1
+************
+
+Number of difference sections found: 13
+Number of difference records found: 172
+
+DIFFERENCES /MERGED=1/OUTPUT=USER$U1B:[DEMO.JPL]DIFF.DAT;4-
+    USER$U1B:[DEMO.JPL]SUBS1.FOR;161-
+    USER$U1B:[DEMO.JPL.OLDPROG]SUBS1.FOR;1
+************
+File USER$U1B:[DEMO.JPL]ACCOSV3.FOR;36
+    4   C  LOCAL DECLARATION OF VARIABLES.
+    5         LOGICAL*1 FBBC     ! LOCAL FLAG FOR TORIC PRINTOUT. BBC 11/84.
+    6   C*****COMMON BLOCK CODEV DECLARATIONS
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV3.FOR;6
+    4   C*****COMMON BLOCK CODEV DECLARATIONS
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV3.FOR;36
+   17         CHARACTER*3 CPARM(30)
+   18         CHARACTER*13 GLASS(0:225)
+   19         CHARACTER*64 TITLE
+   20         INTEGER*4 I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,I11,M,ISTOP,IREF,ISURF
+   21         INTEGER*4 NAPERT(225),NDECE(100),NSOLVE(40),NUMA,MESSAGE(20)
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV3.FOR;6
+   15         CHARACTER*13 GLASS(0:225)
+   16         CHARACTER*64 TITLE
+   17         INTEGER*4 I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,M,ISTOP,IREF,ISURF
+   18         INTEGER*4 NAPERT(225),NDECE(100),NSOLVE(40),NUMA,MESSAGE(20)
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV3.FOR;36
+   25         REAL*8 F1(225),REF_OBJ_HT
+   26         LOGICAL AFO,IC(66),CUF(66)
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV3.FOR;6
+   22         REAL*8 F1(225)
+   23         LOGICAL AFO,IC(66),CUF(66)
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV3.FOR;36
+   44         COMMON /BOTH/I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,I11,GLASS,MESSAGE,M,
+   45        *        ISTOP,IREF,ISURF,AFO,NAPERT,NDECE,F1,DIF,ADE,BDE,CDE,XDE,
+   46        *        YDE,CURVEY,THICKNS,RK,A,B,C,D,IC,CUF,NSOLVE,SOLVF1,SOLVE,
+   47        *        TITLE,NUMA,REF_OBJ_HT
+   48         COMMON /ACONLY/TCVR,PY,PUCY,INDEX,NTORIC,DDIST,SUBMES1,SUBMES2,
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV3.FOR;6
+   41         COMMON /BOTH/I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,GLASS,MESSAGE,M,
+   42        *        ISTOP,IREF,ISURF,AFO,NAPERT,NDECE,F1,DIF,ADE,BDE,CDE,XDE,
+   43        *        YDE,CURVEY,THICKNS,RK,A,B,C,D,IC,CUF,NSOLVE,SOLVF1,SOLVE,
+   44        *        TITLE,NUMA
+   45         COMMON /ACONLY/TCVR,PY,PUCY,INDEX,NTORIC,DDIST,SUBMES1,SUBMES2,
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV3.FOR;36
+   54   C REMOVED EXTRA SPACE AT BEGINNING OF FORMATS TO FIT CODE V. BBC 9/84.
+   55     1   FORMAT(A12)
+   56     2   FORMAT(A64)
+   57     4   FORMAT(A4,6X,F10.5,F10.5,F10.5,F10.5,F10.5)
+   58     5   FORMAT(A13)
+   59     6   FORMAT(A4,6X,I4,6X,I4,6X,I4,6X,I4,6X,I4)
+   60     8   FORMAT(G15.8,I4,1X,G15.8,I4,1X,A13,2X,I4,16X,A1,1X,A4)
+   61     9   FORMAT(A6)
+   62    10   FORMAT(G15.8,I4,1X,G15.8,I4,1X,A13,2X,I4,18X,A4)
+   63    11   FORMAT(A3)
+   64    12   FORMAT(G15.8,I4,1X,G15.8,5X,G15.8,I4)
+   65    13   FORMAT(A4)
+   66    14   FORMAT(G15.8,I4,1X,G15.8,I4,1X,G15.8,I4,1X,G15.8,I4)
+   67    16   FORMAT(F15.8,I4)
+   68    18   FORMAT(F8.5,2X,F9.6,2X,F5.2,5X,F5.2,5X,F5.2)
+   69    20   FORMAT(A3,7X,G10.4)
+   70    22   FORMAT(A3,7X,A4)
+   71    24   FORMAT(A2,8X,F9.3,1X,F9.3,1X,F9.3,1X,F9.3,1X,F9.3)
+   72    26   FORMAT(A3,6X,I4,6X,I4,6X,I4,6X,I4,6X,I4)
+   73    28   FORMAT(A3,6X,I4)
+   74    30   FORMAT(A3,I3,4X,G15.8)
+   75    32   FORMAT(A10,F9.6,1X,F9.6,1X,F9.6,1X,F9.6,1X,F9.6)
+   76    34   FORMAT(A3,I3,1X,A3,F10.5)
+   77    36   FORMAT(A46)
+   78    37   FORMAT(A1,A36)
+   79    38   FORMAT(A31)
+   80    39   FORMAT(A44,A32)
+   81    40   FORMAT(A1,A40)
+   82    41   FORMAT(A49)
+   83    42   FORMAT(A42)
+   84    43   FORMAT(A1,A48)
+   85    44   FORMAT(A44,A36)
+   86    45   FORMAT (A3)
+   87   C******************************************************************************
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV3.FOR;6
+   51     1   FORMAT(1X,A12)
+   52     2   FORMAT(1X,A64)
+   53     4   FORMAT(1X,A4,6X,F10.5,F10.5,F10.5,F10.5,F10.5)
+   54     5   FORMAT(1X,A13)
+   55     6   FORMAT(1X,A4,6X,I4,6X,I4,6X,I4,6X,I4,6X,I4)
+   56     8   FORMAT(1X,G15.8,I4,1X,G15.8,I4,1X,A13,2X,I4,16X,A1,1X,A4)
+   57     9   FORMAT(1X,A6)
+   58    10   FORMAT(1X,G15.8,I4,1X,G15.8,I4,1X,A13,2X,I4,18X,A4)
+   59    11   FORMAT(1X,A3)
+   60    12   FORMAT(1X,G15.8,I4,1X,G15.8,5X,G15.8,I4)
+   61    13   FORMAT(1X,A4)
+   62    14   FORMAT(1X,G15.8,I4,1X,G15.8,I4,1X,G15.8,I4,1X,G15.8,I4)
+   63    16   FORMAT(1X,F15.8,I4)
+   64    18   FORMAT(1X,F8.5,2X,F9.6,2X,F5.2,5X,F5.2,5X,F5.2)
+   65    20   FORMAT(1X,A3,7X,G10.4)
+   66    22   FORMAT(1X,A3,7X,A4)
+   67    24   FORMAT(1X,A2,7X,F10.4,1X,F9.4,1X,F9.4,1X,F9.4,1X,F9.4)
+   68    26   FORMAT(1X,A3,6X,I4,6X,I4,6X,I4,6X,I4,6X,I4)
+   69    28   FORMAT(1X,A3,6X,I4)
+   70    30   FORMAT(1X,A3,I3,4X,G15.8)
+   71    32   FORMAT(1X,A10,F9.6,1X,F9.6,1X,F9.6,1X,F9.6,1X,F9.6)
+   72    34   FORMAT(1X,A3,I3,1X,A3,F10.5)
+   73    36   FORMAT(1X,A46)
+   74    37   FORMAT(1X,A1,A36)
+   75    38   FORMAT(1X,A31)
+   76    39   FORMAT(1X,A44,A32)
+   77    40   FORMAT(1X,A1,A40)
+   78    41   FORMAT(1X,A49)
+   79    42   FORMAT(1X,A42)
+   80    43   FORMAT(1X,A1,A48)
+   81    44   FORMAT(1X,A44,A36)
+   82   C******************************************************************************
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV3.FOR;36
+  109   	  FBBC = .FALSE.
+  110             DO 130,K=1,I4
+  111               IF (NASP(K) .EQ. I) THEN
+  112   	      FBBC = .TRUE.
+  113                 WRITE(5,12)RK(K),KC(K),RIC2(K),RCUF2(K),100
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV3.FOR;6
+  104             DO 130,K=1,I4
+  105               IF (NASP(K) .EQ. I) THEN
+  106                 WRITE(5,12)RK(K),KC(K),RIC2(K),RCUF2(K),100
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV3.FOR;36
+  118             IF (.NOT. FBBC .AND. (SPECSF(I) .EQ. 'YTO'))  THEN
+  119               WRITE (5,12) 0.,100,0.,0.,100
+  120               WRITE (5,14) 0.,100,0.,100,0.,100,0.,100
+  121             END IF
+  122           END IF
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV3.FOR;6
+  111           END IF
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV3.FOR;36
+  145         WRITE(5,45) 'RDO'
+  146   C******************************************************************************
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV3.FOR;6
+  134   C******************************************************************************
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV3.FOR;36
+  159   C CHANGED .OR.'S TO .AND.'S. WAS ALWAYS LOGICALLY TRUE BEFORE. BBC 9/84.
+  160           IF ((GLASS(INDEX(I))(1:4) .NE. 'HOYA') .AND.
+  161        *      (GLASS(INDEX(I))(1:6) .NE. 'SCHOTT') .AND.
+  162        *      (GLASS(INDEX(I))(1:5) .NE. 'OHARA') .AND.
+  163        *      (GLASS(INDEX(I))(1:3) .NE. 'AIR') .AND.
+  164        *      (GLASS(INDEX(I))(1:4) .NE. 'REFL') .AND.
+  165        *      (GLASS(INDEX(I))(1:1) .NE. ' ')) THEN
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV3.FOR;6
+  147           IF ((GLASS(INDEX(I))(1:4) .NE. 'HOYA') .OR.
+  148        *      (GLASS(INDEX(I))(1:6) .NE. 'SCHOTT') .OR.
+  149        *      (GLASS(INDEX(I))(1:5) .NE. 'OHARA') .OR.
+  150        *      (GLASS(INDEX(I))(1:3) .NE. 'AIR') .OR.
+  151        *      (GLASS(INDEX(I))(1:4) .NE. 'REFL') .OR.
+  152        *      (GLASS(INDEX(I))(1:1) .NE. ' ')) THEN
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV3.FOR;36
+  218        *    'due to the non-zero B value.'
+  219           WRITE(5,40)':',SUBMES2(I)
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV3.FOR;6
+  205        *    'because of the non-zero B value.'
+  206           WRITE(5,40)':',SUBMES2(I)
+************
+
+Number of difference sections found: 10
+Number of difference records found: 60
+
+DIFFERENCES /MERGED=1/OUTPUT=USER$U1B:[DEMO.JPL]DIFF.DAT;3-
+    USER$U1B:[DEMO.JPL]ACCOSV3.FOR;36-
+    USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV3.FOR;6
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+   12         CHARACTER*3 CPARM(30)
+   13         CHARACTER*13 GLASS(0:225)
+   14         CHARACTER*64 TITLE
+   15         INTEGER*4 I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,I11,M,ISTOP,IREF,ISURF
+   16         INTEGER*4 NAPERT(225),NDECE(100),NSOLVE(40),NUMA,MESSAGE(20)
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+   12         CHARACTER*13 GLASS(0:225)
+   13         CHARACTER*64 TITLE
+   14         INTEGER*4 I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,M,ISTOP,IREF,ISURF
+   15         INTEGER*4 NAPERT(225),NDECE(100),NSOLVE(40),NUMA,MESSAGE(20)
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+   20         REAL*8 F1(225),REF_OBJ_HT
+   21         LOGICAL AFO,IC(66),CUF(66)
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+   19         REAL*8 F1(225)
+   20         LOGICAL AFO,IC(66),CUF(66)
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+   41         REAL*8 TCVR(10),PY,PUCY,RADIUS(0:225),PIKB(200),NAO,NAO2,YAN
+   42         LOGICAL OB(225)
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+   40         REAL*8 TCVR(10),PY,PUCY,RADIUS(0:225),PIKB(200),NAO,YAN
+   41         LOGICAL OB(225)
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+   52         COMMON /BOTH/I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,I11,GLASS,MESSAGE,M,
+   53        *        ISTOP,IREF,ISURF,AFO,NAPERT,NDECE,F1,DIF,ADE,BDE,CDE,XDE,
+   54        *        YDE,CURVEY,THICKNS,RK,A,B,C,D,IC,CUF,NSOLVE,SOLVF1,SOLVE,
+   55        *        TITLE,NUMA,REF_OBJ_HT
+   56         COMMON /CODEV/DIM,APERT,ICCY,ITHC,IGLC,IWTW1,IWTW2,IWTW3,IWTW4,
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+   51         COMMON /BOTH/I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,GLASS,MESSAGE,M,
+   52        *        ISTOP,IREF,ISURF,AFO,NAPERT,NDECE,F1,DIF,ADE,BDE,CDE,XDE,
+   53        *        YDE,CURVEY,THICKNS,RK,A,B,C,D,IC,CUF,NSOLVE,SOLVF1,SOLVE,
+   54        *        TITLE,NUMA
+   55         COMMON /CODEV/DIM,APERT,ICCY,ITHC,IGLC,IWTW1,IWTW2,IWTW3,IWTW4,
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+   65   C COMPUTE THE VALUE OF YAN BEFORE THICKNS(0) VALUE IS CHANGED. BBC 10/84.
+   66         YAN = ATAN(-1.*REF_OBJ_HT/THICKNS(0))*180./3.1415927
+   67   C*****INITIALIZE
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+   64   C*****INITIALIZE
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+  124             CURVEY(I)=1./RADIUS(I)	! ADDED DECIMAL POINT FOR REAL RESULT.
+  125           END IF
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+  121             CURVEY(I)=1/RADIUS(I)
+  122           END IF
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+  130   C ADJUST GLASS(1:6) POSITION HOYA,SCHOTT,OHARA. BBC 9/20/84.
+  131           IF ((GLASS(I)(1:4) .EQ. 'HOYA') .OR.
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+  127           IF ((GLASS(I)(1:4) .EQ. 'HOYA') .OR.
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+  134   C FIND THE RIGHT PLACES TO CUT THE GLASS VARIABLE. BBC 9/84.
+  135             IQX = 13
+  136   101       IF (GLASS(I)(IQX:IQX) .NE. ' ') THEN
+  137               IQX2 = IQX
+  138               GOTO 102
+  139             END IF
+  140             IQX = IQX - 1
+  141             IF (IQX .EQ. 8) THEN
+  142               IQX2 = IQX
+  143               GOTO 102
+  144             END IF
+  145             GOTO 101
+  146   102       IQX = 6
+  147   103       IF (GLASS(I)(IQX:IQX) .NE. ' ') THEN
+  148               IQX3 = IQX
+  149               GOTO 104
+  150             END IF
+  151             IQX = IQX - 1
+  152             IF (IQX .EQ. 1) THEN
+  153               IQX3 = IQX
+  154               GOTO 104
+  155             END IF
+  156             GOTO 103
+  157   104       GLASS(I)=GLASS(I)(8:IQX2)//' '//GLASS(I)(1:IQX3)//' '
+  158           ELSE IF (GLASS(I)(1:5) .EQ. 'MATRL') THEN
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+  130             GLASS(I)=GLASS(I)(8:13)//' '//GLASS(I)(1:6)
+  131           ELSE IF (GLASS(I)(1:5) .EQ. 'MATRL') THEN
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+  174   C*****APERTURES
+  175         K=0
+  176         DO 225,I=1,I1
+  177           K=K+1
+  178           IF (SHAPE(I) .EQ. ' CIR') THEN
+  179             APERT(K)='CIR '
+  180             NAPERT(K)=NSHAPE(I)
+  181             IF (OB(I)) THEN
+  182               F(K)=-F2(I)
+  183             ELSE
+  184               F(K)=F2(I)
+  185             END IF
+  186           ELSE IF (SHAPE(I) .EQ. 'RECT') THEN
+  187             APERT(K)='REX '
+  188             NAPERT(K)=NSHAPE(I)
+  189             K=K+1
+  190             APERT(K)='REY '
+  191             NAPERT(K)=NSHAPE(I)
+  192             IF (OB(I)) THEN
+  193               F(K-1)=-F1(I)
+  194               F(K)=-F2(I)
+  195             ELSE
+  196               F(K-1)=F1(I)
+  197               F(K)=F2(I)
+  198             END IF
+  199           ELSE IF (SHAPE(I) .EQ. ' ELL') THEN
+  200             APERT(K)='ELX '
+  201             NAPERT(K)=NSHAPE(I)
+  202             K=K+1
+  203             APERT(K)='ELY '
+  204             NAPERT(K)=NSHAPE(I)
+  205             IF (OB(I)) THEN
+  206               F(K-1)=-F1(I)
+  207               F(K)=-F2(I)
+  208             ELSE
+  209               F(K-1)=F1(I)
+  210               F(K)=F2(I)
+  211             END IF
+  212           END IF
+  213   225   CONTINUE
+  214         NUMA=K
+  215   C******************************************************************************
+  216   C*****PICKUPS
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+  147   C*****PICKUPS
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+  267   C
+  268   C  REPLACED 'DO 160,I=1,I2' HERE. THE UPPER BOUND OF THE LOOP MUST INCREASE
+  269   C  BY THE NUMBER OF SURFACES ADDED EVERY LOOP. OTHERWISE CRITICAL SURFACES
+  270   C  TEND TO BE PUSH OFF THE END OF THE ARRAY AND ARE NEVER HANDLED. BBC 10/84.
+  271         IQX = I2
+  272         I = 1
+  273   160   IF (COMMAND(I) .EQ. 'RTIL') THEN
+  274           IF ((XDE(I) .NE. 0.0) .OR. (YDE(I) .NE. 0.0)) THEN
+  275             DEC=.TRUE.
+  276             IF ((ADE(I) .NE. 0.0) .AND. (BDE(I) .NE. 0.0) .AND.
+  277        *      (CDE(I) .NE. 0.0)) THEN  !NONE OF THE ANGLES ARE ZERO
+  278   C THE ADD SUBROUTINE USES VARIABLE I7 SO WE HAD TO ADD IT TO THE PARAM LIST.
+  279               CALL ADD(3,DEC,NDECE(I),ISURF,CURVEY,THICKNS,GLASS,ICCY,
+  280        *        ITHC,IGLC,ISTOP,NDECE,NAPERT,NTORIC,NCASE,NASP,NSOLVE,
+  281        *        NUMA,I2,I3,I4,I6,I8,I10,I,COMMAND,XDE,YDE,ADE,BDE,CDE,
+  282        *        INDEX,IXDC,IYDC,IADC,IBDC,ICDC,KC,IAC,IBC,ICC,IDC,ICCX,I7,
+  283        *        IPIKFR,IPIKTO,PIKUP)
+  284   C ADD NUMBER OF NEW SURFACES TO UPPER BOUND FOR LOOP. BBC 10/84.
+  285               IQX = IQX + 3
+  286             ELSE IF (((ADE(I) .NE. 0.0) .AND. (BDE(I) .NE. 0.0)) .OR.
+  287        *        ((BDE(I) .NE. 0.0) .AND. (CDE(I) .NE. 0.0)) .OR.
+  288        *        ((ADE(I) .NE. 0.0) .AND. (CDE(I) .NE. 0.0))) THEN  !ONLY ONE ANGLE
+  289               CALL ADD(2,DEC,NDECE(I),ISURF,CURVEY,THICKNS,GLASS,ICCY, !IS ZERO
+  290        *        ITHC,IGLC,ISTOP,NDECE,NAPERT,NTORIC,NCASE,NASP,NSOLVE,
+  291        *        NUMA,I2,I3,I4,I6,I8,I10,I,COMMAND,XDE,YDE,ADE,BDE,CDE,
+  292        *        INDEX,IXDC,IYDC,IADC,IBDC,ICDC,KC,IAC,IBC,ICC,IDC,ICCX,I7,
+  293        *        IPIKFR,IPIKTO,PIKUP)
+  294               IQX = IQX + 2
+  295             ELSE IF ((ADE(I) .NE. 0.0) .OR. (BDE(I) .NE. 0.0) .OR.
+  296        *        (CDE(I) .NE. 0.0)) THEN  ! 2 ANGLES ARE ZERO
+  297               CALL ADD(1,DEC,NDECE(I),ISURF,CURVEY,THICKNS,GLASS,ICCY, !IS ZERO
+  298        *        ITHC,IGLC,ISTOP,NDECE,NAPERT,NTORIC,NCASE,NASP,NSOLVE,
+  299        *        NUMA,I2,I3,I4,I6,I8,I10,I,COMMAND,XDE,YDE,ADE,BDE,CDE,
+  300        *        INDEX,IXDC,IYDC,IADC,IBDC,ICDC,KC,IAC,IBC,ICC,IDC,ICCX,I7,
+  301        *        IPIKFR,IPIKTO,PIKUP)
+  302               IQX = IQX + 1
+  303             ELSE ! ALL ANGLES ARE ZERO
+  304               COMMAND(I)='DEC '
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+  198         DO 160,I=1,I2
+  199           IF (COMMAND(I) .EQ. 'RTIL') THEN
+  200             IF ((XDE(I) .NE. 0.0) .OR. (YDE(I) .NE. 0.0)) THEN
+  201               DEC=.TRUE.
+  202               IF ((ADE(I) .NE. 0.0) .AND. (BDE(I) .NE. 0.0) .AND.
+  203        *        (CDE(I) .NE. 0.0)) THEN  /*NONE OF THE ANGLES ARE ZERO
+  204               CALL ADD(3,DEC,NDECE(I),ISURF,CURVEY,THICKNS,GLASS,ICCY,
+  205        *        ITHC,IGLC,ISTOP,NDECE,NAPERT,NTORIC,NCASE,NASP,NSOLVE,
+  206        *        I1,I2,I3,I4,I6,I8,I10,I,COMMAND,XDE,YDE,ADE,BDE,CDE,
+  207        *        INDEX,IXDC,IYDC,IADC,IBDC,ICDC,KC,IAC,IBC,ICC,IDC,ICCX)
+  208             ELSE IF (((ADE(I) .NE. 0.0) .AND. (BDE(I) .NE. 0.0)) .OR.
+  209        *      ((BDE(I) .NE. 0.0) .AND. (CDE(I) .NE. 0.0)) .OR.
+  210        *      ((ADE(I) .NE. 0.0) .AND. (CDE(I) .NE. 0.0))) THEN  /*ONLY ONE ANGLE
+  211               CALL ADD(2,DEC,NDECE(I),ISURF,CURVEY,THICKNS,GLASS,ICCY, /*IS ZERO
+  212        *        ITHC,IGLC,ISTOP,NDECE,NAPERT,NTORIC,NCASE,NASP,NSOLVE,
+  213        *        I1,I2,I3,I4,I6,I8,I10,I,COMMAND,XDE,YDE,ADE,BDE,CDE,
+  214        *        INDEX,IXDC,IYDC,IADC,IBDC,ICDC,KC,IAC,IBC,ICC,IDC,ICCX)
+  215             ELSE IF ((ADE(I) .NE. 0.0) .OR. (BDE(I) .NE. 0.0) .OR.
+  216        *      (CDE(I) .NE. 0.0)) THEN  /* 2 ANGLES ARE ZERO
+  217               CALL ADD(1,DEC,NDECE(I),ISURF,CURVEY,THICKNS,GLASS,ICCY, /*IS ZERO
+  218        *        ITHC,IGLC,ISTOP,NDECE,NAPERT,NTORIC,NCASE,NASP,NSOLVE,
+  219        *        I1,I2,I3,I4,I6,I8,I10,I,COMMAND,XDE,YDE,ADE,BDE,CDE,
+  220        *        INDEX,IXDC,IYDC,IADC,IBDC,ICDC,KC,IAC,IBC,ICC,IDC,ICCX)
+  221             ELSE /* ALL ANGLES ARE ZERO
+  222               COMMAND(I)='DEC '
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+  308           ELSE  ! NO DECENTER
+  309             DEC=.FALSE.
+  310             IF ((ADE(I) .NE. 0.0) .AND. (BDE(I) .NE. 0.0) .AND.
+  311        *        (CDE(I) .NE. 0.0)) THEN  !NONE OF THE ANGLES ARE ZERO
+  312               CALL ADD(2,DEC,NDECE(I),ISURF,CURVEY,THICKNS,GLASS,ICCY,
+  313        *        ITHC,IGLC,ISTOP,NDECE,NAPERT,NTORIC,NCASE,NASP,NSOLVE,
+  314        *        NUMA,I2,I3,I4,I6,I8,I10,I,COMMAND,XDE,YDE,ADE,BDE,CDE,
+  315        *        INDEX,IXDC,IYDC,IADC,IBDC,ICDC,KC,IAC,IBC,ICC,IDC,ICCX,I7,
+  316        *        IPIKFR,IPIKTO,PIKUP)
+  317               IQX = IQX + 2
+  318             ELSE IF (((ADE(I) .NE. 0.0) .AND. (BDE(I) .NE. 0.0)) .OR.
+  319        *        ((BDE(I) .NE. 0.0) .AND. (CDE(I) .NE. 0.0)) .OR.
+  320        *        ((ADE(I) .NE. 0.0) .AND. (CDE(I) .NE. 0.0))) THEN !ONLY ONE ANGLE
+  321               CALL ADD(1,DEC,NDECE(I),ISURF,CURVEY,THICKNS,GLASS,ICCY, !IS ZERO
+  322        *        ITHC,IGLC,ISTOP,NDECE,NAPERT,NTORIC,NCASE,NASP,NSOLVE,
+  323        *        NUMA,I2,I3,I4,I6,I8,I10,I,COMMAND,XDE,YDE,ADE,BDE,CDE,
+  324        *        INDEX,IXDC,IYDC,IADC,IBDC,ICDC,KC,IAC,IBC,ICC,IDC,ICCX,I7,
+  325        *        IPIKFR,IPIKTO,PIKUP)
+  326               IQX = IQX + 1
+  327             ELSE ! ONLY ONE ANGLE IS NON-ZERO
+  328               COMMAND(I)='RTIL'
+  329               IF (CURVEY(NDECE(I)).EQ.0.0.AND.THICKNS(NDECE(I)).EQ.0.0
+  330        *        .AND.GLASS(NDECE(I)).EQ.'    ') GOTO 2277
+  331               ADE(I)=-ADE(I)
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+  226           ELSE  /* NO DECENTER
+  227             DEC=.FALSE.
+  228             IF ((ADE(I) .NE. 0.0) .AND. (BDE(I) .NE. 0.0) .AND.
+  229        *      (CDE(I) .NE. 0.0)) THEN  /*NONE OF THE ANGLES ARE ZERO
+  230               CALL ADD(2,DEC,NDECE(I),ISURF,CURVEY,THICKNS,GLASS,ICCY,
+  231        *        ITHC,IGLC,ISTOP,NDECE,NAPERT,NTORIC,NCASE,NASP,NSOLVE,
+  232        *        I1,I2,I3,I4,I6,I8,I10,I,COMMAND,XDE,YDE,ADE,BDE,CDE,
+  233        *        INDEX,IXDC,IYDC,IADC,IBDC,ICDC,KC,IAC,IBC,ICC,ICCX)
+  234             ELSE IF (((ADE(I) .NE. 0.0) .AND. (BDE(I) .NE. 0.0)) .OR.
+  235        *      ((BDE(I) .NE. 0.0) .AND. (CDE(I) .NE. 0.0)) .OR.
+  236        *      ((ADE(I) .NE. 0.0) .AND. (CDE(I) .NE. 0.0))) THEN  /*ONLY ONE ANGLE
+  237               CALL ADD(1,DEC,NDECE(I),ISURF,CURVEY,THICKNS,GLASS,ICCY, /*IS ZERO
+  238        *        ITHC,IGLC,ISTOP,NDECE,NAPERT,NTORIC,NCASE,NASP,NSOLVE,
+  239        *        I1,I2,I3,I4,I6,I8,I10,I,COMMAND,XDE,YDE,ADE,BDE,CDE,
+  240        *        INDEX,IXDC,IYDC,IADC,IBDC,ICDC,KC,IAC,IBC,ICC,IDC,ICCX)
+  241             ELSE /* ONLY ONE ANGLE IS NON-ZERO
+  242               COMMAND(I)='TILT'
+  243               ADE(I)=-ADE(I)
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+  334    2277       CONTINUE
+  335             END IF
+  336           END IF
+  337         END IF
+  338         I = I + 1
+  339         IF (I .LE. IQX) GOTO 160
+  340   C******************************************************************************
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+  246             END IF
+  247           END IF
+  248           END IF
+  249   160   CONTINUE
+  250   C******************************************************************************
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+  361           DO 164,J=5,2,-1		! UPPER BOUND SHOULD STAY AT FIVE. BBC 9/84.
+  362             IF (W(J) .EQ. W(J-1)) THEN !DELETE DUPLICATE WAVELENGTHS
+  363               W(J)=0.0
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+  271           DO 164,J=6-I,2,-1
+  272             IF (W(J) .EQ. W(J-1)) THEN /*DELETE DUPLICATE WAVELENGTHS
+  273               W(J)=0.0
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+  415             IF (DIM .EQ. 'M   ') THEN !CONVERT FROM MICROMETERS TO LENS
+  416               DDIST(J10)=DDIST(I)*1.E-3 !UNITS: I, CM, MM
+  417             ELSE IF (DIM .EQ. 'I   ') THEN
+  418               DDIST(J10)=DDIST(I)*1.E-3/25.4
+  419             ELSE IF (DIM .EQ. 'C   ') THEN
+  420               DDIST(J10)=DDIST(I)*1.E-2
+  421             END IF
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+  325             IF (DIM .EQ. 'M   ') THEN /*CONVERT FROM MICROMETERS TO LENS
+  326               DDIST(J10)=DDIST(I)*1E-3 /*UNITS: I, CM, MM
+  327             ELSE IF (DIM .EQ. 'I   ') THEN
+  328               DDIST(J10)=DDIST(I)*1E-3/25.4
+  329             ELSE IF (DIM .EQ. 'C   ') THEN
+  330               DDIST(J10)=DDIST(I)*1E-2
+  331             END IF
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+  429         DO 180,I=1,I8  ! IF ASPERIC DATA EXISTS THE SURFACE IS TORIC.
+  430           SPECSF(NTORIC(I))='YTO '
+  431   180   CONTINUE
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+  339         DO 180,I=1,I8  /* IF ASPERIC DATA EXISTS THE SURFACE IS TORIC OTHERWISE
+  340           SPECSF(NTORIC(I))='CYL '  /* IT IS CYLINDRICAL
+  341           DO 178,K=1,I4
+  342             IF (NTORIC(I) .EQ. NASP(K)) SPECSF(NTORIC(I))='YTO '
+  343   178     CONTINUE
+  344   180   CONTINUE
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+  508             IF (RCUF1(I) .EQ. 0.) RCUF1(I) = 1.E-07
+  509             SPECSF(NCASE(I))='ASP '
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+  421             SPECSF(NCASE(I))='ASP '
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+  519   208       DO 210,J=I4,K,-1               ! ADD NEW ASHPERIC SURFACE
+  520               NASP(J+1)=NASP(J)
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+  431   208       DO 210,J=I4,K,-1               /* ADD NEW ASHPERIC SURFACE
+  432               NASP(J+1)=NASP(J)
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+  542           ELSE IF (NCASE(L) .EQ. NASP(K)) THEN  ! ADD RIC1 TO EXISTING ASHPERIC
+  543             RIC2(K)=RIC1(L)                     ! SURFACE
+  544   211       L=L+1
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+  454           ELSE IF (NCASE(L) .EQ. NASP(K)) THEN  /* ADD RIC1 TO EXISTING ASHPERIC
+  455             RIC2(K)=RIC1(L)                     /* SURFACE
+  456   211       L=L+1
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+  559   C ACCOUNT FOR NEW ASPHERIC SURFACE. BBC 9/84.
+  560   	    NASP(K)=NCASE(L)
+  561   	    I4=I4+1
+  562               RIC2(K)=RIC1(L)
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+  471               RIC2(K)=RIC1(L)
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+  583   218       DO 220,J=I4,K,-1                ! ADD NEW ASPHERIC SURFACE
+  584               NASP(J+1)=NASP(J)
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+  492   218       DO 220,J=I4,K,-1                /* ADD NEW ASPHERIC SURFACE
+  493               NASP(J+1)=NASP(J)
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+  606           ELSE IF (NCASE(L) .EQ. NASP(K)) THEN  ! ADD RCUF1 TO EXISTING ASPHERIC
+  607             RCUF2(K)=RCUF1(L)                   ! SURFACE
+  608   221       L=L+1
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+  515           ELSE IF (NCASE(L) .EQ. NASP(K)) THEN  /* ADD RCUF1 TO EXISTING ASPHERIC
+  516             RCUF2(K)=RCUF1(L)                   /* SURFACE
+  517   221       L=L+1
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+  623   C ACCOUNT FOR NEW ASPHERIC SURFACE. BBC 9/84.
+  624   	    I4=I4+1
+  625   	    NASP(K)=NCASE(L)
+  626               RCUF2(K)=RCUF1(L)
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+  532               RCUF2(K)=RCUF1(L)
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+  641   223   CONTINUE
+  642   C******************************************************************************
+  643   C*****SOLVES
+  644         I = 1
+  645   C DELETE LAST SOLVE IF IT APPEARS AT NEXT TO LAST SURFACE. BBC 9/25/84.
+  646         IF (NSOLVE(I6) .EQ. ISURF-1) I6=I6-1
+  647   230   IF (I .LE. I6) THEN
+  648           IF (SOLVE(I) .EQ. 'PY  ') THEN
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+  547   C******************************************************************************
+  548   C*****APERTURES
+  549   223   K=0
+  550         DO 225,I=1,I1
+  551           K=K+1
+  552           IF (SHAPE(I) .EQ. ' CIR') THEN
+  553             APERT(K)='CIR '
+  554             NAPERT(K)=NSHAPE(I)
+  555             IF (OB(I)) THEN
+  556               F(K)=-F2(I)
+  557             ELSE
+  558               F(K)=F2(I)
+  559             END IF
+  560           ELSE IF (SHAPE(I) .EQ. 'RECT') THEN
+  561             APERT(K)='REX '
+  562             NAPERT(K)=NSHAPE(I)
+  563             K=K+1
+  564             APERT(K)='REY '
+  565             NAPERT(K)=NSHAPE(I)
+  566             IF (OB(I)) THEN
+  567               F(K-1)=-F1(I)
+  568               F(K)=-F2(I)
+  569             ELSE
+  570               F(K-1)=F1(I)
+  571               F(K)=F2(I)
+  572             END IF
+  573           ELSE IF (SHAPE(I) .EQ. ' ELL') THEN
+  574             APERT(K)='ELX '
+  575             NAPERT(K)=NSHAPE(I)
+  576             K=K+1
+  577             APERT(K)='ELY '
+  578             NAPERT(K)=NSHAPE(I)
+  579             IF (OB(I)) THEN
+  580               F(K-1)=-F1(I)
+  581               F(K)=-F2(I)
+  582             ELSE
+  583               F(K-1)=F1(I)
+  584               F(K)=F2(I)
+  585             END IF
+  586           END IF
+  587   225   CONTINUE
+  588         NUMA=K
+  589   C******************************************************************************
+  590   C*****SOLVES
+  591         DO 275,I=1,I6
+  592           IF (SOLVE(I) .EQ. 'PY  ') THEN
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107
+  683             DO 270,IDO=1,I8       !********************  THIS IS A PROBLEM!!****
+  684               IF (NSOLVE(IDO) .EQ. NTORIC(K)) ICCX(K)=INT(SOLVF1(IDO))+100
+  685   270       CONTINUE
+  686   	  I = IDO
+  687           END IF
+  688   	I = I + 1
+  689         ELSE
+  690           GOTO 280
+  691         END IF
+  692         GOTO 230
+  693   C******************************************************************************
+  694   C*****APERTURE AND FIELD SPECIFICATION
+  695   280   IF (RN1 .EQ. 0.0) RN1=1.0  !SURFACE IS AIR
+  696         NAO=RN1*SIN(ATAN(PY/THICKNS(0)))
+  697   C CHANGE COMMANDS SO COMMAND CODES ARE INTERPRETED CORRECTLY. BBC 10/84.
+  698         DO 285,J=1,I2
+  699           IF (COMMAND(J) .EQ. 'DEC ') COMMAND(J) = 'RTIL'
+  700   285   CONTINUE
+  701   C NEGATE CERTAIN CONTROL CODES DEPENDING TILT/RTILT AND PIKA VALUE. BBC 10/84.
+  702         CALL CCNEGATE(I2,I10,IPIKTO,NDECE,IPIKFR,COMMAND,PIKA,
+  703        *  IXDC,IYDC,IADC,IBDC,ICDC,ICCY,ITHC,PIKUP,ISURF)
+  704   C MUST HAVE REAL NUMBERS IN A DIVISION OPERATION. BBC 9/84.
+  705   C RE-DEFINE YAN VALUE. BBC 10/84.
+  706   C MOVE YAN VALUE COMPUTATION TO ACCOSV1 TO USE ORIGINAL THICKNS(0) VALUE. BBC.
+  707   C*****************************************************************************
+  708   C*****ALTERNATE CONFIGURATIONS
+  709   C      DO 300, I=1,I11
+  710   C        IF (CPARM(I) .EQ. 'SAY') THEN
+  711   C          DO 301, IDO=1,5
+  712   C            ZOOMTBL(IDO,I)=NAO
+  713   C301       CONTINUE
+  714   C          ZOOMTBL(CFG(I),I) = REF_AP_HT/ACVAL(I)*NAO
+  715   C        ELSE IF (CPARM(I) .EQ. 'CV ') THEN
+  716   C        ELSE IF (CPARM(I) .EQ. 'CVR') THEN
+  717   C        ELSE IF (CPARM(I) .EQ. 'CC ') THEN
+  718   C        ELSE IF (CPARM(I) .EQ. 'XD ') THEN
+  719   C	  CALL ZOOM(I2,NDECE,NCONF,ZOOMTBL,I,XDE,ACVAL(I),CFG(I))
+  720   C        ELSE IF (CPARM(I) .EQ. 'YD ') THEN
+  721   C          CALL ZOOM(I2,NDECE,NCONF,ZOOMTBL,I,YDE,ACVAL(I),CFG(I))
+  722   C        ELSE IF (CPARM(I) .EQ. 'ALP') THEN
+  723   C          CALL ZOOM(I2,NDECE,NCONF,ZOOMTBL,I,ADE,ACVAL(I),CFG(I))
+  724   C        ELSE IF (CPARM(I) .EQ. 'BET') THEN
+  725   C          CALL ZOOM(I2,NDECE,NCONF,ZOOMTBL,I,BDE,ACVAL(I),CFG(I))
+  726   C        ELSE IF (CPARM(I) .EQ. 'GAM') THEN
+  727   C          CALL ZOOM(I2,NDECE,NCONF,ZOOMTBL,I,CDE,ACVAL(I),CFG(I))
+  728   C        ELSE IF (CPARM(I) .EQ. 'AD ') THEN
+  729   C          CALL ZOOM2(I4,NASP,NCONF,ZOOMTBL,I,A,ACVAL(I),CFG(I))
+  730   C        ELSE IF (CPARM(I) .EQ. 'AE ') THEN
+  731   C          CALL ZOOM2(I4,NASP,NCONF,ZOOMTBL,I,B,ACVAL(I),CFG(I))
+  732   C        ELSE IF (CPARM(I) .EQ. 'AF ') THEN
+  733   C          CALL ZOOM2(I4,NASP,NCONF,ZOOMTBL,I,C,ACVAL(I),CFG(I))
+  734   C        ELSE IF (CPARM(I) .EQ. 'AG ') THEN
+  735   C          CALL ZOOM2(I4,NASP,NCONF,ZOOMTBL,I,D,ACVAL(I),CFG(I))
+  736   C        ELSE IF (CPARM(I) .EQ. 'TH ') THEN
+  737   C          DO 311,IDO=0,ISURF
+  738   C            IF (NCONF(I) .EQ. IDO) ZOOMTBL(1,I) = THICKNS(IDO)
+  739   C311       CONTINUE
+  740   C          DO 312,IDO=2,5
+  741   C            ZOOMTBL(IDO,I) = ZOOMTBL(1,I)
+  742   C312       CONTINUE
+  743   C          ZOOMTBL(CFG(I),I) = ACVAL(I)
+  744   C        ELSE IF (CPARM(I) .EQ. 'CAS') THEN
+  745         RETURN
+  746         END
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+  627             DO 270,I=1,I8
+  628               IF (NSOLVE(I) .EQ. NTORIC(K)) ICCX(K)=INT(SOLVF1(I))+100
+  629   270       CONTINUE
+  630           END IF
+  631   275   CONTINUE
+  632   C******************************************************************************
+  633   C*****APERTURE AND FIELD SPECIFICATION
+  634         IF (RN1 .EQ. 0.0) RN1=1.0  /*SURFACE IS AIR
+  635         NAO=RN1*SIN(ATAN(PY/THICKNS(0)))
+  636         YAN=PUCY*(360/(2*3.1415927))
+  637         RETURN
+  638         END
+  639     
+************
+
+Number of difference sections found: 24
+Number of difference records found: 281
+
+DIFFERENCES /MERGED=1/OUTPUT=USER$U1B:[DEMO.JPL]DIFF.DAT;2-
+    USER$U1B:[DEMO.JPL]ACCOSV2.FOR;107-
+    USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV2.FOR;1
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+   11   C BBC 9/20/84. ADDED THE VARIABLES NCONF(),ACVAL(),CPARM(), AND I11 TO HANDLE
+   12   C ALTERNATE CONFIGURATIONS.
+   13         CHARACTER*4 SOLVE(40)
+   14         CHARACTER*3 CPARM(30)
+   15         CHARACTER*13 GLASS(0:225)
+   16         CHARACTER*64 TITLE
+   17         INTEGER*4 I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,I11,M,ISTOP,IREF,ISURF
+   18         INTEGER*4 NAPERT(225),NDECE(100),NSOLVE(40),NUMA,MESSAGE(20)
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+   11         CHARACTER*4 SOLVE(40)
+   12         CHARACTER*13 GLASS(0:225)
+   13         CHARACTER*64 TITLE
+   14         INTEGER*4 I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,M,ISTOP,IREF,ISURF
+   15         INTEGER*4 NAPERT(225),NDECE(100),NSOLVE(40),NUMA,MESSAGE(20)
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+   22         REAL*8 F1(225),REF_OBJ_HT
+   23         LOGICAL AFO,IC(66),CUF(66)
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+   19         REAL*8 F1(225)
+   20         LOGICAL AFO,IC(66),CUF(66)
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+   37         CHARACTER*4 CVAR		! JPL CHANGE.
+   38         INTEGER*4 NMODELS,CFG1,REF_SURF
+   39         CHARACTER*110 LINE
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+   34         CHARACTER*110 LINE
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+   46         COMMON /BOTH/I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,I11,GLASS,MESSAGE,M,
+   47        *        ISTOP,IREF,ISURF,AFO,NAPERT,NDECE,F1,DIF,ADE,BDE,CDE,XDE,
+   48        *        YDE,CURVEY,THICKNS,RK,A,B,C,D,IC,CUF,NSOLVE,SOLVF1,SOLVE,
+   49        *        TITLE,NUMA,REF_OBJ_HT
+   50         COMMON /ACONLY/TCVR,PY,PUCY,INDEX,NTORIC,DDIST,SUBMES1,SUBMES2,
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+   41         COMMON /BOTH/I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,GLASS,MESSAGE,M,
+   42        *        ISTOP,IREF,ISURF,AFO,NAPERT,NDECE,F1,DIF,ADE,BDE,CDE,XDE,
+   43        *        YDE,CURVEY,THICKNS,RK,A,B,C,D,IC,CUF,NSOLVE,SOLVF1,SOLVE,
+   44        *        TITLE,NUMA
+   45         COMMON /ACONLY/TCVR,PY,PUCY,INDEX,NTORIC,DDIST,SUBMES1,SUBMES2,
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+   57   C HAD TO CHANGE SOME OF THE FORMATS. VAX WAS ADDING A ZERO TO THE RIGHT END OF
+   58   C SOME OF THE INTEGERS BECAUSE AN EXTRA BLANK SPACE WAS READ. BBC 9/84.
+   59     2   FORMAT(A110)
+   60     3   FORMAT(5X,E13.6,1X,E13.6,3X,A13,3X,E8.6)
+   61     4   FORMAT(5X,F13.6,1X,F13.6,3X,A13)
+   62     5   FORMAT(1X,I3)
+   63     6   FORMAT(1X,I3,3X,F9.6,2X,F9.6,2X,F9.6,2X,F9.6,2X,F9.6)
+   64     7   FORMAT(19X,F13.6,1X,F13.6,3X,A13,3X,F8.6)
+   65     8   FORMAT(1X,I3,1X,F13.5,F13.5,F13.5,F13.5,F13.5)
+   66     9   FORMAT(19X,F13.6,1X,F13.6,3X,A13)
+   67    10   FORMAT(2X,I3,4X,A4,17X,F6.3,16X,I4)
+   68    12   FORMAT(1X,I3,4X,A4,F14.6)
+   69    14   FORMAT(1X,I3,1X,A4,3X,A4,6X,F10.4,4X,F8.4)
+   70    16   FORMAT(1X,I3,3X,A4,2X,F11.5,1X,F11.5,1X,F10.4,1X,F10.4,1X,F10.4)
+   71    18   FORMAT(1X,I3,4X,A4,2X,I4,2X,F10.6,2X,F10.6)
+   72    20   FORMAT(1X,I3,4X,A4,28X,F10.6)
+   73    22   FORMAT(16X,F8.5,3X,F8.5,3X,F8.5,3X,F8.5,3X,F8.5)
+   74    24   FORMAT(22X,I3)
+   75    26   FORMAT(16X,A6)
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+   52     2   FORMAT(A110)
+   53     3   FORMAT(5X,F13.6,1X,F13.6,3X,A13,3X,F8.6)
+   54     4   FORMAT(5X,F13.6,1X,F13.6,3X,A13)
+   55     5   FORMAT(1X,I4)
+   56     6   FORMAT(1X,I4,2X,F9.6,2X,F9.6,2X,F9.6,2X,F9.6,2X,F9.6)
+   57     7   FORMAT(19X,F13.6,1X,F13.6,3X,A13,3X,F8.6)
+   58     8   FORMAT(1X,I4,F13.5,F13.5,F13.5,F13.5,F13.5)
+   59     9   FORMAT(19X,F13.6,1X,F13.6,3X,A13)
+   60    10   FORMAT(1X,I4,4X,A4,17X,F6.3,16X,I4)
+   61    12   FORMAT(1X,I4,3X,A4,F14.6)
+   62    14   FORMAT(1X,I4,A4,3X,A4,6X,F10.4,4X,F8.4)
+   63    16   FORMAT(1X,I4,2X,A4,2X,F11.5,1X,F11.5,1X,F10.4,1X,F10.4,1X,F10.4)
+   64    18   FORMAT(1X,I4,3X,A4,2X,I4,2X,F10.6,2X,F10.6)
+   65    20   FORMAT(1X,I4,3X,A4,28X,F10.6)
+   66    22   FORMAT(16X,F8.5,3X,F8.5,3X,F8.5,3X,F8.5,3X,F8.5)
+   67    24   FORMAT(22X,I4)
+   68    26   FORMAT(16X,A6)
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+   78    31   FORMAT(11X,A3,7X,I2,1X,E13.6)
+   79    32   FORMAT(E14.6,40X,I3)
+   80   C******************************************************************************
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+   71   C******************************************************************************
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+  136   205   READ(6,2,END=206)LINE
+  137         IF (LINE(2:6) .NE. 'BASIC') GOTO 205
+  138         READ(6,2)LINE
+  139         READ(6,2)LINE
+  140         IF (LINE(13:14) .EQ. 'CV') GOTO 220
+  141         GOTO 210
+  142   206   PRINT *,'COULD NOT FIND KEYWORD: BASIC IN COLUMN 2. PROGRAM HALT.'
+  143         CALL EXIT
+  144   210   READ(6,2)LINE
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+  127   205   READ(6,2)LINE
+  128         IF (LINE(2:6) .NE. 'BASIC') GOTO 205
+  129         READ(6,2)LINE
+  130         IF (LINE(13:14) .EQ. 'CV') GOTO 220
+  131   210   READ(6,2)LINE
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+  191   C READ 'REF SURF' JUST IN CASE WE GET A 'NO APERTURE STOP'. BBC 10/84.
+  192         ELSE IF (LINE(53:60) .EQ. 'REF SURF') THEN
+  193           READ(6,2)LINE
+  194           READ(LINE,32) REF_OBJ_HT,REF_SURF
+  195           READ(6,2)LINE	! SHOULD BE A BLANK LINE.
+  196           GOTO 245
+  197         ELSE IF (LINE(3:3) .EQ. ' ') THEN
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+  178         ELSE IF (LINE(3:3) .EQ. ' ') THEN
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+  205   250   READ(6,2)LINE  ! SKIP 2 LINES
+  206         READ(6,2)LINE
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+  186   250   READ(6,2)LINE  /* SKIP 2 LINES
+  187         READ(6,2)LINE
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+  213   C IF N1 PARAM = 1.0 THEN KEEP UNIQUE GLASS NAME FOR THE PRINTOUT. BBC 10/84.
+  214           IF ((N1(K) .EQ. N1(I7)) .AND. (N2(K) .EQ. N2(I7)) .AND.
+  215        *      (N3(K) .EQ. N3(I7)) .AND. (N4(K) .EQ. N4(I7)) .AND.
+  216        *      (N5(K) .EQ. N5(I7)) .AND. (N1(K) .NE. 1.0)) THEN
+  217              GLASS(INDEX(I7))=GLASS(INDEX(K))
+  218              SAME = .TRUE.
+  219   	ELSE IF ((GLASS(INDEX(I7))(1:5).EQ.'MODEL').AND.
+  220        *          (GLASS(INDEX(K)) .EQ. GLASS(INDEX(I7)))) THEN
+  221   C**THE FOLLOWING STATEMENTS ARE NECESSARY BECAUSE THE 'CHAR' FUNCTION
+  222   C DOES NOT WORK. JPL CHANGE.
+  223   	   NMODELS=INDEX(I7)
+  224   	   IF(NMODELS.EQ.0) CVAR='0   '
+  225   	   IF(NMODELS.EQ.1) CVAR='1   '
+  226   	   IF(NMODELS.EQ.2) CVAR='2   '
+  227   	   IF(NMODELS.EQ.3) CVAR='3   '
+  228   	   IF(NMODELS.EQ.4) CVAR='4   '
+  229   	   IF(NMODELS.EQ.5) CVAR='5   '
+  230   	   IF(NMODELS.EQ.6) CVAR='6   '
+  231   	   IF(NMODELS.EQ.7) CVAR='7   '
+  232   	   IF(NMODELS.EQ.8) CVAR='8   '
+  233   	   IF(NMODELS.EQ.9) CVAR='9   '
+  234   	   IF(NMODELS.EQ.10) CVAR='10   '
+  235   	   IF(NMODELS.EQ.11) CVAR='11  '
+  236   	   IF(NMODELS.EQ.12) CVAR='12  '
+  237   	   IF(NMODELS.EQ.13) CVAR='13  '
+  238   	   IF(NMODELS.EQ.14) CVAR='14  '
+  239   	   IF(NMODELS.EQ.15) CVAR='15  '
+  240   	   IF(NMODELS.EQ.16) CVAR='16  '
+  241   	   IF(NMODELS.EQ.17) CVAR='17  '
+  242   	   IF(NMODELS.EQ.18) CVAR='18  '
+  243   	   IF(NMODELS.EQ.19) CVAR='19  '
+  244   	   IF(NMODELS.EQ.20) CVAR='20  '
+  245   	   IF(NMODELS.EQ.21) CVAR='21  '
+  246   	   IF(NMODELS.EQ.22) CVAR='22  '
+  247   	   IF(NMODELS.EQ.23) CVAR='23  '
+  248   	   IF(NMODELS.EQ.24) CVAR='24  '
+  249   	   IF(NMODELS.EQ.25) CVAR='25  '
+  250   	   IF(NMODELS.EQ.26) CVAR='26  '
+  251   	   IF(NMODELS.EQ.27) CVAR='27  '
+  252   	   IF(NMODELS.EQ.28) CVAR='28  '
+  253   	   IF(NMODELS.EQ.29) CVAR='29  '
+  254   	   IF(NMODELS.EQ.30) CVAR='30  '
+  255   C     CVAR='    '
+  256   C     CVAR=CHAR(INTS(INDEX(I7)))
+  257   	   GLASS(INDEX(I7))=GLASS(INDEX(I7))(1:5)//CVAR
+  258   	END IF
+  259   C***** DROP DUPLICATE PRIVATE CATALOG ENTRIES
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+  194           IF ((N1(K) .EQ. N1(I7)) .AND. (N2(K) .EQ. N2(I7)) .AND.
+  195        *      (N3(K) .EQ. N3(I7)) .AND. (N4(K) .EQ. N4(I7)) .AND.
+  196        *      (N5(K) .EQ. N5(I7)) .AND.
+  197        *      (GLASS(INDEX(K)) .EQ. GLASS(INDEX(I7)))) SAME=.TRUE.
+  198   C***** DROP DUPLICATE PRIVATE CATALOG ENTRIES
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+  268   300   READ(6,2)LINE  ! SKIP 2 LINES
+  269         READ(6,2)LINE
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+  207   300   READ(6,2)LINE  /* SKIP 2 LINES
+  208         READ(6,2)LINE
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+  292         READ(6,2)LINE !SKIP BLANK LINE
+  293   430   READ(6,2)LINE  ! SKIP ANAMORPHIC DATA
+  294         IF (LINE(2:5) .NE. '    ') GOTO 430
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+  231         READ(6,2)LINE /*SKIP BLANK LINE
+  232   430   READ(6,2)LINE  /* SKIP ANAMORPHIC DATA
+  233         IF (LINE(2:5) .NE. '    ') GOTO 430
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+  298   450   READ(6,2)LINE  ! SKIP A LINE
+  299         READ(6,2)LINE  ! SKIP A LINE.	BBC. 9/18/84.
+  300   460   READ(6,2)LINE
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+  237   450   READ(6,2)LINE  /* SKIP A LINE
+  238   460   READ(6,2)LINE
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+  307           I8=I8-1  ! DROP X-TORIC
+  308         END IF
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+  245           I8=I8-1  /* DROP X-TORIC
+  246         END IF
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+  312   500   READ(6,2)LINE  ! SKIP 2 LINES
+  313         READ(6,2)LINE
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+  250   500   READ(6,2)LINE  /* SKIP 2 LINES
+  251         READ(6,2)LINE
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+  321   550   READ(6,2)LINE  ! SKIP 2 LINES
+  322         READ(6,2)LINE
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+  259   550   READ(6,2)LINE  /* SKIP 2 LINES
+  260         READ(6,2)LINE
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+  341   650   READ(6,2)LINE  ! SKIP 2 LINES
+  342         READ(6,2)LINE
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+  279   650   READ(6,2)LINE  /* SKIP 2 LINES
+  280         READ(6,2)LINE
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+  352           I10=I10-1  ! DROP PICKUP WITH B VALUE
+  353         END IF
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+  290           I10=I10-1  /* DROP PICKUP WITH B VALUE
+  291         END IF
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+  359         END IF  ! DROP PICKUP WITH A VALUE NOT EQUAL TO +-1.0
+  360         IF ((PIKUP(I10) .EQ. 'CLAP') .OR. (PIKUP(I10) .EQ. 'COBS')) THEN
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+  297         END IF  /* DROP PICKUP WITH A VALUE NOT EQUAL TO +-1.0
+  298         IF ((PIKUP(I10) .EQ. 'CLAP') .OR. (PIKUP(I10) .EQ. 'COBS')) THEN
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+  364           I10=I10-1  ! DROP CLAP OR COBS PICKUP
+  365         END IF
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+  302           I10=I10-1  /* DROP CLAP OR COBS PICKUP
+  303         END IF
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+  369   700   READ(6,2)LINE ! SKIP 2 LINES
+  370         READ(6,2)LINE
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+  307   700   READ(6,2)LINE /* SKIP 2 LINES
+  308         READ(6,2)LINE
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+  380           I6=I6-1  ! DROP DATA LINE
+  381         END IF
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+  318           I6=I6-1  /* DROP DATA LINE
+  319         END IF
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+  384   C*****ALTERNATE CONFIGURATIONS. BBC 9/20/84.
+  385   725   I11 = 0
+  386         READ (6,2) LINE		! READ NEXT FOUR LINES.
+  387         WRITE (5,244) LINE(1:78)
+  388         READ (6,2) LINE
+  389         WRITE (5,244) LINE(1:78)
+  390         READ (6,2) LINE
+  391         WRITE (5,244) LINE(1:78)
+  392   727   READ (6,2) LINE
+  393         IF (LINE(2:14) .EQ. '             ') GOTO 750
+  394         WRITE (5,244) LINE(1:78)
+  395   C      IF (LINE(2:4) .EQ. 'CFG') THEN
+  396   C      READ (LINE,32) CFG1
+  397   C      ELSE
+  398   C        I11 = I11 + 1
+  399   C        READ (LINE,31) CPARM(I11),NCONF(I11),ACVAL(I11)
+  400   C        CFG(I11) = CFG1
+  401   C      END IF
+  402         GOTO 727		! DECODE THE NEXT LINE
+  403   C******************************************************************************
+  404   C*****GENERAL DATA
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+  322   C*****GENERAL DATA
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+  412   C IF 'NO APERTURE STOP' LINE, THEN 'S' DEFAULTS TO 'REF SURF'. BBC 10/84.
+  413         ELSE IF (LINE(2:17) .EQ. 'NO APERTURE STOP') THEN
+  414           ISTOP = REF_SURF
+  415         ELSE IF (LINE(7:11) .EQ. 'UNITS') THEN
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+  330         ELSE IF (LINE(7:11) .EQ. 'UNITS') THEN
+************
+************
+File USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79
+  424   C BBC 9/20/84. INSERT CODE TO HANDLE 'ALTERNATE CONFIGURATIONS'.
+  425         ELSE IF (LINE(2:10) .EQ. 'ALTERNATE') THEN
+  426           WRITE (5,244) LINE(1:78)
+  427   244     FORMAT (' :',A78)
+  428           GOTO 725
+  429         ELSE
+******
+File USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1
+  339         ELSE
+************
+
+Number of difference sections found: 25
+Number of difference records found: 137
+
+DIFFERENCES /MERGED=1/OUTPUT=USER$U1B:[DEMO.JPL]DIFF.DAT;1-
+    USER$U1B:[DEMO.JPL]ACCOSV1.FOR;79-
+    USER$U1B:[DEMO.JPL.OLDPROG]ACCOSV1.FOR;1

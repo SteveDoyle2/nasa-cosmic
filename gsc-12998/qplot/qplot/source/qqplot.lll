@@ -1,0 +1,2206 @@
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page    1
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+00001      0  0 [ IDENT       ('QPLOT'),  
+00002      0  0   INHERIT     ('QLIBHOME:STARLETQ',
+00003      0  0                'QLIBHOME:STANDARD',
+00004      0  0                'QLIBHOME:GENERAL',
+00005      0  0                'QLIBHOME:IO',
+00006      0  0                'QLIBHOME:COLOR',
+00007      0  0                'QLIBHOME:MATH',
+00008      0  0                'QLIBHOME:STRING',
+00009      0  0                'QLIBHOME:FIG',
+00010      0  0                'QLIBHOME:TERM_VAX',
+00011      0  0                'QLIBHOME:TERMIO',
+00012      0  0                'QLIBHOME:IOBASE',
+00013      0  0                'QLIBHOME:UTILITIES'),
+00014      0  0   ENVIRONMENT ('QLIBHOME:PLOT')]
+00015      0  0 MODULE plot;
+00016      0  0 TYPE
+00017      0  0    point        = RECORD
+00018      0  0                   f   : framelink;
+00019      0  0                   x,y : real;
+00020      0  0                   END;
+00021      0  0 
+00022      0  0 [ HIDDEN ] VAR
+00023      0  0    framelock    : framelink := NIL;
+00024      0  0    frameall     : boolean   := false;
+00025      0  0    jmat         : ARRAY [0..9] OF   RECORD  jm,j1,j2,j3 : integer;  END
+00026      0  0     := ((1000,  -1,-1,-1),
+00027      0  0         (1300, 650,-1,-1),  (1300, 500, 800,-1),  (1300, 400, 650, 900),
+00028      0  0         ( 700, 350,-1,-1),  ( 700, 300, 400,-1),  ( 700, 250, 350, 450),
+00029      0  0         (2000,1000,-1,-1),  (2000, 800,1200,-1),  (2000, 700,1000,1300));
+00030   C  0  0 {=============================================================================}
+00031   C  0  0 {-- SCALING AND CONVERSION FUNCTIONS -----------------------------------------}
+00032   C  0  0 {=============================================================================}
+00033      0  0 [ GLOBAL ]
+00034      1  0 FUNCTION pointofr (fr : framelink;  x,y : real) : point;
+00035      1  0 VAR
+00036      1  0    pt : point;
+00037      1  1 BEGIN
+00038      1  1 pt.f := fr;
+00039      1  1 pt.x := x;
+00040      1  1 pt.y := y;
+00041      1  1 pointofr := pt;
+00042      0  0 END;
+00043   C  0  0 {-----------------------------------------------------------------------------}
+00044      0  0 [ GLOBAL ]
+00045      1  0 FUNCTION pointoflp (fr : framelink;  lp : limitpoint) : point;
+00046      1  0 VAR
+00047      1  0    pt : point;
+00048      1  1 BEGIN
+00049      1  1 pt.f := fr;
+00050      1  1 pt.x := lp.x;
+00051      1  1 pt.y := lp.y;
+00052      1  1 pointoflp := pt;
+00053      0  0 END;
+00054   C  0  0 {-----------------------------------------------------------------------------}
+00055      0  0 [ GLOBAL ]
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page    2
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+00056      1  0 FUNCTION lpofpoint (pt : point) : limitpoint;
+00057      1  0 VAR
+00058      1  0    lp : limitpoint;
+00059      1  1 BEGIN
+00060      1  1 lp.x := pt.x;
+00061      1  1 lp.y := pt.y;
+00062      1  1 lpofpoint := lp;
+00063      0  0 END;
+00064   C  0  0 {-----------------------------------------------------------------------------}
+00065      0  0 [ GLOBAL ]
+00066      1  0 FUNCTION scale (p : point) : ipoint;
+00067      1  0 VAR
+00068      1  0    ip : ipoint;
+00069   C  1  0 {------------------------------}
+00070      2  0 FUNCTION scalez (r : real;  VAR z : frameaxis_type) : integer;
+00071      2  1 BEGIN
+00072      2  1 IF z.log AND (p.f^.format <> polar)
+00073      2  1  THEN scalez := z.jmin + round ((z.jmax-z.jmin) * log10(r/z.min) 
+00074      2  1                               / log10(z.max/z.min))
+00075      2  1  ELSE scalez := z.jmin + round ((z.jmax-z.jmin) * (r-z.min) 
+00076      2  1                               / (z.max-z.min));
+00077      1  0 END;
+00078   C  1  0 {------------------------------}
+00079      1  1 BEGIN
+00080      1  1 ip.ix := scalez (p.x,p.f^.x);
+00081      1  1 ip.iy := scalez (p.y,p.f^.y);
+00082      1  1 scale := ip;
+00083      0  0 END;
+00084   C  0  0 {-----------------------------------------------------------------------------}
+00085      0  0 [ GLOBAL ]
+00086      1  0 FUNCTION descale (fr : framelink;  ip : ipoint) : point;
+00087      1  0 VAR
+00088      1  0    p : point;
+00089   C  1  0 {------------------------------}
+00090      2  0 FUNCTION descalez (i : integer;  VAR z : frameaxis_type) : real;
+00091      2  1 BEGIN
+00092      2  1 IF z.log AND (fr^.format <> POLAR)
+00093      2  1  THEN descalez := 10d0 ** (log10(z.min) 
+00094      2  1              + (log10(z.max)-log10(z.min)) * (i-z.jmin) / (z.jmax-z.jmin))
+00095      2  1  ELSE descalez := z.min 
+00096      2  1              + (z.max-z.min) * (i-z.jmin) / (z.jmax-z.jmin); 
+00097      1  0 END;
+00098   C  1  0 {------------------------------}
+00099      1  1 BEGIN
+00100      1  1 p.f := fr;
+00101      1  1 p.x := descalez (ip.ix,fr^.x);
+00102      1  1 p.y := descalez (ip.iy,fr^.y);
+00103      1  1 descale := p;
+00104      0  0 END;
+00105   C  0  0 {-----------------------------------------------------------------------------}
+00106      0  0 [ GLOBAL ]
+00107      1  0 FUNCTION convert (p : point) : point;
+00108      1  0 VAR
+00109      1  0    temp,pp : point;
+00110   C  1  0 {------------------------------}
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page    3
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+00111      2  0 FUNCTION convertz (r : real;  VAR z : frameaxis_type) : real;
+00112      2  1 BEGIN
+00113      2  1 convertz := r / z.convert;
+00114      1  0 END;
+00115   C  1  0 {------------------------------}
+00116      1  1 BEGIN
+00117      1  1 pp.f := p.f;
+00118      1  1 pp.x := convertz (p.x,p.f^.x);
+00119      1  1 pp.y := convertz (p.y,p.f^.y);
+00120      1  1 IF (p.f^.format = POLAR) 
+00121      1  1  THEN
+00122      1  2   BEGIN
+00123      1  2   temp.x := rmax (pp.x-p.f^.origin,0d0) 
+00124      1  2                       * cos (pp.y * PI/180d0);
+00125      1  2   temp.y := rmax (pp.x-p.f^.origin,0d0) 
+00126      1  2                       * sin (pp.y * PI/180d0);
+00127      1  2   temp.f := pp.f;
+00128      1  2   pp := temp;
+00129      1  1   END;
+00130      1  1 convert := pp;
+00131      0  0 END;
+00132   C  0  0 {-----------------------------------------------------------------------------}
+00133      0  0 [ GLOBAL ]
+00134      1  0 FUNCTION deconvert (p : point) : point;
+00135      1  0 VAR
+00136      1  0    temp,pp : point;
+00137   C  1  0 {------------------------------}
+00138      2  0 FUNCTION deconvertz (r : real;  VAR z : frameaxis_type) : real;
+00139      2  1 BEGIN
+00140      2  1 deconvertz := r * z.convert;
+00141      1  0 END;
+00142   C  1  0 {------------------------------}
+00143      1  1 BEGIN
+00144      1  1 IF (p.f^.format = POLAR) 
+00145      1  1  THEN
+00146      1  2   BEGIN
+00147      1  2   temp.x := sqrt (p.x**2 + p.y**2) + p.f^.origin;
+00148      1  2   IF temp.x <= p.f^.origin
+00149      1  2    THEN temp.y := 0
+00150      1  2    ELSE temp.y := arctan2 (p.y,p.x) * 180d0 / PI;
+00151      1  2   temp.f := p.f;
+00152      1  2   p := temp;
+00153      1  1   END;
+00154      1  1 pp.f := p.f;
+00155      1  1 pp.x := deconvertz (p.x,p.f^.x);
+00156      1  1 pp.y := deconvertz (p.y,p.f^.y);
+00157      1  1 deconvert := pp;
+00158      0  0 END;
+00159   C  0  0 {=============================================================================}
+00160   C  0  0 {-- PLOTLIMITS MANIPULATION PROCEDURES ---------------------------------------}
+00161   C  0  0 {=============================================================================}
+00162      0  0 [ GLOBAL ]
+00163      1  0 PROCEDURE broadenx (VAR lim : plotlimits;  x : real);
+00164      1  1 BEGIN
+00165      1  1 WITH lim DO
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page    4
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+00166      1  2    BEGIN
+00167      1  2    min.x := rmin (min.x,x);
+00168      1  2    max.x := rmax (max.x,x);
+00169      1  1    END;
+00170      0  0 END;
+00171   C  0  0 {-----------------------------------------------------------------------------}
+00172      0  0 [ GLOBAL ]
+00173      1  0 PROCEDURE broadeny (VAR lim : plotlimits;  y : real);
+00174      1  1 BEGIN
+00175      1  1 WITH lim DO
+00176      1  2    BEGIN
+00177      1  2    min.y := rmin (min.y,y);
+00178      1  2    max.y := rmax (max.y,y);
+00179      1  1    END;
+00180      0  0 END;
+00181   C  0  0 {-----------------------------------------------------------------------------}
+00182      0  0 [ GLOBAL ]
+00183      1  0 PROCEDURE broadenxy (VAR lim : plotlimits;  x,y : real);
+00184      1  1 BEGIN
+00185      1  1 broadenx (lim,x);
+00186      1  1 broadeny (lim,y);
+00187      0  0 END;
+00188   C  0  0 {-----------------------------------------------------------------------------}
+00189      0  0 [ GLOBAL ]
+00190      1  0 PROCEDURE samescale (VAR lim : plotlimits);
+00191      1  0 VAR
+00192      1  0    dd,aa,dif : real;
+00193      1  1 BEGIN
+00194      1  1 dd := rmax (abs(lim.max.x-lim.min.x),abs(lim.max.y-lim.min.y)) /2 ;
+00195      1  1 aa := (lim.min.x + lim.max.x) /2;
+00196      1  1 dif := MTH$DSIGN (dd, lim.max.x - lim.min.x);
+00197      1  1 lim.min.x := aa - dif;
+00198      1  1 lim.max.x := aa + dif;
+00199      1  1 aa := (lim.min.y + lim.max.y) /2;
+00200      1  1 dif := MTH$DSIGN (dd, lim.max.y - lim.min.y);
+00201      1  1 lim.min.y := aa - dif;
+00202      1  1 lim.max.y := aa + dif;
+00203      0  0 END;
+00204   C  0  0 {-----------------------------------------------------------------------------} 
+00205      1  0 PROCEDURE expandlimits (VAR lim : plotlimits;  k : real);
+00206      1  0 VAR
+00207      1  0    mid,half : real;
+00208      1  1 BEGIN
+00209      1  1 samescale (lim);
+00210      1  1 mid  := (lim.max.x + lim.min.x) / 2d0;
+00211      1  1 half := (lim.max.x - lim.min.x) / 2d0;
+00212      1  1 lim.min.x := mid - half * k;
+00213      1  1 lim.max.x := mid + half * k;
+00214      1  1 samescale (lim);
+00215      0  0 END;
+00216   C  0  0 {=============================================================================}
+00217   C  0  0 {-- PLOTLIMIT IO PROCEDURES --------------------------------------------------}
+00218   C  0  0 {=============================================================================}
+00219      0  0 [ GLOBAL ]
+00220      1  0 PROCEDURE readlimits (fr : framelink;  VAR lim : plotlimits );
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page    5
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+00221      1  0 VAR
+00222      1  0    min,max : point;
+00223      1  1 BEGIN
+00224      1  1 writeline (out,'Enter Plotting Limits...');
+00225      1  1 min := convert (pointoflp (fr,lim.min));
+00226      1  1 max := convert (pointoflp (fr,lim.max));
+00227      1  1 readreal ('ENTER XMIN: ',min.x,-BIG,BIG,min.x);
+00228      1  1 readreal ('ENTER XMAX: ',max.x,-BIG,BIG,max.x);
+00229      1  1 readreal ('ENTER YMIN: ',min.y,-BIG,BIG,min.y);
+00230      1  1 readreal ('ENTER YMAX: ',max.y,-BIG,BIG,max.y);
+00231      1  1 lim.min := lpofpoint (deconvert (min));
+00232      1  1 lim.max := lpofpoint (deconvert (max));
+00233      0  0 END;
+00234   C  0  0 {-----------------------------------------------------------------------------}
+00235      0  0 [ GLOBAL ]
+00236      1  0 PROCEDURE writelimits (dest : destination;  
+00237      1  0    heading : VARYING [len] OF char;  lim : plotlimits);
+00238      1  1 BEGIN
+00239      1  1 writeline (dest,heading 
+00240      1  1   + ' -- XLIMITS=' + strofr(lim.min.x,13) + strofr(lim.max.x,13) 
+00241      1  1     + ', YLIMITS=' + strofr(lim.min.y,13) + strofr(lim.max.y,13));
+00242      0  0 END; 
+00243   C  0  0 {=============================================================================}
+00244   C  0  0 {-- PLOTLIMITS ZOOM PROCEDURES -----------------------------------------------}
+00245   C  0  0 {=============================================================================}
+00246      0  0 [ GLOBAL ]
+00247      1  0 PROCEDURE purgezoom (fr : framelink);
+00248      1  0 VAR
+00249      1  0    zoom : zoomlink;
+00250      1  1 BEGIN
+00251      1  1 WITH fr^ DO
+00252      1  2    BEGIN
+00253      1  2    zoom := firstzoom;
+00254      1  2    WHILE zoom <> NIL DO
+00255      1  3       BEGIN
+00256      1  3       firstzoom := firstzoom^.nextzoom;
+00257      1  3       dispose (zoom);
+00258      1  3       zoom := firstzoom;
+00259      1  2       END;
+00260      1  1    END;
+00261      0  0 END;
+00262   C  0  0 {-----------------------------------------------------------------------------}
+00263      0  0 [ GLOBAL ]
+00264      1  0 PROCEDURE pushzoom (fr : framelink;  inlim : plotlimits);
+00265      1  0 VAR
+00266      1  0    zoom : zoomlink;
+00267      1  1 BEGIN
+00268      1  1 WITH fr^ DO
+00269      1  2    BEGIN
+00270      1  2    new (zoom);
+00271      1  2    zoom^.lim := inlim;
+00272      1  2    zoom^.nextzoom := firstzoom;
+00273      1  2    firstzoom := zoom;
+00274      1  1    END;
+00275      0  0 END;
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page    6
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+00276   C  0  0 {-----------------------------------------------------------------------------}
+00277      0  0 [ GLOBAL ]
+00278      1  0 FUNCTION popzoom (fr : framelink;  VAR outlim : plotlimits) : boolean;
+00279      1  0 VAR
+00280      1  0    zoom : zoomlink;
+00281      1  1 BEGIN
+00282      1  1 WITH fr^ DO
+00283      1  2    BEGIN
+00284      1  2    popzoom := firstzoom <> NIL;
+00285      1  2    IF firstzoom <> NIL
+00286      1  2     THEN
+00287      1  3      BEGIN
+00288      1  3      outlim := firstzoom^.lim;
+00289      1  3      zoom := firstzoom;
+00290      1  3      firstzoom := firstzoom^.nextzoom;
+00291      1  3      dispose (zoom);
+00292      1  2      END;
+00293      1  1    END;
+00294      0  0 END;
+00295   C  0  0 {-----------------------------------------------------------------------------}
+00296      0  0 [ GLOBAL ]
+00297      1  0 FUNCTION countzoom (fr : framelink) : integer;
+00298      1  0 VAR
+00299      1  0    zoom : zoomlink;
+00300      1  0    out  : integer;
+00301      1  1 BEGIN
+00302      1  1 WITH fr^ DO
+00303      1  2    BEGIN
+00304      1  2    out := 0;
+00305      1  2    zoom := firstzoom;
+00306      1  2    WHILE zoom <> NIL DO
+00307      1  3       BEGIN
+00308      1  3       out := out + 1;
+00309      1  3       zoom := zoom^.nextzoom;
+00310      1  2       END;
+00311      1  2    countzoom := out;
+00312      1  1    END;
+00313      0  0 END;
+00314   C  0  0 {=============================================================================}
+00315   C  0  0 {-- FRAME ALLOCATE / DEALLOCATE PROCEDURES -----------------------------------}
+00316   C  0  0 {=============================================================================}
+00317      0  0 [ GLOBAL ]
+00318      1  0 PROCEDURE makeframe (VAR fr : framelink;  tp : framelink;  lim : plotlimits);
+00319      1  0 VAR
+00320      1  0    i,j : integer;
+00321      1  1 BEGIN
+00322      1  1 new (fr);
+00323      1  1 fr^             := tp^;
+00324      1  1 fr^.lim         := lim;
+00325      1  1 fr^.currlim     := lim;
+00326      0  0 END;
+00327   C  0  0 {-----------------------------------------------------------------------------}
+00328      0  0 [ GLOBAL ]
+00329      1  0 PROCEDURE addframe (fr : framelink);
+00330      1  1 BEGIN
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page    7
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+00331      1  1 IF frame.count = LIMFRAMELIST THEN raise ('Frame list overflow');
+00332      1  1 frame.count := frame.count + 1;
+00333      1  1 frame.data[frame.count] := fr;
+00334      0  0 END;
+00335   C  0  0 {-----------------------------------------------------------------------------}
+00336      0  0 [ GLOBAL ]
+00337      1  0 PROCEDURE clearframe;
+00338      1  0 VAR
+00339      1  0    i : integer;
+00340      1  1 BEGIN
+00341      1  1 frame.data[0]^.lset := false;
+00342      1  1 frame.data[0]^.uset := false;
+00343      1  1 frame.count := 0;
+00344      0  0 END;
+00345   C  0  0 {=============================================================================}
+00346   C  0  0 {-- MISCELLANEOUS PLOTTING PROCEDURES ----------------------------------------}
+00347   C  0  0 {=============================================================================}
+00348      0  0 [ GLOBAL ]
+00349      1  0 PROCEDURE setdefcharsize (height,width,linespacing,charspacing : integer);
+00350      1  1 BEGIN
+00351      1  1 config.ch.height      := height;
+00352      1  1 config.ch.width       := width;
+00353      1  1 config.ch.linespacing := linespacing;
+00354      1  1 config.ch.charspacing := charspacing;
+00355      0  0 END;
+00356   C  0  0 {-----------------------------------------------------------------------------}
+00357      0  0 [ GLOBAL ]
+00358      1  0 PROCEDURE drawbox (xmin,xmax,ymin,ymax : integer);
+00359   C  1  0 { Purpose -- Draw box centered at position ix,iy.  }
+00360      1  1 BEGIN
+00361      1  1 position (xmin, ymin);
+00362      1  1 draw     (xmin, ymax);
+00363      1  1 draw     (xmax, ymax);
+00364      1  1 draw     (xmax, ymin);
+00365      1  1 draw     (xmin, ymin);
+00366      1  1 finplot;
+00367      0  0 END;
+00368   C  0  0 {-----------------------------------------------------------------------------}
+00369      0  0 [ GLOBAL ]
+00370      1  0 PROCEDURE circle (ix,iy,diameter : integer);
+00371   C  1  0 { Purpose -- Draw circle centered at position ix,iy.  }
+00372      1  0 VAR
+00373      1  0    i : integer;
+00374      1  1 BEGIN
+00375      1  1 position (ix + diameter, iy);
+00376      1  1 FOR i := 1 TO 90 DO draw (round (ix + diameter * cos (i*4 * PI / 180d0)),
+00377      1  1                           round (iy + diameter * sin (i*4 * PI / 180d0)));
+00378      1  1 draw     (ix + diameter, iy);
+00379      0  0 END;
+00380   C  0  0 {-----------------------------------------------------------------------------}
+00381      0  0 [ GLOBAL ]
+00382      1  0 PROCEDURE hardcopy;
+00383      1  1 BEGIN
+00384      1  1 screencopy;
+00385      0  0 END;
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page    8
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+00386   C  0  0 {-----------------------------------------------------------------------------}
+00387      0  0 [ GLOBAL ]
+00388      1  0 PROCEDURE replot;
+00389      1  0 VAR
+00390      1  0    i,hcom,hcha : integer;
+00391      1  1 BEGIN
+00392      1  1 screenerase (false);
+00393      1  1 reset (plotitemfile);
+00394      1  1 WHILE NOT eof (plotitemfile) DO
+00395      1  2    BEGIN
+00396      1  2    readplotitem;
+00397      1  2    executecom;
+00398      1  1    END;
+00399      1  1 truncate (plotitemfile);
+00400      0  0 END;
+00401   C  0  0 {-----------------------------------------------------------------------------}
+00402      0  0 [ GLOBAL ]
+00403      1  0 PROCEDURE newline;
+00404   C  1  0 { Purpose -- Drop cursor one line.    }
+00405      1  1 BEGIN
+00406      1  1 moveto (0,-config.ch.height);
+00407      0  0 END;
+00408   C  0  0 {-----------------------------------------------------------------------------}
+00409      0  0 [ GLOBAL ]
+00410      1  0 PROCEDURE scaleposition (pt : point);
+00411   C  1  0 { Purpose -- Set beam at a particular point after scaling.   }
+00412      1  0 VAR
+00413      1  0    ipt : ipoint;
+00414      1  1 BEGIN
+00415      1  1 ipt := scale(convert(pt));
+00416      1  1 position (ipt.ix,ipt.iy);
+00417      0  0 END;
+00418   C  0  0 {-----------------------------------------------------------------------------}
+00419      0  0 [ GLOBAL ]
+00420      1  0 PROCEDURE scaledraw (pt : point);
+00421   C  1  0 { Purpose -- Draw line to a particular point after scaling.   }
+00422      1  0 VAR
+00423      1  0    ipt : ipoint;
+00424      1  1 BEGIN
+00425      1  1 ipt := scale(convert(pt));
+00426      1  1 draw (ipt.ix,ipt.iy);
+00427      0  0 END;
+00428   C  0  0 {-----------------------------------------------------------------------------}
+00429      0  0 [ GLOBAL ]
+00430      1  0 PROCEDURE getposition (VAR ix,iy : integer);
+00431   C  1  0 { Purpose -- Set beam at a particular point in fixed coordinates.   }
+00432      1  1 BEGIN
+00433      1  1 ix := env.pos.ix;
+00434      1  1 iy := env.pos.iy;
+00435      0  0 END;
+00436   C  0  0 {-----------------------------------------------------------------------------}
+00437      0  0 [ GLOBAL ]
+00438      1  0 PROCEDURE timeprint;
+00439   C  1  0 { Purpose -- Print the date and time }
+00440      1  1 BEGIN
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page    9
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+00441      1  1 grprint ('The time is  ' + strtime);
+00442      0  0 END;
+00443   C  0  0 {-----------------------------------------------------------------------------}
+00444      0  0 [ GLOBAL ]
+00445      1  0 FUNCTION inside (fr : framelink;  ipt : ipoint) : boolean;
+00446      1  1 BEGIN
+00447      1  1 inside := (ipt.ix > fr^.x.jmin) AND 
+00448      1  1           (ipt.ix < fr^.x.jmax) AND 
+00449      1  1           (ipt.iy > fr^.y.jmin) AND 
+00450      1  1           (ipt.iy < fr^.y.jmax);
+00451      0  0 END;
+00452   C  0  0 {-----------------------------------------------------------------------------}
+00453      0  0 [ GLOBAL ]
+00454      1  0 FUNCTION hit (fr : framelink;  x1,y1,x2,y2 : real) : integer;
+00455      1  0 VAR
+00456      1  0    ipt1,ipt2 : ipoint;
+00457      1  0    pt1,pt2   : point;
+00458      1  1 BEGIN
+00459      1  1 pt1.f := fr;
+00460      1  1 pt1.x := x1;
+00461      1  1 pt1.y := y1;
+00462      1  1 pt2.f := fr;
+00463      1  1 pt2.x := x2;
+00464      1  1 pt2.y := y2;
+00465      1  1 ipt1 := scale(convert(pt1));
+00466      1  1 ipt2 := scale(convert(pt2));
+00467      1  1 hit := round (sqrt ((1d0*ipt1.ix-ipt2.ix)**2 + (1d0*ipt1.iy-ipt2.iy)**2));
+00468      0  0 END;
+00469   C  0  0 {-----------------------------------------------------------------------------}
+00470      0  0 [ GLOBAL ]
+00471      1  0 PROCEDURE encircle (delta : integer);
+00472      1  1 BEGIN
+00473      1  1 IF delta = 0 THEN delta := config.starsize;
+00474      1  1 moveto (delta,0);
+00475      1  1 drawto (-delta,delta);
+00476      1  1 drawto (-delta,-delta);
+00477      1  1 drawto (delta,-delta);
+00478      1  1 drawto (delta,delta);
+00479      1  1 moveto (-delta,0);
+00480      1  1 finplot;
+00481      0  0 END;
+00482   C  0  0 {-----------------------------------------------------------------------------}
+00483      0  0 [ GLOBAL ]
+00484      1  0 PROCEDURE stardraw (points : integer;  delta : integer);
+00485      1  0 VAR
+00486      1  0    ipt,iptold   : ipoint;
+00487      1  0    i,pp         : integer;
+00488      1  0    th,fi,fpp    : real;
+00489      1  1 BEGIN
+00490      1  1 IF delta = 0 THEN delta := config.starsize;
+00491      1  1 ipt.ix := 0;
+00492      1  1 ipt.iy := delta;
+00493      1  1 moveto (ipt.ix,ipt.iy);
+00494      1  1 IF points < 8
+00495      1  2  THEN BEGIN pp:=points;  fpp:=pp;  END
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   10
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+00496      1  1  ELSE BEGIN pp:=2*points-11;  fpp:=pp;  fpp:=fpp/(pp DIV 2);  END;
+00497      1  1 FOR i := 1 TO pp DO
+00498      1  2    BEGIN
+00499      1  2    iptold := ipt;
+00500      1  2    fi := i;
+00501      1  2    th := 2 * PI * fi / fpp;
+00502      1  2    ipt.ix := round (delta * sin (th));
+00503      1  2    ipt.iy := round (delta * cos (th));
+00504      1  2    drawto (ipt.ix-iptold.ix,ipt.iy-iptold.iy);
+00505      1  1    END;
+00506      1  1 finplot;
+00507      0  0 END;
+00508   C  0  0 {-----------------------------------------------------------------------------}
+00509      0  0 [ GLOBAL ]
+00510      1  0 PROCEDURE grprinttempfile;
+00511      1  0 VAR
+00512      1  0    line : anystring;
+00513      1  1 BEGIN
+00514      1  1 reset (tempfile);
+00515      1  1 WHILE NOT eof (tempfile) DO
+00516      1  2    BEGIN
+00517      1  2    readln (tempfile,line);
+00518      1  2    grprint (line);
+00519      1  2    newline;
+00520      1  1    END;
+00521      0  0 END;
+00522   C  0  0 {=============================================================================}
+00523   C  0  0 {-- LINE TRACING PROCEDURES --------------------------------------------------}
+00524   C  0  0 {=============================================================================}
+00525      0  0 [ HIDDEN ]
+00526      1  0 PROCEDURE clip (VAR pt1,pt2 : point;  VAR visible1,visible2,there : boolean);
+00527   C  1  0 { Purpose -- This subroutine is used by the clipping routines.       }
+00528   C  1  0 {            It determines the visible segment of the line from      }
+00529   C  1  0 {            pt1 to pt2 if any such segment exists.  The parameters  }
+00530   C  1  0 {            pt1 and pt2 are changed (adjusted), and there is set    }
+00531   C  1  0 {            to true if there is a visible portion.                  }
+00532   C  1  0 {----------------------------------}
+00533      2  0 FUNCTION between (x,x1,x2 : real) : boolean;
+00534      2  1 BEGIN
+00535      2  1 between := ((x >= x1) AND (x <= x2))  OR  ((x >= x2) AND (x <= x1));
+00536      1  0 END;
+00537   C  1  0 {----------------------------------}
+00538      2  0 FUNCTION xcross (y,xlo,xhi : real;  pt1,pt2 : point) : real;
+00539      2  0 VAR
+00540      2  0    x : real;
+00541      2  1 BEGIN
+00542      2  1 xcross := UNDEFINED_REAL;
+00543      2  1 IF abs (pt2.y - pt1.y) > 1d-12
+00544      2  1  THEN
+00545      2  2   BEGIN
+00546      2  2   x := pt1.x + (y - pt1.y) / (pt2.y - pt1.y) * (pt2.x - pt1.x);
+00547      2  2   IF between (x,xlo,xhi) AND ((pt1.y >= y) = (pt2.y <= y))
+00548      2  2    THEN xcross := x;
+00549      2  1   END;
+00550      1  0 END;
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   11
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+00551   C  1  0 {----------------------------------}
+00552      2  0 FUNCTION ycross (x,ylo,yhi : real;  pt1,pt2 : point) : real;
+00553      2  0 VAR
+00554      2  0    y : real;
+00555      2  1 BEGIN
+00556      2  1 ycross := UNDEFINED_REAL;
+00557      2  1 IF abs (pt2.x - pt1.x) > 1d-12
+00558      2  1  THEN
+00559      2  2   BEGIN
+00560      2  2   y := pt1.y + (x - pt1.x) / (pt2.x - pt1.x) * (pt2.y - pt1.y);
+00561      2  2   IF between (y,ylo,yhi) AND ((pt1.x >= x) = (pt2.x <= x))
+00562      2  2    THEN ycross := y;
+00563      2  1   END;
+00564      1  0 END;
+00565   C  1  0 {----------------------------------}
+00566      2  0 PROCEDURE hack (VAR ptout : point;  ptin : point;  VAR visible : boolean);
+00567      2  0 VAR
+00568      2  0    xx,yy : real;
+00569      2  1 BEGIN
+00570      2  2 WITH ptin.f^ DO BEGIN
+00571      2  2 visible := true;
+00572      2  2 IF ptout.x > x.max
+00573      2  2  THEN
+00574      2  3   BEGIN
+00575      2  3   visible := false;
+00576      2  3   yy := ycross (x.max,y.min,y.max,ptout,ptin);
+00577      2  3   IF yy <> UNDEFINED_REAL
+00578      2  3    THEN BEGIN  there := true;  ptout.y := yy;  ptout.x := x.max;  END;
+00579      2  2   END;
+00580      2  2 IF ptout.x < x.min
+00581      2  2  THEN
+00582      2  3   BEGIN
+00583      2  3   visible := false;
+00584      2  3   yy := ycross (x.min,y.min,y.max,ptout,ptin);
+00585      2  3   IF yy <> UNDEFINED_REAL
+00586      2  3    THEN BEGIN  there := true;  ptout.y := yy;  ptout.x := x.min;  END;
+00587      2  2   END;
+00588      2  2 IF ptout.y > y.max
+00589      2  2  THEN
+00590      2  3   BEGIN
+00591      2  3   visible := false;
+00592      2  3   xx := xcross (y.max,x.min,x.max,ptout,ptin);
+00593      2  3   IF xx <> UNDEFINED_REAL
+00594      2  3    THEN BEGIN  there := true;  ptout.x := xx;  ptout.y := y.max;  END;
+00595      2  2   END;
+00596      2  2 IF ptout.y < y.min
+00597      2  2  THEN
+00598      2  3   BEGIN
+00599      2  3   visible := false;
+00600      2  3   xx := xcross (y.min,x.min,x.max,ptout,ptin);
+00601      2  3   IF xx <> UNDEFINED_REAL
+00602      2  3    THEN BEGIN  there := true;  ptout.x := xx;  ptout.y := y.min;  END;
+00603      2  2   END;
+00604      2  1 END;
+00605      1  0 END;
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   12
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+00606   C  1  0 {----------------------------------}
+00607      1  1 BEGIN 
+00608      1  1 there := false;
+00609      1  1 hack (pt1,pt2,visible1);
+00610      1  1 hack (pt2,pt1,visible2);
+00611      1  1 there := there OR visible1 OR visible2;
+00612      0  0 END;
+00613   C  0  0 {-----------------------------------------------------------------------------}
+00614      0  0 [ GLOBAL ]
+00615      1  0 PROCEDURE trace (fr : framelink;
+00616      1  0                  VAR x : ARRAY [lx..ux : integer] OF real;
+00617      1  0                  VAR y : ARRAY [ly..uy : integer] OF real;
+00618      1  0                  lo,hi : integer;  toclip : boolean;  style : integer);
+00619   C  1  0 { Purpose -- Trace the line from x(lo),y(lo) to             }
+00620   C  1  0 {            x(hi),y(hi) with appropiate clipping.          }
+00621   C  1  0 {----------------------------------}
+00622      2  0 PROCEDURE tracelinedots (style : integer);
+00623   C  2  0 { Purpose -- Place dots or draw line from x(lo),y(lo) to    }
+00624   C  2  0 {            x(hi),y(hi) with appropiate clipping.          }
+00625      2  0 VAR
+00626      2  0    ptold,ptnew           : point;
+00627      2  0    there                 : boolean;
+00628      2  0    visibleold,visiblenew : boolean;
+00629      2  0    ipt,iptold,iptnew     : ipoint;
+00630      2  0    pc,r                  : real;
+00631      2  0    i,j                   : integer;
+00632      2  1 BEGIN
+00633      2  2 WITH jmat [abs(style) MOD 10] DO BEGIN
+00634      2  2 pc := 0;
+00635      2  2 j := 0;
+00636      2  2 FOR i := lo + 1 TO hi DO
+00637      2  3    BEGIN
+00638      2  3    ptold := convert (pointofr(fr,x[i-1],y[i-1]));
+00639      2  3    ptnew := convert (pointofr(fr,x[i],y[i]));
+00640      2  3    visibleold := true;
+00641      2  3    visiblenew := true;
+00642      2  3    there := true;
+00643      2  3    IF toclip THEN clip (ptold,ptnew,visibleold,visiblenew,there);
+00644      2  3    iptold := scale(ptold);  
+00645      2  3    IF (i = lo+1) OR NOT visibleold 
+00646      2  3     THEN 
+00647      2  4      BEGIN
+00648      2  4      IF style = 0 
+00649      2  4       THEN position (iptold.ix,iptold.iy)
+00650      2  4       ELSE BEGIN  pc := 0;  j := 0;  END;
+00651      2  3      END;
+00652      2  3    IF there 
+00653      2  3     THEN 
+00654      2  4      BEGIN
+00655      2  4      iptnew := scale(ptnew);
+00656      2  4      IF style = 0
+00657      2  4       THEN draw (iptnew.ix,iptnew.iy)
+00658      2  4       ELSE
+00659      2  5        BEGIN
+00660      2  5        r  := sqrt ((iptnew.ix-iptold.ix)**2 + (iptnew.iy-iptold.iy)**2);
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   13
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+00661      2  5        pc := pc + r;
+00662      2  5        WHILE pc > 1 DO
+00663      2  6           BEGIN
+00664      2  6           pc := pc-1;
+00665      2  6           j := (j+1) MOD jm;
+00666      2  6           IF (j=j1) OR (j=j2) OR (j=j3) 
+00667      2  6            THEN 
+00668      2  7             BEGIN
+00669      2  7             ipt.ix := round (iptold.ix + (iptnew.ix-iptold.ix) * (r-pc) / r);
+00670      2  7             ipt.iy := round (iptold.iy + (iptnew.iy-iptold.iy) * (r-pc) / r);
+00671      2  7             position (ipt.ix,ipt.iy);
+00672      2  7             moveto ( config.dotsize, 0);
+00673      2  7             drawto (-config.dotsize, config.dotsize);
+00674      2  7             drawto (-config.dotsize,-config.dotsize);
+00675      2  7             drawto ( config.dotsize,-config.dotsize);
+00676      2  7             drawto ( config.dotsize, config.dotsize);
+00677      2  7             finplot;
+00678      2  6             END;
+00679      2  5           END;
+00680      2  4        END;
+00681      2  4      ptold := ptnew;
+00682      2  3      END;
+00683      2  2    END;
+00684      2  2 finplot;
+00685      2  1 END;
+00686      1  0 END;
+00687   C  1  0 {----------------------------------}
+00688      1  1 BEGIN
+00689      1  1 IF config.dotsize = 0
+00690      1  1  THEN tracelinedots (0)
+00691      1  1  ELSE
+00692      1  2   BEGIN
+00693      1  2   IF style <> 0 THEN tracelinedots (abs(style));
+00694      1  2   IF style >= 0 THEN tracelinedots (0);
+00695      1  1   END;
+00696      0  0 END;
+00697   C  0  0 {-----------------------------------------------------------------------------}
+00698      0  0 [ GLOBAL ]
+00699      1  0 PROCEDURE boxit (fr : framelink;  lim : plotlimits);
+00700      1  0 VAR
+00701      1  0    pt       : point;
+00702      1  0    xsq,ysq  : ARRAY [1..5] OF real;
+00703      1  1 BEGIN
+00704      1  1 IF (fr^.format = POLAR)
+00705      1  1  THEN
+00706      1  2   BEGIN
+00707      1  2   pt := deconvert (pointofr (fr, lim.min.x, lim.min.y));
+00708      1  2   xsq[1] := pt.x;  ysq[1] := pt.y;
+00709      1  2   pt := deconvert (pointofr (fr, lim.min.x, lim.max.y));
+00710      1  2   xsq[2] := pt.x;  ysq[2] := pt.y;
+00711      1  2   pt := deconvert (pointofr (fr, lim.max.x, lim.max.y));
+00712      1  2   xsq[3] := pt.x;  ysq[3] := pt.y;
+00713      1  2   pt := deconvert (pointofr (fr, lim.max.x, lim.min.y));
+00714      1  2   xsq[4] := pt.x;  ysq[4] := pt.y;
+00715      1  2   pt := deconvert (pointofr (fr, lim.min.x, lim.min.y));
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   14
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+00716      1  2   xsq[5] := pt.x;  ysq[5] := pt.y;
+00717      1  2   END
+00718      1  1  ELSE
+00719      1  2   BEGIN
+00720      1  2   xsq[1] := lim.min.x;   ysq[1] := lim.min.y;
+00721      1  2   xsq[2] := lim.min.x;   ysq[2] := lim.max.y;
+00722      1  2   xsq[3] := lim.max.x;   ysq[3] := lim.max.y;
+00723      1  2   xsq[4] := lim.max.x;   ysq[4] := lim.min.y;
+00724      1  2   xsq[5] := lim.min.x;   ysq[5] := lim.min.y;
+00725      1  1   END;
+00726      1  1 trace (fr,xsq,ysq,1,5,true,0);
+00727      0  0 END;
+00728   C  0  0 {=============================================================================}
+00729   C  0  0 {-- MAPPING SUBPROCEDURES ----------------------------------------------------}
+00730   C  0  0 {=============================================================================}
+00731      0  0 [ HIDDEN ]
+00732      1  0 FUNCTION numstr (val,tick : real) : anystring;
+00733      1  0 VAR
+00734      1  0    i,power,digits : integer;
+00735      1  0    basetick       : real;
+00736      1  0    str            : anystring;
+00737      1  1 BEGIN
+00738      1  1 power    := gile (log10(tick) + 1d-3);
+00739      1  1 basetick := 10d0 ** power;
+00740      1  1 IF basetick = 0
+00741      1  1  THEN numstr := '0'
+00742      1  1  ELSE
+00743      1  2   BEGIN
+00744      1  2   IF abs(val) < basetick/2
+00745      1  2    THEN digits := 1
+00746      1  2    ELSE digits := gile (log10(abs(val)/basetick) + 1d-3) + 1;
+00747      1  2   str      := strofi (round(abs(val)/basetick),digits);
+00748      1  2   IF (power = 0) OR (abs(val) < basetick/2)
+00749      1  2    THEN
+00750      1  2   ELSE IF (power < 0) AND (power > -digits)
+00751      1  2    THEN
+00752      1  3     BEGIN
+00753      1  3     str := str + '.';
+00754      1  3     FOR i := digits DOWNTO digits + power DO str[i+1] := str[i];
+00755      1  3     str [digits + power + 1] := '.';
+00756      1  3     END
+00757      1  2   ELSE IF (power <= -digits) AND (power > -10)
+00758      1  2    THEN
+00759      1  3     BEGIN
+00760      1  3     FOR i := 1 TO abs(power) - digits DO str := '0' + str;
+00761      1  3     str := '.' + str;
+00762      1  3     END
+00763      1  2   ELSE IF (power > 0) AND (digits + power < 10)
+00764      1  2    THEN FOR i := 1 TO power DO str := str + '0'
+00765      1  2    ELSE
+00766      1  3     BEGIN
+00767      1  3     str := str + 'E';
+00768      1  3     IF power < 0 THEN str := str + '-';
+00769      1  3     str := str + strofi (abs(power),gile(log10(abs(power)))+1);
+00770      1  2     END;
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   15
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+00771      1  2   IF val < 0 THEN str := '-' + str;
+00772      1  2   IF length(str) > 20 THEN str := '***';
+00773      1  2   numstr := str;
+00774      1  1   END;
+00775      0  0 END;
+00776   C  0  0 {-----------------------------------------------------------------------------}
+00777      0  0 [ HIDDEN ]
+00778      1  0 PROCEDURE marktick (pt : point;  tsize : integer;  string : anystring;  
+00779      1  0    degreesign : boolean;  ch4 : anystring;  controlchar : char;
+00780      1  0    drawgrid : boolean);
+00781   C  1  0 {-------------------------------}
+00782      2  0 PROCEDURE grdegprint (string : anystring);
+00783      2  1 BEGIN
+00784      2  1 moveto (length(string)*config.ch.width, config.ch.height DIV 2);
+00785      2  1 grprint ('o');
+00786      1  0 END;
+00787   C  1  0 {-------------------------------}
+00788      2  0 FUNCTION between (x,x1,x2 : real) : boolean;
+00789      2  1 BEGIN
+00790      2  1 between := ((x >= x1) AND (x <= x2))  OR  ((x >= x2) AND (x <= x1));
+00791      1  0 END;
+00792   C  1  0 {-------------------------------}
+00793      1  1 BEGIN
+00794      1  2 WITH pt.f^ DO BEGIN
+00795      1  2 IF (pt.x = x.min) AND between (pt.y,y.min,y.max) AND (ch4[1] = controlchar) 
+00796      1  2  THEN
+00797      1  3   BEGIN
+00798      1  3   IF string = '' THEN setcolor (y.subtick) ELSE setcolor (y.tick);
+00799      1  3   scaleposition (deconvert (pt));
+00800      1  3   drawto (-tsize,0);
+00801      1  3   setcolor (y.number);
+00802      1  3   moveto (-config.ch.width * imin(length(string)+1,6), -config.ch.height DIV 3);
+00803      1  3   grprint (string);
+00804      1  3   IF degreesign THEN grdegprint (string);
+00805      1  3   IF string = '' THEN setcolor (y.subgrid) ELSE setcolor (y.grid);
+00806      1  3   scaleposition (deconvert (pt));
+00807      1  3   IF drawgrid THEN drawto (x.jmax-x.jmin,0);  
+00808      1  2   END;
+00809      1  2 IF (pt.x = x.max) AND between (pt.y,y.min,y.max) AND (ch4[2] = controlchar)
+00810      1  2  THEN
+00811      1  3   BEGIN
+00812      1  3   IF string = '' THEN setcolor (y.subtick) ELSE setcolor (y.tick);
+00813      1  3   scaleposition (deconvert (pt));
+00814      1  3   drawto (tsize,0);
+00815      1  3   setcolor (y.number);
+00816      1  3   moveto (config.ch.width DIV 2, -config.ch.height DIV 3);
+00817      1  3   grprint (string);
+00818      1  3   IF degreesign THEN grdegprint (string);
+00819      1  3   IF string = '' THEN setcolor (y.subgrid) ELSE setcolor (y.grid);
+00820      1  3   scaleposition (deconvert (pt));
+00821      1  3   IF drawgrid THEN drawto (x.jmin-x.jmax,0);  
+00822      1  2   END;
+00823      1  2 IF (pt.y = y.min) AND between (pt.x,x.min,x.max) AND (ch4[3] = controlchar)
+00824      1  2  THEN
+00825      1  3   BEGIN
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   16
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+00826      1  3   IF string = '' THEN setcolor (x.subtick) ELSE setcolor (x.tick);
+00827      1  3   scaleposition (deconvert (pt));
+00828      1  3   drawto (0,-tsize);
+00829      1  3   setcolor (x.number);
+00830      1  3   moveto (0, -config.ch.height);
+00831      1  3   centergrprint (string);
+00832      1  3   IF degreesign THEN grdegprint (string);
+00833      1  3   IF string = '' THEN setcolor (x.subgrid) ELSE setcolor (x.grid);
+00834      1  3   scaleposition (deconvert (pt));
+00835      1  3   IF drawgrid THEN drawto (0,y.jmax-y.jmin);  
+00836      1  2   END;
+00837      1  2 IF (pt.y = y.max) AND between (pt.x,x.min,x.max) AND (ch4[4] = controlchar)
+00838      1  2  THEN
+00839      1  3   BEGIN
+00840      1  3   IF string = '' THEN setcolor (x.subtick) ELSE setcolor (x.tick);
+00841      1  3   scaleposition (deconvert (pt));
+00842      1  3   drawto (0,tsize);
+00843      1  3   setcolor (x.number);
+00844      1  3   moveto (0,192);
+00845      1  3   centergrprint (string);
+00846      1  3   IF degreesign THEN grdegprint (string);
+00847      1  3   IF string = '' THEN setcolor (x.subgrid) ELSE setcolor (x.grid);
+00848      1  3   scaleposition (deconvert (pt));
+00849      1  3   IF drawgrid THEN drawto (0,y.jmin-y.jmax);  
+00850      1  2   END;
+00851      1  1 END;
+00852      0  0 END;
+00853   C  0  0 {-----------------------------------------------------------------------------}
+00854      0  0 [ HIDDEN ]
+00855      1  0 PROCEDURE setjminmax (fr : framelink);
+00856      1  1 BEGIN
+00857      1  1 WITH fr^ DO
+00858      1  2    BEGIN
+00859      1  2    IF y.lablelow OR fullborder
+00860      1  2     THEN y.jmin := y.bmin + ticksize + config.ch.height * 2
+00861      1  2     ELSE y.jmin := y.bmin;
+00862      1  2    IF y.lablehigh OR fullborder
+00863      1  2     THEN y.jmax := y.bmax - ticksize - config.ch.height * 3
+00864      1  2     ELSE y.jmax := y.bmax - config.ch.height - config.ch.height DIV 3;
+00865      1  2    IF x.lablelow OR fullborder
+00866      1  2     THEN x.jmin := x.bmin + ticksize + config.ch.width * 8 + 3
+00867      1  2     ELSE x.jmin := x.bmin;
+00868      1  2    IF squarebox
+00869      1  2     THEN 
+00870      1  3      BEGIN
+00871      1  3      x.jmax := x.jmin + (y.jmax-y.jmin);
+00872      1  3      IF x.jmax > x.bmax THEN x.jmax := x.bmax;
+00873      1  3      END
+00874      1  2    ELSE IF x.lablehigh OR fullborder
+00875      1  2     THEN x.jmax := x.bmax - ticksize - config.ch.width * 6
+00876      1  2     ELSE x.jmax := x.bmax;
+00877      1  1    END;
+00878      0  0 END;
+00879   C  0  0 {-----------------------------------------------------------------------------}
+00880      0  0 [ GLOBAL ]
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   17
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+00881      1  0 PROCEDURE xymapit (fr : framelink);
+00882      1  0 VAR
+00883      1  0    ctick,ftick,tick,cstick : real;
+00884      1  0    ix,iy,lx,ly      : integer;
+00885      1  0    i,numsmall,qstep : integer;
+00886      1  0    temppoint        : point;
+00887      1  0    tempipoint       : ipoint;
+00888      1  0    degsign,didl,didh: boolean;
+00889      1  0    string           : VARYING [80] OF char;
+00890   C  1  0 {------------------------------}
+00891      2  0 PROCEDURE maketick (VAR amin,amax : real;  VAR ftick,tick : real;  
+00892      2  0    VAR numsmall : integer;  VAR qlog,qrnd : boolean;  mtick : integer);
+00893   C  2  0 { Purpose -- This routines calculates the TICK size, and adjusts AMIN    }
+00894   C  2  0 {            and AMAX accordingly.  NUMSMALL is also set, and the scale  }
+00895   C  2  0 {            is 'delogged' if the range is small.  MTICK is the          }
+00896   C  2  0 {            maximum number of (large) ticks.                            }
+00897      2  0  
+00898      2  0 VAR
+00899      2  0    i,irange : integer;
+00900      2  0    min,max  : integer;
+00901      2  0    range    : real;
+00902      2  1 BEGIN
+00903      2  1 IF amin >= amax THEN amax := amin+1;
+00904      2  1 IF qlog 
+00905      2  1  THEN
+00906      2  2   BEGIN
+00907      2  2   IF amin < 0 THEN amin := amax * 1d-10;
+00908      2  2   IF amax < amin THEN amax := amin * 10;
+00909      2  2   IF amax < amin * 1.2 THEN qlog := false;
+00910      2  1   END;
+00911      2  1 IF qlog
+00912      2  1  THEN
+00913      2  2   BEGIN
+00914      2  2   IF NOT qrnd AND (amax < amin * 2) THEN numsmall := 90 ELSE numsmall := 9;
+00915      2  2   IF qrnd
+00916      2  2    THEN amin := 10d0 ** gile (log10(amin))
+00917      2  2    ELSE amin := 10d0 ** log10(amin);
+00918      2  2   IF qrnd
+00919      2  2    THEN amax := 10d0 ** gile (log10(amax))
+00920      2  2    ELSE amax := 10d0 ** log10(amax);
+00921      2  2   ftick    := 10d0 ** gile (log10(amin));
+00922      2  2   tick     := ftick;
+00923      2  2   END
+00924      2  1  ELSE
+00925      2  2   BEGIN
+00926      2  2   range := amax-amin;
+00927      2  2   tick  := 1;
+00928      2  2   WHILE tick*100 < range DO tick := tick * 10;
+00929      2  2   WHILE tick*10  > range DO tick := tick / 10;
+00930      2  2   i := 1;
+00931      2  3   REPEAT
+00932      2  3      i := (i+1) MOD 3;
+00933      2  3      IF i = 0 
+00934      2  3       THEN tick := tick * 2.5
+00935      2  3       ELSE tick := tick * 2.0;
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   18
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+00936      2  3      min := gile (amin/tick);
+00937      2  3      max := gile (amax/tick) + 1;
+00938      2  3      irange := max-min;
+00939      2  2      UNTIL irange < mtick;
+00940      2  2   IF i > 1 THEN numsmall := 4 ELSE numsmall := 5;
+00941      2  2   IF qrnd 
+00942      2  2    THEN
+00943      2  3     BEGIN
+00944      2  3     amin := min * tick;
+00945      2  3     amax := max * tick;
+00946      2  2     END;
+00947      2  2   ftick := min * tick;
+00948      2  1   END;
+00949      1  0 END;
+00950   C  1  0 {------------------------------}
+00951      1  1 BEGIN 
+00952      1  1 addframe (fr);
+00953      1  2 WITH fr^,config DO BEGIN
+00954      1  2 format := XYTICK;
+00955      1  2 framelock := NIL;
+00956      1  2 setjminmax (fr);
+00957      1  2 
+00958   C  1  2 { FILL BACKGROUND AND BOX }
+00959      1  2 IF clearpanels
+00960      1  2  THEN openpanel ('CLEAR',window)
+00961      1  2  ELSE openpanel (pane,window);
+00962      1  2 drawbox (x.bmin, x.bmax, y.bmin, y.bmax);
+00963      1  2 closepanel;
+00964      1  2 IF clearpanels
+00965      1  2  THEN openpanel ('CLEAR',box)
+00966      1  2  ELSE openpanel (fill,box);
+00967      1  2 drawbox (x.jmin, x.jmax, y.jmin, y.jmax);
+00968      1  2 closepanel;
+00969      1  2 
+00970      1  2 temppoint := convert (pointoflp (fr,currlim.min));
+00971      1  2 x.min := temppoint.x;
+00972      1  2 y.min := temppoint.y;
+00973      1  2 temppoint := convert (pointoflp (fr,currlim.max));
+00974      1  2 x.max := temppoint.x;
+00975      1  2 y.max := temppoint.y;
+00976      1  2 
+00977   C  1  2 { NOW DO X-AXIS }
+00978      1  2 maketick (x.min,x.max,ftick,tick,numsmall,x.log,x.round,maxticks);
+00979      1  2 ctick := ftick;
+00980      1  2 qstep := (gile(log10(x.max))-gile(log10(x.min))) DIV maxticks +1;
+00981      1  2 WHILE (ctick/tick <= x.max/tick + 0.01) DO
+00982      1  3    BEGIN
+00983      1  3    degsign := index (x.suffix,'o') = 1;
+00984      1  3    string := numstr (ctick,tick);
+00985      1  3    IF NOT degsign THEN string := string + x.suffix;
+00986      1  3    IF x.log AND (gile(log10(ctick)) MOD qstep <> 0)
+00987      1  3     THEN BEGIN  degsign := false;  string := '';  END;
+00988      1  3    IF x.lablelow  
+00989      1  3     THEN marktick (pointofr (fr,ctick,y.min),ticksize,
+00990      1  3        string,degsign,'--RR','R',true);
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   19
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+00991      1  3    IF x.lablehigh 
+00992      1  3     THEN marktick (pointofr (fr,ctick,y.max),ticksize,
+00993      1  3        string,degsign,'--RR','R',true);
+00994      1  3    FOR i := 1 TO numsmall-1 DO
+00995      1  4       BEGIN
+00996      1  4       IF x.log AND (numsmall = 90)
+00997      1  4        THEN cstick := ctick * (i+10) / 10
+00998      1  4       ELSE IF x.log
+00999      1  4        THEN cstick := ctick * (i+1)
+01000      1  4        ELSE cstick := ctick + i * tick / numsmall;
+01001      1  4       IF x.log AND (numsmall = 90)
+01002      1  4        THEN string := numstr (cstick,tick/10)
+01003      1  4       ELSE IF x.log AND (x.max < 10 * x.min)
+01004      1  4        THEN string := numstr (cstick,tick)
+01005      1  4        ELSE string := '';
+01006      1  4       IF x.lablelow  
+01007      1  4        THEN marktick (pointofr (fr,cstick,y.min),subticksize,
+01008      1  4           string,degsign AND (string<>''),'--RR','R',true);
+01009      1  4       IF x.lablehigh 
+01010      1  4        THEN marktick (pointofr (fr,cstick,y.max),subticksize,
+01011      1  4           string,degsign AND (string<>''),'--RR','R',true);
+01012      1  3       END;
+01013      1  3    IF tick = 0 THEN raise ('Illegal tick size of zero encountered');
+01014      1  3    IF x.log 
+01015      1  4     THEN BEGIN  ctick := ctick * 10;  tick := ctick;  END
+01016      1  3     ELSE ctick := ctick + tick;
+01017      1  2    END;
+01018      1  2 
+01019      1  2 setcolor (x.lable);
+01020      1  2 lx := length (x.labletext);
+01021      1  2 position ((x.jmax+x.jmin) DIV 2, y.jmin-ticksize-ch.height*2);
+01022      1  2 IF x.lablelow  THEN centergrprint (x.labletext);
+01023      1  2 position ((x.jmax+x.jmin) DIV 2, y.jmax+ticksize);
+01024      1  2 IF x.lablehigh THEN centergrprint (x.labletext);
+01025      1  2  
+01026   C  1  2 { NOW DO Y-AXIS }
+01027      1  2 maketick (y.min,y.max,ftick,tick,numsmall,y.log,y.round,maxticks);
+01028      1  2 ctick := ftick;
+01029      1  2 didl := false;
+01030      1  2 didh := false;
+01031      1  2 
+01032      1  2 WHILE ctick/tick <= y.max/tick + 0.01 DO
+01033      1  3    BEGIN
+01034      1  3    degsign := index (y.suffix,'o') = 1;
+01035      1  3    string := numstr (ctick,tick);
+01036      1  3    IF NOT degsign THEN string := string + y.suffix;
+01037      1  3    IF y.lablelow  
+01038      1  3     THEN 
+01039      1  4      BEGIN
+01040      1  4      temppoint := pointofr (fr,x.min,ctick);
+01041      1  4      tempipoint := scale (convert (temppoint));
+01042      1  4      marktick (temppoint,ticksize,string,degsign,'RR--','R',true);
+01043      1  4      IF NOT didl AND (tempipoint.iy > (y.jmax+y.jmin) DIV 2)
+01044      1  4       THEN
+01045      1  5        BEGIN
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   20
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+01046      1  5        setcolor (y.lable);
+01047      1  5        position (x.bmin, tempipoint.iy - ch.height*3);
+01048      1  5        grprint (y.labletext);
+01049      1  5        didl := true;
+01050      1  4        END;
+01051      1  3      END;
+01052      1  3    IF y.lablehigh 
+01053      1  3     THEN 
+01054      1  4      BEGIN
+01055      1  4      temppoint := pointofr (fr,x.max,ctick);
+01056      1  4      tempipoint := scale (convert (temppoint));
+01057      1  4      marktick (temppoint,ticksize,string,degsign,'RR--','R',true);
+01058      1  4      IF NOT didh AND (tempipoint.iy > (y.jmax+y.jmin) DIV 2)
+01059      1  4       THEN
+01060      1  5        BEGIN
+01061      1  5        setcolor (y.lable);
+01062      1  5        position (x.jmax + ch.width*2, tempipoint.iy - ch.height*3);
+01063      1  5        grprint (y.labletext);
+01064      1  5        didh := true;
+01065      1  4        END;
+01066      1  3      END;
+01067      1  3    FOR i := 1 TO numsmall-1 DO
+01068      1  4       BEGIN
+01069      1  4       IF y.log AND (numsmall = 90)
+01070      1  4        THEN cstick := ctick * (i+10) / 10
+01071      1  4       ELSE IF y.log
+01072      1  4        THEN cstick := ctick * (i+1)
+01073      1  4        ELSE cstick := ctick + i * tick / numsmall;
+01074      1  4       IF y.log AND (numsmall = 90)
+01075      1  4        THEN string := numstr (cstick,tick/10)
+01076      1  4       ELSE IF y.log AND (y.max < 10 * y.min)
+01077      1  4        THEN string := numstr (cstick,tick)
+01078      1  4        ELSE string := '';
+01079      1  4       IF y.lablelow  
+01080      1  4        THEN marktick (pointofr (fr,x.min,cstick),subticksize,
+01081      1  4           string,degsign AND (string<>''),'RR--','R',true);
+01082      1  4       IF y.lablehigh 
+01083      1  4        THEN marktick (pointofr (fr,x.max,cstick),subticksize,
+01084      1  4           string,degsign AND (string<>''),'RR--','R',true);
+01085      1  3       END;
+01086      1  3    IF tick = 0 THEN raise ('Illegal tick size of zero encountered');
+01087      1  3    IF y.log
+01088      1  4     THEN BEGIN  ctick := ctick * 10;  tick := ctick;  END
+01089      1  3     ELSE ctick := ctick + tick;
+01090      1  2    END;
+01091      1  2 
+01092   C  1  2 { DISPLAY TITLE }
+01093      1  2 setcolor (heading);
+01094      1  2 position ((x.jmax+x.jmin) DIV 2, y.bmax - ch.height);
+01095      1  2 centergrprint (title);
+01096      1  2 setcolor (box);
+01097      1  2 drawbox (x.jmin, x.jmax, y.jmin, y.jmax);
+01098      1  2 
+01099   C  1  2 { RESET LIM SINCE ROUNDING MIGHT HAVE BEEN DONE }
+01100      1  2 currlim.min := lpofpoint (deconvert (pointofr (fr,x.min,y.min)));
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   21
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+01101      1  2 currlim.max := lpofpoint (deconvert (pointofr (fr,x.max,y.max)));
+01102      1  1 END;
+01103      0  0 END;
+01104   C  0  0 {-----------------------------------------------------------------------------}
+01105      0  0 [ GLOBAL ]
+01106      1  0 PROCEDURE ramapit (fr : framelink);
+01107      1  0 CONST
+01108      1  0    N                 = 2;
+01109      1  0 VAR
+01110      1  0    vis1,vis2,there   : boolean;
+01111      1  0    firsttick         : boolean;
+01112      1  0    i,j               : integer;
+01113      1  0    a,alo,ahi,asize   : integer;
+01114      1  0    a1,a2,a3,a4       : integer;
+01115      1  0    xunit,th          : real;
+01116      1  0    r,rlo,rhi         : real;
+01117      1  0    r1,r2,r3,r4       : real;
+01118      1  0    ctick,ftick,tick  : real;
+01119      1  0    tickup,tickdown   : real;
+01120      1  0    pt,pt1,pt2        : point;
+01121      1  0 
+01122      1  0    v          : ARRAY [1..50] OF point;
+01123      1  0    tickmethod : (normal,decade,logtick);
+01124      1  0    string     : VARYING [80] OF char;
+01125      1  0    sich       : VARYING [4] OF char;
+01126      1  0    duch       : VARYING [8] OF char;
+01127   C  1  0 {------------------------------}
+01128      2  0 PROCEDURE ramaketick (amin,amax : real;  VAR ftick,tick : real;  
+01129      2  0    mtick : integer);
+01130   C  2  0 { Purpose -- This routines calculates the TICK size for the ramapit      }
+01131   C  2  0 {            routine.  MTICK is the maximum number of (large) ticks.     }
+01132      2  0  
+01133      2  0 VAR
+01134      2  0    i,irange,min,max : integer;
+01135      2  0    range            : real;
+01136      2  1 BEGIN
+01137      2  1 IF amin >= amax THEN amax := amin+1;
+01138      2  1 range := amax-amin;
+01139      2  1 tick  := 1;
+01140      2  1 WHILE tick*100 < range DO tick := tick * 10;
+01141      2  1 WHILE tick*10  > range DO tick := tick / 10;
+01142      2  1 i := 1;
+01143      2  2 REPEAT
+01144      2  2    i := (i+1) MOD 3;
+01145      2  2    IF i = 0 
+01146      2  2     THEN tick := tick * 2.5
+01147      2  2     ELSE tick := tick * 2.0;
+01148      2  2    min := gile (amin/tick);
+01149      2  2    max := gile (amax/tick);
+01150      2  2    irange := max - min;
+01151      2  1    UNTIL  irange < mtick;
+01152      2  1 ftick := (min-1) * tick;
+01153      1  0 END;
+01154   C  1  0 {------------------------------}
+01155      2  0 PROCEDURE tracepoints (vv : ARRAY [l1..u1:integer] OF point;
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   22
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+01156      2  0                        lo,hi : integer;  toclip : boolean;  style : integer);
+01157      2  0 VAR
+01158      2  0    i     : integer;
+01159      2  0    xv,yv : ARRAY [1..2000] OF real;
+01160      2  1 BEGIN
+01161      2  1 FOR i := lo TO hi DO
+01162      2  1    BEGIN  xv[i] := v[i].x;  yv[i] := v[i].y;  END;
+01163      2  1 trace (fr,xv,yv,lo,hi,toclip,style);
+01164      1  0 END;
+01165   C  1  0 {------------------------------}
+01166      2  0 FUNCTION xy (ra : point) : point;
+01167      2  0 VAR
+01168      2  0    pt : point;
+01169      2  1 BEGIN
+01170      2  1 pt.f := ra.f;
+01171      2  1 pt.x := rmax (ra.x - ra.f^.origin,0d0) * cos (ra.y * PI / 180d0);
+01172      2  1 pt.y := rmax (ra.x - ra.f^.origin,0d0) * sin (ra.y * PI / 180d0);
+01173      2  1 xy := pt;
+01174      1  0 END;
+01175   C  1  0 {------------------------------}
+01176      1  1 BEGIN
+01177      1  1 addframe (fr);
+01178      1  2 WITH fr^,config DO BEGIN
+01179      1  2 format := POLAR;
+01180      1  2 framelock := NIL;
+01181      1  2 setjminmax (fr);
+01182      1  2 
+01183      1  2 x.min := currlim.min.x;
+01184      1  2 y.min := currlim.min.y;
+01185      1  2 x.max := currlim.max.x;
+01186      1  2 y.max := currlim.max.y;
+01187      1  2 
+01188   C  1  2 { FILL BACKGROUND AND BOX }
+01189      1  2 IF clearpanels
+01190      1  2  THEN openpanel ('CLEAR',window)
+01191      1  2  ELSE openpanel (pane,window);
+01192      1  2 drawbox (x.bmin, x.bmax, y.bmin, y.bmax);
+01193      1  2 closepanel;
+01194      1  2 IF clearpanels
+01195      1  2  THEN openpanel ('CLEAR',box)
+01196      1  2  ELSE openpanel (fill,box);
+01197      1  2 drawbox (x.jmin, x.jmax, y.jmin, y.jmax);
+01198      1  2 closepanel;
+01199      1  2 
+01200   C  1  2 { FIND MINIMUM, MAXIMUM OF ANGLES AND RADII }
+01201      1  2 xunit := sqrt( (( x.max- x.min)**2     + ( y.max- y.min)**2) / 
+01202      1  2                ((0d0+x.jmax-x.jmin)**2 + (0d0+y.jmax-x.jmin)**2) );
+01203      1  2 r1  := sqrt (x.max**2 + y.max**2);
+01204      1  2 r2  := sqrt (x.min**2 + y.max**2);
+01205      1  2 r3  := sqrt (x.min**2 + y.min**2);
+01206      1  2 r4  := sqrt (x.max**2 + y.min**2);
+01207      1  2 rhi := rmax (r1,r2,r3,r4);
+01208      1  2 
+01209      1  2 asize := 36;
+01210      1  2 i := 1;
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   23
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+01211      1  2 WHILE (rhi/xunit/asize >= 1600) DO
+01212      1  3    BEGIN
+01213      1  3    i := (i+1) MOD 3;
+01214      1  3    IF i = 0 THEN asize := asize * 5 DIV 2 ELSE asize := asize * 2;
+01215      1  2    END;
+01216      1  2 
+01217      1  2 a1 := round (arctan2 (y.max,x.max) / PI / 2d0 * asize);
+01218      1  2 a2 := round (arctan2 (y.max,x.min) / PI / 2d0 * asize);
+01219      1  2 a3 := round (arctan2 (y.min,x.min) / PI / 2d0 * asize);
+01220      1  2 a4 := round (arctan2 (y.min,x.max) / PI / 2d0 * asize);
+01221      1  2  
+01222      1  2 IF      (x.min >= 0) AND (y.min >= 0)
+01223      1  3  THEN BEGIN  duch := 'RARARA-A';  rlo :=     r3;  alo := a4;  ahi := a2;  END
+01224      1  2 ELSE IF (x.max <= 0) AND (y.min >= 0)
+01225      1  3  THEN BEGIN  duch := 'ARRAA-RA';  rlo :=     r4;  alo := a1;  ahi := a3;  END
+01226      1  2 ELSE IF (x.min >= 0) AND (y.max <= 0)
+01227      1  3  THEN BEGIN  duch := 'RAARRAA-';  rlo :=     r2;  alo := a3;  ahi := a1;  END
+01228      1  2 ELSE IF (x.max <= 0) AND (y.max <= 0)
+01229      1  3  THEN BEGIN  duch := 'ARARARA-';  rlo :=     r1;  alo := a2;  ahi := a4;  END
+01230      1  2 ELSE IF x.min >= 0
+01231      1  3  THEN BEGIN  duch := 'AARR-AR-';  rlo :=  x.min;  alo := a3;  ahi := a2;  END
+01232      1  2 ELSE IF x.max <= 0
+01233      1  3  THEN BEGIN  duch := 'AARRA-R-';  rlo := -x.max;  alo := a1;  ahi := a4;  END
+01234      1  2 ELSE IF y.min >= 0
+01235      1  3  THEN BEGIN  duch := 'RRAAR--A';  rlo :=  y.min;  alo := a4;  ahi := a3;  END
+01236      1  2 ELSE IF y.max <= 0
+01237      1  3  THEN BEGIN  duch := 'RRAAR-A-';  rlo := -y.max;  alo := a2;  ahi := a1;  END
+01238      1  2  ELSE BEGIN  duch := 'AA-A----';  rlo :=   0;  alo := 1;   ahi := asize;  END;
+01239      1  2 
+01240      1  2 IF ahi < alo THEN ahi := ahi + asize;
+01241      1  2 IF (asize > 72) AND ((r4 <= r2) =  (r3 <= r1)) THEN duch := 'RRAAR-A-';
+01242      1  2 IF (asize > 72) AND ((r4 <= r2) <> (r3 <= r1)) THEN duch := 'AARRA-R-';
+01243      1  2 IF x.lablehigh 
+01244      1  2  THEN sich := substr (duch,1,4)
+01245      1  2  ELSE sich := substr (duch,5,4);
+01246      1  2  
+01247      1  2 
+01248   C  1  2 { DISPLAY TITLE }
+01249      1  2 setcolor (box);
+01250      1  2 position ((x.jmax + x.jmin) DIV 2, y.bmax);
+01251      1  2 centergrprint (title);
+01252      1  2  
+01253   C  1  2 { DRAW CIRCLES AND RADIAL SEGMENTS }
+01254      1  2 IF NOT x.log 
+01255      1  2  THEN
+01256      1  3   BEGIN
+01257      1  3   ramaketick (rlo+origin, rhi+origin, ftick, tick, maxticks);
+01258      1  3   ctick := ftick;
+01259      1  3   tickmethod := normal;
+01260      1  3   END
+01261      1  2 ELSE IF rhi - rlo > 1.8d0
+01262      1  2  THEN
+01263      1  3   BEGIN
+01264      1  3   ramaketick (rlo+origin, rhi+origin, ftick, tick, round(rhi-rlo)+3);
+01265      1  3   tick := 1d0;
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   24
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+01266      1  3   ctick := gile (ftick);
+01267      1  3   tickmethod := decade;
+01268      1  3   END
+01269      1  2  ELSE
+01270      1  3   BEGIN
+01271      1  3   ramaketick (10d0**(rlo+origin),10d0**(rhi+origin),ftick,tick,2*maxticks);
+01272      1  3   ctick := log10(ftick);
+01273      1  3   tickmethod := logtick;
+01274      1  2   END;
+01275      1  2  
+01276      1  2 firsttick := true;
+01277      1  3 REPEAT
+01278      1  4    CASE tickmethod OF
+01279      1  5       normal:   BEGIN
+01280      1  5                 ctick := ctick + tick;
+01281      1  5                 string := numstr (ctick,tick);
+01282      1  5                 tickdown := rmax(xunit*640d0+origin, ctick-tick*radpct/200);
+01283      1  5                 tickup   := rmax(xunit*640d0+origin, ctick+tick*radpct/200);
+01284      1  4                 END;
+01285      1  5       decade:   BEGIN
+01286      1  5                 ctick := ctick + tick;
+01287      1  5                 string := numstr (10d0**ctick, 10d0**ctick);
+01288      1  5                 tickdown := rmax(xunit*640d0+origin, ctick-tick*radpct/200);
+01289      1  5                 tickup   := rmax(xunit*640d0+origin, ctick+tick*radpct/200);
+01290      1  4                 END;
+01291      1  5       logtick:  BEGIN
+01292      1  5                 ctick := log10 (10d0**ctick + tick);
+01293      1  5                 string := numstr (10d0**ctick, tick);
+01294      1  5                 tickdown := log10 (10d0**ctick - tick * radpct/200);
+01295      1  5                 tickup   := log10 (10d0**ctick + tick * radpct/200);
+01296      1  4                 END;
+01297      1  3       END;
+01298      1  3    string := string + x.suffix;
+01299      1  3 
+01300      1  3    FOR a := alo TO ahi DO
+01301      1  4       BEGIN
+01302      1  4       v[1] := deconvert (xy (pointofr (fr, tickdown, a * 360d0 / asize)));
+01303      1  4       v[2] := deconvert (xy (pointofr (fr, tickup,   a * 360d0 / asize)));
+01304      1  4       setcolor (y.grid);
+01305      1  4       tracepoints (v,1,2,true,0);
+01306      1  4       v[1]   := deconvert (xy (pointofr(fr,ctick,(a*1d0-0.5d0) * 360d0/asize)));
+01307      1  4       v[N+3] := deconvert (xy (pointofr(fr,ctick,(a*1d0+0.5d0) * 360d0/asize)));
+01308      1  4       FOR j := 0 TO N DO
+01309      1  4          v[j+2] := deconvert (xy (pointofr (fr, ctick,
+01310      1  4                    ( a + (1d0*j/N - 0.5d0) * azipct/100) * 360d0 / asize)));
+01311      1  4       FOR j := 1 TO N+2 DO
+01312      1  5          BEGIN
+01313      1  5          pt1 := convert (v[j]);
+01314      1  5          pt2 := convert (v[j+1]);
+01315      1  5          clip (pt1,pt2,vis1,vis2,there);
+01316      1  5          marktick (pt1,ticksize,string,false,sich,'R',false);
+01317      1  5          marktick (pt2,ticksize,string,false,sich,'R',false);
+01318      1  4          END;
+01319      1  4       IF abs(ctick) > xunit THEN BEGIN  v[1] := v[2];  v[N+3] := v[N+2];  END;
+01320      1  4       setcolor (x.grid);
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   25
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+01321      1  4       tracepoints (v,1,N+3,true,0);
+01322      1  3       END;
+01323      1  3 
+01324      1  3    IF inside (fr,scale (convert (pointofr(fr,origin,0)))) AND (ctick >= origin)
+01325      1  3     THEN
+01326      1  4      BEGIN 
+01327      1  4      IF firsttick
+01328      1  4       THEN
+01329      1  5        BEGIN
+01330      1  5        IF x.log 
+01331      1  5         THEN string := numstr (10d0**origin,10d0**(origin-3d0)) + x.suffix
+01332      1  5        ELSE IF origin = 0d0 
+01333      1  5         THEN string := '0' + x.suffix
+01334      1  5         ELSE string := numstr (origin,abs(origin/1000d0)) + x.suffix;
+01335      1  5        marktick (pointofr (fr,0,y.min),ticksize,
+01336      1  5           string,false,'--R-','R',false);
+01337      1  5        END
+01338      1  4       ELSE
+01339      1  5        BEGIN
+01340      1  5        marktick (pointofr (fr, ctick-origin,y.min),ticksize,
+01341      1  5           string,false,'--R-','R',false);
+01342      1  5        marktick (pointofr (fr,-ctick+origin,y.min),ticksize,
+01343      1  5           string,false,'--R-','R',false);
+01344      1  4        END;
+01345      1  4      firsttick := false;
+01346      1  3      END;
+01347      1  2    UNTIL ctick > rhi + origin;
+01348      1  2  
+01349   C  1  2 { DRAW FULL RADII AND LABLE RADII }
+01350      1  2  
+01351      1  2 FOR a := alo TO ahi DO
+01352      1  3    BEGIN
+01353      1  3    th := 360d0 * a / asize;
+01354      1  3    v[1] := deconvert (xy (pointofr (fr, xunit*640d0 + origin, th)));
+01355      1  3    v[2] := deconvert (xy (pointofr (fr, rhi,                  th)));
+01356      1  3    IF (a MOD (asize DIV 4) = 0) 
+01357      1  3     THEN BEGIN  setcolor (y.grid);  tracepoints (v,1,2,true,0);  END;
+01358      1  3    string := numstr (rmod (th+360d0,360d0),360d0/asize);
+01359      1  3    pt1 := convert (v[1]);
+01360      1  3    pt2 := convert (v[2]);
+01361      1  3    clip (pt1,pt2,vis1,vis2,there);
+01362      1  3    clip (pt1,pt2,vis1,vis2,there);
+01363      1  3    IF (a MOD (asize DIV 4) = 0) 
+01364      1  3     THEN marktick (pt2,ticksize,string,true,'AA-A','A',false);
+01365      1  3    marktick (pt1,ticksize,string,true,sich,'A',false);
+01366      1  3    marktick (pt2,ticksize,string,true,sich,'A',false);
+01367      1  2    END;
+01368      1  2 
+01369   C  1  2 { DRAW BORDER }
+01370      1  2 setcolor (box);
+01371      1  2 drawbox (x.jmin, x.jmax, y.jmin, y.jmax);
+01372      1  2 
+01373   C  1  2 { WRITE ORIGIN EQUIVALENCE } 
+01374      1  2 IF x.log 
+01375      1  2  THEN string := 'Origin=' + numstr (10d0**origin,10d0**(origin-3d0)) + x.suffix
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   26
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+01376      1  2 ELSE IF origin = 0d0 
+01377      1  2  THEN string := 'Origin= 0' + x.suffix
+01378      1  2  ELSE string := 'Origin=' + numstr (origin,abs(origin/1000d0)) + x.suffix;
+01379      1  2 position (x.jmax-ch.width*(length(string)), y.jmin-ticksize-ch.height*3);
+01380      1  2 setcolor (heading);
+01381      1  2 grprint (string);
+01382      1  1 END;
+01383      0  0 END;
+01384   C  0  0 {-----------------------------------------------------------------------------}
+01385      0  0 [ GLOBAL ]
+01386      1  0 PROCEDURE mapit (fr : framelink);
+01387      1  0 VAR
+01388      1  0    temppoint        : point;
+01389      1  1 BEGIN 
+01390      1  1 addframe (fr);
+01391      1  2 WITH fr^,config DO BEGIN
+01392      1  2 format := XYNOTICK;
+01393      1  2 framelock := NIL;
+01394      1  2 y.jmin := y.bmin;
+01395      1  2 y.jmax := y.bmax;
+01396      1  2 x.jmin := x.bmin;
+01397      1  2 IF squarebox
+01398      1  2  THEN x.jmax := x.jmin + (y.jmax-y.jmin)
+01399      1  2  ELSE x.jmax := x.bmax;
+01400      1  2 
+01401      1  2 temppoint := convert (pointoflp (fr,currlim.min));
+01402      1  2 x.min := temppoint.x;
+01403      1  2 y.min := temppoint.y;
+01404      1  2 temppoint := convert (pointoflp (fr,currlim.max));
+01405      1  2 x.max := temppoint.x;
+01406      1  2 y.max := temppoint.y;
+01407      1  2 
+01408   C  1  2 { FILL BACKGROUND AND BOX }
+01409      1  2 IF clearpanels
+01410      1  2  THEN openpanel ('CLEAR',window)
+01411      1  2  ELSE openpanel (pane,window);
+01412      1  2 drawbox (x.bmin, x.bmax, y.bmin, y.bmax);
+01413      1  2 closepanel;
+01414      1  2 IF clearpanels
+01415      1  2  THEN openpanel ('CLEAR',box)
+01416      1  2  ELSE openpanel (fill,box);
+01417      1  2 drawbox (x.jmin, x.jmax, y.jmin, y.jmax);
+01418      1  2 closepanel;
+01419      1  2 
+01420   C  1  2 { DISPLAY TITLE }
+01421      1  2 setcolor (heading);
+01422      1  2 position ((x.jmax+x.jmin) DIV 2, y.bmax - ch.height);
+01423      1  2 centergrprint (title);
+01424      1  2  
+01425   C  1  2 { RESET LIM SINCE ROUNDING MIGHT HAVE BEEN DONE }
+01426      1  2 currlim.min := lpofpoint (deconvert (pointofr (fr,x.min,y.min)));
+01427      1  2 currlim.max := lpofpoint (deconvert (pointofr (fr,x.max,y.max)));
+01428      1  1 END;
+01429      0  0 END;
+01430   C  0  0 {=============================================================================}
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   27
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+01431   C  0  0 {-- TEXT/GRAPHICS PROCEDURES -------------------------------------------------}
+01432   C  0  0 {=============================================================================}
+01433      0  0 [ GLOBAL ]
+01434      1  0 PROCEDURE ngp (st : anystring);
+01435      1  1 BEGIN
+01436      1  1 newline;
+01437      1  1 grprint (st);
+01438      0  0 END;
+01439   C  0  0 {-----------------------------------------------------------------------------}
+01440      0  0 [ GLOBAL ]
+01441      1  0 PROCEDURE checkmenu (ch : char);
+01442      1  1 BEGIN
+01443      1  2 CASE ch OF
+01444      1  2    'B':  ngp ('BackZoom -- Return to previous zoom fram');
+01445      1  2    'D':  ngp ('DeZoom   -- Replot in original scale');
+01446      1  2    'E':  ngp ('Exit     -- Return to main commands');
+01447      1  2    'K':  ngp ('Keyboard -- Enter zoom coordinates from keyboard');
+01448      1  2    'L':  ngp ('Lower    -- Cursor at lower left coords. for zoom');
+01449      1  2    'P':  ngp ('Plot     -- Plot data again');
+01450      1  2    'Q':  ngp ('Quarebox -- Square plotting area');
+01451      1  2    'R':  ngp ('Redraw   -- Redraw plot to complete zoom');
+01452      1  2    'U':  ngp ('Upper    -- Cursor at upper right coord. for zoom');
+01453      1  2    'X':  ngp ('X-it     -- Return to main commands');
+01454      1  2    'Z':  ngp ('Zoom     -- Zoom to coords. given by U, L, K');
+01455      1  3    ' ':  BEGIN
+01456      1  3          ngp ('*        -- Toggle all frame flag');
+01457      1  3          ngp ('=        -- Lock frame to cursor position');
+01458      1  3          ngp ('.        -- Lock frame to background frame');
+01459      1  3          ngp ('space    -- Cancel frame lock');
+01460      1  3          ngp ('#        -- Lock frame to number key');
+01461      1  3          ngp ('?        -- Frame lock count by bells');
+01462      1  3          ngp ('$        -- Allows access to QPLOT commands');
+01463      1  3          ngp ('%        -- Hardcopy');
+01464      1  3          ngp ('!        -- Create Metafile');
+01465      1  3          ngp ('^        -- Place colored label');
+01466      1  3          ngp ('\        -- Place colored line');
+01467      1  3          ngp ('@        -- Input source file');
+01468      1  2          END;
+01469      1  2    OTHERWISE;
+01470      1  1    END;
+01471      0  0 END;
+01472   C  0  0 {-----------------------------------------------------------------------------}
+01473      0  0 [ GLOBAL ]
+01474      1  0 PROCEDURE readcursor (VAR key : char;  VAR ipt : ipoint;  color : color_type);
+01475      1  0 VAR
+01476      1  0    line,s    : anystring;
+01477      1  0    p         : parse_type;
+01478      1  1 BEGIN
+01479      1  1 IF source > 0
+01480      1  1  THEN 
+01481      1  2   BEGIN
+01482      1  2   readvary ('  ',line,'');
+01483      1  2   startparse (p,line);
+01484      1  2   s := parse (p,' ');
+01485      1  2   IF s <> '' THEN key := s[1] ELSE key := ' ';
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   28
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+01486      1  2   s := parse (p,' ');
+01487      1  2   ipt.ix := iofstr (s);
+01488      1  2   s := parse (p,' ');
+01489      1  2   ipt.iy := iofstr (s);
+01490      1  2   END
+01491      1  1 ELSE IF (color = 'GIN_NORMAL') AND frameall
+01492      1  1  THEN gin (key,ipt,'GIN_FRAMEALL')
+01493      1  1 ELSE IF (color = 'GIN_NORMAL') AND (framelock <> NIL)
+01494      1  1  THEN gin (key,ipt,'GIN_FRAMELOCK')
+01495      1  1  ELSE gin (key,ipt,color);
+01496      1  1 IF key IN ['a'..'z'] THEN key := chr(ord(key)-32);
+01497      1  1 writejournalline (key + strofi (ipt.ix,8) + strofi (ipt.iy,8));
+01498      0  0 END;
+01499   C  0  0 {-----------------------------------------------------------------------------}
+01500      0  0 [ GLOBAL ]
+01501      1  0 PROCEDURE getcursorpoint (VAR pt : point;  ipt : ipoint);
+01502      1  0 VAR
+01503      1  0    f  : integer;
+01504      1  0    fr : framelink;
+01505      1  1 BEGIN
+01506      1  1 IF framelock <> NIL
+01507      1  1  THEN fr := framelock
+01508      1  1  ELSE 
+01509      1  1   FOR f := 0 TO frame.count DO
+01510      1  1      IF inside (frame.data[f],ipt) THEN fr := frame.data[f];
+01511      1  1 framelock := NIL;
+01512      1  1 pt := deconvert (descale (fr,ipt));
+01513      0  0 END;
+01514   C  0  0 {-----------------------------------------------------------------------------}
+01515      0  0 [ GLOBAL ]
+01516      1  0 PROCEDURE checkcursor (VAR key : char;  VAR ipt : ipoint;  
+01517      1  0    VAR go,plotagain : boolean);
+01518      1  0 VAR 
+01519      1  0    pt      : point;
+01520      1  0    tempkey : char;
+01521      1  0    color   : color_type;
+01522      1  0    string  : anystring;
+01523      1  0    f       : integer;
+01524      1  0    found   : boolean;
+01525      1  0    xv,yv   : ARRAY [1..2] OF real;
+01526      1  0    holdlim : plotlimits;
+01527   C  1  0 {------------------------------}
+01528      2  0 PROCEDURE zoombox (fr : framelink;  clip : boolean);
+01529      2  0 VAR
+01530      2  0    lim : plotlimits;
+01531      2  1 BEGIN
+01532      2  1 IF clip 
+01533      2  1  THEN
+01534      2  2   BEGIN
+01535      2  2   lim.min.x := rmax (fr^.templim.min.x,fr^.currlim.min.x);
+01536      2  2   lim.min.y := rmax (fr^.templim.min.y,fr^.currlim.min.y);
+01537      2  2   lim.max.x := rmin (fr^.templim.max.x,fr^.currlim.max.x);
+01538      2  2   lim.max.y := rmin (fr^.templim.max.y,fr^.currlim.max.y);
+01539      2  2   END
+01540      2  1  ELSE lim := fr^.templim;
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   29
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+01541      2  1 IF fr = frame.data[0]
+01542      2  1  THEN setcolor ('ZOOMFILL')
+01543      2  1  ELSE setcolor ('ZOOMBOX');  
+01544      2  1 boxit (fr,lim);  
+01545      1  0 END;
+01546   C  1  0 {------------------------------}
+01547      2  0 PROCEDURE B_command;
+01548      2  1 BEGIN
+01549      2  1 IF pt.f = frame.data[0]
+01550      2  1  THEN bell
+01551      2  1 ELSE IF popzoom (pt.f,pt.f^.templim) 
+01552      2  1  THEN 
+01553      2  1   WITH pt.f^ DO 
+01554      2  2      BEGIN
+01555      2  2      openpanel ('ZOOMFILL','ZOOMBOX');
+01556      2  2      zoombox (pt.f,true);
+01557      2  2      closepanel;
+01558      2  2      currlim := templim;
+01559      2  2      lset := false;
+01560      2  2      uset := false;
+01561      2  2      END
+01562      2  1  ELSE bell;
+01563      1  0 END;
+01564   C  1  0 {------------------------------}
+01565      2  0 PROCEDURE D_command;
+01566      2  1 BEGIN
+01567      2  1 IF pt.f = frame.data[0]
+01568      2  1  THEN bell
+01569      2  1  ELSE
+01570      2  1   WITH pt.f^ DO 
+01571      2  2      BEGIN
+01572      2  2      templim := lim;
+01573      2  2      openpanel ('ZOOMFILL','ZOOMBOX');
+01574      2  2      zoombox (pt.f,true);
+01575      2  2      closepanel;
+01576      2  2      currlim := lim;  
+01577      2  2      lset := false;
+01578      2  2      uset := false;
+01579      2  1      END;
+01580      1  0 END;
+01581   C  1  0 {------------------------------}
+01582      2  0 PROCEDURE K_command;
+01583      2  1 BEGIN
+01584      2  1 IF pt.f = frame.data[0]
+01585      2  1  THEN bell
+01586      2  1  ELSE
+01587      2  1   WITH pt.f^ DO
+01588      2  2      BEGIN 
+01589      2  2      templim := currlim;
+01590      2  2      readlimits (pt.f,templim);
+01591      2  2      lset:=true;
+01592      2  2      uset:=true;
+01593      2  2      zoombox (pt.f,false);
+01594      2  1      END;
+01595      1  0 END;
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   30
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+01596   C  1  0 {------------------------------}
+01597      2  0 PROCEDURE L_command;
+01598      2  1 BEGIN
+01599      2  1 WITH pt.f^ DO
+01600      2  2    BEGIN
+01601      2  2    IF format = POLAR
+01602      2  2     THEN templim.min := lpofpoint (convert (pt))
+01603      2  2     ELSE templim.min := lpofpoint (pt);
+01604      2  2    lset:=true;  
+01605      2  2    IF uset THEN zoombox (pt.f,false);
+01606      2  1    END;
+01607      1  0 END;
+01608   C  1  0 {------------------------------}
+01609      2  0 PROCEDURE Q_command;
+01610      2  1 BEGIN
+01611      2  1 IF pt.f = frame.data[0]
+01612      2  1  THEN bell
+01613      2  1 ELSE WITH pt.f^ DO IF lset AND uset
+01614      2  2  THEN BEGIN samescale (templim);  zoombox (pt.f,false);  END
+01615      2  1  ELSE bell;
+01616      1  0 END;
+01617   C  1  0 {------------------------------}
+01618      2  0 PROCEDURE U_command;
+01619      2  1 BEGIN
+01620      2  1 WITH pt.f^ DO
+01621      2  2    BEGIN
+01622      2  2    IF format = POLAR
+01623      2  2     THEN templim.max := lpofpoint (convert (pt))
+01624      2  2     ELSE templim.max := lpofpoint (pt);
+01625      2  2    uset:=true;  
+01626      2  2    IF lset THEN zoombox (pt.f,false);
+01627      2  1    END;
+01628      1  0 END;
+01629   C  1  0 {------------------------------}
+01630      2  0 PROCEDURE Z_command;
+01631      2  1 BEGIN
+01632      2  1 IF pt.f = frame.data[0]
+01633      2  1  THEN bell
+01634      2  1 ELSE WITH pt.f^ DO IF uset and lset
+01635      2  1  THEN
+01636      2  2   BEGIN
+01637      2  2   holdlim.min.x := rmin (templim.min.x,templim.max.x);
+01638      2  2   holdlim.max.x := rmax (templim.min.x,templim.max.x);
+01639      2  2   holdlim.min.y := rmin (templim.min.y,templim.max.y);
+01640      2  2   holdlim.max.y := rmax (templim.min.y,templim.max.y);
+01641      2  2   templim := holdlim;
+01642      2  2   openpanel ('ZOOMFILL','ZOOMBOX');
+01643      2  2   zoombox (pt.f,true);
+01644      2  2   closepanel;
+01645      2  2   pushzoom (pt.f,currlim);
+01646      2  2   currlim := templim;
+01647      2  2   lset := false;
+01648      2  2   uset := false;
+01649      2  2   END
+01650      2  1  ELSE bell;
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   31
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+01651      1  0 END;
+01652   C  1  0 {------------------------------}
+01653      2  0 PROCEDURE EXCLAM_command;
+01654      2  0 VAR
+01655      2  0    filename       : logicalname;
+01656      2  0    plotdata       : RECORD
+01657      2  0                     CASE integer OF
+01658      2  0                        1:  (data     : anystring);
+01659      2  0                        2:  (ii       : shortunsigned;
+01660      2  0                             ins      : ins_type;
+01661      2  0                             ix       : shortunsigned;
+01662      2  0                             iy       : shortunsigned;
+01663      2  0                             hlsa     : hlsa_type);
+01664      2  0                     END;
+01665      2  1 BEGIN
+01666      2  1 close (textfile,ERROR:=CONTINUE);
+01667      2  1 readvary ('ENTER METAFILE NAME (NO EXT) : ',filename,'');
+01668      2  1 open (textfile,filename + '.META',NEW);
+01669      2  1 rewrite (textfile);
+01670      2  1 
+01671      2  1 reset (plotitemfile);
+01672   C  2  1 { SET CHARACTER SIZE }
+01673      2  1 plotdata.ins := I_siz;
+01674      2  1 plotdata.ix  := config.ch.width;
+01675      2  1 plotdata.iy  := config.ch.height;
+01676      2  1 plotdata.data.length := 5;
+01677      2  1 writeln (textfile,plotdata.data);
+01678      2  1 
+01679   C  2  1 { SET CHARACTER MARGINS }
+01680      2  1 plotdata.ins := I_mar;
+01681      2  1 plotdata.ix  := config.ch.charspacing;
+01682      2  1 plotdata.iy  := config.ch.linespacing;
+01683      2  1 plotdata.data.length := 5;
+01684      2  1 writeln (textfile,plotdata.data);
+01685      2  1 
+01686      2  1 WHILE NOT eof (plotitemfile) DO
+01687      2  2    BEGIN
+01688      2  2    readplotitem;
+01689      2  2    plotdata.ins := plotitem.ins;
+01690      2  2    plotdata.ix  := plotitem.ix;
+01691      2  2    plotdata.iy  := plotitem.iy;
+01692      2  2    plotdata.data.length := 5;
+01693      2  3    CASE plotdata.ins OF
+01694      2  3       I_col,
+01695      2  4       I_pan:  BEGIN
+01696      2  4               plotdata.hlsa := hlsaofcolor (plotitem.st);
+01697      2  4               plotdata.data.length := 18;
+01698      2  3               END;
+01699      2  3       I_pri:  plotdata.data := plotdata.data + plotitem.st;
+01700      2  2       END;
+01701      2  2    writeln (textfile,plotdata.data);
+01702      2  1    END;
+01703      2  1 close (textfile);
+01704      2  1 truncate (plotitemfile);
+01705      1  0 END;
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   32
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+01706   C  1  0 {------------------------------}
+01707      2  0 PROCEDURE docommand (PROCEDURE command);
+01708      2  1 BEGIN
+01709      2  1 IF NOT frameall
+01710      2  1  THEN
+01711      2  2   BEGIN
+01712      2  2   getcursorpoint (pt,ipt);
+01713      2  2   command;
+01714      2  2   END
+01715      2  1  ELSE
+01716      2  1   FOR f := 1 TO frame.count DO
+01717      2  1      IF inside (frame.data[f],ipt) 
+01718      2  1       THEN 
+01719      2  2        BEGIN
+01720      2  2        pt := deconvert (descale (frame.data[f],ipt));
+01721      2  2        command;
+01722      2  1        END;
+01723      1  0 END;
+01724   C  1  0 {------------------------------}
+01725      1  1 BEGIN
+01726      1  1 go := true;
+01727      1  1 plotagain := false;
+01728      1  1 tempkey := key;
+01729      1  1 key := NUL;
+01730      1  2 CASE tempkey OF
+01731      1  2    'B':  docommand (B_command);
+01732      1  2    'D':  docommand (D_command);
+01733      1  2    'E':  go := false;
+01734      1  2    'K':  docommand (K_command);
+01735      1  2    'L':  docommand (L_command);
+01736      1  2    'P':  replot;
+01737      1  2    'Q':  docommand (Q_command);
+01738      1  2    'R':  plotagain := true;
+01739      1  2    'U':  docommand (U_command);
+01740      1  2    'X':  go := false;
+01741      1  2    'Z':  docommand (Z_command);
+01742      1  2    ' ':  framelock := NIL;
+01743      1  2    '*':  frameall := NOT frameall;
+01744      1  3    '=':  BEGIN
+01745      1  3          getcursorpoint (pt,ipt);
+01746      1  3          framelock := pt.f;
+01747      1  2          END;
+01748      1  2    '.':  framelock := frame.data [0];
+01749      1  3    '#':  BEGIN
+01750      1  3          readcursor (tempkey,ipt,'GIN_FRAMESELECT');
+01751      1  3          IF tempkey IN ['0'..'9'] 
+01752      1  3           THEN framelock := frame.data [ord (tempkey) - ord ('0')]
+01753      1  3           ELSE bell;
+01754      1  2          END;
+01755      1  2    '$':  readvary ('ENTER QPLOT COMMAND : ',string,'');
+01756      1  2    '%':  hardcopy;
+01757      1  2    '!':  EXCLAM_command;
+01758      1  3    '?':  BEGIN
+01759      1  3          found := false;
+01760      1  3          FOR f := 1 TO frame.count DO 
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   33
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+01761      1  4             BEGIN
+01762      1  4             IF NOT found THEN BEGIN bell;  wait (0.5);  END;
+01763      1  4             IF framelock = frame.data[f] THEN found := true;
+01764      1  3             END;
+01765      1  2          END;
+01766      1  3    '^':  BEGIN
+01767      1  3          readvary ('ENTER COLOR : ',color,'WHITE');
+01768      1  3          setcolor (color);
+01769      1  3          readlowervary ('ENTER LABEL : ',string,'');
+01770      1  3          position (ipt.ix,ipt.iy);
+01771      1  3          grprint (string);
+01772      1  2          END;
+01773      1  3    '\':  BEGIN
+01774      1  3          getcursorpoint (pt,ipt);
+01775      1  3          readvary ('ENTER COLOR : ',color,'WHITE');
+01776      1  3          setcolor (color);
+01777      1  3          readreal ('ENTER X1 : ',xv[1],-BIG,BIG,0);
+01778      1  3          readreal ('ENTER Y1 : ',yv[1],-BIG,BIG,0);
+01779      1  3          readreal ('ENTER X2 : ',xv[2],-BIG,BIG,0);
+01780      1  3          readreal ('ENTER Y2 : ',yv[2],-BIG,BIG,0);
+01781      1  3          trace (pt.f,xv,yv,1,2,true,0);
+01782      1  2          END;
+01783      1  2    '@':  qat;
+01784      1  2    OTHERWISE key := tempkey;
+01785      1  1    END;
+01786      1  1 IF NOT go THEN frameall := false;
+01787      0  0 END;
+01788   C  0  0 {-----------------------------------------------------------------------------}
+01789      0  0 [ GLOBAL ]
+01790      1  0 PROCEDURE graphicpause;
+01791      1  0 VAR
+01792      1  0    go,plotagain : boolean;
+01793      1  0    i            : integer;
+01794      1  0    key          : char;
+01795      1  0    ipt          : ipoint;
+01796      1  1 BEGIN
+01797      1  1 go := true;
+01798      1  2 REPEAT
+01799      1  2    readcursor  (key,ipt,'GIN_NORMAL');
+01800      1  2    checkcursor (key,ipt,go,plotagain);
+01801      1  3    CASE key OF
+01802      1  3       NUL:  ;
+01803      1  4       'H':  BEGIN
+01804      1  4             position (ipt.ix,ipt.iy);
+01805      1  4             FOR i := 1 TO 26 DO
+01806      1  5                CASE chr (i+64) OF
+01807      1  5                   'H':  ngp ('Help     -- Display this menu');
+01808      1  5                   OTHERWISE checkmenu (chr (i+64));
+01809      1  4                   END;
+01810      1  4             checkmenu (' ');
+01811      1  3             END;
+01812      1  3       OTHERWISE bell;
+01813      1  2       END;
+01814      1  1    UNTIL NOT go;
+01815      0  0 END;
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   34
+QPLOT                           Source Listing                   7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+-LINE-IDC-PL-SL-
+
+01816   C  0  0 {=============================================================================}
+01817      0  0 END.
+
+PLOT                                                            23-Dec-1988 10:24:50    VAX Pascal V3.7-254                Page   35
+QPLOT                           Pascal Compilation Statistics    7-Oct-1988 15:14:36    DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PAS;233 (1)
+
+PSECT SUMMARY
+
+        Name                     Bytes                         Attributes
+
+$CODE                               30660  NOVEC,NOWRT,  RD,  EXE,  SHR,  LCL,  REL,  CON,  PIC,ALIGN(2)
+$LOCAL                                168  NOVEC,  WRT,  RD,NOEXE,NOSHR,  LCL,  REL,  CON,  PIC,ALIGN(2)
+
+
+ENVIRONMENT STATISTICS
+
+                                                       -------- Symbols --------
+        File                                           Total    Loaded   Percent
+
+DUA1:[QPLOT.QPLOT.SOURCE]STARLETQ.PEN;1                  260         4         2
+DUA1:[QPLOT.QPLOT.SOURCE]STANDARD.PEN;1                  124        58        47
+DUA1:[QPLOT.QPLOT.SOURCE]GENERAL.PEN;1                    20         2        10
+DUA1:[QPLOT.QPLOT.SOURCE]IO.PEN;1                        204        83        41
+DUA1:[QPLOT.QPLOT.SOURCE]COLOR.PEN;1                      93        13        14
+DUA1:[QPLOT.QPLOT.SOURCE]MATH.PEN;1                       59        23        39
+DUA1:[QPLOT.QPLOT.SOURCE]STRING.PEN;1                     72        32        44
+DUA1:[QPLOT.QPLOT.SOURCE]FIG.PEN;1                       213       140        66
+DUA1:[QPLOT.QPLOT.SOURCE]TERM_VAX.PEN;1                  101        29        29
+DUA1:[QPLOT.QPLOT.SOURCE]TERMIO.PEN;1                     98        15        15
+DUA1:[QPLOT.QPLOT.SOURCE]IOBASE.PEN;1                    104         8         8
+DUA1:[QPLOT.QPLOT.SOURCE]UTILITIES.PEN;1                 105         1         1
+
+
+
+PLOT3D                                                          23-Dec-1988 10:27:19    VAX Pascal V3.7-254                Page    1
+QPLOT                           Source Listing                   4-Mar-1988 10:18:34    DUA1:[QPLOT.QPLOT.SOURCE]PLOT3D.PAS;44 (1)
+
+-LINE-IDC-PL-SL-
+
+00001      0  0 [ IDENT       ('QPLOT'),  
+00002      0  0   INHERIT     ('QLIBHOME:STARLETQ',
+00003      0  0                'QLIBHOME:STANDARD',
+00004      0  0                'QLIBHOME:ROTATION',
+00005      0  0                'QLIBHOME:FIG',
+00006      0  0                'QLIBHOME:PLOT'),
+00007      0  0   ENVIRONMENT ('QLIBHOME:PLOT3D') ]
+00008      0  0 MODULE plot3d;
+00009   C  0  0 {=============================================================================}
+00010      0  0 TYPE
+00011      0  0    plotlimits3d = RECORD
+00012      0  0                   min,max : vector;
+00013      0  0                   END;
+00014      0  0 VAR
+00015      0  0    currlim3d    : plotlimits3d;
+00016   C  0  0 {=============================================================================}
+00017   C  0  0 {-- LOW LEVEL 3D GRAPHICS ROUTINES -------------------------------------------}
+00018   C  0  0 {=============================================================================}
+00019      0  0 [ HIDDEN ]
+00020      1  0 PROCEDURE xyzfromvector (VAR x,y,z : real;  rot : rotation;  v : vector);
+00021      1  0 VAR
+00022      1  0    i,j   : integer;
+00023      1  0    vnorm : vector;
+00024      1  1 BEGIN
+00025      1  1 FOR i := 1 TO 3 DO 
+00026      1  1    vnorm[i] := (v[i] - (currlim3d.max[i] + currlim3d.min[i]) / 2)
+00027      1  1                      / (currlim3d.max[i] - currlim3d.min[i]) * 2;
+00028      1  1 vnorm := rotate (rot,vnorm);
+00029      1  1 x := vnorm[1];
+00030      1  1 y := vnorm[2];
+00031      1  1 z := vnorm[3];
+00032      0  0 END;
+00033   C  0  0 {-----------------------------------------------------------------------------}
+00034      0  0 [ GLOBAL ]
+00035      1  0 PROCEDURE position3d (fr : framelink;  x,y,z : real;  rot : rotation);
+00036   C  1  0 { Purpose -- Position beam in three dimensions.   }
+00037      1  0 VAR
+00038      1  0    zz : real;
+00039      1  0    pt : point;
+00040      1  0    v  : vector;
+00041      1  1 BEGIN
+00042      1  1 v[1] := x;
+00043      1  1 v[2] := y;
+00044      1  1 v[3] := z;
+00045      1  1 xyzfromvector (pt.x,pt.y,zz,rot,v);
+00046      1  1 pt.f := fr;
+00047      1  1 scaleposition (pt);
+00048      0  0 END;
+00049   C  0  0 {-----------------------------------------------------------------------------}
+00050      0  0 [ GLOBAL ]
+00051      1  0 PROCEDURE draw3d (fr : framelink;  x,y,z : real;  rot : rotation);
+00052   C  1  0 { Purpose -- Draw line in three dimensions.  }
+00053      1  0 VAR
+00054      1  0    zz : real;
+00055      1  0    pt : point;
+
+PLOT3D                                                          23-Dec-1988 10:27:19    VAX Pascal V3.7-254                Page    2
+QPLOT                           Source Listing                   4-Mar-1988 10:18:34    DUA1:[QPLOT.QPLOT.SOURCE]PLOT3D.PAS;44 (1)
+
+-LINE-IDC-PL-SL-
+
+00056      1  0    v  : vector;
+00057      1  1 BEGIN
+00058      1  1 v[1] := x;
+00059      1  1 v[2] := y;
+00060      1  1 v[3] := z;
+00061      1  1 xyzfromvector (pt.x,pt.y,zz,rot,v);
+00062      1  1 pt.f := fr;
+00063      1  1 scaledraw (pt);
+00064      0  0 END;
+00065   C  0  0 {=============================================================================}
+00066   C  0  0 {-- LINE TRACING PROCEDURES --------------------------------------------------}
+00067   C  0  0 {=============================================================================}
+00068      0  0 [ GLOBAL ]
+00069      1  0 PROCEDURE trace3d (fr : framelink;
+00070      1  0                    VAR x : ARRAY [lx..ux : integer] OF real;
+00071      1  0                    VAR y : ARRAY [ly..uy : integer] OF real;
+00072      1  0                    VAR z : ARRAY [lz..uz : integer] OF real;
+00073      1  0                    lo,hi : integer;  rot : rotation;  toclip : boolean;  
+00074      1  0                    backclip : real;  style : integer);
+00075      1  0 TYPE
+00076      1  0    arr       = ARRAY [1..100000] OF real;
+00077      1  0    ptrarr    = ^arr;
+00078      1  0 VAR
+00079      1  0    i,j       : integer;
+00080      1  0    v         : vector;
+00081      1  0    xx,yy,zz  : ptrarr;
+00082      1  1 BEGIN
+00083      1  1 LIB$GET_VM ((hi-lo+1)*8,xx::$POINTER);
+00084      1  1 LIB$GET_VM ((hi-lo+1)*8,yy::$POINTER);
+00085      1  1 LIB$GET_VM ((hi-lo+1)*8,zz::$POINTER);
+00086      1  1 j := 0;
+00087      1  1 FOR i := lo TO hi DO
+00088      1  2    BEGIN
+00089      1  2    v[1] := x[i];
+00090      1  2    v[2] := y[i];
+00091      1  2    v[3] := z[i];
+00092      1  2    j := j + 1;
+00093      1  2    xyzfromvector (xx^[j],yy^[j],zz^[j],rot,v);
+00094      1  2    IF zz^[j] > backclip
+00095      1  2     THEN 
+00096      1  2    ELSE IF j > 1
+00097      1  3     THEN BEGIN  trace (fr,xx^,yy^,1,j-1,toclip,style);  j := 0;  END
+00098      1  2     ELSE j := 0;
+00099      1  1    END;
+00100      1  1 IF j > 0 THEN trace (fr,xx^,yy^,1,j,toclip,style);
+00101      1  1 LIB$FREE_VM ((hi-lo+1)*8,xx::$POINTER);
+00102      1  1 LIB$FREE_VM ((hi-lo+1)*8,yy::$POINTER);
+00103      1  1 LIB$FREE_VM ((hi-lo+1)*8,zz::$POINTER);
+00104      0  0 END;
+00105   C  0  0 {-----------------------------------------------------------------------------}
+00106      0  0 [ GLOBAL ]
+00107      1  0 PROCEDURE set3d (lim3d : plotlimits3d);
+00108      1  1 BEGIN
+00109      1  1 currlim3d := lim3d;
+00110      0  0 END;
+
+PLOT3D                                                          23-Dec-1988 10:27:19    VAX Pascal V3.7-254                Page    3
+QPLOT                           Source Listing                   4-Mar-1988 10:18:34    DUA1:[QPLOT.QPLOT.SOURCE]PLOT3D.PAS;44 (1)
+
+-LINE-IDC-PL-SL-
+
+00111   C  0  0 {=============================================================================}
+00112      0  0 END.
+
+PLOT3D                                                          23-Dec-1988 10:27:19    VAX Pascal V3.7-254                Page    4
+QPLOT                           Pascal Compilation Statistics    4-Mar-1988 10:18:34    DUA1:[QPLOT.QPLOT.SOURCE]PLOT3D.PAS;44 (1)
+
+PSECT SUMMARY
+
+        Name                     Bytes                         Attributes
+
+$CODE                                1349  NOVEC,NOWRT,  RD,  EXE,  SHR,  LCL,  REL,  CON,  PIC,ALIGN(2)
+$LOCAL                                 48  NOVEC,  WRT,  RD,NOEXE,NOSHR,  LCL,  REL,  CON,  PIC,ALIGN(2)
+
+
+ENVIRONMENT STATISTICS
+
+                                                       -------- Symbols --------
+        File                                           Total    Loaded   Percent
+
+DUA1:[QPLOT.QPLOT.SOURCE]STARLETQ.PEN;1                  260        11         4
+DUA1:[QPLOT.QPLOT.SOURCE]STANDARD.PEN;1                  124        21        17
+DUA1:[QPLOT.QPLOT.SOURCE]ROTATION.PEN;1                   75        12        16
+DUA1:[QPLOT.QPLOT.SOURCE]FIG.PEN;1                       213        91        43
+DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PEN;1                      292        91        31
+
+
+

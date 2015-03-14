@@ -1,0 +1,54 @@
+; Configure TEK terminals for TEK4510 rasterizer.
+UTILITIES SET VERIFY OFF
+UTILITIES TERMINAL /CONFIG
+24
+B
+V
+C
+N
+1
+1
+L
+D
+;
+UTILITIES SET VERIFY ON
+MISC ZAP
+UTILITIES SET VERIFY OFF
+MISC ZAP
+U S K OFF
+U S N 0
+U S M Q X D
+U S M E F E S
+U S M Z M N Y
+U S M Y U T S SMG
+U F X G DARKGRAY
+U F Y G DARKGRAY
+SET FREQUENCY_PLOT       C-NICHOLS
+UTILITIES SET VERIFY ON
+M Z
+Analyze Frequency_response Expression 
+s/(s+1)
+
+
+
+
+
+
+dfsafdsa
+
+
+
+
+
+X       0       0
+Utilities Color Set FIND 
+orange
+Plot Old 
+V   15696   17248
+34
+V   48096   30224
+34
+F   14560   30224
+X   14560   30224
+Utilities Journal_Keep 
+k.sou

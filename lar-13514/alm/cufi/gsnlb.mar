@@ -1,0 +1,77 @@
+;CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+;
+;    GET_SCREEN_NLB    - get data from screen with no leading blanks
+;			 and allow the use of the back space for delete
+;    VERSION:	1.0
+;    AUTHOR:	J.Pierce; RTI
+;    CREATION DATE:	19-Jan-1984
+;    
+;    FUNCTION:	copies text from the terminal screen into a specified
+;			destination. Strips leading blanks and won't accept
+;			a blank line (keeps reading).
+;
+;    USAGE:	called as subroutine or function
+;		iret = get_screen_nlb(input_text,prompt,length)
+;
+;    ARGUMENTS:	(same as for lib$get_screen)
+;		input_text - character type, the destination for term. input
+;		prompt     - character type, optional, prompting text
+;		length     - integer*4, optional, the # of chars. input
+;
+;    ERRORS:    returns the same error codes as lib$get_screen
+;
+;    NOTES:	written in VAX/VMS Macro so that some agruements can
+;		be left out. (Fortran chokes on this). Uses the
+;		Run Time Library function lib$get_screen and a jlp creation
+;		the function strip_leading.
+;
+;    PROCESS:	calls lib$get_screen to get some text. Applies the function
+;		strip_leading to trim off leading blanks or tabs. If
+;		strip_leading returns the length of the string
+;
+;    REVISION HISTORY:	1.0 - Created on 17-Feb-1984 by J.Pierce; RTI
+;
+;CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+;
+;
+	.title	get_screen_nlb
+	.ident	/01/
+;
+	.psect	strlead_data,noexe
+length_addr:	
+	.address	length
+length:	.long	0
+arglis:	.long	2			; arguement list for strlead
+	.long	0			; input descriptor address
+	.long	0			; output descriptor address
+
+arglis2:.long	3			; arguement list for lib$get_screen
+	.long	0			; input descriptor address
+	.long	0			; prompt descriptor address
+	.long	0			; address of length of input string
+
+arglis3:.long	1			; arguement list for back_space_handler
+	.long	0			; input descriptor address
+
+	.psect	get_screen_nlb,exe,nowrt
+	.entry	get_screen_nlb,^M<r2>
+
+	movl	4(ap),arglis2 + 4	; build arglist for lib$get_screen
+	movl	8(ap),arglis2 + 8	; 2nd arguement
+	movl	12(ap),arglis2 + 12	; 3rd arguement
+	movl	4(ap),arglis + 4	; build arglis for strlead
+	movl	4(ap),arglis + 8	; input and output are same place
+	movl	4(ap),arglis3 + 4	; build arglist for back_space_handler
+	movl	arglis2 + 12, length_addr ; check if there is a third arguement
+	bnequ	10$			; if not use length as arguement
+	moval	length, length_addr
+10$:	callg	arglis2, g^lib$get_screen ; get text from terminal
+	tstl	@length_addr		; check no. of characters received
+	beql	30$			; return if no characters
+	movl	r0,r2			; save lib$get_screen return code
+	callg	arglis3, g^back_space_handler	;take care of back spaces
+	callg	arglis, strip_leading	; strip leading blanks
+	subl2	r0,@length_addr		; calc. no. of nonblank bytes input
+20$:	movl	r2,r0			; return with lib$get_screen code
+30$:	ret
+	.end

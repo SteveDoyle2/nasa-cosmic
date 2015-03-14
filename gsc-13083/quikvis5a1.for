@@ -1,0 +1,191 @@
+      SUBROUTINE QUIKVIS5A1(IDTARG,TARGNAMES)
+      IMPLICIT REAL*8 (A-H,O-Z)
+C
+C THIS ROUTINE IS PART OF THE QUIKVIS PROGRAM.  IT WRITES THE HEADER
+C RECORDS ON THE XYPLOT FILES.
+C
+C
+C VARIABLE      DIM       TYPE I/O DESCRIPTION
+C --------      ---       ---- --- -----------
+C
+C IDTARG      MAXTARGS     I*4  I  DESCRIBED IN QUIKVIS(=MAIN) PROLOGUE.
+C
+C TARGNAMES   MAXTARGS    CH*16 I  DESCRIBED IN QUIKVIS(=MAIN) PROLOGUE.
+C
+C***********************************************************************
+C
+C BY C PETRUZZO/GFSC/742.   4/86.
+C       MODIFIED....
+C
+C***********************************************************************
+C
+      INCLUDE 'QUIKVIS.INC'
+C
+      INTEGER*4 IDTARG(MAXTARGS)
+      CHARACTER*16 TARGNAMES(MAXTARGS)
+C
+      REAL*8 ELEMS(6)
+      CHARACTER*18 DATETIME
+      CHARACTER*5 CHARID,I4CHAR
+      CHARACTER*25 CHNIGHT
+      CHARACTER*20 CH20
+      CHARACTER*21 CHYMD
+      CHARACTER*16 CHNAME
+      CHARACTER*4 CH4TEMP
+C
+C
+C ****************
+C *  INITIALIZE  *
+C ****************
+C
+      ELEMS(1) = SMA
+      ELEMS(2) = ECC
+      ELEMS(3) = ORBINCL
+      ELEMS(5) = ARGP
+      ELEMS(6) = 0.D0
+      ALTHI = SMA*(1.D0+ECC) - CONST(53)
+      ALTLO = SMA*(1.D0-ECC) - CONST(53)
+C
+C
+C LOAD VARIABLES CONTAINING TARGET NAME AND ID.  IF ONLY ONE TARGET,
+C PUT THE ID IN THE TITLE RECORDS.  IF MORE, LEAVE THE ID BLANK.
+C
+      IF(NUMTARGS.EQ.1) THEN
+        CHARID = I4CHAR(IDTARG(1),5,K1CHARID)
+        CHNAME = TARGNAMES(1)
+      ELSE
+        CHARID = ' '  ! MULTIPLE TARGS PRESENT. LEAVE BLANK.
+        K1CHARID = 5
+        CHNAME = ' '
+        END IF
+C
+C LOAD VARIABLE CONTAINING THE DATE. IF ONLY ONE DATE, PUT THE
+C DATE IN THE TITLE RECORDS.  IF MORE, OR DATE IS NOT INVOLVED,
+C LEAVE THE DATE BLANK.
+C
+      IF(NEEDTIME) THEN
+        IF(NUMTIMES.EQ.1) THEN
+          CALL PAKT50CH(TSTART,CH20)
+          CHYMD = 'DATE(Y/M/D)= ' // CH20(1:8)
+          K2CHYMD = 21
+        ELSE
+          CHYMD = ' '
+          K2CHYMD = 1
+          END IF
+      ELSE
+        CHYMD = ' '
+        K2CHYMD = 1
+        END IF
+C
+C LOAD THE INFO STRING REPORTING THE ORBIT NIGHT REQUIREMENT.
+C
+      IF(DOREQMT(2)) THEN
+        CHNIGHT = 'ORBIT NIGHT IS REQUIRED'
+      ELSE
+        CHNIGHT = 'ORBIT NIGHT IS IGNORED'
+        END IF
+C
+C
+C ***********************
+C *  WRITE THE RECORDS  *
+C ***********************
+C
+C TITLE RECORDS
+C
+      IF(DOXYPLOT1) WRITE(LUXYPLOT1,101)
+     *     DATETIME(0),           ! DATE AND TIME FILE IS GENERATED
+     *     CHARID(K1CHARID:5),    ! TARGET ID OR BLANK ID
+     *     CHNAME,                ! TARGET NAME OR BLANK
+     *     CHYMD(1:K2CHYMD)       ! DATE INFO OR BLANK
+C
+      IF(DOXYPLOT2) WRITE(LUXYPLOT2,102)
+     *     DATETIME(0),           ! DATE AND TIME FILE IS GENERATED
+     *     CHARID(K1CHARID:5),    ! TARGET ID OR BLANK ID
+     *     CHNAME                 ! TARGET NAME OR BLANK
+C
+C COMMENT RECORDS
+C
+      DO IFILE=1,2
+        LU = 0
+        IF(IFILE.EQ.1 .AND. DOXYPLOT1) LU = LUXYPLOT1
+        IF(IFILE.EQ.2 .AND. DOXYPLOT2) LU = LUXYPLOT2
+        IF(LU.NE.0) THEN
+          WRITE(LU,201)
+     *       JIDNNT(ALTLO),         ! PERIGEE ALTITUDE
+     *       JIDNNT(ALTHI),         ! APOGEE ALTITUDE
+     *       ORBINCL*DEGRAD,        ! INCLINATION
+     *       ARGP*DEGRAD,           ! ARGUMENT OF PERIGEE
+     *       EAVOID*DEGRAD,         ! EARTH AVOIDANCE ANGLE
+     *       VAVOID*DEGRAD,         ! VEL VEC AVOIDANCE ANGLE
+     *       ZMAXSEP*DEGRAD         ! MAX SEPARATION FROM ZENITH
+          IF(IFILE.EQ.1) THEN
+            WRITE(LU,202) CHNIGHT     ! ORBIT NIGHT COMMENT
+          ELSE
+            IF(NODEOPT.EQ.1) THEN
+              TEMP1 = RAAN1*DEGRAD                               ! DEG
+              TEMP2 = (RAAN1 + (NUMRAAN-1)*DELRAAN) * DEGRAD
+              CH4TEMP = 'RAAN'
+            ELSE IF(NODEOPT.EQ.2) THEN
+              TEMP1 = SOLTIM1 / 3600.D0                          ! HRS
+              TEMP2 = (SOLTIM1 + (NUMSOLT-1)*DELSOLT) / 3600.D0
+              CH4TEMP = ' MST'
+            ELSE  ! NODEOPT =1 OR =2 IS VALID.
+              STOP ' QUIKVIS5A1. ERROR END. SEE CODE.'
+              END IF
+            WRITE(LU,203) CHNIGHT,    ! ORBIT NIGHT COMMENT
+     *        CH4TEMP,TEMP1,TEMP2     ! NODE OR MEAN SOLAR TIME RANGE
+            END IF
+          END IF
+        END DO
+C
+C VARIABLE NAMES
+C
+      IF(DOXYPLOT1) WRITE(LUXYPLOT1,301)
+     *   ' 3/',                                           ! # VARIABLES
+     *   'RIGHT ASCENSION OF ASCENDING NODE(DEG)',        ! VAR 1
+     *   'MINUTES AVAILABLE',                             ! VAR 2
+     *   'MEAN SOLAR TIME OF ASCENDING NODE(HRS)'         ! VAR 3
+C
+      CALL PAKT50CH(TSTART,CH20)
+      IF(DOXYPLOT2) WRITE(LUXYPLOT2,301)
+     *   ' 2/',                                           ! # VARIABLES
+     *   'DAYS SINCE Y/M/D= ' // CH20(1:8),               ! VAR 1
+     *   'MINUTES AVAILABLE'                              ! VAR 2
+C
+C
+      RETURN
+C
+  101 FORMAT(
+     *   ' 3/    GENERATED BY QUIKVIS.   ',A/,            ! # TITLES
+     *   'TARGET AVAILABILITY TIME -VS- ORBIT RAAN'/,     ! TITLE1
+     *   'TARGET ID = ',A,'    NAME = ',A/,               ! TITLE2
+     *   A)                                               ! TITLE3
+  102 FORMAT(
+     *   ' 2/    GENERATED BY QUIKVIS.   ',A/,            ! # TITLES
+     *   'MIN/MAX TARGET AVAILABILITY TIME -VS- DATE'/,   ! TITLE1
+     *   'TARGET ID = ',A,'    NAME = ',A)                ! TITLE2
+  201 FORMAT(
+     *     ' 3/'/,                                        ! # COMMENTS
+     *     'MIN/MAX ALT(KM)=',2I5,                        ! COMM 1
+     *       '  INCL(DEG)=',F5.1,'  ARGP(DEG)=',F5.1/,
+     *     'HORIZ AVOID=',F5.1,                           ! COMM 2
+     *       '  VEL VEC AVOID=',F5.1,
+     *       '  MAX ZENITH SEP=',F5.1)
+  202 FORMAT(A)                                           ! COMM 3
+  203 FORMAT(A,T33,A,' RANGE=',F6.1,' THRU',F6.1)         ! COMM 3
+  301 FORMAT(A)
+C
+C***********************************************************************
+C
+C
+C**** INITIALIZATION CALL. PUT GLOBAL PARAMETER VALUES INTO THIS
+C     ROUTINE'S LOCAL VARIABLES.
+C
+      ENTRY QVINIT5A1
+C
+      CALL QUIKVIS999(-1,R8DATA,I4DATA,L4DATA)
+      RETURN
+C
+C***********************************************************************
+C
+      END

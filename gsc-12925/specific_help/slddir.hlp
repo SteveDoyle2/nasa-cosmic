@@ -1,0 +1,35 @@
+delete.hlp
+rename.hlp
+dirkey.hlp
+cngdrive.hlp
+sldcopy.hlp
+
+
+
+
+
+The Directory Mode allows the user to see the directory of available charts
+as well as perform maintenance on the directory.  Renaming and Deleting are
+described in more detail if the function key refering to them is pressed.
+Also copying a slide from another disk drive is explained when F5 is pressed.
+
+The PgUp (Page Up) and PgDn (Page Down) keys can be used to recieve the next or
+previous directory page and F3 Directory can be used to recieve the first page
+again.
+
+To obtain help for any of the following subjects,  press the function key next
+to the desired subject.
+
+        F1  Delete
+        F2  Rename
+        F3  Directory
+        F4  Change Drive
+        F5  Copy
+
+
+        F8  Return to Previous Menu
+
+        F10 Exit from Help
+
+Press F8 to return to the last help screen or F10 to leave the help mode
+

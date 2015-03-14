@@ -1,0 +1,93 @@
+PROGRAM verv80 (output,vfile);
+CONST
+   IO$_PLOTMODE   = 112;
+   IO$_WRITEVBLK  = 48;
+   EFN            = 11;
+TYPE
+   short_integer  = [WORD] -32768..32767;
+TYPE
+   v_type         = PACKED ARRAY [1..264] OF char;
+VAR
+   ichan          : short_integer   := 0;
+   iosb           : ARRAY [1..2] OF integer;
+   devnam         : PACKED ARRAY [1..4] OF char := 'LPC0';
+   v              : v_type;
+   vfile          : FILE OF v_type;
+   i,stat         : integer;
+{-----------------------------------------------------------------------------}
+[ ASYNCHRONOUS, EXTERNAL ]
+FUNCTION SYS$alloc  (%STDESCR devnam : PACKED ARRAY [l1..u1 : integer] OF char;
+                     %IMMED   x1 : integer := 0;
+                     %IMMED   x2 : integer := 0;
+                     %IMMED   x3 : integer := 0) : integer;
+EXTERN;
+{-----------------------------------------------------------------------------}
+[ ASYNCHRONOUS, EXTERNAL ]
+FUNCTION SYS$assign (%STDESCR devnam : PACKED ARRAY [l1..u1 : integer] OF char;
+                     VAR      chan   : short_integer;
+                     %IMMED   acmode : integer := 0;
+                     %IMMED   mbxnam : integer := 0) : integer;
+EXTERN;
+{-----------------------------------------------------------------------------}
+[ ASYNCHRONOUS, EXTERNAL ]
+FUNCTION SYS$qio    (%IMMED   efn    : integer := 0;
+                     %IMMED   chan   : short_integer;
+                     %IMMED   func   : short_integer;
+                     %IMMED   iosb   : integer := 0;
+                     %IMMED   astadr : integer := 0;
+                     %IMMED   astprm : integer := 0;
+                     %REF     p1v    : PACKED ARRAY [l7..u7 : integer] OF char;
+                     %IMMED   p2     : integer;
+                     %IMMED   p3     : integer := 0;
+                     %IMMED   p4     : integer := 0;
+                     %IMMED   p5     : integer := 0;
+                     %IMMED   p6     : integer := 0) : integer;
+EXTERN;
+{-----------------------------------------------------------------------------}
+[ ASYNCHRONOUS, EXTERNAL(SYS$WAITFR) ]
+FUNCTION SYS$waitfr (%IMMED   efn    : integer := 0) : INTEGER;
+EXTERN;
+{-----------------------------------------------------------------------------}
+[ ASYNCHRONOUS, EXTERNAL ]
+FUNCTION SYS$dalloc (%STDESCR devnam : PACKED ARRAY [l1..u1 : integer] OF char;
+                     %IMMED   x1 : integer := 0) : integer;
+EXTERN;
+{-----------------------------------------------------------------------------}
+BEGIN
+open (vfile,'VERV80.PLT',old,ERROR:=CONTINUE);
+IF status (vfile) = 0
+ THEN
+  BEGIN
+  reset (vfile);
+  stat := SYS$alloc (devnam,,,);
+  IF stat <> 1 
+   THEN writeln ('Unable to allocate Versatec , E= ',stat:8)
+   ELSE
+    BEGIN
+    SYS$assign (devnam,ichan,,);
+    IF stat <> 1 
+     THEN writeln ('Unable to assign Versatec , E= ',stat:8)
+     ELSE
+      BEGIN
+      FOR i := 1 TO 264 DO v[i] := chr(0);
+      FOR i := 1 TO 100 DO
+         BEGIN
+         SYS$qio (1,ichan,IO$_PLOTMODE,,,,v,264,,,,);
+         SYS$waitfr(1);
+         END;
+      WHILE NOT eof(vfile) DO
+         BEGIN
+         read (vfile,v);
+         SYS$qio (1,ichan,IO$_PLOTMODE,,,,v,264,,,,);
+         SYS$waitfr(1);
+         END;
+      close (vfile,DISPOSITION:=DELETE);
+      SYS$qio (1,ichan,IO$_WRITEVBLK,,,,chr(12),1,,,,);
+      SYS$waitfr(1);
+      SYS$qio (1,ichan,IO$_WRITEVBLK,,,,chr(12),1,,,,);
+      SYS$waitfr(1);
+      stat := SYS$dalloc (devnam,);
+      END;
+    END;
+  END;
+END.

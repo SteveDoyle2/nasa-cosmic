@@ -1,0 +1,48 @@
+ OPTICAL LENS PRESCRIPTION DATA REFORMATTER
+
+( Cal Tech/Jet Propulsion Lab. )
+
+     The Optical Lens Prescription Data Formatter allows the user to
+quickly and easily transfer complicated optical lens prescriptions from
+one major optical design program to another and back again. Thus one may
+take advantage of the inherent strengths of either program. The programs
+are ACCOS V from Scientific Calculations, Inc. of Fishers, NY, and CODE V
+from Optical Research Associates of Pasadena, CA.
+
+     The translation program works quite well for most lens prescriptions.
+On all tested lenses it correctly translates the lens radii, thickness,
+polynomial aspheric data, tilts, decenters, and aperature sizes. Limita-
+tions occur for special types of surfaces and some data pickups because the
+programs are not fully equivalent. In these cases the program translates
+all the data it can and prints comments mentioning the rest. The user can
+then manually adjust the lens to correctly model the system.
+
+     This program is written in FORTRAN and requires 64K bytes of 8 bit bytes
+but has been fully tested in only one direction -- ACCOS V to CODE V. At some
+installations, differences in lens data files may require modification of
+format statements. This program was released in 1987.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN 77
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 3,814 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX BACKUP Format Magnetic Tape
+
+PROGRAM NUMBER: NPO-17093
+
+DOMESTIC - DOCUMENTATION PRICE: $14.00    PROGRAM PRICE: $800.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $28.00   PROGRAM PRICE: $1600.00
+
+
+
+                                        1
+

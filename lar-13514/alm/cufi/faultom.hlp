@@ -1,0 +1,43 @@
+	Fault Occurrence Model entry is the next step in the model entry
+	sequence.  You will be prompted for fault occurrence models for
+	each stage, up to the maximum number allowed for each stage.
+	This process will be repeated for each stage which you entered
+	in the Stage Description phase.
+
+	If you wish to enter less than the maximum number of Fault
+	Occurrence Models for a stage, merely enter "END" at the
+	"Fault Type" input.  The process will jump forward to the
+	input of models for the next stage.
+
+	When the last model for the last stage has been entered,
+	processing will proceed to the next step of model entry.
+.page
+	Users should refer to the CARE III User's guide (NASA TM- 86404, 
+        Aoril 1985) if the following help does not adequately explain
+        any parameter.	The following help will provide the user with allowable
+	limits for each parameter, in case there is any question
+	about them:
+
+		FAULT TYPE - A character string input which is
+			used to name the fault type being input.
+			This string is currently limited to 20
+			characters in length.  The fault type
+			must be one of those named in the
+			Fault Handling Models (FHM) input
+			stage.  These names are listed.
+
+		FOM -   A string input which indicates what type
+			of fault model this will be.  Current
+			valid inputs are WEIBULL and EXPONENTIAL.
+			The shortest non-ambiguous keyword
+			abbreviation may be used.
+.page
+
+		LAMBDA - A real number greater than 0.0.
+			This input is placed in the RLM parameter
+			in the FLTCAT namelist.
+
+		OMEGA - A real number greater than 0.0.
+			If the model is EXPONENTIAL, then omega
+			will be set to 1.0, regardless of input
+			value.

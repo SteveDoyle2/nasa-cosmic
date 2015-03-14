@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+The Bullet Format Menu consists of the following options :
+
+        Character Size    : Enter letter for size of text for each of these
+                Title         : Listed at top
+                Sub-title     : Listed below the bullet
+                Bullet        : Every bullet will be the same size
+                Sub-bullet    : Every sub-bullet will be the same size
+                Date/Name/Org : Listed at bottom and cannot be large size
+        Number of columns : One or two columns displayed
+        Bullet Symbol     : Symbol placed at beginning of bullet, to recieve
+                            second symbol for 1 or 2, place a "-" sign at the
+                            beginning of the bullet
+        Sub-bullet Symbol : Symbol at beginning of sub-bullet, to recieve
+                            second symbol place "-" sign at beginning
+        GSFC Symbol       : Display the GSFC symbol on the chart or not
+        Background Color  : Color of background on the screen in Window Mode
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

@@ -1,0 +1,1545 @@
+2 EDIT_FILE         
+
+     This command allows quick acess to the EDT editor for the editing 
+of text files.  The editor is brought up in KEYPAD mode if the 
+terminal is VT100 (ANSI 3.64) compatible.
+
+     Format:     UTILITIES  EDIT_FILE  [filename]
+
+2 FRAME             
+
+     This command is used with the various modifiers to control the
+the construction of plotting frames.  Each type of plot has a 
+"template" which is used whenever a plot of that type is desired.
+The number and names of these templates are application dependent.
+Whenever a frame command is executed, the user is first asked if
+he wishes to enter a value for all frames.  If no value (a blank
+line) is entered, the user will be queried for each frame template.
+
+     Format:     UTILITIES  FRAME  [modifier]  [options]
+
+     Some of the frame commands may be used to change the colors of
+the various background items in the frame. The item to be changed is
+given by the modifier.  The new color is given by the argument.  The
+color may be one or more standard qplot colors, given in the
+UTILITIES COLOR LIST command.  A color is specified in the following
+format: 
+
+     color-spec:    [number]  color-name   [[[number]  color-name] ...]
+
+     That is, a color specification consists of a list of colors,
+each of which may be preceded by a real number.  The total length of 
+the string cannot exceed 30 characters.  Color names can be 
+abbreviated, as long as they remain distinct.  The number can be any 
+real number, and defaults to 1.00.  The color names can be colors that 
+have already been defined in terms of other colors.  Note that it is 
+possible create an endless recursion loop in this way.  For this 
+reason, a recursion limit of 10 has been imposed.
+
+3 SET               
+
+     This command may be used to change QPLOT parameters that control
+the construction of plotting frames.  The audit file, if implemented
+for the application, will contain a status report on the changed
+parameter.  If no argument is given, the user will be prompted to
+enter a value.  Pressing <RETURN> will cause the current value to be
+retained.  If no modifier is given, the values of all frame
+parameters will be listed. 
+
+     The quantity to be changed is given by the modifier. The new
+value is given by the argument.  If the argument is omitted or is
+incorrect you will be asked to enter the new value.  Just pressing
+<RETURN> will then cause the old value to be retained. 
+
+     Format:     UTILITIES  FRAME  SET  [modifier]  [argument] 
+
+4 AZIMUTH_PERCENT   
+
+     This parameter controls the percentage of the azimuthal grid that
+is drawn in polar plots. 
+     
+     Format:     UTILITIES  FRAME  SET  AZIMUTH_PERCENT  
+                                                [integer-argument]
+     Default:    65
+
+4 BOX_COLOR         
+
+     This parameter controls the color of the box around the plot.
+
+     Format:     UTILITIES  FRAME  SET  BOX  [color-spec]
+     Default:    "BOX"
+
+4 FILL_COLOR        
+
+     This parameter controls the color of the fill in the plot area.
+
+     Format:     UTILITIES  FRAME  SET  FILL  [color-spec]
+     Default:    "FILL"
+
+4 HEADING_COLOR     
+
+     This parameter controls the color of the heading above the plot.
+
+     Format:     UTILITIES  FRAME  SET  HEADING  [color-spec]
+     Default:    "HEADING"
+
+4 MAXTICKS          
+
+     This parameter controls the maximum number of major tick marks on
+any border in X-Y plots. 
+
+     Format:     UTILITIES  FRAME  SET  MAXTICKS  [integer-argument]
+     Default:    8
+
+4 PANE_COLOR        
+
+     This parameter controls the color of the fill in the frame area.
+
+     Format:     UTILITIES  FRAME  SET  PANE  [color-spec]
+     Default:    "PANE"
+
+4 RADIAL_PERCENT    
+
+     This parameter controls the percentage of the radial grid that is
+drawn on polar plots. 
+
+     Format:     UTILITIES  FRAME  SET  RADIAL_PERCENT
+                                               [integer-argument]
+     Default:    65
+
+4 SQUAREBOX         
+
+     This parameter controls whether the plotting window (white box) 
+will be forced to be square.  If this flag is on, the value of 
+the XFRAME UPPER_LIMIT parameter is ignored.
+
+     Format:     UTILITIES  FRAME  SET  SQUAREBOX  [boolean-argument]
+     Default:    depends upon frame template used.
+
+4 SUBTICKSIZE       
+
+     This parameter controls the size of the minor (sub) tick marks
+along the horizontal and vertical borders of the plot.  The range is 0
+to 2000. 
+
+     Format:     UTILITIES  FRAME  SET  SUBTICKSIZE  [integer-argument]
+     Default:    640
+
+4 TICKSIZE          
+ 
+     This parameter controls the size of the major tick marks along
+the horizontal and vertical borders of the plot.  The range is 480 
+to 4000. 
+
+     Format:     UTILITIES  FRAME  SET  TICKSIZE  [integer-argument] 
+     Default:    1024
+
+4 WINDOW_COLOR      
+
+     This parameter controls the color of the box around the frame.
+
+     Format:     UTILITIES  FRAME  SET  WINDOW  [color-spec]
+     Default:    "WINDOW"
+
+3 X_AXIS            
+
+     This command may be used to change QPLOT parameters that control
+the construction of plotting frames.  In particular, this command
+controls those parameters associated with plotting the X-axis.  The
+audit file, if implemented for the application, will contain a status
+report on the changed parameter.  If no argument is given, the user
+will be prompted to enter a value.  Pressing <RETURN> will cause the
+current value to be retained.  If no modifier is given, the values of
+all Frame X-axis parameters will be listed. 
+
+     The quantity to be changed is given by the modifier. The new
+value is given by the argument.  If the argument is omitted or is
+incorrect you will be asked to enter the new value.  Just pressing
+<RETURN> will then cause the old value to be retained. 
+
+     Format:     UTILITIES  FRAME  X_AXIS  [modifier]  [argument] 
+
+4 GRID_COLOR        
+
+     This parameter controls the color of the main grid lines in the X
+direction. 
+
+     Format:     UTILITIES  FRAME  X_AXIS  GRID_COLOR  [color-spec]
+     Default:    "XGRID"
+
+4 LABEL_COLOR       
+
+     This parameter controls the color of the label on the X axis.
+
+     Format:     UTILITIES  FRAME  X_AXIS  LABEL_COLOR  color-spec]
+     Default:    "XLABEL"
+
+4 NUMBER_COLOR      
+
+     This parameter controls the color of the numbers around the plot,
+but only those on the X axis.
+
+     Format:     UTILITIES  FRAME  X_AXIS  NUMBER_COLOR  [color-spec]
+     Default:    "XNUMBER"
+
+4 ROUNDING          
+
+     This parameter controls whether the limits are to be rounded to
+integer multiples of the ticksize. 
+
+     Format:     UTILITIES  FRAME  X_AXIS  ROUNDING  [boolean-argument]  
+     Default:    OFF
+
+4 SUBGRID           
+
+     This parameter controls the color of the secondary grid lines in 
+the X direction.
+
+     Format:     UTILITIES  FRAME  X_AXIS  SUBGRID  [color-spec]
+     Default:    "XSUBGRID"
+
+4 SUBTICK           
+
+     This parameter controls the color of the in-between tick marks in 
+the X direction on the border of the plot.
+
+     Format:     UTILITIES  FRAME  X_AXIS  SUBTICK  [color-spec]
+     Default:    "XSUBTICK"
+
+4 TICK              
+
+     This parameter controls the color of the tick marks in the X 
+direction on the border of the plot.
+
+     Format:     UTILITIES  FRAME  X_AXIS  TICK  [color-spec]
+     Default:    "XTICK"
+
+3 Y_AXIS            
+
+     This command may be used to change QPLOT parameters that control
+the construction of plotting frames.  In particular, this command
+controls those parameters associated with plotting the Y-axis.  The
+audit file, if implemented for the application, will contain a status
+report on the changed parameter.  If no argument is given, the user
+will be prompted to enter a value.  Pressing <RETURN> will cause the
+current value to be retained.  If no modifier is given, the values of
+all Frame Y-axis parameters will be listed. 
+
+     The quantity to be changed is given by the modifier. The new
+value is given by the argument.  If the argument is omitted or is
+incorrect you will be asked to enter the new value.  Just pressing
+<RETURN> will then cause the old value to be retained. 
+
+     Format:     UTILITIES  FRAME  Y_AXIS  [modifier]  [argument] 
+
+4 GRID_COLOR        
+
+     This parameter controls the color of the main grid lines in the Y
+direction. 
+
+     Format:     UTILITIES  FRAME  Y_AXIS  GRID_COLOR  [color-spec]
+     Default:    "YGRID"
+
+4 LABEL_COLOR       
+
+     This parameter controls the color of the label on the Y axis.
+
+     Format:     UTILITIES  FRAME  Y_AXIS  LABEL_COLOR  color-spec]
+     Default:    "YLABEL"
+
+4 NUMBER_COLOR      
+
+     This parameter controls the color of the numbers around the plot,
+but only those on the Y axis.
+
+     Format:     UTILITIES  FRAME  Y_AXIS  NUMBER_COLOR  [color-spec]
+     Default:    "YNUMBER"
+
+4 ROUNDING          
+
+     This parameter controls whether the limits are to be rounded to
+integer multiples of the ticksize. 
+
+     Format:     UTILITIES  FRAME  Y_AXIS  ROUNDING  [boolean-argument]  
+     Default:    OFF
+
+4 SUBGRID           
+
+     This parameter controls the color of the secondary grid lines in 
+the Y direction.
+
+     Format:     UTILITIES  FRAME  Y_AXIS  SUBGRID  [color-spec]
+     Default:    "YSUBGRID"
+
+4 SUBTICK           
+
+     This parameter controls the color of the in-between tick marks in 
+the Y direction on the border of the plot.
+
+     Format:     UTILITIES  FRAME  Y_AXIS  SUBTICK  [color-spec]
+     Default:    "YSUBTICK"
+
+4 TICK              
+
+     This parameter controls the color of the tick marks in the Y 
+direction on the border of the plot.
+
+     Format:     UTILITIES  FRAME  Y_AXIS  TICK  [color-spec]
+     Default:    "YTICK"
+
+2 GENERAL_HELP      
+
+     The GENERAL_HELP command accesses the application program Help
+Library, which is capable of providing an abundance of useful
+information about the application program.  This library is organized
+in the same manner as the VAX system help library.  Once a topic has
+been selected, information about various sub-topics can be obtained by
+just entering the name of the sub-topic.  If <RETURN> is given as a
+response to any prompt, the help system moves up one level (from
+sub-topic to topic, etc.) and eventually out of the Help Library.  If
+a topic (sub-topic) is not found, a list of all available topics
+(subtopics) is given. 
+
+     Format:     UTILITIES  GENERAL_HELP  [topic]  [sub-topic] ...
+
+     The help library is also accesed if the "?" key is pressed while
+the QPLOT menuing system is active (as indicated on the menu). 
+
+2 HARDCOPY          
+
+     This command is used to set and display the type of hardcopy
+device being used.  Alterations can also be made to the plotting
+routine parameters through this command. 
+
+     Format:     UTILITIES  HARDCOPY  [modifier]  [parameter]
+
+     If the HARDCOPY command is given without a modifier, the hardcopy
+device currently selected will be listed.  If the SETUP modifier is
+used, the user will be prompted for new parameters for the currently
+selected device.  If any other modifier is used, the hardcopy device
+will be changed to that given.  Descriptions are given under the
+specific modifiers. 
+
+3 CONFIGURE         
+
+      The hardcopy device driver can be given instructions to control
+the size, orientation, and other characteristics of the plot. These
+instructions are different for each type of plotting device. The user
+will be asked questions to fully configure the previously selected
+plotting device.  The variables which might be set with the modifier
+include plot mode density, plot size, and plot orientation.  Details
+about use of these parameters is given in description of each specific
+hard-copy device. 
+
+     In addition to the hardware-specific options, the Non-Local
+Hardcopy Command Line must be given.  This command file will take
+the QPLOT generated file and output it to a device of the appropriate
+type located on the user's VAX.  
+
+     Format:     UTILITIES  HARDCOPY  CONFIGURE  
+
+3 EXTERNAL          
+
+     QPLOT contains drivers for the following plotters.  These devices 
+must be connected directly to the VAX, and preferably be used with a 
+queue.  Some devices may need special VAX software, known as a device 
+driver, to work properly.  It should be noted that the QPLOT software
+for a particular graphics device may be (and often is) called a driver.
+The device drivers mentioned here are lower level devices, and are
+obtained from DEC or from the hardware manufacturer, and have nothing
+to do with QPLOT.
+
+     Format:     UTILITIES  HARDCOPY  EXTERNAL  device-type
+
+4 BITMAP            
+
+     Use of this modifier means that the plot information is placed in
+a file for use by other programs.  The data format of the file is
+unique to QPLOT, and is described below.  The filename is BITMAP.PLT,
+and a new version is created for each hardcopy command. 
+
+     Format:     UTILITIES  HARDCOPY  EXTERNAL  BITMAP
+
+Setting the command line (By using the HARDCOPY CONFIGURE command)
+will cause that command line to be issued to the VAX (via a SPAWN
+command) after a hardcopy has been executed. The default command line
+is null, meaning that the file is saved for future use. 
+
+5 Data Format       
+
+     The file BITMAP.PLT consists of many variable length records,
+each record corresponding to one plotting action.  The reading program
+must read these records into a buffer, and be able to detect the 
+number of bytes read in each record.  In Pascal, read into a VARYING 
+string, and cast into a properly formatted variant record.  In 
+FORTRAN, read into a LOGICAL*1 array, and equvalence or transfer to 
+the desired types.  The record format is:
+
+ Field     Type            Position    Description        Values
+ -----     -------------   --------    ----------------   -------------
+ 1         BYTE            1-1         Instruction Type   (0-8)
+ 2         UNSIGNED_WORD   2-3         X-Position         (0-65535)
+ 3         UNSIGNED_WORD   4-5         Y-Position         (0-65535)
+ 4         DOUBLEWORD      6-9         Hue                (0-360)
+ 5         DOUBLEWORD      10-13       Lightness          (0-100)
+ 6         DOUBLEWORD      14-17       Saturation         (0-100)
+ 7         CHAR            18          Attribute          (" ","B","C")
+ 8         STRING          6-end       Text String
+ -----     -------------   --------    ----------------   -------------
+
+     The first byte of each record is the instruction type.  The 
+various values have the following meanings:
+
+ Val Len Instruction     Position     Other
+ --- --- -------------   ----------   -------------------------------------
+ 0   18  Set Color       Not Used     Hue, Lightness, Saturation, Attribute
+ 1   18  Open Panel      Not Used     Hue, Lightness, Saturation, Attribute
+ 2    5  Close Panel     Not Used     none
+ 3    5  Position Pen    X,Y          none
+ 4    5  Draw Line       X,Y          none
+ 5    5  Set Text Size   Wid,Hgt      none
+ 6    5  Set Text Space  Char,Line    none
+ 7    5+ Print Text      X,Y          String
+ 8    5  Flush Buffer    None Used    none
+ --- --- -------------   ----------   -------------------------------------
+
+Notes:
+
+     o    The attribute character modifies the color, as follows.
+
+          " " -- no change.
+          "B" -- Blinking color.
+          "C" -- Clear, HLS value has no effect.  Do not draw.
+
+     o    Colors with a lightness of zero should not be drawn
+          except on top of a panel, or if they can be drawn in 
+          the background color.
+
+     o    Normal plotting window is 0 to 65535 in the X direction,
+          and 0 to 49151 in the Y direction.
+
+     o    The text size is the width and height of the character cell.
+          Subtract the character and line spacing to find the size
+          of a full size character.  For example, a capital H would
+          be (width - character_spacing) units wide, and (height 
+          - line_spacing) units high.
+
+     o    The length of the text string is determined by taking the
+          length of the record and subtracting five.
+
+4 TEK4510           
+
+     Use of this modifier means that plot data is to be prepared in
+Tektronix 4510 Color Rasterizer format.  It is then directed to a
+file, and then to a device of that type that is connected directly 
+to the VAX as indicated by the command line parameter.  The filename is 
+TEK4510.PLT, and a new version is created for each hardcopy command.
+
+     Format:     UTILITIES  HARDCOPY  EXTERNAL  TEK4510
+
+Use of the HARDCOPY CONFIGURE command when this device is selected
+will allow the following device specific parameters to be changed. 
+
+5 Command Line      
+
+The command line is issued after the hardcopy is made to this device, 
+and usually indicates further actions to be performed on the file.
+The default command line is null, meaning that the file is created
+for future use.
+
+5 Primary           
+
+     If the primary color option is selected, all colors are 
+converted to one of the seven "primary" colors that can be printed by
+the Tektronix printers without dithering. The colors include the four
+ink colors (yellow, cyan, magenta, and black) and three mixtures (red,
+green, and blue).  All other colors are "rounded" to one in this set. 
+
+5 Width             
+
+     This option controls the width of the lines on the plot.  Only
+four values (1-4) are accepted, the rest have no effect.  A width of
+one will produce very narrow lines, and is the factory default.  A
+width of 4 will produce the widest lines, about one sixteenth of an
+inch. 
+
+5 Copies            
+
+     This option controls the number of copies to be made of the 
+plot.  The maximum value is nine.  The plot is downloaded to the 
+Tek4510 unit only once.
+
+5 Landscape/Portrait
+
+     If the plot is in landscape format the plot will be as large as
+possible, and take up most of one sheet of the paper.  This is
+normally the default orientation. In portrait format, where the long
+length of the paper is in the vertical direction.  This format will
+produce plots smaller in size. 
+
+5 Text Style        
+
+     This option controls whether stroke or string precision graphtext 
+is to be used.  See the Tek4510 manual for further details.
+
+4 TEK4014H          
+
+     Use of this modifier means that plot data is to be prepared in
+TEK4014 format.  It is then directed to a file.  The file may sent to
+a hardcopy device requiring TEK4014 format, or can also be displayed
+on most Tektronix terminals simply by typing it out.  The filename is 
+TEK4014H.PLT, and a new version is created for each hardcopy command.
+
+     Format:     UTILITIES  HARDCOPY  EXTERNAL  TEK4014H
+
+Use of the HARDCOPY CONFIGURE command when this device is selected
+will allow the following device specific parameters to be changed. 
+
+5 Command Line      
+
+The command line is issued after the hardcopy is made to this device, 
+and usually indicates further actions to be performed on the file.
+The default command line is null, meaning that the file is created
+for future use.
+
+3 NONE              
+
+     This modifier signifies that no hard-copy device is connected to
+the terminal.  It is used in batch-mode operation when the job may be
+printed/plotted on a device selected by the system operator. 
+
+     Format:     UTILITIES  HARDCOPY  NONE
+
+3 LOCAL             
+
+     Use of this modifier means that the terminal is connected
+directly to a hard-copy device rather than the data stream being
+routed through the computer to the device.  No parameter is provided
+for identifying the particular printer/plotter.  If the LOCAL hardcopy
+device is selected, device configuration (if necessary) is done using
+the TERMINAL CONFIGURE command. 
+
+     Format:     UTILITIES  HARDCOPY  LOCAL
+
+3 VIEW              
+
+     This modifer will display the various characteristics of a 
+non-local hardcopy device (one attached to the VAX, not the terminal).
+To display characteristics of local hardcopy devices (those attached 
+directly to the terminal and not connected to the VAX) use the 
+UTILITIES TERMINAL VIEW command.
+
+     Format:     UTILITIES  HARDCOPY  VIEW
+
+2 HELP              
+
+     The HELP command accesses the application program Help Library,
+which is capable of providing an abundance of useful information about
+the application program.  This library is organized in the same manner
+as the VAX system help library.  Once a topic has been selected,
+information about various sub-topics can be obtained by just entering
+the name of the sub-topic.  If <RETURN> is given as a response to any
+prompt, the help system moves up one level (from sub-topic to topic,
+etc.) and eventually out of the Help Library.  If a topic (sub-topic)
+is not found, a list of all available topics (subtopics) is given. 
+
+     Format:     HELP  [topic]  [sub-topic]  [sub-sub-topic] ...
+                 This command can be given at any time!
+
+     The help library is also accesed if the "?" key is pressed while
+the QPLOT menuing system is active (as indicated on the menu). 
+
+2 INPUT_SOURCE_FILE 
+
+     This command transfers control of an applications program to a
+file. Subsequent input will be read from the file indicated.  The
+presence of this command in such a file will cause control to be
+shifted to second file, and control will return to the first file upon 
+completion of the second file.  Files can be nested to a depth of 
+five, at which time an error message will be generated.
+
+     Format:     UTILITIES  INPUT_SOURCE_FILE  filename  [parameters]
+
+     This command is identical in action to the atsign command, but it
+can be reached from the UTILITIES command level with using the shift
+key which is needed to make an atsign (shift-2). 
+
+3 filename          
+
+     The filename is any valid VAX filespec, and thus may include
+device names, directories, and subdirectories.  There is a default
+extension of .SOU (source). 
+
+     Sample commands:
+
+     UTILITIES INPUT TEST.SOU
+     U I TEST
+
+3 parameters        
+
+     Up to nine parameters may be included following the filename, each
+one separated by blanks.  These parameters will be used to substitute
+for the strings 'Pn' in lines read from the source file.  All 
+occurances are substituted, and are done in numerical order.  The 
+string 'Pn' must be exactly correct, with a capital "P" and where
+"n" is one of the digits from 1 to 9.
+
+3 example           
+
+;   A file to change the size of the characters on a 4100 series terminal.
+;   Note that semicolons indicate comments.
+;
+OPTIONS SET HEIGHT 1232
+OPTIONS SET WIDTH   720
+OPTIONS SET LINE_SPACING 416
+OPTIONS SET CHAR_SPACING 208
+;
+;   End of sample file.
+
+2 JOURNAL_KEEP      
+
+     This command saves the journal file.  When a QPLOT application is
+started, a journal file is begun with the name JOURNAL.SOU.  All user
+input is copied to the active file.  This file thus forms a
+supplementary record of each entry. When this command is given, the
+journal file is closed, and the parameter is used to rename the
+existing journal file. A new journal file is begun to save subsequent
+commands. The user is given the option to immediately edit the journal
+file and remove extraneous commands. It creates a file for use with
+the ATSIGN command. The active journal file is deleted when the
+application is terminated. 
+
+     Format:     UTILITIES  JOURNAL_KEEP  [filename-argument]
+     Default:    JOURNAL_SAVE.SOU
+
+2 MENU              
+
+     The MENU command controls whether the QPLOT menuing system is
+activated.  The menus will appear if 
+
+        1)  The menuing system is active.
+        2)  The terminal is in text mode.  
+        3)  No source file is active.  
+
+When menus are displayed the arrow keys can be used to move the cursor
+among the various selections.  When the proper selection is reached,
+just press <RETURN> to select that item.  Alternatively, just press
+the key corresponding to item you wish to select.  The help library is
+also accessed if the "?" key is pressed while the QPLOT menuing system
+is active (as indicated on the menu). 
+
+     This command may be used to toggle the menu on and off.  The 
+initial value is on.
+
+     Format:     UTILITIES  MENU
+
+2 OS                
+
+      The OS command allows access to the host operating system
+language. For example, "OS DIR" will likely generate a directory
+listing. 
+
+Format:          OS  [OS-command]
+                 UTILITIES  OS  [OS-command]
+                 This command can be given at any time!
+
+2 QPLOT_INPUT_FILE  
+
+     This command transfers control of an applications program to a
+QPLOT system file.  The file must be selected from those in the 
+QPLOTHOME directory.  These files are created by the owner of the 
+QPLOTHOME directory, who is probably the one who installed INCA on
+your system.  These files can be used to configure system hardcopy 
+devices, and other useful things.  Subsequent input will be read 
+from the file indicated.  
+
+     Format:     UTILITIES  QPLOT_INPUT_FILE  filename  [parameters]
+
+3 filename          
+
+     The filename is the name (sans extension) of any file in the
+QPLOTHOME directory that has the extension SOU.
+
+3 parameters        
+
+     Up to nine parameters may be included following the filename, each
+one separated by blanks.  These parameters will be used to substitute
+for the strings 'Pn' in lines read from the source file.  All 
+occurances are substituted, and are done in numerical order.  The 
+string 'Pn' must be exactly correct, with a capital "P" and where
+"n" is one of the digits from 1 to 9.
+
+3 example           
+
+;   A file to change the size of the characters on a 4100 series terminal.
+;   Note that semicolons indicate comments.
+;
+OPTIONS SET HEIGHT 1232
+OPTIONS SET WIDTH   720
+OPTIONS SET LINE_SPACING 416
+OPTIONS SET CHAR_SPACING 208
+;
+;   End of sample file.
+
+2 SET               
+
+     This command may be used to change some QPLOT parameters.  The audit
+file, if implemented for the application, will contain a status report
+on the changed parameter.  If no argument is given, the user will be 
+prompted to enter a value.  Pressing <RETURN> will cause the current 
+value to be retained.  If no modifier is given, the values of all 
+SETtable parameters will be listed.
+
+     The quantity to be changed is given by the modifier. The new
+value is given by the argument.  If the argument is omitted or is
+incorrect you will be asked to enter the new value.  Just pressing
+<RETURN> will then cause the old value to be retained. 
+
+     Format:     UTILITIES  SET  [modifier]  [argument] 
+
+3 Character Sizes   
+
+  In addition to the normal text displayed on the terminal in text
+mode, QPLOT permits construction of larger or smaller characters for
+uses such as legends on large graphs.  Note that all characters on the
+same graph must be the same size, however.  Any character in the ASCII
+set may be drawn in this way.  The SET command governs the size of
+these characters.  The modifiers used for this purpose are: 
+
+     HEIGHT
+     CHAR_SPACING
+     LINE_SPACING
+     WIDTH
+
+These are defined in their respective alphabetical order below.
+
+The sum of the height and top margin by the sum of the width and right 
+margin defines the size of a cell for a constructed character.  The de-
+fault size of a character cell is approximately 600 by 1000 units, where
+the maximum size is approximately 3000 by 5000 units.  The size and number
+of these units depends on the particular terminal.  The practical
+minimum size of a cell is approximately 40 by 60 units which corresponds
+to the size of usual characters at 80 characters per line.
+
+3 ASSIST            
+
+     This parameter turns the assist flag on and off.  When the flag
+is on, a "hint" is given before each line of user input, telling the
+user what type of input is expected, and what the default is. Also, if
+numeric input is expected, the minimum and maximum is given.  In
+addition, a confirmation is given after all default input.  That is,
+if a null string or the word "DEFAULT" is entered, QPLOT will tell the
+user what value the program is using. 
+
+     Format:     UTILITIES  SET  ASSIST  [boolean-argument] 
+     Default:    OFF
+
+3 CHAR_SPACING      
+
+     This parameter controls the margin between characters when seen
+on the terminal display.  The initial value of this parameter is
+approximately 100, but it depends upon the type of terminal.  This
+quantity is reset to the initial value whenever the terminal type is
+changed.  The user should not change this parameter if the terminal in
+use is capable of displaying only one character size. 
+
+     Format:     UTILITIES  SET  CHAR_SPACING  [integer-argument]
+     Default:    terminal dependent
+
+3 DOTSIZE           
+
+     This parameter controls the size of the dots used when multiple
+curves are displayed on a non-color terminal.  The initial value of
+this parameter is approximately 64, but depends upon the type of
+terminal.  It is 0 for a color terminal, for instance.  This quantity
+is reset to the initial value whenever the terminal type is changed.
+The range is 0 to 256. 
+
+     Format:     UTILITIES  SET  DOTSIZE  [integer-argument] 
+     Default:    terminal dependent
+
+3 EDITOR            
+
+     The command may be used to change the editor used by QPLOT.  The
+default is the "EDT" editor, which is a called procedure (system
+service) and is very fast.  The editor will come up in change (screen
+edit) mode if the user is using a VT100 compatible terminal.  If 
+another editor is selected, a new process must be 'spawned', resulting
+in a possible delay of several seconds.
+
+     Format:     UTILITIES  SET  EDITOR  [string-argument]
+     Default:    OFF
+
+3 FIELD_WIDTH       
+
+     QPLOT prints real numbers with a certain width. The field width
+is the number of characters per real number in the printout. 
+
+     Format:     UTILITIES  SET  FIELD_WIDTH  [integer-argument]
+     Default:    24
+
+3 HEIGHT            
+
+     This parameter controls the height of characters within their
+individual cells on the terminal display.  The initial value of this
+parameter is approximately 800, but it depends upon the type of
+terminal. This quantity is reset to the initial value whenever the
+terminal type is changed.  The user should not change this parameter
+if the terminal in use is capable of displaying only one character
+size. 
+
+     Format:     UTILITIES  SET  HEIGHT  [integer-argument] 
+     Default:    terminal dependent
+
+3 KEYPRESS          
+
+     This modifier will change a flag which controls whether the user
+is given the prompt "Press any key to continue" after certain commands
+are exectuted.  The parameter for this command is one of the strings
+"Y", "N", "YES", "NO", "ON" or "OFF". 
+
+     Format:     UTILITIES  SET  KEYPRESS  [boolean-parameter]
+     Default:    OFF
+
+3 LINE_SPACING      
+
+     This parameter controls the spacing between lines of text on the
+terminal display.  The initial value of this parameter is
+approximately 200, but it depends upon the type of terminal.  This
+quantity is reset to the initial value whenever the terminal type is
+changed.  The user should not change this parameter if the terminal in
+use is capable of displaying only one character size. 
+
+     Format:     UTILITIES  SET  LINE_SPACING  [integer-argument]
+     Default:    terminal dependent
+
+3 MACRO             
+
+     Sometimes the same command needs to be repeated several times. In
+these cases it can be advantageous to teach QPLOT an abbreviation or
+macro for the command.  This is done by using the SET MACRO command. 
+Main menu selections are checked for this substitution. 
+
+     Format:     UTILITIES  SET  MACRO  key=string
+     Default:    none
+
+3 NOPRESS_WAIT      
+
+     This modifier will change a value which is the wait after
+certain commands are executed.  The parameter for this command is the
+new value of the wait period in seconds. 
+
+     Format:     UTILITIES  SET  NOPRESS_WAIT  [real-parameter]
+     Default:    2.0
+
+3 OVERLAY_KILL      
+
+     This parameter controls whether the text overlay available on
+certain terminals is turned off while plotting is being done. 
+
+     Format:     UTILITIES  SET  OVERLAY_KILL  [boolean-argument] 
+     Default:    ON
+
+3 PATH              
+
+     This parameter changes the default directory, or displays the 
+current directory.
+
+     Format:     UTILITIES  SET  PATH  [path-argument]
+     Default:    OFF
+
+3 RESOLUTION        
+
+     This parameter controls the size of the fuzz area when graphic
+input is being used.  The initial value of this parameter is
+approximately 64, but depends upon the type of terminal.  This
+quantity is reset to the initial value whenever the terminal type is
+changed.  The range is 1 to 4096. 
+
+     Format:     UTILITIES  SET  RESOLUTION  [integer-argument]
+     Default:    terminal dependent
+
+3 VERIFY            
+
+     This parameter controls the verify flag.  This works similar to 
+the SET VERIFY command on the VAX.  When commands are being read from
+a source file, and the verify flag is OFF, non-graphic output to the 
+terminal will be suppressed.
+
+     Format:     UTILITIES  SET  VERIFY  [boolean-argument] 
+     Default:    true
+
+3 WIDTH             
+
+     This parameter controls the width of characters on the terminal
+display.  The initial value of this parameter is approximately 500,
+but it depends upon the type of terminal.  This quantity is reset to
+the initial value whenever the terminal type is changed.  The user
+should not change this parameter if the terminal in use is capable of
+displaying only one character size. 
+
+     Format:     UTILITIES  SET  WIDTH  [integer-argument]
+     Default:    terminal dependent
+
+2 TERMINAL          
+
+     This command is used to change or display the terminal type.  
+If the modifier is present, the terminal type will be changed.  If 
+the modifier is not present, the terminal type will be displayed.
+
+     Format:     UTILITIES  TERMINAL  [modifier]
+
+     The QPLOT library used by these applications programs will
+operate with several different types of terminals.  These include the
+TEK4014, TEK4109, TEK4114, and VT100.  For a full list use the SELECT
+modifier to observe the possible modifiers for the TERMINAL
+command. Any of these may be used in the command to change the
+terminal type.  Setup and use instructions for all of the terminals
+are provided in the description of each terminal below. 
+
+     The type of terminal is written to the audit file and displayed 
+on the terminal.
+
+3 AUTO              
+
+     This modifier will compare the device number (TTA1, etc.) 
+to those in a terminal map (QPLOTHOME:TERMINAL.MAP) file.  The
+hardcopy selection and configuration will also be set.  The map file
+is usually maintained by the system manager and contains a list of
+current device numbers and their types. If this terminal, or other
+peripheral device, is not registered correctly, the system manager
+should be asked to correct the file. 
+
+     Format:     UTILITIES  TERMINAL  AUTO
+
+3 CONFIGURE         
+
+      The terminal driver can be given instructions to control various
+characteristics of the plot.  These instructions are different for
+each type of terminal.  The user will be asked questions to fully
+configure the previously selected plotting device.  The parameters set
+by the user's answers are briefly described under the individual
+terminals below. 
+
+     Format:     UTILITIES  TERMINAL  CONFIGURE
+
+3 QUERY_VT          
+
+     This modifier uses a feature of ANSI 3.64 standard terminals
+(VT100 series) that requires the terminal to report its type
+automatically when a certain escape sequence is sent.  QPLOT will then
+examine the report and classify the terminal as a VT100, VT102, VT125,
+VT220, or VT241.  If an no report is received after five seconds, or
+an incorrect report is recieved, the type is changed to unknown, and
+the procedure below is used.  Note that other types will also report,
+for instance a TEK4109 will report itself to be a VT100, since it is
+VT100 compatible.  Thus this terminal modifier should only be used if
+the user knows that the terminal is one of the above five. 
+
+     Format:     UTILITIES  TERMINAL  QUERY_VT
+
+3 SELECT            
+
+     This modifier selects a new terminal type.  This can be useful 
+when QPLOT thinks you have the wrong terminal type do to an error at 
+startup or an incorrect or missing terminal map file.
+
+     Format:     UTILITIES  TERMINAL  SELECT  [terminal-type]
+
+4 ANSI364           
+
+     The VT100 protocol has been standardized as ANSI (American 
+National Standards Institute) standard number 3.64.  Thus any terminal
+that support this standard is VT100 compatible.
+
+     Format:     UTILITIES  TERMINAL  SELECT  ANSI364
+
+4 AUTO              
+
+     Use of this terminal type cause the same effect as the AUTO
+modifier.
+
+     Format:     UTILITIES  TERMINAL  SELECT  AUTO
+
+4 DUMB              
+
+     This terminal type will cancel all terminal-dependent output,
+such as graphics commands.  The screen cannot be cleared.  Dumb
+terminals are considered to have their own local graphic hardcopy
+device.  When a hardcopy command is issued to a dumb terminal, a rough
+plot will be produced using character cell graphics.  The user can use
+cursor input by typing in the key, row, and column numbers.  This
+designation is suitable for hardcopy terminals and others not
+supported by QPLOT. 
+
+     Format:     UTILITIES  TERMINAL  SELECT  DUMB
+
+4 ERGO301           
+
+     This terminal is made by Microterm, Inc.  It is VT100 compatible 
+with a Tektronix type graphics option.  The resolution is very poor 
+(about 720 x 200) and is monochrome only.
+
+     Format:     UTILITIES  TERMINAL  SELECT  ERGO301
+
+4 NONE              
+
+     This terminal type will cancel all terminal output.  User input
+is expected as usual.  The use of this modifier in an interactive
+mode is not recommended, and will cause a fatal error.  Its principal
+use is in batch mode. 
+
+     Format:     UTILITIES  TERMINAL  SELECT  NONE
+
+4 PCPLOT            
+
+     This terminal type is designed for use with the IBM-PC 
+PC-Plot terminal program.
+
+     Format:     UTILITIES  TERMINAL  SELECT  PCPLOT
+
+     The following options in the PC-Plot program must be set:
+
+     Terminal type:   TEK 4010/ VT100/ TEK 4027 (Partial)
+
+4 QUERY_VT          
+
+     Use of this terminal type will cause the same effect as the
+QUERY_VT modifier. 
+
+     Format:     UTILITIES  TERMINAL  SELECT  QUERY_VT
+
+4 TEK4010           
+
+     This terminal is made by Tektronix, Inc.  There is no
+configuration necessary for this terminal.  Note that many other
+terminals and emulators attempt to mimic a TEK4010.  In most cases the
+QPLOT user should use one of the specially designed terminal drivers
+if one is available, as most also feature VT100 compatibility, but
+always in a different way. 
+
+     Format:     UTILITIES  TERMINAL  SELECT  TEK4010
+
+4 TEK4014           
+
+     This terminal is made by Tektronix, Inc.  There is no
+configuration necessary for this terminal.  Note that many other
+terminals and emulators attempt to mimic a TEK4014.  In most cases the
+QPLOT user should use one of the specially designed terminal drivers
+if one is available, as most also feature VT100 compatibility, but
+always in a different way.  This terminal is different from the
+TEK4010 type in that different size characters are supported. The
+resolution of this terminal is 1024 x 768.
+
+     Format:     UTILITIES  TERMINAL  SELECT  TEK4014
+
+4 TEK4016           
+
+     This terminal is made by Tektronix, Inc.  This terminal is 
+different from the TEK4014 type in that higher resolution lines
+are drawn, with a resolution of 4096 x 3072.
+
+     Format:     UTILITIES  TERMINAL  SELECT  TEK4016
+
+4 TEK4105           
+
+     This terminal is made by Tektronix, Inc., and is totally
+compatible with the VT100 type, as far as QPLOT's commands are
+concerned.  It is also capable of color graphics, and is a 
+near-ideal terminal for QPLOT applications.  It has a resolution
+of 480 x 360, with 8 out of 16 colors.
+
+     Format:     UTILITIES  TERMINAL  SELECT  TEK4105
+
+     The terminal must be configured as follows: 
+
+          GENERAL:     SNOOPY:                NO
+          COMMUNICAT.: EOMCHARS:              CR LF (^M^J)
+                       EOLSTRING:             'CR'  ('^M')
+                       BYPASSCANCEL:          LF    (^J)
+
+Other settings may be adjusted as desired.
+
+4 TEK4106           
+
+     This terminal is made by Tektronix, Inc., and is totally
+compatible with the VT100 type, as far as QPLOT's commands are
+concerned.  It is also capable of graphics, and in many ways is the 
+ideal terminal for QPLOT applications.  The resolution of this 
+terminal is 640 x 480, with 16 out of 64 colors.
+
+     Format:     UTILITIES  TERMINAL  SELECT  TEK4106
+
+     The terminal must be configured as follows:
+
+          GENERAL:     SNOOPY:                NO
+          COMMUNICAT.: EOMCHARS:              CR LF (^M^J)
+                       EOLSTRING:             'CR'  ('^M')
+                       EOFSTRING:             'SB'  ('^Z')
+                       BYPASSCANCEL:          LF    (^J)
+          2PPI:        PASSIGN                P0: PPORT (If copy sent by VAX)
+                                  or          P0: 4510 (If copy not sent by VAX)
+
+Other settings may be adjusted as desired.
+
+The TEK4106 terminal can be connected to (amomg others) a TEK4692/3/5/6
+color printer and a TEK4510 rasterizer, which is in turn connected to
+a printer.  Use of the UTILITIES TERMINAL CONFIGURE command when this
+terminal is selected will allow the following device specific parameters
+to be changed. 
+
+5 Dialog Lines      
+
+     The number of lines in the dialog area that can be quickly 
+displayed may vary, particularily when a terminal emulator is used.
+This parameter will change the number of lines.
+
+5 Hardcopy-Device   
+
+     Either the TEK4695 printer (A), the TEK4510 rasterizer (B) or 
+none (Z) must be selected.
+
+5 Tek4695 size      
+
+     If the TEK4695 hardcopy device is selected, this question will be
+asked.  Large plots will fill the entire sheet in Landscape format.  
+Small plots are about 3 times smaller in portrait format.  The current 
+option allows the user to continue to use what ever size was 
+previously selected as remembered or setup inside the printer.
+
+5 Tek4510 source    
+
+     If the TEK4510 hardcopy device is selected, this question will be 
+asked.  If segment source is selected, the plotting data will be 
+dumped from the terminal's internal memory.  Segment source should be 
+used only if the TEK4107 or TEK4109 types is selected.  Vax source 
+should be used if the terminal has no segment memory, or it is not 
+being used.
+
+5 Copy Needed       
+
+     If the TEK4510 hardcopy device is selected, this question will be
+asked.  The answer to this question depends upon how the 2PPI PASSIGN
+parameter was set during the terminal setup (see above).  Incorrect
+setting of this option will cause either two copies or no copies to be
+generated. 
+
+5 Primary           
+
+     If the TEK4510 hardcopy device is selected, this question will be
+asked.  If the primary color option is selected, all colors are
+converted to one of the seven "primary" colors that can be printed by
+the Tektronix printers without dithering. The colors include the four
+ink colors (yellow, cyan, magenta, and black) and three mixtures (red,
+green, and blue).  All other colors are "rounded" to one in this set. 
+
+5 Width             
+
+     If the TEK4510 hardcopy device is selected, this question will be
+asked.  This option controls the width of the lines on the plot.  Only
+four values (1-4) are accepted, the rest have no effect.  A width of
+one will produce very narrow lines, and is the factory default.  A
+width of 4 will produce the widest lines, about one sixteenth of an
+inch. 
+
+5 Copies            
+
+     If the TEK4510 hardcopy device is selected, this question will be
+asked.  This option controls the number of copies to be made of the
+plot.  The maximum value is nine.  The plot is downloaded to the
+Tek4510 unit only once. 
+
+5 Landscape/Portrait
+
+     If the TEK4510 hardcopy device is selected, this question will be
+asked.  If the plot is in landscape format the plot will be as large
+as possible, and take up most of one sheet of the paper.  This is
+normally the default orientation. In portrait format, where the long
+length of the paper is in the vertical direction.  This format will
+produce plots smaller in size. 
+
+5 Text Style        
+
+     If the TEK4510 hardcopy device is selected, this question will be
+asked.  This option controls whether stroke or string precision
+graphtext is to be used.  See the Tek4510 manual for further details. 
+
+4 TEK4107           
+
+     This terminal is made by Tektronix, Inc., and is totally
+compatibile with the TEK4106 type, and also features local segment
+memory.  The segment memory is supported by QPLOT.  The TEK4106 type
+may also be used if segment memory is not needed. 
+
+     Format:     UTILITIES  TERMINAL  SELECT  TEK4107
+
+4 TEK4109           
+
+     This terminal is made by Tektronix, Inc., and is totally
+compatibile with the TEK4106 type, and this QPLOT terminal driver
+supports segment memory. The TEK4106 type may also be used if segment
+memory is not needed.  The TEK4109 terminal has a larger palette
+then other terminals in this series (TEK4106, TEK4107, TEK4207).
+QPLOT does support this distinction, and the full palette of 4096 
+colors is available on the TEK4109.  The resolution of this 
+terminal is 640 x 480, with 16 out of 4096 colors.
+
+     Format:     UTILITIES  TERMINAL  SELECT  TEK4109
+
+4 TGRAF             
+
+     This terminal emulator for the IBM-PC is made by GrafPoint, Inc.,
+and is totally compatibile with the TEK4107 type, and this QPLOT
+terminal driver supports segment memory. The TEK4106 type may also be
+used if segment memory is not needed.  The dialog area is set to five 
+lines for this type, to help compensate for poor performance in 
+scrolling the dialog area.
+
+      Format:    UTILITIES  TERMINAL  SELECT  TGRAF
+
+4 TEK4114           
+
+     This terminal is made by Tektronix, Inc., and is totally
+compatibile with the TEK4014.  In addition, a number of additional
+features are supported by QPLOT, including the dialog area. 
+
+     Format:     UTILITIES  TERMINAL  SELECT  TEK4114
+
+     Colors are supported on this terminal by drawing different colors 
+using different line styles.  White will appear as solid lines, gray 
+as dotted lines, and other colors as a mixture of dots and dashes.
+
+     The terminal must be configured as follows:
+
+          SNOOPY:                NO
+          PAGEFULL:              NONE
+          EOMCHARS:              CR LF (^M^J)
+          EOLSTRING:             'CR'  ('^M')
+          BYPASSCANCEL:          LF    (^J)
+
+Other setting may be adjusted as desired.
+
+4 TEK4115           
+
+     Format:     UTILITIES  TERMINAL  SELECT  TEK4115
+
+4 TEK4207           
+
+     This terminal is made by Tektronix, Inc., and is totally
+compatibile with the TEK4106 type, and also features local segment
+memory.  The segment memory is supported by QPLOT.  The TEK4106 type
+may also be used if segment memory is not needed. 
+
+     Format:     UTILITIES  TERMINAL  SELECT  TEK4207
+
+4 TV922             
+
+     This terminal is made by Televideo Inc., and is totally
+compatibile with the VT100 type, as far as QPLOT's commands are
+concerned. 
+
+     Format:     UTILITIES  TERMINAL  SELECT  TV922
+
+4 UNKNOWN           
+
+     Use of this terminal type cause the same effect as the UNKNOWN
+modifier.
+
+     Format:     UTILITIES  TERMINAL  SELECT  UNKNOWN
+
+4 VDITERM           
+
+     This terminal type is an IBM-PC or compatible running the IBM
+Graphics Terminal Emulator program.  This program emulates a 
+Lear-Siegler ADM-3A terminal in text mode and limited features of 
+a Tektronics 4105 terminal in graphics mode.  QPLOT will switch 
+modes as needed.  This program uses the IBM Virtual Device Interface, 
+and will run on all IBM standard graphics cards, but does not take
+full advantage of any but the Professional Graphics Adapter.
+
+     Format:     UTILITIES  TERMINAL  SELECT  VDITERM
+
+     The emulator must be configured as follows:
+
+          DEVICE:                             Display
+          TERMINAL:                           Graphics or Alpha
+          PROTOCOL:    Echo:                  Remote
+                       CR Implies             <CR>
+                       LF Implies             <LF>
+                       DEL Effect:            Low Y
+          SWITCH:      Character type:        Hardware
+                       GIN terminator:        <CR>
+                       Character spacing:     Native
+                       Pagefull ....          None ON
+
+Other setting may be adjusted as desired.
+
+4 VERSAMAC          
+
+     This terminal type is designed for use with the MacIntosh 
+VersaTerm terminal program.
+
+     Format:     UTILITIES  TERMINAL  SELECT  VERSAMAC
+
+     The following options in the VersaTerm program must be set:
+
+     EMULATION:   First click TEK4014, then VT100.
+     SETTINGS:    Map BS -> DEL.
+     EXTRAS...:   Auto "TEK4014" Entry ON.
+                  Show Edit Cursor OFF.
+                  DEC VT52 Mode OFF.
+                  New Line Mode OFF.
+
+4 VS100             
+
+     This terminal is made by Visual Systems, Inc., and is totally
+compatibile with the VT100 type, as far as QPLOT's commands are
+concerned. 
+
+     Format:     UTILITIES  TERMINAL  SELECT  VS100
+
+4 VT_EMUL           
+
+     This terminal type is exactly like the VT100/ANSI364 terminal 
+type except that doublehigh/doublewide letters are not generated.  
+Thus this type should be used with VT100 emulators which do not 
+support these capabilities.
+
+     Format:     UTILITIES  TERMINAL  SELECT  VT_EMUL
+
+4 VT100             
+
+     This terminal is made by Digital Equipment Corporation, and is 
+the prototype of the ANSI 3.64 standard.  There are many clones of the 
+VT100, and many terminals or microcomputer programs claim to be 
+VT100-compatible.  Testing the features described below will determine 
+if the terminal is fully compatible.  A number of compatible terminals 
+are used at NASA-Goddard and have been given separate names for 
+documentation purposes.  These are listed below.
+
+     Format:     UTILITIES  TERMINAL  SELECT  VT100
+
+     There are several differences between the way the VT100 graphics
+mode and a real graphics terminal works.  The VT100 uses character
+cell graphics.  This means it has a maximum practical resolution of 24
+rows by 80 (or 132) columns. The VT100 does not have a joystick or
+other cursor control device. The cursor is moved using the arrow keys
+(The same ones used in EDT). The PF1-PF4 keys are used to make the
+VT100 a little bit more usable. Their use is described below. 
+
+     PF1 flip-flops the VT100 from 80 column mode to 132 column mode 
+         and back again. The plot limits are automatically adjusted
+         to take use all of the available screen space.
+
+     PF2 flip-flops the plot characters from assorted characters
+         (Used to represent the different colors available on a color
+         graphics terminal such as the Tek4109) to all periods, and 
+         back again. This is useful when plotting a single curve.  
+         Using all periods tends to smooth the curve out.
+
+     PF3 shows the dialog area. It does not return you to text mode,
+         it just shows you the last five lines.
+
+     PF4 is not used at the moment.     
+
+4 VT102             
+
+     This terminal is made by Digital Equipment Corporation, and is 
+totally compatibile with the VT100 type, as far as QPLOT's commands 
+are concerned.
+
+     Format:     UTILITIES  TERMINAL  SELECT  VT102
+
+4 VT125             
+
+     This terminal is made by Digital Equipment Corporation, and is a
+VT100 compatible with graphics.  
+
+     Format:     UTILITIES  TERMINAL  SELECT  VT125
+
+     The VT100 does not have a joystick or other cursor control
+device.  The cursor is moved using the arrow keys (The same ones used
+in EDT).  The PF1-PF4 keys are used to make the VT125 a little bit
+more usable.  Their use is described below. 
+
+     PF1 centers the graphics cursor.
+
+     PF2 toggles the speed of the graphics cursor.
+
+     PF3 is not used at the moment.     
+
+     PF4 is not used at the moment.     
+
+4 VT220             
+
+     This terminal is made by Digital Equipment Corporation, and is 
+totally compatibile with the VT100 type, as far as QPLOT's commands 
+are concerned.  It does, however, have a different keyboard and gives 
+a different response when the QUERY_VT type is used.
+
+     Format:     UTILITIES  TERMINAL  SELECT  VT220
+
+4 VT240             
+
+     This terminal is made by Digital Equipment Corporation, and is a
+VT220 compatible with graphics.  The graphics resolution is 800 x 250,
+and displays four shades of grey.  The cursor is moved using the 
+arrow keys (The same ones used in EDT).  
+
+     Format:     UTILITIES  TERMINAL  SELECT  VT240
+
+4 VT241             
+
+     This terminal is made by Digital Equipment Corporation, and is a
+VT220 compatible with graphics.  The graphics resolution is 800 x 250,
+and displays four out of eight colors.  The cursor is moved using the 
+arrow keys (The same ones used in EDT).  
+
+     Format:     UTILITIES  TERMINAL  SELECT  VT241
+
+     The following terminal settings must be in effect:
+
+     LIGHT TEXT, DARK SCREEN
+     MONOCHROME DISPLAY
+     USER FEATURES UNLOCKED
+
+     When using the VT241, the logical colors TEXTBACK, TEXTCHAR,
+and CURSOR_1 must be sufficiently different so as to generate three
+different colors (out of the eight displayable).  For example, the
+color of TEXTCHAR being WHITE and CURSOR_1 also being WHITE (or LIGHT 
+GREY) will not work.  The result of this type of error will be random 
+colors of the text, including the possibility of the text color 
+equalling the background color.
+
+3 UNKNOWN           
+
+     This modifier will cause the computer to prompt the user to type
+in his terminal type before the program can proceed.  The type must
+match one the available types, or the prompt is repeated until it
+does. QPLOT commands are not available at the terminal type prompt. 
+
+     Format:     UTILITIES  TERMINAL  UNKNOWN
+
+     If desired, the user can use a VAX defined logical name to find
+the proper terminal type.  This can be useful if the user makes use of
+several QPLOT applications during a single session.  Use the VAX
+command DEFINE to create an equivalence for the logical name UNKNOWN,
+For example, $DEFINE UNKNOWN TEK4014.  The logical name will be
+checked whenever QPLOT is confronted with an UNKNOWN terminal type. 
+
+3 VIEW              
+
+     This modifier causes the computer to display the current 
+port assignment, terminal type, and terminal configuration.
+
+     Format:     UTILITIES  TERMINAL  VIEW
+
+2 VIEW              
+
+     This command is used to display various items as described below.
+There is no input for the VIEW command, since all required information
+is given in the command line.  If no modifier is given, the status of
+all items except the terminal map are given.
+
+     Format:     UTILITIES  VIEW  [modifier]
+
+3 COMPOSITE         
+
+     This modifier will cause all text parameters accessable by the 
+view command to be displayed.
+
+     Format:     UTILITIES  VIEW  COMPOSITE
+
+3 MAP_OF_TERMINALS  
+
+     When an applications program is begun, QPLOT automatically
+determines the device number and compares it to those in a terminal
+map file. This file is usually maintained by the system manager and
+contains a list a current devices and their assigned terminal types.
+If terminal to be used is not displayed correctly, the system manager 
+should be asked to correct the file.  Not that an assigned terminal 
+type can always be over-ridden by using the /terminal-type qualifier 
+when starting the application.
+
+     Format:     UTILITIES  VIEW  MAP_OF_TERMINALS
+
+3 SOURCE            
+
+     The value of the source flag may be examined using this
+modifier.  When a user logs onto the VAX through a terminal
+registered in the QPLOT terminal map, the source flag is set to TERM,
+which indicates that the system is set for interactive use.  When data
+for an application program is being input, such as by the ATSIGN
+command, QPLOT sets the source flag to COMMAND_FILE.  The source flag
+is not set by any command specifically for that purpose alone. 
+
+     Format:     UTILITIES  VIEW  SOURCE
+
+3 TIME              
+
+     This modifier will cause the current time and date to be 
+displayed.
+
+     Format:     UTILITIES  VIEW  TIME
+
+3 VERSION           
+
+     This modifier will display the version of QPLOT used in the 
+compilation of the application program.
+
+     Format:     UTILITIES  VIEW  VERSION
+
+2 @-sign            
+
+     This command transfers control of an applications program to a
+file. Subsequent input will be read from the file indicated.  The
+presence of this command in such a file will cause control to be
+shifted to second file, and control will return to the first file upon 
+completion of the second file.  Files can be nested to a depth of 
+five, at which time an error message will be generated.
+
+     Format:     @filename  [parameters]
+                 UTILITIES  @  filename  [parameters]
+                 This command can be given at any time!
+
+3 filename          
+
+     The filename is any valid VAX filespec, and thus may include
+device names, directories, and subdirectories.  There is a default
+extension of .SOU (source). 
+
+     Sample commands:
+
+     @INCA
+     @DUA1:[HISDIR.TEST]SAMPLE.SOU  TEST   45
+     UTILITIES @ LOAD.SOU
+
+3 parameters        
+
+     Up to nine parameters may be included following the filename, each
+one separated by blanks.  These parameters will be used to substitute
+for the strings 'Pn' in lines read from the source file.  All 
+occurances are substituted, and are done in numerical order.  The 
+string 'Pn' must be exactly correct, with a capital "P" and where
+"n" is one of the digits from 1 to 9.
+
+3 example           
+
+;   A file to change the size of the characters on a 4100 series terminal.
+;   Note that semicolons indicate comments.
+;
+OPTIONS SET HEIGHT 'P1'
+OPTIONS SET WIDTH  'P2'
+OPTIONS SET LINE_SPACING 416
+OPTIONS SET CHAR_SPACING 208
+;
+;   End of sample file.
+
+2 ;-semicolon       
+
+     This command does nothing.  The prompt is immediately repeated.
+This command is most useful in command files to make comments.
+
+     Format:     ; [comment]
+                 This command can be given at any time!
+

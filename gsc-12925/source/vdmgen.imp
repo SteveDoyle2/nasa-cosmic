@@ -1,0 +1,196 @@
+{ $INCLUDE : 'compile.inc' }
+{ $INCLUDE : 'vdmpas.int' }
+{ $INCLUDE : 'vdmgen.int' }
+{ $INCLUDE : 'sfpas.int' }
+
+implementation of vdmgen;
+
+USES vdmpas ;
+USES sfpas ;
+
+procedure vdminit ;
+
+var 
+    metaname : lstring(20) ;
+    pictname : lstring(20) ;
+
+begin
+    lclr := 3 ;             (* white *)
+    fclr := 3 ;
+    tclr := 3 ;
+    pclr := 3 ;
+    lt1 := 1 ;
+    lt2 := 0 ;              (* solid line *)
+    intst := 0 ;
+    tfli := 1 ;             (* 8x8 *)
+    cpath := 0 ;            (* right *)
+    mt1 := 0 ;
+    mt2 := 0 ;
+    msize := 1 ;
+    mclr := 3 ;
+    sl[1] := '8x8' ;
+    sl[2] := '8x6' ;
+    sl[3] := '12x10' ;
+    sl[4] := '16x14' ;
+    version := 0 ;
+    metaname := null;
+    pictname := null;
+    begin_metafile ( metaname ) ;
+    vdm_version (version);
+    if version <> 0 then
+      begin
+        integer_precision ( 10 ) ;
+        real_precision(15,10);
+        index_precision ( 3 ) ;
+        color_precision ( 3 ) ;
+        color_index_precision ( 3 ) ;
+        maximum_color_index ( 4 ) ;
+        font_list( sl[1], sl[2], sl[3], sl[4]);
+        begin_picture ( pictname, 3 ) ;
+          scaling_mode(0, 1.0);
+          color_specification_mode(0);
+          line_width_specification_mode(0);
+          marker_size_specification_mode(0);
+          perimeter_width_specification_mode(0);
+          vdc_extent(0, 199, 639, 0);
+          background_color(color);
+          color_table( 0, color, 3, 5, 7);
+          text_alignment(0, 3, 0.0, 0.0);
+          vdc_precision_for_integer_point(10);
+      end;
+end;
+
+procedure vdmend;
+
+begin
+  end_metafile;
+end;
+
+procedure vdmline ;
+
+begin
+    if ( ndon <> lt1 ) or ( ndoff <> lt2 ) then 
+       begin
+           lt1 := ndon ;
+           lt2 := ndoff ;
+           line_type ( ndon, ndoff ) ;
+       end;
+
+    if color <> lclr then 
+       begin
+           lclr := color ;
+           line_color ( color ) ;
+       end ;
+    
+    polyline ( x1, y1, x2, y2 ) ;
+end;
+
+procedure vdmbar ;
+
+begin
+    if color <> fclr then 
+       begin
+           fclr := color ;
+           fill_color ( fclr ) ;
+       end ;
+
+    if fill <> intst then 
+       begin
+           intst := fill ;
+           interior_style ( intst, e ) ;
+       end ;
+
+    polygon ( x1, y1, x2, y2 ) ;
+
+end ;
+
+procedure vdmtext ;
+
+begin
+    if size <> tfli then
+       begin
+           tfli := size ;
+           text_font_list_index ( tfli ) ;
+       end ;
+
+    if color <> tclr then
+       begin
+           tclr := color ;
+           text_color ( tclr ) ;
+       end ;
+   
+    if dir <> 0 then
+       begin
+           case dir of
+              90 : dir := 2 ;
+             180 : dir := 1 ;
+             270 : dir := 3 ;
+             otherwise : begin end ;
+           end ;
+        end ;
+
+    if dir <> cpath then
+       begin
+           cpath := dir ;
+           character_path ( cpath ) ;
+       end ;
+      
+    vtext ( x, y, e, atext ) ;
+
+end ;
+
+procedure vdmcir ;
+
+begin
+    if fill <> intst then
+       begin
+           intst := fill ;
+           interior_style ( intst, e ) ;
+       end ;
+
+    if color <> fclr then
+       begin
+           fclr := color ;
+           fill_color ( color ) ;
+       end ;
+
+    circle ( cx, cy, radius ) ;
+end ;
+
+procedure vdmarc ;
+
+begin
+    if color <> fclr then
+       begin
+           fclr := color ;
+           fill_color ( color ) ;
+       end ;
+    arc ( x1, y1, mx, my, x, y ) ;
+end ;
+
+procedure vdmsymbol ;
+
+begin
+    if color <> mclr then
+       begin
+           mclr := color ;
+           marker_color ( mclr ) ;
+       end ;
+    
+    if msize <> scale then
+       begin
+           msize := scale ;
+           marker_size ( scale ) ;
+       end ;
+  
+    if ( mt1 <> id1 ) or ( mt2 <> id2 ) then 
+       begin
+           mt1 := id1 ;
+           mt2 := id2 ;
+           marker_type ( id1, id2 ) ;
+       end ;
+
+    polymarker ( x, y ) ;
+end ;
+end.
+

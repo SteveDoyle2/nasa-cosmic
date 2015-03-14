@@ -1,0 +1,18 @@
+                                   INPUT DATA:
+  P=       100.0000000 T  =       500.0000000 S    =          .0000000
+  H=          .0000000 RHO=          .0000000 ENTRY=            3
+ DRYAIR
+ 
+ 
+                                  OUTPUT DATA:
+ P=  100.     PSI                      T=  500.     R
+ COMPRESSIBILITY          .996    
+ ENTROPY(BTU/LBM-R)       1.59    
+ ENTHALPY(BTU/LBM)        271.    
+ DENSITY(LBM/FT3)         .541    
+ CV(BTU/LBM-R)            .172    
+ CP(BTU/LBM-R)            .243    
+ CP/CV                    1.41    
+ SONIC VELOCITY(FT/S)     .110E+04
+ VISCOSITY(LBM/FT-S)      .117E-04
+ THERM.COND.(BTU/FT-S-R)  .394E-05

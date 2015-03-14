@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+The Pie Format Menu consists of the following options :
+
+        Values to be entered : Component count to enter amounts for each slide
+                               or percentages of pie if that is to be entered
+                               When entering percentages, the total field
+                               should be entered so the component counts can
+                               be calculated.  For component count the total
+                               will be calculated and nothing is entered in
+                               the total field
+        GSFC Symbol          : Display the GSFC symbol on the chart
+        Background Color     : Color of background in Window Mode
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

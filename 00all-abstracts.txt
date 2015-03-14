@@ -1,0 +1,2563 @@
+Abstracts for the NASA Engineering Source Code Programs
+
+This information is also available in html format via the html 
+interface.
+
+====================
+
+ROTORCRAFT ANALYSIS
+Aeroelastic Analysis for Rotorcraft in Flight or in a Wind Tunnel
+
+  arc-11150
+  Size: 13,793 Statements
+  Language: FORTRAN IV
+
+  The testing of rotorcraft, either in flight or in a wind tunnel,
+requires a consideration of the coupled aeroelastic stability of the
+rotor and airframe, or the rotor and support system. Even if the
+primary purpose of a test is to measure rotor performance, ignoring
+the question of dynamic stability introduces the risk of catastrophic
+failure of the aircraft. This computer program was developed to
+incorporate an analytical model of the aeroelastic behavior of a wide
+range of rotorcraft. Such an analytical model is desirable for both
+pre-test predictions and post-test correlations. The program is also
+applicable in investigations of isolated rotor aeroelasticity and
+helicopter flight dynamics and could be employed as a basis for more
+extensive investigations of aeroelastic behavior, such as automatic
+control system design.
+
+
+AIRCRAFT TRAJECTORIES
+Optimal Aircraft Trajectories for Specified Range
+
+  Program Label:  arc-11282
+  Size:  2,583
+  Language:  FORTRAN IV
+
+  For an aircraft operating over a fixed range, minimum fuel and
+minimum time trajectories are relatively easy to calculate, but the
+determination of a minimum cost trajectory can be a complex
+undertaking. This computer program was developed to optimize
+trajectories with respect to a cost function based on a weighted sum
+of fuel cost and time cost. As a research tool, the program could be
+used to study various characteristics of optimum trajectories and
+their comparison to standard trajectories. It might also be used to
+generate a model for the development of an airborne trajectory
+optimization system. The program could be incorporated into an airline
+flight planning system, with optimum flight plans determined at
+takeoff time for the prevailing flight conditions. The use of
+trajectory optimization could significantly reduce the cost for a
+given aircraft mission.
+
+
+
+GRAPE
+Two-Dimensional Grids About Airfoils and Other Shapes by the Use of Poisson's Equation
+
+  Program Label:  arc-11379
+  Size:  3,616
+  Language:  FORTRAN IV
+
+  The GRAPE computer program was developed to incorporate a method for
+generating two-dimensional finite-difference grids about airfoils and
+other shapes by the use of the Poisson differential equation. GRAPE
+can be used with any boundary shape, even one specified by tabulated
+points and including a limited number of sharp corners. The GRAPE
+program has been developed to be numerically stable and
+computationally fast. GRAPE can provide the aerodynamic analyst with
+an efficient and consistent means of grid generation.
+
+
+
+VASCOMP II
+V/STOL Aircraft Sizing and Performance
+
+  Program Label:  arc-11433
+  Size:  14,093
+  Language:  FORTRAN IV
+
+  The VASCOMP2 computer program was developed to aid in the
+comparative design study of V/STOL aircraft which use fixed wing lift
+for primary cruise flight.  It rapidly provides aircraft size and
+mission performance data. VASCOMP2 can be used to define design
+requirements such as weight breakdown, required propulsive power, and
+physical dimensions of aircraft which are to meet specified mission
+requirements. The program is also useful in sensitivity studies
+involving both design trade-offs and performance trade-offs.  VASCOMP2
+is capable of approximating the design process involved in the layout
+and sizing of a wide variety of V/STOL aircraft and synthesizing the
+performance of these aircraft.
+
+
+
+MONITOR
+Monte Carlo Investigation of Trajectory Operations and Requirements
+
+  Program Label:  gsc-12705
+  Size:  8,369
+  Language:  FORTRAN IV
+
+  The Monte Carlo Investigation of Trajectory Operations and
+Requirements (MONITOR) program was developed to perform spacecraft
+mission maneuver simulations for geosynchronous, single maneuver, and
+comet encounter type trajectories. MONITOR is a multifaceted program
+which enables the modeling of various orbital sequences and missions,
+the generation of Monte Carlo simulation statistics, and the
+parametric scanning of user requested variables over specified
+intervals. The MONITOR program has been used primarily to study
+geosynchronous missions and has the capability to model Space Shuttle
+deployed satellite trajectories.
+
+
+
+PILOT
+Parameterized Investigation of Launch Opportunities and Trajectories
+
+  Program Label:  gsc-12801
+  Size:  9,199
+  Language:  FORTRAN IV
+
+  The launch window for an earth satellite mission defines the dates
+and the times of day that a satellite can be launched and satisfy the
+mission constraints. The Parameterized Investigation of Launch
+Opportunities and Trajectories (PILOT) program was developed to
+perform mission simulation computations that yield data for use in
+delimiting optimum launch windows. The PILOT program performs
+parametric scans of a user specified trajectory over launch date and
+initital right ascension of the ascending node. During each scan
+various mission parameters are generated and output to a data file.
+
+
+
+FSD
+Flexible Spacecraft Dynamics
+
+  Program Label:  gsc-13006
+  Size:  31,449
+  Language:  FORTRAN 77 ( 99 %); PASCAL ( 01 %); ASSEMBLER ( 00
+
+  The Flexible Spacecraft Dynamics and Control program (FSD) was
+developed to aid in the simulation of a large class of flexible and
+rigid spacecraft. FSD is extremely versatile and can be used in
+attitude dynamics and control analysis as well as in-orbit support of
+deployment and control of spacecraft. FSD has been used to analyze the
+in-orbit attitude performance and antenna deployment of the RAE and
+IMP class satellites, and the HAWKEYE, SCATHA, EXOS-B, and Dynamics
+Explorer flight programs.
+
+
+
+EGRAM
+Echelle Spectrograph Design Aid
+
+  Program Label:  gsc-13016
+  Size:  794
+  Language:  BASIC
+
+  EGRAM aids in the design of spectrographic systems that utilize an
+echelle-first order cross disperser combination. This optical
+combination causes a two dimensional echellogram to fall on a
+detector. EGRAM describes the echellogram with enough detail to allow
+the user to effectively judge the feasibility of the spectrograph's
+design. By iteratively altering system parameters, the desired
+echellogram can be achieved without making a physical model. EGRAM
+calculates system parameters which are accurate to the first order and
+compare favorably to results from ray tracing techniques.
+
+
+
+WING FLUTTER
+Modified Strip Analysis Method for Predicting Wing Flutter at Subsonic to Hypersonic Speeds
+
+  Program Label:  lar-10199
+  Size:  1,714
+  Language:  FORTRAN IV
+
+  A modified strip analysis has been developed for rapidly predicting
+flutter of finite-span, swept or unswept wings at subsonic to
+hypersonic speeds. The method employs distributions of aerodynamic
+parameters which may be evaluated from any suitable linear or
+nonlinear steady-flow theory or from measured steady-flow load
+distributions for the underformed wing. The method has been shown to
+give good flutter results for a broad range of wings at Mach number
+from 0 to as high as 15.3.
+
+
+
+MARS RELAY
+Fast Mars Relay Communication Link
+
+  Program Label:  lar-10658
+  Size:  1,725
+  Language:  FORTRAN IV
+
+  This program evaluates the communications link between the Viking
+Orbiter and Lander vehicles. The program calculates the trajectory of
+the Orbiter and Lander simultaneously. Using data from both vehicles,
+this program calculates communication geometry.
+
+
+
+MISLIFT
+Aerodynamic Lift on Wing-Body Combinations at Small Angles of Attack in Supersonic Flow
+
+  Program Label:  lar-10932
+  Size:  638
+  Language:  FORTRAN IV
+
+  Two separate and distinct theories are incorporated in this computer
+program to estimate the lift-induced pressures existent on a wing-body
+combination. These are (1) the second-order shock-expansion theory,
+which is used to obtain the lifting pressures on the body alone at
+small angles of attack, and (2) the linear-theory integral equations,
+which is used to evaluate the lifting pressures induced by the wing.
+Most of the input required by this program is involved with the
+description of the missile planform geometry.  A force and moment
+summary is presented for the configuration under consideration.
+
+
+
+AEROELASTIC EFFECTS
+University of Kansas Static Aeroelastic Program
+
+  Program Label:  lar-11602
+  Size:  2,865
+  Language:  FORTRAN IV
+
+  This software package contains three programs which compute
+geometric, mass, aerodynamic, and structural characteristics of
+fighter type aircraft. The programs were developed for computational
+support of a parametric study of planform and aeroelastic effects on
+aerodynamic center and stability derivatives. They calculate alpha-
+and q- stability derivatives and induced drag for thin elastic
+aeroplanes at subsonic and supersonic speeds. The programs are
+applicable to studies of steady state aeroelastic effects on stability
+characteristics of airplanes, but results are limited in validity to
+wings of typical fighter airplanes with a weight of 40,000 pounds
+(178,000 Newtons) and wing structures designed to withstand a limit
+load of 7.33 g's.
+
+
+
+AEROELASTIC DIVERGENCE
+Aeroelastic Divergence Characteristics of Unguided, Slender Body, Multi-Stage Launch Vehicles
+
+  Program Label:  lar-12004
+  Size:  1,551
+  Language:  FORTRAN IV
+
+  The primary function of this computer program is the calculation of
+the divergence dynamic pressure and associated divergence modal
+characteristics of unguided, slender-body, multistage launch
+vehicles. . The program also includes an option for calculating a
+generalized static margin which approximates the degeneration in
+rigid-body static margin due to aeroelasticity effects. Evaluated
+equations are also programmed to allow for the exclusion of the effect
+of aerodynamic crossflow resulting from vehicle angular velocities if
+desired. Other physical and aerodynamic properties calculated include
+total mass, center of mass, moments of inertia in pitch about the
+reference station, total aerodynamic lift curve slope, static
+aerodynamic center of pressure, rigid body static margin, and short
+period frequency.
+
+
+
+AIPP
+Atmospheric Interaction Plume Program
+
+  Program Label:  lar-12203
+  Size:  5,950
+  Language:  FORTRAN IV
+
+  This computer program can be used to predict the gas dynamic and
+chemical properties of underexpanded rocket plumes from sea level to
+the altitude above which the viscous continuum flow assumption, with
+distinct shocks, is no longer valid. The program computes the plume
+shock structure while simultaneously accounting for turbulent mixing,
+nonequilibrium chemistry, and gas/particle nonequilibrium effects. The
+program also has the ability to calculate plume properties in the
+subsonic region downstream from the Mach disc, downstream of the shock
+reflected from the triple point, and in the far field. The program can
+readily be used to determine plume optical and electrical properties,
+which are necessary data for calculating the infrared radiation
+pattern and radar cross section. This program was used to calculate
+deposition rate of various nitrogen oxides into the stratosphere
+caused by the Space Shuttle exhaust plumes.
+
+
+
+NSEG
+A Segmented Mission Analysis Program For Low and High Speed Aircraft
+
+  Program Label:  lar-12299
+  Size:  17,926
+  Language:  FORTRAN IV ( 96 %); ASSEMBLER ( 04 %);
+
+  NSEG was developed to perform rapid aircraft mission analyses. It is
+based upon the use of approximate equations of motion whose form
+varies with the type of flight segment. Flight segments considered are
+takeoff, accelerations, climbs, cruises, descents, decelerations, and
+landings. Layered atmosphere options are available. The program can
+also be used for flight envelope mapping. NSEG provides the capability
+to analyze aircraft missions from low to hypersonic speeds.
+
+
+
+KERNEL FUNCTION METHOD
+A Steady And Oscillatory Kernel Function Method For Interfering Surfaces In Subsonic, Transonic and Supersonic Flow
+
+  Program Label:  lar-12524
+  Size:  5,948
+  Language:  FORTRAN IV
+
+  This computer program was developed to provide an analysis method
+based on a kernel function technique which uses assumed pressure
+functions with unknown coefficients. With this technique, generalized
+forces can be calculated in unsteady flow and pressure distributions
+can be obtained in both steady and unsteady flow. Once the aerodynamic
+matrices are computed and inverted, they may be saved and used on
+subsequent problems at very little cost as long as Mach number,
+reduced frequencies, and aerodynamic geometry remain unchanged. This
+method should be very useful for design applications where the
+structural mode shapes change continually due to structural changes
+and payload variations but the aerodynamic parameters remain constant.
+
+
+
+OPTIM
+A Vertical Profile Which Minimizes Aircraft Fuel Burn or Direct Operating Cost
+
+  Program Label:  lar-12940
+  Size:  5,403
+  Language:  FORTRAN IV
+
+  The OPTIM computer program was developed to generate optimum
+vertical profiles for turbojet powered aircraft. Specifically, OPTIM
+generates a profile of altitude, airspeed, and flight path angle as a
+function of range between a given set of origin and destination points
+for particular models of transport aircraft. The profile may be
+optimized in the sense of minimizing fuel or time or in minimizing the
+direct operating cost expressed as a combination of fuel and
+time. Inputs to the program include the vertical wind profile, the
+aircraft takeoff weight, and the aircraft engine and aerodynamic
+characteristics. The optimum vertical flight profile is generated by
+calculating the airspeed and thrust required to minimize the
+Hamiltonian at specific energy increments.
+
+
+
+TRANSPORT AIRCRAFT ANALYSIS
+Takeoff and Landing Performance Capabilities of Transport Category Aircraft
+
+  Program Label:  lar-13086
+  Size:  4,452
+  Language:  FORTRAN IV
+
+  One of the most important considerations in the design of a
+commercial transport aircraft is the aircraft's performance during
+takeoff and landing operations. The aircraft must be designed to meet
+field length constraints in accordance with airworthiness standards
+specified in the Federal Aviation Regulations. In addition, the noise
+levels generated during these operations must be within acceptable
+limits. This computer program provides for the detailed analysis of
+the takeoff and landing performance capabilities of transport category
+aircraft. The program calculates aircraft performance in accordance
+with the airworthiness standards of the Federal Aviation
+Regulations. The aircraft and flight constraints are represented in
+sufficient detail to permit realistic sensitivity studies in terms of
+either configuration modifications or changes in operational
+procedures.
+
+
+
+ COREL & W12SC3
+Two Programs for Supersonic Wing Design and Analysis
+
+  Program Label:  lar-13239
+  Size:  20,150
+  Language:  FORTRAN IV
+
+  COREL and W12SC3 are two computer programs useful in the aerodynamic
+design and analysis of wings for supersonic maneuvering. Both programs
+use the Super Critical Conical Camber (SC3) concept, in which high
+supersonic lift coefficients are obtained by controlling cross flow
+development. COREL (Conical Relaxation) solves the nonlinear full
+potential equation for a spanwise section of a wing in the crossflow
+plane and corrects the result for any nonconical geometry. W12SC3
+applies linear theory panel methods to compute solutions for a
+wing-body configuration. The programs are not restricted to supersonic
+maneuvering cases, but are useful for many design, analysis, and
+optimization applications.
+
+
+
+RATIONAL SPLINE ROUTINES
+Rational Spline Subroutines for Adjustment of Tension Parameters
+
+  Program Label:  lar-13694
+  Size:  2,312
+  Language:  FORTRAN V
+
+  Scientific data often contains random errors that make plotting and
+curve-fitting difficult. The Rational-Spline Approximation with
+Automatic Tension Adjustment algorithm lead to a flexible, smooth
+representation of experimental data. The user sets the conditions to
+apply no tension; to apply fixed tension; or to determine tension with
+a tension adjustment algorithm. The user also selects the number of
+divisions (knots) in the data set, the knot abscissas, and the allowed
+maximum deviations from line segments.  The subroutines use an
+automatic adjustment scheme which frees the user from the drudgery of
+adjusting individual tension parameters while still giving control
+over the local behavior of the spline.
+
+
+
+NOZZLE MATERIALS
+Analytical Comparisons Of Ablative Nozzle Materials
+
+  Program Label:  lew-00240
+  Size:  7,360
+  Language:  FORTRAN IV
+
+  This program is designed to analytically predict the ablation
+performance of rocket nozzle heat protection materials. The program is
+based on the use of nonsymmetrical difference equations that are
+employed to solve systems of complex partial differential equations.
+The program can be used to predict the thermal degradation of a wide
+variety of materials exposed to an external source of heat.  The
+program also includes the effects of mass addition on heat transfer,
+the calculation of internal gas pressure and internal material
+stresses, and a number of other options for surface or char removal.
+
+
+
+TANDEM BLADE TURBOMACHINE
+Velocities and Streamlines on a Blade-To-Blade Stream Surface of a Tandem Blade Turbomachine
+
+  Program Label:  lew-10743
+  Size:  2,536
+  Language:  FORTRAN IV ( 99 %); ASSEMBLER ( 01 %);
+
+  This computer program gives the blade-to-blade solution of the
+two-dimensional, subsonic, compressible (or incompressible),
+nonviscous flow problem for a circular or straight infinite cascade of
+tandem or slotted turbomachine blades. The blades may be fixed or
+rotating. The flow may be axial, radial , or mixed.  The program input
+consists of the basic blade geometry, the meridional stream channel
+coordinates, fluid stagnation conditions, weight flow and flow split
+through the slot, and inlet and outlet flow angles. The output
+includes blade surface velocities, velocity magnitude and direction
+throughout the passage, and the streamline coordinates.
+
+
+
+ROTOR BLADE DESIGN
+Design of Two-Dimensional Supersonic Turbine Rotor Blades With Boundary-Layer Correction
+
+  Program Label:  lew-11744
+  Size:  2,011
+  Language:  FORTRAN IV
+
+  A computer program has been developed for the design of supersonic
+rotor blades where losses are accounted for by correcting the ideal
+blade geometry for boundary layer displacement thickness. The computer
+program input consists essentially of the rotor inlet and outlet Mach
+numbers, upper- and lower-surface Mach numbers, inlet flow angle,
+specific heat ratio, and total flow conditions. The program gas
+properties are set up for air. Additional gases require changes to be
+made to the program. The computer output consists of the corrected
+rotor blade coordinates, the principal boundary-layer parameters, and
+the aftermixing conditions.
+
+
+
+FLUID
+Thermodynamic and Transport Properties of Fluids
+
+  Program Label:  lew-13127
+  Size:  10,000
+  Language:  FORTRAN 77
+
+  The accurate computation of the thermodynamic and transport
+properties of fluids is a necessity for many engineering
+calculations. The FLUID program was developed to calculate the
+thermodynamic and transport properties of pure fluids in both the
+liquid and gas phases. Fluid properties are calculated using a simple
+gas model, empirical corrections, and an efficient numerical
+interpolation scheme. FLUID produces results that are in very good
+agreement with measured values, while being much faster than older
+more complex programs developed for the same purpose.
+
+
+
+CAS2D
+Nonrotating Blade-To-Blade, Steady, Potential Transonic Cascade Flow Analysis Code
+
+  Program Label:  lew-13854
+  Size:  1,786
+  Language:  FORTRAN IV
+
+  An exact, full-potential-equation model for the steady,
+irrotational, homoentropic, and homoenergetic flow of a compressible,
+inviscid fluid through a two-dimensional planar cascade together with
+its appropriate boundary conditions has been derived. The CAS2D
+computer program numerically solves an artificially time-dependent
+form of the actual full-potential equation, providing a nonrotating
+blade-to-blade, steady, potential transonic cascade flow analysis
+code.
+
+
+
+MISER2
+Mistuning Effects on Turbofan Cascades
+
+  Program Label:  lew-14380
+  Size:  2,623
+  Language:  FORTRAN 77
+
+  The study of stability and response in bladed-disk assemblies is
+complicated by the presence of small differences between the
+individual blades, known as mistuning. The Mistuning Effects on
+Turbofan Cascades program, MISER2, was developed to improve the basic
+understanding of the effects of mistuning on aeroelastic stability and
+response.  The MISER2 program calculates the flutter boundaries and
+aeroelastic response of a cascade of arbitrarily mistuned airfoils.
+Each blade is modeled as a two degree-of-freedom oscillator having
+inertial coupling between the bending and torsional motions. It is
+possible to consider any type of uncoupled bending and torsional
+frequencies, damping ratios, mass ratios, and elastic axis and center
+of gravity positions. Special cases which can be treated by MISER2
+include: tuned and mistuned cases; uncoupled bending and uncoupled
+torsion cases; and the tuned coupled bending-torsion case.
+
+
+
+FLUID
+Thermodynamic and Transport Properties of Fluids
+
+  Program Label:  lew-14418
+  Size:  10,000
+  Language:  FORTRAN 77
+
+  The accurate computation of the thermodynamic and transport
+properties of fluids is a necessity for many engineering
+calculations. The FLUID program was developed to calculate the
+thermodynamic and transport properties of pure fluids in both the
+liquid and gas phases. Fluid properties are calculated using a simple
+gas model, empirical corrections, and an efficient numerical
+interpolation scheme. FLUID produces results that are in very good
+agreement with measured values, while being much faster than older
+more complex programs developed for the same purpose.
+
+
+
+SSSP
+Space Shuttle Synthesis Program
+
+  Program Label:  msc-13914
+  Size:  7,810
+  Language:  FORTRAN IV
+
+  The Space Shuttle Synthesis Program (SSSP) automates the trajectory,
+weights and performance computations essential to predesign of the
+Space Shuttle system for earth-to-orbit operations. The two-stage
+Space Shuttle system is a completely reusable space transportation
+system consisting of a booster and an orbiter element. The SSSP'S
+major parts are a detailed weight/volume routine, a precision
+three-dimensional trajectory simulation, and the iteration and
+synthesis logic necessary to satisfy the hardware and trajectory
+constraints.
+
+
+
+COLDARC
+Dissociated Air Flow Effects During Plasma Arc Testing
+
+  Program Label:  msc-20522
+  Size:  1,086
+  Language:  FORTRAN IV
+
+  The COLDARC program was developed as part of an effort to predict
+the heating rate and surface friction effects on the Thermal
+Protection System of the Space Shuttle Orbiter during re-entry
+environments. COLDARC enables the user to predict the heating rate and
+surface friction on a test article during plasma arc testing. This
+program takes into account the effects of dissociated air flow over
+the specimen and the associated heat flux and surface
+temperatures. COLDARC uses a simplified frozen flow model to represent
+the dissociated air flow and to predict the heat flux and surface
+friction, including the effects of retarded atomic recombination, from
+test facility data.
+
+
+
+ARIES
+Aircraft Rollout Iterative Energy Simulation
+
+  Program Label:  msc-20816
+  Size:  2,291
+  Language:  FORTRAN 77
+
+  The ARIES program analyzes aircraft brake performance during
+rollout. The program simulates a three degree of freedom rollout after
+nose gear touchdown. The amount of brake energy dissipated during
+landing determines the life expectancy of brake pads. ARIES
+incorporates brake pressure, actual flight data, crosswinds, and
+runway characteristics to calculate the following: 1) brake energy
+used during rollout for up to four independent brake systems, 2) time
+profiles of rollout distance, velocity, deceleration, and lateral
+runway position, and 3) all aerodynamic moments on the vehicle. ARIES
+can be adapted for modelling most landing aircraft during unpowered
+rollout. Optimum braking procedures can be developed with ARIES to
+minimize brake deterioration while staying within specified lengths of
+runway. ARIES has been used to evaluate several Shuttle Orbiter brake
+pad failures.
+
+
+
+NEQHTCAT
+Laminar Nonequilibrium Aeroheating
+
+  Program Label:  msc-20996
+  Size:  837
+  Language:  FORTRAN V
+
+  The Laminar Nonequilibrium Heating program (NEQHTCAT) is used to
+predict the nonequilibrium heating on the surface of a partially
+catalytic flat plate moving at supersonic speed through the
+atmosphere. NEQHTCAT has been used to analyze the aeroheating effects
+on the Shuttle Orbiter for various re-entry trajectories. The program
+calculates thermodynamic properties and equilibrium edge properties
+and converts these, where required, to a frozen boundary layer
+condition.
+
+
+
+VASP
+Variable Dimension Automatic Synthesis Program 
+
+  Program Label:  arc-10616
+  Size:  2,040
+  Language:  FORTRAN IV
+
+  VASP is a variable dimension Fortran version of the Automatic
+Synthesis Program, ASP. The program is used to implement Kalman
+filtering and control theory. Basically, it consists of 31 subprograms
+for solving most modern control problems in linear, time-variant (or
+time-invariant) control systems. These subprograms include operations
+of matrix algebra, computation of the exponential of a matrix and its
+convolution integral, and the solution of the matrix Riccati
+equation. The user calls these subprograms by means of a FORTRAN main
+program, and so can easily obtain solutions to most general problems
+of extremization of a quadratic functional of the state of the linear
+dynamical system. Particularly, these problems include the synthesis
+of the Kalman filter gains and the optimal feedback gains for
+minimization of a quadratic performance index.
+
+
+
+CONTOUR PLOTS
+A General Algorithm for the Construction of Contour Plots
+
+  Program Label:  arc-11441
+  Size:  1,161
+  Language:  FORTRAN IV
+
+  A general computer algorithm has been developed for the construction
+of contour plots. The algorithm provides for efficient and accurate
+contouring with a modular approach which allows flexibility in
+modifying the algorithm for special applications. The algorithm
+accepts as input data values at a set of points irregularly
+distributed over a plane. The algorithm is based on an interpolation
+scheme in which the points in the plane are connected by straight line
+segments to form a set of triangles. In general, the data is smoothed
+using a least-squares-error fit of the data to a bivariate
+polynomial. To construct the contours, interpolation along the edges
+of the triangles is performed, using the bivariable polynomial if data
+smoothing was performed. Once the contour points have been located,
+the contour may be drawn.
+
+
+
+GENOPTICS
+A General Optical Systems Evaluation Program
+
+  Program Label:  gsc-12439
+  Size:  4,590
+  Language:  FORTRAN IV
+
+  The General Optical Systems Evaluation Program, GENOPTICS, was
+developed as an aid for the analysis and evaluation of optical systems
+that employ lenses, mirrors, diffraction gratings, and other
+geometrical surfaces. The GENOPTICS evaluation is performed by means
+of geometrical ray tracing based upon Snell's law. The GENOPTICS
+program can provide for the exact ray tracing of as many as 800 rays
+through as many as 40 surfaces. These surfaces may be planar, conic,
+toric, or polynomial shaped lenses, mirrors, and diffraction
+gratings. Each surface may be tilted about as many as three axes and
+may be decentered. Surfaces having bilateral symmetry may also be
+analyzed. GENOPTICS provides for user-oriented input and for a wide
+range of output for the evaluation of the optical system being
+analyzed. 
+
+
+
+GENOPTICS
+A General Optical Systems Evaluation Program
+
+  Program Label:  gsc-12823
+  Size:  4,590
+  Language:  FORTRAN IV
+
+  The General Optical Systems Evaluation Program, GENOPTICS, was
+developed as an aid for the analysis and evaluation of optical systems
+that employ lenses, mirrors, diffraction gratings, and other
+geometrical surfaces. The GENOPTICS evaluation is performed by means
+of geometrical ray tracing based upon Snell's law. The GENOPTICS
+program can provide for the exact ray tracing of as many as 800 rays
+through as many as 40 surfaces. These surfaces may be planar, conic,
+toric, or polynomial shaped lenses, mirrors, and diffraction
+gratings. Each surface may be tilted about as many as three axes and
+may be decentered. Surfaces having bilateral symmetry may also be
+analyzed. GENOPTICS provides for user-oriented input and for a wide
+range of output for the evaluation of the optical system being
+analyzed.
+
+
+
+NASTRAN NASTPLT 
+Plotting Post Processor
+
+  Program Label:  gsc-12833
+  Size:  1,000
+  Language:  FORTRAN IV
+
+  The NASTRAN NASTPLT Plotting Post Processor was developed to read
+NASTRAN generated NASTPLT plot files, to check the file contents for
+validity, and to translate the NASTPLT plot commands into appropriate
+calls to plotting routines for either CalComp, Tektronix PLOT10, or
+Versatec plotting systems. This program was originally written to
+generate a summary of the contents of a NASTPLT plot file (plot
+number, draw-lines summary, draw-axis summary, drawcharacter summary,
+maximum and minimum values in the x-range and y-range, pen change
+information, number of records read, the number of commands, and the
+number of plots) for the purposes of debugging and checking the
+validity and characteristics of the file contents.
+
+
+
+ORACLS
+Optimal Regulator Algorithms for the Control of Linear Systems
+
+  Program Label:  gsc-13067
+  Size:  6,200
+  Language:  FORTRAN IV
+
+  This control theory design package, called Optimal Regulator
+Algorithms for the Control of Linear Systems (ORACLS), was developed
+to aid in the design of controllers and optimal filters for systems
+which can be modeled by linear, time-invariant differential and
+difference equations.  A variety of new and efficient methods in the
+field of numerical linear algebra have been combined into the ORACLS
+program, which provides for the solution to time-invariant continuous
+or discrete LQG problems. The ORACLS package is particularly
+attractive to the control system designer because it provides a
+rigorous tool for dealing with multi-input and multi-output dynamic
+systems in both continuous and discrete form.
+
+
+
+CIRCUIT ANALYSIS
+Sneak Circuit Analysis for Locating Wire Segments on Schematic Drawings
+
+  Program Label:  hqn-10517
+  Size:  9,151
+  Language:  COBOL
+
+  The automated sneak circuit analysis is accomplished in three
+processing phases: (1) the data reduction phase in which the "wire
+list" generated from the schematic of the circuit is reduced to an
+ISAM file containing a branch cross-reference table (2) the path
+derivation phase which uses the data in the branch cross-reference
+table to examine all possible paths to see which meet the above
+mentioned two-fold criteria for a possible sneak circuit and (3) the
+path regeneration phase in which the paths flagged are listed in
+branch sequence number and then in to-from connector sequence. The
+output report generated is in a highly usable format that allows the
+engineer to verify the suspected sneak circuit path by locating the
+wire segments on the circuit schematic drawings.
+
+
+
+DIGITAL CONTOURING
+Generalized Digital Contouring Program
+
+  Program Label:  lar-10872
+  Size:  3,529
+  Language:  FORTRAN IV ( 83 %); ASSEMBLER ( 17 %);
+
+  This is a digital computer contouring program developed by combining
+desirable characteristics from several existing contouring
+programs. It can easily be adapted to many different research
+requirements. The overlaid structure of the program permits desired
+modifications to be made with ease.  The contouring program performs
+both the task of generating a depth matrix from either randomly or
+regularly spaced surface heights and the task of contouring the data.
+Any set of data which can be referenced to a two-dimensional
+coordinate system can be graphically represented by this program.
+
+
+
+TRANSIENT RESPONSE
+Transient Response of Ablating Axisymmetric Bodies Including the Effects of Shape Change
+
+  Program Label:  lar-11049
+  Size:  1,679
+  Language:  FORTRAN IV
+
+   A computer program has been developed to analyze the transient
+response of an ablating axisymmetric body, including the effect of
+shape change. The governing differential equation, the boundary
+conditions for the analysis on which the computer program is based,
+and the method of solution of the resulting finite-difference
+equations are discussed in the documentation.
+
+
+
+TRANSIENT THERMAL RESPONSE
+One-Dimensional Numerical Analysis of the Transient Thermal Response of Multilayer Insulative Systems
+
+  Program Label:  lar-12057
+  Size:  500
+  Language:  FORTRAN IV
+
+  This program performs a one-dimensional numerical analysis of the
+transient thermal response of multi-layer insulative systems. The
+analysis can determine the temperature distribution through a system
+consisting of from one to four layers, one of which can be an air
+gap. Concentrated heat sinks at any interface can be included. The
+computer program based on the analysis will determine the thickness of
+a specified layer that will satisfy a temperature limit criterion at
+any point in the insulative system. The program will also
+automatically calculate the thickness at several points on a system
+and determine the total system mass. This program was developed as a
+tool for designing thermal protection systems for highspeed aerospace
+vehicles but could be adapted to many areas of industry involved in
+thermal insulation systems.
+
+
+
+ORACLS
+Optimal Regulator Algorithms for the Control of Linear Systems
+
+  Program Label:  lar-12313
+  Size:  6,200
+  Language:  FORTRAN IV
+
+  This control theory design package, called Optimal Regulator
+Algorithms for the Control of Linear Systems (ORACLS), was developed
+to aid in the design of controllers and optimal filters for systems
+which can be modeled by linear, time-invariant differential and
+difference equations.  A variety of new and efficient methods in the
+field of numerical linear algebra have been combined into the ORACLS
+program, which provides for the solution to time-invariant continuous
+or discrete LQG problems. The ORACLS package is particularly
+attractive to the control system designer because it provides a
+rigorous tool for dealing with multi-input and multi-output dynamic
+systems in both continuous and discrete form.n
+
+
+
+TRANSIENT DIFFUSION
+Numerical Analyses For Treating Diffusion In Single-, Two-, and Three-Phase Binary Alloy Systems
+
+  Program Label:  lar-12381
+  Size:  1,450
+  Language:  FORTRAN IV
+
+  This package consists of a series of three computer programs for
+treating one-dimensional transient diffusion problems in single and
+multiple phase binary alloy systems.  The finite-difference solutions
+developed for this package are applicable for planar, cylindrical, and
+spherical geometries with any diffusion-zone size and any continuous
+variation of the diffusion coefficient with concentration. Special
+techniques were included to account for differences in modal volumes,
+initiation and growth of an intermediate phase, disappearance of a
+phase, and the presence of an initial composition profile in the
+specimen. In each analysis, an effort was made to achieve good
+accuracy while minimizing computation time.
+
+
+
+ORACLS
+Optimal Regulator Algorithms for the Control of Linear Systems
+
+  Program Label:  lar-12953
+  Size:  6,200
+  Language:  FORTRAN IV
+
+  This control theory design package, called Optimal Regulator
+Algorithms for the Control of Linear Systems (ORACLS), was developed
+to aid in the design of controllers and optimal filters for systems
+which can be modeled by linear, time-invariant differential and
+difference equations.  A variety of new and efficient methods in the
+field of numerical linear algebra have been combined into the ORACLS
+program, which provides for the solution to time-invariant continuous
+or discrete LQG problems. The ORACLS package is particularly
+attractive to the control system designer because it provides a
+rigorous tool for dealing with multi-input and multi-output dynamic
+systems in both continuous and discrete form.
+
+
+
+SOPAD
+Separation of Overlapping Peaks and Analysis of Derivatives
+
+  Program Label:  lar-13276
+  Size:  995
+  Language:  FORTRAN 77
+
+  SOPAD was developed for performing the separation of overlapping
+peaks and the analysis of derivatives of x-ray diffraction data. In
+qualitative and quantitative x-ray diffraction problems, overlapping
+profiles introduce difficulties that prevent an accurate determination
+of both peak positions and the areas of the diffraction peaks. This
+problem is prevalent in complex multi-element alloys and in certain
+metal matrix composites because of the large number of phases
+present. SOPAD helps the analyst to get the most information out of
+the available diffraction data.
+
+
+
+PLOT3D
+Drawing Three Dimensional Surfaces
+
+  Program Label:  lew-10482
+  Size:  355
+  Language:  FORTRAN IV
+
+  PLOT3D is a package of programs to draw three-dimensional surfaces
+of the form z = f(x,y). The function f and the boundary values for x
+and y are the input to PLOT3D. The surface thus defined may be drawn
+after arbitrary rotations.  However, it is designed to draw only
+functions in rectangular coordinates expressed explicitly in the above
+form. It cannot, for example, draw a sphere. Output is by off-line
+incremental plotter or online microfilm recorder. This package, unlike
+other packages, will plot any function of the form z = f(x,y) and
+portrays continuous and bounded functions of two independent
+variables. With curve fitting, however, it can draw experimental data
+and pictures which cannot be expressed in the above form.
+
+
+
+GRID3O
+Fast Generation of Multilevel Three-Dimensional Boundary-Conforming O-Type Computational Grids
+
+  Program Label:  lew-13818
+  Size:  1,346
+  Language:  FORTRAN IV
+
+  The GRID30 computer program incorporates a fast algorithm for
+accurately generating boundary-conforming, three-dimensional
+consecutively refined computational grids applicable to arbitrary
+wing-body and axial turbomachinery geometries.  The method is based on
+using an analytic function to generate two-dimensional grids on a
+number of coaxial axisymmetric surfaces positioned between the
+centerbody and the outer radial boundary. These grids are of the
+O-type and are characterized by quasiorthogonality, geometric
+periodicity, and an adequate resolution throughout the flow
+field. Because the built-in nonorthogonal coordinate stretching and
+shearing cause the grid lines leaving the blade or wing trailingedge
+to end at downstream infinity, use of the generated grid simplifies
+the numerical treatment of three-dimensional trailing vortex sheets.
+
+
+
+ANDUCT
+Velocity Gradient Method for Calculating Velocities in an Axisym-Metric Annular Duct
+
+  Program Label:  lew-14000
+  Size:  539
+  Language:  FORTRAN IV
+
+  Turbomachinery components are often connected by ducts, which are
+usually annular. The configurations and aerodynamic characteristics of
+these ducts are crucial to the optimum performance of the
+turbomachinery blade rows. The ANDUCT computer program was developed
+to calculate the velocity distribution along an arbitrary line between
+the inner and outer walls of an annular duct with axisymmetric
+swirling flow. Although other programs are available for duct
+analysis, the use of the velocity gradient method makes the ANDUCT
+program fast and convenient while requiring only modest computer
+resources.
+
+
+
+IMAGE PROCESSING ROUTINES
+Evaluation of Registration, Compression and Classification Algorithms
+
+  Program Label:  mfs-25367
+  Size:  8,715
+  Language:  FORTRAN IV
+
+  This collection of registration, compression, and classification
+algorithms was developed so that different approaches could be
+evaluated and the best approach for a particular application
+determined. Routines are included for six registration algorithms, six
+compression algorithms, and two classification algorithms. The package
+also includes routines for evaluating the effects of processing on the
+image data. This collection of routines should be useful to anyone
+using or developing image processing software.
+
+
+
+COMPSIZE
+Preliminary Design Method for Fiber Reinforced Composite Structures
+
+  Program Label:  mfs-27153
+  Size:  2,038
+  Language:  BASIC
+
+  The Composite Structure Preliminary Sizing program, COMPSIZE, is an
+analytical tool which structural designers can use when doing
+approximate stress analysis to select or verify preliminary sizing
+choices for composite structural members. It is useful in the
+beginning stages of design concept definition, when it is helpful to
+have quick and convenient approximate stress analysis tools available
+so that a wide variety of structural configurations can be sketched
+out and checked for feasibility. The emphasis is on fast,
+user-friendly methods so that rough but technically sound evaluation
+of a broad variety of conceptual designs can be accomplished.
+
+
+
+SCAT
+System Commonality Analysis Tool
+
+  Program Label:  mfs-28207
+  Size:  8,427
+  Language:  FORTRAN 77
+
+  The System Commonality Analysis Tool, SCAT, was designed to aid
+managers and engineers in identifying common, potentially common, and
+unique components of a system. Commonality lowers overall system cost
+through use of the smallest variety of items or subsystem types in the
+greatest number of applications. SCAT, through utilization of a
+comprehensive parts database, determines cost effectiveness by
+comparing life cycle costs of unique part configurations and standard
+part configurations. The SCAT database reflects both engineering and
+financial data. SCAT was instituted as a commonality analysis for the
+Space Station, but is easily applicable to other projects such as
+software commonality, which is used as an example in the detailed
+documentation.
+
+
+
+SOLAR ARRAY
+Orbiting Solar Array Simulation Model
+
+  Program Label:  msc-18558
+  Size:  717
+  Language:  FORTRAN IV
+
+  Solar arrays are becoming an increasingly important means of
+generating power for earth orbiting spacecraft. Currently, almost all
+unmanned earth satellites utilize solar array electrical power
+generation systems. Applications for solar arrays in the near future
+include providing power for space shuttle payloads and manned space
+stations. This computer program was developed to simulate the
+capabilities of earth orbiting arrays. The model used is based on an
+improved version of a finite-element radiation shape factor
+subprogram. The inherent simplicity and speed of the original
+subprogram has been augmented with an improved shadow evaluation
+technique to provide the user with an efficient array model.
+
+
+
+DIGITAL FILTER DESIGN
+Compare Digital Filters by Minimizing Sum Square Error
+
+  Program Label:  msc-20982
+  Size:  1,336
+  Language:  FORTRAN IV
+
+  The Digital Filter Design program presents a method to compare
+desired and designed digital filters by minimizing the
+sum-square-error of the differences in magnitude and phase
+angles. Most filter design techniques emphasize magnitude
+characteristics. Such techniques are adequate for control systems
+where the phase angle of a filter imposes minor effects on system
+stability. However, for closed loop feedback control systems, an
+excessive phase angle of a designed filter may create signal
+distortion or push the system to instability. This Digital Filter
+Design program has been applied to the Space Shuttle pitch body
+bending filter, where the filter was reshaped to provide more
+attenuation to flexible vehicle resonance modes without sacrificing
+the rigid vehicle performance.
+
+
+
+VMACO
+Variable Metric Algorithm for Constrained Optimization
+
+  Program Label:  msc-21275
+  Size:  5,697
+  Language:  FORTRAN 77
+
+  VMACO, the Variable Metric Algorithm for Constrained Optimization,
+is a non-linear program developed to calculate the least value of a
+function of n variables subject to general constraints (both equality
+and inequality). Generally, the first set of constraints is an
+equality (the target)and the remaining constraints are inequalities
+(boundaries). The VMACO program utilizes an iterative method in
+seeking the optimal solution. It can be "hooked" into a driver program
+(examples are provided) which can calculate the values for the real
+function, constraints, and their first order partials with respect to
+the controls.
+
+
+
+IPEG
+Improved Price Estimation Guidelines
+
+  Program Label:  npo-15569
+  Size:  2,363
+  Language:  PASCAL
+
+  The Improved Price Estimation Guidelines, IPEG, program provides a
+simple yet accurate estimate of the price of a manufactured
+product. IPEG facilitates sensitivity studies of price estimates at
+considerably less expense than would be incurred by using the Standard
+Assembly-line Manufacturing Industry Simulation, SAMIS, program
+(COSMIC program NPO-16032). A difference of less than one percent
+between the IPEG and SAMIS price estimates has been observed with
+realistic test cases. However, the IPEG simplification of SAMIS allows
+the analyst with limited time and computing resources to perform a
+greater number of sensitivity studies than with SAMIS. Although IPEG
+was developed for the photovoltaics industry, it is readily adaptable
+to any standard assembly line type of manufacturing industry.
+
+
+
+LCP
+Lifetime Cost and Performance Model for Distributed Photovoltaic Systems
+
+  Program Label:  npo-16001
+  Size:  5,852
+  Language:  SIMSCRIPT
+
+  The Lifetime Cost and Performance (LCP) Model was developed to
+assist in the assessment of Photovoltaic (PV) system design
+options. LCP is a simulation of the performance, cost, and revenue
+streams associated with distributed PV power systems. LCP provides the
+user with substantial flexibility in specifying the technical and
+economic environment of the PV application. User-specified input
+parameters are available to describe PV system characteristics, site
+climatic conditions, utility purchase and sellback rate structures,
+discount and escalation rates, construction timing, and lifetime of
+the system.  In combination with a suitable economic model, LCP can
+provide an estimate of the expected net present worth of a PV system
+to the owner, as compared to electricity purchased from a utility
+grid. Similarly, LCP might be used to perform sensitivity analyses to
+identify those PV system parameters having significant impact on net
+worth.
+
+
+
+IPEG
+Improved Price Estimation Guidelines
+
+  Program Label:  npo-16583
+  Size:  2,363
+  Language:  PASCAL
+
+  The Improved Price Estimation Guidelines, IPEG, program provides a
+simple yet accurate estimate of the price of a manufactured
+product. IPEG facilitates sensitivity studies of price estimates at
+considerably less expense than would be incurred by using the Standard
+Assembly-line Manufacturing Industry Simulation, SAMIS, program
+(COSMIC program NPO-16032). A difference of less than one percent
+between the IPEG and SAMIS price estimates has been observed with
+realistic test cases. However, the IPEG simplification of SAMIS allows
+the analyst with limited time and computing resources to perform a
+greater number of sensitivity studies than with SAMIS. Although IPEG
+was developed for the photovoltaics industry, it is readily adaptable
+to any standard assembly line type of manufacturing industry.
+
+
+
+SERVICES FINANCIAL REPORT
+Lmss Services Financial Report Program for Comparing Alternative Designs
+
+  Program Label:  npo-16606
+  Size:  1,000
+  Language:  MULTIPLAN
+
+  The objective of this Services Finance Report program is to provide
+a means for comparing alternative designs of LMSS systems or other
+services systems. This program is actually a Multiplan worksheet. The
+labels used in the worksheet were chosen for a satellite-based
+cellular communication service (LMSS - Land Mobile Satellite System)
+but the analysis is not restricted to such cases. A comprehensive
+financial model is used to calculate a 'figure of merit' which can be
+used to compare effects of equipment and operating costs, pricing
+strategy, and customer demand for different systems. The program also
+calculates the price that a company would have to charge customers to
+meet all its expenses and make a specified profit. A price estimate
+can be obtained for almost any service which is heavily dependent on
+capital investment and which has operating costs that depend on the
+amount of service sold.
+
+
+
+ORBSIM
+Estimating Geophysical Model Parameters From Planetary Gravity
+
+  Program Label:  npo-16671
+  Size:  6,972
+  Language:  FORTRAN 77
+
+  The ORBSIM program was developed for the accurate extraction of
+geophysical model parameters from Doppler radio tracking data acquired
+from orbiting planetary spacecraft. The model of the proposed
+planetary structure is used in a numerical integration of the
+spacecraft along simulated trajectories around the primary body. Using
+line of sight (LOS) Doppler residuals, ORBSIM applies fast and
+efficient modelling and optimization procedures which avoid the
+traditional complex dynamic reduction of data. ORBSIM produces
+quantitative geophysical results such as size, depth, and mass. ORBSIM
+has been used extensively to investigate topographic features on the
+Moon, Mars, and Venus. The program has proven particulary suitable for
+modelling gravitational anomalies and mascons.
+
+
+
+OPTICAL LENS REFORMATTER
+Optical Lens Prescription Data Reformatter
+
+  Program Label:  npo-17093
+  Size:  3,814
+  Language:  FORTRAN 77
+
+  The Optical Lens Prescription Data Formatter allows the user to
+quickly and easily transfer complicated optical lens prescriptions
+from one major optical design program to another and back again. Thus
+one may take advantage of the inherent strengths of either
+program. The programs are ACCOS V from Scientific Calculations,
+Inc. of Fishers, NY, and CODE V from Optical Research Associates of
+Pasadena, CA.
+
+
+
+SPAM
+Spectral Analysis Manager
+
+  Program Label:  npo-17180
+  Size:  11,700
+  Language:  C-LANGUAGE
+
+  The Spectral Analysis Manager (SPAM) was developed to allow easy
+qualitative analysis of multi-dimensional imaging spectrometer
+data. Imaging spectrometers provide sufficient spectral sampling to
+define unique spectral signatures on a per pixel basis. Thus direct
+material identification becomes possible for geologic studies. SPAM
+provides a variety of capabilities for carrying out interactive
+analysis of the massive and complex datasets associated with
+multispectral remote sensing observations. In addition to normal image
+processing functions, SPAM provides multiple levels of on-line help, a
+flexible command interpretation, graceful error recovery, and a
+program structure which can be implemented in a variety of
+environments. SPAM was designed to be visually oriented and user
+friendly with the liberal employment of graphics for rapid and
+efficient exploratory analysis of imaging spectrometry data.
+
+
+
+SPAM
+Spectral Analysis Manager
+
+  Program Label:  npo-17182
+  Size:  11,700
+  Language:  C-LANGUAGE
+
+  The Spectral Analysis Manager (SPAM) was developed to allow easy
+qualitative analysis of multi-dimensional imaging spectrometer
+data. Imaging spectrometers provide sufficient spectral sampling to
+define unique spectral signatures on a per pixel basis. Thus direct
+material identification becomes possible for geologic studies. SPAM
+provides a variety of capabilities for carrying out interactive
+analysis of the massive and complex datasets associated with
+multispectral remote sensing observations. In addition to normal image
+processing functions, SPAM provides multiple levels of on-line help, a
+flexible command interpretation, graceful error recovery, and a
+program structure which can be implemented in a variety of
+environments. SPAM was designed to be visually oriented and user
+friendly with the liberal employment of graphics for rapid and
+efficient exploratory analysis of imaging spectrometry data.
+
+
+
+FPT
+Fortran Programming Tools for the DEC VAX
+
+  Program Label:  arc-11676
+  Size:  23,970
+  Language:  FORTRAN 77 ( 100 %); ASSEMBLER ( 00 %);
+
+  The FORTRAN Programming Tools (FPT) are a series of tools used to
+support the development and maintenance of FORTRAN 77 source
+codes. Included are a debugging aid, a CPU time monitoring program,
+source code maintenance aids, print utilities, and a library of
+useful, well-documented programs. These tools assist in reducing
+development time and encouraging high quality programming. Although
+intended primarily for FORTRAN programmers, some of the tools can be
+used on data files and other programming languages.
+
+
+
+IBASE
+A General Purpose Imagery Database System
+
+  Program Label:  arc-11712
+  Size:  14,838
+  Language:  FORTRAN 77
+
+  The Image Database program, IBASE, is a general purpose imagery
+information system. The system includes functions for cataloging and
+managing digital imagery files, and for conducting analyses of these
+images. Use of the system may be accomplished either by commands or
+through a hierarchy of menus. The analytical capabilities of IBASE
+include contingency tables, image filtering (low-, high-, and
+bandpass), proximity maps, clustering, histograms, regression, slope
+calculations, scaling, and Boolean manipulations.  
+
+
+
+PITEST
+Multiple Precision Arithmetic
+
+  Program Label:  arc-11725
+  Size:  4,870
+  Language:  FORTRAN 77
+
+  The PITEST program is a package of subroutines that perform
+arithmetic on floating-point numbers of arbitrarily high
+precision. PITEST can also work on very large integers by treating
+them as floating-point numbers with enough precision to exactly
+represent their integral values.  PITEST calculates the value of pi to
+several billion digits (although the program as delivered will
+calculate only 25,000 digits) using the Borwein quadratically
+convergent algorithm of 1983 and the quartically convergent algorithm
+obtained in 1985.  This package also contains subroutines to perform
+multiplication, division, and square root extraction using
+sophisticated techniques such as fast Fourier Transforms. This package
+includes single and double precision versions of all subroutines.
+
+
+
+GREMEX
+Goddard Research and Engineering Management Exercise Simulation System
+
+  Program Label:  gsc-11512
+  Size:  4,846
+  Language:  FORTRAN IV
+
+  The GREMEX computer programs are basically a program evaluation and
+review technique (PERT) reporting system. In the usual PERT program,
+the operator inputs each month the amount of work performed on each
+activity and the computer does the bookkeeping to determine the
+expected completion date of the project. GREMEX automatically assumes
+that all activities due to be worked in the current month will be
+worked. GREMEX predicts new durations (and costs) each month based on
+management actions taken by the players and the contractor's
+abilities.  The ability to re-estimate future events based on
+management decisions or other factors and assign probability factors
+provides life to the model.
+
+
+
+TRAJEC
+Numerical Tracing of Electron Trajectories
+
+  Program Label:  gsc-12535
+  Size:  865
+  Language:  FORTRAN IV
+
+  The TRAJEC computer program was developed as a tool to aid in the
+analysis and design of various electron imaging systems. TRAJEC can
+integrate the path of a relativistic electron through a region of
+non-uniform, static electromagnetic fields to an accuracy of one
+micrometer in ten centimeters.  The program is designed to easily
+interface with various forms of user defined electric potentials and
+magnetic fields. TRAJEC may be implemented interactively so that the
+analyst might freely experiment with combinations of trajectories,
+thereby gaining insight into the aberrations inherent in the imaging
+system under study.  Lines of electrons may be studied to test system
+linear imaging properties. TRAJEC also allows for studies of Monte
+Carlo point sources of electrons to simulate the characteristic
+emissive properties of photo-cathode materials and their effect on the
+images produced.
+
+
+
+NBOD2
+Program to Derive and Solve Equations of Motion for Coupled N-Body Systems
+
+  Program Label:  gsc-12846
+  Size:  9,965
+  Language:  FORTRAN 77
+
+  The NBOD2 computer program was developed to aid in the analysis of
+spacecraft attitude dynamics. NBOD2 is a very general program that may
+be applied to a large class of problems involving coupled N-body
+systems. NBOD2 provides the dynamics analyst with the capability to
+automatically derive and numerically solve the equations of motion for
+any system that can be modeled as a topological tree of coupled rigid
+bodies, flexible bodies, point masses, and symmetrical momentum
+wheels.
+
+
+
+OAP
+Office Automation Pilot Graphics Database System
+
+  Program Label:  gsc-12925
+  Size:  31,200
+  Language:  PASCAL ( 99 %); ASSEMBLER ( 01 %);
+
+  The Office Automation Pilot (OAP) Graphics Database system offers
+the IBM PC user assistance in producing a wide variety of graphs and
+charts. OAP uses a convenient database system, called a chartbase, for
+creating and maintaining data associated with the charts, and twelve
+different graphics packages are available to the OAP user.  Various
+"help" functions and on-screen instructions are available to aid the
+user. The user data is used to generate the graphics portion of the
+chart. Completed charts may be displayed in monotone or color,
+printed, plotted, or stored in the chartbase on the IBM PC. Once
+completed, the charts may be put in a vector format and plotted for
+color viewgraphs.
+
+
+
+INCA
+Interactive Controls Analysis
+
+  Program Label:  gsc-12998
+  Size:  26,701
+  Language:  PASCAL ( 94 %); FORTRAN 77 ( 06 %);
+
+  The Interactive Controls Analysis (INCA) program was developed to
+provide a user friendly environment for the design and analysis of
+linear control systems, primarily feedback control systems. INCA is
+designed for use with both small and large order systems. Using the
+interactive graphics capability, the INCA user can quickly plot a root
+locus, frequency response, or time response of either a continuous
+time system or a sampled data system. The system configuration and
+parameters can be easily changed, allowing the INCA user to design
+compensation networks and perform sensitivity analysis in a very
+convenient manner. A journal file capability is included. This stores
+an entire sequence of commands, generated during an INCA session into
+a file which can be accessed later. Also included in INCA are a
+context-sensitive help library, a screen editor, and plot
+windows. INCA is robust to VAX-specific overflow problems.
+
+
+
+SOAR
+Software for Optical Archive and Retrieval
+
+  Program Label:  gsc-13121
+  Size:  4,303
+  Language:  ASSEMBLER ( 67 %); FORTRAN 77 ( 22 %); DEC VAX DCL
+
+  Software for Optical Archive and Retrieval, SOAR, is an interface
+between the VAX computer's VMS operating system and a WORM optical
+disk drive. The Write-Once-Read-Many optical disk technology (WORM)
+does not permit the overwriting of files. SOAR creates a seamless user
+interface for this new device, allowing the user to write data files
+using commands very similar to the ones already used in VMS. The
+optical disk can be read using the standard VMS commands for file
+access. SOAR maintains a directory list on the magnetic drive until
+the optical disk is filled with data, then permanently writes this
+directory list to the optical disk.
+
+
+
+OWL-1200
+Video Terminal Emulator for the IBM Personal Computer
+
+  Program Label:  ksc-11293
+  Size:  1,000
+  Language:  PASCAL ( 80 %); ASSEMBLER ( 20 %);
+
+  An OWL-1200 video terminal emulator has been written for the IBM
+Personal Computer. The OWL-1200 is a simple user terminal with some
+intelligent capabilities. These capabilities include screen formatting
+and block transmission of data. Several programs, such as Systonetics'
+VIS1ON software for hierarchial scheduling, require this type of
+terminal. The emulator software provides the IBM Personal Computer
+with all of the capabilities of the OWL-1200 terminal. Even those
+features which are implemented in hardware on the OWL-1200 are fully
+provided by the emulator software.
+
+
+
+FLOWCHARTER
+A Universal Structured Design Diagrammer
+
+  Program Label:  lar-12548
+  Size:  11,159
+  Language:  PASCAL
+
+  The Universal Structured Design Diagrammer (FLOWCHARTER) was
+developed as a tool for documenting and understanding computer
+programs. FLOWCHARTER is termed universal because it can produce
+flowcharts and concordances for any program written in virtually any
+language. FLOWCHARTER is termed a structured design diagrammmer
+because the generated flowcharts are presented in a concise tree-like
+format appropriate for representing the flow of control in a
+structured program. FLOWCHARTER can be used to provide standardized
+documentation for any type of finished program. It can also be used in
+the development and debugging phase to clearly exhibit the structure
+of a program.
+
+
+
+AESOP
+An Expert System Engine With Operative Probabilities
+
+  Program Label:  lar-13382
+  Size:  675
+  Language:  LISP
+
+  AESOP is a rule-based inference engine for an expert system, which
+makes decisions about a particular situation given user-supplied
+hypotheses, rules, and answers to questions drawn from the rules. If a
+knowledge base containing the hypotheses and rules governing an
+environment is available to AESOP, almost any situation within that
+environment can be resolved by answering the questions asked by
+AESOP. The questions can be answered with YES, NO, MAYBE, DON'T KNOW,
+DON'T CARE, or with a probability factor ranging from zero to ten.
+The initial prompt asks what task is under consideration, and AESOP
+asks questions about feasibility and performance until one of the
+original hypotheses is confirmed.
+
+
+
+CARE3MENU
+A Care III User Friendly Interface
+
+  Program Label:  lar-13514
+  Size:  8,742
+  Language:  FORTRAN 77
+
+  CARE3MENU generates an input file for the CARE III program. CARE III
+is used for reliability prediction of complex, redundant,
+fault-tolerant systems including digital computers, aircraft, nuclear
+and chemical control systems. The CARE III input file often becomes
+complicated and is not easily formatted with a text editor. CARE3MENU
+provides an easy, interactive method of creating an input file by
+automatically formatting a set of user-supplied inputs for the CARE
+III system. CARE3MENU provides detailed on-line help for most of its
+screen formats.
+
+
+
+PUSHBUTTON EDITOR
+Programmable Display Pushbutton Legend Editor
+
+  Program Label:  lar-13671
+  Size:  1,003
+  Language:  FORTRAN 77
+
+  The Programmable Display Pushbutton (PDP) is a pushbutton device
+which has a programmable 16 x 35 matrix of LEDs on the pushbutton
+surface.  The Programmable Display Pushbutton Legend Editor, PDPE, is
+used to create the LED displays for the pushbuttons. PDPE encodes PDP
+control commands and legend data into message byte strings sent to a
+Logic Refresh and Control Unit (LRCU). PDPE transmits to the LRCU user
+specified commands that control what is displayed on the LED face of
+the individual pushbuttons. Upon receiving a command, the LRCU decides
+whether or not to send the byte code of the message to a data file so
+that it may be called by an applications program.
+
+
+
+EXPERT SYSTEM EXECUTIVE
+Expert System Executive for Automated Real-Time Monitoring
+
+  Program Label:  msc-20908
+  Size:  1,192
+  Language:  C-LANGUAGE
+
+  Real-time data monitoring is a decision making process involving
+knowledge of the system being watched and inferences based upon the
+observed data. The Expert System Executive is a computer program which
+demonstrates the feasibility of automated real-time monitoring. Using
+the Executive, the knowledge of a system is formally coded as a set of
+rules specifying actions to be taken under various conditions. The
+program makes inferences about the observed data based on the
+rules. The Executive has been tested by monitoring the Shuttle onboard
+navigation console using flight data from an entry simulation. The
+test rule base pertaining to onboard state vectors is included in the
+program documentation. By supplying an appropriate set of rules, the
+Expert System Executive can be adapted to other real-time applications
+such as plant operations. Each rule must contain a schedule of
+conditions and the action to be executed when all its conditions are
+true.
+
+
+
+CLIPS
+C Language Integrated Production System for Developing Expert Systems
+
+  Program Label:  msc-21208
+  Size:  57,232
+  Language:  C-LANGUAGE
+
+  The C Language Integrated Production System, CLIPS, is a shell for
+developing expert systems. It is designed to allow artificial
+intelligence research, development, and delivery on conventional
+computers. The primary design goals for CLIPS are portability,
+efficiency, and functionality. For these reasons, the program is
+written in C. CLIPS meets or outperforms most micro- and minicomputer
+based artificial intelligence tools.
+
+
+
+CLIPS
+C Language Integrated Production System for Developing Expert Systems
+
+  Program Label:  msc-21467
+  Size:  57,232
+  Language:  C-LANGUAGE
+
+  The C Language Integrated Production System, CLIPS, is a shell for
+developing expert systems. It is designed to allow artificial
+intelligence research, development, and delivery on conventional
+computers. The primary design goals for CLIPS are portability,
+efficiency, and functionality. For these reasons, the program is
+written in C. CLIPS meets or outperforms most micro- and minicomputer
+based artificial intelligence tools.
+
+
+
+LOOK
+A Text File Display Program
+
+  Program Label:  npo-16358
+  Size:  7,653
+  Language:  FORTRAN 77 ( 86 %); ASSEMBLER ( 14 %);
+
+  The LOOK program was developed to permit a user to examine a text
+file in a psuedo-random access manner. Many engineering and scientific
+programs generate large amounts of printed output. Often this output
+needs to be examined in only a few places. On mini-computers (like the
+DEC VAX) high-speed printers are usually at a premium. One alternative
+is to save the output in a text file and examine it with a text
+editor. The slowness of a text editor, the possibility of
+inadvertently changing the output, and other factors make this an
+unsatisfactory solution. The LOOK program provides the user with a
+means of rapidly examining the contents of an ASCII text file.
+
+
+
+NETWORK TOPOLOGY DESIGN
+Optimal Network Topology Design for the Space Station Information System Network
+
+  Program Label:  npo-16809
+  Size:  520
+  Language:  PASCAL
+
+  This program was developed as part of a research study on the
+topology design and performance analysis for the Space Station
+Information System (SSIS) network. It uses an efficient algorithm to
+generate candidate network designs (consisting of subsets of the set
+of all network components) in increasing order of their total costs,
+and checks each design to see if it forms an acceptable network. This
+technique gives the true cost-optimal network, and is particularly
+useful when the network has many constraints and not too many
+components.
+
+
+
+STAR
+A Simple Tool for Automated Reasoning Supporting Hybrid Applications of Artificial Intelligence
+
+  Program Label:  npo-16832
+  Size:  13,600
+  Language:  C-LANGUAGE
+
+  The Simple Tool for Automated Reasoning program (STAR) is an
+interactive, interpreted programming language for the development and
+operation of artificial intelligence (AI) application systems. STAR
+provides an environment for integrating traditional AI symbolic
+processing with functions and data structures defined in compiled
+languages such as C, FORTRAN and PASCAL. This type of integration
+occurs in a number of AI applications including interpretation of
+numerical sensor data, construction of intelligent user interfaces to
+existing compiled software packages, and coupling AI techniques with
+numerical simulation techniques and control systems software. The STAR
+language was created as part of an AI project for the evaluation of
+imaging spectrometer data at NASA's Jet Propulsion Laboratory.
+
+
+
+SOSPAC
+Solar Space Power Analysis Code
+
+  Program Label:  npo-16855
+  Size:  640
+  Language:  FORTRAN IV
+
+  The Solar Space Power Analysis Code, SOSPAC, was developed to
+examine the solar thermal and photovoltaic power generation options
+available for a satellite or spacecraft in low earth orbit. SOSPAC is
+a preliminary systems analysis tool and enables the engineer to
+compare the areas, weights, and costs of several candidate electric
+and thermal power systems. The configurations studied include
+photovoltaic arrays and parabolic dish systems to produce electricity
+only, and in various combinations to provide both thermal and electric
+power.
+
+
+
+TAPECERT
+A Tape Certification Utility for Dec Vax/Vms Computers
+
+  Program Label:  npo-16876
+  Size:  420
+  Language:  FORTRAN 77
+
+  A tape certification program tests the usability of magnetic tape at
+different densities by writing test patterns and re-reading them. The
+ability to certify tapes is important in environments that do large
+amounts of tape processing. TAPECERT is a VAX utility for tape
+certification in use at the Jet Propulsion Laboratory Multi-Mission
+Image Processing Laboratory which handles data from projects such as
+Voyager and Galileo. TAPECERT allows the user to select the tape
+density, the test pattern to use, the number of allowed retries, and
+whether to allow extended interrecord gaps to skip past bad spots on
+the tape. The program displays system error messages (parity errors,
+for instance) and record count information, with totals every 1000
+blocks. TAPECERT is designed such that command procedures can be set
+up with defaults for different types of certification runs.
+
+
+
+SIMRAND I
+Simulation of Research and Development Projects
+
+  Program Label:  npo-16937
+  Size:  3,146
+  Language:  FORTRAN 77
+
+  The Simulation of Research and Development Projects program
+(SIMRAND) aids in the optimal allocation of R&D resources needed to
+achieve project goals. SIMRAND models the system subsets or project
+tasks as various network paths to a final goal. Each path is described
+in terms of task variables such as cost per hour, cost per unit,
+availability of resources, etc. Uncertainty is incorporated by
+treating task variables as probabilistic random variables. SIMRAND
+calculates the measure of preference for each alternative network. The
+networks yielding the highest utility function (or certainty
+equivalence) are then ranked as the optimal network paths. SIMRAND has
+been used in several economic potential studies at NASA's Jet
+Propulsion Laboratory involving solar dish power systems and
+photovoltaic array construction. However, any project having tasks
+which can be reduced to equations and related by measures of
+preference can be modeled.
+
+
+
+STAR
+A Simple Tool for Automated Reasoning Supporting Hybrid Applications of Artificial Intelligence
+
+  Program Label:  npo-16965
+  Size:  13,600
+  Language:  C-LANGUAGE
+
+  The Simple Tool for Automated Reasoning program (STAR) is an
+interactive, interpreted programming language for the development and
+operation of artificial intelligence (AI) application systems. STAR
+provides an environment for integrating traditional AI symbolic
+processing with functions and data structures defined in compiled
+languages such as C, FORTRAN and PASCAL. This type of integration
+occurs in a number of AI applications including interpretation of
+numerical sensor data, construction of intelligent user interfaces to
+existing compiled software packages, and coupling AI techniques with
+numerical simulation techniques and control systems software. The STAR
+language was created as part of an AI project for the evaluation of
+imaging spectrometer data at NASA's Jet Propulsion Laboratory.N
+
+
+
+FAST POLYNOMIAL TRANSFORM
+A Fast Polynomial Transform Program With a Modularized Structure
+
+  Program Label:  npo-17030
+  Size:  693
+  Language:  C-LANGUAGE
+
+  This program utilizes a fast polynomial transformation (FPT)
+algorithm applicable to two-dimensional mathematical
+convolutions. Two-dimensional convolution has many applications,
+particularly in image processing. Two-dimensional cyclic convolutions
+can be converted to a one-dimensional convolution in a polynomial
+ring. Traditional FPT methods decompose the one-dimensional cyclic
+polynomial into polynomial convolutions of different lengths. This
+program will decompose a cyclic polynomial into polynomial
+convolutions of the same length. Thus, only FPTs and Fast Fourier
+Transforms of the same length are required. This modular approach can
+save computational resources. To further enhance its appeal, the
+program is written in the transportable 'C' language.
+
+
+
+NASA ARCH
+A File Archival System for the Dec VAX
+
+  Program Label:  npo-17129
+  Size:  2,515
+  Language:  DEC VAX DCL
+
+  The function of the NASA ARCH system is to provide a permanent
+storage area for files that are infrequently accessed. The NASA ARCH
+routines were designed to provide a simple mechanism by which users
+can easily store and retrieve files. The user treats NASA ARCH as the
+interface to a black box where files are stored. There are only five
+NASA ARCH user commands, even though NASA ARCH employs standard VMS
+directives and the VAX BACKUP utility. Special care is taken to
+provide the security needed to insure file integrity over a period of
+years.
+
+
+
+PROCSCAN
+Monitoring the Execution of a VAX Image
+
+  Program Label:  npo-17297
+  Size:  955
+  Language:  C-LANGUAGE ( 77 %); ASSEMBLER ( 13 %); FORTRAN 77 
+
+  The program PROCSCAN was developed to monitor the profile of an
+executable image during execution. The purpose is to identify the
+routines where a program is spending most of its time. Thus PROCSCAN
+can be a very useful first step in program optimization. The output
+from PROCSCAN is a sorted histogram of subroutines versus time spent
+in each subroutine. The data represents a proportionate sampling of
+where the program is spending its time. Over a period of a few CPU
+minutes, a fairly accurate picture can be formed. If a program has
+been linked with the /NOTRACEBACK qualifier, or it calls routines
+contained within a shareable library, then PROCSCAN will not function.
+
+
+
+SCANEXE
+Examining The Subroutine Structure Of A Vax Image
+
+  Program Label:  npo-17298
+  Size:  770
+  Language:  C-LANGUAGE ( 83 %); FORTRAN 77 ( 13 %); ASSEMBLER 
+
+  SCANEXE is a command for the DEC VAX used to scan a VMS executable
+image and print information about the routines it uses. Optionally,
+SCANEXE lists each routine, with its entry point, and how many times
+it is called, if at all. Information on the progress of the program
+will be optionally printed as it analyzes the various executable
+components.
+
+
+
+TEXVIEW
+Production of Viewgraphs With Tex
+
+  Program Label:  npo-17299
+  Size:  1,692
+  Language:  TEX
+
+  TEXVIEW is a package of TEX macros that facilitate viewgraph
+production. TEXVIEW is based on TEX, a public domain typesetting
+language developed by Dr. Donald Knuth of Stanford University. The
+TEXVIEW macros are grouped into the following categories: format
+control; indentation control; font control; spacing control; graphical
+control; and page layout.
+
+
+
+ZED
+A Line Editor for the Dec VAX
+
+  Program Label:  npo-17300
+  Size:  7,058
+  Language:  C-LANGUAGE
+
+  The ZED editor for the DEC VAX is a simple, yet powerful line editor
+for text, program source code, and non-binary data. Line editors can
+be superior to screen editors in some cases, such as executing complex
+multiple or conditional commands, or editing via slow modem lines. ZED
+excels in the area of text processing by using procedure files. For
+example, such procedures can reformat a file of addresses or remove
+all comment lines from a FORTRAN program.  In addition to command
+files, ZED also features versatile search qualifiers, global changes,
+conditionals, on-line help, hexadecimal mode,space compression,
+looping, logical combinations of search strings, journaling, visible
+control characters, and automatic detabbing.
+
+
+
+LONGLIB
+A Graphics Library
+
+  Program Label:  npo-17443
+  Size:  28,191
+  Language:  FORTRAN 77
+
+  This library is a set of subroutines designed for vector plotting to
+CRT's, plotters, dot matrix, and laser printers. LONGLIB subroutines
+are invoked by program calls similar to standard CALCOMP routines. In
+addition to the basic plotting routines, LONGLIB contains an extensive
+set of routines to allow viewport clipping, extended character sets,
+graphic input, shading, polar plots, and 3-D plotting with or without
+hidden line removal. LONGLIB capabilities include surface plots,
+contours, histograms, logarithm axes, world maps, and seismic
+plots. LONGLIB includes master subroutines, which are self-contained
+series of commonly used individual subroutines. When invoked, the
+master routine will initialize the plotting package, and will plot
+multiple curves, scatter plots, log plots, 3-D plots, etc. and then
+close the plot package, all with a single call.
+
+
+
+AOFA
+Three-dimensional Supersonic Viscous Flow
+
+  Program Label:  arc-11087
+  Size:  2,175
+  Language:  FORTRAN IV
+
+  AOFA determines the complete viscous and inviscid flow around a body
+of revolution at a given angle of attack and traveling at supersonic
+speeds. The viscous calculations from this program agree with
+experimental values for surface and pitot pressures and with surface
+heating rates. At high speeds, lee-side flows are important because
+the local heating is difficult to correlate and because the shed
+vortices can interact with vehicle components such as a canopy or a
+vertical tail. This program should find application in the design
+analysis of any high speed vehicle.
+
+
+
+AIRCRAFT MOTIONS
+Analysis of Aircraft Motions from Air Traffic Control Radar Records
+
+  Program Label:  arc-11132
+  Size:  360
+  Language:  FORTRAN IV
+
+  This program was developed by Ames Research Center, in cooperation
+with the National Transportation Safety Board, as a technique for
+deriving time histories of an aircraft's motion from Air Traffic
+Control (ATC) radar records. This technique uses the radar range and
+azimuth data, along with the downlinked altitude data, to derive an
+expanded set of data which includes airspeed, lift, attitude angles
+(pitch, roll, and heading), etc. This technique should prove useful as
+a source of data in the investigation of commercial airline accidents
+and in the analysis of accidents involving aircraft which do not have
+onboard data recorders (e.g., military, shorthaul, and general
+aviation).
+
+
+
+NASDS
+Nastran/Discos/Samsan Dmap Bridging Program
+
+  Program Label:  gsc-12902
+  Size:  1,130
+  Language:  NASTRAN DMAP ( 35 %); FORTRAN IV ( 65 %);
+
+  The NASTRAN/DISCOS/SAMSAN bridging program and its associated data
+file processor provide the flexible structure control designer with a
+means of tying together the following programs for the design and
+analysis of flexible structure controllers: 1) the NASA Structural
+Analysis (NASTRAN) system which provides general finite element and
+matrix manipulation capabilities for the analysis of structures, 2)
+the Dynamic Interaction Simulation of Controls and Structure (DISCOS)
+program which provides for the time and frequency domain analysis of
+any dynamic system that can be modeled as a system of interconnected
+rigid and flexible bodies, and 3) the SAMSAN library which provides a
+self-consistent set of algorithms for the support of large-order
+controls system design and evaluation studies with an emphasis on
+sampled system analysis.
+
+
+
+QUIKVIS
+Celestial Target Availability Information
+
+  Program Label:  gsc-13083
+  Size:  24,848
+  Language:  FORTRAN 77
+
+  QUIKVIS computes the times during an Earth orbit when geometric
+requirements are satisfied for observing celestial objects. The
+observed objects may be fixed (stars, etc.) or moving (sun, moon,
+planets). QUIKVIS is useful for preflight analysis by those needing
+information on the availability of celestial objects to be
+observed. Two types of analyses are performed by QUIKVIS. One is used
+when specific objects are known, the other when targets are unknown
+and potentially useful regions of the sky must be identified. The
+results are useful in selecting candidate targets, examining the
+effects of observation requirements, and doing gross assessments of
+the effects of the orbit's right ascension of the ascending node
+(RAAN). The results are not appropriate when high accuracy is needed
+(e.g. for scheduling actual mission operations).
+
+
+
+PRESSURE SURGES
+Estimating Pressure Surges in Cryogenic Liquid-Vapor Systems
+
+  Program Label:  ksc-11312
+  Size:  876
+  Language:  FORTRAN 77
+
+  This mathematical model has been developed for the prediction of
+pressure behavior in single- and two-phase cryogenic systems. A
+transient liquid flow analysis has been modified to incorporate the
+behavior of gas bubbles and is used to predict maximum pressure in
+cryogenic transfer systems consisting of complex pipe and valve
+arrangements under both steady state and transient conditions. This
+simulation has compared favorably with data obtained during the
+transfer of liquid oxygen from ground storage tanks to the Shuttle
+Orbiter's external tanks.
+
+
+
+FLOW IN SHOCK LAYER
+Determination of Flow Field in a Nonequilibrium Shock Layer
+
+  Program Label:  lar-11198
+  Size:  3,000
+  Language:  FORTRAN IV
+
+   An approximate inverse solution is presented for the nonequilibrium
+flow in the inviscid shock layer about a vehicle in hypersonic
+flight. The method is based upon a thin-shock-layer approximation and
+has the advantage of being applicable to both subsonic and supersonic
+regions of the shock layer. The relative simplicity of the method
+allows for a significant reduction in storage capacity and computing
+time.  Additional cases are presented for entry of spherical nose
+cones into representative Venusian and Matrian atmospheres. A digital
+computer program written in FORTRAN language is presented that permits
+an arbitrary gas mixture to be employed in the solution. The effects
+of vibration, dissociation, recombination, electronic excitation, and
+ionization are included in the program.
+
+
+
+EXHAUST FLOW FIELDS
+Analysis of Three-Dimensional Supersonic Nozzle Exhaust Flow Fields
+
+  Program Label:  lar-11596
+  Size:  6,283
+  Language:  FORTRAN IV
+
+  A second order numerical method employing reference plane
+characteristics has been developed for the calculation of
+geometrically complex three dimensional nozzle-exhaust flow fields,
+heretofore uncalculable. The program calculates and carries along the
+underexpansion shock and contact as discrete discontinuity surfaces,
+for a nonuniform vehicle external flow. Additionally, shock formation
+due to coalescence is detected. A wide variety of geometric problems
+may be considered since the reference plane method has been developed
+for three separate coordinate systems, all incorporated into a single
+program.
+
+
+
+HIGH SPEED FLOW
+Super/Hypersonic Inviscid Flow Around Real Configurations
+
+  Program Label:  lar-11891
+  Size:  16,174
+  Language:  FORTRAN IV
+
+  This package was developed to compute the inviscid super/hypersonic
+flow field about complex vehicle geometries accurately and
+efficiently. A second-order accurate finite difference scheme is used
+to integrate the three-dimensional Euler equations in regions of
+continuous flow, while all shock waves are computed as discontinuities
+via the Rankine-Hugoniot jump conditions. This package has the ability
+to compute blunt nose entropy layers in detail. Real gas effects for
+equilibrium air are included using curve fits of Mollier charts. This
+package can be a very useful tool in the design and analysis of high
+speed vehicles such as supersonic aircraft, hypersonic transports, and
+re-entry spacecraft (shuttle orbiter).
+
+
+
+MASPROP
+Calculation of Mass Properties of a Rigid Structure
+
+  Program Label:  lar-12454
+  Size:  857
+  Language:  FORTRAN IV
+
+  The computer program MASPROP was developed to rapidly calculate the
+mass properties of complex rigid structural systems. This program's
+basic premise is that complex systems can be adequately described by a
+combination of basic elementary structural shapes. Thirteen widely
+used basic structural shapes are available.  MASPROP provides a
+designer with a simple technique that requires minimal input to
+calculate the mass properties of a complex rigid structure and should
+be useful in any situation where one needs to calculate the center of
+gravity and moments of inertia of a complex structure.
+
+
+
+COMBUSTION FLOW FIELDS
+Viscous Characterictics Analysis of Combustion Flow Fields
+
+  Program Label:  lar-12598
+  Size:  5,170
+  Language:  FORTRAN IV
+
+  This computer program was developed to use viscous characteristics
+theory to analyze supersonic combustion flow fields with imbedded
+subsonic regions. Intended to be used as a practical design tool for
+two-dimensional and axisymmetric supersonic combustor development,
+this program has proven useful in the analysis of such problems as
+determining the flow field of a single underexpanded hydrogen jet, the
+internal flow of a gas sampling probe, the effects of fuel-injector
+strut shape, and the effects of changes in combustor configuration.
+
+
+
+NOZZLE FLOW
+Three Dimensional Navier-Stokes Equations for Flow Over Nonaxisymmetric Nozzle Configurations
+
+  Program Label:  lar-12962
+  Size:  14,735
+  Language:  FORTRAN IV ( 99 %); ASSEMBLER ( 01 %);
+
+  A set of computer codes has been developed for solving the
+three-dimensional Navier-Stokes equations for the flow over
+nonaxisymmetric nozzle configurations. The objective in developing
+these codes was to be able to compute the internal and external
+viscous flowfield about an isolated nozzle, so that the flow
+characteristics and performance of three-dimensional jet engine
+exhaust nozzles could be predicted. The approach is based on using an
+efficient implicit numerical method to solve the unsteady
+Navier-Stokes equations in a boundary-conforming curvilinear
+coordinate system to obtain the desired time-asymptotic steady-state
+solution. Flow turbulence effects are simulated by means of algebraic
+turbulence models for the effective turbulent eddy viscosity and
+Prandlt number.
+
+
+
+PAFAC
+Plastic and Failure Analysis of Composites
+
+  Program Label:  lar-13183
+  Size:  7,069
+  Language:  FORTRAN IV
+
+  The increasing number of applications of fiber-reinforced composites
+in industry demands a detailed understanding of their material
+properties and behavior. A three-dimensional finite-element computer
+program called PAFAC (Plastic and Failure Analysis of Composites) has
+been developed for the elastic-plastic analysis of fiber-reinforced
+composite materials and structures. The evaluation of stresses and
+deformations at edges, cutouts, and joints is essential in
+understanding the strength and failure for metal-matrix composites
+since the onset of plastic yielding starts very early in the loading
+process as compared to the composite's ultimate strength. Such
+comprehensive analysis can only be achieved by a finite-element
+program like PAFAC. PAFAC is particularly suited for the analysis of
+laminated metal-matrix composites. It can model the elastic-plastic
+behavior of the matrix phase while the fibers remain elastic. Since
+the PAFAC program uses a three-dimensional element, the program can
+also model the individual layers of the laminate to account for
+thickness effects.
+
+
+
+GASP
+Thermodynamic and Transport Properties of Helium, Methane, Neon, Nitrogen, Carbon Monoxide, Carbon Dioxide, Oxygen and Argon
+
+  Program Label:  lew-11629
+  Size:  2,183
+  Language:  FORTRAN IV
+
+  GASP calculates the thermodynamic and transport properties of argon,
+carbon dioxide, carbon monoxide, fluorine, methane, neon, nitrogen,
+and oxygen. GASP accepts any two of pressure, temperature, or density
+as input.  Outputs are temperature, density, pressure, entropy,
+enthalpy, specific heats, expansion coefficient, sonic velocity,
+viscosity, thermal conductivity, and surface tension. A special
+technique is provided to estimate the thermal conductivity near the
+thermodynamic critical point.
+
+
+
+BLADE3D
+Three-Dimensional, Inviscid, Rotational Flows With Shock Waves in Axial Compressor Blade Rows
+
+  Program Label:  lew-13910
+  Size:  5,854
+  Language:  FORTRAN IV
+
+  The BLADE3D computer program provides for the calculation of the
+inviscid flow field in a fully three-dimensional blade passage of an
+axial compressor rotor or stator. BLADE3D provides the engineer with
+an accurate inviscid solution capability. The program is applicable to
+arbitrary axial compressor hub, tip, and blade geometries, including
+rotors with dampers (part-span shrouds). The analysis method employed
+in BLADE3D is valid for subsonic, transonic, and supersonic flows,
+including choked flows. BLADE3D may also be used for flow calculations
+in axial turbines, but with lowered resolution in sections of the
+flow.
+
+
+
+FIN HEAT TRANSFER
+Solution of Radiation and Convection Fin Heat Transfer Problems
+
+  Program Label:  lew-13978
+  Size:  1,000
+  Language:  FORTRAN IV
+
+  This program was developed to provide for the rapid, steady-state
+solution of fin-type heat transfer problems. The program accommodates
+a variety of fin-type heat conduction applications involving radiative
+and convective boundary conditions with additionally imposed local
+heat flux. It also accommodates lengthwise variation of fin boundary
+conditions, conductances, and dimensions. The program is particularly
+suited for use in parametric studies during fin design. It can also be
+used for a variety of one-dimensional and two-dimensional heat
+transfer problems that do not correspond specifically to fin-type
+applications. A powerful and efficient analytic tool, this program can
+achieve an order-of-magnitude reduction in run time when employed as a
+substitute for a general purpose heat transfer program.
+
+
+
+AESOP
+Interactive Design of Linear Quadratic Regulators and Kalman Filters
+
+  Program Label:  lew-14128
+  Size:  9,258
+  Language:  FORTRAN IV
+
+  AESOP was developed to solve a number of problems associated with
+the design of controls and state estimators for linear time-invariant
+systems. The systems considered are modeled in state-variable form by
+a set of linear differential and algebraic equations with constant
+coefficients. Two key problems solved by AESOP are the linear
+quadratic regulator (LQR) design problem and the steady-state Kalman
+filter design problem. AESOP is designed to be used in an interactive
+manner.  The user can solve design problems and analyze the solutions
+in a single interactive session. Both numerical and graphical
+information are available to the user during the session.
+
+
+
+CONVECTIVE DEPOSITION
+Multicomponent Convective Deposition Rates
+
+  Program Label:  lew-14366
+  Size:  698
+  Language:  FORTRAN IV
+
+  A wide variety of engineering applications including chemical
+coating of metals, solid state electronics device fabrication,
+filtration, aircraft icing, corrosion and fouling of gas turbine
+blades, and heat exchangers deal with vapor and particle capture,
+either to exploit or suppress it. A comprehensive but tractable
+convective diffusion deposition rate theory exists based on the
+assumption of a multicomponent 'chemically frozen' boundary layer
+(CFBL). The theory makes full use of available transport coefficient
+and property information. CFBL is applicable under conditions of
+multicomponent vapor transport, and is capable of simultaneously
+dealing with "heavy molecule" particle transport. This CFBL theory has
+been incorporated into a simple computer program for calculating
+alkali sulfate deposition rates. With code changes, this program
+should be adaptable to other deposition problems.
+
+
+
+COMPRESSIBLE FLOW
+Solving Compressible Flow Problems Using Electrical Analogy
+
+  Program Label:  mfs-14683
+  Size:  469
+  Language:  FORTRAN IV
+
+  This program solves problems involving compressible pipe flow with
+heat transfer through the use of an electrical analogy. To adapt the
+container data for program usage, the container surfaces are assigned
+node numbers.  To balance the system to a specified pressure drop, one
+of two compressible flow solutions can be used: the flow can be fixed
+and the orifice diameters adjusted or orifice sizes fixed and the flow
+corrected.  Solving for manifold design parameters, the fixed flow
+routine is first used to determine approximate orifice sizes and flow
+rates. Container inlet temperature values are compared with the
+required temperatures and final adjustments are made on the variable
+flow routine to yield design values for orifice size, flow and
+temperature.
+
+
+
+FLUID FLOW IN PIPE
+Thermal Analysis Of Fluid Flow In A Pipe With a Variable External Thermal Environment
+
+  Program Label:  mfs-15148
+  Size:  300
+  Language:  FORTRAN IV
+
+  The computer program has the capability of solving heat transfer
+problems for fluid flow systems with a variable external thermal
+environment for the pipe and variable inlet fluid temperature and flow
+rate.  This item may be used for the heat transfer analysis of fluid
+flow systems with a variable external thermal environment for the pipe
+and variable inlet fluid temperature and flow rate.  Possible
+extensions include the analysis of vacuum-jacketed and insulated
+piping systems. The techniques used could also be extended to include
+the thermal analysis of exposed cryogenic piping systems during
+cooldown and frost formation.
+
+
+
+TAP
+Thermal Analyzer Program
+
+  Program Label:  mfs-18410
+  Size:  1,062
+  Language:  FORTRAN IV
+
+  This program solves N-dimensional transient heat transfer problems
+by the analysis of an analogous network of nodes joined by
+conductors. A capacitance, C, a heat generation rate, Q, and a
+temperature, T, are associated with each node. A conductance, K, is
+associated with each conductor.  Convection and radiation are
+evaluated at the beginning of each time interval. Conduction, if
+variable, may be made a function of the average temperature of the two
+connecting nodes. Such conduction is evaluated at the beginning of
+each time interval.
+
+
+
+EQUILIBRIUM COMPOSITION
+Multiphase Chemical Equilibrium Composition
+
+  Program Label:  msc-01119
+  Size:  1,793
+  Language:  FORTRAN IV
+
+  This program is designed for the calculation of equilibrium
+composition of a complex, multiphase chemical system such as the
+ablation products of an inorganic-reinformed plastic. The method is
+based on the concept of free energy minimization of the total
+system. It is very general and may find applications in a diversified
+area. The program is designed to cover a maximum of 12 elements in 80
+gaseous and 15 condensed species. The elements currently included in
+this program are C, O, H, N, Si, A, Al, B, and Ca. The temperature
+range is 0 to 24,000 degrees K. Also, certain thermodynamic properties
+of the system are determined as by-products of the main calculations.
+
+
+
+GAS PERFORMANCE
+Axisymmetric Two-Phase Perfect Gas Performance
+
+  Program Label:  msc-11774
+  Size:  3,366
+  Language:  FORTRAN IV
+
+  This program calculates the inviscid axisymmetric nozzle expansion
+of propellant systems having both gaseous and condensed exhaust
+products. The program considers the velocity and thermal lags (for ten
+particle groups) between the gaseous and condensed combustion products
+(when they are present in the chamber). It does not consider mass
+transfer (only momentum and energy transfer) between gaseous and
+condensed combustion products. It also does not consider
+nonequilibrium effects of finite rate chemical reactions between
+gaseous and combustion products. This program considers only the
+expansion of a uniform mixture (the ideal engine case). Standard
+explicit integration methods are utilized. The program is designed for
+engineering use and is specified and programmed in a straightforward
+manner to facilitate its use as a development tool.
+
+
+
+PROPULSION SYSTEM
+Evaluation of Design Parameters and Size of a Low Pressure Auxiliary Propulsion System
+
+  Program Label:  msc-14016
+  Size:  1,648
+  Language:  FORTRAN IV
+
+  This program was written to evaluate and define optimum design
+parameters and size of a low pressure auxiliary propulsion system
+(APS). The APS will provide attitude and translational control, using
+gaseous hydrogen and oxygen propellants for both the booster and
+orbiter elements of a NASA Space Shuttle Vehicle. The program
+evaluates, for various space shuttle performance requirements, the
+optimum subsystem design parameters such as engine chamber pressure,
+mixture ratio, expansion ratio, and component/subsystem weight and
+size. The APS design point, sensitivities to design parameters, and
+mission requirements can be obtained quickly with the program. The
+program could be revised to evaluate and optimize oxygen and hydrogen
+subsystem concepts for fuel cell and environmental control on space
+vehicles.
+
+
+
+THERMAL PROTECTION SYSTEM
+TPS Multidimensional Heat Conduction Program
+
+  Program Label:  msc-18616
+  Size:  8,140
+  Language:  FORTRAN IV
+
+  The Thermal Protection System (TPS) for the Space Shuttle consists
+of an outer layer of rigid surface insulation tiles. It is important
+that an accurate understanding of the thermal behavior of this system
+be obtained prior to usage. This computer program was developed to
+compute the transient temperature history and the steady-state
+temperatures of complex problems associated with the TPS, but the
+program could be used in the thermal analysis of most
+three-dimensional systems.
+
+
+
+PSANAL
+Composite Point Stress Analysis
+
+  Program Label:  msc-18978
+  Size:  1,142
+  Language:  FORTRAN IV
+
+  This composite material computer program, PSANAL, is a linear
+laminate analysis program developed to compute the laminate elastic
+and thermal properties and the allowable load levels for any
+combination of applied membrane and bending loads occuring at a point.
+Mechanically applied loads may consist of three stress resultants and
+three stress couples, which are assumed to be acting in constant ratio
+and may be applied in any combination. Individual lamina thermal loads
+are computed and included in the allowable-load analysis. No
+restrictions are placed on either laminate balance or symmetry. Both
+unidirectional "unwoven" tape and pseudo-unidirectional/ bidirectional
+"woven" fabric prepregs can be accommodated by PSANAL.
+
+
+
+GAS STORAGE SIMULATION
+High Pressure Gas Storage System Blowdown and Charging Models
+
+  Program Label:  msc-19658
+  Size:  443
+  Language:  IBM 360 CSMP ( 85 %); FORTRAN IV ( 15 %);
+
+  This program is a simulation model for predicting the pressure and
+temperature histories occurring in recharge or blowdown processes for
+high pressure gas storage systems. The model allows for real gas
+effects as well as conductive, convective, and radiative heat transfer
+to the storage container walls for any environmental boundary
+conditions. The parameter values currently encoded into the program
+code are those appropriate for sizing the fuel cell high pressure
+hydrogen and oxygen reactant gas storage subsystem for the Shuttle
+Orbiter 101 approach and landing test program. However the model can
+be applied with some modification to sizing and performance prediction
+of industrial high pressure gas storage systems subject to time
+varying thermal environmental conditions.
+
+
+
+GENERAL FLOW DISTRIBUTION
+General Flow Distribution Program  for Hydraulic Systems
+
+  Program Label:  msc-20306
+  Size:  520
+  Language:  FORTRAN V
+
+  The General Flow Distribution Program was developed to analyze
+pressure drops and flow distribution in closed and open hydraulic
+systems. The program analyzes a system on the basis of incompressible
+flow even though the system may contain either compressible or
+incompressible fluid. The program has been used to analyze such
+orbiter hydraulic systems as the Air Revitalization System in the
+Environmental Control and Life Support System. The General Flow
+Distribution Program is capable of solving fixed or variable flow
+problems for series, parallel, or series-parallel systems.
+
+
+
+CUMBIN
+Cumulative Binomial Programs
+
+  Program Label:  npo-17555
+  Size:  89
+  Language:  C-LANGUAGE
+
+  The cumulative binomial program, CUMBIN, is one of a set of three
+programs which calculate cumulative binomial probability distributions
+for arbitrary inputs. The three programs, CUMBIN, NEWTONP (NPO-17556),
+and CROSSER (NPO-17557), can be used independently of one
+another. CUMBIN can be used by statisticians and users of statistical
+procedures, test planners, designers, and numerical analysts. The
+program has been used for reliability/availability calculations.
+
+
+
+NEWTONP
+Cumulative Binomial Programs
+
+  Program Label:  npo-17556
+  Size:  147
+  Language:  C-LANGUAGE
+
+  The cumulative binomial program, NEWTONP, is one of a set of three
+programs which calculate cumulative binomial probability distributions
+for arbitrary inputs. The three programs, NEWTONP, CUMBIN (NPO-17555),
+and CROSSER (NPO-17557), can be used independently of one
+another. NEWTONP can be used by statisticians and users of statistical
+procedures, test planners, designers, and numerical analysts. The
+program has been used for reliability/availability calculations.
+
+
+
+CROSSER
+Cumulative Binomial Programs
+
+  Program Label:  npo-17557
+  Size:  144
+  Language:  C-LANGUAGE
+
+  The cumulative binomial program, CROSSER, is one of a set of three
+programs which calculate cumulative binomial probability distributions
+for arbitrary inputs. The three programs, CROSSER, CUMBIN (NPO-17555),
+and NEWTONP (NPO-17556), can be used independently of one
+another. CROSSER can be used by statisticians and users of statistical
+procedures, test planners, designers, and numerical analysts. The
+program has been used for reliability/availability calculations.
+
+
+
+SOLAR FLUX
+Simplified Calculation of Solar Flux on the Side Wall of Cylindrical Cavity Solar Receivers
+
+  Program Label:  npo-17732
+  Size:  364
+  Language:  FORTRAN 77
+
+  The Simplified Calculation of Solar Flux Distribution on the Side
+Wall of Cylindrical Cavity Solar Receivers program employs a simple
+solar flux calculation algorithm for a cylindrical cavity type solar
+receiver. Applications of this program include the study of solar
+energy, heat transfer, and space power-solar dynamics engineering.
+
+
+

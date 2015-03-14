@@ -1,0 +1,49 @@
+ VASCOMP II- V/STOL AIRCRAFT SIZING AND PERFORMANCE
+
+( BOEING VERTOL CO. )
+
+     The VASCOMP2 computer program was developed to aid in the comparative
+design study of V/STOL aircraft systems by rapidly providing aircraft size
+and mission performance data. VASCOMP2 can be used to define design re-
+quirements such as weight breakdown, required propulsive power, and phys-
+ical dimensions of aircraft which are to meet specified mission require-
+ments. The program is also useful in sensitivity studies involving both de-
+sign trade-offs and performance trade-offs. Generality and flexibility
+were maintained during formulation of the program in order to permit an ac-
+curate simulation of virtually any V/STOL configuration. VASCOMP2 is ca-
+pable of approximating the design process involved in the layout and siz-
+ing of a wide variety of V/STOL aircraft and synthesizing the performance of
+these aircraft. The program is intended for use in the study of V/STOL air-
+craft which use fixed wing lift for primary cruise flight. The program is
+not suited for the study of aircraft which employ rotary wing lift for for-
+ward flight.
+
+     The VASCOMP2 program is written in FORTRAN IV for batch execution and
+has been implemented on a CDC CYBER 170 series computer with a central mem-
+ory requirement of approximately 112K (octal) of 60 bit words. The VASCOMP2
+program was developed in 1968 and last updated in 1980.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC CYBER 170 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 14,093 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: ARC-11433
+
+DOMESTIC - DOCUMENTATION PRICE: $64.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $128.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

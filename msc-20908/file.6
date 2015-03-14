@@ -1,0 +1,40 @@
+/*****************************************************************************/
+/*                                                                           */
+/*  Find_false                                                               */
+/*                                                                           */
+/*  This function finds the first false condition in a list of conditions.   */
+/*  It is normal to for the list to contain only one false condition.        */
+/*                                                                           */
+/*  Input:  list - pointer to a list of pointers to conditions.              */
+/*  Output: pointer to the false condition.                                  */
+/*                                                                           */
+/*  Method: For each condition in the list                                   */
+/*              if the condition is false                                    */
+/*                  return the pointer to the condition                      */
+/*                                                                           */
+/*  Programmer: G R Goodrum, MDTSCO, June 1984                               */
+/*                                                                           */
+/*****************************************************************************/
+
+#include "structures.inc"
+
+struct cond_info *
+find_false ( list )
+struct cond_info **list;
+{
+    struct cond_info *cond;
+
+    while  ( ( cond = *list++ ) != NULL )
+    {                                                           /* debug */
+        count ( 4, 0 );                                         /* debug */
+        if  ( cond -> last_value == FALSE )
+        {                                                       /* debug */
+            count ( 4, 2 );                                     /* debug */
+            return ( cond );
+        }                                                       /* debug */
+        else count ( 4, 3 );                                    /* debug */
+    }                                                           /* debug */
+    count ( 4, 1 );                                             /* debug */
+
+    return ( NULL );    /* This line should never be executed. */
+}

@@ -1,0 +1,7 @@
+define verb intex
+	image sys$sysdevice:[tex.tex]initex
+	parameter p1, label=input_file
+	parameter p2, label=second_file
+	qualifier font_directory, label=font_area, nonnegatable, value(list)
+	qualifier input_directory, label=input_area, nonnegatable, value(list)
+	qualifier batch, batch

@@ -1,0 +1,53 @@
+ CROSSER - CUMULATIVE BINOMIAL PROGRAMS
+
+( Cal Tech/Jet Propulsion Lab. )
+
+     The cumulative binomial program, CROSSER, is one of a set of three pro-
+grams which calculate cumulative binomial probability distributions for
+arbitrary inputs. The three programs, CROSSER, CUMBIN (NPO-17555), and
+NEWTONP (NPO-17556), can be used independently of one another. CROSSER can
+be used by statisticians and users of statistical procedures, test plan-
+ners, designers, and numerical analysts. The program has been used for re-
+liability/availability calculations.
+
+     CROSSER calculates the point at which the reliability of a k-out-of-
+n system equals the common reliability of the n components. It is designed
+to work well with all integer values 0 < k <= n. To run the program, the user
+simply runs the executable version and inputs the information requested
+by the program. The program is not designed to weed out incorrect inputs,
+so the user must take care to make sure the inputs are correct. Once all in-
+put has been entered, the program calculates and lists the result. It also
+lists the number of iterations of Newton's method required to calculate the
+answer within the given error.
+
+     The CROSSER program is written in C. It was developed on an IBM AT with
+a numeric co-processor using Microsoft C 5.0. Because the source code is
+written using standard C structures and functions, it should compile cor-
+rectly with most C compilers. The program format is interactive. It has
+been implemented under DOS 3.2 and has a memory requirement of 26K. CROSSER
+was developed in 1988.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: C-LANGUAGE
+
+MACHINE REQUIREMENTS: IBM PC SERIES
+
+PROGRAM SIZE: APPROXIMATELY 144 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 5.25 Inch IBM PC DOS Format Diskette
+
+PROGRAM NUMBER: NPO-17557
+
+DOMESTIC - DOCUMENTATION PRICE: $15.00    PROGRAM PRICE: $150.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $30.00   PROGRAM PRICE: $300.00
+
+
+
+                                        1
+

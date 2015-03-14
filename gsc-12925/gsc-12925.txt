@@ -1,0 +1,68 @@
+ OAP- OFFICE AUTOMATION PILOT GRAPHICS DATABASE SYSTEM
+
+( NASA Goddard Space Flight Center )
+
+     The Office Automation Pilot (OAP) Graphics Database system offers the
+IBM PC user assistance in producing a wide variety of graphs and charts. OAP
+uses a convenient database system, called a chartbase, for creating and
+maintaining data associated with the charts, and twelve different graph-
+ics packages are available to the OAP user. Each of the graphics capabili-
+ties is accessed in a similar manner. The user chooses creation, revision,
+or chartbase/slide show maintenance options from an initial menu. The user
+may then enter or modify data displayed on a graphic chart. The cursor moves
+through the chart in a "circular" fashion to facilitate data entries and
+changes. Various "help" functions and on-screen instructions are avail-
+able to aid the user. The user data is used to generate the graphics por-
+tion of the chart. Completed charts may be displayed in monotone or color,
+printed, plotted, or stored in the chartbase on the IBM PC. Once completed,
+the charts may be put in a vector format and plotted for color viewgraphs.
+
+     The twelve graphics capabilities are divided into three groups:
+Forms, Structured Charts, and Block Diagrams. There are eight Forms avail-
+able: 1) Bar/Line Charts, 2) Pie Charts, 3) Milestone Charts, 4) Resources
+Charts, 5) Earned Value Analysis Charts, 6) Progress/Effort Charts, 7)
+Travel/Training Charts, and 8) Trend Analysis Charts. There are three
+Structured Charts available: 1) Bullet Charts, 2) Organization Charts, and
+3) Work Breakdown Structure (WBS) Charts. The Block Diagram available is an
+N x N Chart. Each graphics capability supports a chartbase. The OAP graph-
+ics database system provides the IBM PC user with an effective means of man-
+aging data which is best interpreted as a graphic display.
+
+     The OAP graphics database system is written in IBM PASCAL 2.0 and as-
+sembler for interactive execution on an IBM PC or XT with at least 384K of
+memory, and a color graphics adapter and monitor. Printed charts require
+an Epson, IBM, OKIDATA, or HP Laser printer (or equivalent). Plots require
+the Tektronix 4662 Penplotter. Source code is supplied to the user for mod-
+ification and customizing. Executables are also supplied for all twelve
+graphics capabilities. This system was developed in 1983, and Version 3.1
+was released in 1986.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: PASCAL ( 99 %); ASSEMBLER ( 01 %);
+
+MACHINE REQUIREMENTS: IBM PC
+
+PROGRAM SIZE: APPROXIMATELY 31,200 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 3.5 Inch IBM PC DOS Format Diskette
+
+PROGRAM NUMBER: GSC-12925
+
+DOMESTIC - DOCUMENTATION PRICE: $84.00    PROGRAM PRICE: $1000.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $168.00   PROGRAM PRICE: $2000.00
+
+
+
+                                        2
+

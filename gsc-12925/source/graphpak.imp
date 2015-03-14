@@ -1,0 +1,429 @@
+   (* $INCLUDE : 'compile.inc' *)
+   (* $INCLUDE : 'getparam.int' *)
+   (* $INCLUDE : 'dspas.int' *)
+   (* $INCLUDE : 'graphpak.int' *)
+
+   implementation of graphpak;
+
+      uses dspas;
+
+  function trunc1 ( r : real ) : real;
+
+    var
+      temp1, temp2 : real;
+      power	      : integer;
+
+    begin
+      if r > 32000 then
+	begin
+	  temp1 := r / 1000;
+	  temp1 := float ( trunc ( temp1 ) ) * 1000;
+	  temp2 := r - temp1;
+	  temp2 := float ( trunc ( temp2 ) );
+	  trunc1 := temp1 + temp2;
+	end
+       else
+	trunc1 := float ( trunc ( r ) );
+    end;
+
+  function round1 ( r : real ) : real;
+
+    var
+      temp1, temp2 : real;
+      power	      : integer;
+
+    begin
+      if r > 32000 then
+	begin
+	  temp1 := r / 1000;
+	  temp1 := float ( trunc ( temp1 ) ) * 1000;
+	  temp2 := r - temp1;
+	  temp2 := float ( round ( temp2 ) );
+	  round1 := temp1 + temp2;
+	end
+       else
+	round1 := float ( round ( r ) );
+    end;
+
+
+   procedure recode;
+
+   var
+	   a1	      : lstring(6);
+	   c	     : char;
+	   temp  : real;
+	   old	       : lstring(14);
+	   i,j,k : integer;
+	   neg	       : boolean;
+	   n	     : byte;
+	   w1,w2 : boolean;
+	   x,d	       : real;
+	   xx	      : array [1..2] of real;
+	   y	     : integer;
+
+   begin
+
+      case code of
+	 1  :  begin
+		 if (a = '      ') or (a = null) then b := 0.0
+		 else begin
+		    n := 1;
+		    w1 := true;
+		    while n <= a.len do
+		       if not ( a[n] in [' ','-','+','.','0'..'9'] ) then
+			  begin
+			     b := 0.0;
+			     w1 := false;
+			     n := a.len + 1;
+			  end
+		       else
+			  n := n + 1;
+
+		    n := 1;
+		    for i := 1 to a.len do
+		       if a[i] <> ' ' then
+			  begin
+			    a1[n] := a[i];
+			    n := n + 1;
+			  end;
+		    a1.len := n-1;
+		    if w1 then w1 := decode ( a1, b );
+		 end ; (* if a = '     ' or a = null *)
+	       end;    (* case code of 1 *)
+
+	 2  : begin
+	       if (b <= 999999.0) and (b >= -99999.0) then
+		  begin
+		    w1 := encode(old,b:14);
+		    c := old[14];
+		    if c > '5' then k := 6 else k := ord ( c ) - 48;
+		    if (old[1] = ' ') then neg := false else neg := true;
+		    if (k <= 4) then
+		      begin
+			 temp	 := (float(ord(old[2])-48))*10000 +
+				    (ord(old[4])-48)*1000  +
+				    (ord(old[5])-48)*100   +
+				    (ord(old[6])-48)*10    +
+				    (ord(old[7])-48)	   +
+				    (ord(old[8])-48) div 5;
+			 if (old[12] = '+') then
+			    begin
+			      j := k+2;
+			      x := temp
+			    end
+			 else
+			    begin
+			      temp := round1(temp/100)*100;
+			      d := 1;
+			      for j := 1 to k-1 do d := d * 10;
+			      x := temp/d;
+			      j := 1
+			    end; (* if old[12] = '+' *)
+			 for i := 6 downto 1 do
+			     if (i = j) then
+				a1[i] := '.'
+			     else
+				begin
+				  y := trunc(x/10);
+				  a1[i] := chr(trunc(x-float(y)*10)+48);
+				  x := y
+				end;
+
+			 while (j < 5) do
+			   begin
+			     for i := 6 downto 2 do
+				a1[i] := a1[i-1];
+			     a1[1] := ' ';
+			     j := j + 1;
+			   end;
+
+			 if((a1[6]='0')and(a1[5]='.'))then
+			   if a1[4]=' ' then
+			      a1[5] := ' '
+			   else begin
+			       for j := 6 downto 2 do
+				  a1[j] := a1[j-1];
+			       a1[1] := ' ';
+			   end;
+
+			 if a1[6] = '.' then
+			    begin
+			      for j := 6 downto 2 do
+				 a1[j] := a1[j-1];
+			      a1[1] := ' '
+			    end
+		      end  (* if k <= 4 *)
+		   else    (* if k >  4 *)
+		      begin
+			if old[12] = '-' then
+			   begin
+			      for i := 1 to 5 do
+				  a1[i] := ' ';
+			      a1[6] := '0';
+			      neg := false;
+			   end
+			else
+			   begin
+			      temp := (float(ord(old[2])-48))*1e5 +
+				      (float(ord(old[4])-48))*10000 +
+				      (ord(old[5])-48)*1000 +
+				      (ord(old[6])-48)*100 +
+				      (ord(old[7])-48)*10 +
+				      (ord(old[8])-48) +
+				      (ord(old[9])-48) div 5;
+			      xx[1] := trunc1(temp/1000);
+			      xx[2] := temp-xx[1]*1000;{last 3 digits of x}
+			      for j := 2 downto 1 do
+				  begin
+				      x := xx[j];
+				      for i := 3 downto 1 do
+					  begin
+					    y := trunc(x/10);
+					    a1[i+3*(j-1)] := chr(trunc(x-float(y)*10)+48);
+					    x := y
+					  end  (* for i *)
+				  end;	       (* for j *)
+			   end;     (* if old[12] = '-' *)
+		      end;  (* if k <= 4 *)
+
+		   for n := 1 to 6 do
+		     begin
+			a.len := n;
+			a[n] := a1[n]
+		     end;
+
+		   if neg then
+		      if a[1] = ' ' then a[1] := '-'
+		      else begin
+			  for n := 6 downto 2 do
+			     a[n] := a[n-1];
+			  a[1] := '-';
+		      end;
+
+	       end   (* if b <= 999999 *)
+	    else begin
+	      if b > 999999.0 then
+		 [ for n := 1 to 6 do a[n] := '9';  a.len := 6; ];
+	      if b < -99999.0 then
+		 [ for n := 2 to 6 do a[n] := '9';  a[1] := '-'; a.len := 6; ];
+	    end;  (* if b >= 999999 and b <= -99999 *)
+
+	 end; (* case 2 *)
+
+	 otherwise;
+      end; (* case *)
+    end; (* recode *)
+
+
+   procedure scale;
+
+   var
+	a	 : real;
+	i	 : byte;
+
+   begin
+      recode(1,z11,a);
+                        
+      for i := 1 to total do begin
+	 if  x[i] > 999999.0 then x[i] := 999999.0 ;
+	 if  x[i] < -99999.0 then x[i] := -99999.0 ;
+	 if (x[i] > 0.001) or (x[i] < -0.001) then
+	     y[i] := trunc(height * (x[i] / a))
+	 else
+	     y[i] := 0;
+                    
+      end; (* for *)
+   end;
+
+
+   procedure minmax;
+
+
+   var
+       i	: byte;
+
+   begin
+      error := false;
+      min := 1e20;
+      max := -min;
+
+      if(total <= 0) then
+	 error := true
+      else
+	 for i := 1 to total do
+	 begin
+	    if(x[i] > max) then max := x[i];
+	    if(x[i] < min) then min := x[i]
+	 end
+   end;
+
+
+
+   procedure sum;
+
+   (* This procedure finds the partial sums of a data array.
+      total is the dimension of the data array. *)
+
+   var
+       i      : byte;
+
+   begin
+      error := false;
+      if(total > 0) then
+	 begin
+	    if mode = 1 then y[1] := x[1] else x[1] := y[1];
+	    if(total >= 2) then
+              for i := 2 to total do begin
+		if mode = 1 then
+		[ if (y[i-1]+x[i]) <= 999999.0 then y[i]:=y[i-1]+x[i]
+					       else y[i] := 999999.0; ]
+		else
+		[ if (y[i]-y[i-1]) >= -99999.0 then x[i]:=y[i]-y[i-1]
+					       else x[i] := -99999.0;];
+              end; (* for *)
+	 end
+      else
+	 error := true
+   end;
+
+   procedure ticlabel;
+
+   (* This procedure obtains the ticmark labels (a maximum of 10) *)
+
+
+   var
+	flag	 : boolean;
+	i	 : byte;
+	max,min  : real;
+	r1	 : integer;
+	r	 : real;
+	factor	 : integer4;
+	tmp	 : array [1..11] of real;
+
+   begin
+      flag := true;
+      minmax(total,x,max,min,flag);
+      if max > 999999.0 then max := 999999.0;
+      if min < -99999.0 then min := -99999.0;
+      if max < 0 then max := 0;
+      if min >= 0 then [min := 0;
+		       r := max - min;]
+      else if max > -min then r := 2*max
+			 else r := -2*min;
+      if r <= 100 then begin
+      factor := 1;
+      r1 := trunc ( r );
+      end else
+
+      if (r > 100) and (r <= 1000) then
+	 [r1 := trunc((r-1) / 10); factor := 10]
+       else if (r > 1000) and (r <= 10000) then
+	  [r1 := trunc((r-1) / 100); factor := 100]
+	else if (r > 10000) and (r <= 100000) then
+	   [r1 := trunc((r-1) / 1000); factor := 1000]
+	 else if (r > 100000) and (r <= 1000000) then
+	    [r1 := trunc((r-1) / 10000); factor := 10000]
+	  else [ r1 := trunc((r-1) / 100000); factor := 100000 ] ;
+      r1 := r1 + 1;
+
+	    case r1 of
+	      0  ..  6 : [d := 7 ; tmp[d] := 6 ];
+	      7  ..  8 : [d := 9 ; tmp[d] := 8 ];
+	      9  .. 10 : [d := 11; tmp[d] := 10];
+	      11 .. 12 : [d := 7 ; tmp[d] := 12];
+	      13 .. 16 : [d := 9 ; tmp[d] := 16];
+	      17 .. 20 : [d := 11; tmp[d] := 20];
+	      21 .. 25 : [d := 6 ; tmp[d] := 25];
+	      26 .. 30 : [d := 7 ; tmp[d] := 30];
+	      31 .. 40 : [d := 9 ; tmp[d] := 40];
+	      41 .. 50 : [d := 11; tmp[d] := 50];
+	      51 .. 60 : [d := 7 ; tmp[d] := 60];
+	      61 .. 80 : [d := 9 ; tmp[d] := 80];
+	      81 ..100 : [d := 11; tmp[d] :=100];
+	      otherwise begin end; end;
+
+     tmp[d] := tmp[d] * factor;
+     r := tmp[d];
+     if min < 0 then tmp[d] := ( tmp[d] / 2 );
+      for i := 1 to d-1 do
+	 tmp[i] := tmp[d] - trunc1(r / ord(d-1)) * ord(d-i);
+      for i := 1 to d do
+	recode ( 2, y[i], tmp[i] );
+   end;
+
+
+
+   procedure bars;
+
+   var
+	 a,b,c,i : integer;
+	 offset  : byte;
+	 width	       : byte;
+
+   begin
+
+   width := width4[n];
+   offset := offset4[n];
+
+   for i := 1 to total do
+
+      begin
+	 if (n = 1) then
+	    c := xzero + 4 + (i - 1) * boxwide
+	 else
+	    if (n = 2) then
+	       c := xzero + 6 + (i - 1) * boxwide + offset * (p - 1)
+	    else
+	       c := xzero + 2 + (i - 1) * boxwide + offset * (p - 1);
+
+	 (* Draw bar *)
+
+	 if x[i] >= 1 then
+	    dsbar(c,yzero-x[i],c+width,yzero-1,color,fill);
+
+      end
+   end;
+
+
+   procedure ogive;
+
+   var
+	a,b,c,d  : integer;
+	j	  : byte;
+
+
+   begin
+
+     c := xzero + interval;
+     d := yzero - x[1];
+
+    if total <> 1 then
+     begin
+
+      dsline(xzero+1,yzero-offset,c,d,color,ndon,ndoff);
+
+      for j := 1 to total-2 do
+	 begin
+	    a := xzero + j * interval;
+	    b := yzero - x[j];
+	    c := xzero + (j+1) * interval;
+	    d := yzero - x[j+1];
+	    dsline(a,b,c,d,color,ndon,ndoff);
+	 end;
+
+      a := c;
+      b := d;
+      c := c - 1 + interval;
+      d := yzero - x[total];
+      dsline(a,b,c,d,color,ndon,ndoff);
+
+     end
+    else
+     dsline (xzero+1,yzero-offset,xzero+interval-1,yzero-x[1],color,ndon,ndoff);
+
+   end;
+   end.
+
+
+
+

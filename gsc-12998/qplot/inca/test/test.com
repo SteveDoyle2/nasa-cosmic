@@ -1,0 +1,13 @@
+$ IT
+$ IN /NONE INTRO
+A R E G*H
+
+
+
+
+
+X 0 0
+C W RL
+GHBLANK
+X S
+$ DR *.AUD

@@ -1,0 +1,96 @@
+ GENOPTICS- A GENERAL OPTICAL SYSTEMS EVALUATION PROGRAM
+
+( NASA Goddard Space Flight Center )
+
+     The General Optical Systems Evaluation Program, GENOPTICS, was de-
+veloped as an aid for the analysis and evaluation of optical systems that
+employ lenses, mirrors, diffraction gratings, and other geometrical sur-
+faces. The GENOPTICS evaluation is performed by means of geometrical ray
+tracing based upon Snell's law. The GENOPTICS program can provide for the
+exact ray tracing of as many as 800 rays through as many as 40 surfaces.
+These surfaces may be planar, conic, toric, or polynomial shaped lenses,
+mirrors, and diffraction gratings. Each surface may be tilted about as many
+as three axes and may be decentered. Surfaces having bilateral symmetry may
+also be analyzed. GENOPTICS provides for user-oriented input and for a wide
+range of output for the evaluation of the optical system being analyzed.
+
+     GENOPTICS provides a wide range of features for the optical system ana-
+lyst. GENOPTICS performs paraxial ray tracing and computation of the third
+order aberrations including aspheric contribution. Graphical output can
+be generated for spot diagrams, radial energy distributions, and modula-
+tion transfer functions, for each object point and each color. Sag tables
+may be generated for any rotationally symmetric surface, with options to
+obtain the sag differences from a reference sphere in units of lengths or
+wavelengths. Statistics and plots of ray intercepts with any surface in the
+system may be obtained for use in vignetting analysis and beam distribution
+analysis. Afocal systems can be examined with image statistics generated
+in terms of tangents of angles with respect to the optical axis. For exact
+ray tracing, a ray pattern at the entrance pupil can be specified as a rect-
+angular or polar grid, where each ray samples an equal amount of area, or as
+a pattern where each ray samples an equal amount of solid angle for a finite
+object. This latter pattern is useful in radiometric work.
+
+     Input to GENOPTICS includes program control statements, system defi-
+nition data, surface data, and task data. Multiple cases may be examined in
+a single run. Output includes printed and graphical results. The user can
+specify which portions of an analysis are to be printed. Optional printout
+includes system data, surface-to-surface printout of each ray, modulation
+transfer function values, radial energy distribution values, and parax-
+ial ray data including aberrations. GENOPTICS is coded to generate plot-
+ted output for a ZETA plotting system but should be readily adapted to other
+plotting systems.
+
+     The GENOPTICS program is written in FORTRAN 77 and has been implemented
+on an IBM 370 series and DEC VAX series computer with a central memory re-
+quirement of approximately 220K of 8 bit bytes. GENOPTICS was developed in
+the mid 1970's and last updated in 1984.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+                                  IBM VERSION
+
+LANGUAGE: FORTRAN 77
+
+MACHINE REQUIREMENTS: IBM 360 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 5,733 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: GSC-12439
+
+DOMESTIC - DOCUMENTATION PRICE: $40.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $80.00   PROGRAM PRICE: $1000.00
+
+
+
+                                DEC VAX VERSION
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: DEC VAX-11/780
+
+PROGRAM SIZE: APPROXIMATELY 4,590 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX FILES-11 Format Magnetic Tape
+
+PROGRAM NUMBER: GSC-12823
+
+DOMESTIC - DOCUMENTATION PRICE: $40.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $80.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

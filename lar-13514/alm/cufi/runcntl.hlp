@@ -1,0 +1,39 @@
+	The runtime control options menu is the last menu for model
+	entry. This menu provides input to CARE III which controls
+	the execution time of the analytic model and other internal
+        control parameters.
+
+	Inputs on this menu are a mixture of numeric values and
+	keyword string inputs.  The keywords can be abbreviated to
+	their shortest non-ambiguous form.
+
+        Integration steps:  In choosing integers in the range, 17 - 64,
+        selected probabilistic values will be computed for a linear 
+        timebase.  The mission time will be divided up into increments
+        specified by the selected integer value.  The greater the number
+        of steps the longer the runtime and cost, but the accuracy increases.
+        If the string "LOGarithmic" is selected, the timebase will vary by
+        logarithmic increments up to the selected mission time.  The default
+        timebase is logarithmic and usually gives the best results.
+.page
+        Timebase:  All values will be given in terms of the selected unit.
+        The unit "HOURS" is the default.  Failure rates for modules must be
+        given in terms of hours irrespective of the selected timebase.
+
+        Cut Truncation Value:  The truncation value is used to limit the
+        number of fault vectors used to compute QSUM, system failure due
+        to imperfect fault handling. The default value is 1.0E-14.
+
+	QPTRNC: A real number greater than 0.0 is used to  limit the
+        number of fault vectors used to compute QSUM.  The default value 
+        is .01.
+
+	NPSBRN: Number of subruns. An integer in the range, 1 - 20.
+	Default value is 20.
+.page
+	CKDATA: A flag indicating if the CARE III program is to check
+        user's input prior to processing it.  CARE III has a more extensive
+        checking capability than the CARE3MENU program.  Default is CKDATA=T.
+
+        For more details, please refer to the CARE III user's guide (NASA TM-
+        86404, April 1985).

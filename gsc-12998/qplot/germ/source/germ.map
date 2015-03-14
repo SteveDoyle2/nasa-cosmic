@@ -1,0 +1,407 @@
+
+GERM.EXE                                                        11-OCT-1988 10:30        VAX-11 Linker V04-00             Page    1
+
+                                             +------------------------+
+                                             ! Object Module Synopsis !
+                                             +------------------------+
+
+Module Name     Ident              Bytes      File                                Creation Date      Creator
+-----------     -----              -----      -----                               -------------      -------
+GERM            GERM                 3008 DUA1:[QPLOT.GERM.SOURCE]MAIN.OBJ;4   11-Oct-1988 10:25  VAX Pascal V3.7-254
+STRING          QPLOT                3555 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 15:53  VAX Pascal V3.7-254
+IO_IMP          QPLOT               16132 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1 11-Oct-1988 09:09  VAX Pascal V3.7-254
+IOBASE          QPLOT                9347 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:28  VAX Pascal V3.7-254
+TERMIO          QPLOT                6379 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:26  VAX Pascal V3.7-254
+GENERAL         QPLOT                 749 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 15:49  VAX Pascal V3.7-254
+DIRECTORY       QPLOT                4033 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 15:50  VAX Pascal V3.7-254
+TERM_DUMB       QPLOT                3594 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:17  VAX Pascal V3.7-254
+TERM_ERGO301    QPLOT                4197 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:17  VAX Pascal V3.7-254
+TERM_NONE       QPLOT                 804 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:18  VAX Pascal V3.7-254
+TERM_PCPLOT     QPLOT                5225 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:18  VAX Pascal V3.7-254
+TERM_TEK4010    QPLOT                1356 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:19  VAX Pascal V3.7-254
+TERM_TEK4014    QPLOT                2102 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:19  VAX Pascal V3.7-254
+TERM_TEK4016    QPLOT                2205 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:19  VAX Pascal V3.7-254
+TERM_TEK4105    QPLOT                6722 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:20  VAX Pascal V3.7-254
+TERM_TEK4106    QPLOT                6858 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:21  VAX Pascal V3.7-254
+TERM_TEK4107    QPLOT                3870 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:21  VAX Pascal V3.7-254
+TERM_TEK4114    QPLOT                3371 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:22  VAX Pascal V3.7-254
+TERM_VDITERM    QPLOT                4772 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:23  VAX Pascal V3.7-254
+TERM_VERSAMAC   QPLOT                3977 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:23  VAX Pascal V3.7-254
+TERM_VT100      QPLOT                9750 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:24  VAX Pascal V3.7-254
+TERM_VT125      QPLOT                3607 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:24  VAX Pascal V3.7-254
+TERM_VT240      QPLOT                2729 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:25  VAX Pascal V3.7-254
+TERM_VT241      QPLOT                4539 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:25  VAX Pascal V3.7-254
+PLOT            QPLOT               30828 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1 11-Oct-1988 09:10  VAX Pascal V3.7-254
+HANDLER         QPLOT                3363 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:27  VAX Pascal V3.7-254
+HARD_TEK4510    QPLOT                6215 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:14  VAX Pascal V3.7-254
+HARDIO          QPLOT                 483 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:16  VAX Pascal V3.7-254
+HARD_BITMAP     QPLOT                 953 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:13  VAX Pascal V3.7-254
+HARD_TEK4014H   QPLOT                2932 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:13  VAX Pascal V3.7-254
+COLOR           QPLOT               23481 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 15:53  VAX Pascal V3.7-254
+MATH            QPLOT                 523 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 15:58  VAX Pascal V3.7-254
+TERM_4010       QPLOT                5577 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:11  VAX Pascal V3.7-254
+TERM_REGIS      QPLOT                3800 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:10  VAX Pascal V3.7-254
+UTILITIES       QPLOT               25718 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1 11-Oct-1988 09:08  VAX Pascal V3.7-254
+TERM_VAX        QPLOT                1437 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:04  VAX Pascal V3.7-254
+STANDARD        QPLOT                1068 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 15:52  VAX Pascal V3.7-254
+TERM_ANSI       QPLOT                6209 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:07  VAX Pascal V3.7-254
+TERM_4100       QPLOT                5835 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:12  VAX Pascal V3.7-254
+IO              QPLOT                  39 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 15:52  VAX Pascal V3.7-254
+FIG             QPLOT                8169 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:03  VAX Pascal V3.7-254
+FONT            QPLOT                5760 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 15:51  VAX Pascal V3.7-254
+TERM_CHAR       QPLOT                 305 DUA1:[QPLOT.QPLOT.SOURCE]QPLOT.OLB;1  7-Oct-1988 16:06  VAX Pascal V3.7-254
+
+                                            +--------------------------+
+                                            ! Program Section Synopsis !
+                                            +--------------------------+
+
+Psect Name      Module Name       Base     End           Length            Align                 Attributes
+
+DUA1:[QPLOT.GERM.SOURCE]GERM.EXE;4                              11-OCT-1988 10:30        VAX-11 Linker V04-00             Page    2
+
+----------      -----------       ----     ---           ------            -----                 ----------
+LIB$INITIALIZE                  00000200 0000020F 00000010 (         16.) LONG 2 NOPIC,USR,CON,REL,GBL,NOSHR,NOEXE,  RD,NOWRT,NOVEC
+                DIRECTORY       00000200 00000203 00000004 (          4.) BYTE 0
+                COLOR           00000204 00000207 00000004 (          4.) BYTE 0
+                UTILITIES       00000208 0000020B 00000004 (          4.) BYTE 0
+                FIG             0000020C 0000020F 00000004 (          4.) BYTE 0
+$LOCAL                          00000400 000087C7 000083C8 (      33736.) LONG 2   PIC,USR,CON,REL,LCL,NOSHR,NOEXE,  RD,  WRT,NOVEC
+                GERM            00000400 000004DE 000000DF (        223.) LONG 2
+                IO_IMP          000004E0 000005E0 00000101 (        257.) LONG 2
+                IOBASE          000005E4 00000C78 00000695 (       1685.) LONG 2
+                TERMIO          00000C7C 00000C83 00000008 (          8.) LONG 2
+                GENERAL         00000C84 00000C94 00000011 (         17.) LONG 2
+                DIRECTORY       00000C98 00001651 000009BA (       2490.) LONG 2
+                TERM_DUMB       00001654 00001663 00000010 (         16.) LONG 2
+                TERM_NONE       00001664 00001674 00000011 (         17.) LONG 2
+                TERM_TEK4014    00001675 00001675 00000001 (          1.) BYTE 0
+                TERM_TEK4016    00001676 00001676 00000001 (          1.) BYTE 0
+                TERM_TEK4105    00001678 0000167F 00000008 (          8.) LONG 2
+                TERM_TEK4106    00001680 0000168B 0000000C (         12.) LONG 2
+                TERM_TEK4107    0000168C 00001695 0000000A (         10.) LONG 2
+                TERM_TEK4114    00001698 0000169B 00000004 (          4.) LONG 2
+                TERM_VDITERM    0000169C 000017A0 00000105 (        261.) LONG 2
+                TERM_VERSAMAC   000017A1 000017A1 00000001 (          1.) BYTE 0
+                TERM_VT100      000017A4 00001A5A 000002B7 (        695.) LONG 2
+                TERM_VT125      00001A5C 00001A5F 00000004 (          4.) LONG 2
+                TERM_VT241      00001A60 00001A61 00000002 (          2.) BYTE 0
+                PLOT            00001A64 00001B0B 000000A8 (        168.) LONG 2
+                HANDLER         00001B0C 00001B8B 00000080 (        128.) LONG 2
+                HARD_TEK4510    00001B8C 00001C00 00000075 (        117.) LONG 2
+                HARDIO          00001C04 00001C07 00000004 (          4.) LONG 2
+                HARD_BITMAP     00001C08 00001C27 00000020 (         32.) LONG 2
+                HARD_TEK4014H   00001C28 00001C7E 00000057 (         87.) LONG 2
+                COLOR           00001C80 00004FD0 00003351 (      13137.) LONG 2
+                TERM_4010       00004FD4 00004FD7 00000004 (          4.) LONG 2
+                TERM_REGIS      00004FD8 000050E8 00000111 (        273.) LONG 2
+                TERM_VAX        000050EC 00005191 000000A6 (        166.) LONG 2
+                STANDARD        00005194 00005346 000001B3 (        435.) LONG 2
+                IO              00005348 00005359 00000012 (         18.) LONG 2
+                FIG             0000535C 00007147 00001DEC (       7660.) LONG 2
+                FONT            00007148 000087C7 00001680 (       5760.) LONG 2
+$CODE                           00008800 0003C3D4 00033BD5 (     211925.) LONG 2   PIC,USR,CON,REL,LCL,  SHR,  EXE,  RD,NOWRT,NOVEC
+                GERM            00008800 000092E0 00000AE1 (       2785.) LONG 2
+                STRING          000092E4 0000A0C6 00000DE3 (       3555.) LONG 2
+                IO_IMP          0000A0C8 0000DECA 00003E03 (      15875.) LONG 2
+                IOBASE          0000DECC 0000FCB9 00001DEE (       7662.) LONG 2
+                TERMIO          0000FCBC 0001159E 000018E3 (       6371.) LONG 2
+                GENERAL         000115A0 0001187B 000002DC (        732.) LONG 2
+                DIRECTORY       0001187C 00011E7E 00000603 (       1539.) LONG 2
+                TERM_DUMB       00011E80 00012C79 00000DFA (       3578.) LONG 2
+                TERM_ERGO301    00012C7C 00013CE0 00001065 (       4197.) LONG 2
+                TERM_NONE       00013CE4 00013FF6 00000313 (        787.) LONG 2
+                TERM_PCPLOT     00013FF8 00015460 00001469 (       5225.) LONG 2
+                TERM_TEK4010    00015464 000159AF 0000054C (       1356.) LONG 2
+                TERM_TEK4014    000159B0 000161E4 00000835 (       2101.) LONG 2
+                TERM_TEK4016    000161E8 00016A83 0000089C (       2204.) LONG 2
+
+DUA1:[QPLOT.GERM.SOURCE]GERM.EXE;4                              11-OCT-1988 10:30        VAX-11 Linker V04-00             Page    3
+
+
+Psect Name      Module Name       Base     End           Length            Align                 Attributes
+----------      -----------       ----     ---           ------            -----                 ----------
+$CODE                           00008800 0003C3D4 00033BD5 (     211925.) LONG 2   PIC,USR,CON,REL,LCL,  SHR,  EXE,  RD,NOWRT,NOVEC 
+                TERM_TEK4105    00016A84 000184BD 00001A3A (       6714.) LONG 2
+                TERM_TEK4106    000184C0 00019F7D 00001ABE (       6846.) LONG 2
+                TERM_TEK4107    00019F80 0001AE93 00000F14 (       3860.) LONG 2
+                TERM_TEK4114    0001AE94 0001BBBA 00000D27 (       3367.) LONG 2
+                TERM_VDITERM    0001BBBC 0001CD5A 0000119F (       4511.) LONG 2
+                TERM_VERSAMAC   0001CD5C 0001DCE3 00000F88 (       3976.) LONG 2
+                TERM_VT100      0001DCE4 00020042 0000235F (       9055.) LONG 2
+                TERM_VT125      00020044 00020E56 00000E13 (       3603.) LONG 2
+                TERM_VT240      00020E58 00021900 00000AA9 (       2729.) LONG 2
+                TERM_VT241      00021904 00022ABC 000011B9 (       4537.) LONG 2
+                PLOT            00022AC0 0002A283 000077C4 (      30660.) LONG 2
+                HANDLER         0002A284 0002AF26 00000CA3 (       3235.) LONG 2
+                HARD_TEK4510    0002AF28 0002C6F9 000017D2 (       6098.) LONG 2
+                HARDIO          0002C6FC 0002C8DA 000001DF (        479.) LONG 2
+                HARD_BITMAP     0002C8DC 0002CC74 00000399 (        921.) LONG 2
+                HARD_TEK4014H   0002CC78 0002D794 00000B1D (       2845.) LONG 2
+                COLOR           0002D798 0002FFFB 00002864 (      10340.) LONG 2
+                MATH            0002FFFC 00030206 0000020B (        523.) LONG 2
+                TERM_4010       00030208 000317CC 000015C5 (       5573.) LONG 2
+                TERM_REGIS      000317D0 00032596 00000DC7 (       3527.) LONG 2
+                UTILITIES       00032598 00038A09 00006472 (      25714.) LONG 2
+                TERM_VAX        00038A0C 00038F02 000004F7 (       1271.) LONG 2
+                STANDARD        00038F04 0003917C 00000279 (        633.) LONG 2
+                TERM_ANSI       00039180 0003A9C0 00001841 (       6209.) LONG 2
+                TERM_4100       0003A9C4 0003C08E 000016CB (       5835.) LONG 2
+                IO              0003C090 0003C0A4 00000015 (         21.) LONG 2
+                FIG             0003C0A8 0003C2A0 000001F9 (        505.) LONG 2
+                TERM_CHAR       0003C2A4 0003C3D4 00000131 (        305.) LONG 2
+
+                                                +-----------------+
+                                                ! Symbols By Name !
+                                                +-----------------+
+
+Symbol                          Value       Symbol                          Value       Symbol                          Value       
+------                          -----       ------                          -----       ------                          -----       
+ADDDEF                          0002E0FC-R  CHOFCOLOR                       0003C2A4-R  COLORSETUP_TEK4010              000154AC-R 
+ADDFRAME                        00023B8C-R  CHOFCOLOR_4010                  000303B0-R  COLORSETUP_TEK4014              00015AA4-R 
+ADDPRI                          0002E088-R  CHOFCOM                         000093BC-R  COLORSETUP_TEK4016              000162E0-R 
+ADDTEMPLATE                     0003C0C8-R  CIRCLE                          00023CD0-R  COLORSETUP_TEK4105              000175EC-R 
+ARCCOSH                         00030068-R  CLEARCOLOR                      0002E804-R  COLORSETUP_TEK4106              00018814-R 
+ARCSINH                         00030048-R  CLEARFRAME                      00023BF8-R  COLORSETUP_TEK4107              0001A06C-R 
+BELL                            0000ABB0-R  CLEARSCREEN                     0000A544-R  COLORSETUP_TEK4114              0001AF34-R 
+BOXIT                           000243A4-R  CLOSEAUDIT                      0000F714-R  COLORSETUP_VDITERM              0001BCE0-R 
+BROADENX                        000234E8-R  CLOSEJOURNAL                    0000F950-R  COLORSETUP_VERSAMAC             0001CE5C-R 
+BROADENXY                       00023558-R  CLOSEPANEL                      0000D1E0-R  COLORSETUP_VT100                0001DE8C-R 
+BROADENY                        00023520-R  COLORSETUP                      0000FF48-R  COLORSETUP_VT125                000200E8-R 
+BUFFEREMPTY_REGIS               0003198C-R  COLORSETUP_4100                 0003B144-R  COLORSETUP_VT240                00020F08-R 
+CANDOMENU                       0000AA50-R  COLORSETUP_DUMB                 00011F6C-R  COLORSETUP_VT241                00021A70-R 
+CENTERGRPRINT                   0000D528-R  COLORSETUP_ERGO301              00012CD4-R  COMMANDCOUNT                    0000CFA0-R 
+CHECKCURSOR                     00027570-R  COLORSETUP_NONE                 00013D40-R  COMMANDCREATE                   0000CFAC-R 
+CHECKMENU                       000268F0-R  COLORSETUP_PCPLOT               000144CC-R  CONFIG_REGIS                    0003252C-R 
+
+DUA1:[QPLOT.GERM.SOURCE]GERM.EXE;4                              11-OCT-1988 10:30        VAX-11 Linker V04-00             Page    4
+
+
+Symbol                          Value       Symbol                          Value       Symbol                          Value       
+------                          -----       ------                          -----       ------                          -----       
+CONVERT                         00023300-R  GIN_ERGO301                     00013A44-R  OPENJOURNAL                     0000F904-R 
+CONVERTLOWER                    00005359-R  GIN_NONE                        00013DA4-R  OPENPANEL                       0000D0E4-R 
+COUNTZOOM                       00023B2C-R  GIN_PCPLOT                      0001520C-R  OPENSOURCEFILE                  0000E31C-R 
+DECONVERT                       00023414-R  GIN_TEK4010                     000158A8-R  PARSE                           00009F1C-R 
+DELETEJOURNAL                   0000F938-R  GIN_TEK4014                     00015F90-R  PAUSE                           0000AAC8-R 
+DESCALE                         0002A088-R  GIN_TEK4016                     00016830-R  POINTOFLP                       000232B0-R 
+DRAW                            0000D328-R  GIN_TEK4105                     00017F40-R  POINTOFR                        0002328C-R 
+DRAWBOX                         00023C48-R  GIN_TEK4106                     000197D4-R  POPZOOM                         00023AEC-R 
+DRAWTO                          0000D394-R  GIN_TEK4107                     0001AD00-R  POSITION                        0000D244-R 
+DRAW_4010                       00030658-R  GIN_TEK4114                     0001B9D0-R  POSOFSTR_REGIS                  00031FD0-R 
+DRAW_4100                       0003B8B4-R  GIN_VDITERM                     0001C840-R  PURGEZOOM                       00023A90-R 
+DRAW_REGIS                      00031EB0-R  GIN_VERSAMAC                    0001D94C-R  PUSHZOOM                        00023AC0-R 
+EDITFILE                        0000C544-R  GIN_VT100                       0001F580-R  QABORT                          000330F8-R 
+ENCIRCLE                        00023FCC-R  GIN_VT125                       00020450-R  QAT                             00033F88-R 
+EQUOFCOLOR                      0002E9AC-R  GIN_VT240                       00021304-R  QFRAME                          00033108-R 
+EXECUTECOM                      00010014-R  GIN_VT241                       000224C0-R  QFSET                           0003799C-R 
+EXECUTECOM_DUMB                 000120BC-R  GOODCOLOR                       0002E7A0-R  QGENERALHELP                    000332D8-R 
+EXECUTECOM_ERGO301              00012EB4-R  GOODFILENAME                    000116D4-R  QIOWCTRLC                       00038DE4-R 
+EXECUTECOM_NONE                 00013D44-R  GRAPHICPAUSE                    00027420-R  QIOWREAD                        00038C4C-R 
+EXECUTECOM_PCPLOT               00014D9C-R  GRPRINT                         0000D4E4-R  QIOWREADNOECHO                  00038CB8-R 
+EXECUTECOM_TEK4010              00015510-R  GRPRINTTEMPFILE                 00024138-R  QIOWREADNOECHOPURGE             00038CF4-R 
+EXECUTECOM_TEK4014              00015B08-R  HANDLER                         0002A4FC-R  QIOWREADPROMPTTIMEDNOECHOPURGE  00038D30-R 
+EXECUTECOM_TEK4016              00016368-R  HARDCONFIG                      0002C818-R  QIOWREADPURGE                   00038C80-R 
+EXECUTECOM_TEK4105              00017838-R  HARDCONFIG_BITMAP               0002CB90-R  QIOWWRITE                       00038B98-R 
+EXECUTECOM_TEK4106              00018A50-R  HARDCONFIG_TEK4014H             0002D520-R  QIOWWRITEVIRTUAL                00038BF4-R 
+EXECUTECOM_TEK4107              0001A3C4-R  HARDCONFIG_TEK4510              0002C158-R  QOS                             00033550-R 
+EXECUTECOM_TEK4114              0001B01C-R  HARDCOPY                        00023D78-R  QQPLOTINPUT                     0003404C-R 
+EXECUTECOM_VDITERM              0001BEFC-R  HARDMAKE                        0002C774-R  QSET                            0003638C-R 
+EXECUTECOM_VERSAMAC             0001CFBC-R  HARDMAKE_BITMAP                 0002C948-R  QVIEW                           00033A64-R 
+EXECUTECOM_VT100                0001E474-R  HARDMAKE_TEK4014H               0002CEBC-R  RAISE                           000390BC-R 
+EXECUTECOM_VT125                000200EC-R  HARDMAKE_TEK4510                0002B658-R  RAMAPIT                         00028334-R 
+EXECUTECOM_VT240                00020F0C-R  HARDNAME                        0002C6FC-R  READARGUMENT                    0000A8BC-R 
+EXECUTECOM_VT241                00021E78-R  HARDNAME_BITMAP                 0002C918-R  READBOO                         0000B854-R 
+EXIST                           0001164C-R  HARDNAME_TEK4014H               0002CD9C-R  READCH                          0000ADA0-R 
+EXP10                           00030124-R  HARDNAME_TEK4510                0002B1D0-R  READCOMMAND                     0000CB20-R 
+FACTORIAL                       00030024-R  HIT                             00023F2C-R  READCURSOR                      00026C80-R 
+FILESEARCH                      00011B0C-R  HLSAOFCOLOR                     0002E59C-R  READGIN                         0000D62C-R 
+FINPLOT                         0000D5F0-R  HLSAOFRGBA                      0002DEC8-R  READINT                         0000B9CC-R 
+FULLCOMMAND                     0000C838-R  INITPALETTE                     0002FC50-R  READLIMITS                      000236D0-R 
+GETCOLOR                        0002E91C-R  INSIDE                          00023EE0-R  READLINE                        0000F84C-R 
+GETCOLORINDEX                   0002FE5C-R  INTERPOLATE                     000301B4-R  READLOGICALNAME                 0000B580-R 
+GETCOLORINDEX_4100              0003AFA4-R  IOFSTR                          00009CF8-R  READLOWERVARY                   0000B4AC-R 
+GETCOLORINDEX_REGIS             00031CB4-R  LOG10                           000300D4-R  READMENU                        00010DD4-R 
+GETCURSORPOINT                  00026FE8-R  LPOFPOINT                       000232D4-R  READMENU_4010                   00030BE0-R 
+GETDIRECTORY                    000118BC-R  MAKEFRAME                       00023B48-R  READMENU_ANSI                   00039990-R 
+GETFOREIGN                      0001175C-R  MAPIT                           00026478-R  READMENU_DUMB                   000129A4-R 
+GETPOSITION                     00023E64-R  MENUPREP_4010                   00030AE8-R  READMENU_ERGO301                00013C14-R 
+GILE                            000301EC-R  MOVETO                          0000D2B0-R  READMENU_NONE                   00013F54-R 
+GIN                             00010A44-R  NAMEFROMSTR                     000097B8-R  READMENU_PCPLOT                 00015304-R 
+GIN_4010                        00030528-R  NEWLINE                         00023DDC-R  READMENU_TEK4010                000158DC-R 
+GIN_4100                        0003BCE8-R  NGP                             00026884-R  READMENU_TEK4014                00015FC4-R 
+GIN_DUMB                        00012730-R  OPENAUDIT                       0000F614-R  READMENU_TEK4016                00016864-R 
+
+DUA1:[QPLOT.GERM.SOURCE]GERM.EXE;4                              11-OCT-1988 10:30        VAX-11 Linker V04-00             Page    5
+
+
+Symbol                          Value       Symbol                          Value       Symbol                          Value       
+------                          -----       ------                          -----       ------                          -----       
+READMENU_TEK4105                000181FC-R  SCREENCOPY_TEK4010              0001589C-R  STARTPARSE                      00009EB4-R 
+READMENU_TEK4106                00019878-R  SCREENCOPY_TEK4014              00015F84-R  STRFIX                          0000962C-R 
+READMENU_TEK4107                0001ADF8-R  SCREENCOPY_TEK4016              00016824-R  STRIPBLANK                      000094DC-R 
+READMENU_TEK4114                0001BA20-R  SCREENCOPY_TEK4105              00017EE4-R  STRIPTRAIL                      0000959C-R 
+READMENU_VDITERM                0001CB0C-R  SCREENCOPY_TEK4106              00019208-R  STROFCOLOR_4100                 0003AE6C-R 
+READMENU_VERSAMAC               0001DA18-R  SCREENCOPY_TEK4107              0001ACF4-R  STROFCOLOR_REGIS                00031B90-R 
+READMENU_VT100                  0001FF5C-R  SCREENCOPY_TEK4114              0001B974-R  STROFHLSA_4100                  0003AD00-R 
+READMENU_VT125                  00020CFC-R  SCREENCOPY_VDITERM              0001C7E4-R  STROFHLSA_REGIS                 00031A74-R 
+READMENU_VT240                  000217A4-R  SCREENCOPY_VERSAMAC             0001D940-R  STROFI                          00009950-R 
+READMENU_VT241                  00022960-R  SCREENCOPY_VT100                0001F224-R  STROFINDEX_4100                 0003AEF0-R 
+READREAL                        0000BF88-R  SCREENCOPY_VT125                00020348-R  STROFINDEX_REGIS                00031C08-R 
+READST                          0000AC70-R  SCREENCOPY_VT240                000212F8-R  STROFPOS_4010                   000302E4-R 
+READSTRING                      0000D684-R  SCREENCOPY_VT241                000224B4-R  STROFPOS_4100                   0003ABF8-R 
+READTERM                        000105D4-R  SCREENERASE                     000107F8-R  STROFPOS_REGIS                  000318A4-R 
+READTERM_DUMB                   00012414-R  SCREENERASE_4010                00030488-R  STROFR                          000099E8-R 
+READTERM_ERGO301                0001382C-R  SCREENERASE_ANSI                000392C8-R  STROFR2                         00009C1C-R 
+READTERM_NONE                   00013D70-R  SCREENERASE_DUMB                0001243C-R  STRTIME                         00009744-R 
+READTERM_PCPLOT                 00015134-R  SCREENERASE_ERGO301             00013854-R  STRTRUNC                        000096CC-R 
+READTERM_TEK4010                00015868-R  SCREENERASE_NONE                00013D9C-R  SYSTEMIOINIT                    00038A74-R 
+READTERM_TEK4014                00015F10-R  SCREENERASE_PCPLOT              0001515C-R  TEMPFILE                        00005348-R 
+READTERM_TEK4016                000167F0-R  SCREENERASE_REGIS               00032174-R  TERMCONFIG                      0001144C-R 
+READTERM_TEK4105                00017CC4-R  SCREENERASE_TEK4010             00015890-R  TERMCONFIG_DUMB                 00012A10-R 
+READTERM_TEK4106                00019014-R  SCREENERASE_TEK4014             00015F38-R  TERMCONFIG_ERGO301              00013C98-R 
+READTERM_TEK4107                0001A9F0-R  SCREENERASE_TEK4016             00016818-R  TERMCONFIG_NONE                 00013FBC-R 
+READTERM_TEK4114                0001B820-R  SCREENERASE_TEK4105             00017CEC-R  TERMCONFIG_PCPLOT               00015388-R 
+READTERM_VAX                    00038E14-R  SCREENERASE_TEK4106             0001903C-R  TERMCONFIG_TEK4010              00015968-R 
+READTERM_VDITERM                0001C594-R  SCREENERASE_TEK4107             0001AA18-R  TERMCONFIG_TEK4014              00016050-R 
+READTERM_VERSAMAC               0001D848-R  SCREENERASE_TEK4114             0001B848-R  TERMCONFIG_TEK4016              000168F0-R 
+READTERM_VT100                  0001EFE0-R  SCREENERASE_VDITERM             0001C624-R  TERMCONFIG_TEK4105              0001829C-R 
+READTERM_VT125                  00020314-R  SCREENERASE_VERSAMAC            0001D870-R  TERMCONFIG_TEK4106              000198FC-R 
+READTERM_VT240                  000212C4-R  SCREENERASE_VT100               0001F164-R  TERMCONFIG_TEK4107              0001AE7C-R 
+READTERM_VT241                  00022470-R  SCREENERASE_VT125               0002033C-R  TERMCONFIG_TEK4114              0001BAAC-R 
+READVARY                        0000B170-R  SCREENERASE_VT240               000212EC-R  TERMCONFIG_VDITERM              0001CBA0-R 
+READYES                         0000B05C-R  SCREENERASE_VT241               00022498-R  TERMCONFIG_VERSAMAC             0001DA9C-R 
+REGISTERAPPLICATION             00038F34-R  SELECTHARD                      000333C4-R  TERMCONFIG_VT100                0001FFFC-R 
+REGISTERQPLOT                   0000A8E8-R  SELECTTERM                      0003366C-R  TERMCONFIG_VT125                00020D80-R 
+REOPENAUDIT                     0000F688-R  SETCHMARGIN                     0000D478-R  TERMCONFIG_VT240                00021828-R 
+REPLOT                          00023D84-R  SETCHSIZE                       0000D40C-R  TERMCONFIG_VT241                000229E4-R 
+RESIGNAL                        0002A564-R  SETCOLOR                        0000D05C-R  TERMINAL                        00005920-R 
+RGBAOFHLSA                      0002DC70-R  SETCOMMAND                      0000C688-R  TERMNAME                        0000FCE4-R 
+ROFSTR                          00009D8C-R  SETCTRLC                        0002A574-R  TERMNAME_DUMB                   00011F3C-R 
+SAMESCALE                       000235C4-R  SETDEFCHARSIZE                  00023C18-R  TERMNAME_ERGO301                00012CA4-R 
+SCALE                           0002A198-R  SETDIRECTORY                    000119E0-R  TERMNAME_NONE                   00013D10-R 
+SCALEDRAW                       00023E30-R  SETFLAG                         00038814-R  TERMNAME_PCPLOT                 000140A4-R 
+SCALEPOSITION                   00023DFC-R  SETINT                          00038600-R  TERMNAME_TEK4010                0001547C-R 
+SCREENCOPY                      00010908-R  SETREAL                         000383F0-R  TERMNAME_TEK4014                00015A74-R 
+SCREENCOPY_4010                 000304E4-R  SETTERMINAL                     0000EAB4-R  TERMNAME_TEK4016                000162B0-R 
+SCREENCOPY_DUMB                 000124AC-R  SETVARY                         000381BC-R  TERMNAME_TEK4105                00016BFC-R 
+SCREENCOPY_ERGO301              00013A38-R  STARDRAW                        00024068-R  TERMNAME_TEK4106                000187E4-R 
+SCREENCOPY_NONE                 00013DA0-R  STARTCOMMAND                    0000C730-R  TERMNAME_TEK4107                0001A000-R 
+SCREENCOPY_PCPLOT               00015200-R  STARTFILESEARCH                 00011A78-R  TERMNAME_TEK4114                0001AF04-R 
+SCREENCOPY_REGIS                00032454-R  STARTGETCOLOR                   0002E8C0-R  TERMNAME_VDITERM                0001BC3C-R 
+
+DUA1:[QPLOT.GERM.SOURCE]GERM.EXE;4                              11-OCT-1988 10:30        VAX-11 Linker V04-00             Page    6
+
+
+Symbol                          Value       Symbol                          Value       Symbol                          Value       
+------                          -----       ------                          -----       ------                          -----       
+TERMNAME_VERSAMAC               0001CE2C-R  
+TERMNAME_VT100                  0001DDE8-R  
+TERMNAME_VT125                  000200B8-R  
+TERMNAME_VT240                  00020ED8-R  
+TERMNAME_VT241                  000219C0-R  
+TIMEPRINT                       00023E78-R  
+TRACE                           00029A40-R  
+UNREAD                          0000A6C8-R  
+UPCASE                          00009428-R  
+UPCASESTR                       0000944C-R  
+UTILITIES                       00035598-R  
+VECTORSYMBOL                    00007148-R  
+VIEWCOLORS                      0002EA38-R  
+WAIT                            00011618-R  
+WRITEENDOFJOURNALLINE           0000FAE4-R  
+WRITEERROR                      0002A5EC-R  
+WRITEJOURNALLINE                0000FB8C-R  
+WRITEJOURNALSTRING              0000F9C0-R  
+WRITELIMITS                     000238F4-R  
+WRITELINE                       0000A554-R  
+WRITESTRING                     0000A718-R  
+WRITETERM                       000101B0-R  
+WRITETERM_4010                  000309AC-R  
+WRITETERM_4100                  0003BA8C-R  
+WRITETERM_DUMB                  000123B0-R  
+WRITETERM_ERGO301               00013714-R  
+WRITETERM_NONE                  00013D48-R  
+WRITETERM_PCPLOT                00015018-R  
+WRITETERM_TEK4010               00015804-R  
+WRITETERM_TEK4014               00015EAC-R  
+WRITETERM_TEK4016               0001678C-R  
+WRITETERM_TEK4105               00017C58-R  
+WRITETERM_TEK4106               00018FA8-R  
+WRITETERM_TEK4107               0001A930-R  
+WRITETERM_TEK4114               0001B7B4-R  
+WRITETERM_VDITERM               0001C31C-R  
+WRITETERM_VERSAMAC              0001D79C-R  
+WRITETERM_VT100                 0001EBD0-R  
+WRITETERM_VT125                 00020268-R  
+WRITETERM_VT240                 00021168-R  
+WRITETERM_VT241                 00022314-R  
+XYMAPIT                         0002552C-R  
+
+
+
+	  Key for special characters above:
+		+------------------+
+		! *  - Undefined   !
+		! U  - Universal   !
+		! R  - Relocatable !
+		! X  - External    !
+		! V  - Vectored    !
+
+DUA1:[QPLOT.GERM.SOURCE]GERM.EXE;4                              11-OCT-1988 10:30        VAX-11 Linker V04-00             Page    7
+
+
+Symbol                          Value       Symbol                          Value       Symbol                          Value       
+------                          -----       ------                          -----       ------                          -----       
+		+------------------+
+
+DUA1:[QPLOT.GERM.SOURCE]GERM.EXE;4                              11-OCT-1988 10:30        VAX-11 Linker V04-00             Page    8
+
+                                                 +----------------+
+                                                 ! Image Synopsis !
+                                                 +----------------+
+
+Virtual memory allocated:                         00000200 0003C9FF 0003C800 (247808. bytes, 484. pages)
+Stack size:                                             20. pages
+Image header virtual block limits:                       1.        2. (    2. blocks)
+Image binary virtual block limits:                       3.      464. (  462. blocks)
+Image name and identification:                    GERM GERM
+Number of files:                                        12.
+Number of modules:                                      52.
+Number of program sections:                             18.
+Number of global symbols:                             1600.
+Number of image sections:                               31.
+User transfer address:                            000092D0
+Debugger transfer address:                        7FFEDF68
+Number of code references to shareable images:          52.
+OTS transfer address - LIB$INITIALIZE:            0003C3D5
+Image type:                                       EXECUTABLE.
+Map format:                                       DEFAULT in file DUA1:[QPLOT.GERM.SOURCE]GERM.MAP;4
+Estimated map length:                             138. blocks
+                                              +---------------------+
+                                              ! Link Run Statistics !
+                                              +---------------------+
+
+Performance Indicators                            Page Faults	CPU Time	Elapsed Time
+----------------------                            -----------	--------	------------
+    Command processing:                                    80	00:00:00.24	00:01:39.82
+    Pass 1:                                               551	00:00:05.22	00:02:13.70
+    Allocation/Relocation:                                 22	00:00:00.21	00:00:05.13
+    Pass 2:                                               545	00:00:08.58	00:00:45.28
+    Map data after object module synopsis:                  6	00:00:01.12	00:00:04.35
+    Symbol table output:                                    0	00:00:00.02	00:00:00.14
+Total run values:                                        1204	00:00:15.39	00:04:48.42
+
+Using a working set limited to 2162 pages and 1019 pages of data storage (excluding image)
+
+Total number object records read (both passes):   2138
+    of which 1002 were in libraries and 127 were DEBUG data records containing 29584 bytes
+28113 bytes of DEBUG data were written,starting at VBN 465 with 55 blocks allocated
+
+Number of modules extracted explicitly             = 0
+    with 44 extracted to resolve undefined symbols
+
+122 library searches were for symbols not in the library searched
+
+A total of 0 global symbol table records was written
+
+LINK/NOMAP/EXE=GERM.EXE/MAP=GERM.MAP MAIN,QLIBHOME:QPLOT/LIB

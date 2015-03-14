@@ -1,0 +1,333 @@
+  { $INCLUDE : 'compile.inc' }
+  { $INCLUDE : 'getparam.int' }
+  { $INCLUDE : 'utility.int' }
+  { $INCLUDE : 'vbpas.int' }
+  { $INCLUDE : 'dspas.int' }
+  { $INCLUDE : 'dialog.int' }
+  { $INCLUDE : 'sfpas.int' }
+  { $INCLUDE : 'ldb.int'     }
+  { $INCLUDE : 'execute.int' }
+  { $INCLUDE : 'alterl.int'}
+  { $INCLUDE : 'palpict.int' }
+  { $INCLUDE : 'palexec.int' }
+
+  implementation of palexec;
+
+  USES getparam;
+
+  USES utility;
+
+  USES sfpas;
+
+  USES vbpas;
+
+  USES dspas;
+
+  USES dialog;
+
+  USES ldb;
+
+  USES execute;
+
+  USES alterl;
+
+  USES palpict;
+(*********************************************************************)
+
+  procedure exit;
+
+  begin
+    chartinfo (1, first, skeleton^ );
+  end;
+(**********************************************************************)
+
+  procedure enter;
+
+    begin
+      current := first^.up;
+      delete ( current );
+    end;
+
+  (**********************************************************)
+  procedure redraw;
+
+  begin
+    if code <> 2 then dsinit;
+    skelepal ( color, skeleton^ );
+    picture  ( first, skeleton^ );
+    if code <> 2 then
+      begin
+	rtype := 2;
+	reduce ( rtype, color );
+      end;
+  end;
+
+ (*****************************************************************)
+
+  procedure sldredraw;
+
+   begin
+      color	  :=  1 ;   color1	:= 3;
+      color2[1]   :=  1 ;   color2[2]	:= 2;
+      fill2[1]	  := 15 ;   fill2[2]	:= 9;
+      pattern2[1] :=  1 ;   pattern2[2] := 0;
+      rtype := 2; screen(4); colors(0,color);
+      height := 240;
+      chartinfo ( 2, first, skeleton^ );
+      skelepal	(    color, skeleton^ );
+      picture	(    first, skeleton^ );
+      reduce	(    rtype, color );
+  end;
+
+(**************************************************************************)
+
+  procedure perform2;
+
+  var
+    nperiod  : integer;
+    yr,x,y   : integer;
+    yrs      : lstring(2);
+    month    : array [0..12] of lstring(3);
+    header1  : array [1..10] of lstring(40);
+    n,i,j,m  : integer;
+    buf      : lstring(80);
+    inchar   : twobyte;
+    length   : byte;
+    current  : entity;
+    buffer   : lstring(127);
+    current_node : byte;
+    status   : mode;
+
+ (* ----------------------------------------------------------------*)
+
+ procedure pal_upd;
+
+ var
+   i,j,k   : integer;
+
+ begin
+   if length > 0  then
+     begin
+       with current^ do begin
+	  if buffer.len <> field^.len then
+	     saved := false
+	  else begin
+	     for i := 1 to buffer.len do
+		 if buffer[i] <> field^[i] then saved := false;
+	  end; (* if buffer.len *)
+       end;    (* with		*)
+       k := 3;
+       if current^.etype in [1..8, 11 ] then k := 0;
+       alter_entity_list ( current, buffer, length, k);
+       if current^.etype in [9,10] then
+	  with current^ do begin
+	       there( xtext, ytext );
+	       write( field^ );
+	  end; (* with *)
+     end;     (* if   *)
+     if status = txt  then  inkey := 36;
+     if inkey  =  1   then  current_node := 0 ;
+  end;
+
+ (* ----------------------------------------------------------------*)
+
+  procedure inloop;
+
+    var
+      i : integer;
+      last_node : byte;
+
+    begin
+	last_node := 0;
+	buf := null;
+	current_node := current^.etype;
+	  while not ( inkey in [1,3..5,42] )  do
+	    begin
+	      if ( node_data^[last_node].valid_key_set_id =
+	           node_data^[current_node].valid_key_set_id ) and
+	         ( node_data^[current_node].prtmsg =
+	           node_data^[last_node].prtmsg ) and
+		 ( promptupd = 2 ) and ( inkey in [0,22..28,36] ) then
+		   promptupd := 3 else last_node := current_node;
+	      inkey := 0;
+	      with current^  do
+		begin
+		  length := field^.len;
+		  buffer.len := length;
+		  for i := 1 to length	do  buffer[i] := field^[i];
+		end;
+	      with node_data^[current_node] do
+		incom ( 22,prtmsg,buf,-1,rtype,character_size,
+			current^.xtext,current^.ytext,data_type,
+			input_length,valid_key_set_id,esc,backspace,
+			cursor_left,cursor_right,ins,del,status,buffer,
+			length,inkey);
+
+		pal_upd;
+
+		perform2( inkey, first, name, skeleton^);
+		perform ( inkey, current, current_node, first )
+	    end;
+    end;
+
+
+(*--------------------------------------------------------------------*)
+
+procedure header;
+
+var   period_type : lstring(7);
+      i, j	  : integer;
+      hname	  : lstring(20);
+
+begin
+      header1[1]  := 'Contract no.: ';
+      header1[2]  := 'Type: ';
+      header1[3]  := 'Contractor: ';
+      header1[4]  := 'Category: ';
+      header1[5]  := 'Unit: ';
+      header1[6]  := 'By: ';
+      header1[7]  := 'Date: ';
+      header1[8]  := 'Scope of work: ';
+      header1[9]  := 'Budgeted at completion value: ';
+      header1[10] := 'Footnotes: ';
+
+      screen ( 2 );
+      colors ( 0, color );
+      nperiod := ord( total );			   (* # of period *)
+      hname := null;
+      if form = 1 then hname := 'Progress'
+		  else hname := 'Level of Effort';
+      there  ( ord( 80 - hname.len-6 ) div 2, 0 );
+      write  ( hname, ' Chart' );
+      current := first;
+      for i := 1 to 9 do			 (* for etype 1 to 9 *)
+	  begin
+	       with current^ do
+		  begin
+		    there ( xtext - header1[i].len, ytext );
+		    write ( header1[i], field^ );
+		  end ;
+	       current := current^.down;
+	   end; (* for *)
+
+      there(0, 8);
+      if enter_mode = 1 then
+	 write ('Please enter incremental values')
+      else
+	 write ('Please enter cumulative values');
+
+      case period of				  (* case type of period *)
+	    0	 : begin			     (*  month *)
+		     there ( 4, 10);  period_type := 'Month  ' ;
+		     write (period_type) ;
+		   end;
+	    1..4 : begin
+		     there ( 4, 10);  period_type := 'Quarter' ;
+		     write (period_type) ;
+		   end ;
+	    5	 : begin
+		     there ( 4, 10);  period_type := 'Year   ' ;
+		     write (period_type) ;
+		   end;
+	end; (* case *)
+
+	there ( 4, 11);  write ( 'Planned');
+	there ( 4, 12);  write ( 'Actual' );
+
+	month[1]  := ' 1/';  month[2]  := ' 2/';  month[3]  := ' 3/';
+	month[4]  := ' 4/';  month[5]  := ' 5/';  month[6]  := ' 6/';
+	month[7]  := ' 7/';  month[8]  := ' 8/';  month[9]  := ' 9/';
+	month[10] := '10/';  month[11] := '11/';  month[12] := '12/';
+	month[0]  := ' 19';
+
+	yr  := ( ord( year[1] ) - 48 )*10 + ord( year[2] ) - 48;
+	if (fiscal_year <> 0) and (start > (fiscal_year*3)) then yr := yr + 1;
+	x  := 16;
+
+	for j := 1 to nperiod do   (* for 1 to # of period display mo/yr *)
+	   begin
+	     case  period of
+			       (* starting month + # of period - 2 *)
+	       0    : [ m := ( ( start + j - 2 ) mod 12 ) + 1;
+			if ( m = ((fiscal_year * 3) + 1)) and (j <> 1) then
+			     yr := yr + 1; ] ;
+			       (*  starting quarter + # of period - 2 *)
+	       1..4 : [ m := ( ( period + j - 2 ) mod  4 ) + 1;
+			if ( m = 1 ) and ( j <> 1 ) then yr := yr + 1; ];
+
+	       5    : [ m := 0;
+			if j <> 1 then yr := yr + 1; ] ;
+	      end; (* case *)
+
+	      if yr = 100 then [ month[0] := ' 20' ;  yr := 0 ; ] ;
+	      yrs.len := 2;
+	      yrs[2] := chr( ( yr - (yr div 10)*10) + 48 ) ;
+	      yrs[1] := chr( ( yr div 10 ) + 48 ) ;
+
+	      if  j <= 6 then	 y := 10;  (* first 6 period in first line *)
+
+	      if  j =  7 then  [ y := 14;	   x := 16 ;
+				 there ( 4, 14 );  write (period_type);
+				 there ( 4, 15 );  write ( 'Planned' );
+				 there ( 4, 16 );  write ( 'Actual'  ); ];
+
+	      if  j >  7 then	 y := 14;
+
+	      x := x + 9 ;
+	      there ( x, y ) ;	write ( month[m],yrs:2 );
+	end;  (* for *)
+
+	there (0, 18);	 write ( header1[10] );      (* footnote *)
+
+	current := first ;
+	repeat
+	    with current^ do
+	       if ((etype = 10) or (etype = 11)) and (field^.len > 0) then
+		   [ there ( xtext, ytext );
+		     write ( field^ ); ] ;
+	    current := current^.down ;
+	until (current^.etype = 12) or (current = first);
+
+	buf := messages^[39] ;
+	current := first;
+	inloop;
+end; (* header *)
+
+(* ----------------------------------------------------------------- *)
+
+  begin
+     case inkey of
+	   41 : begin
+		  header;
+		  if not ( inkey in [0,1,3] ) then
+		     redraw ( 1, current, first ) ;
+		  if (inkey in [4,5]) then inkey := 0;
+		end;
+    (*	     32 : begin
+		    assign (f,'graph.hlp');
+		    f.trap :=true;
+		    f.errs :=0;
+		    reset (f);
+		    if f.errs = 0 then
+		       begin
+			 for n:= 1 to 1
+			   read (f,helppage);
+			 help (helppage);
+		       end
+		     else
+		       begin
+			 there (0,23);
+			 writeln ( 'Graph.hlp not found ... Press any key to continue                             ');
+			 get_input (inchar);
+		       end;
+		    close (f);
+		    reduce (rtype,color)
+		  end;		     *)
+	   otherwise begin end;
+      end; (* case inkey *)
+
+  end;
+
+  end.
+
+

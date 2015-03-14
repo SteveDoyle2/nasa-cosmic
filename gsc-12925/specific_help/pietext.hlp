@@ -1,0 +1,35 @@
+ 
+edit.hlp
+ 
+ 
+
+
+
+
+
+
+Text Mode displays the fields which are to be edited.  To change information in
+fields, type the new information and it will replace the old information.  To
+insert characters in the middle of the field, press the insert key and what is
+typed will be inserted.  What is on the screen when a function key or the
+return key is pressed is what will be saved. 
+When using the percent option for entering data, the total field should be
+entered to give the component count. If using the component count, the total
+field will be skipped.
+
+To obtain help for any of the following subjects,  press the function key next
+to the desired subject.
+
+ 
+        F2  Edit
+ 
+ 
+
+
+ 
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

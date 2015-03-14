@@ -1,0 +1,21 @@
+      SUBROUTINE ECHOGP
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      CALL ECHDPC
+C
+      CALL ECHDGM
+C
+      CALL ECHOSA
+C
+      CALL ECHOVD
+C
+      CALL ECHSAC
+C
+      CALL WHECHO
+C
+      CALL AWECHO
+C
+      RETURN
+C
+      END

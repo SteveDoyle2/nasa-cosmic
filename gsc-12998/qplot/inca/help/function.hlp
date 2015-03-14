@@ -1,0 +1,1754 @@
+1 FUNCTION  
+
+     INCA is essentially a manipulator of polynomial functions. The
+function command allows the user to examine, edit, delete, write, and
+load functions.  The main graphics commands of INCA (root locus,
+frequency response and time response) all operate on a function or
+function expression. 
+
+     Some modifiers to this command create a new function.  If the
+new function has the same name as an existing function, the old
+function is placed in a ten-function "trash bin".  The UNDELETE
+modifier can be used to retreive accidentally trashed functions. 
+
+     Format:     FUNCTION  modifier  [parameters]
+
+2 Description       
+
+     INCA functions are either STATIC or DYNAMIC.  The static type is 
+stored as a list of numerator and denominator factors, and is also 
+called FACTORED.  The dynamic type is stored as a character string, 
+and is evaluated to produce a factored type when needed for analysis.
+
+     INCA factored functions are restricted to quotients of real
+polynomials with degree less than or equal to 100.  While complex
+factors may be obtained when a real polynomial is factored, these
+roots must always appear as conjugate pairs.  The number of functions
+allowed is limited to 500. 
+
+3 Fields            
+
+     The functions are maintained in a linked list.  Each function has
+a number of fields:
+
+     1)  NAME             -- A 30 character string (left justified). 
+     2)  STORAGE          -- Number of bytes required to store.
+     3)  CREATION         -- Date and time of creation.
+     4)  COMMENT          -- A 80 character string.
+     5)  TYPE             -- Factored or Dynamic.
+
+STATIC or FACTORED type:
+     6)  PLANE            -- Either "K", "S", "Z", or "W".  (Domain).
+     7)  TAU              -- Sample Period.  (For "Z" and "W" plane only).
+     8)  GAIN             -- Numerator gain.
+     9)  POLYNOMIALS      -- Numerator and denominator factors.
+
+DYNAMIC type:
+     6)  Expression character string.
+
+4 Name              
+
+     A function is referenced by means of its name.  Thus no two
+functions can have the same name, and INCA has numerous checks to
+ensure that such a case does not occur.  The name can have a maximum
+of 30 characters, the first of which is alphabetic (A-Z) and the
+remainder of which are alphanumeric (A-Z,0-9,_).  No blanks are
+allowed inside the name. 
+
+     Certain words should not be used as function names.  These
+have predefined meanings in INCA.
+
+          ALL       Used in function selection
+          NEW       Used in function selection
+          PI        3.14159...
+          S         plane variable
+          W         plane variable
+          Z         plane variable
+
+     Since the name field also includes two bytes for a length 
+indicator, the total length of the name field is 32 bytes.
+
+4 Storage           
+
+     This field contains the function storage requirements in bytes.
+It is required for the internal workings of INCA, and is displayed for 
+the sake of completeness, and for user information.  This field cannot 
+be changed by the user.
+
+4 Creation          
+
+     The time and date of creation are stored in the function
+definition.  These fields are for documentation purposes only.  The
+information is automatically inserted into the function, and cannot be
+changed by the user.  
+
+4 Comment           
+
+     This field is for documentation purposes only.  The comment can
+be up to 80 characters in length, and may contain any printable
+character.  Since the comment field also includes two bytes for a
+length indicator, the total length of the comment field is 82 bytes. 
+This field is usually filled in automatically by commands that create 
+a new function, such as the FUNCTION COMPUTE and FUNCTION GENERATE 
+FILTER commands.
+
+4 Plane             
+
+     This field indicates the domain of the function.  INCA currently
+supports "S", "Z", and "W" plane functions only.  If the function has
+no zeros or poles, it is a constant function, and is assigned the
+plane of "K".  K-plane functions may be used in combination with
+functions in any other plane.  Functions with different planes or
+periods cannot be combined.  The PLANE field occupies one byte of
+storage. 
+
+4 Tau               
+
+     This field indicates the sample period (in seconds) associated 
+with a function in the "Z" or "W" domain.  This field contains the 
+value UNDEFINED for "S" and "K" domain functions, and for "Z" and "W" 
+domain functions that have not yet been assigned a sample period.  If 
+two functions are combined, one of which has an undefined sample 
+period, the resulting will function will have the sample period of the 
+other function.  Functions with different sample periods cannot be 
+combined.  This field occupies eight bytes of storage.
+
+4 Gain              
+
+     This field contains the gain of the function. This field occupies
+eight bytes of storage. 
+
+4 Polynomials       
+
+     Polynomials are stored in the factored form only.  This method is
+numerically superior, see the INCA theory manual for more details. 
+The maximum order of each polynomial is 100.  Each polynomial has
+three fields: 
+
+     1)  DEG     -- Number of distinct factors.
+     2)  F       -- A 120 element array of complex numbers (factors)
+                 -- paired with their power.  The power is either plus
+                    (for numerator factors) or minus (denominator).  A
+                    power of zero is automatically removed.  Only the 
+                    positive imaginary half of a complex pair is 
+                    stored.
+
+     All integers are stored in longword format (4 bytes).  Complex 
+numbers are stored as a pair (real, then imaginary) of double 
+precision floating point numbers (8 bytes each).  
+
+3 normalization     
+
+     After functions are defined, it is necessary to ensure that they 
+are in the appropriate format.  This process is called normalization.  
+There are seven steps in normalization:
+
+          1)  Check that name is left justified, is not completely 
+              blank, contains no internal blanks, begins with a letter 
+              and contains only letters, numbers, and the underline (_).
+          2)  Change nearly zero factors to zero.
+          3)  Make nearly real factors real.
+          4)  Remove very large factors, and adjust gain accordingly.
+          5)  Matching up non-adjacent complex pairs.  Unmatched pairs 
+              will cause an error.
+          6)  Collecting nearly equal factors.
+          7)  Canceling nearly equal factors in numerator and denominator.
+          8)  Removing factors with zero exponents.
+          9)  Check plane and sample period consistency.
+
+3 predefined        
+
+     There are a number of functions built into the function evaluator 
+that might be considered predefined.  These include constant functions 
+associated with all real numbers, the constant function PI, and the 
+functions S, Z and W.  The last three have a gain of 1 and a single 
+factor of zero in the numerator (order 1).
+
+      Large or small real numbers that require exponential notation 
+must be enclosed in brackets.  The brackets are unnecessary for 
+constants of more reasonable size.  Brackets are also required for 
+negative constants.  Sample predefined functions are given below.  
+
+        S              Z              W              PI
+        1              1.234          234190         1.23d6
+        12             0              123E34         45
+
+3 reserved-names    
+
+     The following character strings are reserved words in INCA and
+should not be used as function names. 
+
+     UTILITIES      Command:  Access QPLOT utilities.
+     HELP           Command:  Access Help Library.
+     ABORT          Command:  Abnormal return to command level.
+     ALL            All functions will be processed.
+     S,Z,W,PI       Predefined functions.
+     UNDEFINED      Special numeric value.
+
+2 AUDIT             
+
+     This qualifer may be used to list functions in the audit file.
+There are a number of formats available. The default format is HEADER.
+ If a format for the roots is given, a dynamic function will first be
+converted to static format. If no parameter is given all functions are
+displayed.  For more information, check for the appropriate format in
+the FUNCTION VIEW command documentation. 
+
+     Format:     FUNCTION  AUDIT  format  [ALL]  [function-name]
+
+2 COMPUTE           
+
+     This modifier allows a function to be defined in terms of other
+functions and constants.  The resultant function is the equation -- it
+is recomputed each time the function in question is needed. If you
+define a function in terms of itself, an infinite recursion loop will
+be created, resulting in an error condition.  The expression can be
+any valid INCA expression.  See the main topic Expressions for more
+details and examples. 
+
+     The FUNCTION COMPUTE command is unique in that the command and
+modifier are optional when not in menu mode.  Any unrecognized command
+line with an equals sign will be considered a compute command.  After
+the first function has been defined, the user need only enter the
+function[:]=expression portion.  The ":" is also optional, and has
+been provided for the benefit of PASCAL, ADA, and MODULA-2 users. 
+After the function has been entered, press return to return to the
+main command level, or enter more functions if desired. 
+
+     Format:     [FUNCTION  COMPUTE]  [function[:]=expression]
+                 [function[:]=expression]
+                 .
+                 .
+                 .
+                 [function[:]=expression]
+                 (blank line)
+
+3 Expressions       
+
+     Expressions are used throughout INCA as a means of creating or
+entering a function.  If an expression is too long to type on one
+line, finish the line with a backslash character "\". INCA will prompt
+for the expression continuation. 
+
+     An operator can be of three types, unary, binary and named.  A
+unary operator must be the first item in an expression or
+subexpression.  A binary operator operates on the operands on both
+sides of the operator.  Binary operators are one of the familiar
+mathematical symbols (+-*/^).  A named operator operates on one or
+more operands enclosed in parentheses following the operator.  These
+operators must begin with a dollar sign ($) and be followed by a
+specific string of characters.  Example named operators include $Z,
+$WH, and $CLOOP. 
+
+3 Evaluation        
+
+     All operands must be functions, constants, or expressions.
+The expression is evalated in the following order.
+
+                  ()   Parentheses are used to override priority
+                  $    Priority of named operators is
+                       determined by enclosing parentheses
+                       around arguments.
+                  ^    Exponentiation has highest priority.
+                  +,-  Unary plus/minus has next highest priority.
+                  *,/  
+                  +,-  Lowest priority.
+
+     The order of evaluation can be modified by the use of
+parentheses.  Evaluation proceeds from left to right among operators of
+equal precedence.  A copy of the function is used in computations;
+thus the result function name may be the same as that of one of the
+operands. 
+
+3 Functions         
+
+     If an expression contains no operators, it must be a single function. 
+If the first character of the function is a letter, then it is checked 
+against the list of predefined and user-defined functions.  Otherwise, 
+the function must be a numeric constant, and it is converted to a real 
+number.
+
+3 Predefined        
+
+     There are four predefined functions:  
+
+           S           S domain, single zero at (0,0).
+           Z           Z domain, single zero at (0,0).
+           W           W domain, single zero at (0,0).
+           PI          K domain, no zeores or poles.
+
+     These functions are recognized by their one or two character 
+names.  These names should not be used for user defined functions.
+
+3 User-defined      
+
+     The list of user defined functions is searched for a match.  If
+no matching name is found, the user is asked if he desires to reenter
+the function name.  If the answer is no, an error condition is raised,
+and the function evaluation is aborted. 
+
+3 Constants         
+
+     The string is converted to a real number using the VAX run time 
+library routine.  Exponential format is allowed, including plus or 
+minus signs on the exponent.
+
+3 + operator        
+
+     The + operator uses one of two methods.  To determine the method
+used, the compined order of all of the denominators is determined.  
+If this number is less than the SETtable variable QZcutoff, and none 
+of the numerators is larger than the associated denominator, the QZ 
+algorithm is used as described in the theroy manual.  Otherwise this 
+method is used.  Given that:
+
+          R = F1 + F2  where    F1 = k1*A1/B1  and  F2 = k2*A2/B2
+then
+                      (k1 * A1 * B2)  +  (k2 * A2 * B1)
+                 R =  ---------------------------------
+                                  (B1 * B2)
+
+     The three products are first computed.  The two products in the 
+numerator are then expanded and added together coefficient by 
+coefficient.  The sum is then factored, and the terms collected and 
+canceled with those in the denominator.
+
+3 - operator        
+
+     The - operator uses the following method.  Given that:
+
+          R = F1 - F2  where    F1 = k1*A1/B1  and  F2 = k2*A2/B2
+then
+                      (k1 * A1 * B2)  -  (k2 * A2 * B1)
+                 R =  ---------------------------------
+                                  (B1 * B2)
+
+     The method is similar to that used by the + operator, except that
+the numerator products are subtracted.  The same limits apply. The -
+operator can also be used on the first term of an expression, for
+example "-S*(S-1)".  In this case it is termed a unary operator.
+
+3 * operator        
+
+     The * operator uses the following method.  Given that:
+
+          R = F1 * F2  where    F1 = k1*A1/B1  and  F2 = k2*A2/B2
+then
+                      (k1 * k2) * (A1 * A2)
+                 R =  ---------------------
+                            (B1 * B2)
+
+     The computation is straightforward.  The gains are multiplied
+together to get the resultant function gain.  Since the polynomials
+are in factored form, all that is needed is to group together the
+factors, and then collect and cancel common factors. 
+
+3 / operator        
+
+     The / operator uses the following method.  Given that:
+
+          R = F1 / F2  where    F1 = k1*A1/B1  and  F2 = k2*A2/B2
+then
+                      (k1 / k2) * (A1 * B2)
+                 R =  ---------------------
+                            (B1 * A2)
+
+     The computation is straightforward.  The gains are divided
+to get the resultant function gain.  Since the polynomials are 
+in factored form, all that is needed is to group together the factors, 
+and then collect and cancel common factors.
+
+3 ^ operator        
+
+     This is an exponentiation operator.  The first operand can be any 
+function, but the second operand must be a constant function (plane=K, 
+no zeroes or poles) and must have a positive integer value.  The 
+evaluation is done by repeated multiplication.
+
+3 $(named) operators
+
+     These operators are capapable of a multitude of operations.  They
+are grouped in to categories such as algebraic, conversion, input, and 
+miscellanous.  More help is available in these various groupings under 
+the FUNCTION GENERATE command, which offers an easy way to use named 
+operators to create static functions.  Dynamic functions using named 
+operators must, of course, use the "$" operator format.
+
+2 DELETE            
+
+     This command may be used to delete a particular function, or to
+delete all functions. 
+
+     If the "ALL" is entered as a function name, all functions will be
+deleted.  A confirmation will be requested if any functions are
+currently defined.  Otherwise the list of functions is then searched
+for one with a matching name, and such a function is deleted if found.
+ If no matching function is found, a message is printed and control
+returns to the command level. 
+
+     Format:     FUNCTION  DELETE  [ALL]  [function-name]
+
+2 EDIT              
+
+     This modifier invokes the INCA function editor, which can be
+used to create and modify functions. The user should understand the
+data content of a function before using the function editor.  This
+information can be found under the topic "Functions". A function can
+be edited in any one of a number of formats.  Regardless of entry
+format, the function is stored in factored form using the numerator
+gain.  Nearly identical factors (within 1 ppm) are collected and
+canceled if necessary.  Functions entered in unfactored format are
+first factored. 
+
+     Format:     FUNCTION  EDIT  format  [function-name]
+
+3 GRAPHIC           
+
+     This format invokes the INCA graphic function editor, which can
+be used to create and modify functions.  The user should understand
+the data content of a function before using the function editor.  This
+information can be found under the topic "Functions".  The function is
+stored in factored form using the numerator gain.  Nearly identical
+factors (within 1 ppm) are collected and canceled if necessary. 
+This command is for testing and instructional use only, and is not
+designed for accurate entry of functions. 
+
+     Format:     FUNCTION  EDIT  GRAPHIC  [function-name]
+
+4 Commands          
+
+     Many different graphic editor commands (subcommands) are
+available.  The commands listed below are available to inspect and
+manipulate the function.  These commands are activated by the use of
+one letter abbreviations.  Hitting the key that is the appropriate
+abbreviation will immediately activate the desired function -- it is
+not necessary to use the <return> or <enter> key.  
+
+     Most graphics editor commands use the position of the graphics
+cursor as additional input.  This information might be a point on the
+plot to be examined, the corner of a window for a zoom operation, or
+the position at which to place a label.  An unexecutable command is
+signaled by sounding the terminal bell three times.  This might
+happen if the cursor was not at a valid point of the plot, or the
+status was not appropriate (e.g., attempting a zoom without the window
+being set). 
+
+5 A-add             
+
+     This command will allow the user to add a zero or pole to the 
+function.  Just place the crosshairs at the proper point, and press 
+"A" followed by "Z" for a zero, or "P" for a pole.  A real root will 
+be created at the point indicated, moved up or down if necessary so as 
+to place the point on the real axis.  If a complex root is desired, 
+press "C" immediately after pressing "A".
+ 
+     Additional input :     None.
+     Cursor position :      No effect. 
+
+5 B-BackZoom        
+
+     The scale of each view reached by using the <Z-Zoom> command is
+pushed onto a special stack.  This command will pop one view off of
+the stack, allowing a previous view to be reexamined.  
+
+     Additional input :     None 
+     Cursor position :      No effect. 
+
+5 C-Comment         
+
+     This command will allow the user to enter a new comment.  The old 
+comment is displayed, and the user is prompted to enter the new 
+comment.  To retain the old comment, just press <RETURN>.
+
+     Additional input :     None 
+     Cursor position :      No effect. 
+
+5 D-DeZoom          
+
+     This command allows the user to reverse the <Z-zoom> command. The
+plot will be redrawn at the original scale.  Display items such as
+those resulting from the <T-Type> command will be lost. 
+
+     Additional input :     None 
+     Cursor position :      No effect. 
+
+5 E-Exit            
+
+     This command will cause an exit from the cursor mode and a return 
+to command mode.  This command is the same as <X-Xit>.  
+
+     Additional input :     None
+     Cursor position :      No effect. 
+
+5 F-Fix-function    
+
+     This command will round the currently defined roots off to the 
+graphics editor's internal 'grid'.  The size of the grid is controlled 
+by the "W-Width" command.  All new roots are automatically rounded to 
+grid locations.  It is necessary to round roots to the grid before 
+they can be canceled out using the "A-Add" command.
+
+     Additional input :     None
+     Cursor position :      No effect. 
+
+5 G-Gain            
+
+     This command will allow the user to enter a new gain.  The old 
+gain is displayed, and the user is prompted to enter the new 
+gain.  To retain the old gain, just press <RETURN>.
+
+     Additional input :     None 
+     Cursor position :      No effect. 
+
+5 H-Help            
+
+     This command will display a menu of the active and available
+graphics editor commands at the cursor location. 
+
+     Additional input :     None
+     Cursor position :      No effect.
+
+5 K-Keyboard        
+
+     This command allows the corners of the zoom area to be input from
+the keyboard.  The zoom area is defined by minima and maxima for both
+the X and Y coordinates.  After the coordinates are entered the area
+to be zoomed will be shown on the screen as a rectangle.  If the
+<L-Lower left> or <U-Upper right> commands are used before the zoom is
+executed that corner will be repositioned and rectangle redrawn. 
+
+     Additional input :     Minimum, maximum values of X and Y.
+     Cursor position :      No effect.
+
+5 L-Lower left      
+
+     This command uses the cursor coordinates to set a corner of the
+zoom area.  The related command <U-Upper right> may be used to set the
+other corner.  When both corners are set the area to be zoomed will be
+shown on the screen as a rectangle.  If this command is repeated
+before the zoom is executed the corner will be repositioned and
+rectangle redrawn.  It should be noted that the point selected using
+this command need not necessarily be the lowest or the leftmost of the
+two points selected. 
+
+     Additional input :     none 
+     Cursor position :      One of the corners of the Zoom Window.
+
+5 N-Name            
+
+     This command will allow the user to change the name of the
+function.  The old name is displayed, and the user is prompted to
+enter the new name.  To retain the old name, just press <RETURN>. 
+
+     Additional input :     None 
+     Cursor position :      No effect. 
+
+5 O-Original        
+
+     This command cancels all changes made in the current editing 
+session redisplays the original function.
+
+     Additional input :     None
+     Cursor position :      No effect. 
+
+5 P-Plane           
+
+     This command will allow the user to change the function plane. 
+The old plane is displayed, and the user is prompted to enter the new
+plane.  To retain the old plane, just press <RETURN>. 
+
+     Additional input :     None 
+     Cursor position :      No effect. 
+
+5 Q-sQuare-zoom-area
+
+     This command will ensure that the zoom area is square, that is,
+has the same scale on the X and Y axes. The zoom area must be
+completely defined.  Both minima and maxima for both the X and Y
+coordinates must have been defined, at which point the area to be
+zoomed will be shown on the screen as a rectangle.  The square command
+will enlarge the rectangle so that it is a square having the size of
+the longer side of the rectangle.  This command should not be used if 
+the two axes represent wildly different quantities.
+
+     Additional input :     None 
+     Cursor position :      No effect.
+
+5 R-Redraw          
+
+     This command allows the user to refresh the current plot.  The
+plot will be redrawn at the current scale, and with the same curves as
+were drawn originally.  Images such as those resulting from the
+<T-Type> command will be lost. 
+
+     Additional input :     None 
+     Cursor position :      No effect.
+
+5 S-Sample-Period   
+
+     This command will allow the user to change the sample period of
+the function.  The old sample period is displayed, and the user is
+prompted to enter the new sample period.  To retain the old sample
+period, just press <RETURN>. 
+
+     Additional input :     None 
+     Cursor position :      No effect. 
+
+5 T-Type function   
+
+     This command will write a brief description of the function used
+at the cursor position.  All numbers are displayed with only a few
+digits of precision. The following items are displayed: 
+
+          Function name.
+          Function plane.
+          Function numerator gain.
+          Function sample period (if in Z or W plane).
+          Number of distinct numerator factors.
+          List of distinct numerator factors and their orders.
+          Number of distinct denominator factors.
+          List of distinct denominator factors and their orders.
+
+     Additional input :     none
+     Cursor position :      Position at which function description is 
+                            to be written.
+
+5 U-upper right     
+
+     This command uses the cursor coordinates to set a corner of the
+zoom area.  The related command <L-lower left> may be used to set the
+other corner.  When both corners are set the area to be zoomed will be
+shown on the screen as a rectangle.  If this command is repeated
+before the zoom is executed the corner will be repositioned and
+rectangle redrawn.  It should be noted that the point selected using
+this command need not necessarily be the uppermost or the rightmost of
+the two points selected. 
+
+     Additional input :     none 
+     Cursor position :      One of the corners of the Zoom Window.
+
+5 W-Width-of-grid   
+
+     This command changes the size of the graphics editor's internal
+'grid'.  All new roots are automatically rounded to grid locations. 
+It is necessary to round roots to the grid before they can be canceled
+out using the "A-Add" command. 
+
+     Additional input :     Width.
+     Cursor position :      No effect. 
+
+5 X-exit            
+
+     This command will cause an exit from the cursor mode and a return 
+to command mode.  This command is the same as <E-exit>.  
+
+     Additional input :     none
+     Cursor position :      No effect.
+
+5 Z-zoom            
+
+     This command allows the user to enlarge a portion of a plot
+without recalculating any of the data.  Both minima and maxima for
+both the X and Y coordinates must have been defined, at which point
+the area to be zoomed will be shown on the screen as a rectangle. The
+zoom coordinates may be entered as real numbers using the <K-keyboard>
+command, or through use of the cursor by using the <L-lower left> and
+<U-Upper right> commands.  Use of the <Q-square zoom area> command
+will ensure that both X and Y axes have the same scale. 
+
+     Additional input :     none 
+     Cursor position :      No effect.
+
+5 2..9-Widen-Window 
+
+     This commands will 'UnZoom' by a particular factor.  The
+currently visible area will be reduced by the digit entered, and the
+function surrounded by blank space.  After using this command new
+roots can be entered with a larger magnitude than currently possible. 
+
+     Additional input :     None
+     Cursor position :      No effect.
+
+
+5 $-QPLOT-command   
+
+     This command allows the user to access the HELP library and VAX 
+facility from the graphics mode.  Other input will return to graphics 
+mode with no effect.
+
+     Additional input :     None.
+     Cursor position :      No effect.
+
+5 %-hardcopy        
+
+     This command allows the user to create a hardcopy of the 
+currently displayed plot.
+
+     Additional input :     As needed (terminal dependent).
+     Cursor position :      No effect.
+
+5 ^-usertext        
+
+     This command allows the user to place text of any color any
+place on the plot.  The key used is shift-6 on most keyboards.
+
+     Additional input :     Text and color.
+     Cursor position :      Location text is to be placed.
+
+5 \-userline        
+
+     This command allows the user to draw a line on the plot.
+
+     Additional input :     Text and coordinates.
+     Cursor position :      No effect.
+
+3 LINE              
+
+     The function line editor is designed for foolproof if somewhat 
+cumbersome operation.  It is similar in style to an old-style text 
+line editor.  The user must enter command to select the item to be 
+edited, and then enter the new value.
+
+     This is the best editor for batch operation.  It has been
+extensively changed since INCA 2.0x, and does NOT support the old
+command structure, nor the source file converter.  The batch edit
+files must be converted by hand. 
+
+     Format:     FUNCTION  EDIT  LINE  [function-name]
+
+4 BODEGAIN_FACTORED 
+
+     This format is the same as the factored format except that the
+Bode (or DC) gain is used instead of the numerator gain.  To convert
+from numerator gain to Bode gain one multiplies by the conversion
+factor described below.  The reverse transformation is done by
+dividing by the conversion factor.  The conversion factor (C) is
+computed as follows.  First calculate a function (F) of all factors: 
+
+     To compute F, express factor in form  (s + a +bi)
+
+            If  b<>0          THEN      F = sqrt (a**2 + b**2)
+            If  b=0 and a<>0  THEN      F = a
+            If  b=0 and a=0   THEN      F = 1
+
+     Then                product of F's for numerator factors
+                   C =  --------------------------------------
+                        product of F's for denominator factors
+ 
+     and       <numerator-gain> = <bodegain> / C
+
+     Format:     FUNCTION  EDIT  LINE  BODEGAIN_FACTORED  
+                                                [function-name]
+
+4 DEGREE_POLAR      
+
+     This format allows the magnitude and angle of the roots to be 
+edited.  The following items are queried.
+
+          Function name.
+          Function plane.
+          Function numerator gain.
+          Function sample period (if in Z or W plane).
+          Number of distinct numerator factors.
+          List of magnitude, phase in degrees, and order for distinct 
+             numerator factors.
+          Number of distinct denominator factors.
+          List of magnitude, phase in degrees, and order for distinct 
+             denominator factors.
+
+     Format:     FUNCTION  EDIT  LINE  DEGREE_POLAR  [function-name]
+
+4 FACTORED          
+
+     The FACTORED option is the default.  This option allows a 
+function to be entered in factored form.  The following items are
+queried:
+
+          Function name (if necessary)
+          Plane
+          Gain
+          Number of distinct zeroes
+          Number of distinct poles
+          Factors of numerator
+          Factors of denominator
+
+     The factored form is the normal storage format for INCA 
+functions.  Note that roots in the left half plane are entered with 
+POSITIVE real numbers.
+
+     Format:     FUNCTION  EDIT  LINE  FACTORED  [function-name]
+
+4 POLAR             
+
+     This format allows the magnitude and angle of the roots to be 
+edited.  The following items are queried.
+
+          Function name.
+          Format identifier ('POLAR FORM').
+          Function plane.
+          Function numerator gain.
+          Function sample period (if in Z or W plane).
+          Number of distinct numerator factors.
+          List of magnitude, phase in radians, and order for distinct 
+             numerator factors.
+          Number of distinct denominator factors.
+          List of magnitude, phase in radians, and order for distinct 
+             denominator factors.
+
+     Format:     FUNCTION  EDIT  LINE  POLAR  [function-name]
+
+4 ROOTS             
+
+     This option allows the roots of a function to be entered.  
+The following items are queried:
+
+          Function name (if necessary)
+          Plane
+          Gain
+          Number of distinct zeroes
+          Number of distinct poles
+          Roots of numerator
+          Roots of denominator
+
+     The roots of a function are the normal INCA printout format. Note
+that roots in the left half plane are entered with NEGATIVE real
+numbers. 
+
+     Format:     FUNCTION  EDIT  LINE  ROOTS  [function-name]
+
+4 UNFACTORED        
+
+     This option allows a function to be entered in unfactored form.  
+The following items are queried:
+
+          Function name (if necessary)
+          Plane
+          Order of numerator
+          Order of denominator 
+          Coefficients of numerator in increasing order.
+          Coefficients of denominator in increasing order.
+
+     The function is converted to factored form before being stored.
+
+     Format:     FUNCTION  EDIT  LINE  UNFACTORED  [function-name]
+
+4 ZETA_OMEGA        
+
+     This format will allow a function to be entered in a Zeta-Omega 
+format.  The following items are queried.
+
+          Function name.
+          Format identifier ('ZETA_OMEGA FORM').
+          Function plane.
+          Function numerator gain.
+          Function sample period (if in Z or W plane).
+          Number of distinct numerator factors.
+          List of zeta, omega, order for distinct numerator factors.
+          Number of distinct denominator factors.
+          List of zeta, omega, order for distinct denominator factors.
+
+     Format:     FUNCTION  EDIT  LINE  ZETA_OMEGA  [function-name]
+
+4 Commands          
+
+     Many different line editor commands (subcommands) are available.  
+
+5 CHECK             
+
+     Check function for self-consistency.  The name is checked for
+compatible format, and the zeroes and poles are canceled and
+collected. 
+
+     Format:     CHECK
+
+5 DENOMINATOR       
+
+     Format:     DENOMINATOR  denominator-subcommand  [parameter]
+
+6 ADD               
+
+     This command is used to extend the denominator polynomial. 
+New coefficients (unfactored format) or roots (other formats)
+are entered after using this command.  Just pressing <RETURN>
+will terminate the entry of new data in unfactored format. 
+Entering a order of 0 will terminate the entry of new data in
+other formats. 
+
+     Format:     DENOMINATOR  ADD 
+
+6 CHANGE            
+
+     This command will type out denominator root nn in the
+appropriate format.  The user will then be asked to reenter the
+factor or coefficient.  Just pressing <RETURN> will cause the
+old data to be retained. 
+
+     Format:     DENOMINATOR  CHANGE  [root-number]
+
+6 DEGREE            
+
+     This command can be used to reduce the degree of the
+denominator polynomial (unfactored format) or the number of
+distinct roots (other formats). The current degree or root count
+will be typed. The user will then be asked to enter a new degree
+or root count, and the polynomial will be truncated at that
+point. 
+
+     Format:     DENOMINATOR  DEGREE  [integer]
+
+6 VIEW              
+
+     This command will display the entire denominator for inspection.
+
+     Format:     DENOMINATOR  VIEW  [root-number]
+
+5 HEADING           
+
+     This command allows the user to edit the function heading, which
+consists of the name, comment, plane, gain, and sample period (for Z
+and W plane functions). 
+
+     Format:     HEADING  heading-subcommand  [parameter]
+
+6 COMMENT           
+
+     This command will type the current comment, and then ask
+the user to enter a new comment.  Just pressing <RETURN> will
+cause the old comment to be retained. 
+
+     Format:     HEADING  COMMENT  [character-string]
+
+6 GAIN              
+
+     This command will type the current gain, and then ask the
+user to enter the new gain.  Just pressing <RETURN> will cause
+the old gain to be retained.  The gain may be any real number. 
+This is either the numerator gain (in most cases) or the Bode
+gain (in BODEGAIN_FACTORED format). 
+
+     Format:     HEADING  GAIN  [real-number]
+
+6 NAME              
+
+     This command will type the current name, and then ask the
+user to enter a new name.  Just pressing <RETURN> will cause the
+old name to be retained. 
+
+     Format:     HEADING  NAME  [logical-name]
+
+6 PLANE             
+
+     The function plane must be one of the four characters "S",
+"Z", "W", or "K".  The first three represent the plane of the
+function, and the last indicates a constant without zeroes or
+poles.  Any other character is rejected with a warning message
+and the prompt is repeated. 
+
+     Format:     HEADING  PLANE  [character]
+
+6 SAMPLING_PERIOD   
+
+     This command can only be used if the function is in the Z
+or W plane.  The current sample period will be typed, and the
+user will be asked to enter the new sample period.  Just
+pressing <RETURN> will cause the old sample period to be
+retained.  The sample period must be a positive real number. 
+
+     Format:     HEADING  SAMPLING_PERIOD  [real-number]
+
+6 VIEW              
+
+    This comment will type the function heading, including name,
+creation time, date, plane, gain, and sample period (if in Z or
+W plane). 
+
+5 NUMERATOR         
+
+     Format:     NUMERATOR  numerator-subcommand  [parameter]
+
+6 ADD               
+
+     This command is used to extend the numerator polynomial. 
+New coefficients (unfactored format) or roots (other formats)
+are entered after using this command.  Just pressing <RETURN>
+will terminate the entry of new data in unfactored format. 
+Entering a order of 0 will terminate the entry of new data in
+other formats. 
+
+     Format:     NUMERATOR  ADD 
+
+6 CHANGE            
+
+     This command will type out NUMERATOR root nn in the
+appropriate format.  The user will then be asked to reenter the
+factor or coefficient.  Just pressing <RETURN> will cause the
+old data to be retained. 
+
+     Format:     NUMERATOR  CHANGE  [root-number]
+
+6 DEGREE            
+
+     This command can be used to reduce the degree of the
+NUMERATOR polynomial (unfactored format) or the number of
+distinct roots (other formats). The current degree or root count
+will be typed. The user will then be asked to enter a new degree
+or root count, and the polynomial will be truncated at that
+point. 
+
+     Format:     NUMERATOR  DEGREE  [integer]
+
+6 VIEW              
+
+     This command will list the entire NUMERATOR for inspection.
+
+     Format:     NUMERATOR  VIEW  [root-number]
+
+5 VIEW              
+
+     This command will list the entire function in the current 
+format for inspection.
+
+     Format:     VIEW
+
+5 XIT               
+
+     Exit function editor and save the function.  The old function 
+will be thrown in the trash, and may be accessed using the FUNCTION 
+UNDELETE command.
+
+     Format:     XIT
+
+3 SCREEN            
+
+     The function screen editor is implemented by writing the 
+function to a file ('INCAFCN.DAT') and then calling the EDT editor to 
+allow the user to edit the file.  After the user exits EDT in the 
+normal manner, the file is read by a "compiler" program which checks 
+the modified function for errors.  If errors are found, the user is
+returned to EDT for corrections.  The error messages are placed in the 
+file itself -- and they are automatically removed by the compiler on 
+the next pass.
+
+     Format:     FUNCTION  EDIT  SCREEN  [function-name]
+
+2 GENERATE          
+
+     This modifier provides a variety of ways to easily create new 
+transfer functions.  The functions so generated are STATIC, and thus
+are not dependent on other constants.  Use the FUNCTION COMPUTE 
+command and the expression format if you wish to make dynamic 
+functions.
+
+     Format:     FUNCTION  GENERATE  [modifiers]
+
+3 ALGEBRAIC_OPERATOR
+
+     The modifiers contained in this modifier are used for simple
+algebraic and triginometric operations.  The argument must be a 
+constant (no roots) function or an expression which evaulates to a 
+constant function.
+
+     Format:     FUNCTION  GENERATE  ALGEBRAIC_OPERATOR  [modifier]
+
+4 COS               
+
+     This operator takes the cosine of a constant (K-plane) function.
+It is useful for calculating other constants, particularily in the Z
+plane.  The argument is in radians. 
+
+     Format:     FUNCTION  GENERATE  ALGEBRAIC_OPERATOR  COS
+     Expression: $COS (angle-in-radians)
+
+4 COSD              
+
+     This operator takes the cosine of a constant (K-plane) function. 
+It is useful for calculating other constants, particularily in the Z
+plane.  The argument is in degrees. 
+
+     Format:     FUNCTION  GENERATE  ALGEBRAIC_OPERATOR  COSD
+     Expression: $COSD (angle-in-degrees)
+
+4 EXP               
+
+     This operator calculates the exponential function (exp(x)), that
+is, the inverse of the natural logarithm.  The parameter must be a
+constant (K-plane) function.  This operator is useful for calculating
+other constants.  
+
+     Format:     FUNCTION  GENERATE  ALGEBRAIC_OPERATOR  EXP
+     Expression: $EXP (const)
+
+4 EXP10             
+
+     This operator calculates 10 raised to a given power, that is, the
+inverse of the base 10 logarithm.  The parameter must be a constant
+(K-plane) function.  This operator is useful for calculating other
+constants. 
+
+     Format:     FUNCTION  GENERATE  ALGEBRAIC_OPERATOR  EXP10
+     Expression: $EXP10 (const)
+
+4 LOG               
+
+     This operator takes the base e (natural) logarithm of a constant
+(K-plane) function.  It is useful for calculating other constants. 
+The parameter must be greater than or equal to zero. 
+
+     Format:     FUNCTION  GENERATE  ALGEBRAIC_OPERATOR  LOG
+     Expression: $LOG (const)
+
+4 LOG10             
+
+     This operator takes the base 10 logarithm of a constant (K-plane)
+function.  It is useful for calculating other constants.  The parameter
+must be greater than or equal to zero. 
+
+     Format:     FUNCTION  GENERATE  ALGEBRAIC_OPERATOR  LOG10
+     Expression: $LOG10 (const)
+
+4 SIN               
+
+     This operator takes the sine of a constant (K-plane) function. 
+It is useful for calculating other constants, particularily in the Z
+plane.  The argument is in radians. 
+
+     Format:     FUNCTION  GENERATE  ALGEBRAIC_OPERATOR  SIN
+     Expression: $SIN (angle-in-radians)
+
+4 SIND              
+
+     This operator takes the sine of a constant (K-plane) function. 
+It is useful for calculating other constants, particularily in the Z
+plane.  The argument is in degrees. 
+
+     Format:     FUNCTION  GENERATE  ALGEBRAIC_OPERATOR  SIND
+     Expression: $SIND (angle-in-degrees)
+
+4 SQRT              
+
+     This operator takes the square root of a constant (K-plane)
+function. It is useful for calculating other constants.  The argument
+must be greater than or equal to zero. 
+
+     Format:     FUNCTION  GENERATE  ALGEBRAIC_OPERATOR  [modifier]
+     Expression: $SQRT (const)    
+
+3 CONVERSION        
+
+     This modifier allows conversion from one plane to another.  If
+the original plane is the S plane, an optional zero order hold and/or
+advance factor may be added.  For more information, check the
+conversion subtopic of expressions or the INCA theory manual. 
+The operators $Z, $ZH, $W, and $WH allow conversion of functions 
+from one plane to another.  The conversion process involved is 
+described below.  
+
+     Format:     FUNCTION  GENERATE  CONVERSION
+     Expression: $W (S-function, sampleperiod [,advancefactor])
+                 $W (Z-function)
+                 $W (W-function, sampleperiod)
+                 $WH (S-function, sampleperiod [,advancefactor])
+                 $Z (S-function, sampleperiod [,advancefactor])
+                 $Z (Z-function, sampleperiod)
+                 $Z (W-function)
+                 $ZH (S-function, sampleperiod [,advancefactor])
+
+4 $W                
+
+     This operator allows a function in the S or Z plane to be 
+converted to the W plane.  It also allows a sample period to be 
+assigned to a function already in the W plane.  
+
+     If the function is in the S plane, the operands include the name
+of the function to be converted, the sampling period, and the
+(optional) advanced modifier.  The operation is performed by first
+converting from S to Z, and then converting from Z to W. 
+
+     If the function is in the Z plane, there is only one operand
+since the sampling period is already defined.  If the function is in
+the W plane, there are two operands, the second being the sample
+period.  This operand must be constant (no zeroes or poles) and
+greater than zero.  
+
+     The W-plane conversion is a bilinear transformation.  
+Everywhere a Z appears in the function, it is replaced by the 
+expression  (1+w*T/2) / (1-w*T/2), where T is the sample period. 
+
+4 $WH               
+
+     This operator allows a function in the S plane (NOT Z plane) to 
+be converted to the W plane with the inclusion of a zero order hold.
+
+4 $Z                
+
+     This operator allows a function in the S or W plane to be 
+converted to the Z plane.  It also allows a sample period to be 
+assigned to a function already in the Z plane.  
+
+     If the function is in the S plane, the operands include the name
+of the function to be converted, the sampling period, and the
+(optional) advanced modifier.  If the function is in the Z plane,
+there are two operands, the second being the sample period.  This
+operand must be constant (no zeroes or poles) and greater than zero. 
+
+     The conversion from the S plane to the Z plane is quite 
+complicated.  In addition to the S plane function, the sample period 
+is needed (this must be a constant or a K plane function).  A zero 
+order hold may be included in the conversion process if desired.  This 
+is implemented by using the $ZH operator instead of the $Z operator.  
+An optional advance factor is allowed (which must also be a constant 
+or K plane function).  The advance factor allows users to do the 
+so-called advanced or modified Z-transform.
+
+The process of conversion consists of the following steps.  Here the 
+letter A is pole, T is the sample period, and D is the advance factor, 
+and K is the numerator of the partial fraction.
+
+     1)   Divide function by S if zero order hold is included.
+     2)   Calculate partial fraction expansion of function.
+     3)   Convert denominator of expanded function, by using 
+          expression   s+A  -->   z-exp(A*T).
+     4)   Convert numerator of expanded function, by using
+          expression    K   -->   K * exp(-A*D*T).......
+            .
+            .
+            .
+     5)   Add the terms of the partial fraction together and 
+          factor the numerator.
+     6)   Multiply function by (Z-1)/Z if zero order hold is included.
+
+More detailed information is available in the INCA Theory Manual.
+
+     If the function is in the W plane, there is only one operand
+since the sampling period is already defined.  The conversion from the
+W plane to the Z plane is a bilinear transformation.  Everywhere a W
+appears in the function, it is replaced by the expression  (2/T) *
+(z-1) / (z+1), where T is the sample period. 
+
+4 $ZH               
+
+     This operator allows a function in the S plane (NOT W plane) to 
+be converted to the Z plane with the inclusion of a zero order hold.
+
+3 DYNAMIC_EQUATION  
+
+     This modifier allows a function to be defined in terms of other
+functions and constants.  The result function is the equation -- it is
+recomputed each time the function in question is needed. If you define
+a function in terms of itself, an infinite recursion loop will be
+create, resulting in an error condition.  The expression can be any
+valid INCA expression.  See the main topic Expressions for more
+details and examples. 
+
+     Format:     FUNCTION  GENERATE  DYNAMIC_EQUATION  
+                                             [function[:]=expression]
+
+3 FILTER            
+
+     The FILTER modifier will create a new STATIC function.  There are
+several common filters listed below.  Two inputs are required for most
+filters -- Bandwidth and Order.  The bandwidth is entered in radians
+per second, and has a default value of 1.  The order is usually a
+count of the number of poles.  The default value is 2. 
+
+     Format:     FUNCTION  GENERATE  FILTER  filter-type
+
+4 BESSEL            
+
+     The Bessel filter is an all-pole constant time delay filter.  
+It exhibits linear phase response characteristics over the filter 
+pass band.  The phase linearity characteristics are superior to the 
+Butterworth and Chebyshev filters, but the amplitude resonse is 
+inferior.  
+
+     To design a Bessel filter, the following specifications are 
+required:
+
+     1)  Bandwidth (r/s)
+     2)  Order
+
+     Format:     FUNCTION  GENERATE  FILTER  BESSEL
+     Expression: $BESSEL (bandwidth,order)
+
+4 BUTTERWORTH       
+
+     The Butterworth filter is designed to meet frequency-response
+amplitude specifications such that the transfer function H(jw) is
+taken to have n poles, to have all its zeros at w=infinity, to have a
+bandwidth ranging from zero to w=W, and to have an amplitude
+characteristic which has the value 1.0 at w=0 and is as flat as
+possible at the passband center.  The Butterworth filter is a set of
+poles evenly spaced on a semi-circle in the left half plane.  There
+are two parameters. 
+
+     1)  Bandwidth (r/s)
+     2)  Order (maximum is 20)
+
+     Format:     FUNCTION  GENERATE  FILTER  BUTTERWORTH
+     Expression: $BUTTER (bandwidth,order)
+
+4 CHEBYSHEV         
+
+     A chebyshev filter is an all-pole filter with the following 
+characteristics:
+
+     1)   An equal amount of ripple in the pass band (equiripple)
+     2)   Monotonically decreasing with frequency above the pass band
+     3)   Steepest possible cutoff rate in the transmission band.
+
+     The following specifications are required:
+
+     1)   Bandwidth (r/s)
+     2)   Order
+     3)   Ripple (in dB)     (default = 0.5)
+
+     Format:     FUNCTION  GENERATE  FILTER  CHEBYSHEV
+     Expression: $CHEBYS (bandwidth,order,ripple)
+
+4 ITAE              
+
+     An ITAE (minimum Integral of Time-multiplied Absolute Error)
+filter is a set of poles designed to reduce the transmission error. 
+There are two parameters. 
+
+     1)  Bandwidth (r/s)
+     2)  Order (maximum is 8)
+
+     Format:     FUNCTION  GENERATE  FILTER  ITAE
+     Expression: $ITAE (bandwidth,order)
+
+3 INPUT             
+
+     Format:     FUNCTION  GENERATE  INPUT  [input-type]
+
+4 ACCELERATION      
+
+     This operator will produce the Laplace transform corresponding to 
+a constant acceleration.  The parameter must be a constant expression, 
+with no zeroes or poles.
+
+     Format:     FUNCTION  GENERATE  INPUT  ACCELERATION  [acc-const]
+     Expression: $ACC (acc-const)
+
+4 COMBINATION       
+
+     This operator will produce the Laplace transform corresponding to
+a summation of step, ramp, and acceleration components.  The
+parameters must be constant expressions, with no zeroes or poles. 
+Additional components can be added as desired to represent the rate of 
+change of acceleration, and so on.
+
+     Format:     FUNCTION  GENERATE  INPUT  COMBINATION
+     Expression: $SRA (step-const [,ramp-const [,acc-const ...]])
+
+4 IMPULSE           
+
+     This modifier will create an impulse function.  It has no
+equivalent expression operator.  It is equivalent to a constant
+function of gain one.
+
+     Format:     FUNCTION  GENERATE  INPUT  IMPULSE
+     Expression: 1
+
+4 DAMPED_OSCILLATOR 
+
+     This operator will produce the Laplace transform corresponding to
+a damped oscillator.  The parameters must be constant expressions,
+with no zeroes or poles.  The frequency must be given in radians per 
+second, and the phase is given in radians.  This operator is evaluated 
+as:
+                    cos(th) * (s+a) - sin(th) * w
+                    -----------------------------
+                      (s+a) ^ 2    +    w ^ 2
+
+     Format:     FUNCTION  GENERATE  INPUT  DAMPED_OSCILATOR  
+                                                           [acc-const]
+     Expression: $DOSC (frequency [,phase-in-radians [,damping]])
+                 $DOSCD (frequency [,phase-in-degrees [,damping]])
+
+4 RAMP              
+
+     This operator will produce the Laplace transform corresponding to 
+a constant ramp.  The parameter must be a constant expression, with no 
+zeroes or poles.
+
+     Format:     FUNCTION  GENERATE  INPUT  RAMP  [ramp-const]
+     Expression: $RAMP (ramp-const)
+
+4 STEP              
+
+     This operator will produce the Laplace transform corresponding to 
+a constant step.  The parameter must be a constant expression, with no 
+zeroes or poles.
+
+     Format:     FUNCTION  GENERATE  INPUT  STEP  [step-const]
+     Expression: $STEP (step-const)
+
+3 MISCELLANEOUS     
+
+     Various uncategorizable function types are lumped together
+in this modifier.  For more information see the individual modifiers.
+
+     Format:     FUNCTION  GENERATE  MISCELLANEOUS  [modifier]
+
+4 CLOSED_LOOP       
+
+     The CLOOP operator may be used to calculate a closed loop
+transfer function in a simplified manner. The compensation, plant, and 
+feedback functions are the three operands, and must all be
+present.  The system is of this form:
+
+            +       ------------     ------------
+   -----------O----| comp. fcn. |---| plant fcn. |--------------->
+              ^     ------------     ------------    |
+              | -       -------------------          |
+               --------| feedback function |---------
+                        -------------------
+
+     Format:     FUNCTION  GENERATE  MISCELLANEOUS  CLOSED_LOOP
+     Expression: $CLOOP (comp-fcn, plant-fcn, feedback-fcn)
+
+5 evaluation        
+
+     The result of the $CLOOP operator is computed using the following
+equation. 
+
+               CLTF = $CLOOP (CF,PF,FF)
+               CLTF = (CF * PF) / (1 + (CF * PF * FF))
+
+     Where CF is the compensation function, PF is the plant 
+function, and FF is the feedback function.  If we let 
+
+                    CF = P/Q,   PF = R/S,   FF = U/V
+  
+then,
+                                 (P * R * V)
+             CLTF   =     -------------------------
+                          (Q * S * V) + (P * R * U)
+
+5 examples         
+
+     The following examples illustrate the use of the $CLOOP operator.
+All functions must be in the same plane, or in the K plane.
+
+               CLTF = $CLOOP(1,g,h)       equiv. to  g/(1+g*h)
+               CLTF = $CLOOP(23,g*g2,h)   equiv. to  23*g*g2/(1+23*g*g2*h)
+
+4 PD_CONTROL_LAW    
+
+     This operator allows the user to develop a position and rate 
+(derivative) or PD control law.  To design the controller, the user 
+must know the Bode or DC gain of the rest of the control loop.  If the 
+rest of the loop consists of just the plant, the loop gain of the 
+system is the reciprocal of the system inertia.
+
+There are three parameters:
+
+     1)  Controller bandwidth (r/s)
+     2)  Damping ratio (default = 0.707...)
+     3)  Loop gain (recriprocal of inertia).
+
+     Format:     FUNCTION  GENERATE  MISCELLANEOUS  PD_CONTROL_LAW
+     Expression: $PD (bandwidth, damping-ratio, gain)
+
+4 PID_CONTROL_LAW   
+
+     This operator allows the user to design a Position-plus-Integral-
+plus-Derivative (PID) Control Law.  To design the controler, the user
+must know the Bode or DC gain of the rest of the control loop.  If the
+rest of the loop consists of just the plant, the loop gain is the
+reciprocal of the inertia. 
+
+There are three parameters:
+
+     1)  Controller bandwidth (r/s)
+     2)  Damping ratio (default = 0.707...)
+     3)  Loop gain (recriprocal of inertia).
+     4)  Integral Loop Weighting factor.  (Default = 1)
+
+     Format:     FUNCTION  GENERATE  MISCELLANEOUS  PID_CONTROL_LAW
+     Expression: $PID (bandwidth, damping-ratio, gain, ...)
+
+3 STATIC_EQUATION   
+
+     This modifier allows a function to be defined in terms of other
+functions and constants.  The resulting equation is then evaluated,
+and the function is stored in factored form. If you define a function
+in terms of itself, the old function value will be used before it is
+trashed.  The expression can be any valid INCA expression.  See the
+main topic Expressions for more details and examples. 
+
+     Format:     FUNCTION  GENERATE  STATIC_EQUATION  
+                                             [function[:]=expression]
+
+2 LOAD              
+
+     The format of the file required by the LOAD modifier is best
+illustrated by the example below.  This is the same format as created
+by the FUNCTION SAVE FACTORED or FUNCTION AUDIT FACTORED commands.
+Thus a properly formatted function-textfile could be created by
+editing the audit file.  The output itself can be edited if desired,
+but the format cannot be changed. 
+
+     Format:     FUNCTION  LOAD  file-name
+
+3 Example           
+
+------------------------------------------------------------------------------
+
+Function name  = A
+Storage requirements              268
+Function last modified on      11:07:41.40  18-SEP-1987
+Comment: 
+
+ROOTED FORM
+Function plane = S
+Gain = -0.354468949192959      
+
+Numerator   has  4 distinct roots:
+  S=  - 0.42456766000000000                                      Order =  1
+  S=  + 0.65550000000000000                                      Order =  1
+  S=  - 0.60000000000000001     - j* 0.46000000000000000         Order =  1
+  S=  - 0.60000000000000001     + j* 0.46000000000000000         Order =  1
+
+Denominator has  4 distinct roots:
+  S=  - 0.11000000000000000     - j* 0.46000000000000000         Order =  2
+  S=  - 0.11000000000000000     + j* 0.46000000000000000         Order =  2
+  S=  -  1.0800000000000000     - j* 0.16000000000000000         Order =  1
+  S=  -  1.0800000000000000     + j* 0.16000000000000000         Order =  1
+
+------------------------------------------------------------------------------
+
+2 SAVE              
+
+     The format of the file produced by the SAVE modifier is best
+illustrated by the example under the FUNCTION LOAD command.  This is
+the same format as created by the FUNCTION VIEW FACTORED or FUNCTION
+AUDIT FACTORED commands. The file can be edited if desired, but the
+format cannot be changed. 
+
+     Format:     FUNCTION  SAVE  file-name
+
+2 UNDELETE          
+
+     This command allows the user to retreive previously deleted
+functions.  Every time a function is deleted, it is placed in an
+internal "trash barrel".  The last ten deleted functions can be
+examined using the UNDELETE modifier.  The user is then asked if he
+wants to recover each one in turn.  If he answers yes, the function is
+copied into the list of active functions.  It remains in the trash as
+well.  If a currently existing function has the same name, it is
+deleted. 
+
+     Format:     FUNCTION  UNDELETE
+
+2 VIEW              
+
+     This qualifer may be used to view functions on the terminal.
+There are a number of formats available.  The default format is
+HEADER.  If a format for the roots is given, a dynamic function will
+first be converted to static format.  If no parameter is given all
+functions are displayed. 
+
+     Format:     FUNCTION  VIEW  format  [ALL]  [function-name]
+
+     The ALL parameter will cause all existing functions to be printed
+in the format chosen.  The function-name-parameter is incompatable
+with the ALL parameter, and if both are given the second parameter
+will be ignored. 
+
+3 BODEGAIN_FACTORED 
+
+      The following items are sent to the terminal display.  Appropriate 
+labels are provided.
+
+          Function name.
+          Format identifier ('BODEGAIN_FACTORED FORM').
+          Function plane.
+          Function bode gain.
+          Function sample period (if in Z or W plane).
+          Number of distinct numerator factors.
+          List of distinct numerator factors and their orders.
+          Number of distinct denominator factors.
+          List of distinct denominator factors and their orders.
+
+     Format:     FUNCTION  VIEW  BODEGAIN_FACTORED  [ALL]  [function-name]
+
+3 DEGREE_POLAR      
+
+     The following items are sent to the terminal display.  Appropriate 
+labels are provided.
+
+          Function name.
+          Format identifier ('DEGREE_POLAR FORM').
+          Function plane.
+          Function numerator gain.
+          Function sample period (if in Z or W plane).
+          Number of distinct numerator factors.
+          List of magnitude, phase in degrees, and order for distinct 
+             numerator factors.
+          Number of distinct denominator factors.
+          List of magnitude, phase in degrees, and order for distinct 
+             denominator factors.
+
+     Format:     FUNCTION  VIEW  DEGREE_POLAR  [ALL]  [function-name]
+
+3 EXPAND_PART_FRACT 
+
+     This modifier will cause the function to be typed in partial
+fraction format.  If the function is given by: 
+
+   F(S) = k  [(s+a1)^p1 . . . (s+am)^pm] / [(s+b1)^q1 . . . (s+bn)^qn]
+
+     the partial fraction expansion is given by:
+
+                  c11         c12                     c1q1
+          F(S) =  ----  +  ---------  +  . . .  +  ----------
+                  s+b1     (s+b1)**2               (s+b1)**q1
+               .
+               . 
+                  cn1         cn2                     cnqn
+               +  ----  +  ---------  +  . . .  +  ----------
+                  s+bn     (s+bn)**2               (s+bn)**qn
+ 
+     and the following items are sent to the terminal display.
+
+          Function name.
+          Format identifier ('PARTIAL FRACTION FORM').
+          Function sample period (if in Z or W plane).
+          List of partial fraction terms.
+ 
+     Format:     FUNCTION  VIEW  EXPAND_PART_FRACT  [ALL]  [function-name]
+
+3 FACTORED            
+
+     This format will give the description closest to internal format,
+although the function header is truncated.  The following items are
+sent to the terminal display.  Appropriate labels are provided. 
+
+          Function name.
+          Format identifier ('FACTORED FORM').
+          Function plane.
+          Function numerator gain.
+          Function sample period (if in Z or W plane).
+          Number of distinct numerator factors.
+          List of distinct numerator factors and their orders.
+          Number of distinct denominator factors.
+          List of distinct denominator factors and their orders.
+
+     Format:     FUNCTION  VIEW  FACTORED  [ALL]  [function-name]
+
+3 NO_EVALUATION       
+
+     This format will give the description closest to internal format.
+ The following items are sent to the terminal display.  Appropriate 
+labels are provided.
+
+          Function name.
+          Function creation date and time.
+          Function comment.
+
+Either
+          Format identifier ('FACTORED FORM').
+          Function plane.
+          Function numerator gain.
+          Function sample period (if in Z or W plane).
+          Number of distinct numerator factors.
+          List of distinct numerator factors and their orders.
+          Number of distinct denominator factors.
+          List of distinct denominator factors and their orders.
+Or
+          Format identifier ('DYNAMIC FUNCTION').
+          Expression string.
+
+     Format:     FUNCTION  VIEW  NO_EVALUATION  [ALL]  [function-name]
+
+3 POLAR         
+
+     The following items are sent to the terminal display.  Appropriate 
+labels are provided.
+
+          Function name.
+          Format identifier ('POLAR FORM').
+          Function plane.
+          Function numerator gain.
+          Function sample period (if in Z or W plane).
+          Number of distinct numerator factors.
+          List of magnitude, phase in radians, and order for distinct 
+             numerator factors.
+          Number of distinct denominator factors.
+          List of magnitude, phase in radians, and order for distinct 
+             denominator factors.
+
+     Format:     FUNCTION  VIEW  POLAR  [ALL]  [function-name]
+
+3 ROOTS             
+
+     The following items are sent to the terminal display.  Appropriate 
+labels are provided.
+
+          Function name.
+          Format identifier ('ROOTED FORM').
+          Function plane.
+          Function numerator gain.
+          Function sample period (if in Z or W plane).
+          Number of distinct numerator roots.
+          List of distinct numerator roots and their orders.
+          Number of distinct denominator roots.
+          List of distinct denominator roots and their orders.
+
+     Format:     FUNCTION  VIEW  [ALL]  [function-name]
+
+3 SUMMARY             
+
+     This modifier is used to display a one line summary of all of the
+functions in the current project, as listed below:
+
+          Function name
+Either
+          Function plane
+          Function gain
+          Numerator factors (real + complex)
+          Denominator factors (real + complex)
+          Comment
+Or
+          Expression string.
+
+     Format:     FUNCTION  VIEW  SUMMARY
+
+3 UNFACTORED          
+
+     This modifier will type the function in unfactored polynomial
+form. The function factors are multiplied together to give the real
+coefficients of the unfactored numerator and denominator polynomials.
+The numerator polynomial is multiplied by the function numerator gain.
+The following items are sent to the terminal display. 
+
+          Function name.
+          Format identifier ('UNFACTORED FORM').
+          Function plane.
+          Function sample period (if in Z or W plane).
+          Order of numerator.
+          List of numerator coefficients.
+          Order of denominator.
+          List of denominator coefficients.
+
+     Format:     FUNCTION  VIEW  UNFACTORED  [ALL]  [function-name]
+
+3 ZETA_OMEGA        
+
+     The following items are sent to the terminal display.  Appropriate 
+labels are provided.
+
+          Function name.
+          Format identifier ('ZETA_OMEGA FORM').
+          Function plane.
+          Function numerator gain.
+          Function sample period (if in Z or W plane).
+          Number of distinct numerator factors.
+          List of zeta, omega, and order for distinct numerator factors.
+          Number of distinct denominator factors.
+          List of zeta, omega, and order for distinct denominator factors.
+
+     Format:     FUNCTION  VIEW  ZETA_OMEGA  [ALL]  [function-name]
+

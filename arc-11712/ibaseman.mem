@@ -1,0 +1,4764 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+                I M A G E   D A T A B A S E
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                       Release Notes
+
+                       14,March 1986
+
+
+
+
+
+                      Steven W. Engle
+
+                     Sterling Software
+
+                  Moffett Field, CA. 94035
+
+
+
+              Sterling Software Technical Note
+
+                      TN-86-7104-902-3
+
+Image Database Release Notes                                    Page 2
+
+
+
+
+
+CHAPTER 1       IBASE - THE IMAGE DATABASE
+
+
+
+        1.1     INTRODUCTION . . . . . . . . . . . . . . . . . . . 1-1
+
+        1.2     FUNCTIONAL DESCRIPTION . . . . . . . . . . . . . . 1-1
+
+        1.3     STRUCTURE OF THE IMAGE DATA BASE . . . . . . . . . 1-2
+
+
+
+
+
+CHAPTER 2       THE MENU INTERFACE
+
+
+
+        2.1     INTRODUCTION . . . . . . . . . . . . . . . . . . . 2-1
+
+        2.2     GENERAL OPERATING INSTRUCTIONS.  . . . . . . . . . 2-1
+
+        2.2.1     Taxonomy Of The Database.  . . . . . . . . . . . 2-1
+
+        2.2.2     Layer Specifications.  . . . . . . . . . . . . . 2-2
+
+        2.2.3     Comment Fields.  . . . . . . . . . . . . . . . . 2-3
+
+        2.2.4     How To Operate The Menus.  . . . . . . . . . . . 2-3
+
+        2.2.5     How To Operate The Screen Forms. . . . . . . . . 2-3
+
+        2.2.6     THE MAIN MENU  . . . . . . . . . . . . . . . . . 2-4
+
+        2.2.6.1   Edit File Contents [submenu] . . . . . . . . . . 2-5
+
+        2.2.7     Edit GeoCube Description [application] . . . . . 2-5
+
+        2.2.7.1   Cube Name  . . . . . . . . . . . . . . . . . . . 2-6
+
+        2.2.7.2   Northern Starting Position,Northern Ending 
+
+                  Position . . . . . . . . . . . . . . . . . . . . 2-6
+
+        2.2.7.3   Comments/Annotations . . . . . . . . . . . . . . 2-6
+
+        2.2.7.4   Modifications  . . . . . . . . . . . . . . . . . 2-6
+
+        2.2.7.5   Cube Name  . . . . . . . . . . . . . . . . . . . 2-7
+
+        2.2.7.6   Layer Name . . . . . . . . . . . . . . . . . . . 2-8
+
+        2.2.7.7   Layer Label  . . . . . . . . . . . . . . . . . . 2-8
+
+        2.2.7.8   Layer Type . . . . . . . . . . . . . . . . . . . 2-8
+
+        2.2.7.9   Layer File . . . . . . . . . . . . . . . . . . . 2-9
+
+        2.2.7.10  Data Type  . . . . . . . . . . . . . . . . . . . 2-9
+
+        2.2.7.11  Data Representation. . . . . . . . . . . . . . . 2-9
+
+        2.2.7.12  Comments/Annotations . . . . . . . . . . . . . . 2-9
+
+        2.2.7.13  Layer Size . . . . . . . . . . . . . . . . . . . 2-9
+
+        2.2.7.14  Pixel Size . . . . . . . . . . . . . . . . . .  2-10
+
+        2.2.7.15  Sample Date  . . . . . . . . . . . . . . . . .  2-10
+
+        2.2.7.16  Modifications  . . . . . . . . . . . . . . . .  2-10
+
+        2.2.8     Edit Label List [application]  . . . . . . . .  2-10
+
+        2.2.8.1   Label  . . . . . . . . . . . . . . . . . . . .  2-11
+
+        2.2.8.2   Comments/Annotation  . . . . . . . . . . . . .  2-11
+
+        2.2.8.3   Modifications  . . . . . . . . . . . . . . . .  2-11
+
+        2.2.9     Print/Display File Contents [submenu]  . . . .  2-12
+
+        2.2.9.1   Print GeoCube Master File Contents. 
+
+                  [application]  . . . . . . . . . . . . . . . .  2-12
+
+        2.2.9.2   Print Layer Description File Contents. 
+
+                  [application]  . . . . . . . . . . . . . . . .  2-12
+
+        2.2.9.3   Summarize A Specific GeoCube. [application]  .  2-13
+
+        2.2.9.4   Print A Report Layer . . . . . . . . . . . . .  2-13
+
+        2.2.9.5   Print A Report Layer At The Terminal . . . . .  2-13
+
+        2.2.9.6   Print A Line Printer Map Of A Layer 
+
+                  [application]  . . . . . . . . . . . . . . . .  2-13
+
+        2.2.9.7   Directory Of System Data Files. [application]   2-13
+
+        2.2.9.8   List The Labels [application]  . . . . . . . .  2-13
+
+        2.2.10    Analyze File [submenu] . . . . . . . . . . . .  2-14
+
+        2.2.10.1  Generate A Contingency Table [application] . .  2-14
+
+        2.2.10.2  Conduct A Contingency Analysis [application] .  2-14
+
+Image Database Release Notes                                    Page 3
+
+
+
+
+
+        2.2.10.3  Confirm The Presence Of A Layer Type 
+
+                  [application]  . . . . . . . . . . . . . . . .  2-15
+
+        2.2.10.4  Generate A Proximity Map [application] . . . .  2-15
+
+        2.2.10.5  Cluster An Image [application] . . . . . . . .  2-15
+
+        2.2.10.6  Filter An Image [submenu]  . . . . . . . . . .  2-15
+
+        2.2.10.6.1Low Pass Filter [application]  . . . . . . . .  2-16
+
+        2.2.10.6.2High Pass Filter [application] . . . . . . . .  2-16
+
+        2.2.10.6.3Band Pass Filter [application] . . . . . . . .  2-16
+
+        2.2.10.7  Perform Boolean Operations Upon An Image 
+
+                  [submenu]  . . . . . . . . . . . . . . . . . .  2-16
+
+        2.2.10.7.1And Two Images [application] . . . . . . . . .  2-17
+
+        2.2.10.7.2Or Two Images [application]  . . . . . . . . .  2-17
+
+        2.2.10.7.3Negate An Image [application]  . . . . . . . .  2-17
+
+        2.2.10.7.4Xor Two Images [application] . . . . . . . . .  2-18
+
+        2.2.10.8  Scale An Image [application] . . . . . . . . .  2-18
+
+        2.2.10.9  Generate A Histogram Of An Image [application]  2-18
+
+        2.2.10.10 Acquire General Layer Statistics [application]  2-18
+
+        2.2.10.11 Calculate Slope Of An Elevation Image  . . . .  2-18
+
+        2.2.10.12 Calculate Aspect Of An Elevation Image . . . .  2-18
+
+        2.2.10.13 Regress One Layer Against Another  . . . . . .  2-19
+
+        2.2.11    File Manipulation [submenu]  . . . . . . . . .  2-19
+
+        2.2.11.1  Copy A Layer To Another GeoCube [application]   2-19
+
+        2.2.11.2  Change The Name Of A Layer [application] . . .  2-19
+
+        2.2.11.3  Delete A GeoCube [application] . . . . . . . .  2-20
+
+        2.2.11.4  Delete A Layer [application] . . . . . . . . .  2-20
+
+        2.2.11.5  Delete System Master Files [application] . . .  2-20
+
+        2.2.11.6  List The Layer Files [application] . . . . . .  2-20
+
+        2.2.11.7  List The Labels [application]  . . . . . . . .  2-20
+
+        2.2.11.8  Print A Layer At The Line Printer [application] 2-20
+
+
+
+
+
+CHAPTER 3       THE COMMAND INTERFACE
+
+
+
+        3.1     INTRODUCTION . . . . . . . . . . . . . . . . . . . 3-1
+
+        3.2     GENERAL COMMAND STRUCTURE  . . . . . . . . . . . . 3-1
+
+        3.2.1     HELP . . . . . . . . . . . . . . . . . . . . . . 3-1
+
+        3.2.2     THE AND COMMAND  . . . . . . . . . . . . . . . . 3-1
+
+        3.2.3     THE ASPECT COMMAND . . . . . . . . . . . . . . . 3-2
+
+        3.2.4     THE CLUSTER COMMAND  . . . . . . . . . . . . . . 3-2
+
+        3.2.5     THE CONTAB COMMAND . . . . . . . . . . . . . . . 3-2
+
+        3.2.6     THE CONTABS COMMAND  . . . . . . . . . . . . . . 3-2
+
+        3.2.7     THE EXIT COMMAND . . . . . . . . . . . . . . . . 3-3
+
+        3.2.8     THE EXISTS? COMMAND  . . . . . . . . . . . . . . 3-3
+
+        3.2.9     THE FILTER BANDPASSS COMMAND . . . . . . . . . . 3-3
+
+        3.2.10    THE FILTER LOWPASS COMMAND . . . . . . . . . . . 3-4
+
+        3.2.11    THE FILTER HIGHPASS COMMAND  . . . . . . . . . . 3-4
+
+        3.2.12    THE GENSTATS COMMAND . . . . . . . . . . . . . . 3-4
+
+        3.2.13    THE LIST CUBES COMMAND . . . . . . . . . . . . . 3-5
+
+        3.2.14    THE LIST LAYERS COMMAND  . . . . . . . . . . . . 3-5
+
+        3.2.15    THE HIST COMMAND . . . . . . . . . . . . . . . . 3-5
+
+        3.2.16    THE NOT COMMAND  . . . . . . . . . . . . . . . . 3-6
+
+        3.2.17    THE OR COMMAND . . . . . . . . . . . . . . . . . 3-6
+
+        3.2.18    THE PROX COMMAND . . . . . . . . . . . . . . . . 3-7
+
+        3.2.19    THE QUIT COMMAND . . . . . . . . . . . . . . . . 3-7
+
+        3.2.20    THE REGRESS COMMAND  . . . . . . . . . . . . . . 3-7
+
+Image Database Release Notes                                    Page 4
+
+
+
+
+
+        3.2.21    THE SEND COMMAND . . . . . . . . . . . . . . . . 3-7
+
+        3.2.22    THE SET CUBE COMMAND . . . . . . . . . . . . . . 3-8
+
+        3.2.23    THE SHOW CUBE COMMAND  . . . . . . . . . . . . . 3-8
+
+        3.2.24    THE SHOW LAYERFILE COMMAND . . . . . . . . . . . 3-8
+
+        3.2.25    THE SLOPE COMMAND  . . . . . . . . . . . . . . . 3-8
+
+        3.2.26    THE TYPE COMMAND . . . . . . . . . . . . . . . . 3-9
+
+        3.2.27    THE XOR COMMAND  . . . . . . . . . . . . . . . . 3-9
+
+
+
+
+
+CHAPTER 4       IBASE PROGRAM STRUCTURE
+
+
+
+        4.1     THE EXECUTIVES . . . . . . . . . . . . . . . . . . 4-1
+
+        4.1.1     The Menu Executive . . . . . . . . . . . . . . . 4-1
+
+        4.1.2     The Command Executive  . . . . . . . . . . . . . 4-2
+
+        4.2     GENERATION OF OUTPUT LAYER FILE NAMES. . . . . . . 4-2
+
+        4.3     FORMATS OF THE SYSTEM FILES  . . . . . . . . . . . 4-2
+
+        4.3.1     Format Of The GeoCube Master File  . . . . . . . 4-2
+
+        4.3.2     Format Of The Layer Master File  . . . . . . . . 4-3
+
+        4.3.3     Format Of The Label List File  . . . . . . . . . 4-3
+
+        4.3.4     Format Of The Layer Data File  . . . . . . . . . 4-4
+
+        4.3.5     Internal Representation Of Layer Data. . . . . . 4-4
+
+        4.4     DEVELOPMENT ENVIRONMENT  . . . . . . . . . . . . . 4-4
+
+        4.4.1     Installation Instructions  . . . . . . . . . . . 4-4
+
+        4.4.2     Files Included In The Distribution Tape. . . . . 4-5
+
+        4.4.2.1   CLSTCOM.INC  . . . . . . . . . . . . . . . . . . 4-5
+
+        4.4.2.2   CPARMS.HLP . . . . . . . . . . . . . . . . . . . 4-5
+
+        4.4.2.3   GEOREC.INC . . . . . . . . . . . . . . . . . . . 4-5
+
+        4.4.2.4   IBASE.EXE  . . . . . . . . . . . . . . . . . . . 4-6
+
+        4.4.2.5   IBASE.FOR  . . . . . . . . . . . . . . . . . . . 4-6
+
+        4.4.2.6   IBASE.OBJ  . . . . . . . . . . . . . . . . . . . 4-6
+
+        4.4.2.7   IBASEMAN.MEM . . . . . . . . . . . . . . . . . . 4-6
+
+        4.4.2.8   IBASEMAN.RNO . . . . . . . . . . . . . . . . . . 4-6
+
+        4.4.2.9   IMGA.INC, IMGB.INC . . . . . . . . . . . . . . . 4-6
+
+        4.4.2.10  IOCOM.INC  . . . . . . . . . . . . . . . . . . . 4-6
+
+        4.4.2.11  LABREC.INC . . . . . . . . . . . . . . . . . . . 4-6
+
+        4.4.2.12  LAYREC.INC . . . . . . . . . . . . . . . . . . . 4-7
+
+        4.4.2.13  MKMANUAL.COM . . . . . . . . . . . . . . . . . . 4-7
+
+        4.4.2.14  PCOMP.COM  . . . . . . . . . . . . . . . . . . . 4-7
+
+        4.4.3     Description Of The Contents Of The Inclusion 
+
+                  Files. . . . . . . . . . . . . . . . . . . . . . 4-7
+
+        4.4.3.1   CLSTCOM.INC  . . . . . . . . . . . . . . . . . . 4-7
+
+        4.4.3.2   GEOREC.INC . . . . . . . . . . . . . . . . . . . 4-7
+
+        4.4.3.3   IOCOM.INC  . . . . . . . . . . . . . . . . . . . 4-7
+
+        4.4.3.4   IMGA.INC,IMGB.INC  . . . . . . . . . . . . . . . 4-8
+
+        4.4.3.5   LABREC.INC . . . . . . . . . . . . . . . . . . . 4-8
+
+        4.4.3.6   LAYREC.INC . . . . . . . . . . . . . . . . . . . 4-8
+
+        4.4.4     Areas Of Potential Incompatibility . . . . . . . 4-8
+
+        4.4.4.1   Use Of VAX/VMS Intrinsic Functions   . . . . . . 4-8
+
+        4.4.4.2   Terminal Dependence  . . . . . . . . . . . . . . 4-8
+
+        4.4.4.3   Indexed File I/O . . . . . . . . . . . . . . . . 4-8
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                              CHAPTER 1
+
+
+
+                      IBASE - THE IMAGE DATABASE
+
+
+
+
+
+
+
+1.1  INTRODUCTION
+
+
+
+     The image database  is  a  general  purpose  Imagery  Information
+
+System  intended  to  be  used  with the Cheshire Image Classification
+
+expert system.  The  system  includes  functions  for  cataloging  and
+
+managing  digital  imagery files, and for conducting analyses of these
+
+images.  Use of the system may be accomplished either through a system
+
+of menus, or by commands.
+
+
+
+
+
+
+
+1.2  FUNCTIONAL DESCRIPTION
+
+
+
+     The  image  database  is  capable  of  storing,  analyzing,   and
+
+manipulating  digital  satelite  imagery.   Data  is  organized into a
+
+number of images--referred to as 'layers'--each of which refers  to  a
+
+single  location  on  the  planet  surface.  Layers are organized into
+
+GeoCubes.  Data pertaining to the GeoCube in general is stored in  the
+
+GeoCube  file,  while  data  about  each  image is stored in the layer
+
+record corresponding to the layer itself.  The imagery data is  stored
+
+in individual files.
+
+
+
+     Analysis may be conducted on individual layers or sets of layers.
+
+The  results  of  analyses  are  entered into layers and corresponding
+
+layer records are created automatically.
+
+
+
+     Functions are provided to enter layer information,  to  summarize
+
+and  report  layer information, to conduct analysis, and to manipulate
+
+layer files.  Functions may be invoked using commands or  through  the
+
+menu tree.
+
+
+
+
+
+
+
+1.3  STRUCTURE OF THE IMAGE DATA BASE
+
+
+
+     All information stored in the image data base is considered  part
+
+of  a  GeoCube.   A  GeoCube  is  a rectangular region, delimited by a
+
+particular pair of coordinates for the Upper Right (North-Eastern) and
+
+Lower  Left  (South-western) corners.  A GeoCube is composed of one or
+
+more layers.  These layers form square regions within the space of the
+
+IBASE - THE IMAGE DATABASE                                    Page 1-2
+
+
+
+
+
+GeoCube.
+
+
+
+     Information about each GeoCube is stored in  the  GeoCube  Master
+
+File.   This  file  is  usually named "IDBMASTR.DAT".  The information
+
+stored is the Name of the GeoCube,  its  coordinate  pairs,  and  some
+
+commentary text for the GeoCube.
+
+
+
+     Layer information is  stored  in  the  Layer  Master  File.   The
+
+standard name for this file is "IDBLAYER.DAT".  The information stored
+
+here refers to the individual layers.  The layer information  includes
+
+fields  which refer to the layer's GeoCube and the name of the file in
+
+which the image is stored.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                              CHAPTER 2
+
+
+
+                          THE MENU INTERFACE
+
+
+
+
+
+
+
+2.1  INTRODUCTION
+
+
+
+     The menu interface provides an efficient  and  easily  accessible
+
+means  of operating the image database.  The user is confronted with a
+
+menu display and must enter either a valid selection, or  an  asterisk
+
+("*").   The asterisk will cause control to be transferred to the next
+
+higher menu level, or from the top level  menu  will  cause  IBASE  to
+
+exit.  Menu selections will transfer control either to submenus (items
+
+which result in submenus are  generally  followed  by  a  right  caret
+
+[">"])  or  to  applications.   Applications  prompt  for the necesary
+
+parameters and administer their respective functions.
+
+
+
+
+
+
+
+2.2  GENERAL OPERATING INSTRUCTIONS.
+
+
+
+2.2.1  Taxonomy Of The Database.
+
+
+
+     The Image database is primarily intended as a means to manipulate
+
+groups of measures that form matrices--images.  Each Image is referred
+
+to herein as a layer.  One  or  more  layers  referring  to  the  same
+
+two-dimensional   space  are  grouped  into  a  single  GeoCube.   The
+
+following is a hierarchical representation of the Database fields;
+
+ 1. GeoCube
+
+  1.1 Layer Record
+
+   1.1.01 Data File Specification
+
+   1.1.02 Comments
+
+   1.1.03 Layer Label
+
+   1.1.04 Layer Type
+
+   1.1.05 Data Representation
+
+   1.1.06 Data Type
+
+   1.1.07 Layer Size - number of samples
+
+   1.1.08 Layer Size - number of lines
+
+   1.1.09 Pixel Size - "width"
+
+   1.1.10 Pixel Size - "length"
+
+   1.1.11 Data of Sample
+
+     1.1.11.1 Day of Sample
+
+     1.1.11.2 Month of Sample
+
+     1.1.11.3 Year of Sample
+
+
+
+THE MENU INTERFACE                                            Page 2-2
+
+
+
+
+
+  1.2 Layer Data
+
+   1.2.1   Pixel value 1,1
+
+   1.2.2   Pixel value 1,2
+
+   1.2.n   Pixel value 1,n
+
+   1.2.m.n Pixel value m,n
+
+
+
+
+
+     The largest unit in the Image database is the GeoCube.  A GeoCube
+
+is  composed  of  a  number  of  layers  each  refering  to  the  same
+
+goegraphical location on the surface of the planet.  A record  in  the
+
+GeoCube  master file references the GeoCube and maintiains information
+
+and comments about the GeoCube as a whole.
+
+
+
+     Each layer is referenced by a record in the  Layer  record  file.
+
+This  record  contains  fields  describing  the layer, referencing its
+
+GeoCube, and specifying the file in which the layer data is kept.
+
+
+
+     Layer data files are of two types;  Images and  Reports.   Report
+
+layers  are  merely  text files containing the results of analyses, or
+
+other pertinant data.  They are referenced in the layer to keep  track
+
+of the reports and results.  Image layers are actual files of samples.
+
+These samples may be either byte or two-byte integer  values  and  are
+
+kept  in  a line-by-line format without any header information.  Hence
+
+in a byte file the first byte is the value of coordinate  1,1  in  the
+
+image, the second byte is the value of coordinate 1,2, and so forth.
+
+
+
+
+
+
+
+2.2.2  Layer Specifications.
+
+
+
+     Layers  are  referred  to  by  unique  names   created   by   the
+
+concatenation of the GeoCube name and the Layer Name.  The name itself
+
+carries no internal significance and therefore may be  freely  defined
+
+by  the  user.   In  menu  mode  prompting  is performed to obtain the
+
+GeoCube name and the layer name seperately in each  application  (when
+
+possible  the GeoCube name is offered as a default value).  In Command
+
+mode it is possible either to set a default cube (using the  SET  CUBE
+
+command)  and  refer  thereon  to  only  layer  names,  or  to use the
+
+following syntax to refer to layers;  GeoCube#Layer.  For example, the
+
+layer for Elevation in the GeoCube of New Jersey would be expressed as
+
+NEWJERSEY#ELEVATION.
+
+
+
+
+
+
+
+2.2.3  Comment Fields.
+
+
+
+     Comment fields are present  in  the  GeoCube,  Layer,  and  Label
+
+records.   These  fields  are  available for general annotation by the
+
+user and are never referenced by analysis functions.  Functions  which
+
+create output reports or output images write the specifications of the
+
+input layers and the operation performed into this field  to  indicate
+
+the  contents  of  the  layer,  but the user is free to overwrite this
+
+information at will.
+
+THE MENU INTERFACE                                            Page 2-3
+
+
+
+
+
+2.2.4  How To Operate The Menus.
+
+
+
+     All IBASE menus follow a consistent and predictable behaviour, in
+
+accordance with the following general rules.
+
+
+
+     To select a menu  item,  enter  its  number.   Improperly  formed
+
+numbers  will  cause  the  terminal bell to ring and will reprompt the
+
+operator.  To leave the menu and return  to  the  next  higher  level,
+
+enter  an  asterisk.   An  asterisk  entered at the highest level will
+
+terminate IBASE.
+
+
+
+     The system of menus forms a hierarchy in which  some  menu  items
+
+will  themselves  invoke  menus (submenus).  These items generally end
+
+with  a  right  caret  (">").   The  following   diagram   graphically
+
+illustrates the structure of the menu tree;
+
+
+
+                   Main Menu
+
+                       |
+
+    +-----------+------+---------+---------------+
+
+    |           |                |               |
+
+ Edit File  Print/Display   Image Analysis  File Manipulation
+
+ Contents   File Contents      Functions      Functions
+
+                                 |              
+
+                   +-------------+--------------+
+
+                   |                            |
+
+               Boolean Operations     Filtering Operations
+
+
+
+
+
+
+
+
+
+2.2.5  How To Operate The Screen Forms.
+
+
+
+     IBASE screen forms are interfaces which "take over" the  terminal
+
+screen,  in  a  sense  simulating  an  active  piece  of  paper on the
+
+terminal.  The terminal cursor is used  to  prompt  the  user  at  the
+
+current item being entered.  In general, entering an asterisk ("*") at
+
+a field will cause the cursor to be backed up to the  previous  field.
+
+Entering  an  asterisk  at  the  first  field  of a screen form causes
+
+control to be returned to the invoking submenu.
+
+
+
+     When using data entry screen forms ( edit/modify/delete ), it  is
+
+of  use  to  be aware of a number of additional operating rules.  Data
+
+entry forms display the contents  of  a  single  file  record.   These
+
+records  are  accessed  by  the system using "key" fields in the data.
+
+Each key field must  be  unique,  and  once  created  they  cannot  be
+
+altered.   In  general,  key fields are among the first several fields
+
+entered.  Once the key fields are entered, a search  is  conducted  to
+
+locate  the  record  with  the  key  specified.   If  such a record is
+
+located, the fields of the screen form are displayed and the  user  is
+
+prompted  to  enter  any modifications.  If no such record is located,
+
+the user is prompted to complete the screen form  and  the  record  is
+
+entered as a new record.
+
+THE MENU INTERFACE                                            Page 2-4
+
+
+
+
+
+     At the modifications field, a number of different operations  may
+
+be  performed.   By  entering  the number of a field, the user will be
+
+permitted to enter a modification to the field.  By entering 'N',  the
+
+user  will indicate that no modifications are necessary and the record
+
+is stored if it is new, or updated if it was  modified.   Entering  an
+
+asterisk  ("*")  will  cause the modifications or the new record to be
+
+ignored and the user will be prompted for a new record--the data  base
+
+will  not be modified in any way.  Attempts to modify the key field(s)
+
+will be perceived as instructions to delete the record  and  the  user
+
+will  be  prompted  with  a  number  of  messages  to ensure that this
+
+selection was not mistaken.
+
+
+
+
+
+
+
+2.2.6  THE MAIN MENU
+
+
+
+     When the Image DataBase is initially invoked in the menu mode the
+
+following menu will be displayed;
+
+
+
++------------------------------------------------------------------+
+
+| Date:             Cheshire Image Data Base  NASA/Ames Res Center |
+
+|                                                                  |
+
+|                       Main System Menu                           |
+
+~                                                                  ~
+
+|              1. Edit File Contents.              >               |
+
+|              2. Print/Display File Contents.     >               |
+
+|              3. Image Analysis Functions.        >               |
+
+|              4. File Manipulation Functions.     >               |
+
+~                                                                  ~
+
+|                Please Select a Menu Item                         |
+
++------------------------------------------------------------------+
+
+
+
+
+
+     By selecting one of the offered items the user will  gain  access
+
+to  a  number  of  further  system  functions.  The Edit file contents
+
+selection includes functions used to access and update the contents of
+
+the  system layer data files and the GeoCube files.  The Print/Display
+
+file contents functions create reports detailing the contents  of  the
+
+system  data files.  The Image Analysis functions perform calculations
+
+upon layers.  Finally,  the  File  manipulation  functions  include  a
+
+number of utlities to allow access to the actual system files.
+
+
+
+
+
+
+
+2.2.6.1  Edit File Contents [submenu] -
+
+
+
+     These functions permit interactive  editting,  modification,  and
+
+deletion of items in the system data files.
+
+
+
+THE MENU INTERFACE                                            Page 2-5
+
+
+
+
+
++------------------------------------------------------------------+
+
+| Date:             Cheshire Image Data Base  NASA/Ames Res Center |
+
+|                                                                  |
+
+|                  Edit File Contents SubMenu                      |
+
+~                                                                  ~
+
+|                 1. Edit GeoCube Description.                     |
+
+|                 2. Edit Layer Description.                       |
+
+|                 3. Edit Label List.                              |
+
+~                                                                  ~
+
+|                Please Select a Menu Item                         |
+
++------------------------------------------------------------------+
+
+
+
+
+
+
+
+
+
+2.2.7  Edit GeoCube Description [application]
+
+
+
+     This menu selection permits interactive  editting,  deletion  and
+
+modification  of  records  in  the  GeoCube  description  file.   This
+
+interaction is handled through a screen mask.
+
+
+
++------------------------------------------------------------------+
+
+| Date:             Cheshire Image Data Base  NASA/Ames Res Center |
+
+|                                                                  |
+
+|                   Edit GeoCube Description                       |
+
+|                                                                  |
+
+|          1. Cube Name:                                           |
+
+|          2. Northern Starting Position:                          |
+
+|          3.   Northern Ending Position:                          |
+
+|          4.  Eastern Starting Position:                          |
+
+|          5.    Eastern Ending Position:                          |
+
+|                                                                  |
+
+|  Comments/Annotation                                             |
+
+|  |.............:..............|............:............|        |
+
+| 6.                                                               |
+
+| 7.                                                               |
+
+|  |.............:..............|............:............|        |
+
+|                                                                  |
+
+|                        Modifications                             |
+
++------------------------------------------------------------------+
+
+
+
+
+
+     A description of each of the above fields follows;
+
+
+
+
+
+
+
+2.2.7.1  Cube Name -
+
+
+
+     Enter here the GeoCube name.   Once  the  name  is  entered,  the
+
+system  will  attempt  to locate the corresponding GeoCube record.  If
+
+the record is found, it's contents will be  displayed  on  the  screen
+
+form.  If no such record exists, the user will be permitted to enter a
+
+new record.
+
+THE MENU INTERFACE                                            Page 2-6
+
+
+
+
+
+     An asterisk entered here will terminate the function  and  return
+
+the user to the next highest menu.
+
+
+
+     Attempts to modify this field will be interpreted as commands  to
+
+delete  this  record  and  will  cause  the  user  to  be prompted for
+
+confirmation (see description of MODIFICATIONS below).
+
+
+
+
+
+
+
+2.2.7.2  Northern Starting Position,Northern Ending Position - Eastern
+
+Starting Position, and Eastern Ending Position
+
+
+
+     These fields are used to indicate the relative  extremes  of  the
+
+GeoCube.   Currently  they  are not used by any analysis functions are
+
+need not be dealt with.
+
+
+
+     An asterisk ("*") entered at any one of these fields  will  cause
+
+the cursor to prompt at the previous screen mask item.
+
+
+
+
+
+
+
+2.2.7.3  Comments/Annotations -
+
+
+
+     This field is available for the user to enter additional comments
+
+and  annotations  to  identify the layer.  The field is ignored by all
+
+programs that access the database.
+
+
+
+     An asterisk ("*") entered here will cause the cursor to prompt at
+
+the previous screen mask item.
+
+
+
+
+
+
+
+2.2.7.4  Modifications -
+
+
+
+     This field permits the user to modify any of the  fields  in  the
+
+screen  mask.   To  modify  a particular field, simply enter the field
+
+number, press return, and the cursor will move to that field.
+
+
+
+     This procedure will work for any  field  except  the  key  field.
+
+Attempts to modify the key field are interpreted as commands to delete
+
+the record, and will cause the user  to  be  prompted  to  delete  the
+
+record.
+
+
+
+     If no modifications are to be done enter 'N' and the contents  of
+
+the  file  will be altered.  An asterisk ('*') entered here will cause
+
+the screen to be ignored and will result  in  no  alterations  to  the
+
+system file.
+
+
+
+     2.3.3 Edit Layer Description [application]
+
+
+
+     This selection transfers control to the  Layer  Description  file
+
+editor  to  allow  interactive  entry,  deletion,  and modification of
+
+records in the layer description file.  Upon selection of the  editor,
+
+the following terminal screen is displayed;
+
+THE MENU INTERFACE                                            Page 2-7
+
+
+
+
+
++------------------------------------------------------------------+
+
+| Date:             Cheshire Image Data Base  NASA/Ames Res Center |
+
+|                                                                  |
+
+|                    Edit Layer Description                        |
+
+|                                                                  |
+
+|  1.Cube Name:                         2.Layer Name:              |
+
+|                                                                  |
+
+|  3.Layer Label:                       6.Data Type:               |
+
+|  4.Layer Type:                        7.Data Representation:     |
+
+|  5.Layer File:                                                   |
+
+|                                                                  |
+
+|  8.Comments/Annotation                                           |
+
+|  |.............:..............|............:............|        |
+
+|                                                                  |
+
+|               --x-- --y--                                        |
+
+|  9.Layer Size:                       11.Sample Date:             |
+
+| 10.Pixel Size:                                                   |
+
+|                        Modifications                             |
+
++------------------------------------------------------------------+
+
+
+
+     A description of each of the fields follows;
+
+
+
+
+
+
+
+2.2.7.5  Cube Name -
+
+
+
+     This field contains the name of the GeoCube under which the layer
+
+is  to  be stored.  Upon entry the GeoCube Master file is consulted to
+
+validate the presence of the layer.  Should the system  be  unable  to
+
+locate  the  GeoCube,  the  message  "ERROR-Unknown  GeoCube"  will be
+
+displayed on the terminal and the user will be reprompted  to  reenter
+
+the Cube Name.
+
+
+
+     An asterisk ("*") entered here  will  terminate  the  editor  and
+
+return control to the Submenu.
+
+
+
+
+
+
+
+2.2.7.6  Layer Name -
+
+
+
+     This is a unique name assigned to the layer.  This name  will  be
+
+used to identify the layer within the database.
+
+
+
+     Upon entry of this field, the system will  attempt  to  locate  a
+
+record  with  this particular layer name in the GeoCube entered in the
+
+previous field.  If such a record is found the fields in the form  are
+
+filled out and the user is prompted at the MODIFICATIONs field.  If no
+
+such record is found the user is permitted to enter a new record.
+
+
+
+     An asterisk ("*") entered in this field will cause the cursor  to
+
+move to the previous screen field.
+
+
+
+     The Layer Name in conjunction with the cube name create a  unique
+
+identifier  for  the  layer,  and  as  such  are the key fields of the
+
+screen.  Attempts to modify the key fields are interpreted as commands
+
+THE MENU INTERFACE                                            Page 2-8
+
+
+
+
+
+to delete the record.
+
+
+
+
+
+
+
+2.2.7.7  Layer Label -
+
+
+
+     Enter here the predefined label for the layer.  The label will be
+
+validated  against  data stored in the Label List (see below).  Should
+
+no corresponding label be present in the Label list, an error  message
+
+will be displayed and the user will be reprompted.
+
+
+
+     An asterisk ("*") entered in this field will cause the cursor  to
+
+move to the previous screen field.
+
+
+
+
+
+
+
+2.2.7.8  Layer Type -
+
+
+
+     This field is used to distinguish  layers  which  contain  report
+
+information  from  layer  contenting image data.  Only two entries for
+
+this field are accepted, either R for report  or  I  for  image.   The
+
+entry  is  converted  to  uppercase  and  expanded to the full text of
+
+either 'IMAGE' or 'REPORT'.  Any  other  entry  will  cause  an  error
+
+message  to  be displayed and the user will be reprompted to enter the
+
+field.
+
+
+
+     An asterisk ("*") entered in this field will cause the cursor  to
+
+move to the previous screen field.
+
+
+
+
+
+
+
+2.2.7.9  Layer File -
+
+
+
+     This field contains the specification of the file which  contains
+
+the  image  data.  The field may contain any valid file specification.
+
+Upon entry of this field, a check will be performed  to  confirm  that
+
+the file is currently available.  Failure of this check will result in
+
+the display of a warning message.  This message is informational  only
+
+and does not imply an error condition.
+
+
+
+     An asterisk ("*") entered in this field will cause the cursor  to
+
+move to the previous screen field.
+
+
+
+
+
+
+
+2.2.7.10  Data Type -
+
+
+
+     This field refers the way samples are to be interpreted.  It  may
+
+be  either  (C)ontinuous  or  (D)iscrete.  Continuous values represent
+
+ranges or directly measured values.  Discrete values do not  represent
+
+measurements,  but rather refer to defined classes, or have other user
+
+assigned meanings.
+
+THE MENU INTERFACE                                            Page 2-9
+
+
+
+
+
+2.2.7.11  Data Representation. -
+
+
+
+     This field indicates the form in which information in  the  Image
+
+file  is  represented.   Permissible  entries  here  are  (I)nteger or
+
+(B)yte.  The user has only to enter the first character and the  entry
+
+program will expand the response out to its full form.
+
+
+
+
+
+
+
+2.2.7.12  Comments/Annotations -
+
+
+
+     This field is available for the user to enter additional comments
+
+and  annotations  to  identify the layer.  The field is ignored by all
+
+programs that access the database.
+
+
+
+
+
+
+
+2.2.7.13  Layer Size -
+
+
+
+     This field  indicates  the  count  of  pixels  in  the  X  and  Y
+
+dimensions.   This  is  equivalent  to  the  number of samples and the
+
+number of lines, respectively.
+
+
+
+
+
+
+
+2.2.7.14  Pixel Size -
+
+
+
+     This field contains the size of each pixel in both the X and  the
+
+Y  coordinates.   The units are currently undefined, and this field is
+
+not currently accessed by analysis functions.
+
+
+
+
+
+
+
+2.2.7.15  Sample Date -
+
+
+
+     This field contains the date on which the image was obtained.  It
+
+is  not  used  by  the system and is intended primarily for use by the
+
+operator.  The format of the date is MM/DD/YY where M  refers  to  the
+
+month, D refers to the day, and Y refers to the last two digits of the
+
+year.
+
+
+
+     A blank entered in this field will cause the current date  to  be
+
+displayed and entered as the sample date.
+
+
+
+
+
+
+
+2.2.7.16  Modifications -
+
+
+
+     This field permits the user to modify any of the  fields  in  the
+
+screen  mask.   To  modify  a particular field, simply enter the field
+
+number, press return, and the cursor will move to that field.
+
+
+
+     This procedure will work for any field  except  the  key  fields.
+
+Attempts to modify the key field are interpreted as commands to delete
+
+the record, and will cause the user  to  be  prompted  to  delete  the
+
+THE MENU INTERFACE                                           Page 2-10
+
+
+
+
+
+record.
+
+
+
+     If no modifications are to be done enter 'N' and the contents  of
+
+the  file  will be altered.  An asterisk ('*') entered here will cause
+
+the screen to be ignored and will result  in  no  alterations  to  the
+
+system file.
+
+
+
+
+
+
+
+2.2.8  Edit Label List [application]
+
+
+
+     This selection transfers control to the  Label  List  editor  and
+
+displays  a  a  screen  mask  system to be used for interactive entry,
+
+deletion, and modification of records in the label  list  file.   This
+
+data  is  used  by  the expert system to determine the contents of the
+
+image and its intended use.  Entries in the Label field of  the  layer
+
+record  are  checked  against  the Label List to ensure that a limited
+
+number of standard labels are in use by the system.
+
+
+
+     When the menu item is selected,  the  following  screen  mask  is
+
+displayed;
+
+
+
++------------------------------------------------------------------+
+
+| Date:             Cheshire Image Data Base  NASA/Ames Res Center |
+
+|                                                                  |
+
+|                       Edit Label List                            |
+
+|                                                                  |
+
+|             1.Label:                                             |
+
+|                                                                  |
+
+|  2.Comments/Annotation                                           |
+
+|  |.............:..............|............:............|        |
+
+|                                                                  |
+
+|                        Modifications                             |
+
++------------------------------------------------------------------+
+
+
+
+     A description of each of the fields follows;
+
+
+
+
+
+
+
+2.2.8.1  Label -
+
+
+
+     Enter  here  the  image  label.   Image  labels   are   generally
+
+determined  by those defined in the analysis rule of the expert system
+
+and will be  used  to  designate  types  of  layers  (ie;   elevation,
+
+spectral band 1, etc.).  Should the attempt to validate the label fail
+
+the message;  "ERROR - Unknown Layer Label", will be displayed and the
+
+user will be reprompted.
+
+THE MENU INTERFACE                                           Page 2-11
+
+
+
+
+
+2.2.8.2  Comments/Annotation -
+
+
+
+     This field is included for general  annotation  use  and  is  not
+
+accessed by any analysis function.
+
+
+
+
+
+
+
+2.2.8.3  Modifications -
+
+
+
+     This field permits the user to modify any of the  fields  in  the
+
+screen  mask.   To  modify  a particular field, simply enter the field
+
+number, press return, and the cursor will move to that field.
+
+
+
+     This procedure will work for any field  except  the  key  fields.
+
+Attempts to modify the key field are interpreted as commands to delete
+
+the record, and will cause the user  to  be  prompted  to  delete  the
+
+record.
+
+
+
+     If no modifications are to be done enter 'N' and the contents  of
+
+the  file  will be altered.  An asterisk ('*') entered here will cause
+
+the screen to be ignored and will result  in  no  alterations  to  the
+
+system file.
+
+
+
+
+
+
+
+2.2.9  Print/Display File Contents [submenu]
+
+
+
+     This selection leads to a submenu of a number of functions  which
+
+allow  the  user  to  display  the  contents of the system files or to
+
+create printer maps of the layer files.  When this  item  is  selected
+
+from the main menu, the following submenu is displayed;
+
+
+
++------------------------------------------------------------------+
+
+| Date:             Cheshire Image Data Base  NASA/Ames Res Center |
+
+|                                                                  |
+
+|               Print/Display File Contents SubMenu                |
+
+~                                                                  ~
+
+|            1. Print GeoCube Master File Contents.                |
+
+|            2. Print Layer Description File Contents.             |
+
+|            3. Summarize a specific GeoCube.                      |
+
+|            4. Print a Report Layer.                              |
+
+|            5. Print a Report Layer at the Terminal               |
+
+|            6. Print a Line Printer Map of a Layer                |
+
+|            7. Directory of System Data Files.                    |
+
+|            8. List the Labels                                    |
+
+~                                                                  ~
+
+|                Please Select a Menu Item                         |
+
++------------------------------------------------------------------+
+
+Each of the menu items will be taken up below;
+
+THE MENU INTERFACE                                           Page 2-12
+
+
+
+
+
+2.2.9.1  Print GeoCube Master File Contents.  [application] -
+
+
+
+     This function prints a  report  detailing  the  contents  of  the
+
+GeoCube  Master file.  This is a listing of all the GeoCubes currently
+
+defined by the systems and  the  corresponding  information  for  each
+
+GeoCube.
+
+
+
+     Upon selection of this menu item the user  is  prompted  for  the
+
+destination  of  the output file, (S)creen or (F)ile.  Should the user
+
+select File, the system will prompt  for  the  destination  layer  and
+
+GeoCube.
+
+
+
+
+
+
+
+2.2.9.2  Print Layer Description File Contents.  [application] -
+
+
+
+     This function creates and prints a report detailing  all  of  the
+
+layers currently defined for every GeoCube in the system.
+
+
+
+
+
+
+
+2.2.9.3  Summarize A Specific GeoCube.  [application] -
+
+
+
+     This  function  creates  and  prints  a  report  summarizing  the
+
+contents of a single GeoCube, including all underlying layers.
+
+
+
+
+
+
+
+2.2.9.4  Print A Report Layer -
+
+
+
+     This function accepts the name of a  layer  and  sends  the  data
+
+contained  in  that  layer  to the line printer.  The layer must be of
+
+type Report, and a check is performed to ensure that  it  is  of  that
+
+type.
+
+
+
+
+
+
+
+2.2.9.5  Print A Report Layer At The Terminal -
+
+
+
+     This function accepts the name of a  layer  and  sends  the  data
+
+contained  in  that  layer to the terminal.  The layer must be of type
+
+Report, and a check is performed to ensure that it is of that type.
+
+
+
+
+
+
+
+2.2.9.6  Print A Line Printer Map Of A Layer [application] -
+
+
+
+     This function creates a line printer Map of the layer  specified.
+
+The  map  is  automatically  sent  to  the  device named LPB0:  .  The
+
+function assigns gray levels using an  even  distribution  to  enhance
+
+image clarity.
+
+
+
+     Upon invocation,  the  user  is  prompted  to  supply  the  layer
+
+specification to be rendered.
+
+THE MENU INTERFACE                                           Page 2-13
+
+
+
+
+
+2.2.9.7  Directory Of System Data Files.  [application] -
+
+
+
+     This function lists on the screen or to a file each layer and the
+
+name of its corresponding data file.
+
+
+
+
+
+
+
+2.2.9.8  List The Labels [application] -
+
+
+
+     This function lists on  the  screen  or  to  a  file  the  labels
+
+currently defined in the system.
+
+
+
+
+
+
+
+2.2.10  Analyze File [submenu]
+
+
+
+     This selection transfers control to  the  Analyze  File  Contents
+
+submenu.   Items in this menu perform analysis of Layer Imagery.  Upon
+
+initialization, the following submenu is displayed;
+
+
+
++------------------------------------------------------------------+
+
+| Date:             Cheshire Image Data Base  NASA/Ames Res Center |
+
+|                                                                  |
+
+|                     Analyze File Contents                        |
+
+~                                                                  ~
+
+|             1. Generate a Contingency Table                      |
+
+|             2. Conduct a Contingency Analysis                    |
+
+|             3. Confirm the Presence of a Layer Type              |
+
+|             4. Generate a Proximity Map                          |
+
+|             5. Cluster an Image                                  |
+
+|             6. Filter an Image                          >        |
+
+|             7. Perform Boolean Operations upon an Image.>        |
+
+|             8. Scale an Image                                    |
+
+|             9. Generate a Histogram of an Image                  |
+
+|            10. Acquire General Layer Statistics                  |
+
+|            11. Calculate Slope of an Elevation Image.            |
+
+|            12. Calculate Aspect of an Elevation Image.           |
+
+|            13. Regress One Layer Against Another.                |
+
+~                                                                  ~
+
+|                Please Select a Menu Item                         |
+
++------------------------------------------------------------------+
+
+
+
+
+
+
+
+2.2.10.1  Generate A Contingency Table [application] -
+
+
+
+     Performs a contingency analysis of two layers.  This analysis  is
+
+output  into  a  report  layer as specified by the user.  The function
+
+prompts for the  specifications  of  the  two  input  layers  and  the
+
+specification of the destination layer.
+
+THE MENU INTERFACE                                           Page 2-14
+
+
+
+
+
+2.2.10.2  Conduct A Contingency Analysis [application] -
+
+
+
+     Performs a specialized version of the contingency analysis on two
+
+layers.   This  analysis is output into a report layer as specified by
+
+the user.  If the first image is of a discrete data type, as specified
+
+in  the  DATA  TYPE  field of the layer record, the result is the mode
+
+average for each row of the contingency analysis.  If the data type is
+
+continuous, the arithmetic mean is returned.
+
+
+
+     Upon  invocation  the  user  is  prompted  to  supply  the  layer
+
+specification  of  the two input layers and the layer specification of
+
+the output layer.
+
+
+
+
+
+
+
+2.2.10.3  Confirm The Presence Of A Layer Type [application] -
+
+
+
+     This function determines whether or not  a  particular  layer  is
+
+present in the database.  It's use is intended primarily for interface
+
+to external automatic facilities to assay the presence  of  layers  in
+
+the database.
+
+
+
+     The user is prompted to enter the Layer specification.
+
+
+
+
+
+
+
+2.2.10.4  Generate A Proximity Map [application] -
+
+
+
+     This function generates a proximity map,  a  layer  whose  pixels
+
+represent  the  euclidian  distance  (truncated  to an integer) to the
+
+nearest non-zero pixel in the input image.
+
+
+
+     The user is prompted to enter the input layer  specification  and
+
+the output layer specification.
+
+
+
+
+
+
+
+2.2.10.5  Cluster An Image [application] -
+
+
+
+     This function applies  the  Isodata  clustering  algorithm  to  a
+
+series  of  layers.  It is not necessary that the layers be members of
+
+the same GeoCube.  The user is prompted to  enter  as  many  as  eight
+
+layer  specifications, and the clustering is conducted.  Output may be
+
+statistics or a clustered image, or both.
+
+
+
+     NOTE:  This function requires considerable runtime resources  and
+
+may run for long periods of time before completing.
+
+THE MENU INTERFACE                                           Page 2-15
+
+
+
+
+
+2.2.10.6  Filter An Image [submenu] -
+
+
+
+     Selection of this menu item causes the following  Submenu  to  be
+
+displayed;
+
+
+
++------------------------------------------------------------------+
+
+| Date:             Cheshire Image Data Base  NASA/Ames Res Center |
+
+|                                                                  |
+
+|                     Filter Image SubMenu                         |
+
+~                                                                  ~
+
+|                     1. Low Pass Filter                           |
+
+|                     2. High Pass Filter                          |
+
+|                     3. Band Pass Filter                          |
+
+~                                                                  ~
+
+|                Please Select a Menu Item                         |
+
++------------------------------------------------------------------+
+
+
+
+
+
+
+
+2.2.10.6.1  Low Pass Filter [application] -
+
+
+
+     This function performs low pass filtering  of  the  image.   This
+
+process  sets  all  pixel  values  higher than the specified filtering
+
+value to zero, exclusive (pixels whose values  are  the  same  as  the
+
+threshold value are not altered).
+
+
+
+     Upon invocation of this function, the user is  prompted  for  the
+
+input  GeoCube  and layer, the threshold value, and the output GeoCube
+
+and layer.  This function is the complement  to  High  pass  filtering
+
+(see below).
+
+
+
+
+
+
+
+2.2.10.6.2  High Pass Filter [application] -
+
+
+
+     This function performs high pass filtering of  the  image.   This
+
+process sets all pixel values lower than the specified filtering value
+
+to zero, exclusive (pixels whose values are the same as the  threshold
+
+value are not altered).
+
+
+
+     Upon invocation of this function, the user is  prompted  for  the
+
+input  GeoCube  and layer, the threshold value, and the output GeoCube
+
+and layer.  This function is the complement to Low pass filtering (see
+
+above).
+
+
+
+
+
+
+
+2.2.10.6.3  Band Pass Filter [application] -
+
+
+
+     This function performs band pass filtering of  the  image.   This
+
+process  sets  all pixel values lower than or equal to, or higher than
+
+or equal to the specified filtering values to zero, inclusive  (pixels
+
+whose  values  are  the same as the threshold values are altered NOTE:
+
+this is not consistent with Low and High pass filters).
+
+THE MENU INTERFACE                                           Page 2-16
+
+
+
+
+
+     Upon invocation of this function, the user is  prompted  for  the
+
+input  GeoCube and layer, the threshold values, and the output GeoCube
+
+and layer.
+
+
+
+
+
+
+
+2.2.10.7  Perform Boolean Operations Upon An Image [submenu] -
+
+
+
+     This menu  item  transfers  control  to  the  Boolean  Operations
+
+Submenu.   Functions  in  this  menu permit the application of boolean
+
+operators upon one or more layers.  Boolean functions  interprete  the
+
+layer  data  in the following specialized manner;  non-zero pixels are
+
+equated to the value of binary one, and pixels whose values  are  zero
+
+are equated to binary zero.  Upon initalization, the following menu is
+
+displayed;
+
+
+
++------------------------------------------------------------------+
+
+| Date:             Cheshire Image Data Base  NASA/Ames Res Center |
+
+|                                                                  |
+
+|               Boolean Image Operations SubMenu                   |
+
+~                                                                  ~
+
+|                     1. And Two Images                            |
+
+|                     2. Or Two Images                             |
+
+|                     3. Negate an Image                           |
+
+|                     4. Xor Two Images                            |
+
+~                                                                  ~
+
+|                Please Select a Menu Item                         |
+
++------------------------------------------------------------------+
+
+
+
+     Each of the menu items is taken up below;
+
+
+
+
+
+
+
+2.2.10.7.1  And Two Images [application] -
+
+
+
+     This menu selection creates an output image that is  the  logical
+
+"and"ing  of the two input images.  Interpretation of image data is as
+
+follows;  non-zero values are taken to represent binary one, and  zero
+
+values  are  taken  to  represent binary zero.  Hence the output image
+
+contains ones at every location inwhich the two input images both have
+
+non-zero values.
+
+
+
+
+
+
+
+2.2.10.7.2  Or Two Images [application] -
+
+
+
+     This menu selection creates an output image that is  the  logical
+
+"Or"ing  of  the two input images.  Interpretation of image data is as
+
+follows;  non-zero values are taken to represent binary one, and  zero
+
+values  are  taken  to  represent binary zero.  Hence the output image
+
+contains ones at every location inwhich either  of  the  input  images
+
+have non-zero values.
+
+THE MENU INTERFACE                                           Page 2-17
+
+
+
+
+
+2.2.10.7.3  Negate An Image [application] -
+
+
+
+     This menu selection creates an output image that is  the  logical
+
+negation  of  the  input  image.   Interpretation  of image data is as
+
+follows;  non-zero values are taken to represent binary one, and  zero
+
+values  are  taken  to  represent binary zero.  Hence the output image
+
+contains ones at every location inwhich there was a zero value in  the
+
+input image, and a one at every location there was a non-zero value.
+
+
+
+
+
+
+
+2.2.10.7.4  Xor Two Images [application] -
+
+
+
+     This menu selection creates an output image that is  the  logical
+
+"Xor"ing  of the two input images.  Interpretation of image data is as
+
+follows;  non-zero values are taken to represent binary one, and  zero
+
+values  are  taken  to  represent binary zero.  Hence the output image
+
+contains ones at every location inwhich either one--but not both--  of
+
+the input images have non-zero values
+
+
+
+
+
+
+
+2.2.10.8  Scale An Image [application] -
+
+
+
+     This function remaps  the  pixel  values  in  an  image  into  an
+
+additional range of pixel values.
+
+
+
+
+
+
+
+2.2.10.9  Generate A Histogram Of An Image [application] -
+
+
+
+     This menu selection generates a scaled frequency histogram  of  a
+
+given image file.  This histogram may be either cumulative or
+
+
+
+
+
+
+
+2.2.10.10  Acquire General Layer Statistics [application] -
+
+
+
+     This menu selection calculates a series of  statistics  over  the
+
+area  of the image.  These statistics include the arithmetic mean, the
+
+mode, and the median of the  pixel  values.   Also  displayed  is  the
+
+maximum  and  minimum  pixel  values.   The  standard deviation of the
+
+values of the pixels in the image is also calculated.
+
+
+
+
+
+
+
+2.2.10.11  Calculate Slope Of An Elevation Image -
+
+
+
+     This menu selection creates an image file inwhich  the  value  of
+
+each  picture  element  is  the slope of the pixel at that point.  The
+
+input image to this application is an elevation image.
+
+THE MENU INTERFACE                                           Page 2-18
+
+
+
+
+
+2.2.10.12  Calculate Aspect Of An Elevation Image -
+
+
+
+     This menu selection creates an image file inwhich  the  value  of
+
+each  picture  element  is the aspect of the pixel at that point.  The
+
+input image to this application is an elevation image.
+
+
+
+
+
+
+
+2.2.10.13  Regress One Layer Against Another -
+
+
+
+     This menu selection performs a linear regression analysis of  the
+
+two  input images.  The report produced indicates the correlation, and
+
+the slope and y-intercept of the regression line.
+
+
+
+
+
+
+
+2.2.11  File Manipulation [submenu]
+
+
+
+     This menu selection provides access to a number of functions that
+
+allow  the  user  to  perform  housekeeping operations upon the system
+
+files.  When the file manipulation item  is  selected  from  the  main
+
+menu, the following submenu is displayed;
+
+
+
++------------------------------------------------------------------+
+
+| Date:             Cheshire Image Data Base  NASA/Ames Res Center |
+
+|                                                                  |
+
+|                     File Manipulation                            |
+
+~                                                                  ~
+
+|              1. Copy a Layer to Another GeoCube                  |
+
+|              2. Change the Name of a Layer                       |
+
+|              3. Delete an Entire GeoCube                         |
+
+|              4. Delete a Layer                                   |
+
+|              5. Delete System Master Files                       |
+
+|              6. List Layer Files                                 |
+
+|              7. List the Labels                                  |
+
+|              8. Print a Layer at the Line Printer                |
+
+~                                                                  ~
+
+|                Please Select a Menu Item                         |
+
++------------------------------------------------------------------+
+
+
+
+
+
+
+
+2.2.11.1  Copy A Layer To Another GeoCube [application] -
+
+
+
+     This menu item permits the contents of one Layer to be copied  to
+
+another GeoCube or to another layer within the same GeoCube.  The user
+
+is prompted to enter the source GeoCube and layer and the  Destination
+
+GeoCube  and  layer.   In  addition  to  creating  an additional layer
+
+record, the function copies the contents of the  layer  file  into  an
+
+additional layer file.
+
+THE MENU INTERFACE                                           Page 2-19
+
+
+
+
+
+2.2.11.2  Change The Name Of A Layer [application] -
+
+
+
+     This menu item allows the name of a layer to be altered.  This is
+
+a  convenient  means  of  transporting a layer between geocubes.  Note
+
+that specific fields in the layer record are  altered  to  effect  the
+
+change and no data is actually copied.  The layer as it was previously
+
+known is no longer available to the system.
+
+
+
+
+
+
+
+2.2.11.3  Delete A GeoCube [application] -
+
+
+
+
+
+
+
+2.2.11.4  Delete A Layer [application] -
+
+
+
+     This menu item allows controlled deletion of a layer.   The  user
+
+is  prompted  to select whether or not the layer file will be deleted.
+
+After being prompted to enter the layer and GeoCube specification, the
+
+user  is  provided with a number of opportunities to exit the function
+
+without actually performing the deletions.
+
+
+
+
+
+
+
+2.2.11.5  Delete System Master Files [application] -
+
+
+
+     This function permits deletion of the system master files and all
+
+the data stored within them.  Use of this function is catastrophic and
+
+should be used only to completely purge the system of all  data.   Use
+
+of this function terminates the execution of IBASE.
+
+
+
+     Upon selection of the function,  the  user  will  be  prompted  a
+
+number of time to ensure that the intentions are clear.
+
+
+
+
+
+
+
+2.2.11.6  List The Layer Files [application] -
+
+
+
+     This item creates a list of the  actual  layer  files  and  their
+
+associated layer and geocube names.
+
+
+
+
+
+
+
+2.2.11.7  List The Labels [application] -
+
+
+
+     This menu item lists the labels currently  defined.   Labels  are
+
+entered intot the label list via the EMD Label List in the EMD Menu.
+
+THE MENU INTERFACE                                           Page 2-20
+
+
+
+
+
+2.2.11.8  Print A Layer At The Line Printer [application] -
+
+
+
+     This menu item dispatches the designated report layer to the line
+
+printer.   If the designated layer is of a type other than report, the
+
+layer will not be printed and the user will be informed of the error.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                              CHAPTER 3
+
+
+
+                        THE COMMAND INTERFACE
+
+
+
+
+
+
+
+3.1  INTRODUCTION
+
+
+
+     The command interface may  be  invoked  using  the  /MODE=COMMAND
+
+qualifier  when  invoking  IBASE from VAX/VMS.  IBASE prompts the user
+
+with the prompt "Ib>".
+
+
+
+     Command mode is intended primarily for use when interfacing IBASE
+
+to  the  external  expert  system, hence the command language does not
+
+contain all of the layer information  entry  facilities  available  in
+
+menu mode.  All of the analysis functions are supported however.
+
+
+
+
+
+
+
+3.2  GENERAL COMMAND STRUCTURE
+
+
+
+3.2.1  HELP
+
+
+
+     Help with a command may be obtained by entering the name  of  the
+
+command preceded with a question mark.  This will list on the terminal
+
+screen the format of the command and a short description of  what  the
+
+command does.
+
+
+
+
+
+
+
+3.2.2  THE AND COMMAND
+
+
+
+     Creates an image which is  the  logical  AND  of  the  two  input
+
+images.   For  purposes  of this function a binary one is considered a
+
+non-zero value and a binary zero is a zero value.  Values of  one  are
+
+placed in the image at pixels whose values are non-zero in both of the
+
+input images.
+
+
+
+command format;
+
+
+
+AND source_layer1 source_layer2 output_layer
+
+
+
+example;  Ib> AND newjersey#mask newjersey#urban newjersey#urbancounty 
+
+THE COMMAND INTERFACE                                         Page 3-2
+
+
+
+
+
+3.2.3  THE ASPECT COMMAND
+
+
+
+     Calculates the aspect given elevation data
+
+
+
+command format;
+
+
+
+ASPECT source_layer1 output_layer
+
+
+
+example;  Ib> ASPECT newjersey#elevation newjersey#aspect
+
+
+
+
+
+
+
+3.2.4  THE CLUSTER COMMAND
+
+
+
+     Performs cluster analysis of a number of layers
+
+command format;
+
+
+
+CLUSTER (source_list), <minimum pixels per cluster>,
+
+         <minimum distance between centroids>,
+
+         <maximum number of cycles>, [statistics layer],
+
+         [output_layer]
+
+
+
+Note: parameters represented by angular braces will be defaulted if
+
+ not defined, but must be implied using commas (eg; ",,,"). However
+
+ the statistics layer AND/OR output layer must be indicated.
+
+
+
+example;  Ib>CLUSTER (newjersey#mask newjersey#urban),,,,,
+
+                    newjersey#urbancounty 
+
+
+
+
+
+
+
+3.2.5  THE CONTAB COMMAND
+
+
+
+     Performs a contingency analysis of two layers.  This analysis  is
+
+output into a report layer as specified by the user.
+
+
+
+command format;
+
+
+
+CONTAB source_layer1 source_layer2 output_layer
+
+
+
+example;  Ib> CONTAB newjersey#mask newjersey#urban newjersey#urbancounty 
+
+
+
+
+
+
+
+3.2.6  THE CONTABS COMMAND
+
+
+
+     Performs a specialized version of the contingency analysis on two
+
+layers.   This  analysis is output into a report layer as specified by
+
+the user.  If the first image is of a discrete data type, as specified
+
+in  the  DATA  TYPE  field of the layer record, the result is the mode
+
+average for each row of the contingency analysis.  If the data type is
+
+continuous, the arithmetic mean is returned.
+
+
+
+THE COMMAND INTERFACE                                         Page 3-3
+
+
+
+
+
+command format;
+
+
+
+CONTABS source_layer1 source_layer2 output_layer
+
+
+
+example;  Ib> CONTABS newjersey#mask newjersey#urban newjersey#urbancounty 
+
+
+
+
+
+
+
+3.2.7  THE EXIT COMMAND
+
+
+
+     This command terminates the execution of IBASE, closes  all  open
+
+files  and returns the user to the operating system.  Same as the QUIT
+
+command.
+
+
+
+command format;
+
+
+
+EXIT       {no parameters}
+
+
+
+
+
+
+
+3.2.8  THE EXISTS?  COMMAND
+
+
+
+     Confirms the existance of a particular layer.
+
+
+
+command format;
+
+
+
+EXISTS? layer_specification 
+
+
+
+example;  Ib> EXISTS? newjersey#mask
+
+          No.
+
+
+
+
+
+
+
+3.2.9  THE FILTER BANDPASSS COMMAND
+
+
+
+     This function performs band pass filtering of  the  image.   This
+
+process  sets  all pixel values lower than or equal to, or higher than
+
+or equal to the specified filtering values to zero, inclusive  (pixels
+
+whose  values  are  the same as the threshold values are altered NOTE:
+
+this is not consistent with Low and High pass filters).
+
+
+
+     Upon invocation of this function, the user is  prompted  for  the
+
+input  GeoCube and layer, the threshold values, and the output GeoCube
+
+and layer.
+
+
+
+     Note that the order of the threshold values is not important, the
+
+higher  is  taken to denote the upper threshold and the lower value is
+
+taken to denote the lower threshold.
+
+
+
+command format;
+
+
+
+FILTER BANDPASS source_layer output_layer value value
+
+
+
+example;  Ib> FILTER BANDPASS himalya#elevation himalya#specialplace 100 
+
+          200
+
+THE COMMAND INTERFACE                                         Page 3-4
+
+
+
+
+
+3.2.10  THE FILTER LOWPASS COMMAND
+
+
+
+     This function performs low pass filtering  of  the  image.   This
+
+process  sets  all  pixel  values  higher than the specified filtering
+
+value to zero, exclusive (pixels whose values  are  the  same  as  the
+
+threshold value are not altered).
+
+
+
+     Upon invocation of this function, the user is  prompted  for  the
+
+input  GeoCube  and layer, the threshold value, and the output GeoCube
+
+and layer.  This function is the complement  to  High  pass  filtering
+
+(see below).
+
+
+
+command format;
+
+
+
+FILTER LOWPASS source_layer output_layer threshold
+
+
+
+example;  Ib> FILTER LOWPASS sierra#elevation sierra#lowplaces 1000
+
+
+
+
+
+
+
+3.2.11  THE FILTER HIGHPASS COMMAND
+
+
+
+     This function performs high pass filtering of  the  image.   This
+
+process sets all pixel values lower than the specified filtering value
+
+to zero, exclusive (pixels whose values are the same as the  threshold
+
+value are not altered).
+
+
+
+     Upon invocation of this function, the user is  prompted  for  the
+
+input  GeoCube  and layer, the threshold value, and the output GeoCube
+
+and layer.  This function is the complement to Low pass filtering (see
+
+above).
+
+
+
+command format;
+
+
+
+FILTER HIGHPASS source_layer1 output_layer threshold
+
+
+
+example;  Ib> FILTER HIGHPASS sierra#elevation sierra#hiplaces 3000
+
+
+
+
+
+
+
+3.2.12  THE GENSTATS COMMAND
+
+
+
+     Calculates a number of general image statistics for the specified
+
+layer.  These include the mode, median, and mean averages, the maximum
+
+and minimum pixel values in the image, and  the  cross-image  standard
+
+deviation.   Output  may  be send either to the screen or to an output
+
+layer.
+
+
+
+command format;
+
+
+
+GENSTATS source_layer1 {output_layer}
+
+
+
+output_layer is optional and output will be send to the terminal 
+
+screen should this item be omitted.
+
+
+
+THE COMMAND INTERFACE                                         Page 3-5
+
+
+
+
+
+example; Ib> GENSTATS newjersey#urban newjersey#stats
+
+
+
+
+
+
+
+3.2.13  THE LIST CUBES COMMAND
+
+
+
+     This function returns a list of the GeoCubes currently present in
+
+the system.
+
+
+
+command format;
+
+
+
+LIST CUBES    {no parameters}
+
+
+
+example;  Ib> LIST CUBES
+
+          ocean
+
+          miami
+
+          example
+
+
+
+
+
+
+
+3.2.14  THE LIST LAYERS COMMAND
+
+
+
+     This function returns a list of the Layers currently present  for
+
+a  given  GeoCube  in  the  system.   An asterisk ("*") entered as the
+
+GeoCube will cause all of the Layers in the system to be listed.
+
+
+
+command format;
+
+
+
+LIST LAYERS GeoCube
+
+
+
+example;  Ib> LIST LAYERS florida
+
+          miami#soil
+
+          miami#elevation
+
+          miami#aspect
+
+
+
+
+
+
+
+3.2.15  THE HIST COMMAND
+
+
+
+     Creates a scaled histogram of the specified layer.
+
+
+
+THE COMMAND INTERFACE                                         Page 3-6
+
+
+
+
+
+command format;
+
+
+
+HIST source_layer1 output_layer {CUMULATIVE}
+
+
+
+the parameter CUMULATIVE is optional and specifies whether
+
+or not a cmulative histogram is desired.
+
+
+
+example;  Ib> HIST newjersey#mask 
+
+
+
+            0 |     |     |     |
+
+            1 ######|     |     |
+
+            2 ##############    |
+
+          ~~~~~~~~~~~~~~~~~~~~~
+
+          ~~~~~~~~~~~~~~~~~~~~~
+
+          254 |     |     |     |
+
+          255 ########### |     |
+
+
+
+
+
+
+
+3.2.16  THE NOT COMMAND
+
+
+
+     Creates an image which is  the  logical  negation  of  the  input
+
+image.   For  purposes  of  this function a binary one is considered a
+
+non-zero value and a binary zero is a zero value.  Values of  one  are
+
+placed  in  the  image  at  pixels  whose values are zero in the input
+
+image.
+
+
+
+command format;
+
+
+
+NOT source_layer output_layer
+
+
+
+example;  Ib> NOT forest#green forest#notgreen
+
+
+
+
+
+
+
+3.2.17  THE OR COMMAND
+
+
+
+     Creates an image which is the logical OR of the two input images.
+
+For  purposes  of  this function a binary one is considered a non-zero
+
+value and a binary zero is a zero value.  Values of one are placed  in
+
+the  image  at pixels whose values are non-zero in either of the input
+
+images.
+
+
+
+command format;
+
+
+
+OR source_layer1 source_layer2 output_layer
+
+
+
+example;  OR ocean#cold ocean#frozen ocean#nofish
+
+THE COMMAND INTERFACE                                         Page 3-7
+
+
+
+
+
+3.2.18  THE PROX COMMAND
+
+
+
+     Creates  a  layer  whose  pixel  values  indicate  the  euclidian
+
+distance  (integerized),  to  the  nearest  non-zero pixel in the base
+
+image.
+
+
+
+command format;
+
+
+
+PROX source_layer1 source_layer2 output_layer
+
+
+
+example;  Ib> PROX newjersey#mask newjersey#urban newjersey#urbancounty
+
+
+
+
+
+
+
+3.2.19  THE QUIT COMMAND
+
+
+
+     This command terminates the execution of IBASE, closes  all  open
+
+files  and returns the user to the operating system.  Same as the EXIT
+
+command.
+
+
+
+command format;
+
+
+
+QUIT   {no parameters}
+
+
+
+example;  Ib> QUIT
+
+
+
+
+
+
+
+3.2.20  THE REGRESS COMMAND
+
+
+
+     This command performs a regression analysis upon  the  two  input
+
+images.   The  output  report consist of a correlation factor, and the
+
+yintercept and slope of the regression line.
+
+
+
+command format;
+
+
+
+REGRESS source_layer1 source_layer2 output_layer
+
+
+
+example;  Ib> REGRESS test#day1 test#day2 test#sensordrift
+
+
+
+
+
+
+
+3.2.21  THE SEND COMMAND
+
+
+
+     This command is used to send a layer using the XMODEM protocol.
+
+
+
+command format;
+
+
+
+SEND layer_specification
+
+
+
+example;  Ib> SEND test#population
+
+THE COMMAND INTERFACE                                         Page 3-8
+
+
+
+
+
+3.2.22  THE SET CUBE COMMAND
+
+
+
+     This command is used to set the current default GeoCube  name  to
+
+be  used  when  the  name is not specified in the layer specification.
+
+The currently defined default cube name may be found  using  the  SHOW
+
+CUBE command.
+
+
+
+command format;
+
+
+
+SET CUBE Default_cube
+
+
+
+example;  Ib> SET CUBE EXAMPLE
+
+
+
+
+
+
+
+3.2.23  THE SHOW CUBE COMMAND
+
+
+
+     This command prints the currently defined default  GeoCube.   The
+
+default GeoCube may be set using the SET CUBE command.
+
+
+
+command format;
+
+
+
+SHOW CUBE
+
+
+
+example;  Ib> SHOW CUBE
+
+          EXAMPLE
+
+
+
+
+
+
+
+3.2.24  THE SHOW LAYERFILE COMMAND
+
+
+
+     Returns the layerfile associated with the specified layer.   This
+
+function  is  intended  primarily  to  facilitate  access to the layer
+
+outside of IBASE.
+
+
+
+command format;
+
+
+
+SHOW LAYERFILE layer_specification
+
+
+
+example;  Ib> SHOW LAYERFILE newjersey#mask
+
+          NONBAKCOD.IBD
+
+
+
+
+
+
+
+3.2.25  THE SLOPE COMMAND
+
+
+
+     Calculates the slope of the  image  from  digital  terrain  data.
+
+Creates  an  output  layer  whose  pixel  values are the slope at that
+
+location.
+
+
+
+command format;
+
+
+
+SLOPE source_layer1 source_layer2 output_layer
+
+
+
+example;  SLOPE outback#mud outback#mudslide
+
+THE COMMAND INTERFACE                                         Page 3-9
+
+
+
+
+
+3.2.26  THE TYPE COMMAND
+
+
+
+     Writes a report layer to the terminal screen, similar to PRINT.
+
+
+
+command format;
+
+
+
+TYPE output_layer
+
+
+
+example;  Ib> TYPE newjersey#histogram
+
+
+
+
+
+
+
+3.2.27  THE XOR COMMAND
+
+
+
+     Creates an image which is the logical XOR (exclusive OR)  of  the
+
+two  input  images.   For  purposes  of  this function a binary one is
+
+considered a non-zero value and a binary zero is a zero value.  Values
+
+of  one are placed in the image at pixels whose values are non-zero in
+
+one input image or the other, but not both of the input images.
+
+
+
+command format;
+
+
+
+XOR source_layer1 source_layer2 output_layer
+
+
+
+example;  Ib> XOR newjersey#pools newjersey#lakes newjersey#smallwater 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                              CHAPTER 4
+
+
+
+                       IBASE PROGRAM STRUCTURE
+
+
+
+
+
+
+
+4.1  THE EXECUTIVES
+
+
+
+     The IBASE program primarily consist  of  two  seperate  executive
+
+systems sharing a common set of low level analysis subroutines.  These
+
+two executives are the Menu executive  and  the  Command  Interpreter.
+
+Selection  of  the  executives  is controlled by analyzing the foreign
+
+command line suplied when the IBASE command is entered  from  VAX/VMS.
+
+The  routine  that  analyzes this line set the variable MODE to 'M' or
+
+'C'.  This caused control to be transferred to the Main Menu or to the
+
+Command Interpreter, respectively.  The menu mode is the default.
+
+
+
+
+
+
+
+4.1.1  The Menu Executive
+
+
+
+     The menu executive makes extensive use  of  MAITRE_D,  a  routine
+
+which automatically formats and displays menus.  MAITRE_D ensures that
+
+a valid selection is entered and  returns  with  the  selected  value.
+
+This  value  may  in  turn transfer control to yet another menu, cause
+
+control to be transfered to an application subroutine,  or  cause  the
+
+subroutine to return to the next higher menu level.
+
+
+
+     Transfers  of  control  to  Submenus  generally  involves  simply
+
+calling  the  next lower level subroutine to manage the submenu.  This
+
+routine  will  regain  control  after  its   respective   applications
+
+subroutines  are run.  Upon exiting of the submenu routine, control is
+
+transfered to the next higher level menu.
+
+
+
+     Applications subroutines are responsible for the acquisition  and
+
+checking  of  the  layers to be analyzed and the administration of the
+
+analysis.  This involves the display  and  management  of  the  proper
+
+screen masks, the prompting for the various parameters, the loading of
+
+layer data, the calling of the low-level analysis functions,  and  the
+
+updating of the layer files.  Upon completion of the analysis, control
+
+is returned to the calling menu subroutine.
+
+IBASE PROGRAM STRUCTURE                                       Page 4-2
+
+
+
+
+
+4.1.2  The Command Executive
+
+
+
+     The command executive compares the entered command to  the  valid
+
+commands  and  then  passes  control  to  the corresponding applcation
+
+subroutine.   The  application  subroutine  is  responsible  for   the
+
+unpacking  of the layer specifications, the loading of the layer data,
+
+the calling of the low-level analysis function, and  the  updating  of
+
+the layer files.  Upon completion of the analysis, control is returned
+
+to the command executive.  The command executive  is  terminated  upon
+
+reciept of an EXIT or QUIT command from the user.
+
+
+
+
+
+
+
+4.2  GENERATION OF OUTPUT LAYER FILE NAMES.
+
+
+
+     In instances when it is necessary to write a new  layer  file,  a
+
+unique layer file name is generated randomly and this is used to store
+
+the layer image.  This name is  derived  using  a  pattern  of  random
+
+letters  structured as CVCCVCCVC where C, designates a consonant and V
+
+designates a vowel.  This pattern creates pronouceable and hence  more
+
+easily  remembered  file  names.  As each file name is generated it is
+
+checked to ensure that no other file currently exists with that  name,
+
+collisions  amongst file names will cause a new random file name to be
+
+generated.
+
+
+
+
+
+
+
+4.3  FORMATS OF THE SYSTEM FILES
+
+
+
+     IBASE uses five types of files  to  store  database  information;
+
+The  GeoCube master file, the Layer master file, the Label List, Layer
+
+data files, and report files.  While  report  files  are  merely  text
+
+files whose contents are the printer form of a report, the other files
+
+do have specialize formats  which  will  recieve  further  discussion.
+
+Each of those file types is taken up below;
+
+
+
+
+
+
+
+4.3.1  Format Of The GeoCube Master File
+
+
+
+     The GeoCube master file is used to store  information  shared  by
+
+all  layers  of  a  cube.   Currently that information consists of the
+
+overall extremes of the cube and a commentary field.
+
+
+
+     The file is of the type Indexed, and  is  indexed  on  the  Field
+
+CUBE_NAME.  The file specification is IDBMASTR.DAT.
+
+                   Description of a GeoCube Record
+
+
+
+        CHARACTER * 16  CUBE_NAME        ! positions 1:15, Key 0
+
+        CHARACTER * 70  COMMENT(2)       ! positions 16:145
+
+        INTEGER         N_START          ! positions 146:149
+
+        INTEGER         N_END            ! positions 150:153
+
+        INTEGER         E_START          ! positions 154:157
+
+        INTEGER         E_END            ! positions 158:161
+
+IBASE PROGRAM STRUCTURE                                       Page 4-3
+
+
+
+
+
+4.3.2  Format Of The Layer Master File
+
+
+
+     The Layer  Master  File  stores  data  pertaining  to  individual
+
+layers.  This data includes fields that indicate the cube of which the
+
+layer is a member, the file name in which the layer  data  is  stored,
+
+and additional fields for use by analysis functions and for commentary
+
+or annotation.
+
+
+
+     The file is of type Indexed, and is indexed on the concantenation
+
+of   the   CUBE_NAME   and  LAYER_NAME  fields.   The  file  is  named
+
+"IDBLAYER.DAT".
+
+                    Description of a Layer Record
+
+
+
+        CHARACTER * 16   CUBE_NAME        ! positions 1:15, Key 0
+
+        CHARACTER * 16   LAYER_NAME       ! positions 16:31, Key 0
+
+        CHARACTER * 16   LAYER_TYPE       ! positions 32:47
+
+        CHARACTER * 80   FILE_NAME        ! positions 48:127
+
+        CHARACTER * 70   COMMENT          ! positions 128:207
+
+        CHARACTER * 16   LAYER_LABEL      ! 
+
+        CHARACTER * 4    FILE_TYPE        ! positions 208:211
+
+        INTEGER          LAY_SIZE_X       ! positions 212:215
+
+        INTEGER          LAY_SIZE_Y       ! positions 216:219
+
+        INTEGER          PIX_SIZE_X       ! positions 220:223
+
+        INTEGER          PIX_SIZE_Y       ! positions 224:227
+
+        INTEGER          D_S_DA           ! positions 228:231
+
+        INTEGER          D_S_MO           ! positions 232:235
+
+        INTEGER          D_S_YR           ! positions 236:239
+
+
+
+
+
+
+
+
+
+4.3.3  Format Of The Label List File
+
+
+
+     The label list is used to store a list of the valid labels to  be
+
+used in the system to identify layers.  This is intended primarily for
+
+use by external automated agents attempting to assess the contents  of
+
+a particular layer.
+
+
+
+     The file is of type indexed, and is indexed on the  LABEL  field.
+
+The file is named "IDBLABEL.DAT"
+
+
+
+     CHARACTER * 16        LABEL         ! positions 1:15
+
+     CHARACTER * 70        COMMENT       ! positions 16:85
+
+
+
+
+
+
+
+4.3.4  Format Of The Layer Data File
+
+
+
+     The layer data files are used to store digital image  data.   The
+
+format  is in line by line format, each record corresponds to one line
+
+of samples.  No header information is stored in the file itself,  this
+
+data  is  present  in the layer record.  Interpretation of the file is
+
+determined solely by the contents of the layer record.
+
+IBASE PROGRAM STRUCTURE                                       Page 4-4
+
+
+
+
+
+4.3.5  Internal Representation Of Layer Data.
+
+
+
+     Layer data is represented internally in a single-dimension linear
+
+array of INTEGER values.  Conversion of the layer from its form in the
+
+layer data file is as per information stored in the layer record.  The
+
+output format of layer information is based on the requirements of the
+
+analysis and upon the initial format of the imagery.
+
+
+
+
+
+
+
+4.4  DEVELOPMENT ENVIRONMENT
+
+
+
+     IBASE was developed on a VAX-11/780 under VMS version  2.4.   The
+
+source language is VAX-11 FORTRAN.
+
+
+
+Source System;         VAX-11/780 VMS v2.4
+
+
+
+Lines of Source Code;      14,740
+
+       Less comments;       9,834
+
+
+
+Inclusion Files;            CLSTCOM.INC
+
+                             GEOREC.INC
+
+                              IOCOM.INC
+
+                               IMGA.INC
+
+                               IMGB.INC
+
+                             LABREC.INC
+
+                             LAYREC.INC
+
+
+
+
+
+
+
+4.4.1  Installation Instructions
+
+
+
+     To install IBASE follow the following procedure;
+
+
+
+     1.  Copy the contents of the distribution tape to the account  in
+
+which the executeable image is to reside.
+
+
+
+     2.  Edit the file IOCOM.INC, modifying the value of the  variable
+
+HELP_FILE_SPEC  to contain the complete specification of the help file
+
+CPARMS.HLP (eg;  DRA0:[IBASE]CPARMS.HLP ).  Be sure to adjust the size
+
+of  the declaration CHARACTER * n HELP_FILE_SPEC to reflect the number
+
+of characters in the parameter, (Eg;  from the example above the  line
+
+would read;  CHARACTER * 22 HELP_FILE_SPEC )
+
+
+
+     3.  Compile IBASE by typing, $ FORTRAN IBASE,  and  then  $  LINK
+
+IBASE.   These  steps  may  take quite a while.  After completing this
+
+process successfully, it is prudent  to  delete  the  object  file  to
+
+conserve  disk  space, to do this type $DELETE/CONFIRM IBASE.OBJ.* and
+
+answer yes to the prompt.
+
+
+
+     4.  Enter the line;  $ IBASE :==  [{directory}]IBASE.EXE  in  the
+
+highest applicable LOGIN.COM file.  This defines the IBASE command and
+
+makes it  known  to  the  foreign  command  facility.   IBASE  is  now
+
+installed.
+
+IBASE PROGRAM STRUCTURE                                       Page 4-5
+
+
+
+
+
+4.4.2  Files Included In The Distribution Tape.
+
+
+
+     Each of the files included on the distribution tape is  described
+
+briefly below.
+
+
+
+
+
+
+
+4.4.2.1  CLSTCOM.INC -
+
+
+
+     Common block and associated  declarations  used  by  the  cluster
+
+analysis routines.
+
+
+
+
+
+
+
+4.4.2.2  CPARMS.HLP -
+
+
+
+     File of help information used by the command mode help facility.
+
+
+
+
+
+
+
+4.4.2.3  GEOREC.INC -
+
+
+
+     Inclusion file containing declarations used to access the GeoCube
+
+records.
+
+
+
+
+
+
+
+4.4.2.4  IBASE.EXE -
+
+
+
+     Executeable image of IBASE, compiled on a VAX-11/780, with bounds
+
+checking.
+
+
+
+
+
+
+
+4.4.2.5  IBASE.FOR -
+
+
+
+     FORTRAN source code for IBASE.
+
+
+
+
+
+
+
+4.4.2.6  IBASE.OBJ -
+
+
+
+     IBASE object file.  Compiled on a VAX-11/780
+
+
+
+
+
+
+
+4.4.2.7  IBASEMAN.MEM -
+
+
+
+     This manual in printable form.
+
+IBASE PROGRAM STRUCTURE                                       Page 4-6
+
+
+
+
+
+4.4.2.8  IBASEMAN.RNO -
+
+
+
+     Runoff form of this manual.
+
+
+
+
+
+
+
+4.4.2.9  IMGA.INC, IMGB.INC -
+
+
+
+     Inclusion  files  containing   common   blocks   and   associated
+
+declarations used by routines which manipulate images.
+
+
+
+
+
+
+
+4.4.2.10  IOCOM.INC -
+
+
+
+     Inclusion file containing common blocks  used  by  routines  that
+
+perform I/O.
+
+
+
+
+
+
+
+4.4.2.11  LABREC.INC -
+
+
+
+     Inclusion file containing declarations used to access  the  label
+
+records.
+
+
+
+
+
+
+
+4.4.2.12  LAYREC.INC -
+
+
+
+     Inclusion file containing declarations used to access  the  layer
+
+files.
+
+
+
+
+
+
+
+4.4.2.13  MKMANUAL.COM -
+
+
+
+     Command file used to create this manual.
+
+
+
+
+
+
+
+4.4.2.14  PCOMP.COM -
+
+
+
+     Command file used to compile IBASE in batch mode.
+
+
+
+
+
+
+
+4.4.3  Description Of The Contents Of The Inclusion Files.
+
+
+
+     IBASE utilizes a number of  inclusion  files  to  maintain  group
+
+specific  information.   In  the following the contents of each of the
+
+inclusion files is discussed.
+
+IBASE PROGRAM STRUCTURE                                       Page 4-7
+
+
+
+
+
+4.4.3.1  CLSTCOM.INC -
+
+
+
+     This file contains a number of specialized definitions and common
+
+blocks for use by the clustering algorithm.
+
+
+
+
+
+
+
+4.4.3.2  GEOREC.INC -
+
+
+
+     This file contains  declarations  of  the  fields  in  a  GeoCube
+
+record.
+
+
+
+
+
+
+
+4.4.3.3  IOCOM.INC -
+
+
+
+     This is a set of common definitions used by  all  system  modules
+
+that conduct any input or output.  It is used to maintain unit numbers
+
+and a number of often used definitions.
+
+
+
+
+
+
+
+4.4.3.4  IMGA.INC,IMGB.INC -
+
+
+
+     These files contain common areas used to store  the  contents  of
+
+images, their size, and other image wide pieces of information.
+
+
+
+
+
+
+
+4.4.3.5  LABREC.INC -
+
+
+
+     This file contains declarations for the fields in a Label record.
+
+
+
+
+
+
+
+4.4.3.6  LAYREC.INC -
+
+
+
+     This file contains declarations for the fields in a Layer record.
+
+
+
+
+
+
+
+4.4.4  Areas Of Potential Incompatibility
+
+
+
+4.4.4.1  Use Of VAX/VMS Intrinsic Functions -
+
+
+
+     IBASE makes use of a number of VAX/VMS run time library intrinsic
+
+functions.   These  are  used primarily to control the position of the
+
+cursor on the  terminal  screen  and  to  perform  conversion  amongst
+
+differing  data  types.   Use of the intrinsics has been confined to a
+
+number of individual modules, each of which is identified  as  machine
+
+dependent.
+
+IBASE PROGRAM STRUCTURE                                       Page 4-8
+
+
+
+
+
+4.4.4.2  Terminal Dependence -
+
+
+
+     Menu and terminal mask interaction has  been  created  using  DEC
+
+VT10X  terminal dependent escape/control sequences.  Hence interaction
+
+in the menu mode must use a compatible terminal.  In command mode,  no
+
+terminal dependent features are used.
+
+
+
+
+
+
+
+4.4.4.3  Indexed File I/O -
+
+
+
+     The three system data files make extensive use of VAX RMS indexed
+
+file  access.  Indexed access to the files is confined to four modules
+
+for each file, one that updates, one that writes, one that reads,  and
+
+one that deletes a record.
+
+
+                                                          Page Index-1
+
+
+
+
+
+                                INDEX
+
+
+
+
+
+
+
+Analyze                              generate a histogram of an image,
+
+  and, 2-17                            2-18
+
+  band pass filter, 2-16             generate a proximity map, 2-15
+
+  boolean operations submenu,        high pass filter, 2-16
+
+    2-16                             list the labels, 2-13, 2-20
+
+  calculate aspect, 2-18             list the layer files, 2-20
+
+  calculate slope, 2-18              low pass filter, 2-16
+
+  cluster, 2-15                      negate an image, 2-17
+
+  confirm layer presence, 2-15       or two images, 2-17
+
+  contingency table, 2-14            print a layer at the line
+
+printer,
+
+  filter submenu, 2-15                 2-20
+
+  general stats, 2-18                print a line printer map of a
+
+layer,
+
+  high pass filter, 2-16               2-13
+
+  histogram, 2-18                    print geocube master file,
+
+  low pass filter, 2-16                2-12
+
+  negate, 2-17                       print layer description file,
+
+  or, 2-17                             2-12
+
+  proximity map, 2-15                regress, 2-19
+
+  regress, 2-19                      scale an image, 2-18
+
+  scale, 2-18                        summarize a specific geocube,
+
+  special contingency table,           2-13
+
+    2-14                             xor two images, 2-18
+
+  xor, 2-18                        Applicatons
+
+And two images, 2-17                 print a report layer, 2-13
+
+Applications                         print a report layer at the
+
+terminal,
+
+  and two images, 2-17                 2-13
+
+  band pass filter, 2-16               
+
+  calculate aspect, 2-18           Band pass filter, 2-16
+
+  calculate slope, 2-18            Boolean operations
+
+  change the name of a layer,        and, 2-17
+
+    2-19                             negate, 2-17
+
+  cluster an image, 2-15             or, 2-17
+
+  conduct a contingency analysis,    submenu, 2-16
+
+    2-14                             xor, 2-18
+
+  confirm the presence of a layer type,    
+
+    2-15                           Calculate aspect, 2-18
+
+  copy a layer to another geocube, Calculate slope, 2-18
+
+    2-19                           Change the name of a layer, 2-19
+
+  delete a geocube, 2-20           Cluster an image, 2-15
+
+  delete a layer, 2-20             Commands, 3-1
+
+  delete the system master files,    and, 3-1
+
+    2-20                             aspect, 3-2
+
+  directory of system data files.,   cluster, 3-2
+
+    2-13                             contab, 3-2
+
+  edit geocube description contents,  contabs, 3-2
+
+    2-5                              exists?, 3-3
+
+  edit label list, 2-10              exit, 3-3
+
+  edit layer description, 2-7        filter bandpass, 3-3
+
+                                                          Page Index-2
+
+
+
+
+
+  edit/generate a contingency table,  filter highpass, 3-4
+
+    2-14                             filter lowpass, 3-4
+
+  general layer statistics, 2-18     genstats, 3-4
+
+                                                          Page Index-3
+
+
+
+
+
+  help, 3-1                          high pass, 2-16, 3-4
+
+  hist, 3-5                          low pass, 2-16, 3-4
+
+  list cubes, 3-5                    submenu, 2-15
+
+  list layers, 3-5                 Functional description, 1-1
+
+  not, 3-6                             
+
+  or, 3-6                          General layer statistics, 2-18
+
+  prox, 3-7                        Generate a proximity map, 2-15
+
+  quit, 3-7                        Geocube
+
+  regress, 3-7                       delete, 2-20
+
+  send, 3-7                          summarize, 2-13
+
+  set cube, 3-8                        
+
+  show cube, 3-8                   High pass filter, 2-16
+
+  show layerfile, 3-8              Histogram an image, 2-18
+
+  slope, 3-8                           
+
+  type, 3-9                        Inclusion files, 4-7
+
+  xor, 3-9                           clstcom.inc, 4-7
+
+Comments, 2-3                        georec.inc, 4-7
+
+Conduct a contingency analysis,      imga.inc, 4-8
+
+  2-14                               imgb.inc, 4-8
+
+Confirm the presence of a layer type,  iocom.inc, 4-7
+
+  2-15                               labrec.inc, 4-8
+
+Copy a layer to another geocube,     layrec.inc, 4-8
+
+  2-19                             Incompatibility, 4-8
+
+                                     indexed file i/o, 4-8
+
+Delete a geocube, 2-20               terminal dependence, 4-8
+
+Delete a layer, 2-20                 vms intrinsics, 4-8
+
+Delete the system master files,    Installation, 4-4
+
+  2-20                                 
+
+Directory of system data files.,   Label list
+
+  2-13                               edit, 2-10
+
+                                   Labels list
+
+Edit                                 list contents, 2-13
+
+  file contents, 2-5               Layer
+
+  geocube description, 2-5           delete, 2-20
+
+  label list, 2-10                 Layer specifications, 2-2
+
+  layer description, 2-7           List the labels, 2-13, 2-20
+
+Edit file contents, 2-5            List the layer files, 2-20
+
+Edit geocube description, 2-5      Low pass filter, 2-16
+
+Edit label list, 2-10                  
+
+Edit layer, 2-7                    Main menu, 2-4
+
+Edit/generate a contingency table, Menu
+
+  2-14                               analyze file, 2-14
+
+Executives                           edit file contents, 2-5
+
+  command, 4-2                       file manipulation, 2-19
+
+  menu, 4-1                          main menu, 2-4
+
+                                     menu interface, 2-1
+
+File manipulation, 2-19              perform boolean operations upon
+
+an image,
+
+File names                             2-16
+
+  geocube master file, 4-2           print/display file contents,
+
+  label list, 4-3                      2-12
+
+  layer master file, 4-3           Menus, 2-3
+
+  layer specifications, 4-2          filter an image, 2-15
+
+Filter an image, 2-15              Modifications, 2-10
+
+Filters                                
+
+                                                          Page Index-4
+
+
+
+
+
+  band pass, 2-16, 3-3             Negate an image, 2-17
+
+                                                          Page Index-5
+
+
+
+
+
+Or two images, 2-17                
+
+                                   
+
+Perform boolean operations upon an image,
+
+  2-16                             
+
+Pixel size, 2-10                   
+
+Print                              
+
+  a report layer, 2-13             
+
+  file contents submenu, 2-12      
+
+  geocube master file, 2-12        
+
+  layer description file, 2-12     
+
+  list the labels, 2-13            
+
+  lp map, 2-13                     
+
+  summarize a geocube, 2-13        
+
+Print a layer at the line printer, 
+
+  2-20                             
+
+Print a line printer map of a layer,
+
+  2-13                             
+
+Print a report layer, 2-13         
+
+Print a report layer at the terminal,
+
+  2-13                             
+
+Print geocube master file, 2-12    
+
+Print layer description file,      
+
+  2-12                             
+
+Print/display file contents,       
+
+  2-12                             
+
+Program structure, 4-1             
+
+  the executives, 4-1              
+
+                                   
+
+Regress two layers, 2-19           
+
+                                   
+
+Sample date, 2-10                  
+
+Scale an image, 2-18               
+
+Screen forms, 2-3                  
+
+Summarize a specific geocube,      
+
+  2-13                             
+
+System files                       
+
+  formats, 4-2                     
+
+    geocube master file, 4-2       
+
+    label list file, 4-3           
+
+    layer data file, 4-4           
+
+    layer master file, 4-3         
+
+  names                            
+
+    geocube master file, 4-2       
+
+    label list file, 4-3           
+
+    layer master file, 4-3         
+
+    output layer files, 4-2        
+
+                                   
+
+Terminal dependence, 4-8           
+
+                                   
+
+Xor two images, 2-18               
+
+                                   
+

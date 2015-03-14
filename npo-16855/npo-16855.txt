@@ -1,0 +1,56 @@
+ SOSPAC- SOLAR SPACE POWER ANALYSIS CODE
+
+( Cal Tech/Jet Propulsion Lab. )
+
+     The Solar Space Power Analysis Code, SOSPAC, was developed to examine
+the solar thermal and photovoltaic power generation options available for a
+satellite or spacecraft in low earth orbit. SOSPAC is a preliminary systems
+analysis tool and enables the engineer to compare the areas, weights, and
+costs of several candidate electric and thermal power systems. The config-
+urations studied include photovoltaic arrays and parabolic dish systems to
+produce electricity only, and in various combinations to provide both ther-
+mal and electric power.
+
+     SOSPAC has been used for comparison and parametric studies of proposed
+power systems for the NASA Space Station. The initial requirements are pro-
+jected to be about 40 kW of electrical power, and a similar amount of thermal
+power with temperatures above 1000 degrees Centigrade. For objects in low
+earth orbit, the aerodynamic drag caused by suitably large photovoltaic ar-
+rays is very substantial. Smaller parabolic dishes can provide thermal en-
+ergy at a collection efficiency of about 80%, but at increased cost. SOSPAC
+allows an analysis of cost and performance factors of five hybrid power
+generating systems. Input includes electrical and thermal power require-
+ments, sun and shade durations for the satellite, and unit weight and cost
+for subsystems and components. Performance equations of the five config-
+urations are derived, and the output tabulates total weights of the power
+plant assemblies, area of the arrays, efficiencies, and costs.
+
+     SOSPAC is written in FORTRAN IV for batch execution and has been imple-
+mented on an IBM PC computer operating under DOS with a central memory re-
+quirement of approximately 60K of 8 bit bytes. This program was developed
+in 1985.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: IBM PC SERIES
+
+PROGRAM SIZE: APPROXIMATELY 640 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 5.25 Inch IBM PC DOS Format Diskette
+
+PROGRAM NUMBER: NPO-16855
+
+DOMESTIC - DOCUMENTATION PRICE: $25.00    PROGRAM PRICE: $100.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $50.00   PROGRAM PRICE: $200.00
+
+
+
+                                        1
+

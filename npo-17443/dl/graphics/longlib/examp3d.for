@@ -1,0 +1,85 @@
+C
+C *** LAST REVISED ON 14-AUG-1987 16:22:27.42
+C *** SOURCE FILE: [DL.GRAPHICS.LONGLIB]EXAMP3D.FOR
+C
+       PROGRAM EXAMP3D
+C       
+C       EXAMPLE SHOWING THE USE OF THE 3D PLOTTING PACKAGE IN LONGLIB
+C       WITHOUT HIDDEN LINE REMOVAL.  THIS FILE IS FORTRAN 77 COMPATIBLE.
+C
+C       OPEN PLOT PACKAGE WITH SCREEN PROMPT AND A PRINT HISTORY FILE UNIT 3
+C
+       CALL FRAME(3,0,4.,3.,3.)
+       CALL SYMBOL(-1.0,-1.,0.2,'EXAMP3D',0.,7,-1)
+       CALL PLOT(0.,0.,3)
+C
+C       INITIALIZE THE 3D (NO HIDDEN LINE REMOVAL) PACKAGE
+C
+       CALL INIT3D(14.,13.,12.,0.,0.,0.,0.,15.,1.,1)
+C
+C       PLOT SOME AXIS LINES AS EXAMPLES
+C
+       CALL PLOT3D(0.,0.,0.,3)
+       CALL PLOT3D(1.,0.,0.,2)
+C
+C       USE 2-D LABELING ON END OF AXIS
+C
+C       FIRST GET SCREEN COORDINATES AND ADD 2-D LABEL THEN
+C       PUT ON 3D LABEL
+C
+       CALL WHERE3D(X,Y)
+       CALL SYMBOL(X,Y,.1,'X',0.,1,-1)
+       CALL SYM3D(1.,0.,0.,0.,0.,0.,.2,'X',1)
+C
+       CALL PLOT3D(0.,0.,0.,3)
+       CALL PLOT3D(0.,1.,0.,2)
+       CALL WHERE3D(X,Y)
+       CALL SYMBOL(X,Y,.23,'Y',0.,1,-1)
+       CALL SYM3D(0.,1.,0.,0.,0.,0.,.2,'Y',1)
+C
+       CALL PLOT3D(0.,0.,0.,3)
+       CALL PLOT3D(0.,0.,1.,2)
+       CALL WHERE3D(X,Y)
+       CALL SYMBOL(X,Y,.23,'Z',0.,1,-1)
+       CALL SYM3D(0.,0.,1.,0.,0.,0.,.2,'Z',1)
+C
+C       ADD FANCY LABELS
+C
+       CALL SYM3D(0.,0.,0.,0.,0.,0.,.2,'x axis',6)
+       CALL SYM3D(0.,0.,0.,0.,0.,90.,.2,'x2 axis',7)
+       CALL SYM3D(0.,0.,0.,0.,90.,0.,.2,'y axis',6)
+       CALL SYM3D(0.,0.,0.,0.,90.,180.,.2,'y2 axis',7)
+       CALL SYM3D(0.,0.,0.,-90.,0.,0.,.2,'z axis',6)
+       CALL SYM3D(0.,0.,0.,-90.,0.,90.,.2,'z2 axis',7)
+C
+C       ADD SOME RANDOM PI'S TO SHOW OFF NUM3D ROUTINE
+C
+       CALL NUM3D(0.,0.5,0.,0.,30.,90.,.2,3.14159,4)
+       CALL NUM3D(0.5,0.,0.5,40.,0.,0.,.2,3.14159,4)
+       CALL NUM3D(0.5,0.5,0.5,40.,40.,40.,.2,3.14159,4)
+C
+C       ASK FOR A SCREEN CLEAR THEN RESTORE TERMINAL PLOT MODE
+C
+       CALL PLOT(0.,0.,3)
+       CALL NEWPAGE
+       CALL CTERM(2)
+       CALL CTERM(-1)
+C
+C       NOW PLOT REAL AXIS
+C
+       AMIN=0.0
+       AMAX=3.0
+       CALL AXIS3D(0.,0.,0.,0.,0.,0.,'X AXIS',6,3.,AMIN,AMAX,
+     $              3.0302,.15,1002.)
+       CALL AXIS3D(0.,0.,0.,0.,90.,0.,'Y AXIS',6,3.,AMIN,AMAX,
+     $              3.03,.15,1002.)
+       CALL AXIS3D(0.,0.,0.,-90.,0.,0.,'Z AXIS',6,3.,AMIN,AMAX,
+     $              3.04,.15,1002.)
+C
+C       CLOSE PLOT PACKAGE AND ASK FOR SCREEN CLEAR
+C
+       CALL PLOT(0.,0.,3)
+       CALL CTERM(2)
+       CALL PLOTND
+       STOP
+       END

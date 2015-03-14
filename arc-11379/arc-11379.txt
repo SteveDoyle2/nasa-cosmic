@@ -1,0 +1,70 @@
+ GRAPE- TWO-DIMENSIONAL GRIDS ABOUT AIRFOILS AND OTHER SHAPES BY THE USE
+OF POISSON'S EQUATION
+
+( NASA Ames Research Center )
+
+     The ability to treat arbitrary boundary shapes is one of the most de-
+sirable characteristics of a method for generating grids, including those
+about airfoils. In a grid used for computing aerodynamic flow over an air-
+foil, or any other body shape, the surface of the body is usually treated
+as an inner boundary and often cannot be easily represented as an analytic
+function. The GRAPE computer program was developed to incorporate a method
+for generating two-dimensional finite-difference grids about airfoils and
+other shapes by the use of the Poisson differential equation. GRAPE can be
+used with any boundary shape, even one specified by tabulated points and in-
+cluding a limited number of sharp corners. The GRAPE program has been de-
+veloped to be numerically stable and computationally fast. GRAPE can pro-
+vide the aerodynamic analyst with an efficient and consistent means of grid
+generation.
+
+     The GRAPE procedure generates a grid between an inner and an outer
+boundary by utilizing an iterative procedure to solve the Poisson differen-
+tial equation subject to geometrical restraints. In this method, the inho-
+mogeneous terms of the equation are automatically chosen such that two im-
+portant effects are imposed on the grid. The first effect is control of the
+spacing between mesh points along mesh lines intersecting the boundaries.
+The second effect is control of the angles with which mesh lines intersect
+the boundaries. Along with the iterative solution to Poisson's equation,
+a technique of coarse-fine sequencing is employed to accelerate numerical
+convergence. GRAPE program control cards and input data are entered via the
+NAMELIST feature. Each variable has a default value such that user supplied
+data is kept to a minimum. Basic input data consists of the boundary speci-
+fication, mesh point spacings on the boundaries, and mesh line angles at the
+boundaries. Output consists of a dataset containing the grid data and, if
+requested, a plot of the generated mesh.
+
+     The GRAPE program is written in FORTRAN IV for batch execution and has
+been implemented on a CDC 6000 series computer with a central memory re-
+quirement of approximately 135K (octal) of 60 bit words. For plotted output
+the commercially available DISSPLA graphics software package is required.
+The GRAPE program was developed in 1980.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC 6000 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 3,616 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: ARC-11379
+
+DOMESTIC - DOCUMENTATION PRICE: $20.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $40.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

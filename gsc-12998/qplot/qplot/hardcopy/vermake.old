@@ -1,0 +1,173 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STARLETQ',
+               'QLIBHOME:STANDARD',
+               'QLIBHOME:IO',
+               'QLIBHOME:STRING',
+               'QLIBHOME:FIG',
+               'QLIBHOME:TERM_VAX',
+               'QLIBHOME:HARD_RAST'),
+  ENVIRONMENT ('QLIBHOME:HARD02.TEN') ]
+MODULE hard02 (vfile);
+{=============================================================================}
+{-- PROCEDURES FOR HARDCOPY TYPE 02 ------------------------------------------}
+{=============================================================================}
+[ HIDDEN ] TYPE
+   v_type        = ARRAY [0..263] OF pix8;
+[ HIDDEN ] VAR
+   v             : v_type;
+   vfile         : FILE of v_type;
+[ HIDDEN ] VAR
+   hardfig : RECORD
+             comfile       : VARYING [30] OF char;
+             format        : char;
+             x             : integer;
+             y             : integer;
+             END 
+           := ('QPLOTHOME:VERV80.COM','P',2816,2112);
+{=============================================================================}
+[ HIDDEN ] PROCEDURE setraster;
+BEGIN
+raster.landscape := hardfig.format = 'L';
+CASE hardfig.format OF
+   'P':  BEGIN
+         raster.xsize := hardfig.x;
+         raster.ysize := hardfig.y;
+         END;
+   'L':  BEGIN
+         raster.xsize := hardfig.y;
+         raster.ysize := hardfig.x;
+         END;
+   END;
+raster.yblocks := (raster.ysize + 7) DIV 8;
+END;
+{=============================================================================}
+[ GLOBAL ]
+FUNCTION hardname02 (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0:  hardname02 := '1';
+   1:  hardname02 := 'VERV80  ';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE hardmake02;
+VAR
+   oldpos  : ipoint;
+{------------------------------}
+PROCEDURE fillpicture;
+VAR
+   i,j     : shortunsigned;
+   h,l,s   : integer;
+   a       : char;
+BEGIN
+FOR i := 1 TO plotfig.commax DO WITH plotfig.com^[i] DO CASE ins OF
+   I_col:  setvisible (i);
+   I_pan:  ;
+   I_clo:  ;
+   I_pos:  BEGIN
+           env.pos.ix := ix;
+           env.pos.iy := iy;
+           END;
+   I_dra:  BEGIN
+           IF NOT env.visible
+            THEN 
+             BEGIN
+             env.pos.ix := ix;
+             env.pos.iy := iy;
+             END
+            ELSE 
+             BEGIN
+             bresenham (env.pos.ix,env.pos.iy,ix,iy);
+             env.pos.ix := ix;
+             env.pos.iy := iy;
+             END;
+           END;
+   I_siz:  BEGIN
+           env.curch.width  := ix;
+           env.curch.height := iy;
+           END;
+   I_mar:  BEGIN
+           env.curch.charspacing := ix;
+           env.curch.linespacing   := iy;
+           END;
+   I_pri:  IF env.visible AND (ix <= iy) 
+            THEN rasterprint (env.pos.ix,env.pos.iy,comchastring(i));
+   I_emp:  ;
+   END;
+END;
+{------------------------------}
+PROCEDURE writefile;
+VAR
+   i,j,offset : integer;
+BEGIN
+offset := (264 - raster.yblocks) DIV 2;
+open (vfile,'VERV80.PLT',new);
+rewrite (vfile);
+FOR i := 0 TO raster.xsize-1 DO
+   BEGIN
+   FOR j := 0 TO 263 DO
+      IF j < offset
+       THEN v[j] := []
+      ELSE IF j < offset + raster.yblocks 
+       THEN v[j] := pix^[i*raster.yblocks+j-offset]
+       ELSE v[j] := [];
+   write (vfile,v);
+   END;
+close (vfile);
+END;
+{------------------------------}
+BEGIN
+setraster;
+env.curch := config.ch;
+
+openplane;
+fillpicture;
+writefile;
+closeplane;
+LIB$SPAWN ('@' + hardfig.comfile);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE hardconfig02 (configcontrol : configcontrol_type);
+BEGIN
+WITH hardfig DO CASE configcontrol OF
+   CON:  BEGIN
+         setraster;
+         config.resolution := 49152 DIV raster.ysize * 4;
+         config.dotsize    := config.resolution * 2;
+         config.ch.width   := config.resolution * 6;
+         config.ch.height  := config.resolution * 10;
+         config.ch.charspacing := config.resolution * 2;
+         config.ch.linespacing := config.resolution * 4;
+         config.starsize   := config.resolution * 4;
+         END;
+   QUE:  BEGIN
+         readvary ('ENTER COMMAND FILE NAME  : ',comfile,comfile);
+         writeline (out,'L=LANDSCAPE, P=PORTRAIT');
+         readch  ('ENTER FORMAT             : ',format,'LPC',format);
+         CASE format OF
+            'L':  BEGIN
+                  readint ('ENTER X SIZE IN PIXELS   : ',x,200,2112,x);
+                  readint ('ENTER Y SIZE IN PIXELS   : ',y,200,9000,y);
+                  END;
+            'P':  BEGIN
+                  readint ('ENTER X SIZE IN PIXELS   : ',x,200,9000,x);
+                  readint ('ENTER Y SIZE IN PIXELS   : ',y,200,2112,y);
+                  END;
+            END;
+         END;
+   REP:  BEGIN
+         writeline (out,'Command file name is ' + comfile);
+         CASE format OF
+            'L':  writeline (out,'Format is landscape');
+            'P':  writeline (out,'Format is portrait');
+            'C':  writeline (out,'Format is not changed');
+            END;
+         writeline (out,'Number of X pixels is ' + strofi (x,4));
+         writeline (out,'Number of Y pixels is ' + strofi (y,4));
+         END;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+END.

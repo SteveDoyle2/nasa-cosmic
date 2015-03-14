@@ -1,0 +1,615 @@
+  { $INCLUDE : 'compile.inc' }
+  { $INCLUDE : 'vbpas.int' }
+  { $INCLUDE : 'sfpas.int' }
+  { $INCLUDE : 'getparam.int' }
+  { $INCLUDE : 'dialog.int' }
+
+  implementation of dialog;
+
+  USES vbpas;
+
+  USES sfpas;
+
+  USES getparam;
+
+
+  var inchar : twobyte;
+      abc    : array[1..127] of byte;
+      sfset  : set of byte;
+      buffer      : lstring(80);
+
+  value
+      escape := true;
+
+  (*********************************************************)
+
+  function dosxqq ( command : byte; parm : word ) : word; extern;
+
+  (*********************************************************)
+
+  function key_board_status;
+
+  var
+      status : boolean;
+
+  begin
+    status := false;
+    if dosxqq ( 11, 0 ) <> 2816 then status := true;
+    key_board_status := status;
+  end;
+
+  (*********************************************************)
+
+  procedure get_input;
+
+  var
+      status : boolean;
+
+  begin
+    status := key_board_status;
+    while not status do status := key_board_status;
+    inchar[1] := dosxqq ( 7, 0 ) - 1792;
+    if inchar[1] = 0 then inchar[2] := dosxqq ( 7, 0 ) - 1792;
+  end;
+
+  (*********************************************************)
+
+  procedure prompter1;
+
+  var
+      height      : integer;
+      i           : integer;
+      line_length : integer;
+
+  procedure prompter2;
+
+    var
+      i,j,k,l,k1  : integer;
+
+  begin
+    if promptupd = 3 then promptupd := 2
+    else begin
+    if ( rtype = 2 ) or ( rtype = 3 ) then
+      line_length := 79
+     else line_length := 39;
+    if ( rtype < 4 ) then
+      begin
+        for j := 1 to line_length do
+          buffer[j] := ' ';
+        buffer.len := line_length;
+        j := 0;
+        if prompt1 = null then
+         begin
+          if prompt2 = null then j := 2 else j := 1;
+          if promptupd = 1 then
+            begin
+              if reverse = -1 then j := 0
+               else rdeupd ( rtype, prompt_line, prompt_line+j-1 );
+              promptupd := 2;
+            end;
+          if promptupd = 0 then promptupd := 1;
+         end
+        else promptupd := 2;
+        for i := j to 2 do
+          begin
+            there ( 0, prompt_line + i );
+            write ( buffer );
+          end;
+        there ( 0, prompt_line );
+        copylst ( prompt1, buffer );
+        if buffer.len > line_length  then buffer.len := line_length;
+        if buffer.len > 0 then write ( buffer );
+        copylst ( prompt2, buffer );
+        if buffer.len > line_length then buffer.len := line_length;
+        there ( 0, prompt_line + 1 );
+        if buffer.len > 0 then write ( buffer );
+      end;
+    j := 0;
+    k := 0;
+    for i := 1 to 10 do
+      if fctn_map^[valid_key_set_id][i] <> 0 then
+        begin
+          k := k + 1;
+          j := fctn_tag^[fctn_map^[valid_key_set_id][i]].len + 1 + j;
+          if i = 10 then j := j + 1;
+        end;
+    if j+k<line_length then buffer.len:=(line_length-j-k)
+     else buffer.len:=0;
+    for l := 1 to buffer.len do
+      buffer[l] := ' ';
+    there ( 0, prompt_line + 2 );
+    l := 1;
+    for i := 1 to 10 do
+     begin
+      if fctn_map^[valid_key_set_id][i] <> 0 then
+        begin
+              if (i<>1)and(l<=line_length)and(j+k<=line_length) then
+               begin
+                buffer.len := buffer.len + 1;
+                repeat
+                  write ( ' ' );
+                  l := l + 1;
+                  buffer.len := buffer.len-1;
+                until (l>((i-1)*line_length) div 10)or(buffer.len<1);
+               end;
+          if line_length < j then
+            begin
+              k1 := 1;
+              if l <= line_length then write ( i:1 );
+              l := l + 1;
+              if i = 10 then l := l + 1;
+              while (k1<=fctn_tag^[fctn_map^[valid_key_set_id][i]].len)
+                and (l<=line_length) do
+                begin
+                  write(fctn_tag^[fctn_map^[valid_key_set_id][i]][k1]);
+                  k1 := k1 + 1;
+                  l := l + 1;
+                end;
+            end
+           else
+            begin
+              write(i:1, fctn_tag^[fctn_map^[valid_key_set_id][i]]);
+              l := l+fctn_tag^[fctn_map^[valid_key_set_id][i]].len+1;
+            end;
+              k1:=fctn_tag^[fctn_map^[valid_key_set_id][i]].len;
+              if (i = 8)and(k1 > 4)and(rtype<4) then
+                if (reverse<>-1) then vbbrvs ( rtype,
+                                    (l-k1+3)*8*(ord(rtype>3)+1),
+               (prompt_line+2)*16,(k1-3)*8*(ord(rtype>3)+1),16)
+                else
+                 begin
+                   tbclr(l-k1+3,prompt_line+2,k1-4,112);
+                 end;
+        end;
+        if i = 7 then [write ( buffer );l:=l+buffer.len;buffer.len:=0
+                      if reverse=-1 then tbclr(0,prompt_line+2,80,7);];
+       end;
+     end;
+  end;
+
+  (*********************************************************)
+
+  begin
+  if mode = 2 then prompter2 else
+  begin
+    line_length := 39;
+    if (rtype=2) or (rtype=3) then line_length := 79;
+    if reverse = -1 then
+       begin
+         if escape then prompter2
+                   else
+            begin
+              tbclr ( 0, prompt_line+2, 80, 7 );
+              there ( 0, prompt_line );
+              for i := 1 to 3*line_length+2 do write ( ' ' );
+            end;
+       end
+         else
+       begin
+         if escape then prompter2
+                   else rdeupd ( rtype, prompt_line, prompt_line+2 );
+       end;
+  end;
+  end;
+
+  (*********************************************************)
+
+  procedure incom;
+
+  var
+      b1,b2,k: byte;
+      i,j    : integer;
+      column : integer;
+      row    : integer;
+      cursor : integer;
+      exit   : boolean;
+      insert : boolean;
+      edit   : boolean;
+      line_length : integer;
+      x1,y1       : integer;
+      length1: byte;
+      err    : boolean;
+
+  procedure writefield;
+
+    var i : integer;
+
+    begin
+    if ((row > 21)or(data_type in [1,3])) and (rtype<4) then
+      begin
+        there ( x1, y1 );
+        for i := 1 to length do
+          begin
+            if i = line_length - x1 + 1 then
+              there ( x1, y1 + 1 );
+            write ( chr ( abc[i]) );
+          end;
+        for i := (length+1) to max do write ( ' ' );
+        if reverse <> -1 then vbbrvs(rtype,x1*8*(ord(rtype>3)+1),y1*16,
+                              max*8*(ord(rtype>3)+1),16)
+                         else tbclr(x1,y1,max,112);
+        there ( column, row );
+      end;
+    end;
+
+  begin
+    if rtype > 3 then
+       begin
+         data_type     := 3;
+         ins           := 0;
+         del           := 0;
+         backspace     := 0;
+         cursor_left   := 0;
+         cursor_right  := 0;
+         valid_key_set_id := 2;
+       end;
+    length1 := length;
+    insert  := false;
+    cursor := 1;
+    k := 1;
+    if data_type in [1,3] then
+       while (k < length) and (buffer[k] = ' ') do k := k + 1;
+    length := length - k + 1;
+    for i := 1 to length do abc[i] := wrd ( buffer[i+k-1] );
+    for i := (length+1)  to max do abc[i] := 32;
+
+         column := x0;
+         row    := y0;
+         x1     := x0;
+         y1     := y0;
+      if reverse < -1 then
+        begin
+          row := prompt_line+1;
+          y1 := row;
+          column := prompt2.len;
+          x1 := column;
+        end;
+    if reverse = -1 then
+        tbclr ( x1, y1, max, 112 );
+    line_length := 39;
+    if (rtype=2) or (rtype=3) then line_length := 79;
+    sfset := [116];
+    k := 1;
+    while (k<=25)and (not(fctn_map^[valid_key_set_id][k] in [34,35]) do k:=k+1;
+    edit := true;
+    if k <= 25 then
+      begin
+        if fctn_map^[valid_key_set_id][k] = 35 then edit:=false;
+        k := k + 58;
+        sfset := sfset + [k];
+      end;
+    if (not edit)and(cursor_left=1) then sfset := sfset + [75];
+    if (not edit)and(cursor_right=1) then sfset := sfset + [77];
+    if     ins=1    then sfset := sfset + [82];
+    if     del=1    then sfset := sfset + [83];
+
+    if escape then prompter1 ( 2, prompt_line, prompt1, prompt2, reverse,
+                              rtype, data_type, valid_key_set_id );
+    writefield;
+    there ( column, row );
+    repeat
+      if rtype < 4 then
+        begin
+      if (reverse <> -1) and (reverse <> -3) then
+        while not key_board_status do
+          vbblink ( rtype, column*8, row*16+14, 8, 2, 2500 );
+      if reverse = -3 then
+        while not (key_board_status) do
+          begin
+            vbbrvs ( rtype, column*8, row*16+14, 8, 2 );
+            vbblink ( rtype, x0, y0, 2, 0, 1000 );
+            vbbrvs ( rtype, column*8, row*16+14, 8, 2 );
+            vbblink ( rtype, x0, y0, 2, 0, 1000 );
+          end;
+        end;
+      get_input ( inchar );
+      b1 := inchar[1];
+      b2 := inchar[2];
+      exit := (b1=13) or ( (b1=0) and not (b2 in sfset) );
+      while not exit do
+        begin
+          case b1 of
+            0: begin  { function key }
+                 if b2 = k then begin
+                        if cursor_left=1  then
+                          if 75 in sfset then sfset := sfset - [75]
+                                         else sfset := sfset + [75];
+                        if cursor_right=1 then
+                          if 77 in sfset then sfset := sfset - [77]
+                                         else sfset := sfset + [77];
+                        if [75,77] * sfset <> [] then
+                          begin
+                            for i := 1 to 25 do
+                             if fctn_map^[valid_key_set_id][i]=34 then
+                              fctn_map^[valid_key_set_id][i]:=35;
+                          end
+                         else
+                          for i := 1 to 25 do
+                            if fctn_map^[valid_key_set_id][i]=35 then
+                              fctn_map^[valid_key_set_id][i]:=34;
+                         promptupd := 2;
+                         if escape then
+                         prompter1(2,prompt_line,prompt1,prompt2,reverse,
+                              rtype, data_type, valid_key_set_id );
+                         writefield;
+                         promptupd := 1;
+                       end  else
+                 case b2 of
+                   75: if cursor > 1 then  { move cursor left }
+                          begin
+                            insert := false;
+                            if cursor > 1 then
+                               begin
+                                 if column=x1 then
+                                    begin
+                                      column := line_length;
+                                      row := row - 1;
+                                    end
+                                      else
+                                    column := column - 1;
+                                 there ( column, row );
+                                 cursor := cursor - 1;
+                               end;
+                          end;
+                   77: if cursor <= max then  { move cursor right }
+                          begin
+                            insert := false;
+                            write ( chr ( abc[cursor] ) );
+                            if column=line_length then
+                               begin
+                                 column := x1;
+                                 if row < 24 then row := row + 1;
+                               end
+                                 else
+                               column := column + 1;
+                            cursor := cursor + 1;
+                            if cursor-1>length then length:=cursor-1;
+                          end;
+                   82: if cursor <= max then  { insert text }
+                          begin
+                            insert := true;
+                          end;
+                   83: if cursor >= 1 then  { delete text }
+                          begin
+                            insert := false;
+                            for i := cursor to length-1{max-1} do
+                             begin
+                               abc[i] := abc[i+1];
+                               if x1+i <= line_length+1 then
+                                 there ( x1+i-1, row )
+                                else if y1 <> 24 then
+                                       there(2*x1+i-line_length-2,y1+1)
+                                     else there(2*x1+i-line_length-2,y1);
+                               write ( chr ( abc[i] ) );
+                             end;
+                            if length >= cursor then
+                              begin
+                            abc[length{max}] := 32;
+                            if x1+length{max} = line_length + 2 then
+                             if y1 <> 24 then there ( x1, y1 + 1 )
+                               else there ( x1, y1 );
+                            write ( chr ( abc[length{max}] ) );
+                            if length > 1 then
+                              begin
+                                if length > cursor then
+                                  length := length - 1;
+                              end
+                             else
+                                 abc[1] := 32;
+                              end;
+                          end;
+                 116: if cursor < max+1 then
+                        begin
+                          if length+x1 > line_length+1 then
+                            begin
+                             if cursor < line_length-x1+2 then
+                             begin
+                              for i := cursor to line_length-x1+1 do
+                                write ( chr(abc[i]) );
+                              if row < 24 then there ( x1, row + 1 )
+                                else there ( x1, row );
+                             end
+                             else
+                              there ( x1, row );
+                             for i := line_length-x1+2 to length do
+                               write ( chr(abc[i]) );
+{                            if reverse = -1 then
+                              for i:=length+1 to 2*(line_length-x1)+1 do
+                                write ( ' ' );}
+                            end
+                           else
+                            begin
+                              for i := cursor to length do
+                                write ( chr(abc[i]) );
+{                             if reverse = -1 then
+                               begin
+                                 if max < line_length-x1 then
+                                   j := max + 1
+                                  else j := line_length-x1+1;
+                                 for i := length+1 to j do
+                                   write ( ' ' );
+                               end;}
+                            end;
+                          column := length + x1;
+                          if column > line_length then
+                            begin
+                              column := column-line_length+x1-1;
+                              if (cursor<line_length-x1+2)and(row<24) then
+                                row := row + 1;
+                            end;
+                          cursor := length + 1;
+                        end;
+               end;
+          end;
+
+            8: if (backspace=1) and (cursor>1) then  { backspace }
+                  begin
+                    if column=x1 then
+                       begin
+                         column := line_length;
+                         row := row - 1;
+                       end
+                         else
+                       column := column - 1;
+                    there ( column, row );
+                    for i := cursor-1 to length-1{max-1} do
+                      begin
+                        abc[i] := abc[i+1];
+                        if x1 + i = line_length + 2 then
+                          if y1 <> 24 then there ( x1, y1 + 1 )
+                            else there ( x1, y1 );
+                        write ( chr ( abc[i] ) );
+                      end;
+                    abc[length{max}] := 32;
+                    if x1 + length{max} = line_length + 2 then
+                       if y1 <> 24 then there ( x1, y1 + 1 )
+                         else there ( x1, y1 );
+                    write ( chr(abc[length{max}]) );
+                    if length>1 then length:=length-1 else abc[1]:=32;
+                    cursor := cursor - 1;
+                  end;
+
+           27: if esc=1 then  { escape }
+                  begin
+                    escape := not escape;
+                    if promptupd = 3 then promptupd := 2;
+                    if promptupd = 0 then promptupd := 1;
+                    prompter1 ( 1, prompt_line, prompt1, prompt2, reverse,
+                                rtype, data_type, valid_key_set_id);
+                    writefield;
+                  end;
+
+          otherwise   { text }
+                  begin
+                    status := error;
+                    case data_type of
+                      1: if b1 in [48..57,43,45,46] then status := txt;
+                      2: if b1 in [65..90,97..122] then status := txt;
+                      3: if b1 in [32,48..57] then status := txt;
+                      4: begin end;  { data type for fctkeys }
+                    otherwise
+                      if not (b1 in [7..12]) then status := txt;
+                    end;
+                    if (cursor<=max) and (status=txt) then
+                       begin
+                        if (rtype<4) then
+                         write ( chr (b1) );
+                         if insert then
+                            [if length < max then length := length+1;
+                             for i := length{max} downto cursor+1 do
+                              begin
+                                abc[i] := abc[i-1];
+                                if x1+i <= line_length+1 then
+                                  there ( x1+i-1, row )
+                               else if y1 <> 24 then
+                                      there(2*x1+i-2-line_length,y1+1)
+                                   else there(2*x1+i-2-line_length,y1);
+                                write ( chr ( abc[i] ) );
+                              end;];
+                         abc[cursor] := b1;
+                         column := column + 1;
+                         if column > line_length then
+                            begin
+                              column := x1;
+                              if row < 24 then row := row + 1;
+                            end;
+                         cursor := cursor + 1;
+                         if cursor-1>length then length:=cursor-1;
+                       end;
+                      if (cursor = max) and (status = txt) then
+                        begin
+                          err := true;
+                          for i := 1 to max do
+                           if abc[i] <> 32 then err := false;
+                          if err then
+                            begin
+                              length := length1;
+                              for i := 1 to length do
+                               abc[i] := wrd ( buffer[i]);
+                               writefield;
+                               length := 0;
+                            end;
+                        end;
+                   end;
+          end;
+          there ( column, row );
+          if rtype < 4 then
+            begin
+          if (reverse <> -1) and (reverse <> -3) then
+            while not key_board_status do
+              vbblink ( rtype, column*8, row*16+14, 8, 2, 2500 );
+          if reverse = -3 then
+            while not (key_board_status) do
+              begin
+                vbbrvs ( rtype, column*8, row*16+14, 8, 2 );
+                vbblink ( rtype, x0, y0, 2, 0, 1000 );
+                vbbrvs ( rtype, column*8, row*16+14, 8, 2 );
+                vbblink ( rtype, x0, y0, 2, 0, 1000 );
+              end;
+            end;
+          get_input ( inchar );
+          b1 := inchar[1];
+          b2 := inchar[2];
+          exit := (b1=13) or ( (b1=0) and not (b2 in sfset) );
+        end;
+
+         if b1 = 0 then   { function key is last }
+            begin
+              userkey := b2;
+              if b2 in valid_set^[valid_key_set_id] then
+                 if length < 1 then status := fctkey
+                               else status := mixed
+                                                     else
+                    begin
+                      status := error;
+{                     there ( 0, prompt_line );
+                      i := 1;
+                      while (i<=messages^[2].len) and (i<=line_length) do
+                        begin
+                          write ( messages^[2][i] );
+                          i := i + 1;
+                        end;
+                      there ( 0, prompt_line+1 );
+                      i := 1;
+                      while (i<=messages^[1].len) and (i<=line_length) do
+                        begin
+                          write ( messages^[1][i] );
+                          i := i + 1;
+                        end;
+                      there ( 0, prompt_line+2 );
+                      for i := 1 to line_length do write ( ' ' );
+                      get_input ( inchar );
+                      there ( 0, prompt_line );
+                      for i := 1 to line_length do write ( ' ' );
+                      there ( 0, prompt_line+1 );
+                      for i := 1 to line_length do write ( ' ' );
+                      prompter1 ( 1, prompt_line, prompt1, prompt2, reverse,
+                                  rtype, data_type,valid_key_set_id);
+                      writefield;
+                      there ( column, row );}
+                    end;
+            end
+              else
+            status := txt;
+    until status <> error;
+    if reverse=-1 then tbclr(x1,y1,max,7)
+     else if (rtype<4)and(y1>21) then
+        vbbrvs(rtype,(x1+cursor-1)*8*(ord(rtype>3)+1),y1*16,
+               (max-cursor+1)*8*(ord(rtype>3)+1),16);
+    if ( status <> fctkey ) then
+       begin
+         for i := 1 to length do
+             buffer[i] := chr( abc[i] );
+         buffer.len := length;
+       end;
+    if ( status <> txt ) then
+       begin
+         userkey := fctn_map^[valid_key_set_id][userkey - 58];
+       end;
+    if edit then [b1:=35;b2:=34] else [b1:=34;b2:=35];
+    for i := 1 to 25 do
+      if fctn_map^[valid_key_set_id][i]=b1 then
+        fctn_map^[valid_key_set_id][i]:=b2;
+  end;
+  end.
+

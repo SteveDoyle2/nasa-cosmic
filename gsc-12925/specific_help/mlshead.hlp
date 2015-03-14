@@ -1,0 +1,35 @@
+
+edit.hlp
+
+
+
+mlsfoot.hlp
+
+
+
+
+The Header screen allows input of the information found in the header of the
+milestone chart.  It appears as soon as the F2(Text) key is pressed from the
+Main Screen or the Format Menu or when F5(Header) is pressed from the
+Milestone/Footnote screen.
+To change the information in the fields, type the new information and it will
+overwrite the old information.  The insert key can be pressed to insert
+characters in the middle of a field.  What is displayed on the screen when any
+function key or return key is pressed is what will be saved.
+
+To obtain help for any of the following subjects,  press the function key next
+to the desired subject.
+
+ 
+        F2  Edit
+ 
+ 
+ 
+        F6  Milestone/Footnote
+ 
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

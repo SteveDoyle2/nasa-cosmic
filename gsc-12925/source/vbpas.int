@@ -1,0 +1,28 @@
+   interface;
+      unit vbpas(screen,colors,there,there1,spage,sclear,
+                vbtrvs,vbbrvs,vbblink,get_equip,equipflg,equipscr,
+                equipprt,drive,tbclr,scrmode,prtnum );
+
+    var
+      equipflg : byte;
+      equipscr : byte;
+      drive    : char;
+      equipprt : array[1..3] of lstring(30);
+      scrmode  : integer;
+      prtnum   : char;
+
+      procedure sclear;
+      procedure screen(mode : integer);
+      procedure get_equip;
+      procedure colors(id: integer; color : integer);
+      procedure there(u,v : integer);
+      procedure there1(u,v : integer);
+      procedure spage(p : integer);
+      procedure vbtrvs(rtype,x,y,size,nochar:integer);
+      procedure vbbrvs(rtype,x,y,npix,nline:integer);
+      procedure vbblink(rtype,x,y,npix,nline,delay:integer);
+      procedure tbclr(xtext,ytext,len:integer;b:byte);
+
+   begin
+   end;
+

@@ -1,0 +1,149 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STANDARD',
+               'QLIBHOME:IO',
+               'QLIBHOME:FIG',
+               'QLIBHOME:TERM_VAX',
+               'QLIBHOME:TERM_4010',
+               'QLIBHOME:TERM_4100'),
+  ENVIRONMENT ('QLIBHOME:TEK4016.TEN') ]
+MODULE term_TEK4016;
+[ HIDDEN ] VAR
+   termfig       : RECORD
+                   charsize : char;
+                   END 
+                 := (';');
+{=============================================================================}
+{-- PROCEDURES FOR TERMINAL TYPE TEK4016 -------------------------------------}
+{=============================================================================}
+[ GLOBAL ]
+FUNCTION termname_TEK4016 (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0: termname_TEK4016 := '1';
+   1: termname_TEK4016 := 'TEK4016 ';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE colorsetup_TEK4016;
+BEGIN
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE executecom_TEK4016;
+VAR
+   h,l,s         : integer;
+   a             : char;
+   temp          : boolean;
+   oldpos        : ipoint;
+   oldstr,newstr : VARYING [80] OF char;
+{------------------------------}
+PROCEDURE bufferempty;
+BEGIN
+IF length(env.buffer) <> 0 
+ THEN 
+  BEGIN
+  env.mode := M_PLOT;
+  qiowwrite (env.buffer + CRLF);
+  env.buffer := '';
+  END;
+END;
+{------------------------------}
+BEGIN
+temp := false;
+WITH plotitem DO CASE ins OF
+   I_col:  BEGIN
+           bufferempty;
+           IF env.visible THEN qiowwrite (ESC + chofcolor_4010 (st));
+           END;
+   I_pan:  ;
+   I_clo:  ;
+   I_pos:  BEGIN
+           bufferempty;
+           env.pos.ix := ix;
+           env.pos.iy := iy;
+           END;
+   I_dra:  draw_4100 (ix,iy,temp,bufferempty);
+   I_siz:  ;
+   I_mar:  ;
+   I_pri:  IF env.visible AND (st <> '') 
+            THEN 
+             BEGIN
+             bufferempty;
+             env.buffer := ESC + termfig.charsize 
+                         + chr(29) + strofpos_4100 (env.pos)
+                         + chr(31) + st;
+             bufferempty;
+             END;
+   I_emp:  bufferempty;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE writeterm_TEK4016 (str : VARYING [l2] OF char);
+BEGIN
+writeterm_4010 (str);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE readterm_TEK4016 (VAR outstr : VARYING [l2] OF char);  
+BEGIN
+readterm_vax (outstr);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screenerase_TEK4016;
+BEGIN
+screenerase_4010;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screencopy_TEK4016;
+BEGIN
+screencopy_4010;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE gin_TEK4016 (VAR key : char;  VAR ipt : ipoint;  color : color_type);
+BEGIN
+gin_4010 (key,ipt);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+FUNCTION readmenu_TEK4016 (default : char;  toplevel : boolean;
+   helpprefix : anystring) : command_type;
+BEGIN
+readmenu_TEK4016 := readmenu_4010 (default,toplevel,helpprefix,menuprep_4010);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE termconfig_TEK4016 (configcontrol : configcontrol_type);
+BEGIN
+WITH termfig DO CASE configcontrol OF
+   CON:  BEGIN
+         CASE termfig.charsize OF
+            ';':  config.ch := ch_type (496,768,96,208);
+            ':':  config.ch := ch_type (544,848,64,176);
+            '9':  config.ch := ch_type (816,1312,96,304);
+            '8':  config.ch := ch_type (896,1408,96,288);
+            END;
+         config.resolution := 16;
+         config.dotsize    := 64;
+         config.starsize   := 320;
+         config.ansi364    := false;
+         config.drawblack  := false;
+         END;
+   QUE:  BEGIN;
+         readch ('ENTER TEK CHARACTER SIZE CODE : ',charsize,'89:;',charsize);
+         CASE termfig.charsize OF
+            ';':  config.ch := ch_type (496,768,96,208);
+            ':':  config.ch := ch_type (544,848,64,176);
+            '9':  config.ch := ch_type (816,1312,96,304);
+            '8':  config.ch := ch_type (896,1408,96,288);
+            END;
+         END;
+   REP:  writeline (out,'Character size code is "' + charsize + '"');
+   END;
+END;
+{-----------------------------------------------------------------------------}
+END.

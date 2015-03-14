@@ -1,0 +1,636 @@
+      PROGRAM  MISLIFT(INPUT=401,OUTPUT=1001,TAPE5=INPUT,TAPE6=OUTPUT)
+      COMMON X(100),Y(100),Z(10),XLE1(10),XTE1(10),XLE2(10),XTE2(10),
+     1XLE3(10),XTE3(10),DZDX(21,80),A(21,80),
+     2XANS(50),PANS(50),AMANS(50),PC(50),PCT(13,11),
+     2DELTAT(13,11),AM1T(13,11),MTAB(11),CNAT(13,11),
+     2GAMANS(50),DEL(50),YANS(50),CPANS(200)
+      NAMELIST/NUM/ AMACH,N,X,Y,S,NP,Z,XLE1,XTE1,XLE2,XTE2,XLE3,XTE3,
+     1YTIP,DELTA1,DELTA2,DELTA3,IPRINT,IWING,
+     2DELTAT,MTAB,PCT,AM1T,CNAT
+      REAL MTAB,MMIDDL,MIDDLE
+  100 READ(5,NUM)
+      IF(EOF,5)5000,5001
+ 5001 WRITE(6,NUM)
+      DELTA1=DELTA1/57.2958
+      DELTA2=DELTA2/57.2958
+      DELTA3=DELTA3/57.2958
+      XK=80./(X(N)-XLE1(1))
+      YK=20./YTIP
+      BETA=SQRT(AMACH**2-1.)
+      XST=XLE1(1)
+      DO 1 I=1,N
+    1 Y(I)=YK*Y(I)
+      YMAX=Y(1)
+      DO 4 I=2,N
+    4 YMAX=AMAX1(YMAX,Y(I))
+      S=YMAX**2*3.1416/YK**2
+      DO 2 I=1,NP
+      Z(I)=YK*Z(I)
+      XLE1(I)=XK*(XLE1(I)-XST)
+      XTE1(I)=XK*(XTE1(I)-XST)
+      XLE2(I)=XK*(XLE2(I)-XST)
+      XTE2(I)=XK*(XTE2(I)-XST)
+      XLE3(I)=XK*(XLE3(I)-XST)
+    2 XTE3(I)=XK*(XTE3(I)-XST)
+      DO 3 L=1,80
+      DO 3 M=1,21
+      DZDX(M,L)=50.
+      A(M,L)=1.
+      TTX=FLOAT(L)/XK+XST
+      CALL FTLUP(TTX,TTY,+1,N,X,Y)
+C
+C        DZDX FOR BODY
+C
+C
+C        DZDX FOR WINGS
+C
+      TTX=FLOAT(M-1)
+      CALL FTLUP(TTX,TXLE1,1,NP,Z,XLE1)
+      CALL FTLUP(TTX,TXTE1,1,NP,Z,XTE1)
+      IF(FLOAT(M-1).GE.TTY.AND.TXLE1.LE.FLOAT(L)) 200,210
+ 200  CONTINUE
+      IF(FLOAT(L).LE.TXTE1.AND.TXLE1.NE.TXTE1) DZDX(M,L)=TAN(DELTA1)+.01
+     1743*(1.+(TTY/FLOAT(M-1))**2*TTY/YMAX)
+ 210  CONTINUE
+      IF(FLOAT(M-1).GE.TTY) 209,211
+ 209  CONTINUE
+      IF(FLOAT(L).GT.TXLE1.AND.FLOAT(L).LT.(TXLE1+1.)) 250,251
+ 250  A(M,L)=FLOAT(L)-TXLE1
+      GO TO 211
+ 251  IF(FLOAT(L).GT.TXTE1.AND.FLOAT(L).LT.(TXTE1+1.)) A(M,L)=1.-(FLOAT(
+     1L)-TXTE1)
+ 211  CONTINUE
+      IF(IWING.LT.2) GO TO 213
+ 212  CONTINUE
+      CALL FTLUP(TTX,TXLE2,1,NP,Z,XLE2)
+      CALL FTLUP(TTX,TXTE2,1,NP,Z,XTE2)
+      D1=(TXLE2-TXTE1)/6./TTY
+      IF(D1.GT.1.) D1=1.
+      IF(FLOAT(M-1).GE.TTY.AND.TXLE2.LE.FLOAT(L)) 215,216
+ 215  CONTINUE
+      IF(FLOAT(L).LE.TXTE2.AND.TXLE2.NE.TXTE2) DZDX(M,L)=TAN(DELTA2)+.01
+     1743*(1.+(TTY/FLOAT(M-1))**2*TTY/YMAX*D1)
+ 216  CONTINUE
+      IF(FLOAT(M-1).GE.TTY) 217,213
+ 217  CONTINUE
+      IF(FLOAT(L).GT.TXLE2.AND.FLOAT(L).LT.(TXLE2+1.)) 252,253
+ 252  A(M,L)=FLOAT(L)-TXLE2
+      GO TO 213
+ 253  IF(FLOAT(L).GT.TXTE2.AND.FLOAT(L).LT.(TXTE2+1.)) A(M,L)=1.-(FLOAT(
+     1L)-TXTE2)
+ 213  CONTINUE
+      IF(IWING.EQ.3) 218,219
+ 218  CALL FTLUP(TTX,TXLE3,1,NP,Z,XLE3)
+      CALL FTLUP(TTX,TXTE3,1,NP,Z,XTE3)
+      D2=(TXLE3-TXTE2)/6./TTY
+      IF(D2.GT.1.) D2=1.
+      IF(FLOAT(M-1).GE.TTY.AND.TXLE3.LE.FLOAT(L)) 220,221
+ 220  CONTINUE
+      IF(FLOAT(L).LE.TXTE3.AND.TXLE3.NE.TXTE3) DZDX(M,L)=TAN(DELTA3)+.01
+     1743*(1.+(TTY/FLOAT(M-1))**2*TTY/YMAX*D2)
+ 221  CONTINUE
+      IF(FLOAT(M-1).GE.TTY) 222,219
+ 222  CONTINUE
+      IF(FLOAT(L).GT.TXLE3.AND.FLOAT(L).LT.(TXLE3+1.)) 254,255
+ 254  A(M,L)=FLOAT(L)-TXLE3
+      GO TO 219
+ 255  IF(FLOAT(L).GT.TXTE3.AND.FLOAT(L).LT.(TXTE3+1.)) A(M,L)=1.-(FLOAT(
+     1L)-TXTE3)
+ 219  CONTINUE
+      IF (FLOAT(M-1).LE.TTY) DZDX(M,L)=0.
+  3   CONTINUE
+C
+C        COMPUTE CP FOR PLANFORM MATRIX
+C
+      DO 10 LSTAR=1,80
+      DO 10 MSTAR=1,21
+      IF(DZDX(MSTAR,LSTAR).EQ.50.) GO TO 60
+      P=0.
+      IF(LSTAR.EQ.1) GO TO 41
+      LSTARR=LSTAR-1
+      JLIM=19+MSTAR+1
+C
+C        EVALUATE INFLUENCE COEFFICIENTS
+C
+      DO 40 I=1,LSTARR
+      X1=(FLOAT(I)+1.)/XK
+      X2=(FLOAT(I)   )/XK
+      RSUM=0.
+      RSAVE=0.
+      DO 20 J=1,JLIM
+      MVAL=MSTAR-J+1
+      IF(MVAL.LT.1) MVAL=IABS(MSTAR-J)+1
+      LVAL=LSTAR-I
+      MM=MVAL-1
+C
+C        TEST TO SEE IF POINT IS IN MACH FORECONE
+C
+      Y1=(FLOAT(J-1)+.5)/YK
+      Y2=(FLOAT(J-1)-.5)/YK
+      ICONE=0
+      XXA=X1*X1-(BETA*Y1)**2
+      XXB=X1*X1-(BETA*Y2)**2
+      XXC=X2*X2-(BETA*Y1)**2
+      XXD=X2*X2-(BETA*Y2)**2
+      IF(XXA.GT.0.AND.XXB.GT.0) 225,226
+ 225  CONTINUE
+      IF(XXC.GT.0.AND.XXD.GT.0) 25,226
+ 226  CONTINUE
+C
+C        POINT IS ON MACH FORECONE BOUNDARY
+C
+      R=(2.*RSUM-ABS(RSAVE))/2.*(-1.)
+      LVALL=LVAL-1
+      ICONE=1
+      GO TO 300
+C
+C       POINT IS IN MACH FORECONE
+C
+ 25   CONTINUE
+      TERM1=SQRT(XXC)/(BETA*Y1)
+      TERM2=SQRT(XXD)/(BETA*Y2)
+      TERM3=SQRT(XXA)/(BETA*Y1)
+      TERM4=SQRT(XXB)/(BETA*Y2)
+      R=(ATAN(TERM1)-TERM1-ATAN(TERM2)+TERM2-ATAN(TERM3)+TERM3+
+     1ATAN(TERM4)-TERM4)*(-1.)
+      IF(J.EQ.1) GO TO 26
+      RSUM=RSUM+R
+      GO TO 27
+   26 RSAVE=R
+   27 LVALL=LVAL-1
+  300 CONTINUE
+      IF((LVAL.EQ.1).OR.(DZDX(MVAL,LVALL).EQ.0)) 227,228
+ 227  P=P+DZDX(MVAL,LVAL)*R*A(MVAL,LVAL)
+      IF(ICONE.EQ.1) 30,20
+ 228  P=P+(.666*DZDX(MVAL,LVAL)+DZDX(MVAL,LVALL)*.333)*R*A(MVAL,LVAL)
+      IF(ICONE.EQ.1) 30,20
+   20 CONTINUE
+   30 RSUM=0.
+      IF((20-(MSTAR-1)).EQ.0) GO TO 40
+      LVALU=LSTAR-I
+      JJLIM=20-MSTAR+1
+      DO 50 JJ=1,JJLIM
+      MVALU=JJ+MSTAR
+      Y1=(FLOAT(JJ)+.5)/YK
+      Y2=(FLOAT(JJ)-.5)/YK
+      ICONE=0
+      XXA=X1*X1-(BETA*Y1)**2
+      XXB=X1*X1-(BETA*Y2)**2
+      XXC=X2*X2-(BETA*Y1)**2
+      XXD=X2*X2-(BETA*Y2)**2
+      IF(XXA.GT.0.AND.XXB.GT.0) 230,232
+ 230  CONTINUE
+      IF(XXC.GT.0.AND.XXD.GT.0) 35,232
+ 232  CONTINUE
+C
+C        POINT IS ON MACH FORECONE BOUNDARY
+C
+      R=(2.*RSUM-ABS(RSAVE))/2.*(-1.)
+      LVALUU=LVALU-1
+      ICONE=1
+      GO TO 235
+C
+C      POINT IS IN MACH FORECONE
+C
+ 35   CONTINUE
+      TERM1=SQRT(XXC)/(BETA*Y1)
+      TERM2=SQRT(XXD)/(BETA*Y2)
+      TERM3=SQRT(XXA)/(BETA*Y1)
+      TERM4=SQRT(XXB)/(BETA*Y2)
+      R=(ATAN(TERM1)-TERM1-ATAN(TERM2)+TERM2-ATAN(TERM3)+TERM3+
+     1ATAN(TERM4)-TERM4)*(-1.)
+      RSUM=RSUM+R
+      LVALUU=LVALU-1
+ 235  CONTINUE
+      IF((LVALU.EQ.1).OR.(DZDX(MVALU,LVALUU).EQ.0)) 236,237
+ 236  P=P+DZDX(MVALU,LVALU)*R*A(MVALU,LVALU)
+      IF(ICONE.EQ.1) 40,50
+  237 P=P+(.6666*DZDX(MVALU,LVALU)+DZDX(MVALU,LVALUU)*.333)*R*A(MVALU,LV
+     1ALU)
+      IF(ICONE.EQ.1) 40,50
+   50 CONTINUE
+   40 CONTINUE
+   41 IF(DZDX(MSTAR,LSTAR).EQ.50) GO TO 60
+      DZDX(MSTAR,LSTAR)=+4./BETA*DZDX(MSTAR,LSTAR)+P/3.1416
+      GO TO 10
+   60 DZDX(MSTAR,LSTAR)=0.
+   10 CONTINUE
+      DO 1099 I=1,N
+ 1099 Y(I)=Y(I)/YK
+      DEL(1)=ATAN((Y(2)-Y(1))/(X(2)-X(1)))
+      CALL BILUP(DELTAT,MTAB,PCT,AM1T,AM1T,AM1T,13,11,DEL(1),AMACH,
+     1PC(1),AMANS(1),AMANS(1),AMANS(1))
+      CALL BILUP(DELTAT,MTAB,CNAT,CNAT,CNAT,CNAT,13,11,DEL(1),AMACH,
+     1CNA,CNA,CNA,CNA)
+      XANS(1)=X(1)/2.
+      YANS(1)=Y(1)/2.
+      PANS(1)=PC(1)
+      CPANS(1)=(PANS(1)-1.)/(AMACH**2*.7)
+      GAMANS(1)=TAN(DEL(1))*CNA
+      GAM=GAMANS(1)
+      DCNDA=(2.*3.1416/S*GAMANS(1)*Y(1)/2.*X(1))/(57.3)
+      DCMDA=-(6.2832/(S*X(N))*GAMANS(1)*Y(1)/2.*XANS(1)*X(1))/
+     1(57.3)
+      AMA=AMANS(1)
+      DPDSA=0
+      PA=PC(1)
+      DO 1015 I=2,N
+      IF(Y(I).EQ.0.) GO TO 1015
+      DEL(I)=ATAN((Y(I)-Y(I-1))/(X(I)-X(I-1)))
+      IF(DEL(I) .LT.0.) GO TO 1002
+      DELTA=DEL(I)
+      CALL BILUP(DELTAT,MTAB,PCT,PCT,CNAT,CNAT,13,11,DEL(I),AMACH,
+     1PC(I),PC(I),CNA,CNA)
+      GO TO 1003
+ 1002 PC(I)=1.
+      CNA=2.
+ 1003 ANUA=2.4495*ATAN(.40825*SQRT(AMA**2-1.))-ATAN(SQRT(AMA**2-1.))
+      ANUB=ANUA+DEL(I-1)-DEL(I)
+      IF(ANUB.GE.ANUA) GO TO 1000
+      IF(ABS(DEL(I-1)-DEL(I)).LT..001) GO TO 1000
+C
+C     CALCULATION FOR COMPRESSION AND SHOCK FORMATION
+C
+      ANG=DEL(I)-DEL(I-1)
+      SHOCK=4.
+      AA=1.
+      B=-(AMA**2+2.)/AMA**2-1.4*SIN(ANG)**2
+      CC=(2.*AMA**2+1.)/AMA**4+((2.4**2)/4.+.4/AMA**2)*SIN(ANG)**2
+      DD=-COS(ANG)**2/AMA**4
+      ANUM=(9./2.)*(B*CC)-B*B*B-(27./2.)*DD
+      DEN=(B*B-3.*CC)**1.5
+      CSPH=ANUM/DEN
+      SNPH=SQRT(1.-CSPH*CSPH)
+      PHI=ASIN(SNPH)
+      AANGL=(PHI+SHOCK*3.14159)/3.
+      C=CC
+      MMIDDL=-B/3.+(2./3.*SQRT(B*B-3.*C))*COS(AANGL)
+      MIDDLE=SQRT(MMIDDL)
+      SIGMA=ASIN(MIDDLE)
+      SINSQ=SIN(SIGMA)**2
+      AMB=SQRT((36.*AMA**4*SINSQ-5.*(AMA**2*SINSQ-1.)*(7.*AMA**2*SINSQ
+     1+5.))/((7.*AMA**2*SINSQ-1.)*(AMA**2*SINSQ+5.)))
+      PB=(7.*AMA**2*SINSQ-1.)/6.*PA
+      AMUB=SIN(1./AMB)
+      XX=(2.4*TAN(DEL(I)-DEL(I-1))*COS(SIGMA-DEL(I-1))-SIN(SIGMA-
+     1DEL(I-1)))*AMA**2*SIN(SIGMA-DEL(I-1))**2+SIN(SIGMA-DEL(I-1))
+      YY=1.+(1.-2.*SIN(SIGMA-DEL(I-1))**2+2.*TAN(DEL(I)-DEL(I-1))*
+     1SIN(SIGMA-DEL(I-1))*COS(SIGMA-DEL(I-1)))*AMA**2*SIN(SIGMA-DEL(I-1
+     2))**2
+      FA=4./2.4*(1.+.4/2.*AMA**2)*SIN(SIGMA-DEL(I-1))*XX/YY
+      BA=1.4*PA*AMA**2/(2.*(AMA**2-1.))
+      BB=1.4*PB*AMB**2/(2.*(AMB**2-1.))
+      XY=2.*BB/(Y(I)-1.)*(SIN(SIGMA-DEL(I-1))*SIN(DEL(I-1))/
+     1SIN(SIGMA-DEL(I))-SIN(DEL(I)))+DPDSA*(BB*SIN(SIGMA-DEL(I-1))/
+     2(BA*SIN(SIGMA-DEL(I)))+(PB/PA-FA)*COS(SIGMA-DEL(I-1))*TAN(AMUB)/
+     3SIN(SIGMA-DEL(I)))
+ 2002 DPDS=XY/(1.+TAN(AMUB)/TAN(SIGMA-DEL(I)))
+      GO TO 1011
+ 1000 DELM=.01
+      K=1
+      AMB=AMA
+ 1004 AMB=AMB+DELM
+      ANU=2.4495*ATAN(.40825*SQRT(AMB**2-1.))-ATAN(SQRT(AMB**2-1.))
+      IF(ANU-ANUB)1004,1004,1005
+ 1005 AMB=AMB-DELM
+      GO TO (1006,1007,1008,1009),K
+ 1006 DELM=.001
+      K=2
+      GO TO 1004
+ 1007 DELM=.0001
+      K=3
+      GO TO 1004
+ 1008 DELM=.00001
+      K=4
+      GO TO 1004
+ 1009 PB=PA*((1.+AMA**2/5.)/(1.+AMB**2/5.))**3.5
+ 1010 BA=1.4*PA*AMA**2/(2.*(AMA**2-1.))
+      AOASTA=((125./216.)/AMA)*(1.+AMA**2/5.)**3
+      BB=1.4*PB*AMB**2/(2.*(AMB**2-1.))
+      AOASTB=((125./216.)/AMB)*(1.+AMB**2/5.)**3
+      DPDS=(BB/Y(I-1))*(AOASTA/AOASTB*SIN(DEL(I-1))-SIN(DEL(I)))
+     1+BB/BA*AOASTA/AOASTB*DPDSA
+ 1011 ETA=DPDS*(X(I)-X(I-1))/((PC(I)-PB)*COS(DEL(I)))
+      IF(ETA)1012,1013,1013
+ 1012 PANS(I)=PB
+      AMANS(I)=AMB
+      GAMANS(I)=PB/PA*(SIN(2.*ASIN(1./AMA))/SIN(2.*ASIN(1./AMB)))*
+     1GAM
+      GAM=GAMANS(I)
+      AMA=AMB
+      PA=PB
+      XANS(I)=(X(I)+X(I-1))/2.
+      YANS(I)=(Y(I)+Y(I-1))/2.
+      DPDSA=0.
+      GO TO 1014
+ 1013 ETANS=ETA/2.
+      GAMANS(I)=(1.-EXP(-ETANS))*TAN(DEL(I))*CNA+PB/PA*(SIN(2.*
+     1ASIN(1./AMA))/SIN(2.*ASIN(1./AMB)))*EXP(-ETANS)*GAM
+      GAM=(1.-EXP(-ETA))*TAN(DEL(I))*CNA+PB/PA*(SIN(2.*ASIN(1./AMA))/
+     1SIN(2.*ASIN(1./AMB)))*EXP(-ETA)*GAM
+      PA=PC(I)-(PC(I)-PB)*EXP(-ETA)
+      AMA=SQRT(5.*((1.+AMB**2/5.)*(PB/PA)**.28571-1.))
+      XANS(I)=(X(I)+X(I-1))/2.
+      YANS(I)=(Y(I)+Y(I-1))/2.
+      PANS(I)=PC(I)-(PC(I)-PB)*EXP(-ETANS)
+      AMANS(I)=SQRT(5.*((1.+AMB**2/5.)*(PB/PANS(I))**.28571-1.))
+      DPDSA=(PC(I)-PA)/(PC(I)-PB)*DPDS
+ 1014 DCNDA=DCNDA+(2.*3.1416/S*GAMANS(I)*(Y(I)+Y(I-1))/2.*(X(I)-
+     1X(I-1)))/(57.3)
+ 1015 DCMDA=DCMDA-(6.2832/(S*X(N))*GAMANS(I)*(Y(I)+Y(I-1))/2.*XANS(I)*
+     1(X(I)-X(I-1)))/(57.3)
+      DO 2099 I=1,N
+ 2099 Y(I)=Y(I)*YK
+C
+C        COMPUTE LONGITUDINAL AERO. CHARACTERISTICS
+C
+      CN=0.
+      CM=0.
+      CN1=0.
+      CM1=0.
+      CL1=0.
+      CN2=0.
+      CM2=0.
+      CL2=0.
+      CN3=0.
+      CM3=0.
+      CL3=0.
+      DO 70 MM=1,21
+      DO 70 L=1,80
+      IF(DZDX(MM,L).EQ.50.) GO TO 70
+C      COMPUTE LONGITUDINAL AERO. CHARACTERISTICS
+      IF(MM.EQ.1) A(MM,L)=A(MM,L)/2.
+      CNC= +2.*DZDX(MM,L)/(XK*YK)/S*A(MM,L)
+      CMC= -2.*DZDX(MM,L)*(FLOAT(L)-.5+XST*XK)/(S*(XST*XK+80.))*A(MM,L)/
+     1(XK*YK)
+      CLC=+DZDX(MM,L)*(FLOAT(MM)-1.)/(S*21.)*A(MM,L)/(XK*YK)
+      CN=CN+CNC
+      CM=CM+CMC
+      TTX=FLOAT(L)/XK+XST
+      CALL FTLUP(TTX,TTY,+1,N,X,Y)
+      TTX=FLOAT(MM-1)
+      IF(FLOAT(MM-1).LT.TTY) GO TO 70
+      CALL FTLUP(TTX,TXLE1,1,NP,Z,XLE1)
+      CALL FTLUP(TTX,TXTE1,1,NP,Z,XTE1)
+      IF((FLOAT(L).LT.TXLE1).OR.(FLOAT(L).GT.TXTE1+1.)) GO TO 654
+      CN1=CN1+CNC
+      CM1=CM1+CMC
+      CL1=CL1+CLC
+ 654  CONTINUE
+      IF(IWING.LT.2) GO TO 256
+  301 CONTINUE
+      CALL FTLUP(TTX,TXLE2,1,NP,Z,XLE2)
+      CALL FTLUP(TTX,TXTE2,1,NP,Z,XTE2)
+      IF((FLOAT(L).LT.TXLE2).OR.(FLOAT(L).GT.TXTE2+1.)) GO TO 256
+      CN2=CN2+CNC
+      CM2=CM2+CMC
+      CL2=CL2+CLC
+ 256  CONTINUE
+      IF(IWING.EQ.3) 257,70
+ 257  CONTINUE
+      CALL FTLUP(TTX,TXLE3,1,NP,Z,XLE3)
+      CALL FTLUP(TTX,TXTE3,1,NP,Z,XTE3)
+      IF((FLOAT(L).LT.TXLE3).OR.(FLOAT(L).GT.TXTE3+1.)) GO TO 70
+      CN3=CN3+CNC
+      CM3=CM3+CMC
+      CL3=CL3+CLC
+ 70   CONTINUE
+      CNTOT=DCNDA+CN
+      CMTOT=DCMDA+CM
+      AC1=-CM1/CN1
+      AC2=-CM2/CN2
+      AC3=-CM3/CN3
+      BC1=0.
+      BC2=0.
+      BC3=0.
+      IF(CN1.NE.0.) BC1=CL1/CN1*2.
+      IF(CN2.NE.0.) BC2=CL2/CN2*2.
+      IF(CN3.NE.0.) BC3=CL3/CN3*2.
+      IF(IPRINT.NE.0) GO TO 78
+C
+C        LONG PRINT OPTION   IPRINT=0
+C
+      DO 76 MM=1,21
+      WRITE(6,101) MM,(DZDX(MM,L),L=1,80)
+   76 CONTINUE
+ 101  FORMAT(///1X,*DELCP(*,I2,*,1-80)*/(10F12.7))
+C
+C        SHORT PRINT OPTION   IPRINT=1
+C
+   78 WRITE(6,103)
+  103 FORMAT(//1X* COMPLETE CONFIGURATION*)
+      PRINT 510,CNTOT,CMTOT
+      WRITE(6,104)
+  104 FORMAT(//1X* BODY CHARACTERISTICS*)
+      PRINT 510,DCNDA,DCMDA
+      WRITE(6,102)
+ 102  FORMAT(//1X*FIN AND INTERFERENCE CHARACTERISTICS*)
+      PRINT 510,CN,CM
+ 510  FORMAT(14X4HCNA=F12.7,5X4HCMA=F12.7)
+      TEST=ABS(CN1)
+      IF(TEST.GE..0001)PRINT 511,CN1,CM1,AC1,BC1
+ 511  FORMAT(//1X*FIN NO.1 CHARACTERISTICS*/14X4HCNA=F12.7,5X4HCMA=F12.7
+     1,5X3HAC=F12.7,5X3HBC=F12.7)
+      TEST=ABS(CN2)
+      IF(TEST.GE..0001)PRINT 512,CN2,CM2,AC2,BC2
+ 512  FORMAT(//1X*FIN NO.2 CHARACTERISTICS*/14X4HCNA=F12.7,5X4HCMA=F12.7
+     1,5X3HAC=F12.7,5X3HBC=F12.7)
+      TEST=ABS(CN3)
+      IF(TEST.GE..0001)PRINT 513,CN3,CM3,AC3,BC3
+ 513  FORMAT(//1X*FIN NO.3 CHACACTERISTICS*/14X4HCNA=F12.7,5X4HCMA=F12.7
+     1,5X3HAC=F12.7,5X3HBC=F12.7)
+      DELTA1=DELTA1*57.2958
+      DELTA2=DELTA2*57.2958
+      DELTA3=DELTA3*57.2958
+      DO 74 I=1,N
+   74 Y(I)=Y(I)/YK
+      DO 75 I=1,NP
+      Z(I)=Z(I)/YK
+      XLE1(I)=XLE1(I)/XK+XST
+      XTE1(I)=XTE1(I)/XK+XST
+      XLE2(I)=XLE2(I)/XK+XST
+      XTE2(I)=XTE2(I)/XK+XST
+      XLE3(I)=XLE3(I)/XK+XST
+   75 XTE3(I)=XTE3(I)/XK+XST
+      GO TO 100
+ 5000 STOP
+      END
+      SUBROUTINE BILUP(TABI,TABJ,TABIJ,TACIJ,TADIJ,TAEIJ,NI,NJ,VALI,
+     1VALJ,BVAL1,CVAL1,DVAL1,EVAL1)
+C     A TWO DIMENSIONAL TABLE LOOK-UP FOR TWO VARIABLES.
+C     INPUT TABLES ARE TABIJ(I,J),TACIJ(I,J),TADIJ(I,J) AND TAEIJ(I,J)
+C     AS FUNCTIONS OF TABI(I) AND TABJ(J). THE TWO DEPENDENT VARIABLES ARE
+C     LINEARLY INTERPOLATED SIMULTANEOUSLY FOR INPUT VALUES OF VALI AND
+C     VALJ RESULTING IN ANSWERS BVAL1, CVAL1, DVAL1, EVAL1.  ERROR
+C     SIGNALS ARE GENERATED WHEN THE TABJ(J) TABLE IS EXTRAPOLATED.
+      DIMENSION TABJ(11),TABI(13,11),TABIJ(13,11),TACIJ(13,11),
+     1TADIJ(13,11),TAEIJ(13,11),TBISL(2),TBIJ1(2),TCIJ1(2),TDIJ1(2),
+     2TEIJ1(2)
+      TBJSL=0.0
+      KK=2
+      IF(TABJ(1).LT.TABJ(2)) GO TO 1
+      DO 10 J=1,NJ
+      IF(VALJ-TABJ(J)) 10,9,11
+    9 TBJSL=1.0
+      GO TO 300
+   10 CONTINUE
+      IF(J.EQ.NJ) WRITE(6,100)
+  100 FORMAT(/20X20HHIGH J EXTRAPOLATION)
+   11 IF(J.GT.1) GO TO 300
+      WRITE(6,101)
+  101 FORMAT(/20X19HLOW J EXTRAPOLATION)
+      J=2
+      GO TO 300
+    1 DO 2 J=1,NJ
+      IF(VALJ-TABJ(J)) 3,4,2
+    4 TBJSL=1.0
+      GO TO 300
+    2 CONTINUE
+      IF(J.EQ.NJ) WRITE(6,100)
+    3 IF(J.GT.1) GO TO 300
+      WRITE(6,101)
+      J=2
+  300 IF(TABI(1,J).GT.TABI(2,J)) GO TO 5
+      IF(VALI.LT.TABI(1,J)) GO TO 21
+      IF(VALI.GT.TABI(NI,J)) GO TO 24
+      DO 20 I=1,NI
+      IF(VALI-TABI(I,J)) 22,28,20
+   20 CONTINUE
+   21 I=2
+      GO TO 22
+   24 I=NI
+      GO TO 22
+    5 IF(VALI.GT.TABI(1,J)) GO TO 6
+      IF(VALI.LT.TABI(NI,J)) GO TO 7
+      DO 8 I=1,NI
+      IF(VALI-TABI(I,J)) 8,28,22
+    8 CONTINUE
+    6 I=2
+      GO TO 22
+    7 I=NI
+      GO TO 22
+   28 TBISL(KK)=0.0
+      TBIJ1(KK)=TABIJ(I,J)
+      TCIJ1(KK)=TACIJ(I,J)
+      TDIJ1(KK)=TADIJ(I,J)
+      TEIJ1(KK)=TAEIJ(I,J)
+      GO TO 29
+   22 TBISL(KK)=(VALI-TABI(I-1,J))/(TABI(I,J)-TABI(I-1,J))
+      TBIJ1(KK)=TBISL(KK)*(TABIJ(I,J)-TABIJ(I-1,J))+TABIJ(I-1,J)
+      TCIJ1(KK)=TBISL(KK)*(TACIJ(I,J)-TACIJ(I-1,J))+TACIJ(I-1,J)
+      TDIJ1(KK)=TBISL(KK)*(TADIJ(I,J)-TADIJ(I-1,J))+TADIJ(I-1,J)
+      TEIJ1(KK)=TBISL(KK)*(TAEIJ(I,J)-TAEIJ(I-1,J))+TAEIJ(I-1,J)
+   29 IF(TBJSL.EQ.0.0) GO TO 26
+      BVAL1=TBIJ1(KK)
+      CVAL1=TCIJ1(KK)
+      DVAL1=TDIJ1(KK)
+      EVAL1=TEIJ1(KK)
+      GO TO 25
+   26 IF(KK.EQ.1) GO TO 23
+      KK=KK-1
+      J=J-1
+      GO TO 300
+   23 J=J+1
+      TBJSL=(VALJ-TABJ(J-1))/(TABJ(J)-TABJ(J-1))
+      BVAL1=TBJSL*(TBIJ1(2)-TBIJ1(1))+TBIJ1(1)
+      CVAL1=TBJSL*(TCIJ1(2)-TCIJ1(1))+TCIJ1(1)
+      DVAL1=TBJSL*(TDIJ1(2)-TDIJ1(1))+TDIJ1(1)
+      EVAL1=TBJSL*(TEIJ1(2)-TEIJ1(1))+TEIJ1(1)
+   25 RETURN
+      END
+      SUBROUTINE FTLUP (X,Y,M,N,VARI,VARD)                                K   1
+      DIMENSION VARI(1), VARD(1), V(3), YY(2)                             K   2
+      IF (M.EQ.0.AND.N.EQ.0) GO TO 19                                     K   3
+      IF (M.EQ.0.AND.N.NE.0) GO TO 21                                     K   4
+      IF (N.LE.IABS(M)) GO TO 21                                          K   5
+      IF (M.GT.0) GO TO 8                                                 K   6
+C             M.LT.0                                                      K   7
+      DO 1 IYY=1,N                                                        K   8
+      I=IYY                                                               K   9
+      IF (VARI(I)-X) 2,20,1                                               K  10
+1     CONTINUE                                                            K  11
+      I=N+M                                                               K  12
+C          IF X.LT.X(N),EXTRAPOLATE                                       K  13
+      IF (M.EQ.-1) GO TO 3                                                K  14
+      GO TO 7                                                             K  15
+C          IF X.GT.X(1),EXTRAPOLATE                                       K  16
+2     IF (I.EQ.1.AND.M.EQ.-1) GO TO 3                                     K  17
+      IF (I.EQ.1.AND.M.EQ.-2) GO TO 7                                     K  18
+      IF (M.NE.-1) GO TO 4                                                K  19
+C          M=-1                                                           K  20
+      I=I-1                                                               K  21
+3     IF (VARI(I).LE.VARI(I+1)) GO TO 21                                  K  22
+      GO TO 12                                                            K  23
+C          M=-2                                                           K  24
+4     IF (I.NE.N) GO TO 5                                                 K  25
+      I=N-2                                                               K  26
+      GO TO 7                                                             K  27
+C          COMPARE WITH NEXT                                              K  28
+5     IF (VARI(I+1)-X) 6,21,21                                            K  29
+6     I=I-1                                                               K  30
+      IF (I.EQ.1) GO TO 7                                                 K  31
+C          SEE WHICH THREE                                                K  32
+      IF ((VARI(I-1)-X).LT.(X-VARI(I+2))) I=I-1                           K  33
+7     IF (VARI(I).LE.VARI(I+1).OR.VARI(I+1).LE.VARI(I+2)) GO TO 21        K  34
+      GO TO 17                                                            K  35
+C             M.GT.0                                                      K  36
+8     DO 9 IYY=1,N                                                        K  37
+      I=IYY                                                               K  38
+      IF (X-VARI(I)) 10,20,9                                              K  39
+9     CONTINUE                                                            K  40
+      I=N-M                                                               K  41
+C          IF X.GT.X(N),EXTRAPOLATE                                       K  42
+      IF (M.EQ.1) GO TO 11                                                K  43
+      GO TO 16                                                            K  44
+C          IF X.LT.X(1),EXTRAPOLATE                                       K  45
+10    IF (I.EQ.1.AND.M.EQ.1) GO TO 11                                     K  46
+      IF (I.EQ.1.AND.M.EQ.2) GO TO 16                                     K  47
+      IF (M.NE.1) GO TO 13                                                K  48
+C          M=1                                                            K  49
+      I=I-1                                                               K  50
+11    IF (VARI(I+1).LE.VARI(I)) GO TO 21                                  K  51
+C          LINEAR                                                         K  52
+12    Y=(VARD(I)*(VARI(I+1)-X)-VARD(I+1)*(VARI(I)-X))/(VARI(I+1)-VARI(I)  K  53
+     1)                                                                   K  54
+      RETURN                                                              K  55
+C          M=2                                                            K  56
+13    IF (I.NE.N) GO TO 14                                                K  57
+      I=N-2                                                               K  58
+      GO TO 16                                                            K  59
+C          COMPARE WITH NEXT                                              K  60
+14    IF (X-VARI(I+1)) 15,21,21                                           K  61
+15    I=I-1                                                               K  62
+      IF (I.EQ.1) GO TO 16                                                K  63
+C          SEE WHICH THREE                                                K  64
+      IF ((X-VARI(I-1)).LT.(VARI(I+2)-X)) I=I-1                           K  65
+16    IF (VARI(I+1).LE.VARI(I).OR.VARI(I+2).LE.VARI(I+1)) GO TO 21        K  66
+C          SECOND ORDER                                                   K  67
+17    V(1)=VARI(I)-X                                                      K  68
+      V(2)=VARI(I+1)-X                                                    K  69
+      V(3)=VARI(I+2)-X                                                    K  70
+      K=I                                                                 K  71
+      DO 18 J=1,2                                                         K  72
+      YY(J)=(VARD(K)*V(J+1)-VARD(K+1)*V(J))/(VARI(K+1)-VARI(K))           K  73
+18    K=K+1                                                               K  74
+      Y=(YY(1)*V(3)-YY(2)*V(1))/(VARI(I+2)-VARI(I))                       K  75
+      RETURN                                                              K  76
+C             ZERO ORDER(Y=Y(1))                                          K  77
+19    Y=VARD(1)                                                           K  78
+      RETURN                                                              K  79
+C             Y=Y(I)                                                      K  80
+20    Y=VARD(I)                                                           K  81
+      RETURN                                                              K  82
+C                                                                         K  83
+C          ERROR PRINT                                                    K  84
+21    PRINT 22                                                            K  85
+      PRINT 23, M,N,X                                                     K  86
+      IF (N.EQ.0) STOP                                                    K  87
+      IF (M.EQ.0) STOP                                                    K  88
+      PRINT 24                                                            K  89
+      STOP                                                                K  90
+C                                                                         K  91
+C                                                                         K  92
+22    FORMAT (/31H ERROR WAS ENCOUNTERED IN FTLUP)                        K  93
+23    FORMAT (1X,2HM=I5,5X,2HN=I5,5X,2HX=E20.8)                           K  94
+24    FORMAT (19H TABLE OUT OF ORDER)                                     K  95
+      END                                                                 K  96-

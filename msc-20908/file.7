@@ -1,0 +1,106 @@
+/*****************************************************************************/
+/*                                                                           */
+/*  initialize                                                               */
+/*                                                                           */
+/*  This subroutine initializes the free queue, adds rule groups to the      */
+/*  proper queues, and adds a startup rule to the main queue.                */
+/*                                                                           */
+/*  Programmer: G R Goodrum, MDTSCO, June 1984                               */
+/*                                                                           */
+/*****************************************************************************/
+
+#include "structures.inc"
+#include <stdio.h>
+
+initialize()
+{
+    extern struct rule_queue free_queue;
+    extern struct queue_element space[];
+    extern struct rule_info rule[];
+    extern struct cond_info condition[];
+    extern int n_conds;
+    struct cond_info *c;
+    struct queue_element *qe;
+    int i, j;
+#ifdef TRACE
+    extern int n_rules, n_conds;
+    FILE *fp, *fopen();
+#endif
+
+    free_queue.begin_elt.next  =  &space[0];
+    space[0].previous  =  &free_queue.begin_elt;
+    space[0].next  =  &space[1];
+
+    qe  =  &space[0];
+    for  (  i = 1;  i < SPACE_SIZE-1;  i++  )
+    {
+        count ( 5, 0 );                                         /* debug */
+        qe++;
+        qe -> previous  =  qe - 1;
+        qe -> next  =  qe + 1;
+    }
+    count ( 5, 1 );                                             /* debug */
+
+    free_queue.end_elt.previous  =  &space[SPACE_SIZE-1];
+    space[SPACE_SIZE-1].previous  =  &space[SPACE_SIZE-2];
+    space[SPACE_SIZE-1].next  =  &free_queue.end_elt;
+
+#ifdef TRACE
+    for  ( i = 0;  i < n_rules;  i++ )
+        rule[i].trace = FALSE;
+
+    for  ( i = 0;  i < n_conds;  i++ )
+        condition[i].trace = FALSE;
+
+    fp  =  fopen ( "tracerules", "r" );
+    if  ( fp != NULL )
+    {
+        while  ( fscanf ( fp, "%d", &i ) != EOF )
+        {
+            if  ( i >= 0 )
+                rule[i].trace  =  TRUE;
+            else
+                for  ( j = 0;  j < n_rules;  j++ )
+                    rule[j].trace = TRUE;
+        }
+        fclose ( fp );
+    }
+
+    fp  =  fopen ( "tracecond", "r" );
+    if  ( fp != NULL )
+    {
+        while  ( fscanf ( fp, "%d", &i ) != EOF )
+        {
+            if  ( i >= 0 )
+                condition[i].trace  =  TRUE;
+            else
+                for  ( j = 0;  j < n_conds;  j++ )
+                    condition[j].trace = TRUE;
+        }
+        fclose ( fp );
+    }
+#endif
+
+    add_to_queue ( &rule[84] );
+    add_to_queue ( &rule[85] );
+    add_to_queue ( &rule[87] );
+    setup();
+
+    for ( i = 0;  i < n_conds; i++ )
+        condition[i].mark = TRUE;
+
+#ifdef TRACE
+    push ( 4, 0 );
+#endif
+    c = &condition[0];
+    for  ( i = 0;  i < n_conds; i++ )
+    {
+        if  ( c -> mark )
+            evaluate ( c );
+        c += 1;
+    }
+#ifdef TRACE
+    pop ();
+#endif
+
+}

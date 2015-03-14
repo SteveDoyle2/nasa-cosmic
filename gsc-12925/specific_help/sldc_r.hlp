@@ -1,0 +1,35 @@
+remove.hlp
+edit.hlp
+insert.hlp
+cngdrive.hlp
+move.hlp
+clear.hlp
+
+
+
+
+The CREATE/REVISE a Slide Show is used to create Slide Shows to be used later
+by PRINT/VIEW/PLOT a Slide Show.  It consists of 5 Shows each containing up to
+10 slides.  When on the line above the box, enter the slide show name and when
+on any of the numbered lines inside the box, enter the name of the slide, using
+the directory listed below, in the order that the slides are to be run.  When
+you exit, you will be prompted whether you want to save these shows or not.
+Enter a Y for yes or N for no.  Descriptions of the available function keys can
+be obtained by pressing one of the appropriate function keys listed below.
+
+To obtain help for any of the following subjects,  press the function key next
+to the desired subject.
+
+        F1  Remove
+        F2  Edit
+        F3  Insert
+        F4  Change Drive
+        F5  Move
+        F6  Clear
+ 
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last help screen or F10 to leave the help mode
+

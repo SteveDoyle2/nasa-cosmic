@@ -1,0 +1,297 @@
+
+No image file created                                           30-SEP-1983 13:53        VAX-11 Linker V03-03             Page    1
+
+                                             +------------------------+
+                                             ! Object Module Synopsis !
+                                             +------------------------+
+
+Module Name     Ident              Bytes      File                                Creation Date      Creator
+-----------     -----              -----      -----                               -------------      -------
+LOOK            01                 297934 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  29-Sep-1983 13:12  VAX-11 FORTRAN V3.3-45
+BLKIN           0                     871 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  27-SEP-1983 11:37  VAX-11 Macro V03-00
+BRDCST          01                   2931 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  21-Sep-1983 13:53  VAX-11 FORTRAN V3.3-45
+COMLVL          01                 286197 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  29-Sep-1983 13:12  VAX-11 FORTRAN V3.3-45
+DODEF           01                 199689 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  21-Sep-1983 13:35  VAX-11 FORTRAN V3.3-45
+DOIT            01                 194680 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6   4-Apr-1983 11:51  VAX-11 FORTRAN V3.2-37
+EXITR           01                    224 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  21-Sep-1983 13:53  VAX-11 FORTRAN V3.3-45
+GETDEF          01                 281375 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  17-Aug-1983 08:22  VAX-11 FORTRAN V3.3-45
+GETOWN          0                     102 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  27-SEP-1983 11:38  VAX-11 Macro V03-00
+INTASC          01                    146 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  21-Sep-1983 13:53  VAX-11 FORTRAN V3.3-45
+LINCON          01                  91721 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  14-Jan-1983 16:04  VAX-11 FORTRAN V3.1-23
+PRSCOM          01                 283220 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  21-Sep-1983 13:12  VAX-11 FORTRAN V3.3-45
+PRTOUT          0                    6474 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  27-SEP-1983 11:38  VAX-11 Macro V03-00
+REDOIT          01                     57 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  21-Sep-1983 13:53  VAX-11 FORTRAN V3.3-45
+SETERM          0                    1477 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  29-SEP-1983 09:52  VAX-11 Macro V03-00
+SFTLIN          01                  10059 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  21-Sep-1983 13:53  VAX-11 FORTRAN V3.3-45
+STOPSC          01                 198017 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  21-Sep-1983 13:53  VAX-11 FORTRAN V3.3-45
+TTBRDINI        0                     951 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  27-SEP-1983 11:40  VAX-11 Macro V03-00
+WORKNG          01                    379 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  21-Sep-1983 13:53  VAX-11 FORTRAN V3.3-45
+CONVUP          01                    130 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  21-Sep-1983 13:53  VAX-11 FORTRAN V3.3-45
+STPSC2          01                     10 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  21-Sep-1983 13:53  VAX-11 FORTRAN V3.3-45
+TIMAST          01                    355 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  21-Sep-1983 13:53  VAX-11 FORTRAN V3.3-45
+TMAST2          01                     10 SYS2:[PUBLIC.SOURCE.LOOK]LOOK.OLB;6  21-Sep-1983 13:53  VAX-11 FORTRAN V3.3-45
+
+                                            +--------------------------+
+                                            ! Program Section Synopsis !
+                                            +--------------------------+
+
+Psect Name      Module Name       Base     End           Length            Align                 Attributes
+----------      -----------       ----     ---           ------            -----                 ----------
+$PDATA                          00000200 0000071F 00000520 (       1312.) LONG 2   PIC,USR,CON,REL,LCL,  SHR,NOEXE,  RD,NOWRT,NOVEC
+                LOOK            00000200 00000440 00000241 (        577.) LONG 2
+                BRDCST          00000444 00000446 00000003 (          3.) LONG 2
+                COMLVL          00000448 0000058D 00000146 (        326.) LONG 2
+                DODEF           00000590 000005B6 00000027 (         39.) LONG 2
+                DOIT            000005B8 00000689 000000D2 (        210.) LONG 2
+                EXITR           0000068C 00000694 00000009 (          9.) LONG 2
+                INTASC          00000698 0000069E 00000007 (          7.) LONG 2
+                LINCON          000006A0 000006B7 00000018 (         24.) LONG 2
+                PRSCOM          000006B8 000006C8 00000011 (         17.) LONG 2
+                WORKNG          000006CC 000006EF 00000024 (         36.) LONG 2
+                TIMAST          000006F0 0000071F 00000030 (         48.) LONG 2
+$LOCAL                          00000800 00018A67 00018268 (      98920.) LONG 2   PIC,USR,CON,REL,LCL,NOSHR,NOEXE,  RD,  WRT,NOVEC
+                LOOK            00000800 000015EF 00000DF0 (       3568.) LONG 2
+                BRDCST          000015F0 00001623 00000034 (         52.) LONG 2
+                COMLVL          00001624 00001DD7 000007B4 (       1972.) LONG 2
+                DODEF           00001DD8 0000233B 00000564 (       1380.) LONG 2
+                DOIT            0000233C 000184AF 00016174 (      90484.) LONG 2
+                EXITR           000184B0 000184DF 00000030 (         48.) LONG 2
+
+No image file created                                           30-SEP-1983 13:53        VAX-11 Linker V03-03             Page    2
+
+
+Psect Name      Module Name       Base     End           Length            Align                 Attributes
+----------      -----------       ----     ---           ------            -----                 ----------
+$LOCAL                          00000800 00018A67 00018268 (      98920.) LONG 2   PIC,USR,CON,REL,LCL,NOSHR,NOEXE,  RD,  WRT,NOVEC 
+                GETDEF          000184E0 0001866F 00000190 (        400.) LONG 2
+                INTASC          00018670 0001868F 00000020 (         32.) LONG 2
+                LINCON          00018690 000187A7 00000118 (        280.) LONG 2
+                PRSCOM          000187A8 000188B7 00000110 (        272.) LONG 2
+                REDOIT          000188B8 000188CB 00000014 (         20.) LONG 2
+                SFTLIN          000188CC 000188F3 00000028 (         40.) LONG 2
+                STOPSC          000188F4 00018947 00000054 (         84.) LONG 2
+                WORKNG          00018948 000189C3 0000007C (        124.) LONG 2
+                CONVUP          000189C4 000189EF 0000002C (         44.) LONG 2
+                TIMAST          000189F0 00018A67 00000078 (        120.) LONG 2
+BRDCM1                          00018A68 0001947D 00000A16 (       2582.) LONG 2   PIC,USR,OVR,REL,GBL,  SHR,NOEXE,  RD,  WRT,NOVEC
+                LOOK            00018A68 0001947D 00000A16 (       2582.) LONG 2
+                BRDCST          00018A68 0001947D 00000A16 (       2582.) LONG 2
+                COMLVL          00018A68 0001947D 00000A16 (       2582.) LONG 2
+BRDCM2                          00019480 000194AA 0000002B (         43.) LONG 2   PIC,USR,OVR,REL,GBL,  SHR,NOEXE,  RD,  WRT,NOVEC
+                LOOK            00019480 000194AA 0000002B (         43.) LONG 2
+                BRDCST          00019480 000194AA 0000002B (         43.) LONG 2
+                COMLVL          00019480 000194AA 0000002B (         43.) LONG 2
+CHARS                           000194AC 0002CB41 00013696 (      79510.) LONG 2   PIC,USR,OVR,REL,GBL,  SHR,NOEXE,  RD,  WRT,NOVEC
+                LOOK            000194AC 0002CB41 00013696 (      79510.) LONG 2
+                COMLVL          000194AC 0002CB41 00013696 (      79510.) LONG 2
+                DOIT            000194AC 0002CB41 00013696 (      79510.) LONG 2
+                GETDEF          000194AC 0002CB41 00013696 (      79510.) LONG 2
+                LINCON          000194AC 0002CA0B 00013560 (      79200.) LONG 2
+                PRSCOM          000194AC 0002CB41 00013696 (      79510.) LONG 2
+DOITNM                          0002CB44 0002CB88 00000045 (         69.) LONG 2   PIC,USR,OVR,REL,GBL,  SHR,NOEXE,  RD,  WRT,NOVEC
+                LOOK            0002CB44 0002CB88 00000045 (         69.) LONG 2
+                BLKIN           0002CB44 0002CB68 00000025 (         37.) LONG 2
+                BRDCST          0002CB44 0002CB88 00000045 (         69.) LONG 2
+                COMLVL          0002CB44 0002CB88 00000045 (         69.) LONG 2
+                DOIT            0002CB44 0002CB88 00000045 (         69.) LONG 2
+                EXITR           0002CB44 0002CB79 00000036 (         54.) LONG 2
+                GETDEF          0002CB44 0002CB88 00000045 (         69.) LONG 2
+                LINCON          0002CB44 0002CB88 00000045 (         69.) LONG 2
+                PRSCOM          0002CB44 0002CB88 00000045 (         69.) LONG 2
+                SETERM          0002CB44 0002CB88 00000045 (         69.) LONG 2
+                STOPSC          0002CB44 0002CB88 00000045 (         69.) LONG 2
+                WORKNG          0002CB44 0002CB88 00000045 (         69.) LONG 2
+                TIMAST          0002CB44 0002CB88 00000045 (         69.) LONG 2
+GETDAT                          0002CB8C 0002CB9B 00000010 (         16.) LONG 2 NOPIC,USR,CON,REL,LCL,NOSHR,NOEXE,  RD,  WRT,NOVEC
+                GETOWN          0002CB8C 0002CB9B 00000010 (         16.) LONG 2
+INPUTC                          0002CB9C 00058B77 0002BFDC (     180188.) LONG 2   PIC,USR,OVR,REL,GBL,  SHR,NOEXE,  RD,  WRT,NOVEC
+                LOOK            0002CB9C 00058B77 0002BFDC (     180188.) LONG 2
+                COMLVL          0002CB9C 00058B77 0002BFDC (     180188.) LONG 2
+                DODEF           0002CB9C 00058B77 0002BFDC (     180188.) LONG 2
+                GETDEF          0002CB9C 00058B77 0002BFDC (     180188.) LONG 2
+                PRSCOM          0002CB9C 00058B77 0002BFDC (     180188.) LONG 2
+                STOPSC          0002CB9C 00058B77 0002BFDC (     180188.) LONG 2
+INPUTN                          00058B78 0005CF75 000043FE (      17406.) LONG 2   PIC,USR,OVR,REL,GBL,  SHR,NOEXE,  RD,  WRT,NOVEC
+                LOOK            00058B78 0005CF75 000043FE (      17406.) LONG 2
+                COMLVL          00058B78 0005CF75 000043FE (      17406.) LONG 2
+
+No image file created                                           30-SEP-1983 13:53        VAX-11 Linker V03-03             Page    3
+
+
+Psect Name      Module Name       Base     End           Length            Align                 Attributes
+----------      -----------       ----     ---           ------            -----                 ----------
+INPUTN                          00058B78 0005CF75 000043FE (      17406.) LONG 2   PIC,USR,OVR,REL,GBL,  SHR,NOEXE,  RD,  WRT,NOVEC 
+                DODEF           00058B78 0005CF75 000043FE (      17406.) LONG 2
+                GETDEF          00058B78 0005CF75 000043FE (      17406.) LONG 2
+                PRSCOM          00058B78 0005CF75 000043FE (      17406.) LONG 2
+                STOPSC          00058B78 0005CF75 000043FE (      17406.) LONG 2
+LNCN                            0005CF78 0005F5BD 00002646 (       9798.) LONG 2   PIC,USR,OVR,REL,GBL,  SHR,NOEXE,  RD,  WRT,NOVEC
+                LOOK            0005CF78 0005F5BD 00002646 (       9798.) LONG 2
+                DOIT            0005CF78 0005F5BD 00002646 (       9798.) LONG 2
+                LINCON          0005CF78 0005F5BD 00002646 (       9798.) LONG 2
+                PRTOUT          0005CF78 0005E2F1 0000137A (       4986.) LONG 2
+                SFTLIN          0005CF78 0005F5BD 00002646 (       9798.) LONG 2
+OWNER                           0005F5C0 0005F5C3 00000004 (          4.) LONG 2   PIC,USR,OVR,REL,GBL,  SHR,NOEXE,  RD,  WRT,NOVEC
+                LOOK            0005F5C0 0005F5C3 00000004 (          4.) LONG 2
+                GETOWN          0005F5C0 0005F5C3 00000004 (          4.) LONG 2
+PRSCHR                          0005F5C4 0006017B 00000BB8 (       3000.) LONG 2   PIC,USR,OVR,REL,GBL,  SHR,NOEXE,  RD,  WRT,NOVEC
+                GETDEF          0005F5C4 0006017B 00000BB8 (       3000.) LONG 2
+                PRSCOM          0005F5C4 0006017B 00000BB8 (       3000.) LONG 2
+PRSNUM                          0006017C 0006029D 00000122 (        290.) LONG 2   PIC,USR,OVR,REL,GBL,  SHR,NOEXE,  RD,  WRT,NOVEC
+                GETDEF          0006017C 0006029D 00000122 (        290.) LONG 2
+                PRSCOM          0006017C 0006029D 00000122 (        290.) LONG 2
+STOPCM                          000602A0 000602B1 00000012 (         18.) LONG 2   PIC,USR,OVR,REL,GBL,  SHR,NOEXE,  RD,  WRT,NOVEC
+                DOIT            000602A0 000602B1 00000012 (         18.) LONG 2
+                EXITR           000602A0 000602B1 00000012 (         18.) LONG 2
+                STOPSC          000602A0 000602B1 00000012 (         18.) LONG 2
+TASTNM                          000602B4 000602C4 00000011 (         17.) LONG 2   PIC,USR,OVR,REL,GBL,  SHR,NOEXE,  RD,  WRT,NOVEC
+                WORKNG          000602B4 000602C4 00000011 (         17.) LONG 2
+                TIMAST          000602B4 000602C4 00000011 (         17.) LONG 2
+TT_BRD_DATA                     000602C8 000603CB 00000104 (        260.) LONG 2 NOPIC,USR,CON,REL,LCL,NOSHR,NOEXE,  RD,  WRT,NOVEC
+                TTBRDINI        000602C8 000603CB 00000104 (        260.) LONG 2
+$CODE                           00060400 000679C5 000075C6 (      30150.) LONG 2   PIC,USR,CON,REL,LCL,  SHR,  EXE,  RD,NOWRT,NOVEC
+                LOOK            00060400 0006145C 0000105D (       4189.) LONG 2
+                BRDCST          00061460 00061515 000000B6 (        182.) LONG 2
+                COMLVL          00061518 0006251C 00001005 (       4101.) LONG 2
+                DODEF           00062520 000627C3 000002A4 (        676.) LONG 2
+                DOIT            000627C4 000660C2 000038FF (      14591.) LONG 2
+                EXITR           000660C4 00066122 0000005F (         95.) LONG 2
+                GETDEF          00066124 00066323 00000200 (        512.) LONG 2
+                INTASC          00066324 0006638E 0000006B (        107.) LONG 2
+                LINCON          00066390 00066CBD 0000092E (       2350.) LONG 2
+                PRSCOM          00066CC0 00067663 000009A4 (       2468.) LONG 2
+                REDOIT          00067664 00067688 00000025 (         37.) LONG 2
+                SFTLIN          0006768C 00067768 000000DD (        221.) LONG 2
+                STOPSC          0006776C 00067867 000000FC (        252.) LONG 2
+                WORKNG          00067868 000678EC 00000085 (        133.) LONG 2
+                CONVUP          000678F0 00067945 00000056 (         86.) LONG 2
+                STPSC2          00067948 00067951 0000000A (         10.) LONG 2
+                TIMAST          00067954 000679B8 00000065 (        101.) LONG 2
+                TMAST2          000679BC 000679C5 0000000A (         10.) LONG 2
+BLKCLS                          000679C6 000679E2 0000001D (         29.) BYTE 0 NOPIC,USR,CON,REL,LCL,NOSHR,  EXE,  RD,NOWRT,NOVEC
+                BLKIN           000679C6 000679E2 0000001D (         29.) BYTE 0
+BLKIN                           000679E3 00067A52 00000070 (        112.) BYTE 0 NOPIC,USR,CON,REL,LCL,NOSHR,  EXE,  RD,NOWRT,NOVEC
+                BLKIN           000679E3 00067A52 00000070 (        112.) BYTE 0
+
+No image file created                                           30-SEP-1983 13:53        VAX-11 Linker V03-03             Page    4
+
+
+Psect Name      Module Name       Base     End           Length            Align                 Attributes
+----------      -----------       ----     ---           ------            -----                 ----------
+BLKOPN                          00067A53 00067B97 00000145 (        325.) BYTE 0 NOPIC,USR,CON,REL,LCL,NOSHR,  EXE,  RD,NOWRT,NOVEC
+                BLKIN           00067A53 00067B97 00000145 (        325.) BYTE 0
+BLKSIN                          00067B98 00067C41 000000AA (        170.) BYTE 0 NOPIC,USR,CON,REL,LCL,NOSHR,  EXE,  RD,NOWRT,NOVEC
+                BLKIN           00067B98 00067C41 000000AA (        170.) BYTE 0
+GETOWN                          00067C42 00067C93 00000052 (         82.) BYTE 0 NOPIC,USR,CON,REL,LCL,NOSHR,  EXE,  RD,NOWRT,NOVEC
+                GETOWN          00067C42 00067C93 00000052 (         82.) BYTE 0
+PRTCLS                          00067C94 00067D5A 000000C7 (        199.) BYTE 0 NOPIC,USR,CON,REL,LCL,NOSHR,  EXE,  RD,NOWRT,NOVEC
+                PRTOUT          00067C94 00067D5A 000000C7 (        199.) BYTE 0
+PRTOPN                          00067D5B 00067EE4 0000018A (        394.) BYTE 0 NOPIC,USR,CON,REL,LCL,NOSHR,  EXE,  RD,NOWRT,NOVEC
+                PRTOUT          00067D5B 00067EE4 0000018A (        394.) BYTE 0
+PRTOUT                          00067EE5 00067F4F 0000006B (        107.) BYTE 0 NOPIC,USR,CON,REL,LCL,NOSHR,  EXE,  RD,NOWRT,NOVEC
+                PRTOUT          00067EE5 00067F4F 0000006B (        107.) BYTE 0
+SETERM                          00067F50 0006843E 000004EF (       1263.) BYTE 0 NOPIC,USR,CON,REL,LCL,NOSHR,  EXE,  RD,NOWRT,NOVEC
+                SETERM          00067F50 0006843E 000004EF (       1263.) BYTE 0
+TT_BRD_CODE                     0006843F 000686F1 000002B3 (        691.) BYTE 0 NOPIC,USR,CON,REL,LCL,NOSHR,  EXE,  RD,NOWRT,NOVEC
+                TTBRDINI        0006843F 000686F1 000002B3 (        691.) BYTE 0
+BLKDAT                          00068A00 00068AC5 000000C6 (        198.) LONG 2 NOPIC,USR,CON,REL,LCL,NOSHR,  EXE,  RD,  WRT,NOVEC
+                BLKIN           00068A00 00068AC5 000000C6 (        198.) LONG 2
+PRTDAT                          00068AC8 00068DDB 00000314 (        788.) LONG 2 NOPIC,USR,CON,REL,LCL,NOSHR,  EXE,  RD,  WRT,NOVEC
+                PRTOUT          00068AC8 00068DDB 00000314 (        788.) LONG 2
+SETDAT                          00068DDC 00068E6C 00000091 (        145.) LONG 2 NOPIC,USR,CON,REL,LCL,NOSHR,  EXE,  RD,  WRT,NOVEC
+                SETERM          00068DDC 00068E6C 00000091 (        145.) LONG 2
+
+                                                +-----------------+
+                                                ! Symbols By Name !
+                                                +-----------------+
+
+Symbol          Value              Symbol          Value              Symbol          Value              Symbol          Value
+------          -----              ------          -----              ------          -----              ------          -----
+BLKCLS          000679C6-R         SETNAR          000682C1-R         
+BLKIN           000679E3-R         SETWID          0006837F-R         
+BLKOPN          00067A53-R         SETWRP          000681FF-R         
+BLKSIN          00067B98-R         SFTLIN          0006768C-R         
+BRDCST          00061460-R         STOPSC          0006776C-R         
+CLRWRP          00068260-R         STPSC2          00067948-R         
+COMLVL          00061518-R         TIMAST          00067954-R         
+CONVUP          000678F0-R         TMAST2          000679BC-R         
+DODEF           00062520-R         TTBRDAST        00068583-R         
+DOIT            000627C4-R         TTBRDEND        000685FA-R         
+EXITR           000660C4-R         TTBRDINI        0006843F-R         
+GETDEF          00066124-R         TTSPAWN         00068682-R         
+GETOWN          00067C42-R         WORKNG          00067868-R         
+INTASC          00066324-R         
+LINCON          00066390-R         
+LOOK            00060400-R         
+PRSCOM          00066CC0-R         
+PRTCLS          00067C94-R         
+PRTOPN          00067D5B-R         
+PRTOUT          00067EE5-R         
+REDOIT          00067664-R         
+RESTRM          0006814B-R         
+SETERM          00067F50-R         
+
+No image file created                                           30-SEP-1983 13:53        VAX-11 Linker V03-03             Page    5
+
+
+Symbol          Value              Symbol          Value              Symbol          Value              Symbol          Value
+------          -----              ------          -----              ------          -----              ------          -----
+
+
+
+
+	  Key for special characters above:
+		+------------------+
+		! *  - Undefined   !
+		! U  - Universal   !
+		! R  - Relocatable !
+		! X  - External    !
+		+------------------+
+
+No image file created                                           30-SEP-1983 13:53        VAX-11 Linker V03-03             Page    6
+
+                                                 +----------------+
+                                                 ! Image Synopsis !
+                                                 +----------------+
+
+Virtual memory allocated:                         00000200 00068FFF 00068E00 (429568. bytes, 839. pages)
+Stack size:                                             20. pages
+Image binary virtual block limits:                       0.        0. (    0. blocks)
+Image name and identification:                     01
+Number of files:                                         6.
+Number of modules:                                      33.
+Number of program sections:                             38.
+Number of global symbols:                              775.
+Number of image sections:                               16.
+User transfer address:                            00060400
+Number of code references to shareable images:          39.
+Image type:                                       EXECUTABLE.
+Map format:                                       DEFAULT in file JPLSCR:[JLV.LOOK]LOOK.MAP;1
+Estimated map length:                             101. blocks
+                                              +---------------------+
+                                              ! Link Run Statistics !
+                                              +---------------------+
+
+Performance Indicators                            Page Faults	CPU Time	Elapsed Time
+----------------------                            -----------	--------	------------
+    Command processing:                                    32	00:00:00.07	00:00:00.24
+    Pass 1:                                               222	00:00:02.99	00:00:10.50
+    Allocation/Relocation:                                 18	00:00:00.12	00:00:00.36
+    Pass 2:                                                 7	00:00:00.45	00:00:02.40
+    Map data after object module synopsis:                 13	00:00:00.56	00:00:01.00
+    Symbol table output:                                    0	00:00:00.00	00:00:00.04
+Total run values:                                         292	00:00:04.19	00:00:14.54
+
+Using a working set limited to 750 pages and 126 pages of data storage (excluding image)
+
+Total number object records read (both passes):   858
+    of which 575 were in libraries and 88 were DEBUG data records containing 7014 bytes
+
+Number of modules extracted explicitly             = 1
+    with 29 extracted to resolve undefined symbols
+
+78 library searches were for symbols not in the library searched
+
+A total of 0 global symbol table records was written
+
+/NOEXE/MAP=LOOK SYS2:[PUBLIC.SOURCE.LOOK]LOOK/INC=LOOK/LIB

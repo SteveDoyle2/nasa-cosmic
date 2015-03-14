@@ -1,0 +1,68 @@
+ AOFA- THREE-DIMENSIONAL SUPERSONIC VISCOUS FLOW
+
+( NASA Ames Research Center )
+
+     This program, which is called 'AOFA', determines the complete viscous
+and inviscid flow around a body of revolution at a given angle of attack and
+traveling at supersonic speeds. The viscous calculations from this pro-
+gram agree with experimental values for surface and pitot pressures and
+with surface heating rates. At high speeds, lee-side flows are important
+because the local heating is difficult to correlate and because the shed
+vortices can interact with vehicle components such as a canopy or a verti-
+cal tail. This program should find application in the design analysis of
+any high speed vehicle.
+
+     Lee-side flows are difficult to calculate because thin-boundary-layer
+theory is not applicable and the concept of matching inviscid and viscous
+flow is questionable. This program uses the parabolic approximation to the
+compressible Navier-Stokes equations and solves for the complete invis-
+cid and viscous regions of flow, including the pressure. The parabolic ap-
+proximation results from the assumption that the stress derivatives in the
+streamwise direction are small in comparison with derivatives in the normal
+and circumferential directions. This assumption permits the equation to be
+solved by an implicit finite difference marching technique which proceeds
+downstream from the initial data point, provided the inviscid portion of
+flow is supersonic. The viscous cross-flow separation is also determined
+as part of the solution. To use this method it is necessary to first deter-
+mine an initial data point in a region where the inviscid portion of the flow
+is supersonic.
+
+     Input to this program consists of two parts. Problem description is
+conveyed to the program by namelist input. Initial data is acquired by the
+program as formatted data. Because of the large amount of run time this pro-
+gram can consume the program includes a restart capability. Output is in
+printed format and magnetic tape for further processing.
+
+     This program is written in FORTRAN IV and has been implemented on a CDC
+7600 with a central memory requirement of approximately 35K (octal) of 60
+bit words.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC 7000 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 2,175 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI CDC NOS Internal Format Magnetic Tape
+
+PROGRAM NUMBER: ARC-11087
+
+DOMESTIC - DOCUMENTATION PRICE: $15.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $30.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

@@ -1,0 +1,7 @@
+define verb zed
+ image user$disk:[pjs.zed]zed
+ parameter p1,prompt="Input file",label=Input_file,value(required)
+ parameter p2,prompt="Output file",label=Output_file
+ qualifier ver,nonnegatable,value(required)
+ qualifier with,nonnegatable,value(required)
+ qualifier eprint,nonnegatable,value(required)

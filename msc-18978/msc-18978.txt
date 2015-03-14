@@ -1,0 +1,57 @@
+ PSANAL- COMPOSITE POINT STRESS ANALYSIS
+
+( ROCKWELL INTERNATIONAL CORP. )
+
+     This composite material computer program, PSANAL, is a linear lami-
+nate analysis program developed to compute the laminate elastic and ther-
+mal properties and the allowable load levels for any combination of applied
+membrane and bending loads occuring at a point. Basic orthotropic stress-
+strain relationships and standard composite laminate theory formulas are
+utilized in the PSANAL analysis. Mechanically applied loads may consist of
+three stress resultants and three stress couples, which are assumed to be
+acting in constant ratio and may be applied in any combination. A constant
+temperature is assumed to exist through each laminate thickness. Individ-
+ual lamina thermal loads are computed and included in the allowable-load
+analysis. No restrictions are placed on either laminate balance or symme-
+try. Both unidirectional "unwoven" tape and pseudo-unidirectional/ bidi-
+rectional "woven" fabric prepregs can be accommodated by PSANAL.
+
+     Input data to PSANAL includes lamina properties, allowable strengths
+and strains, safety factor, laminate description, and applied loads. Fail-
+ure criteria consists of the requirement that no lamina matrix failure is
+permitted at limit load, while no fiber failure is allowed at ultimate load.
+Lamina failure criteria consists of both maximum stress criteria and max-
+imum strain criteria. The PSANAL program has the capability to handle as
+many as 10 different prepreg materials and 50 plies per laminate. Output
+from PSANAL includes laminate elastic properties, laminate thermal prop-
+erties, and allowable load levels.
+
+     The PSANAL program is written in FORTRAN IV for batch execution and has
+been implemented on an IBM 370 computer with a central memory requirement
+of approximately 100K of 8 bit bytes. The PSANAL program was developed in
+1975.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: IBM 370 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 1,142 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: MSC-18978
+
+DOMESTIC - DOCUMENTATION PRICE: $29.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $58.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

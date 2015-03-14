@@ -1,0 +1,61 @@
+  { $INCLUDE : 'compile.inc' }
+  { $INCLUDE : 'getparam.int' }
+  { $INCLUDE : 'utility.int' }
+  { $INCLUDE : 'alterl.int' }
+
+  implementation of alterl;
+
+  USES getparam;
+
+  procedure alter_entity_list;
+
+  var
+      i, j, l, k, max : integer;
+      length2 : integer;
+
+  begin  { alter}
+    length2 := ord ( length );
+    with current^ do
+      begin { with }
+        max := ord ( node_data^[etype].input_length );
+        l   := ( max - length2 ) div 2;
+        if mode = 0 then field^.len := length2
+                    else field^.len := max;
+        case mode of
+
+        0: for i := 1 to length2 do field^[i] := buffer[i];
+
+        1: begin
+             for i := 1 to l do field^[i] := ' ';
+             for i := l+1 to length2+l do field^[i] := buffer[i-l];
+             for i := length2+l+1 to max do field^[i] := ' ';
+           end;
+
+        2: begin
+             for i := 1 to length2 do field^[i] := buffer[i];
+             for i := length2+1 to max do field^[i] := ' ';
+           end;
+
+      3,4: begin
+             if mode = 3 then 
+                 while (buffer[length2] = ' ') and ( length2 > 0 ) do
+                   length2 := length2 - 1;
+             j := max - length2;
+             for i := 1 to j do field^[i] := ' ';
+             l := j + 1;
+             for i := l to max do
+                 begin
+                   k := i - j;
+                   field^[i] := buffer[k];
+                 end;
+           end;
+
+        otherwise
+
+        end; { case }
+
+      end; { with }
+
+  end; { alter }
+  end.
+

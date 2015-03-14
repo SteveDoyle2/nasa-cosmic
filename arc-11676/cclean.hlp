@@ -1,0 +1,9 @@
+1 CCLEAN
+
+CCLEAN is a program to clean up COMMON blocks in a FORTRAN program. It is
+particularly helpful after using TIDY.
+
+Enter:   CCLEAN filespec
+
+where filespec is the name of the FORTRAN file, less the .FOR suffix. A new
+version of filespec will be created.  See MERLIN:CCLEAN.DOC for more info.

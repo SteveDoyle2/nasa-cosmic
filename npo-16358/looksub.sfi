@@ -1,0 +1,640 @@
+      SUBROUTINE BRDCST(MESSAGE)
+C
+C***********************************************************************
+C*****************************   BRDCST   ******************************
+C***********************************************************************
+C
+CDM   This subroutine catches broadcast messages and stores them away in
+CDM   common.
+CDM
+CDM   Programmer - Jon Vavrus   4 APR 1983
+CM
+CM         This routine is called as an AST whenever a broadcast message
+CM    comes through to the terminal.  That message is then stored away
+CM    in the common area BRDCM1.  A flag is set and a count is updated
+CM    in BRDCM2.
+CM
+CM         A message is also output on to the screen.
+C
+C***   COMMON AREAS
+C
+CS    BRDCM1  Contains character variables for broadcast handling.
+CS              BRDNOT holds the notice to be displayed on the screen.
+CS              BRDMSG which holds broadcast messages.
+C
+CS    BRDCM2  Contains non-character information for broadcast handling.
+CS              BRDLEN the length of strings in BRDMSG.
+CS              BRDCNT the count of strings in BRDMSG.
+CS              BRDFLG a flag telling if there are unread messages.
+C
+CS    DOITNM  Contains information transferred from the main program:
+CS                 INCHAN - input channel of the terminal
+CS                 TIME   - scrolling speed in -10000000*seconds/line
+CS                 SBFFLG - flag indicating whether there is a string
+CS                          in the search buffer
+CS                 DIRECT - flag for reverse (-1 for reverse, else 1)
+CS                 EBK    - EBK of input file
+CS                 SBFLEN - length of string(s) in search buffer(s)
+CS                 RECBLK - number of bytes used per block in FIX-BLK files
+CS                 RANGE  - starting and ending block numbers and pointers
+CS                          of the print range.
+CS                 VT100  - flag set .TRUE. if terminal is a VT100
+CS                 LRL    - length of longest record in input file
+CS                 LENLMT - maximum length of output (if <0 then WRAP set)
+CS                 PAGEND - Line number of last line output to screen.
+CS                 PAGLEN - number of lines per page
+CS                 COMLIN - line number for command input (bottom of screen)
+CS                 VT100A - flag set .TRUE. if VT100 has advanced video option
+C
+      CHARACTER*(*) MESSAGE
+      CHARACTER*128 BRDMSG(20)
+      CHARACTER*22 BRDNOT
+      INTEGER*4 TIME,EBK,RANGE(2,2),PAGEND
+      INTEGER*2 DIRECT,SBFLEN(10),RECBLK,LENLMT,PAGLEN,COMLIN,
+     1          BRDCNT,BRDLEN(20)
+      LOGICAL*1 SBFFLG,VT100,VT100A,BRDFLG
+
+      COMMON /BRDCM1/BRDNOT,BRDMSG
+      COMMON /BRDCM2/BRDLEN,BRDCNT,BRDFLG
+      COMMON /DOITNM/INCHAN,TIME,SBFFLG,DIRECT,EBK,SBFLEN,RECBLK,RANGE,
+     1               VT100,LRL,LENLMT,PAGEND,PAGLEN,COMLIN,VT100A
+
+      BRDCNT = BRDCNT + 1
+      IF (BRDCNT .LE. 20) THEN
+        BRDFLG = .TRUE.
+        BRDMSG(BRDCNT) = MESSAGE
+        BRDLEN(BRDCNT) = LEN(MESSAGE)
+      ELSE
+        DO FOR I=2,20
+         BRDMSG(I-1) = BRDMSG(I)
+         BRDLEN(I-1) = BRDLEN(I)
+        END DO FOR
+        BRDMSG(20) = MESSAGE
+        BRDLEN(20) = LEN(MESSAGE)
+      ENDIF
+      IF (VT100)
+        CALL LIB$PUT_SCREEN(CHAR(27)//'7')
+        CALL LIB$PUT_SCREEN(BRDNOT,COMLIN,IABS(LENLMT)-28)
+      ENDIF
+      RETURN
+      END
+
+      SUBROUTINE CONVUP(LENGTH,LOWER,UPPER)
+C
+C***********************************************************************
+C*****************************   CONVUP   ******************************
+C***********************************************************************
+C
+CDM   This subroutine converts a string from lower to upper case.
+CDM   Both of the strings are passed in non-descriptor form.
+CDM
+CDM   Programmer - Jon Vavrus  13 NOV 1980
+CM
+CM         The routine takes a string of bytes starting at the location
+CM    given for LOWER and converts any alphabetic characters in the first
+CM    LENGTH bytes to upper-case, returning the converted string of bytes
+CM    starting at the location given for UPPER.
+C
+      INTEGER*2 LENGTH
+      LOGICAL*1 LOWER(1),UPPER(1)
+
+      DO FOR I=1,LENGTH
+C
+C***   141 octal is lowercase a in ASCII, 172 octal is lowercase z in
+C***   ASCII.  40 octal is the spacing between the upper and lowercase
+C***   alphabets in ASCII.
+C
+       IF (LOWER(I) .GE. '141'O .AND. LOWER(I) .LE. '172'O) THEN
+         UPPER(I) = LOWER(I) - '40'O
+       ELSE
+         UPPER(I) = LOWER(I)
+       ENDIF
+      END DO FOR
+      RETURN
+      END
+
+      SUBROUTINE EXITR
+C
+C***********************************************************************
+C*******************************   EXITR   *****************************
+C***********************************************************************
+C
+CDM   This subroutine is invoked on image exit and cancels any
+CDM   AST, and closes the file and re-stores the terminal.
+CDM
+CDM   Programmer - Jon Vavrus  13 JAN 1983
+CM
+CM    Should be set up by a call to SYS$DCLEXH(BLOCK) where block
+CM    is a 4 longword array with this routines address as the second
+CM    longword, 1 as the third longword, and the address of any
+CM    writable location (longword) as the fourth.
+C
+C***   COMMON STORAGE
+C
+CS    DOITNM  Contains information transferred from the main program:
+CS                 INCHAN - input channel of the terminal
+CS                 TIME   - scrolling speed in -10000000*seconds/line
+CS                 SBFFLG - flag indicating whether there is a string
+CS                          in the search buffer
+CS                 DIRECT - flag for reverse (-1 for reverse, else 1)
+CS                 EBK    - EBK of input file
+CS                 SBFLEN - length of string(s) in search buffer(s)
+CS                 RECBLK - number of bytes used per block in FIX-BLK files
+CS                 RANGE  - starting and ending block numbers and pointers
+CS                          of the print range.
+CS                 VT100  - flag set .TRUE. if terminal is a VT100
+C
+CS    STOPCM  Used to pass information back and forth to/from the stop
+CS            scrolling AST.  STOPIT is a flag set .TRUE. if scrolling
+CS            should be stopped, INBUF is the input character, IOFLAG and
+CS            TIMFLG are event flags, and IOSB is the I/O IOSB.
+C
+      INTEGER*4 TIMFLG,TIME,EBK,RANGE(2,2)
+      INTEGER*2 IOSB(4),DIRECT,SBFLEN(10),RECBLK
+      LOGICAL*1 STOPIT,INBUF,SBFFLG,VT100
+
+      COMMON /DOITNM/INCHAN,TIME,SBFFLG,DIRECT,EBK,SBFLEN,RECBLK,RANGE,
+     1               VT100
+      COMMON /STOPCM/STOPIT,INBUF,IOFLAG,IOSB,TIMFLG
+
+      IF (IOFLAG .GT. 0)
+        CALL SYS$CANCEL(%VAL(INCHAN))
+        CALL LIB$FREE_EF(IOFLAG)
+      ENDIF
+      CALL WORKNG(.FALSE.)
+      CALL RESTRM(INCHAN)
+      CALL BLKCLS
+      IF (VT100) CALL LIB$PUT_SCREEN(CHAR(27)//'[0q')
+      CALL SYS$DASSGN(%VAL(INCHAN))
+      RETURN
+      END
+
+      SUBROUTINE INTASC(LENGTH,DATA,STRING)
+C
+C***********************************************************************
+C******************************   INTASC   *****************************
+C***********************************************************************
+C
+CDM   This subroutine converts a string of ascii coded bytes to a character
+CDM   variable
+CDM
+CDM   Programmer - Jon Vavrus    JUL 1980
+CM
+CM         The subroutine is called with LENGTH (the number of bytes to be
+CM    converted), DATA (the starting location of the data), and STRING (a
+CM    character variable to recieve the translation).  After translation the
+CM    LENGTH+1 character of STRING is set to a blank.
+C
+      CHARACTER*(*) STRING
+      INTEGER*2 LENGTH
+      LOGICAL*1 DATA(200)
+
+      DECODE (LENGTH,100,DATA)STRING
+100   FORMAT (A<LENGTH>)
+      STRING(LENGTH+1:LENGTH+1) = ' '
+      RETURN
+      END
+
+      SUBROUTINE REDOIT(COMAND,NUMFLG,TANUMB,MINFLG)
+C
+C***********************************************************************
+C*****************************   REDOIT   ******************************
+C***********************************************************************
+C
+CDM   This routine calls DOIT
+CDM
+CDM   Programmer - Jon Vavrus  26 AUG 1981
+CM
+CM         The routine simply calls DOIT with the same argument list.
+CM    This allows DOIT to call itself.
+C
+C***   CALLED ROUTINES
+C
+C     DOIT    Executes commands
+C
+      INTEGER*4 COMAND
+      LOGICAL*1 MINFLG,NUMFLG
+
+      CALL DOIT(COMAND,NUMFLG,TANUMB,MINFLG)
+      RETURN
+      END
+
+      SUBROUTINE SFTLIN(LINES)
+C
+C***********************************************************************
+C*****************************   SFTLIN   ******************************
+C***********************************************************************
+C
+CDM   This subroutine shifts the output lines stored in the line storage
+CDM   arrays in order to make room at the end of the arrays for more lines.
+CDM
+CDM    Programmer - Jon Vavrus  13 NOV 1980
+CDM    Revised    - Jon Vavrus  12 MAY 1981
+CDM    Revised    - Jon Vavrus  29 JUL 1981 (change CCLINE usage)
+CDM    Revised    - Jon Vavrus  18 AUG 1982 (bigger arrays)
+CM
+CM         The routine requires LINES (the character array of actual
+CM    output lines) to be passed as an argument, all the other arrays are
+CM    passed through common area LNCN.  The normal shift is to make room
+CM    for 100 more lines at the end, however, if there are less then 500
+CM    lines already then the shift frees up 599 of the 600 lines.  When
+CM    the shift occurs lines shifted off the front of the arrays are lost.
+C
+C***   COMMON AREAS
+C
+CS    LNCN    Contains output arrays, and file pointers and information:
+CS                 LINLEN - array of output line lengths
+CS                 LINEP  - top of screen line (or last line output by
+CS                          backward scroll)
+CS                 NLINES - number of lines in arrays
+CS                 BUFFER - array of unconverted data
+CS                 PBUF   - current position in BUFFER
+CS                 NBUF   - number of bytes in BUFFER
+CS                 BLK    - next block in file
+CS                 FSZ    - record length for FIX files, or FSZ for VFC files
+CS                 IFSZ   - word extended record length for FIX files
+CS                 RFM    - files RFM
+CS                 RAT    - files RAT (1=CR,2=FTN,3=PRN,4=none,<0=BLK set)
+CS                 SBLK   - starting block of current batch of output lines
+CS                 CCLINE - array containing pointer to where the line's
+CS                          record starts in the file (CCLINE(1,x) = block
+CS                          #, CCLINE(2,x) = byte number in block).  If
+CS                          CCLINE(1,x) = 0 then it is a carriage control
+CS                          line.
+CS                 LBLK   - last block processed by LINCON
+CS                 LPBUF  - last value of PBUF processed by LINCON
+C
+      CHARACTER*132 LINES(600)
+      INTEGER*4 RFM,RAT,FSZ,PBUF,BLK,SBLK,CCLINE(2,600)
+      INTEGER*2 LINLEN(600)
+      LOGICAL*1 BUFFER(3750)
+
+      COMMON /LNCN/LINLEN,LINEP,NLINES,BUFFER,PBUF,NBUF,BLK,FSZ,IFSZ,
+     1             RFM,RAT,SBLK,CCLINE,LBLK,LPBUF
+
+      IF (LINEP .GT. 500) THEN
+        J = 500
+      ELSE
+        J = LINEP - 1
+      ENDIF
+      DO FOR I=J,600
+       LINLEN(I-J+1) = LINLEN(I)
+       LINES(I-J+1) = LINES(I)
+       CCLINE(1,I-J+1) = CCLINE(1,I)
+       CCLINE(2,I-J+1) = CCLINE(2,I)
+      END DO FOR
+      DO FOR I=1,J-1
+       IF (CCLINE(1,I) .NE. 0)
+         SBLK = CCLINE(1,I)
+         UNDO
+       ENDIF
+      END DO FOR
+      LINEP = LINEP - J + 1
+      NLINES = 600 - J + 1
+      RETURN
+      END
+
+      SUBROUTINE STOPSC
+C
+C***********************************************************************
+C*****************************   STOPSC   ******************************
+C***********************************************************************
+C
+CDM   This subroutine is the AST used to stop the scrolling function.
+CDM
+CDM   Programmer - Jon Vavrus  13 NOV 1980
+CDM   Revised    - Jon Vavrus  12 MAY 1981
+CDM   Revised    - Jon Vavrus  26 AUG 1981
+CDM   Revised    - Jon Vavrus   6 NOV 1981
+CDM   Revised    - Jon Vavrus   4 MAY 1982 (non-advanced video VT100's)
+CM
+CM         The routine is executed whenever anything is typed while a
+CM    scroll is in progress.  If the character typed is "(" or a symbol
+CM    defined as "(", all timer requests are cancelled, the timer event
+CM    flag is set, and STOPIT is set to .TRUE..  If the character typed
+CM    is not one of the above, then the I/O is requeued with STPSC2 as
+CM    its AST (STPSC2 just calls this routine), and the character is in-
+CM    serted into the input buffer.
+C
+C***   CALLED ROUTINES
+C
+CC    STPSC2  Routine to re-call this one.
+C
+C***   COMMON AREAS
+C
+C
+CS    STOPCM  Used to pass information back and forth to/from the main
+CS            process.  STOPIT is a flag set .TRUE. if scrolling should
+CS            be stopped, INBUF is the input character, IOFLAG and TIMFLG
+CS            are event flags, and IOSB is the I/O IOSB.
+C
+CS    DOITNM  Contains information transferred from the main program:
+CS                 INCHAN - input channel of the terminal
+CS                 TIME   - scrolling speed in -10000000*seconds/line
+CS                 SBFFLG - flag indicating whether there is a string
+CS                          in the search buffer
+CS                 DIRECT - flag for reverse (-1 for reverse, else 1)
+CS                 EBK    - EBK of input file
+CS                 SBFLEN - length of string(s) in search buffer(s)
+CS                 RECBLK - number of bytes used per block in FIX-BLK files
+CS                 RANGE  - starting and ending block numbers and pointers
+CS                          of the print range.
+CS                 VT100  - flag set .TRUE. if terminal is a VT100
+CS                 LRL    - length of longest record in input file
+CS                 LENLMT - maximum length of output (if <0 then WRAP set)
+CS                 PAGEND - Line number of last line output to screen.
+CS                 PAGLEN - number of lines per page
+CS                 COMLIN - line number for command input (bottom of screen)
+CS                 VT100A - flag set .TRUE. if VT100 has advanced video option
+C
+CS    INPUTC  Contains the input character buffer INLINE and the defined
+CS            symbols SYMS and the definition search buffers DEFBUF
+C
+CS    INPUTN  Contains the input character buffer length LENSAV, and the
+CS            symbol definitions DEFS, the number of such definitions
+CS            (NDEFS), the definition flags DEFFLG, and the definition
+CS            numbers NUMDEF
+C
+C***   INPUT VARIABLES
+C
+CI    INBUF   One byte buffer used for the QIO input request.
+C
+C***   INPUT UNIT
+C
+CR    INCHAN  Channel number of the terminal.
+C
+      EXTERNAL STPSC2
+      CHARACTER*128 INLINE
+      CHARACTER*30 DEFBUF(10,10,60)
+      CHARACTER*1 SYMS(60)
+      REAL*4 NUMDEF(10,60)
+      INTEGER*4 TIMFLG,TIME,EBK,RANGE(2,2),PAGEND
+      INTEGER*2 IOSB(4),DIRECT,SBFLEN(10),RECBLK,DEFS(11,10,60),LENLMT,
+     1          LENSAV,PAGLEN,COMLIN
+      LOGICAL*1 INBUF,STOPIT,ERROUT(5),SBFFLG,VT100,DEFFLG(3,10,60),
+     1          VT100A
+
+      COMMON /STOPCM/STOPIT,INBUF,IOFLAG,IOSB,TIMFLG
+      COMMON /DOITNM/INCHAN,TIME,SBFFLG,DIRECT,EBK,SBFLEN,RECBLK,RANGE,
+     1               VT100,LRL,LENLMT,PAGEND,PAGLEN,COMLIN,VT100A
+      COMMON /INPUTC/INLINE,SYMS,DEFBUF
+      COMMON /INPUTN/LENSAV,DEFS,NDEFS,DEFFLG,NUMDEF
+
+      DATA ERROUT/7,27,'[','3','q'/
+      IF (IOSB(1) .NE. '830'X .AND. IOSB(1) .NE. '2C'X)
+C
+C***   Is the character a (
+C
+        IF (INBUF .EQ. '(') THEN
+          CALL SYS$CANTIM(,)
+          STOPIT = .TRUE.
+          CALL SYS$SETEF(%VAL(TIMFLG))
+        ELSE
+C
+C***   Is the character a symbol defined as (
+C
+          DO FOR I=1,NDEFS
+           IF (ICHAR(SYMS(I)) .EQ. INBUF .AND. DEFS(1,1,I) .EQ. 6) THEN
+             CALL SYS$CANTIM(,)
+             STOPIT = .TRUE.
+             CALL SYS$SETEF(%VAL(TIMFLG))
+             RETURN
+           ENDIF
+          END DO FOR
+C
+C***   If character is not a control character add it to INLINE (input
+C***   buffer)
+C
+          IF (INBUF .GE. 32 .AND. INBUF .LE. 126)
+            LENSAV = LENSAV + 1
+            INLINE(LENSAV:LENSAV) = CHAR(INBUF)
+          ELSE
+C
+C***   If it is a <DEL> then remove the last character
+C
+            IF (INBUF .EQ. 127 .AND. LENSAV .GE. 1)
+              LENSAV = LENSAV - 1
+            ELSE
+C
+C***   If it is a ^X or ^U then delete entire buffer
+C
+              IF (INBUF .EQ. 24 .OR. INBUF .EQ. 21)
+                LENSAV = 0
+              ENDIF
+            ENDIF
+          ENDIF
+C
+C***   Requeue request
+C
+          CALL SYS$QIO(%VAL(IOFLAG),%VAL(INCHAN),%VAL('1171'X),IOSB,
+     1                 STPSC2,,INBUF,%VAL(1),,,,)
+        ENDIF
+      ENDIF
+      RETURN
+      END
+
+      SUBROUTINE STPSC2
+C
+C***********************************************************************
+C*****************************   STPSC2   ******************************
+C***********************************************************************
+C
+CDM   This subroutine is the AST for the I/O request from STOPSC, if
+CDM   invoked it will call STOPSC and exit.
+CDM
+CDM   Programmer - Jon Vavrus  13 NOV 1980
+C
+C***   CALLED ROUTINES
+C
+C     STOPSC   Actual AST routine.
+C
+      CALL STOPSC
+      RETURN
+      END
+
+      SUBROUTINE TMAST2
+C
+C******************************************************************************
+C*********************************   TMAST2   *********************************
+C******************************************************************************
+C
+C
+CDM   This routine is simply a means for TIMAST to refer to itself.  All it
+CDM   does is call TIMAST.
+CDM
+CDM   Programmer  Jon Vavrus -  3 SEP 1982
+CDM   Revised     Jon Vavrus - 21 SEP 1983 (changed name with TIMAST)
+C
+C***   CALLED ROUTINES
+C
+C     TIMAST    - Routine to actually output the next message.
+C
+      CALL TIMAST
+      RETURN
+      END
+
+      SUBROUTINE TIMAST
+C
+C******************************************************************************
+C*********************************   TIMAST   *********************************
+C******************************************************************************
+C
+CDM   This routine outputs the proper "WORKING" message at the bottom of the
+CDM   screen and requeues itself as a timer AST (through TMAST2).
+CDM
+CDM   Programmer  Jon Vavrus -  8 SEP 1982
+CDM   Revised     Jon Vavrus - 21 SEP 1983 (changed name with TMAST2)
+C
+C***   CALLED ROUTINES
+C
+CC    TMAST2   - Routine which calls this one.
+C
+C***   COMMON AREAS
+C
+CS    DOITNM  Contains information transferred from the main program:
+CS                 INCHAN - input channel of the terminal
+CS                 TIME   - scrolling speed in -10000000*seconds/line
+CS                 SBFFLG - flag indicating whether there is a string
+CS                          in the search buffer
+CS                 DIRECT - flag for reverse (-1 for reverse, else 1)
+CS                 EBK    - EBK of input file
+CS                 SBFLEN - length(s) of string(s) in search buffer(s)
+CS                 RECBLK - number of bytes used per block in FIX-BLK files
+CS                 RANGE  - beginning and ending block numbers and pointers
+CS                          of the print range
+CS                 VT100  - flag set .TRUE. if terminal is VT100.
+CS                 LRL    - length of the longest record in input file.
+CS                 LENLMT - maximum output length (if <0 then WRAP set)
+CS                 PAGEND - line number of last line output to screen
+CS                 PAGLEN - number of lines per page
+CS                 COMLIN - line number for command input (bottom of screen)
+CS                 VT100A - flag set .TRUE. if VT100 has advanced video option
+C
+CS    TASTNM  Used to pass the ROW and COLUMN for the message, the flag
+CS            ONEFLG, the timer delta time DELTA, and the timer event flag
+CS            TIMREF.
+C
+      EXTERNAL TMAST2
+      INTEGER*4 INCHAN,TIME,EBK,RANGE(2,2),PAGEND,TIMREF,DELTA(2)
+      INTEGER*2 SBFLEN(10),RECBLK,LENLMT,PAGLEN,COMLIN,DIRECT,ROW,COLUMN
+      LOGICAL*1 SBFFLG,VT100,VT100A,START,ONEFLG
+
+      COMMON /DOITNM/INCHAN,TIME,SBFFLG,DIRECT,EBK,SBFLEN,RECBLK,RANGE,
+     1               VT100,LRL,LENLMT,PAGEND,PAGLEN,COMLIN,VT100A
+      COMMON /TASTNM/ROW,COLUMN,ONEFLG,DELTA,TIMREF
+
+      IF (ONEFLG) THEN
+        IF (VT100A)
+          CALL LIB$PUT_SCREEN(CHAR(27)//'[7mWORKING'//CHAR(27)//'[0m',
+     1                        ROW,COLUMN)
+        ELSE
+          CALL LIB$PUT_SCREEN('WORKING',ROW,COLUMN)
+        ENDIF
+        ONEFLG = .FALSE.
+      ELSE
+        IF (VT100A)
+          CALL LIB$PUT_SCREEN(CHAR(27)//'[1mWORKING'//CHAR(27)//'[0m',
+     1                        ROW,COLUMN)
+        ELSE
+          CALL LIB$PUT_SCREEN('working',ROW,COLUMN)
+        ENDIF
+        ONEFLG = .TRUE.
+      ENDIF
+C
+C***   Queue AST
+C
+      CALL SYS$SETIMR(%VAL(TIMREF),DELTA,TMAST2,%VAL(1))
+      RETURN
+      END
+
+      SUBROUTINE WORKNG(START)
+C
+C******************************************************************************
+C*********************************   WORKNG   *********************************
+C******************************************************************************
+C
+CDM   This subroutine puts out the flashing "WORKING" message.
+CDM
+CDM   Programmer  Jon Vavrus -  8 SEP 1982
+CM
+CM    The message is displayed at screen position COMLIN(from DOITNM),
+CM    IABS(LENLMT)-19(DOITNM also) if START (logical) is .TRUE., and is
+CM    stopped if START is .FALSE..  The changing of the display is done
+CM    through the use of a system timer AST.
+C
+C***   COMMON AREAS
+C
+CS    DOITNM  Contains information transferred from the main program:
+CS                 INCHAN - input channel of the terminal
+CS                 TIME   - scrolling speed in -10000000*seconds/line
+CS                 SBFFLG - flag indicating whether there is a string
+CS                          in the search buffer
+CS                 DIRECT - flag for reverse (-1 for reverse, else 1)
+CS                 EBK    - EBK of input file
+CS                 SBFLEN - length(s) of string(s) in search buffer(s)
+CS                 RECBLK - number of bytes used per block in FIX-BLK files
+CS                 RANGE  - beginning and ending block numbers and pointers
+CS                          of the print range
+CS                 VT100  - flag set .TRUE. if terminal is VT100.
+CS                 LRL    - length of the longest record in input file.
+CS                 LENLMT - maximum output length (if <0 then WRAP set)
+CS                 PAGEND - line number of last line output to screen
+CS                 PAGLEN - number of lines per page
+CS                 COMLIN - line number for command input (bottom of screen)
+CS                 VT100A - flag set .TRUE. if VT100 has advanced video option
+C
+CS    TASTNM  Used to pass the ROW and COLUMN for the message, the flag
+CS            ONEFLG, the timer delta time DELTA, and the timer event flag
+CS            TIMREF.
+C
+C***   CALLED ROUTINES
+C
+CC    TIMAST  Timer AST.
+C
+      EXTERNAL TIMAST
+      INTEGER*4 INCHAN,TIME,EBK,RANGE(2,2),PAGEND,TIMREF,DELTA(2)
+      INTEGER*2 SBFLEN(10),RECBLK,LENLMT,PAGLEN,COMLIN,DIRECT,ROW,COLUMN
+      LOGICAL*1 SBFFLG,VT100,VT100A,START,ONEFLG
+
+      COMMON /DOITNM/INCHAN,TIME,SBFFLG,DIRECT,EBK,SBFLEN,RECBLK,RANGE,
+     1               VT100,LRL,LENLMT,PAGEND,PAGLEN,COMLIN,VT100A
+      COMMON /TASTNM/ROW,COLUMN,ONEFLG,DELTA,TIMREF
+
+      DATA DELTA/-20000000,-1/
+
+      IF (START) THEN
+C
+C***   Set up to start
+C
+        ONEFLG = .FALSE.
+        CALL LIB$GET_EF(TIMREF)
+        ROW = COMLIN
+        COLUMN = IABS(LENLMT) - 19
+C
+C***   Output message
+C
+        IF (VT100A)
+          CALL LIB$PUT_SCREEN(CHAR(27)//'[7mWORKING'//CHAR(27)//'[0m',
+     1                        ROW,COLUMN)
+        ELSE
+          CALL LIB$PUT_SCREEN('WORKING',ROW,COLUMN)
+        ENDIF
+C
+C***   Queue AST
+C
+        CALL SYS$SETIMR(%VAL(TIMREF),DELTA,TIMAST,%VAL(1))
+      ELSE
+        IF (TIMREF .GT. 0)
+C
+C***   Make sure not invoked at wrong time by EXITR
+C
+C***   Done working, cancel timer requests and clear message
+C
+          CALL SYS$CANTIM(%VAL(1),)
+          CALL LIB$PUT_SCREEN('       ',ROW,COLUMN)
+          CALL LIB$SET_CURSOR(1,1)
+          CALL LIB$FREE_EF(TIMREF)
+        ENDIF
+      ENDIF
+      RETURN
+      END

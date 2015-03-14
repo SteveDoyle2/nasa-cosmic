@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+When the Fill Bar key is pressed from the Graphics Mode of the milestone chart,
+the prompt asks for the date up to which the bar is to be filled.  Enter the
+date in the dd/mm/yy format, or if the cursor is in the desired location, press
+return.  The bar will be filled to that point.
+
+
+
+
+
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

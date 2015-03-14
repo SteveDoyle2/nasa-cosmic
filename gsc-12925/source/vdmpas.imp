@@ -1,0 +1,664 @@
+{  $INCLUDE : 'compile.inc'}
+{  $INCLUDE : 'vdmpas.int'   }
+{  $INCLUDE : 'dspas.int'  }
+{  $INCLUDE : 'vdmgen.int'   }
+{  $INCLUDE : 'dialog.int' }
+ { $INCLUDE : 'vbpas.int' }
+
+implementation of vdmpas;
+
+  USES dspas;
+  USES vdmgen;
+  USES dialog;
+  USES vbpas;
+
+  var
+    a : array [1..4] of byte;
+    p : array [1..10] of integer;
+    r : array [1..10] of real;
+    inchar : twobyte;
+
+  procedure diskfull;
+    begin
+      if plfile.errs <> 0 then
+        begin
+          there (0,22);
+          writeln ('Disk full error. File not created. Press any key to continue.');
+          get_input(inchar);
+          there (0, prompt_line);
+          writeln ('                                                              ');
+        end;
+    end;
+    
+  procedure intvdm(point : integer);
+    begin
+      if point < 0 then
+        begin
+          point := abs(point);
+          a[2] := lobyte( ( point and #000f) or #0020);
+        end
+      else
+        a[2] := lobyte( ( point and #000f) or #0030);
+      point := (point and #03f0) div 16;
+      a[1]  := lobyte(point or #0040);
+    end;
+
+  procedure writestring(var s : lstring);
+    var
+      i : word;
+    begin
+      for i := 1 to s.len do
+          if plfile.errs = 0 then
+            begin
+              write(plfile,s[i]);
+              diskfull;
+            end;
+    end;
+
+  procedure write_n_point(num : integer);
+    var
+      i : integer;
+    begin
+      for i := 1 to num do
+        begin
+          intvdm(p[i]);
+          if plfile.errs = 0 then
+           begin
+             if ( (i mod 2) = 0 ) and ( i <> num ) then
+               write(plfile,chr(a[1]),chr(a[2]),chr(#1f))
+             else
+               write(plfile, chr(a[1]),chr(a[2]));
+             diskfull;
+           end;
+         end;
+     if plfile.errs = 0 then
+       begin
+         write(plfile,chr(#1e));
+         diskfull;
+       end;
+    end;
+
+  procedure writecrd(num : integer);
+    var  
+      i : integer;
+    begin
+      for i := 1 to num do
+        begin
+          intvdm(p[i]);
+          if plfile.errs = 0 then
+            begin
+              write(plfile,chr(a[1]),chr(a[2]));
+              diskfull;
+            end;
+        end;
+    end;
+
+  procedure relvdm(rel : real);
+    var
+      i1,
+      i2,
+      j,
+      v,
+      count : integer;
+      d     : real;
+    begin
+      a[3] := #00;
+      if rel < 0 then
+        begin
+          rel  := abs(rel);
+          a[3] := a[3] or #30
+        end
+      else
+        a[3] := a[3] or #38;
+      i1 := trunc(rel);
+      d  := rel-trunc(rel);
+      count := 0;
+      v := #4000;
+      while ( (i1 and v) = 0 ) and (count < 16) do
+        begin
+          v := v div 2;
+          count := count + 1;
+        end;
+
+      for j := 1 to count do
+        begin
+          i2 := trunc(d*2);
+          i1 := (i1*2) or i2;
+          d  := d*2 - trunc(d*2);
+        end;
+      a[1] := hibyte( ( ( i1 and #7e00) div 2) or #4000);
+      a[2] := lobyte( ( ( i1 and #01f8) div 8) or #40);
+      a[3] := lobyte(i1 and #0007) or a[3];
+      a[4] := lobyte( count and #000f) or #20;
+    end;
+
+  procedure writerel(num : integer);
+    var
+      i : integer;
+    begin
+      for i := 1 to num do
+        begin
+          relvdm(r[i]);
+          if plfile.errs = 0 then
+            begin
+              write(plfile,chr(a[1]),chr(a[2]),chr(a[3]),chr(a[4]));
+              diskfull;
+            end;
+        end;
+    end;
+
+  procedure writecode(code : byte);
+    begin
+      if plfile.errs = 0 then
+        begin
+          write(plfile,chr(code));
+          diskfull;
+        end;
+    end;
+
+  procedure writeindex(ci : integer);
+    begin
+      if version = 0 then
+        writecode(lobyte(ci or #0030))
+      else
+        begin
+          p[1] := ci;
+          writecrd(1);
+          writecode(#1e);
+        end;
+    end;
+
+  procedure writeend;
+    begin
+      if version <> 0 then
+        writecode(#1e);
+    end;
+
+  procedure begin_metafile;
+    begin
+      writecode(#54);
+      writestring(s);
+      writeend;
+    end;
+
+  procedure end_metafile;
+    begin
+      writecode(#55);
+      writeend;
+    end;
+
+  procedure color_specification_mode;
+    begin
+      writecode(#45);
+      writeindex(e);
+    end;
+
+  procedure line_color;
+    begin
+      writecode(#40);
+      writecode(#40);
+      writecode(#34);
+      writeindex(ci);
+    end;
+
+  procedure fill_color;
+    begin
+      writecode(#40);
+      writecode(#40);
+      writecode(#31);
+      writeindex(ci);
+    end;
+ 
+  procedure text_color;
+    begin
+      writecode(#40);
+      writecode(#41);
+      writecode(#31);
+      writeindex(ci);
+    end;
+
+  procedure marker_color;
+    begin
+      writecode(#40);
+      writecode(#40);
+      writecode(#32);
+      writeindex(ci);
+    end;
+
+  procedure marker_size;
+    begin
+      writecode(#30);
+      writeindex(scale);
+    end;
+
+  procedure perimeter_width;
+    begin
+      writecode(#32);
+      writecode(#32);
+      writeindex(vdc);
+    end;
+
+  procedure line_type;
+    begin
+      writecode(#33);
+      writecode(#31);
+      if version = 0 then
+        begin
+          writecode(lobyte(ix1 or #0030));
+          writecode(lobyte(ix2 or #0030));
+        end
+      else
+        begin
+          p[1] := -1 * (ix1 * 10 + ix2);
+          writecrd(1);
+          writecode(#1e);
+        end;
+    end;
+
+  procedure perimeter_type;
+    begin
+      writecode(#33);
+      writecode(#32);
+      if version = 0 then
+        begin
+          writecode(lobyte(ix1 or #0030));
+          writecode(lobyte(ix2 or #0030));
+        end
+      else
+        begin
+          p[1] := -1 * (ix1 * 10 + ix2);
+          writecrd(1);
+          writecode(#1e);
+        end;
+    end;
+
+  procedure marker_type;
+    begin
+      writecode(#31);
+      if version = 0 then
+        begin
+          writecode(lobyte(ix1 or #0030));
+          writecode(lobyte(ix2 or #0030))
+        end
+      else
+        begin
+          p[1] := -1 * (ix1 * 100 + ix2);
+          writecrd(1);
+          writecode(#1e);
+        end;
+    end;
+
+  procedure interior_style;
+    begin
+      writecode(#34);
+      if version = 0 then
+        writecode(lobyte(ix or #0030))
+      else
+        begin
+          p[1] := ix;
+          p[2] := e;
+          writecrd(2);
+          writecode(#1e);
+        end;
+    end;
+
+  procedure text_font_list_index;
+    begin
+      writecode(#3c);
+      writeindex(ix);
+    end;
+
+  procedure character_path;
+    begin
+      writecode(#39);
+      writeindex(e);
+    end;
+
+  procedure polyline;
+    begin
+      writecode(#21);
+      p[1] := x1;
+      p[2] := y1;
+      if version = 0 then
+        begin
+          p[3] := x2;
+          p[4] := y2;
+          writecrd(4);
+        end
+      else
+        begin
+          p[3] := x2-x1;
+          p[4] := y2-y1;
+          write_n_point(4);
+        end;
+    end;
+
+  procedure polygon;
+    begin
+      writecode(#22);
+      p[1] := x1;
+      p[2] := y1;
+      if version = 0 then
+        begin
+          p[3] := x2;
+          p[4] := y2;
+          writecrd(4);
+        end
+      else
+        begin
+          p[3] := 0;
+          p[4] := y2-y1;
+          p[5] := x2-x1;
+          p[6] := 0;
+          p[7] := 0;
+          p[8] := y1-y2;
+          write_n_point(8);
+        end;
+    end;
+
+  procedure polymarker;
+    begin
+      writecode(#20);
+      p[1] := x1;
+      p[2] := y1;
+      if version = 0 then
+        writecrd(2)
+      else
+        write_n_point(2);
+    end;
+
+  procedure circle;
+    begin
+      writecode(#25);
+      p[1] := x1;
+      p[2] := y1;
+      p[3] := r;
+      writecrd(3);
+      writeend;
+    end;
+
+  procedure vtext;
+    begin
+      writecode(#24);
+      writecode(#30);
+      p[1] := x1;
+      p[2] := y1;
+      p[3] := 0;
+      if version = 0 then
+        writecrd(2)
+      else
+        writecrd(3);
+      writestring(s);
+      writecode(#1e);
+    end;
+
+  procedure arc;
+    begin
+      writecode(#26);
+      writecode(#30);
+      p[1] := x1;
+      p[2] := y1;
+      p[3] := x2;
+      p[4] := y2;
+      p[5] := x3;
+      p[6] := y3;
+      writecrd(6);
+      writeend;
+    end;
+  
+  procedure color_table;
+    var
+      c : byte;
+    begin
+      writecode(#41);
+      p[1] := start;
+      writecrd(1);
+      c  := lobyte( (c1 * 8) or #40 );
+      writecode(c);
+      c  := lobyte( (c2 * 8) or #40 );
+      writecode(c);
+      c  := lobyte( (c3 * 8) or #40 );
+      writecode(c);
+      c  := lobyte( (c4 * 8) or #40 );
+      writecode(c);
+      writeend;
+    end;
+
+  procedure background_color;
+    begin
+      writecode(#40);
+      writecode(#40);
+      writecode(#32);
+      writeindex(ci);
+    end;
+
+  procedure text_alignment;
+    begin
+      writecode(#3d);
+      p[1] := he;
+      p[2] := ve;
+      writecrd(2);
+      r[1] := hr;
+      r[2] := vr;
+      writerel(2);
+      writeend;
+    end;
+
+  procedure vdm_version;
+    begin
+      intvdm ( version ) ;
+      if plfile.errs=0 then
+         begin
+            write ( plfile, chr(#60), chr(a[1]), chr(a[2]), chr(#1e)) ;
+            diskfull;
+         end;
+    end;
+
+  procedure maximum_color_index;
+    begin
+      intvdm ( mi ) ;
+      if plfile.errs=0 then
+         begin
+            write ( plfile, chr(#63), chr(a[1]), chr(a[2]), chr(#1e)) ;
+            diskfull ;
+         end ;
+    end ;
+
+  procedure integer_precision;
+    begin
+      intvdm ( i ) ;
+      if plfile.errs=0 then
+         begin
+            write ( plfile, chr(#65), chr(a[1]), chr(a[2]), chr(#1e)) ;
+            diskfull ;
+         end ;
+    end ;
+
+  procedure color_precision;
+    begin
+      intvdm ( ci ) ;
+      if plfile.errs=0 then
+         begin
+            write ( plfile, chr(#67), chr(a[1]), chr(a[2]), chr(#1e)) ;
+            diskfull ;
+         end ;
+    end ;
+
+  procedure color_index_precision ;
+    begin
+      intvdm ( i ) ;
+      if plfile.errs=0 then
+         begin
+            write ( plfile, chr(#68), chr(a[1]), chr(a[2]), chr(#1e) ) ;
+            diskfull ;
+         end ;
+    end;
+
+  procedure index_precision ;
+    begin
+      intvdm ( ix ) ;
+      if plfile.errs=0 then
+         begin
+           write ( plfile, chr(#6f), chr(a[1]), chr(a[2]), chr(#1e)) ;
+           diskfull ;
+         end ;
+    end ;
+
+  procedure font_list ;
+
+  var i, si : integer ;
+
+    begin
+      si := 4;
+      if plfile.errs=0 then
+         begin
+           write ( plfile, chr(#6c) ) ;
+           diskfull ;
+         end ;
+      for i := 1 to si do
+         begin
+           writestring ( sl[i] ) ;
+           if (plfile.errs = 0 ) and (i < si) then
+              begin
+                 write ( plfile, chr(#1f) ) ;
+                 diskfull ;
+              end; 
+         end;
+      writeend;
+    end ;
+
+  procedure line_width_specification_mode ;
+    begin
+       intvdm ( li ) ;
+       if plfile.errs=0 then
+          begin
+             write ( plfile, chr(#6e), chr(#31), chr(a[1]), chr(a[2]),chr(#1e));
+             diskfull ;
+          end ;
+    end ;
+
+  procedure marker_size_specification_mode ;
+    begin
+      intvdm ( mi ) ;
+      if plfile.errs=0 then
+         begin
+            write ( plfile, chr(#6e), chr(#32), chr(a[1]), chr(a[2]),chr(#1e));
+            diskfull ;
+         end ;
+    end ;
+
+  procedure perimeter_width_specification_mode ;
+    begin
+      intvdm ( pi ) ;
+      if plfile.errs=0 then
+         begin
+            write ( plfile, chr(#6e), chr(#34), chr(a[1]), chr(a[2]),chr(#1e) ) ;
+            diskfull ;
+         end ;
+    end ;
+
+  procedure clip_rectangle ;
+    begin
+      if plfile.errs=0 then
+         begin
+            write ( plfile, chr(#50) ) ;
+            diskfull ;
+         end ;
+      p[1] := xmin;
+      p[2] := xmax;
+      p[3] := ymin;
+      p[4] := ymax;
+      writecrd(4);
+      writeend;
+    end ;
+
+  procedure clip_indicator ;
+    begin
+      intvdm ( ci ) ;
+      if plfile.errs=0 then
+         begin
+            write( plfile, chr(#51), chr(a[1]), chr(a[2]), chr(#1e) ) ;
+            diskfull ;
+         end ;
+    end ;
+
+  procedure vdc_precision_for_integer_points ;
+    begin
+      intvdm ( vi ) ;
+      if plfile.errs=0 then
+         begin
+            write( plfile, chr(#52), chr(a[1]), chr(a[2]), chr(#1e) ) ;
+            diskfull ;
+         end ;
+    end ;
+
+  procedure begin_picture ;
+    begin
+      intvdm ( i ) ;
+      if plfile.errs=0 then
+         begin
+            write ( plfile, chr(#56) ) ;
+            diskfull ;
+         end ;
+      writestring ( s ) ;
+      if plfile.errs=0 then
+         begin
+            write ( plfile, chr(a[1]), chr(a[2]), chr(#1e) ) ;
+            diskfull ;
+         end ;
+    end ;
+
+  procedure end_picture ;
+    begin
+      if plfile.errs=0 then
+         begin
+            write ( plfile, chr(#57), chr(#1e) ) ;
+            diskfull ;
+         end ;
+    end ;
+
+  procedure vdc_extent ;
+    begin
+      writecode(#58);
+      p[1] := x1;
+      p[2] := y1;
+      p[3] := x2;
+      p[4] := y2;
+      writecrd(4);
+      writeend;
+    end ;
+
+  procedure real_precision ;
+    begin
+      intvdm ( r1 ) ;
+      if plfile.errs=0 then
+         begin
+            write ( plfile, chr(#66), chr(a[1]), chr(a[2]) ) ;
+            diskfull ;
+         end ;
+      intvdm ( r2 ) ;
+      if plfile.errs=0 then
+         begin
+           write ( plfile, chr(a[1]), chr(a[2]), chr(#1e) ) ;
+           diskfull ;
+         end ;
+    end ;
+
+  procedure scaling_mode ;
+    begin
+      intvdm ( i ) ;
+      if plfile.errs=0 then
+         begin
+            write ( plfile, chr(#6d), chr(a[1]), chr(a[2]) ) ;
+            diskfull ;
+         end ;
+      relvdm ( r ) ;
+      if plfile.errs=0 then
+         begin
+            write ( plfile, chr(a[1]), chr(a[2]), chr(a[3]), chr(a[4]), chr(#1e));
+            diskfull ;
+         end ;
+    end ;
+
+  end.
+

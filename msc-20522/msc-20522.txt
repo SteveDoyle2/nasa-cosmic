@@ -1,0 +1,48 @@
+ COLDARC- DISSOCIATED AIR FLOW EFFECTS DURING PLASMA ARC TESTING
+
+( ROCKWELL INTERNATIONAL CORP. )
+
+     The COLDARC program was developed as part of an effort to predict the
+heating rate and surface friction effects on the Thermal Protection System
+of the Space Shuttle Orbiter during re-entry environments. COLDARC enables
+the user to predict the heating rate and surface friction on a test article
+during plasma arc testing. This program takes into account the effects of
+dissociated air flow over the specimen and the associated heat flux and sur-
+face temperatures. Normally, plasma arc testing involves air flow over a
+test specimen having a relatively smooth surface. Since the orbiter Ther-
+mal Protection System does not constitute a smooth mold line surface, the
+COLDARC program was necessary to assess the impact of this surface rough-
+ness and the dissociated air flow. COLDARC uses a simplified frozen flow
+model to represent the dissociated air flow and to predict the heat flux and
+surface friction, including the effects or retarded atomic recombination,
+from test facility data.
+
+     This program is written in FORTRAN IV for batch execution and has been
+implemented on a CDC CYBER 170 series computer with a central memory re-
+quirement of approximately 40K (octal) of 60 bit words. COLDARC was devel-
+oped in 1981.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC CYBER 170 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 1,086 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: MSC-20522
+
+DOMESTIC - DOCUMENTATION PRICE: $15.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $30.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

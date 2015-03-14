@@ -1,0 +1,13 @@
+  interface;
+  
+  unit wbsaltd ( alter_display_space, format );
+
+  USES utility;
+
+  procedure format ( var inkey : byte; var current, first : entity );
+
+  procedure alter_display_space ( var first       : entity );
+
+  begin
+  end;
+

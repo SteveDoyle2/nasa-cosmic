@@ -1,0 +1,417 @@
+{ $INCLUDE : 'compile.inc' }
+{ $INCLUDE : 'getparam.int' }
+{ $INCLUDE : 'vbpas.int' }
+{ $INCLUDE : 'dspas.int' }
+{ $INCLUDE : 'sfpas.int' }
+{ $INCLUDE : 'utility.int' }
+{ $INCLUDE : 'nsqdraw.int' }
+
+implementation of nsqdraw;
+
+     USES getparam;
+
+     USES vbpas;
+
+     USES dspas;
+
+     USES sfpas;
+
+     USES utility;
+
+  procedure dfbox;
+
+    var
+      i,k	: integer;
+      temp1,temp2: integer;
+      temp3,temp4: integer;
+
+    begin
+      k := 0;
+      for i := 1 to funcnum do
+	begin
+	  if i*fbwidth = 640 then k := 1;
+	  temp1 := (i-1)*fbwidth;
+	  temp2 := (i-1)*fbheight + t_first;
+	  temp3 := i*fbwidth;
+	  temp4 := i*fbheight + t_first;
+	  dsbar (temp1+1,temp2+1,temp3-1,temp4-1,0,9);
+	  dsbar (temp1,temp2,temp3-k,temp4,color1,0);
+	end;
+    end;
+
+  procedure dcbox ( i, j : integer );
+
+    var
+      k 	: integer;
+
+    begin
+      if funcnum = 10 then k := 2
+		      else k := 0;
+      dsbar((j-1)*fbwidth+9-k,(i-1)*fbheight+t_first+9-k,j*fbwidth-9+k,i*fbheight+t_first-9+k,0,9);
+      dsbar((j-1)*fbwidth+8-k,(i-1)*fbheight+t_first+8-k,j*fbwidth-8+k,i*fbheight+t_first-8+k,color1,0);
+    end;
+
+  procedure dcircle ( i, j : integer );
+
+    var
+      startx,starty,k : integer;
+      centerx,centery : integer;
+      offsetx1,offsetx2:integer;
+      temp1	      : real;
+      temp3,temp4     : real;
+      temp5	      : real;
+
+    begin
+      startx := (j-1) * fbwidth + 8;
+      starty := (i-1) * fbheight + 7 + t_first;
+      centerx := cbwidth div 2 - 1;
+      centery := cbheight div 2 - 1;
+      dsbar(startx+2,starty+1,startx+cbwidth-3,starty+cbheight-6,0,9);
+      for k := 1 to centery - 1 do
+	begin
+	  temp3 := sqr(centerx);
+	  temp4 := sqr(centery);
+	  temp5 := (k*k);
+	  temp1 := temp3*(1-(temp5 / temp4));
+	  offsetx1 := trunc(sqrt(temp1));
+	  dsline(startx+centerx+offsetx1,starty+centery+k,startx+centerx+offsetx1-2,starty+centery+k,color1,1,0);
+	  dsline(startx+centerx-offsetx1,starty+centery+k,startx+centerx-offsetx1+2,starty+centery+k,color1,1,0);
+	  dsline(startx+centerx-offsetx1,starty+centery-k,startx+centerx-offsetx1+2,starty+centery-k,color1,1,0);
+	  dsline(startx+centerx+offsetx1,starty+centery-k,startx+centerx+offsetx1-2,starty+centery-k,color1,1,0);
+	end;
+      dsline(startx+centerx+offsetx1,starty+1,startx+centerx-offsetx1,starty+1,color1,1,0);
+      dsline(startx+centerx+offsetx1,starty+cbheight-3,startx+centerx-offsetx1,starty+cbheight-3,color1,1,0);
+    end;
+
+
+  procedure draw2;
+
+    type
+      a4 = array [1..4] of boolean;
+
+    var
+      numnodes : integer;
+      offset   : integer;
+      offsetx  : integer;
+      i,j,k,l  : integer;
+      current  : entity;
+      connum : byte;
+      pix,line : integer;
+      letheight: byte;
+      space    : integer;
+      mat      : array [1..10] of array [1..10] of boolean;
+      numclines: integer;
+      buffer   : lstring(1);
+      done     : boolean;
+      node_blank:a4;
+      ndon,ndoff: byte;
+      firstb   : boolean;
+
+    procedure num_nodes (var node_blank : a4;
+			 var numnodes : integer;
+			 var current : entity);
+
+      var
+	t : entity;
+	i,j : integer;
+
+      begin
+	numnodes := 0;
+	t := current;
+	for i := 1 to node_data^[current^.etype].nfields do
+	      begin
+	       j := 1;
+	       node_blank[i] := true;
+	       while j <= t^.field^.len do
+		begin
+		 if t^.field^[j] <> ' ' then
+		   begin
+		     j := t^.field^.len;
+		     node_blank[i] := false;
+		     numnodes := numnodes + 1;
+		   end;
+		 j := j + 1;
+		end;
+	       t := t^.down;
+	      end;
+      end;
+
+
+    procedure darrow ( p,l : integer; dir : char );
+
+      begin
+	case dir of
+	  'r' : begin
+		  dsline ( p, l, p-5, l-5, color1, 1, 0 );
+		  dsline ( p, l, p-5, l+5, color1, 1, 0 );
+		end;
+	  'l' : begin
+		  dsline ( p, l, p+5, l-5, color1, 1, 0 );
+		  dsline ( p, l, p+5, l+5, color1, 1, 0 );
+		end;
+	  'u' : begin
+		  dsline ( p, l, p-5, l-5, color1, 1, 0 );
+		  dsline ( p, l, p+5, l-5, color1, 1, 0 );
+		end;
+	  'd' : begin
+		  dsline ( p, l, p-5, l+5, color1, 1, 0 );
+		  dsline ( p, l, p+5, l+5, color1, 1, 0 );
+		end;
+	  otherwise
+	  end;
+      end;
+
+
+   (***** body of draw2 *****)
+
+    begin
+      if plotchoice <> 2 then begin
+	screen(3);
+	colors ( 0, color );
+	dsinit;
+	there (0,0);
+	write ('Drawing in Progress...                 ');
+      end;
+      if symbol=1 then dsymbol(skeleton^[89],skeleton^[90],3,0,0,1);
+      current := first;
+      size := node_data^[current^.etype].character_size;
+      j := (node_data^[current^.etype].input_length-current^.field^.len) div 2;
+      case size of
+	0 : letwidth := 8;
+	1 : letwidth := 6;
+	2 : letwidth := 10;
+	3 : letwidth := 14;
+	 otherwise
+	  end;
+      with current^ do
+	dstext(x+j*letwidth, y, size, color1, field^, field^.len, 0);
+      current := current^.down;
+      dfbox;
+      numlines := node_data^[current^.etype].nfields;
+      size := node_data^[current^.etype].character_size;
+      case size of
+	0 : [letheight := 8; letwidth := 8;];
+	1 : [letheight := 8; letwidth := 6;];
+	2 : [letheight := 12; letwidth := 10;];
+	3 : [letheight := 16; letwidth := 14;];
+	 otherwise
+	  end;
+      offset := (10-funcnum)*4+28;
+      space := letheight + skeleton^[offset];
+      for j := 1 to funcnum do
+	begin
+	  num_nodes (node_blank,numnodes,current);
+	     k := 1;
+	      offset := (ord(numlines) - numnodes)*(space div 4)*2;
+	      for i := 1 to numlines do
+	      begin
+		if not node_blank[i] then
+		  begin
+		    with current^ do
+		      begin
+		      offsetx := ((node_data^[etype].input_length - field^.len) * letwidth div 4) * 2;
+		      dstext (x+offsetx,y+offset-ord(i-k)*space,size,color1,field^,field^.len,0);
+		      end;
+		    k := k + 1;
+		  end;
+		current := current^.down;
+	      end;
+	end;
+      size := node_data^[current^.etype].character_size;
+      case size of
+	0 : [letheight := 8; letwidth := 8;];
+	1 : [letheight := 8; letwidth := 6;];
+	2 : [letheight := 12; letwidth := 10;];
+	3 : [letheight := 16; letwidth := 14;];
+	 otherwise
+	end;
+      connum := 1;
+      if funcnum < 7 then numclines := node_data^[11].nfields
+		     else numclines := node_data^[15].nfields;
+      offset := (10-funcnum)*3+3;
+      space := letheight + skeleton^[offset];
+      for j := 1 to funcnum do
+	for i := 1 to funcnum do
+	 begin
+	  if i <> j then
+	    begin
+	      if current^.etype <> 9 then
+		begin
+		  if form = 2 then
+		    begin
+		      dcbox ( j, i );
+		      num_nodes (node_blank,numnodes,current);
+			  offset := (numclines - numnodes)*(space div 4)*2;
+			  l := 1;
+			  for k := 1 to numclines do
+			  begin
+			    if not node_blank[k] then
+			      begin
+				with current^ do
+				  begin
+				  offsetx := ((node_data^[etype].input_length - field^.len) * letwidth div 4) * 2;
+				  dstext (x+offsetx,y+offset-ord(k-l)*space,size,color1,field^,field^.len,0);
+				  end;
+				l := l + 1;
+			      end;
+			    current := current^.down;
+			  end;
+		      current := current^.up;
+		    end
+		   else
+		    with current^ do
+		    begin
+		      dcircle ( j, i );
+		      field^[1] := chr (connum div 10 + 48);
+		      field^[2] := chr (connum mod 10 + 48);
+		      field^.len := 2;
+		      connum := connum + 1;
+		      if field^[1] = '0' then
+		       begin
+			buffer[1] := field^[2];
+			dstext (x+(letwidth div 2),y,size,color1,buffer,1,0);
+		       end
+		       else
+			dstext (x,y,size,color1,field^,field^.len,0);
+		    end;
+		  mat[i][j] := true;
+		end
+	       else
+		mat[i][j] := false;
+	      current := current^.down;
+	    end
+	     else mat[i][j] := true;
+	 end;
+      while current <> first do
+	begin
+	  with current^ do
+	    dstext ( x, y, 1, color1, field^, field^.len, 0 );
+	  current := current^.down;
+	end;
+      line := (fbheight div 2) + t_first;
+      for j := 1 to funcnum do
+	begin
+	  i := 1;
+	  if j = 1 then
+	    begin
+	      pix := fbwidth;
+	      offset := (cbwidth - fbwidth) div 2;
+	      i := i + 1;
+	    end
+	   else
+	    begin
+	      pix := (fbwidth + cbwidth) div 2;
+	      offset := 0;
+	      while not ( mat[i][j] ) do
+		begin
+		i := i + 1;
+		pix := pix + fbwidth;
+		end;
+	      if i = j then
+		begin
+		  pix := pix + ((fbwidth-cbwidth) div 2);
+		  offset := (cbwidth-fbwidth) div 2;
+		end;
+	      i := i + 1;
+	    end;
+	  repeat
+	  if (i > j) or (form = 1) then [ndon := 1; ndoff := 0]
+		   else [ndon := 2; ndoff := 2];
+	  if i > funcnum then done := true
+		    else if mat[i][j] then done := true
+				      else done := false;
+	  while not done do
+	    begin
+	      offset := offset + fbwidth;
+	      i := i + 1;
+	      if i > funcnum then done := true
+			else if mat[i][j] then done := true;
+	    end;
+	  if i <> j then offset := offset + fbwidth -cbwidth
+		    else offset := offset + ((fbwidth - cbwidth) div 2);
+	  if i <= funcnum then
+	    begin
+	      if form = 2 then
+		if i > j then darrow (pix+offset,line,'r')
+			 else darrow (pix,line,'l');
+	      dsline (pix,line,pix+offset,line,color1,ndon,ndoff);
+	    end;
+	  if i = j then
+	   begin
+	    pix := pix + fbwidth + offset;
+	    offset := (cbwidth - fbwidth) div 2;
+	   end
+	  else
+	   begin
+	    pix := pix + offset + cbwidth;
+	    offset := 0;
+	   end;
+	  i := i + 1;
+	  until i > funcnum;
+	  line := line + fbheight;
+       end;
+    pix := fbwidth div 2;
+    for i := 1 to funcnum do
+      begin
+	j := 1;
+	if i = 1 then
+	  begin
+	    line := fbheight + t_first;
+	    offset := (cbheight - fbheight) div 2;
+	    j := j + 1;
+	  end
+	 else
+	  begin
+	    line := (fbheight + cbheight) div 2 + t_first;
+	    offset := 0;
+	    while not mat[i][j] do
+	      begin
+		j := j + 1;
+		line := line + fbheight;
+	      end;
+	    if i = j then
+	      begin
+		line := line + ((fbheight-cbheight) div 2);
+		offset := (cbheight-fbheight) div 2;
+	      end;
+	    j := j + 1;
+	  end;
+	repeat
+	  if (i >= j) or (form = 1) then [ndon := 1; ndoff := 0]
+		   else [ndon := 2; ndoff := 2];
+	if j > funcnum then done := true
+		  else if mat[i][j] then done := true
+				    else done := false;
+	while not done do
+	  begin
+	    offset := offset + fbheight;
+	    j := j + 1;
+	    if j > funcnum then done := true
+		      else if mat[i][j] then done := true;
+	  end;
+	if i <> j then offset := offset + fbheight - cbheight
+		  else offset := offset + ((fbheight - cbheight) div 2);
+	if j <= funcnum then
+	  begin
+	    if form = 2 then
+	      if i >= j then darrow ( pix, line+offset, 'u' )
+		       else darrow ( pix, line, 'd' );
+	      dsline(pix,line,pix,line+offset,color1,ndon,ndoff);
+	    end;
+	if i = j then
+	  begin
+	    line := line +  fbheight + offset;
+	    offset := (cbheight - fbheight) div 2;
+	  end
+	 else
+	  begin
+	    line := line + offset + cbheight;
+	    offset := 0;
+	  end;
+	j := j + 1;
+	until j > funcnum;
+	pix := pix + fbwidth;
+      end;
+  end;
+end.
+

@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+The Milestone Format Menu consists of the following options :
+
+        Starting Year     : The first year which will be included on the chart
+        Starting Month    : The first month which will be included on the chart
+        Type of Period    : Years or months.
+        Number of periods : Numbers of years or months displayed in total
+        Week Format       : For 6 month charts, the number of weeks considered
+                            in each month of the quarter, i.e. either 5 weeks
+                            in January or five weeks in March
+        Fiscal year start : Starting quarter for the fiscal year changing the
+                            year boundaries on the chart
+        Nowline shown     : Show nowline or not when chart is drawn
+        Organization      : Speeds entry of organization if desired
+        Background color  : Color of background for window
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

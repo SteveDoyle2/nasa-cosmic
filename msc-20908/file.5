@@ -1,0 +1,31 @@
+/*****************************************************************************/
+/*                                                                           */
+/*  false_set_list                                                           */
+/*                                                                           */
+/*  This function sets all conditions in a list to false.                    */
+/*                                                                           */
+/*  Input:  list - pointer to a list of condition pointers.                  */
+/*  Output: none                                                             */
+/*                                                                           */
+/*  Method:  For each condition in the list                                  */
+/*              Call set_false.                                              */
+/*                                                                           */
+/*  Programmer: G R Goodrum, MDTSCO, June 1984                               */
+/*                                                                           */
+/*****************************************************************************/
+
+#include "structures.inc"
+
+false_set_list ( list )
+struct cond_info **list;
+{
+    struct cond_info *cond;
+
+    while  ( ( cond = *list++ ) != NULL )
+    {                                                           /* debug */
+        count ( 3, 0 );                                         /* debug */
+        set_false ( cond );
+    }                                                           /* debug */
+    count ( 3, 1 );                                             /* debug */
+
+}

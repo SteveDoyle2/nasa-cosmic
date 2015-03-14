@@ -1,0 +1,365 @@
+C *******************************************************************
+C
+C       FLUX DISTRIBUTION IN CYLINDRICAL RECEIVER CAVITY
+C       BY CONTOUR ERROR METHOD
+C       Code written by PRADEEP BHANDARI, Jet Propulsion Laboratory
+C
+C *******************************************************************
+C
+      DIMENSION ARALP(100),ZMIN(100),ZMAX(100),
+     * FZ(100),ALP(100),Z2(100),Z3(100)
+      REAL L,MU
+       CHARACTER B*12
+      COMMON PI,GS,NZCY,NZ,NAL,REFCONC,FOCAL,ALPMAX,BETA,
+     *       DCY,DAP,L,RCY,ALPHA,G,P,CONANG,
+     *       MU,KCRIT
+C
+      PI=3.141593
+C
+C   SOLAR CONSTANT NORMALIZED
+      GS=1.0          
+C
+C ----------------------------------------------------------
+C ****** INPUT PARAMETERS ********
+C
+       WRITE (6,1500)
+ 1500 FORMAT (1X,' WELCOME TO THE SIMPLIFIED PROGRAM TO CALCULATE')
+       WRITE (6,1510)
+ 1510 FORMAT (1X,' THE SOLAR FLUX DISTRIBUTION ON THE SIDE WALL OF')
+       WRITE (6,1520)
+ 1520 FORMAT (1X,' CYLINDRICAL RECEIVER CAVITIES')
+       WRITE (6,1560)
+ 1560 FORMAT (/1X,'NAME OF FILE FOR STORING OUTPUT: ENTER "*:*.OUT"?  ')
+      READ (5,1565) B
+ 1565 FORMAT(A12)
+      OPEN (1,FILE=B)
+      WRITE (6,1600)
+ 1600 FORMAT(/1X,'ENTER ALL DIMENSIONS IN THE SAME UNITS,')
+      WRITE (6,1601)
+ 1601 FORMAT(1X,'EXCEPT AS PROMPTED')
+      WRITE (6,1602)
+ 1602 FORMAT(//1X,'ENTER DIMENSIONS OF RECEIVER CAVITY: ')
+ 1605 WRITE (6,1610)
+ 1610 FORMAT (1X,'CAVITY DIAMETER, CAVITY HEIGHT ?     ')
+      READ (5,*,ERR=1605) DCY,L
+ 1620 WRITE (6,1630)
+ 1630 FORMAT (1X,'APERTURE DIAMETER ?   ')
+      READ (5,*,ERR=1620) DAP
+      WRITE (6,5000)
+ 5000 FORMAT(//1X,'ENTER CONCENTRATOR DATA :    ')
+ 5005 WRITE (6,5010)
+ 5010 FORMAT (1X,'FOCAL LENGTH, RIM ANGLE (DEGREES) ?    ')
+      READ (5,*,ERR=5005) FOCAL,ALPMAX
+ 5020 WRITE (6,5025)
+ 5025 FORMAT (1X,'CONCENTRATOR REFLECTIVITY ( <= 1.0 ) ?    ')
+      READ (5,*,ERR=5020) REFCONC
+ 5030 WRITE (6,5035)
+ 5035 FORMAT (1X,'CONCENTRATOR SLOPE ERROR ( MILLI RADIANS ) ?    ')
+      READ (5,*,ERR=5030) SERR
+C
+      WRITE (1,3300) DCY
+ 3300 FORMAT(/1X,'CAVITY DIAMETER = ',F7.2)
+      WRITE (1,3305) L
+ 3305 FORMAT(/1X,'CAVITY HEIGHT = ',F7.2)
+      WRITE (1,3310) DAP
+ 3310 FORMAT(/1X,'APERTURE DIAMETER = ',F7.2)
+      WRITE (1,3315) FOCAL
+ 3315 FORMAT(/1X,'FOCAL LENGTH OF CONCENTRATOR = ',F7.2) 
+      WRITE (1,3320) ALPMAX
+ 3320 FORMAT(/1X,'CONC. RIM ANGLE = ',F7.2,' degrees')
+      WRITE (1,3325) REFCONC
+ 3325 FORMAT(/1X,'CONC. REFLECTIVITY = ',F7.2)
+      WRITE (1,3330) SERR
+ 3330 FORMAT(/1X,'CONC. SLOPE ERROR = ',F7.2,' milliradians'///)
+C
+C ----------------------------------------------------------
+C ****** NUMERICAL PARAMETERS *************************************
+C
+C   NO. OF CYL. SEGMENTS FOR FLUX CALCS.
+      NZCY = 40                
+C
+C   NO. OF SEGMENTS FOR BEAM AREA CALCS.
+      NZ = 60                  
+C
+C   NO. OF ANGLE SEGMENTS ON CONCENTRATOR
+      NAL = 60                  
+C
+C ___________________________________________________________________
+C
+C  ARRAYS FOR ZMIN,ZMAX & AREA OF BEAM ON CYLIN. FOR VARIOUS ALPHAS
+C
+      RCY = DCY/2.0
+      RAP = DAP/2.0
+      ALPMAX = ALPMAX*PI/180.0
+      BETA = 16.0/60.0*PI/180.0 + 2*SERR/1000
+      DELAL = ALPMAX/NAL
+      DELMIN = FOCAL*BETA
+      DELMAX = 2*FOCAL*BETA/COS(ALPMAX)/(1+COS(ALPMAX))
+      KOUNT = 0
+      KCRIT = 0
+C     NO SPILLOVER
+      IF (DELMAX.LE.RAP) THEN
+      KOUNT=1
+      KCRIT=1
+      END IF
+C     FULL RANGE SPILLOVER
+      IF (DELMIN.GE.RAP) THEN
+      KOUNT=2
+      KCRIT=2
+      END IF
+      ALP(1) = DELAL/2.0
+C
+      DO 100 I=2,NAL
+      ALP(I)=ALP(I-1)+DELAL
+ 100  CONTINUE
+      KHI = 0
+      KLOW = 0
+      DO 200 I=1,NAL
+      ALPHA = ALP(I)
+      CONANG = BETA
+      KCRIT = 1
+      G = L + 2.0*FOCAL*COS(ALPHA)/(1.0+COS(ALPHA))
+      P = (G-L)*TAN(ALPHA)
+C
+      IF (KOUNT.EQ.1) GO TO 1000
+      MU = ATAN(RAP/2/FOCAL*(1+COS(ALPHA)))
+      EPS = MU*COS(ALPHA)
+      DELTA = 2*FOCAL*BETA/(1+COS(ALPHA))
+      DELMAJ = DELTA/COS(ALPHA)
+      IF (DELMAJ.GT.RAP) KCRIT = 2
+ 1000 CALL ZMINMAX(ZA,ZB)
+      ZMIN(I)=ZA
+      ZMAX(I)=ZB
+      IF (ZMIN(I).GE.L) GO TO 200
+      IF (ZMAX(I).LE.0.0) GO TO 200
+C     NO SPILLOVER
+      IF (KOUNT.EQ.1) GO TO 1020
+C     FULL RANGE SPILLOVER
+      IF (KOUNT.EQ.2) GO TO 1020
+C     PARTIAL SPILLOVER
+      DZ = (ZMAX(I)-ZMIN(I))/NZ
+      Z = ZMIN(I)
+      IF (DELMAJ.LE.RAP) THEN
+      KCRIT = 1
+      GO TO 1020
+      END IF
+      IF (DELTA.GE.RAP) THEN
+      KCRIT = 2
+      GO TO 1020
+      END IF
+ 1100 KCRIT = 1
+      Z = Z+DZ
+      CALL ROOT(Z,ZMIN(I),ZMAX(I),X1)
+      KCRIT = 2
+      CALL ROOT(Z,ZMIN(I),ZMAX(I),X2)
+      IF (X1.GT.X2) GO TO 1100
+      Z2(I) = Z
+      Z = ZMAX(I)
+ 1200 KCRIT = 1
+      Z = Z-DZ
+      CALL ROOT(Z,ZMIN(I),ZMAX(I),X1)
+      KCRIT = 2
+      CALL ROOT(Z,ZMIN(I),ZMAX(I),X2)
+      IF (X1.GT.X2) GO TO 1200
+      Z3(I) = Z
+      KCRIT = 2
+      CALL SIMPS(ZMIN(I),Z2(I),AA)
+      KCRIT = 1
+      CALL SIMPS(Z2(I),Z3(I),AB)
+      KCRIT = 2
+      CALL SIMPS(Z3(I),ZMAX(I),AC)
+      ARALP(I) = AA+AB+AC
+      GO TO 200
+ 1020 CALL SIMPS(ZMIN(I),ZMAX(I),ARALP(I))
+ 200  CONTINUE
+C
+C ********************************************************************
+C
+C     FLUX VARIATION WITH DISTANCE FROM FOCAL PLANE
+C
+      ZFP = 0.0
+      Z = L
+      DZ = L/NZCY
+      WRITE (6,600)
+      WRITE (1,600)
+ 600  FORMAT(//1X,'DISTANCE FROM',10X,'SIDEWALL FLUX')
+      WRITE (6,605)
+      WRITE (1,605)
+ 605  FORMAT(1X,'FOCAL PLANE',10X,'(SOLAR CONSTANTS)'//)
+      DO 300 I=1,NZCY+1
+      FLZ=0.0
+      DO 400 J=1,NAL
+      IF (ZMAX(J).LE.Z) GO TO 400
+      IF (ZMIN(J).GE.Z) GO TO 400
+      ALPHA = ALP(J)
+      G = L+2.0*FOCAL*COS(ALPHA)/(1.0+COS(ALPHA))
+      P = (G-L)*TAN(ALPHA)
+      ZMN = ZMIN(J)
+      ZMX = ZMAX(J)
+C     NO SPILLOVER
+      IF (KOUNT.EQ.1) THEN
+      KCRIT = 1
+      FRAC = 1.0
+      GO TO 3000
+      END IF
+C     FULL RANGE SPILLOVER
+      IF (KOUNT.EQ.2) THEN
+      KCRIT = 2
+      FRAC = ((RAP/2/FOCAL/BETA*(1+COS(ALPHA)))**2)*COS(ALPHA)
+      GO TO 3000
+      END IF
+C     PARTIAL SPILLOVER
+      KCRIT = 1
+      E1 = 2*FOCAL*BETA/(1+COS(ALPHA))
+      E2 = E1/COS(ALPHA)
+      IF (E1.GE.RAP) THEN
+      KCRIT = 2
+      FRAC = ((RAP/2/FOCAL/BETA*(1+COS(ALPHA)))**2)*COS(ALPHA)
+      GO TO 3000
+      END IF
+      IF (E2.LE.RAP) THEN
+      FRAC = 1.0
+      GO TO 3000
+      END IF
+      YSTR = SQRT(RAP**2-E1**2)/SIN(ALPHA)
+      XSTR = SQRT(RAP**2-YSTR**2)
+      BRAC1 = YSTR*XSTR+(RAP**2)*ASIN(YSTR/RAP)
+      BRAC2 = YSTR*SQRT(E2**2-YSTR**2)+(E2**2)*ASIN(YSTR/E2)
+      AFP = PI*RAP**2-2*BRAC1+2*COS(ALPHA)*BRAC2
+      FRAC = AFP/PI/E1/E2
+      IF (Z.LT.Z2(J)) THEN
+      KCRIT = 2
+      ZMN = ZMIN(J)
+      ZMX = Z2(J)
+      GO TO 3000
+      END IF
+      IF (Z.GT.Z3(J)) THEN
+      KCRIT = 2
+      ZMN = Z3(J)
+      ZMX = ZMAX(J)
+      GO TO 3000
+      END IF
+      ZMN = Z2(J)
+      ZMX = Z3(J)
+ 3000 CALL ROOT(Z,ZMN,ZMX,X)
+      Y = SQRT(RCY**2-X**2)
+      TERM1 = ATAN(ABS(X/Y))*SIN(ALPHA)/(1.0+COS(ALPHA))**2/ARALP(J)
+ 4000 FLZ = FLZ+TERM1*DELAL*8.0*GS*REFCONC*FRAC*FOCAL**2
+      FZ(I) = FLZ
+ 400  CONTINUE
+      WRITE (6,650) ZFP,FZ(I)
+      WRITE (1,650) ZFP,FZ(I)
+ 650  FORMAT (6X,F6.4,10X,F10.4/)
+ 500  Z = Z-DZ
+ 510  ZFP = ZFP + DZ
+ 300  CONTINUE
+      END
+C
+C --------------------------------------------------------------------
+C
+C     SIMPSON'S RULE FOR INTEGRATION
+C
+      SUBROUTINE SIMPS(ZA,ZB,AREA)
+      REAL L,MU
+      COMMON PI,GS,NZCY,NZ,NAL,REFCONC,FOCAL,ALPMAX,BETA,
+     *       DCY,DAP,L,RCY,ALPHA,G,P,CONANG,
+     *       MU,KCRIT
+      DELZ = (ZB-ZA)/NZ
+C
+C     COMPUTE SUMODD
+C
+      SUMODD = 0.0
+      Z = ZA+DELZ
+      DO 100 I=2,NZ,2
+      CALL ROOT(Z,ZA,ZB,X)
+      Y=SQRT(RCY**2-X**2)
+      ARC=RCY*2.0*ATAN(ABS(X/Y))
+      SUMODD = SUMODD+ARC
+ 300  Z = Z+2.0*DELZ
+ 100  CONTINUE
+C
+C     COMPUTE SUMEVE
+C
+      SUMEVE = 0.0
+      Z = ZA+2.0*DELZ
+      DO 200 I = 2,NZ-2,2
+      CALL ROOT(Z,ZA,ZB,X)
+      Y=SQRT(RCY**2-X**2)
+      ARC=RCY*2.0*ATAN(ABS(X/Y))
+      SUMEVE = SUMEVE+ARC
+ 400  Z = Z+2.0*DELZ
+ 200  CONTINUE
+C
+      CALL ROOT(ZA,ZA,ZB,X)
+      Y=SQRT(RCY**2-X**2)
+      ARCA=RCY*2.0*ATAN(ABS(X/Y))
+C
+      CALL ROOT(ZB,ZA,ZB,X)
+      Y=SQRT(RCY**2-X**2)
+      ARCB=RCY*2.0*ATAN(ABS(X/Y))
+C
+C     COMPUTE AREA
+C
+      AREA = DELZ/3.0*(ARCA+4.0*SUMODD+2.0*SUMEVE+ARCB)
+      RETURN
+      END
+C
+C --------------------------------------------------------------------
+C
+C     ZMIN AND ZMAX CALCULATIONS
+C
+      SUBROUTINE ZMINMAX(ZA,ZB)
+      REAL L,MU
+      COMMON PI,GS,NZCY,NZ,NAL,REFCONC,FOCAL,ALPMAX,BETA,
+     *       DCY,DAP,L,RCY,ALPHA,G,P,CONANG,
+     *       MU,KCRIT
+      TERM1 = (G-L+RCY/TAN(ALPHA))*SIN(CONANG)
+      TERM2 = SIN(ALPHA+CONANG)*COS(ALPHA)
+      ZB = TERM1/TERM2+L-RCY/TAN(ALPHA)
+      ZA = L-RCY/TAN(ALPHA)-TERM1/SIN(ALPHA-CONANG)/COS(ALPHA)
+      IF (KCRIT.EQ.2) THEN
+      ZB = G-(RCY+P)*(G-L)/(P+DAP/2)
+      ZA = G-(RCY+P)*(G-L)/(P-DAP/2)
+      END IF
+      RETURN
+      END
+C
+C --------------------------------------------------------------------
+C
+C     ROOTS OF EQUATION
+C
+      SUBROUTINE ROOT(Z,ZA,ZB,XA)
+      REAL L,MU
+      COMMON PI,GS,NZCY,NZ,NAL,REFCONC,FOCAL,ALPMAX,BETA,
+     *       DCY,DAP,L,RCY,ALPHA,G,P,CONANG,
+     *       MU,KCRIT
+C
+      NROOT = 50
+      XA = 0.0
+      DXA = (RCY+P)/(DAP/2+P)*DAP/2/NROOT
+      FUNX = 0.0
+      FUNXP = 0.0
+      XP = 0.0
+      RATIO = 1.0
+      DO 1500 I=1,NROOT+1
+ 110  TERM1 = (SQRT(RCY**2-XA**2)+P)
+      TERM2 = ((Z-G)*SIN(ALPHA)+TERM1*COS(ALPHA))**2
+      IF (KCRIT.EQ.2) TERM2 = TERM2/(COS(ALPHA))**2
+      TERM3 = (Z-G)*COS(ALPHA)-TERM1*SIN(ALPHA)
+      TERM4 = (TERM3*TAN(BETA))**2
+      IF (KCRIT.EQ.2) TERM4 = (TERM3*TAN(MU))**2
+      FUNX  = TERM2-TERM4+XA**2
+      IF (I.EQ.1) GO TO 2000
+      RATIO = FUNX/FUNXP
+ 2000 IF (ABS(FUNX).LE.1.0E-3) GO TO 1600
+      IF (RATIO.LT.0.0) THEN
+      XA    = (XA+XP)/2.0
+      GO TO 1600
+      END IF
+      FUNXP = FUNX
+      XP = XA
+      XA = XA+DXA
+1500  CONTINUE
+1600  RETURN
+      END
+

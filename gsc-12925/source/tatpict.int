@@ -1,0 +1,29 @@
+   interface;
+      unit tatpict ( skeletat, picture, chartinfo, get_list, format );
+
+      uses getparam;
+
+      uses utility;
+
+   procedure skeletat (     color  : integer; var xy : supinteger );
+
+   procedure picture  ( var first  : entity ; var xy : supinteger );
+
+   procedure chartinfo (     code     : byte;
+			 var first    : entity;
+			 var xy       : supinteger );
+
+   procedure get_list  ( var first    : entity;
+			 var period   : byte;
+			 var xy       : supinteger );
+
+   procedure format    ( var inkey    : byte;
+			 var current  : entity;
+			 var first    : entity	   );
+
+   begin
+   end;
+
+
+
+

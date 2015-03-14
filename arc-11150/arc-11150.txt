@@ -1,0 +1,75 @@
+ AEROELASTIC ANALYSIS FOR ROTORCRAFT IN FLIGHT OR IN A WIND TUNNEL
+
+( NASA Ames Research Center )
+
+     The testing of rotorcraft, either in flight or in a wind tunnel, re-
+quires a consideration of the coupled aeroelastic stability of the rotor
+and airframe, or the rotor and support system. Even if the primary purpose
+of a test is to measure rotor performance, ignoring the question of dynamic
+stability introduces the risk of catastrophic failure of the aircraft.
+This computer program was developed to incorporate an analytical model of
+the aeroelastic behavior of a wide range of rotorcraft. Such an analyti-
+cal model is desirable for both pre-test predictions and post-test corre-
+lations. The program is also applicable in investigations of isolated ro-
+tor aeroelasticity and helicopter flight dynamics and could be employed as
+a basis for more extensive investigations of aeroelastic behavior, such as
+automatic control system design.
+
+     The program incorporates an analytical model which is applicable to
+a wide range of rotors, helicopters, and operating conditions. The equa-
+tions of motion used in the model were derived using an integral Newtonian
+method, which provides considerable insight into the blade inertial and
+aerodynamic forces. The rotor model includes coupled flap-lag bending and
+blade torsion degrees of freedom, and is applicable to articulated, hinge-
+less, gimballed, and teetering rotors with an arbitrary number of blades.
+The aerodynamic model is valid for both high and low inflow, and for both ax-
+ial and nonaxial flight. Rotor rotational speed dynamics, including engine
+inertia and damping, and perturbation inflow dynamics are included in the
+aerodynamic model.
+
+     For a rotor on a wind-tunnel support, a normal mode representation of
+the test module, strut, and balance is used. The aeroelastic analysis for
+rotorcraft in flight is applicable to a general two-rotor aircraft, in-
+cluding single main-rotor and tandem helicopter configurations, and side-
+by-side or tilting proprotor aircraft configurations. The rotor model in-
+cludes rotor-rotor aerodynamic interference and ground effect. The air-
+craft model includes rotor-fuselage-tail aerodynamic interference, engine
+dynamics, and control dynamics. A constant-coefficient approximation is
+used for nonaxial flow and a quasistatic approximation is used for the low
+frequency dynamics. The coupled system dynamics results is a set of linear
+differential equations which are used to determine the stability and aeroe-
+lastic response of the system.
+
+     This program is written in FORTRAN IV for batch execution and has been
+implemented on an IBM 360 series computer with a central memory requirement
+of approximately 624K of 8 bit bytes. This program was developed in 1977.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: IBM 360 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 13,793 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: ARC-11150
+
+DOMESTIC - DOCUMENTATION PRICE: $55.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $110.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

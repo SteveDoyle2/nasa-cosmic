@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+When the Triangle key is pressed from the graphics mode of the milestone chart,
+the prompt will ask for the date of the triangle.  Enter the date in the
+dd/mm/yy format or if the cursor is at the desired location, press return.
+Remember the cursor must be on the same line as the triangle to be inserted.
+After the date is entered, the prompt will ask for the optional number which
+will be placed in the center of the triangle if given.  After this prompt has
+been answered, the triangle will appear on the screen unfilled.  To fill the
+triangle use F7(Fill Triangle).
+
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

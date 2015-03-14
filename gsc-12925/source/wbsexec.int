@@ -1,0 +1,28 @@
+  interface;
+
+  unit wbsexec(perform2,last_ins,add2,destroy,redraw,sldredraw,
+               exit,enter);
+
+  USES utility;
+
+  var
+      add2     : boolean;
+      destroy  : boolean;
+      last_ins : integer;
+
+  procedure exit     ( var current, first: entity );
+
+  procedure enter    ( var current, first: entity );
+
+  procedure redraw   ( code : integer;var current, first: entity );
+
+  procedure sldredraw ( var current, first : entity ) ;
+
+  procedure perform2 ( var inkey         : byte;
+                       var current       : entity;
+                       var current_node  : byte;
+                       var first         : entity );
+
+  begin
+  end;
+

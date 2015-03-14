@@ -1,0 +1,3240 @@
+FILE NAME:            QUIKVIS.TXT               MARCH 25, 1987
+
+
+
+
+REMINDER: wide pages are
+          present
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                   QUIKVIS PROGRAM
+                   ---------------
+
+
+
+                     USER GUIDE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    Contents:  Section 1.  Introduction
+                       2.  Notable options
+                       3.  Examples of output
+                       4.  Data files input and output
+                       5.  DCL
+                       6.  Program flow
+                       7.  Usage notes, program limitations
+                       8.  Target catalogue file
+                       9.  Observation requirements file
+                      10.  User input
+                      11.  Output
+                      12.  Definition of the Detail Data File format
+
+*************************************
+*      SECTION 1. INTRODUCTION      *
+*************************************
+
+
+QUIKVIS computes target availability information for fixed and moving
+celestial targets.  The results are useful in selecting candidate
+targets, examining the effects of observation requirements, and doing
+gross assessments of the effects of the orbit's right ascension of the
+ascending node(RAAN).  The results are not appropriate for scheduling
+purposes(see LIMITATION note at the end of this section).
+
+Target availability means the earth does not block the line of sight to
+the target and all observation requirements are satisfied. 
+
+
+The user specifies:
+
+      - orbit altitude and inclination
+
+      - range of orbit right ascension of the ascending node
+
+      - range of dates of interest
+
+      - targets to be observed(individual targets or a sky survey)
+
+      - observation requirements;  during an observation, none, some, or
+        all of the following may be required....
+
+           s/c is in orbit night
+
+           the separation angle between the target direction and the
+               velocity vector is greater than a specified minimum
+
+           the separation angle between the target direction and the
+               earth horizon is greater than a specified minimum
+
+           the separation angle between the target direction and the
+               zenith direction is less than a specified maximum
+
+
+
+
+
+
+                         ( CONTINUED )
+
+
+
+
+
+
+
+QUIKVIS produces target availability information as follows...
+
+      - for individually specified targets,
+
+          a table showing the duration per orbit that the target is
+          available;  the durations are given as a function of date and
+          RAAN or RAAN's mean solar time;  (see section 3, example 1)
+
+          detail output showing the mean anomalies where individual
+          observation requirements are satisfied;  the mean anomalies
+          are given as a function of date and RAAN or RAAN's mean solar
+          time;  (see section 3, examples 2 and 3)
+
+          detail output showing when, relative to one of several orbital
+          events available, observation requirements are satisfied;
+          (see section 3, example 4)
+
+          a data file of the above-mentioned detail output;  (see
+          section 10, table 6, parameter named LEVDETAIL;  also see
+          section 12 for the format definition)
+
+      - for a sky survey,
+
+          for each date, a table showing the minimum duration targets
+          are availabile per orbit;  the table is given as right
+          ascension -vs- declination and the duration is for a target at
+          that table location;  the mimumum is the smallest of the
+          durations computed for the individual RAAN's;  (similar to
+          section 3, example 5, but for one date)
+
+          a series of tables, each associated with a time in the
+          specified range;  each table is a composite of single-date
+          tables described above;  the composite duration is the
+          minimum of each target's single-date minimum, considering all
+          dates from the first to the current one;  (see section 3,
+          example 5);
+
+          corresponding to the two items immediately above, maps of the
+          sky showing the duration regions are available;  (see
+          section 3, example 6);
+
+
+
+LIMITATION
+----------
+
+Because of the models involved, this program's output should not be used
+when high accuracy is needed.  In particular, it is inappropriate for
+scheduling actual mission operations.  This program uses the following
+models: 
+
+    - the spacecraft's trajectory is Keplerian and circular
+    - the earth is spherical
+    - sun and planet positions are determined analytically
+    - user specifies the orbital parameters in Mean of 1950.0
+      coordinates
+    - potential target occultation by the moon or planets is ignored
+    - atmospheric refraction is ignored
+
+
+
+
+************************************
+*    SECTION 2. NOTABLE OPTIONS    *
+************************************
+
+
+
+1) Specifying the orbit RAAN.  The user may specify the RAAN range
+   directly or in terms of its mean solar time.  (see table 4)
+
+   The latter ties the RAAN to a launch time of day and may be useful
+   for missions where the launch window is constant over a range of
+   dates.  The mean solar time parameters are used to compute the
+   RAAN values for the dates involved.
+   
+
+
+2) Sky survey mode.  If the payload has potential targets throughout the
+   sky, this program can be used in a survey mode to identify promising
+   regions of the sky.  One selects the survey option by not specifying
+   any targets on the observation requirements file.  Examples 5 and 6
+   of section 3 show the kind of output produced by this option.
+   
+
+
+3) Detail output.  For a run that processes individually specified
+   targets, one can get the following(controls input via table 6 of
+   section 10)....
+
+      - a table showing, for each RAAN or RAAN mean solar time, the
+        mean anomalies where individual observation requirements begin
+        and cease to be satisfied; a table is given for each date;  the
+        mean anomalies are relative to a user-specified orbit event set
+        in table 8 of section 10;  see example 2 in section 3
+
+
+      - for each RAAN or RAAN mean solar time, the above information is
+        presented in bar graph format to illustrate the overlapping of
+        requirement satisfaction periods;  each requirement has an
+        associated bar;  one set of this output is given for each date;
+        the mean anomalies are relative to a user-specified orbit event
+        set in table 8 of section 10;  see example 3 in section 3
+
+      - a table in bar graph format showing the time after a
+        user-specified orbit event(table 8) when all requirements are
+        satisfied;  there is one bar per RAAN;  a table is given for
+        each date;  see example 4 in section 3
+
+      - a data file containing the data values used to generate the
+        table and bar graph output mentioned above;  see section 12
+        for the file contents and format
+
+
+4) XYPLOT data files.  The program can create two data files used by the
+   TOSS XYPLOTTER program to display target availability as a function
+   of the orbit RAAN or the RAAN's mean solar time.  (see section 11 and
+   table 6 in section 10)
+
+
+
+
+*******************************************************************
+*    SECTION 3. PROGRAM OUTPUT - EXAMPLES OF WHAT IS AVAILABLE    *
+*******************************************************************
+
+
+The following pages contain examples of the various kinds of output
+available from QUIKVIS.
+
+
+
+
+
+
+
+
+OUTPUT EXAMPLE 1
+----------------
+
+
+The next page shows shows a specific target's availability per orbit for
+each orbit RAAN and date processed.
+
+
+This output is available when targets are individually specified. 
+
+
+Output was turned on by the summary option, DOSUMMARY(table 6).
+
+
+Subroutine QUIKVIS5A2D1 writes this output.
+
+ SUMMARY TARGET AVAILABILITY INFO                                                        GENERATED 24-SEP-86 11:57:36
+ ********************************
+
+ TARGET ID =    23  TARGET NAME= R=240,D=45      
+
+ OBSERVATION REQUIREMENTS:
+
+      TARGET AVAILABILITY REQUIRES ORBIT NIGHT                    
+      EARTH LIMB AVOIDANCE ANGLE(DEG) =         17.00
+      VELOCITY VECTOR AVOIDANCE ANGLE(DEG) =     0.00
+      MAX OK SEPARATION FROM ZENITH(DEG) =     180.00
+
+ THIS TABLE GIVES TARGET AVAILABILITY DURATION AS A FUNCTION OF DATE AND ORBIT RIGHT ASCENSION OF THE ASCENDING NODE.
+
+ DURATIONS ARE IN MINUTES ROUNDED DOWN TO A WHOLE NUMBER.
+   --- MEANS BEFORE ROUNDING, DURATION WAS LESS THAN 10.000 MINUTES(= THE USER-SPECIFIED MINIMUM OF INTEREST)
+
+ COLUMN HEADERS ARE DAYS FROM (Y/M/D H:M:S) 87/09/01 00:00:00
+
+
+  ORBIT
+   RAAN
+  (DEG)    0   2   4   6   8  10  12  14  16  18  20  22  24  26  28  30  32  34  36  38  40  42  44  46  48  50
+
+    0.0  --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+   10.0  --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+   20.0  --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+   30.0  --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+   40.0  --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+   50.0  --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+   60.0  --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+   70.0   10 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+   80.0   10  10 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+   90.0   11  11  10  10 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+  100.0   12  12  11  11  10  10 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+  110.0   13  12  12  12  11  11  10  10 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+  120.0   13  13  13  12  12  11  11  11  10  10 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+  130.0   14  14  13  13  13  12  12  11  11  11  10  10 --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+  140.0   14  14  14  13  13  13  12  12  12  11  11  10  10  10 --- --- --- --- --- --- --- --- --- --- --- ---
+  150.0   15  14  14  14  13  13  13  12  12  12  11  11  11  10  10  10 --- --- --- --- --- --- --- --- --- ---
+  160.0   15  15  14  14  14  14  13  13  13  12  12  12  11  11  11  10  10 --- --- --- --- --- --- --- --- ---
+  170.0   15  15  15  14  14  14  14  13  13  13  12  12  12  11  11  11  10  10  10 --- --- --- --- --- --- ---
+  180.0   16  15  15  15  14  14  14  14  13  13  13  12  12  12  12  11  11  11  10  10  10 --- --- --- --- ---
+  190.0   16  16  15  15  15  15  14  14  14  13  13  13  13  12  12  12  11  11  11  10  10  10 --- --- --- ---
+  200.0   17  16  16  16  15  15  15  14  14  14  14  13  13  13  12  12  12  11  11  11  10  10  10 --- --- ---
+  210.0   17  17  17  16  16  16  15  15  15  14  14  14  13  13  13  12  12  12  12  11  11  11  10  10  10 ---
+  220.0   18  18  17  17  17  16  16  16  15  15  15  14  14  14  13  13  13  12  12  12  11  11  11  10  10  10
+  230.0   19  19  18  18  17  17  17  16  16  16  15  15  15  14  14  14  13  13  13  12  12  12  11  11  11  10
+  240.0   20  20  19  19  18  18  18  17  17  16  16  16  15  15  14  14  14  13  13  13  12  12  12  11  11  11
+  250.0   21  21  20  20  19  19  19  18  18  17  17  16  16  16  15  15  14  14  14  13  13  13  12  12  11  11
+  260.0   23  22  22  21  21  20  20  19  19  18  18  17  17  16  16  16  15  15  14  14  14  13  13  12  12  12
+  270.0   24  23  23  22  22  21  21  20  20  19  19  18  18  17  17  16  16  15  15  14  14  14  13  13  12  12
+  280.0   25  24  24  23  22  22  21  21  20  20  19  19  18  18  17  17  16  16  15  15  14  14  14  13  13  12
+  290.0   25  24  24  23  23  22  22  21  21  20  20  19  18  18  17  17  16  16  15  15  14  14  14  13  13  12
+  300.0   25  24  23  23  22  22  21  21  20  20  19  19  18  18  17  17  16  16  15  15  14  14  13  13  12  12
+  310.0   23  23  22  22  21  21  20  19  19  18  18  17  17  16  16  15  15  14  14  13  13  12  12  11  11  10
+  320.0   21  20  20  19  19  18  17  17  16  16  15  15  14  14  13  13  12  12  11  11  10  10 --- --- --- ---
+  330.0   17  16  16  15  15  14  14  13  13  12  12  11  11  10  10 --- --- --- --- --- --- --- --- --- --- ---
+  340.0   13  13  12  12  11  11  10  10 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+  350.0   10  10 --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    0.0  --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+  T-MIN=   7   6   6   5   5   5   4   4   3   2   2   1   1   0   0   0   0   0   0   0   0   0   0   0   0   0
+  T-MAX=  25  24  24  23  23  22  22  21  21  20  20  19  18  18  17  17  16  16  15  15  14  14  14  13  13  12
+
+
+
+
+
+
+
+
+
+
+
+
+OUTPUT EXAMPLE 2
+----------------
+
+
+
+The next page shows the mean anomaly values when each observation
+requirement begins and ceases to be satisfied.  The mean anomaly is
+relative to a user-specified orbit event.  One such table is
+generated for each date processed.
+
+
+This output is available when targets are individually specified.
+
+
+Output was turned on by DODETTABLE(table 6). 
+
+
+Subroutine QUIKVIS5A2C writes this output.
+
+ DETAIL TARGET AVAILABILITY INFO                                                         GENERATED 24-SEP-86 15:35:54
+ *******************************
+
+
+ TARGET ID =     7    TARGET NAME= BARNARD LOOP    
+
+ OBSERVATION REQUIREMENTS:
+
+      TARGET AVAILABILITY IGNORES ORBIT NIGHT.                    
+      EARTH LIMB AVOIDANCE ANGLE(DEG)=     0.00
+      VELOCITY VECTOR AVOIDANCE ANGLE=    90.00
+      MAX OK SEPARATION FROM ZENITH=      90.00
+
+
+ Y/M/D H:M:S = 89/05/03 00:00:00  DAYS SINCE FIRST DATE=   0.000
+ SUN(M50):    RA,DEC(DEG)=   39.58   15.44  DISTANCE(AU)=   1.00792563    
+
+
+ THE FOLLOWING TABLE GIVES THE MEAN ANOMALIES AT WHICH INDIVIDUAL OBSERVATION REQUIREMENTS BEGIN AND CEASE TO BE SATISFIED.
+
+ MEAN ANOMALIES ARE RELATIVE TO ORBIT EVENT:  CROSS ORBIT SUNSET                      
+
+ BEGIN,CEASE= 0,0 MEANS THE REQUIREMENT IS NEVER SATISFIED.   BEGIN,CEASE= 0,360 MEANS THE REQUIREMENT IS ALWAYS SATISFIED.
+ COLUMN HEADINGS: RAAN IS THE ORBIT RIGHT ASCENSION OF THE ASCENDING NODE.  MST IS THE ASCENDING NODE'S MEAN SOLAR TIME.
+
+       RAAN    RAAN    AVAIL       EVENT       MA: OK HORIZON      MA: OK DAY/NIGHT    MA: OK VEL VEC      MA: OK ZENITH
+      (DEG)     MST    (MIN)         MA        BEGIN   CEASE       BEGIN   CEASE       BEGIN   CEASE       BEGIN   CEASE
+               (HR)                (DEG)       (DEG)   (DEG)       (DEG)   (DEG)       (DEG)   (DEG)       (DEG)   (DEG)
+
+      220.4    0.00    22.61       279.7      -162.9    53.6         0.0   360.0       -54.6   125.4      -144.6    35.4
+      235.4    1.00    22.61       266.4      -163.6    51.8         0.0   360.0       -55.9   124.1      -145.9    34.1
+      250.4    2.00    22.61       253.3      -163.8    50.7         0.0   360.0       -56.5   123.5      -146.5    33.5
+      265.4    3.00    22.61       239.9      -163.6    50.6         0.0   360.0       -56.5   123.5      -146.5    33.5
+      280.4    4.00    22.61       226.1      -163.2    51.3         0.0   360.0       -55.9   124.1      -145.9    34.1
+      295.4    5.00    22.61       211.8      -162.7    52.5         0.0   360.0       -55.1   124.9      -145.1    34.9
+      310.4    6.00    22.61       197.1      -162.9    53.5         0.0   360.0       -54.7   125.3      -144.7    35.3
+      325.4    7.00    22.61       182.2      -163.9    53.8         0.0   360.0       -55.1   124.9      -145.1    34.9
+      340.4    8.00    22.61       167.6      -166.2    52.7         0.0   360.0       -56.7   123.3      -146.7    33.3
+      355.4    9.00    22.61       153.5      -169.4    50.1         0.0   360.0       -59.7   120.3      -149.7    30.3
+       10.4   10.00    22.61       140.1      -173.0    46.3         0.0   360.0       -63.4   116.6      -153.4    26.6
+       25.4   11.00    22.61       127.2      -176.4    42.0         0.0   360.0       -67.2   112.8      -157.2    22.8
+       40.4   12.00    22.61       114.8      -178.9    38.1         0.0   360.0       -70.4   109.6      -160.4    19.6
+       55.4   13.00    22.61       102.3      -180.5    35.2         0.0   360.0       -72.7   107.3      -162.7    17.3
+       70.4   14.00    22.61        89.5      -181.0    33.7         0.0   360.0       -73.7   106.3      -163.7    16.3
+       85.4   15.00    22.61        75.7      -180.3    34.0         0.0   360.0       -73.2   106.8      -163.2    16.8
+      100.4   16.00    22.61        60.3      -178.2    36.2         0.0   360.0       -71.0   109.0      -161.0    19.0
+      115.4   17.00    22.61        42.9      -174.6    40.4         0.0   360.0       -67.1   112.9      -157.1    22.9
+      130.4   18.00    22.61        23.5      -169.8    46.2         0.0   360.0       -61.8   118.2      -151.8    28.2
+      145.4   19.00    22.61         3.1      -165.1    52.1         0.0   360.0       -56.5   123.5      -146.5    33.5
+      160.4   20.00    22.61       343.2      -161.8    56.4         0.0   360.0       -52.7   127.3      -142.7    37.3
+      175.4   21.00    22.61       324.9      -160.5    58.3         0.0   360.0       -51.1   128.9      -141.1    38.9
+      190.4   22.00    22.61       308.4      -160.8    57.8         0.0   360.0       -51.5   128.5      -141.5    38.5
+      205.4   23.00    22.61       293.5      -161.8    55.9         0.0   360.0       -53.0   127.0      -143.0    37.0
+      220.4    0.00    22.61       279.7      -162.9    53.6         0.0   360.0       -54.6   125.4      -144.6    35.4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+OUTPUT EXAMPLE 3
+----------------
+
+
+
+
+
+The next page shows in bar format the mean anomalies when individual
+observation requirement begin and cease to be satisfied.  The mean
+anomalies are relative to a user-specified event.  Output for only a
+few RAAN's is shown here to save space.  Output is generated for each
+date processed. 
+
+
+This output is available when targets are individually specified.
+
+
+Output was turned on by DOBARS1(table 6). 
+
+
+This option can create large files, so care should be used.
+
+
+Subroutine QUIKVIS5A2C writes this output.
+
+ DETAIL TARGET AVAILABILITY INFO                                                         GENERATED 24-SEP-86 15:35:54
+ *******************************
+
+
+ TARGET ID =     7    TARGET NAME= BARNARD LOOP    
+
+ OBSERVATION REQUIREMENTS:
+
+      TARGET AVAILABILITY IGNORES ORBIT NIGHT.                    
+      EARTH LIMB AVOIDANCE ANGLE(DEG)=     0.00
+      VELOCITY VECTOR AVOIDANCE ANGLE=    90.00
+      MAX OK SEPARATION FROM ZENITH=      90.00
+
+
+ Y/M/D H:M:S = 89/05/03 00:00:00  DAYS SINCE FIRST DATE=   0.000
+ SUN(M50):    RA,DEC(DEG)=   39.58   15.44  DISTANCE(AU)=   1.00792563    
+
+
+ THE FOLLOWING SHOWS THE MEAN ANOMALIES AT WHICH INDIVIDUAL OBSERVATION REQUIREMENTS BEGIN AND CEASE TO BE
+ SATISFIED.  AN '*' INDICATES THE REQUIREMENT IS  SATISFIED, A BLANK INDICATES IT IS VIOLATED.
+
+ MEAN ANOMALIES ARE RELATIVE TO ORBIT EVENT:  CROSS ORBIT SUNSET                      
+
+
+
+
+ RIGHT ASCN OF ASC NODE(DEG)= 220.4   NODE'S MEAN SOLAR TIME(HR)=  0.00   DURATION AVAILABLE(MINUTES)=  22.61
+ HORIZON   ******************                                               ********************************************************
+ VEL-AVOID ******************************************                                                           ********************
+ ZEN SEP   ************                                                           **************************************************
+           *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *
+ M-ANOM=   0   15   30   45   60   75   90  105  120  135  150  165  180  195  210  225  240  255  270  285  300  315  330  345  360
+
+
+ RIGHT ASCN OF ASC NODE(DEG)= 235.4   NODE'S MEAN SOLAR TIME(HR)=  1.00   DURATION AVAILABLE(MINUTES)=  22.61
+ HORIZON   ******************                                               ********************************************************
+ VEL-AVOID ******************************************                                                           ********************
+ ZEN SEP   ************                                                           **************************************************
+           *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *
+ M-ANOM=   0   15   30   45   60   75   90  105  120  135  150  165  180  195  210  225  240  255  270  285  300  315  330  345  360
+
+
+ RIGHT ASCN OF ASC NODE(DEG)= 250.4   NODE'S MEAN SOLAR TIME(HR)=  2.00   DURATION AVAILABLE(MINUTES)=  22.61
+ HORIZON   *****************                                                ********************************************************
+ VEL-AVOID ******************************************                                                           ********************
+ ZEN SEP   ************                                                           **************************************************
+           *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *
+ M-ANOM=   0   15   30   45   60   75   90  105  120  135  150  165  180  195  210  225  240  255  270  285  300  315  330  345  360
+
+
+ RIGHT ASCN OF ASC NODE(DEG)= 265.4   NODE'S MEAN SOLAR TIME(HR)=  3.00   DURATION AVAILABLE(MINUTES)=  22.61
+ HORIZON   *****************                                                ********************************************************
+ VEL-AVOID ******************************************                                                           ********************
+ ZEN SEP   ************                                                           **************************************************
+           *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *
+ M-ANOM=   0   15   30   45   60   75   90  105  120  135  150  165  180  195  210  225  240  255  270  285  300  315  330  345  360
+
+
+ RIGHT ASCN OF ASC NODE(DEG)= 280.4   NODE'S MEAN SOLAR TIME(HR)=  4.00   DURATION AVAILABLE(MINUTES)=  22.61
+ HORIZON   ******************                                               ********************************************************
+ VEL-AVOID ******************************************                                                           ********************
+ ZEN SEP   ************                                                           **************************************************
+           *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *
+ M-ANOM=   0   15   30   45   60   75   90  105  120  135  150  165  180  195  210  225  240  255  270  285  300  315  330  345  360
+
+
+ RIGHT ASCN OF ASC NODE(DEG)= 295.4   NODE'S MEAN SOLAR TIME(HR)=  5.00   DURATION AVAILABLE(MINUTES)=  22.61
+ HORIZON   ******************                                               ********************************************************
+ VEL-AVOID ******************************************                                                           ********************
+ ZEN SEP   ************                                                           **************************************************
+           *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *    *
+ M-ANOM=   0   15   30   45   60   75   90  105  120  135  150  165  180  195  210  225  240  255  270  285  300  315  330  345  360
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+OUTPUT EXAMPLE 4
+----------------
+
+
+
+
+The next page shows in bar format the time since the s/c crossed the
+sun meridian(an orbit event selected by the user, table 8) when all
+observation requirements are satisfied.  This output is generated
+for each date processed. 
+
+A single bar at the bottom shows, roughly, the period during which
+the target is guaranteed to be available on that date for all of
+the RAAN's considered.
+
+
+This output is available when targets are individually specified.
+
+
+Output was turned on by DOBARS2(table 6). 
+
+
+Subroutine QUIKVIS5A2C writes this output.
+
+
+ DETAIL TARGET AVAILABILITY INFO                                                         GENERATED 24-SEP-86 15:35:56
+ *******************************
+
+
+ TARGET ID =     7    TARGET NAME= BARNARD LOOP    
+
+ OBSERVATION REQUIREMENTS:
+
+      TARGET AVAILABILITY IGNORES ORBIT NIGHT.                    
+      EARTH LIMB AVOIDANCE ANGLE(DEG)=     0.00
+      VELOCITY VECTOR AVOIDANCE ANGLE=    90.00
+      MAX OK SEPARATION FROM ZENITH=      90.00
+
+
+ Y/M/D H:M:S = 89/05/03 00:00:00  DAYS SINCE FIRST DATE=   0.000
+ SUN(M50):    RA,DEC(DEG)=   39.58   15.44  DISTANCE(AU)=   1.00792563    
+
+
+ THE FOLLOWING SHOWS WHEN TARGET AVAILABILITY BEGINS AND CEASES.  IN MINUTES AFTER EVENT:  CROSS ORBIT SUNSET
+
+ THE FIRST RAAN = 220.37 DEGREES,  THE FIRST RAAN'S MEAN SOLAR TIME =  0.00
+
+
+ DT=   0        10        20        30        40        50        60        70        80        90
+  MST  +    +    +    +    +    +    +    +    +    +    +    +    +    +    +    +    +    +    +
+  0.00 **********X         X         X         X         X         X         X     ***************                              
+  1.00 **********X         X         X         X         X         X         X     ***************                              
+  2.00 **********X         X         X         X         X         X         X     ***************                              
+  3.00 **********X         X         X         X         X         X         X     ***************                              
+  4.00 **********X         X         X         X         X         X         X     ***************                              
+  5.00 **********X         X         X         X         X         X         X     ***************                              
+  6.00 **********X         X         X         X         X         X         X     ***************                              
+  7.00 **********X         X         X         X         X         X         X     ***************                              
+  8.00 **********X         X         X         X         X         X         X     ***************                              
+  9.00 ********* X         X         X         X         X         X         X    ****************                              
+ 10.00 ********  X         X         X         X         X         X         X   *****************                              
+ 11.00 *******   X         X         X         X         X         X         X  ******************                              
+ 12.00 ******    X         X         X         X         X         X         X *******************                              
+ 13.00 ******    X         X         X         X         X         X         X *******************                              
+ 14.00 *****     X         X         X         X         X         X         X********************                              
+ 15.00 ******    X         X         X         X         X         X         X *******************                              
+ 16.00 ******    X         X         X         X         X         X         X *******************                              
+ 17.00 *******   X         X         X         X         X         X         X  ******************                              
+ 18.00 ********  X         X         X         X         X         X         X   *****************                              
+ 19.00 **********X         X         X         X         X         X         X     ***************                              
+ 20.00 ***********         X         X         X         X         X         X      **************                              
+ 21.00 ***********         X         X         X         X         X         X      **************                              
+ 22.00 ***********         X         X         X         X         X         X      **************                              
+ 23.00 ***********         X         X         X         X         X         X      **************                              
+  0.00 **********X         X         X         X         X         X         X     ***************                              
+       +    +    +    +    +    +    +    +    +    +    +    +    +    +    +    +    +    +    +
+ DT=   0        10        20        30        40        50        60        70        80        90
+
+
+
+ THE FOLLOWING GIVES A ROUGH INDICATION OF GUARANTEED AVAILABILITY FOR ALL RAAN'S PROCESSED.
+ THIS BAR WAS DERIVED BY OVERLAYING ALL OF THE BARS ABOVE, NOT BY OVERLAYING THE ACTUAL TIMES.
+
+ BAR=  *****                                                                        **************                              
+       +----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+----+
+ DT=   0        10        20        30        40        50        60        70        80        90
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+OUTPUT EXAMPLE 5
+----------------
+
+
+
+The next page shows the grid output generated by the sky survey
+option KOPT1(table 7).  The bottom line indicates whether the
+data is for a single date or a range of dates.
+
+
+
+
+
+
+Subroutine QUIKVIS5B1A writes this output.
+
+
+                                                                               GENERATED 21-FEB-86 12:45:26
+
+
+
+  90> -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+  80> -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+  70> -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+  60> -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  0  2  4  7  9 12 12 10  7  5  2  0 -- --
+
+  50>  2  0 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  0  2  4  6  9 11 14 16 19 16 14 12 10  7  5  2
+
+  40>  6  3  0 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  0  2  4  7  9 11 14 16 19 21 19 17 15 13 10  8  6
+
+  30>  8  5  2  0 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  1  4  6  8 11 13 16 18 21 23 21 19 17 15 12 10  8
+
+  20>  9  7  4  1 -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  1  3  5  7 10 12 14 17 20 22 23 23 20 18 16 14 12  9
+
+  10> 10  8  5  2  0 -- -- -- -- -- -- -- -- -- -- -- -- --  0  2  4  6  9 11 13 16 18 21 23 23 23 22 20 17 15 13 10
+
+   0> 10  7  5  2 -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  1  3  6  8 10 13 15 18 20 23 23 23 23 21 18 16 13 10
+
+ -10> 10  7  4  1 -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  0  2  5  7  9 12 14 17 19 22 23 23 23 22 19 16 13 10
+
+ -20>  9  6  3  0 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  1  3  6  8 10 13 15 18 21 23 23 23 20 18 16 12  9
+
+ -30>  8  5  2 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  0  2  4  7  9 11 14 17 20 22 23 21 19 17 14 11  8
+
+ -40>  6  3 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  0  2  5  7 10 12 15 18 21 21 19 17 14 12  9  6
+
+ -50>  2 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  0  2  5  7 10 12 15 18 18 16 14 11  8  5  2
+
+ -60> -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --  0  3  5  8 10 13 11  9  6  3  0 -- --
+
+ -70> -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+ -80> -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+ -90> -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+       *     *     *     *     *     *     *     *     *     *     *     *     *     *     *     *     *     *     *
+       0    20    40    60    80   100   120   140   160   180   200   220   240   260   280   300   320   340   360
+
+
+
+
+
+
+
+ OBS REQMTS: ORBIT NIGHT IS REQUIRED.     MIN TARG/HORIZ SEP=   0.0     MIN TARG/VEL SEP=  90.0     MAX TARG/ZENITH SEP=  95.0
+
+ SMA(KM)=  6678.2   ECC= 0.000001   INCL(DEG)=  28.50   ARGP=   0.00
+ NODE RANGE: FIRST/LAST ASCENDING NODES=    0.00  360.00  INCREMENT BETWEEN NODES PROCESSED=   10.00
+
+ GRID SHOWS MINIMUM DURATION TARGET IS AVAILABLE PER ORBIT FOR ALL DATES(Y/M/D) WITHIN 87/09/01 TO 87/09/06   (DAYS=  5.0)
+ INCREMENT BETWEEN DATES TESTED(DAYS) =   5.0      DURATION IS IN MINUTES ROUNDED DOWN TO A WHOLE NUMBER.                      
+
+ IN GENERAL, GRID ENTRIES ARE LARGER THAN 'GUARANTEED AVAILABILITY' TIMES.  THIS GRID MERELY SHOWS THE SMALLEST TIME
+ ENCOUNTERED AMONG ALL DATES AND ORBIT RAAN'S PROCESSED.
+
+      SIMPLE EXAMPLE:  IN ONE CASE A TARGET IS AVAILABLE FROM SUNSET TO SUNSET+20 MINUTES.  IN ANOTHER IT IS AVAILABLE
+                       FROM SUNSET+13 MINUTES TO SUNSET+28 MINUTES.  THE MINIMUM DURATION(GRID ENTRY) IS 15 MINUTES BUT
+                       THE GUARANTEED AVAILABILITY IS 7 MINUTES(IE, FROM SUNSET+13 TO SUNSET+20).
+
+
+
+                                       ***** SPANS MULTIPLE DATES *****    87/09/01  THRU  87/09/06
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+OUTPUT EXAMPLE 6
+----------------
+
+
+
+
+
+The next page shows the map output generated by the sky survey
+option KOPT2(table 7).  The two bottom lines indicate whether the
+data is for a single date or a range of dates.
+
+
+
+Subroutine QUIKVIS5B1B writes this output.
+
+     0        30E       60E       90E      120E      150E      180       210E      240E      270E      300E      330E        0 
+     *         *         *         *         *         *         *         *         *         *         *         *         * 
+ 90N*I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I*90N
+     I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I    
+     I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I    
+     I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I    
+     I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I    
+     I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I    
+     I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I    
+     I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I    
+     I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I::::11111I111122222I233333333I322222221I1111:::::I    
+     I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I::::1    I   12    I23       I32     21I   1:::::I    
+ 60N*I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I*60N
+     I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I::::1   1I111122222I233333333I322222221I1111:::::I    
+     I1111:::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::11I1111   12I222233333I344444444I433333333I322222221I    
+     I   1:::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::1 I       12I   23    I34       I43       I32     21I    
+     I1  1:::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::1 I    11112I 2223   3I34  444  I43333333 I3222   21I    
+     I21  111::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I::::111  I   12222 I2333   34I4  45554 I 44444443I 3332   2I    
+     I21    1::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I::::1    I   12    I23     34I   45 54 I       43I   32    I    
+     I21    1::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I::::1    I   12    I23     34I   45 54 I       43I   32    I    
+     I2111  1::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I::::1    I 1112   2I23  33334I 4445 544I4      43I3  32222 I    
+     I 2221  11I1::::::::I:::::::::I:::::::::I:::::::::I:::::::::I::::1    I1222   23I3  34444 I4555   55I54      4I43  33332I    
+ 30N*I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I*30N
+     I   21    I1::::::::I:::::::::I:::::::::I:::::::::I:::::::::I::::1  11I12  22223I   34    I45       I5444     I43     32I    
+     I   21    I1::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:111  122I2  23333 I   34    I45       I 5554    I43     32I    
+     I   21    I1::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:1    12 I   23    I   34    I45       I   54    I43     32I    
+     I2  2111  I1::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:1    12 I   23    I 3334   4I45       I   54444 I4333   32I    
+     I32  2221 I 111:::::I:::::::::I:::::::::I:::::::::I::::::::1I1     12 I   23    I3444   45I5        I    55554I 4443   3I    
+     I32    21 I   1:::::I:::::::::I:::::::::I:::::::::I::::::::1I      12 I   23    I34     45I         I       54I   43    I    
+     I32    21 I   1:::::I:::::::::I:::::::::I:::::::::I::::::::1I      12 I   23    I34     45I         I       54I   43    I    
+     I32    21 I 111:::::I:::::::::I:::::::::I:::::::::I::::::::1I1     12 I   23    I34     45I         I       54I   43    I    
+     I32    21 I1::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:1    12 I   23    I34     45I         I       54I   43    I    
+  0N*I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I* 0N
+     I32  2221 I1::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:1    122I2  23333 I3444   45I5        I       54I   43    I    
+     I32 2111  I1::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:1     11I12  22223I 3334   4I45       I       54I   43    I    
+     I32 21    I1::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:1       I12     23I   34    I45       I       54I   43    I    
+     I32 21    I1::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:111     I12     23I   34    I45       I       54I   43   3I    
+     I2  21    I1::::::::I:::::::::I:::::::::I:::::::::I:::::::::I::::1    I12     23I   34    I45       I       54I   43  32I    
+     I   21    I1::::::::I:::::::::I:::::::::I:::::::::I:::::::::I::::1    I12     23I   34    I45       I       54I   43  32I    
+     I   21  11I1::::::::I:::::::::I:::::::::I:::::::::I:::::::::I::::1    I1222   23I3  34444 I45       I    55554I 4443  32I    
+     I   21 1::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I::::1    I 1112   2I23  33334I45       I   54444 I4333   32I    
+     I   21 1::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I::::1    I   12    I23     34I45       I   54    I43     32I    
+ 30S*I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I*30S
+     I 222111::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I::::111  I   12    I23     34I4555     I 5554   4I43  33332I    
+     I2111:::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::1 I   12    I23     34I 4445    I5444   43I3  32222 I    
+     I21 1:::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::1 I   12    I23     34I   45    I54     43I   32    I    
+     I2111:::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::11I1  12222 I2333   34I4  455555I54  44443I 3332   2I    
+     I1::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:1  11112I 2223   3I34  44444I4  43333 I3222   21I    
+     I1::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:1     12I   23    I34       I   43    I32     21I    
+     I1::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:1     12I   23    I34       I   43    I32     21I    
+     I1::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:11111112I222233333I344444444I444433333I322222221I    
+     I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I::::::::1I111122222I233333333I322222221I1111:::::I    
+ 60S*I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I*60S
+     I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I::::::::1I111122222I233333333I322222221I1111:::::I    
+     I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I    
+     I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I    
+     I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I    
+     I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I    
+     I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I    
+     I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I    
+     I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I    
+     I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I:::::::::I    
+ 90S*I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I---------I*90S
+     *         *         *         *         *         *         *         *         *         *         *         *         * 
+     0        30E       60E       90E      120E      150E      180       210E      240E      270E      300E      330E        0 
+
+ KEY TO SYMBOLS: ( MIN TIME - MAX TIME)=SYMBOL      NEVER VISIBLE=:
+  (  0.0-  5.0)=1  (  5.0- 10.0)=2  ( 10.0- 15.0)=3  ( 15.0- 20.0)=4  ( 20.0- 25.0)=5
+
+ MIN/MAX OBSERVATION TIMES(MINUTES) =   0.000E+00   23.9    
+
+ OBS REQMTS: ORBIT NIGHT IS REQUIRED.     MIN TARG/HORIZ SEP=   0.0     MIN TARG/VEL SEP=  90.0     MAX TARG/ZENITH SEP=  95.0
+
+ SMA(KM)=  6678.2   ECC= 0.000001   INCL(DEG)=  28.50   ARGP=   0.00
+ NODE RANGE: FIRST/LAST ASCENDING NODES=    0.00  360.00  INCREMENT BETWEEN NODES PROCESSED=   10.00
+
+ GRID SHOWS MINIMUM DURATION TARGET IS AVAILABLE PER ORBIT FOR ALL DATES(Y/M/D) WITHIN 87/09/01 TO 87/09/06   (DAYS=  5.0)
+ INCREMENT BETWEEN DATES TESTED(DAYS) =   5.0      DURATION IS IN MINUTES.                                                     
+
+
+
+********************************************
+*    SECTION 4. DATA FILES INPUT/OUTPUT    *
+********************************************
+
+
+  UNITS 5, 6, 8, 19, 25, 26, 27, and 30 are readable with a text editor
+
+
+USER INPUT          IN      This is the user input as described in
+(unit 5)                    tables zero-8  of this user guide. It may
+                            be a data file or the user's terminal.
+
+                            Always used.
+
+
+USER INFO          OUT      This is the unit to which prompt, certain
+(unit 6)                    error messages, and information messages are
+                            sent. User may direct standard print output
+                            here as well as to unit 19.
+
+                            Always used.
+
+
+TARGET CATALOGUE    IN      Data file containing info about the targets.
+(unit 8)                    Data includes ID, name, and location.  File
+                            is in the standard TOSS target catalogue
+                            format.  Described in section 8.
+
+                            Used when individual targets are involved,
+                            ignored when the survey option is on.
+
+
+PRINT RESULTS      OUT      This is the unit to which miscellaneous
+(unit 19)                   information and standard output is written.
+
+                            Always used.
+
+
+XYPLOT DATA        OUT      This is a file written in a format that is
+(unit 25)                   used by the TOSS XYPLOTTER program.
+                            Described in section 11.
+
+                            Used only when the first xyplot option is
+                            turned on by the user.
+                            (section 10, table 6, variable DOXYPLOT1)
+
+
+XYPLOT DATA        OUT      This is a file written in a format that is
+(unit 26)                   used by the TOSS XYPLOTTER program.
+                            Described in section 11.
+
+                            Used only when the second xyplot option is
+                            turned on by the user.
+                            (section 10, table 6, variable DOXYPLOT2)
+
+
+DETAIL DATA        OUT      This is a data file for use by an external
+(unit 27)                   processor.  Described in section 12.
+
+                            Used only when the file generation option
+                            is turned on by the user
+                            (section 10, table 6, variable LEVDETAIL)
+
+
+OBS'VN REQMTS       IN      This is a data file that specifies the
+(unit 30)                   observation requirements and targets to be
+                            processed.  Described in section 9.
+
+                            Always used.
+
+
+SCRATCH FILE       ---      This file is used for data written and read
+(unit 1)                    within the program.
+
+                            Used when individual targets are involved,
+                            ignored when the survey option is on.
+
+
+
+**********************
+*   SECTION 5. DCL   *
+**********************
+
+
+The QUIKVIS program's DCL is straightforward. The lower case words in
+the DCL below are meant to indicate that the user will supply the
+file names when the command file is set up. 
+
+
+      $! QUIKVIS.COM
+      $!
+      $ ASSIGN SCR1.DAT    FOR001
+      $ ASSIGN userinput   FOR005  ! for interactive use, userinput = TT
+      $ ASSIGN    TT       FOR006
+      $ ASSIGN targetcat   FOR008
+      $ ASSIGN printfile   FOR019
+      $ ASSIGN xyplotfile1 FOR025
+      $ ASSIGN xyplotfile2 FOR026
+      $ ASSIGN detaildata  FOR027
+      $ ASSIGN obsreqmts   FOR030
+      $!
+      $ RUN [TOSS.CURRENT.IMAGES]QUIKVIS
+      $!
+      $ DEASSIGN FOR001
+      $ DEASSIGN FOR005
+      $ DEASSIGN FOR006
+      $ DEASSIGN FOR008
+      $ DEASSIGN FOR019
+      $ DEASSIGN FOR025
+      $ DEASSIGN FOR026
+      $ DEASSIGN FOR027
+      $ DEASSIGN FOR030
+      $ DELETE SCR1.DAT;*
+
+
+
+
+In case QUIKVIS.EXE is not present in [TOSS.CURRENT.IMAGES], the
+program may be linked as
+
+      $ LINK/EXECUTABLE=QUIKVIS -
+         [TOSS.CURRENT.LIBRARY]TOSSLIB/L/INCLUDE=QUIKVIS
+
+and the RUN command is
+
+      $ RUN QUIKVIS
+
+
+
+*******************************
+*   SECTION 6. PROGRAM FLOW   *
+*******************************
+
+
+Before each of the read instructions which will be discussed in
+section 10 of this user guide, the user is prompted for the input
+values.  Except for the first prompt, the current values of the
+variables involved are displayed on unit 6 so the user can decide on
+changes.  This occurs even if the input is from a file and no real-time
+decision is involved. 
+
+
+ERROR CHECKS ON USER INPUT ARE DONE.
+
+
+FLOW:
+
+   STEPS 1 AND 2 ARE EXECUTED ONCE PER RUN. THE OTHERS FORM A LOOP.
+
+
+   1. The program initializes its internal arrays and default values.
+      It reads the observation requirements file and if necessary, the
+      target catalogue.  An error in either file ends the run.
+
+
+   2. The USER SEES a prompt message asking whether this is an
+      interactive run.  The reply affects the response to user input
+      errors and the generation of progress reports during execution.
+      The program believes the user's response, regardless of the actual
+      nature of the run.  (Table zero)
+
+
+   3. The USER SEES a series of prompt messages asking for parameters
+      controlling the program.  If an error occurs here, the program
+      reprompts(interactive runs) or ends(non-interactive). (Tables 2-8)
+
+
+   4. The USER SEES a display of parameters controlling the program.
+      The current case executes.  If this is an interactive run,
+      messages are sent occasionally to the prompt unit so the user can
+      monitor the run's progress.
+
+
+   5. The program repeats steps 3 and 4 until the user's input contains
+      an end of file or until a fatal error is sensed.
+
+
+********************************
+*    SECTION 7. USAGE NOTES    *
+********************************
+
+
+
+LIMITATIONS AND COMMENTS
+------------------------
+
+   - all orbits are circular;  extending the program to handle eccentric
+     orbits is not difficult because the underlying algorithms handle
+     eccentric orbits and QUIKVIS has been coded with eccentricity and
+     argument of perigee variables present but set to zero
+
+   - all orbit computations assume Keplerian motion
+
+   - Mean of 1950.0 coordinates are used, including those for the
+     s/c orbital parameters
+
+   - observation requirements are the same for all targets in the run
+
+   - the sky survey option is very time consuming;  you should do an
+     initial run using only one date to verify the correctness of your
+     input and get a timing estimate;  test runs have varied according
+     to the load on the computer(VAX 11/780), but 20 minutes elapsed
+     time per date is not unusual with 37 orbit RAAN's involved;
+     efficiency modifications will be made in the future if program
+     usage warrants the effort;  subroutine TAVISPAK could use a mod
+     specifically for circular orbits(internally, QUIKVIS uses a very
+     small eccentricity to avoid ambiguity about the perigee location)
+     
+   - when used as targets, the sun, moon, and planets, have zero radius;
+     when used for shadow computations, the sun has its correct radius
+
+   - the earth is the only body that can occult a target;  for example,
+     if a target is behind the moon, this program will not sense it
+
+   - the earth is spherical
+
+   - the program can handle up to 703 targets(703 accommodates the
+     sky survey option)
+
+   - the program can handle up to 361 orbit RAAN's
+
+   - the program can handle up to 100 dates in the date range
+
+   - the target catalogue may have at most 5 parameters in the
+     set of parameters holding the location and miscellaneous data;
+     described section 8
+
+   - only 5 kinds of observation requirements permitted;  the associated
+     keywords in the observation requirements file are DAYNIGHT, 
+     BRIGHTERT, DARKERT, VELAVOID, ZENITH;  furthermore, the bright and
+     dark horizon avoidance angles must be equal; described in section 9
+     
+   - the detail output option can create large output files and should
+     be used judiciously;  see comments in section 12 for space
+     requirements
+
+
+ERROR HANDLING
+--------------
+
+   If errors are sensed in the target catalogue or observation
+   requirement file, the run ends.
+
+   In the interactive mode the program responds to user input (unit 5)
+   errors by reprompting for the input.  If not interactive, a user
+   input error ends the program.
+
+   Throughout the code, error checks are done in places where errors are
+   unlikely except through careless modification in the future.  Not all
+   such errors can be anticipated, but those that were will cause the
+   program to stop with a message.
+
+
+************************************************
+*   SECTION 8. INPUT FILE - TARGET CATALOGUE   *
+************************************************
+
+
+The following is a catalogue that was used in testing the program.
+
+
+      1, 'R=0,D=0',     3,   0.,   0., 1./
+      2, 'R=0,D=90',    3,   0.,  90., 1./
+      3, 'R=180,D=0',   3, 180.,   0., 1./
+      4, 'R=130,D=0',   3, 130.,   0., 1./
+     21, 'R=120,D=45',  3, 120.,  45., 1./
+     22, 'R=120,D=-45', 3, 120., -45., 1./
+     23, 'R=240,D=45',  3, 240.,  45., 1./
+     24, 'R=240,D=-45', 3, 240., -45., 1./
+     25, 'R=50,D=10',   3,  50.,  10., 1./
+    101, 'MERCURY'      1/
+    102, 'VENUS',       1/
+    104, 'MARS',        1/
+    105, 'JUPITER',     1/
+    106, 'SATURN',      1/
+    107, 'URANUS',      1/
+    108, 'NEPTUNE',     1/
+    109, 'PLUTO',       1/
+    201, 'SUN',         1/
+    202, '-SUN',        1/
+    203, 'MOON',        1/
+    204, '-MOON',       1/
+    
+
+
+
+
+The TOSS document TARGCATLG.TXT fully describes the file's format. An
+abbreviated description follows and reflects both QUIKVIS and catalogue
+reader requirements.
+
+
+The catalogue is read in a list-directed manner.  The quantities
+defined are:
+
+      target ID
+      target name
+      target type
+      target parameters
+
+  Target ID:  zero or negative ID's are ignored; the others must be in
+              ascending order with no duplicate ID's
+
+  Target name: 1 to 16 characters enclosed in single quotes, no leading
+               blanks;  for moving targets, the names in the above
+               example are recognized
+
+  Target type:  must be 1(moving celestial target) or 3(fixed)
+
+  Target parameters:
+
+          max of 5 present, even if none are required;
+
+          moving targets - no parameters required
+
+          fixed targets - 1. target right ascension in Mean of 1950.0
+                          2. target declination in Mean of 1950.0
+                          3. angle units in parameters 1 and 2.
+                             = 0, radians
+                             = 1, degrees
+                             = otherwise, right ascension is in
+                               hours, minutes, seconds(format=HHMMSS.SS)
+                               declination is in degrees, minutes, and
+                               seconds(format=+/-DDMMSS.SS)
+
+********************************************************
+*   SECTION 9. INPUT FILE - OBSERVATION REQUIREMENTS   *
+********************************************************
+
+
+The following is an example of an observation requirements file.
+
+        QUIKVIS OBS REQMTS.
+        'EXAMPLE'/
+        'DAYNIGHT',1/
+        'VELAVOID',90./
+        'ZENITH',95./
+        'ENDREQ'/
+        23/
+        107/
+        -9999/
+
+
+
+The TOSS document OBSREQMT.TXT fully describes the file's format. An
+abbreviated description follows and reflects both QUIKVIS and catalogue
+reader requirements.
+
+The first line is a comment line. It must be present but its contents
+are ignored.
+
+The second line defines the name of the experiment.  It is used for
+output purposes and has no other significance.
+
+The next several lines, up to the ENDREQ keyword, define the
+requirements that must be satisfied during an observation.  QUIKVIS
+allows five other keywords and each has one accompanying value.
+Keywords must be enclosed in single quotes.   If a keyword is absent,
+the observation requirement takes the default value.
+
+      KEYWORD   VALUE
+      ------    -----
+
+      DAYNIGHT    0   orbit night not required (default) 
+                  1   orbit night required
+
+      BRIGHTERT   x   x= the target's minimum angle above the
+                      sunlit horizon; in degrees;  default = 0.0
+
+                      must be zero or positive
+
+      DARKERT     x   x= the target's minimum angle above the
+                      shadowed horizon;   in degrees;   default = 0.0
+
+                      must be zero or positive
+
+                      WARNING: QUIKVIS requires that the horizon angles
+                               be equal
+
+      VELAVOID    v   v= minimum angle between the line of sight to the
+                      target and the velocity vector;  in degrees;
+                      default = 0.0
+
+                      must be in 0 to 180 range
+
+      ZENITH      z   z= maximum angle between the line of sight to the
+                      target and the zenith direction;  in degrees
+                      default = 180.0
+
+                      must be in 0 to 180 range
+
+      ENDREQ    none  must be present and the last keyword.
+
+
+
+
+
+
+                     ( continued )
+
+
+
+
+                   ( continuation )
+
+
+
+
+Following the keywords, zero to 703 target ID's are supplied.  A record
+containing -9999 in the ID location signals the end.  If no ID's are
+supplied, QUIKVIS executes the sky survey option.  ID's need not be in
+ascending order.  Zero and negative ID's are ignored.  Duplicate ID's
+are treated as a single ID. 
+
+
+
+
+DISCUSSION:
+
+      zero, some, or all may be present
+
+      DARKERT and BRIGHTERT must be both present or both absent
+
+      since QUIKVIS uses circular orbits, ZENITH and DARKERT/BRIGHTERT
+      have similar effects;  horizon avoidance is the more efficient
+      because it is used in the earth occultation algorithm
+
+****************************************
+*    SECTION 10. USER INPUT(unit 5)    *
+****************************************
+
+
+         **** USER INPUT VIA DATA FILE OR TERMINAL KEYBOARD ****
+
+
+THERE ARE 9 READ STATEMENTS WHEREBY THE USER SUPPLIES CONTROL
+INFORMATION TO THE PROGRAM.  ALL BUT THE FIRST ARE LIST-DIRECTED.
+ALL BUT THE FIRST ARE USED FOR EACH LOOP OF THE MAIN PROGRAM. THE 9 ARE:
+
+
+ 0. INTERACTIVE RUN(Y/N).
+
+    The user tells the program whether this is an interactive run and
+    the program believes whatever it is told.
+
+ 1. DATE SPAN OF INTEREST.
+
+    The user tells the program the first date, increment, and number of
+    dates for which processing is wanted.
+
+ 2. ORBIT ALTITUDE.
+
+    The user gives the altitude above the spherical earth.
+
+ 3. ORBIT INCLINATION.
+
+ 4. NODE-SPECIFICATION OPTION.
+
+    The user tells the program whether RAAN's are specified directly
+    or by specifying the RAAN's mean solar time.
+
+ 5. RANGE OF RAAN OR RAAN'S MEAN LOCAL TIME.
+
+    The user specified the first value, increment, and number of values.
+
+ 6. NON-SURVEY OUTPUT OPTIONS SELECTED. (IS READ EVEN IF A SURVEY RUN)
+
+ 7. SURVEY OUTPUT OPTIONS SELECTED. (IS READ EVEN IF A NON-SURVEY RUN)
+
+ 8. MISCELLANEOUS PARAMETERS.
+
+    The user specifies other parameters not provided above.
+
+
+ ----------->  DETAILS OF THE ABOVE INPUTS ARE
+               CONTAINED IN TABLES ZERO THROUGH 8.
+
+
+                ***** EXAMPLE OF USER'S INPUT *****
+
+
+This is what the a user's unit 5 file could look like.
+
+           Y
+           870901,30,2/
+           300/
+           28.5/
+           1/
+           35,5,8/
+           T/
+           1,3,3/
+           3/
+
+
+                       TABLE ZERO
+                       ----------
+
+                  ( INTERACTIVE RUN ? )
+
+
+
+INPUT IS VIA PROGRAM READING FROM UNIT 5.
+
+
+
+DESCRIPTIVE      FIRST       DEFAULT     COMMENTS
+  VARIABLE        CASE        IF NOT
+    NAME        DEFAULT     OVERRIDDEN
+-----------     -------     ----------   --------
+
+INTERACTIVE      none          none      Tells the program whether this
+(logical)                                is or is not an interactive
+                                         run(so program knows how to
+                                         respond to user input errors).
+
+
+                                         You must respond with Y or N as
+                                         the first character.  Do not
+                                         use leading blanks.  Do not use
+                                         quotes.
+
+                                              Y = interactive
+                                              N = not interactive.
+
+
+                                         Five erroneous responses are
+                                         permitted before the run ends.
+
+
+                       TABLE 1 
+                       -------
+
+                 ( DATES OF INTEREST )
+
+
+INPUT IS VIA PROGRAM READING FROM UNIT 5. INPUT IS LIST-DIRECTED AND IN
+THE ORDER GIVEN IN THIS TABLE.
+
+
+
+DESCRIPTIVE    FIRST     DEFAULT     COMMENTS
+  VARIABLE      CASE      IF NOT
+    NAME      DEFAULT   OVERRIDDEN
+-----------   -------   ----------   --------
+
+
+FIRSTDATE     500101.   = previous   the first date in the range of
+(real)        YYMMDD.     case's     dates of interest; 
+                          value
+
+                                     format is YYMMDD.HMMSS; the HHMMSS
+                                     part can be input and will be used
+                                     correctly, but the program was
+                                     intended for analyses where the
+                                     time of day is insignificant
+
+
+
+DELDATE         5.0     = previous   the increment between dates when
+(real)         days       case's     processing occurs;
+                          value
+
+
+
+NUMDATES         1      = previous   the number of dates to be processed
+(integer)                 case's
+                          value
+
+                                     NUMDATES > 100 is an error
+
+
+
+
+ ******** REMINDERS ******
+
+      End your input data with a slash(/).
+
+      To end the program, enter:
+                           a.  CNTL/Z if unit 5 is the terminal, or
+                           b.  no data record if unit 5 is a data file.
+
+
+                       TABLE 2
+                       -------
+
+                  ( ORBIT ALTITUDE )
+
+
+INPUT IS VIA PROGRAM READING FROM UNIT 5. INPUT IS LIST-DIRECTED.
+
+
+
+DESCRIPTIVE    FIRST     DEFAULT     COMMENTS
+  VARIABLE      CASE      IF NOT
+    NAME      DEFAULT   OVERRIDDEN
+-----------   -------   ----------   --------
+
+
+ALTITUDE       300.0    = previous   The orbit altitude above a
+(real)       kilometers   case's     spherical earth.
+                          value
+                                     Orbit is circular.
+
+                                     Earth radius = 6378.166 km.
+
+
+                                     Zero or negative altitude is an
+                                     error.
+
+
+
+
+ ******** REMINDERS ******
+
+      End your input data with a slash(/).
+
+      To end the program, enter:
+                           a.  CNTL/Z if unit 5 is the terminal, or
+                           b.  no data record if unit 5 is a data file.
+
+
+                       TABLE 3
+                       -------
+
+                 ( ORBIT INCLINATION )
+
+
+
+
+INPUT IS VIA PROGRAM READING FROM UNIT 5. INPUT IS LIST-DIRECTED.
+
+
+
+DESCRIPTIVE    FIRST     DEFAULT     COMMENTS
+  VARIABLE      CASE      IF NOT
+    NAME      DEFAULT   OVERRIDDEN
+-----------   -------   ----------   --------
+
+
+ORBINC         28.5     = previous   This is the orbit inclination
+(real)        degrees     case's
+                          value
+
+
+                                     Inclination negative or greater
+                                     than 180 degrees is an error
+
+
+ ******** REMINDERS ******
+
+      End your input data with a slash(/).
+
+      To end the program, enter:
+                           a.  CNTL/Z if unit 5 is the terminal, or
+                           b.  no data record if unit 5 is a data file.
+
+
+                       TABLE 4 
+                       -------
+
+         ( FLAG INDICATING THE RAAN SELECTION OPTION )
+
+
+INPUT IS VIA PROGRAM READING FROM UNIT 5. INPUT IS LIST-DIRECTED AND IN
+THE ORDER GIVEN IN THIS TABLE.
+
+
+
+DESCRIPTIVE    FIRST     DEFAULT     COMMENTS
+  VARIABLE      CASE      IF NOT
+    NAME      DEFAULT   OVERRIDDEN
+-----------   -------   ----------   --------
+
+
+NODEOPT          1      = previous   flag indicating how the orbit
+(integer)                 case's     RAAN range is defined
+                          value
+
+                                     = 1, defined directly; use table 5A
+                                          next
+
+                                     = 2, defined in terms of mean solar
+                                          time;  use table 5B next
+
+                                     = otherwise, an error
+
+
+
+
+ ******** REMINDERS ******
+
+      End your input data with a slash(/).
+
+      To end the program, enter:
+                           a.  CNTL/Z if unit 5 is the terminal, or
+                           b.  no data record if unit 5 is a data file.
+
+
+                       TABLES 5A and 5B   (use only one)
+                       ----------------
+
+          ( 5A: DEFINE ORBIT RAAN RANGE DIRECTLY )
+
+          ( 5B: DEFINE ORBIT RAAN RANGE USING MEAN SOLAR TIME )
+
+
+INPUT IS VIA PROGRAM READING FROM UNIT 5. INPUT IS LIST-DIRECTED AND IN
+THE ORDER GIVEN IN THIS TABLE.
+
+
+
+DESCRIPTIVE    FIRST     DEFAULT     COMMENTS
+  VARIABLE      CASE      IF NOT
+    NAME      DEFAULT   OVERRIDDEN
+-----------   -------   ----------   --------
+
+
+                **********
+                *   5A   *    WHEN TABLE 4 HAS NODEOPT=1
+                **********
+
+
+
+FIRSTRAAN       0.0     = previous   first RAAN in the range; used
+(real)        degrees     case's     for each date processed
+                          value
+
+
+DELRAAN         7.5     = previous   increment between RAAN's processed
+(real)        degrees     case's
+                          value
+
+
+NUMRAAN          49     = previous   number of RAAN's to be processed
+(integer)                 case's
+                          value
+                                     NUMRAAN > 361 is an error
+
+
+
+                **********
+                *   5B   *    WHEN TABLE 4 HAS NODEOPT=2
+                **********
+
+
+
+FIRSTMST        0.0     = previous   mean solar time of the first RAAN
+(real)         hours      case's     to be processed
+                          value
+
+
+DELMST         60.0     = previous   increment between RAAN mean solar
+(real)        minutes     case's     times
+                          value
+
+
+NUMMST           25     = previous   number of RAAN's to be processed
+(integer)                 case's
+                          value
+                                     NUMMST > 361 is an error
+
+
+
+
+ ******** REMINDERS ******
+
+      End your input data with a slash(/).
+
+      To end the program, enter:
+                           a.  CNTL/Z if unit 5 is the terminal, or
+                           b.  no data record if unit 5 is a data file.
+
+                       TABLE 6
+                       -------
+
+      ( DEFINE OUTPUT OPTIONS FOR NON-SURVEY RUNS )
+
+
+
+INPUT IS VIA PROGRAM READING FROM UNIT 5. INPUT IS LIST-DIRECTED AND IN
+THE ORDER GIVEN IN THIS TABLE.
+
+
+
+DESCRIPTIVE    FIRST     DEFAULT     COMMENTS
+  VARIABLE      CASE      IF NOT
+    NAME      DEFAULT   OVERRIDDEN
+-----------   -------   ----------   --------
+
+
+        ************************************** IE:  INDIVIDUAL TARGETS
+        *   IF THE RUN IS A NON-SURVEY RUN   *      ARE SPECIFIED IN THE
+        **************************************      REQUIREMENTS FILE
+
+
+DOSUMMARY     .TRUE.    = previous   If .TRUE.:  for each target, give
+(logical)                 case's     the RAAN -vs- date table of target
+                          value      availability
+
+                                     If .FALSE.: do not give the table
+
+                                     Section 3, example 1 illustrates it
+
+
+DODETTABLE    .FALSE.   = previous   If .TRUE.:  give detail output in
+(logical)                 case's     table form as described in
+                          value      section 2, item 3, first bullet
+
+                                     If .FALSE.: do not give the output
+
+                                     Section 3, example 2 illustrates it
+
+
+DOBARS1       .FALSE.   = previous   If .TRUE.: give bar graph output
+(logical)                 case's     showing the mean anomalies for
+                          value      which individual observation
+                                     requirements are satisfied.
+                                     Described in section 2, item 3,
+                                     second bullet
+
+                                     If .FALSE.: do not give the output
+
+                                     Section 3, example 3 illustrates it
+
+
+DOBARS2       .FALSE.   = previous   If .TRUE.: give bar graph output
+(logical)                 case's     showing the time since a specified
+                          value      orbit event when all observation
+                                     reqirements are satisfied.
+                                     Described in section 2, item 3,
+                                     third bullet
+
+                                     If .FALSE.: do not give the output
+
+                                     Section 3, example 4 illustrates it
+ 
+
+
+                     ( continued )
+
+
+                ( Table 6 continued )
+
+
+LEVDETAIL        0       = previous  Controls the creation of the detail
+                          case's     data file(unit 27) mentioned in
+                                     section 2, item 3, fourth bullet
+
+                                     = 0 or negative: do not generate it
+                                     = 1, 2, 3, or 4: give info as
+                                       described in section 12
+                                     = 5 or greater: value reset to 4
+
+
+DOXYPLOT1     .FALSE.    = previous  If .TRUE.: create a data file in
+(logical)                 case's     the format used by the TOSS
+                          value      XYPLOTTER program; output unit
+                                     is 25
+
+                                     If .FALSE.: do not create it
+
+                                     Data is output in groups, each
+                                     group corresponding to a date and
+                                     target pair; data is in triplets,
+                                     1-RAAN, 2-availability duration,
+                                     3-RAAN's mean solar time
+ 
+
+DOXYPLOT2     .FALSE.    = previous  If .TRUE.: create a data file in
+(logical)                 case's     the format used by the TOSS
+                          value      XYPLOTTER program; output unit
+                                     is 26
+
+                                     If .FALSE.: do not create it
+
+                                     There are two groups of data for
+                                     each target, one group having
+                                     minimum availability duration for
+                                     all nodes processed, the other has
+                                     the maximum.  Data is in pairs:
+                                     1-days since the start,
+                                     2-availability duration
+
+
+TOPRINT       .TRUE.    = previous   If .TRUE.: put availability results
+(logical)                 case's     on the print unit(unit 19)
+                          value
+                                     If .FALSE.: do not put the results
+                                     there; however, other output is
+                                     written there
+
+
+
+TOPROMPT      .FALSE.   = previous   If .TRUE.: put availability results
+(logical)                 case's     on the prompt unit(unit 6)
+                          value
+                                     If .FALSE.: do not put the results
+                                     there; however, other output is
+                                     written there
+
+                                     TOPRINT = TOPROMPT = .FALSE. is
+                                     valid
+
+
+
+
+                    ( continued )
+
+
+
+                ( table 6 continued )
+
+
+
+
+
+        ************************************** IE: NO INDIVIDUAL TARGETS
+        *   IF THE RUN IS A SKY SURVEY RUN   *     ARE SPECIFIED IN THE
+        **************************************     REQUIREMENTS FILE
+
+
+DUMMY        none        none        9 dummy parameters are read and
+(9 of these)                         then ignored;
+ 1-4: L*1 
+   5: I*4                            Coding the program this way made
+ 6-9: L*1                            the user input easier to describe
+                                     and lets the same unit 5 serve
+                                     both survey and non-survey runs
+
+
+
+ ******** REMINDERS ******
+
+      End your input data with a slash(/).
+
+      To end the program, enter:
+                           a.  CNTL/Z if unit 5 is the terminal, or
+                           b.  no data record if unit 5 is a data file.
+
+
+                       TABLE 7 
+                       -------
+
+
+          ( DEFINE OUTPUT OPTIONS FOR SKY SURVEY RUNS )
+
+
+
+INPUT IS VIA PROGRAM READING FROM UNIT 5. INPUT IS LIST-DIRECTED AND IN
+THE ORDER GIVEN IN THIS TABLE.
+
+
+
+DESCRIPTIVE    FIRST     DEFAULT     COMMENTS
+  VARIABLE      CASE      IF NOT
+    NAME      DEFAULT   OVERRIDDEN
+-----------   -------   ----------   --------
+
+        ************************************** IE: NO INDIVIDUAL TARGETS
+        *   IF THE RUN IS A SKY SURVEY RUN   *     ARE SPECIFIED IN THE
+        **************************************     REQUIREMENTS FILE
+
+
+KFREQ            1      = previous   the frequency at which sky survey
+(integer)                 case's     results are given;  ex: KFREQ = 3
+                          value      means that results are given at the
+                                     first, fourth, seventh, ...., and
+                                     last dates of interest;
+
+                                     if zero or negative, results are
+                                     given for the first and last dates
+
+
+KOPT1            3      = previous   = 1, give results for the current
+(integer)                 case's          date
+                          value
+                                     = 2, give composite results for
+                                          all dates from the first to
+                                          the current date
+
+                                     = otherwise, do both of the above
+
+
+KOPT2            3      = previous   = 1, give results in grid format
+(integer)                 case's
+                          value      = 2, give results in map format
+
+                                     = otherwise, do both of the above
+
+
+
+
+        ************************************** IE:  INDIVIDUAL TARGETS
+        *   IF THE RUN IS A NON-SURVEY RUN   *      ARE SPECIFIED IN THE
+        **************************************      REQUIREMENTS FILE
+
+
+KDUMMY       none        none        3 dummy parameters are read and
+(3 of these)                         then ignored;
+(integer)
+
+                                     Coding the program this way made
+                                     the user input easier to describe
+                                     and lets the same unit 5 serve
+                                     both survey and non-survey runs
+
+
+
+
+ ******** REMINDERS ******
+
+      End your input data with a slash(/).
+
+      To end the program, enter:
+                           a.  CNTL/Z if unit 5 is the terminal, or
+                           b.  no data record if unit 5 is a data file.
+
+
+                       TABLE 8 
+                       -------
+
+              ( MISCELLANEOUS PARAMETERS )
+
+
+INPUT IS VIA PROGRAM READING FROM UNIT 5. INPUT IS LIST-DIRECTED AND IN
+THE ORDER GIVEN IN THIS TABLE.
+
+
+
+DESCRIPTIVE    FIRST     DEFAULT     COMMENTS
+  VARIABLE      CASE      IF NOT
+    NAME      DEFAULT   OVERRIDDEN
+-----------   -------   ----------   --------
+
+
+KRELTIME         2      = previous   Effective only for non-survey runs
+(integer)                 case's     and when least one of DODETTABLE,
+                          value      DOBARS1, DOBARS2, and LEVDETAIL
+                                     are .TRUE.(table 6); otherwise,
+                                     not used
+
+                                     Identifies the orbital event from
+                                     which the start and end of
+                                     availability periods are measured
+
+                                     = 1, s/c enters orbit night
+                                     = 2, s/c enters orbit day
+                                     = 3, s/c crosses sun meridian
+                                     = 4, s/c crosses ascending node
+                                     = 5, s/c crosses descending node
+                                     = 6, s/c crosses target meridian
+                                     = 7, s/c crosses zero right ascn
+                                     = otherwise, error
+
+
+
+VISMIN          0.0     = previous   Effective only for non-survey runs
+(real)        minutes     case's     and when DOSUMMARY(table 6) is
+                          value      .TRUE.
+
+                                     This is the minimum duration that
+                                     will be reported in the summary
+                                     table;  if the duration is zero or
+                                     less than VISMIN, the program
+                                     writes '---', as in section 3,
+                                     example 1
+
+
+
+ ******** REMINDERS ******
+
+      End your input data with a slash(/).
+
+      To end the program, enter:
+                           a.  CNTL/Z if unit 5 is the terminal, or
+                           b.  no data record if unit 5 is a data file.
+
+******************************
+*     SECTION 11. OUTPUT     *
+******************************
+
+
+QUIKVIS OUTPUT CONSISTS OF:
+
+      - prompt, error, and run progress messages (unit 6)
+
+      - standard output of target availability info (unit 19)
+
+      - data in a format that the TOSS XYPLOTTER program uses
+        (units 25 and 26)
+
+      - detail data for use by an external processor (unit 27)
+
+
+
+Examples of units 6, 19, 25, and 26 are given in this section of the
+guide.  The format and examples of the detail data file is given in
+section 12. 
+
+
+
+USER INPUT (unit 5) THAT GENERATED THE UNITS 6 AND 19 SAMPLE OUTPUT
+-------------------------------------------------------------------
+
+This was used to generate sample prompt output(unit 6) and sample
+standard output(unit 19).  The XYPLOT and detail data files were created
+separately.
+
+
+     Y               Table ZERO   replied Y to get unit 6 hard copy
+     870901.,2.,26/  Table 1      dates
+     300./           Table 2      altitude
+     28.5/           Table 3      inclination
+     1/              Table 4      node selection option
+     0.,10.,37/      Table 5A     node definition
+     /               Table 6      output options for individual targ run
+     1,3,3/          Table 7      output options for sky survey run
+     3,10/           Table 8      orbital event flag, VISMIN for summary
+
+
+////////////////////////////////////////////
+
+   SAMPLE PROMPT UNIT OUTPUT (unit 6) 
+
+////////////////////////////////////////////
+
+
+
+ READING CATALOGUE INFORMATION.   25-MAR-87 14:29:16
+
+
+ END READING CATALOGUE INFORMATION.   25-MAR-87 14:29:20
+
+
+
+
+
+ ********** START CASE  1 **********
+
+
+
+
+
+
+ ***************** USER GUIDE TABLE ZERO *****************
+
+
+
+$IS THIS AN INTERACTIVE RUN ?  ENTER (Y/N) > 
+
+
+ ***************** USER GUIDE TABLE 1 *****************
+
+
+ <<< FIRST TIME AND INCREMENT(DAYS) CONTROLS >>>
+
+   FIRST VALUE =   500101.000000    
+   INCREMENT =     5.00000000000    
+   NUM VALUES =           1
+
+$  ENTER NEW CONTROLS -----> 
+
+   ENTERED -->    870901.000000       2.00000000000         26
+
+
+
+ ***************** USER GUIDE TABLE 2 *****************
+
+
+
+ SPECIFY ORBIT ALTITUDE (EARTH RAD=6378.166)  DEFAULT= 300.000
+
+$ENTER > 
+
+
+ ***************** USER GUIDE TABLE 3 *****************
+
+
+
+ SPECIFY THE ORBIT INCLINATION. DEFAULT=  28.500
+
+$ENTER > 
+
+
+
+ ***************** USER GUIDE TABLE 4 *****************
+
+
+
+ SPECIFY THE METHOD OF ASSIGNING ORBIT RAAN'S.
+
+    1= NODE RANGE SPECIFIED DIRECTLY.
+    2= MEAN SOLAR TIME RANGE IS SPECIFIED. RAAN COMPUTED.
+
+    DEFAULT =  1
+
+$ENTER > 
+
+
+ ***************** USER GUIDE TABLE 5A *****************
+
+
+ <<< ORBIT RAAN CONTROLS >>>
+
+   FIRST VALUE =  0.000000000000E+00
+   INCREMENT =     7.50000000000    
+   NUM VALUES =          49
+
+$  ENTER NEW CONTROLS -----> 
+
+   ENTERED -->   0.000000000000E+00   10.0000000000         37
+
+
+
+ ***************** USER GUIDE TABLE 6 *****************
+
+
+
+ THIS RUN PROCESSES INDIVIDUAL TARGET LOCATIONS.
+
+   SET OUTPUT OPTIONS.  DEFAULTS ARE --
+
+     SUMMARY OUTPUT...................... T
+     DETAIL OUTPUT:
+       MEAN ANOMALY TABLE................  F
+       BARS: AVAIL(EACH REQMT)...........  F
+       BARS: AVAIL(COMPOSITE REQMT)......  F
+       DATA FILE GENERATION(UNIT 27).....  0
+          0 = OFF
+          1 = MIN DATA = GNTD AVAILABILITY FOR EACH DATE(COMPOSITE, ALL NODES)
+          2 = 1 + GNTD OK-NESS FOR EACH OBS REQMT(COMPOSITE, ALL NODES)
+          3 = 2 + AVAILABILITY FOR INDIVIDUAL RAANS
+          4 = MAX DATA = 3 + OK-NESS FOR EACH OBS REQMT FOR EACH NODE
+     GENERATE XYPLOT FILE:
+       DUR -VS- RAAN (UNIT 25)...........  F
+       MIN/MAX DUR -VS-DATE (UNIT 26)....  F
+     PUT RESULTS ON PRINT UNIT........... T
+     PUT RESULTS ON PROMPT UNIT.......... F
+
+$ENTER > 
+
+
+ ***************** USER GUIDE TABLE 7 *****************
+
+
+
+$DUMMY READ. ENTER SLASH(/).  > 
+
+
+ ***************** USER GUIDE TABLE 8 *****************
+
+
+
+ ORBIT EVENT INDICATOR FOR RELATIVE TIME USE =   2
+
+    ASSIGNMENTS: 1= CROSS ORBIT SUNSET                      
+                 2= CROSS ORBIT SUNRISE                     
+                 3= CROSS TRUE SUN MERIDIAN                 
+                 4= CROSS ASCENDING NODE                    
+                 5= CROSS THE DESCENDING NODE               
+                 6= CROSS TARGET MERIDIAN                   
+                 7= CROSS INERTIAL ZERO RIGHT ASCENSION     
+
+ MINIMUM AVAILABILITY(MINUTES) FOR SUMMARY TABLE ENTRY =  0.0000E+00
+
+$ENTER > 
+
+          CASE  1 STARTED AT 25-MAR-87 14:29:28
+
+
+
+
+ FIRST AND LAST TIMES(YYMMDD.HHMMSS) =  870901.000000  871021.000000
+
+         INCREMENT(DAYS) =   2.0
+         NUMBER OF TIMES =    26
+         TIME SPAN(DAYS) =  50.0
+
+ ORBIT SEMI-MAJOR AXIS(KM) =  6678.166  (PERIOD(MIN)=  90.520)
+ ORBIT INCLINATION(DEG) =       28.500
+
+ RAAN RANGE WAS INPUT:
+
+         FIRST AND FINAL RAAN(DEG) =     0.000  360.000
+         INCREMENT(DEG) =   10.000
+         NUMBER OF RAANS =      37
+         SPAN(DEG) =       360.000
+
+ OBSERVATION CONSTRAINTS:
+
+         EARTH AVOIDANCE(DEG)........  17.0
+         VEL VEC AVOIDANCE(DEG)......  70.0
+         MAX TARGET/ZENITH SEP(DEG).. 180.0
+         ORBIT NIGHT................. REQUIRED  
+
+ PROCESSING INDIVIDUAL TARGETS:
+
+         SUMMARY OUTPUT............................ ON        
+             MINIMUM AVAILABILITY REPORTED(MINS)...  10.0
+         DETAIL OUTPUT............................. OFF       
+             INFO LEVEL FOR DETAIL FILE............ 0
+         XYPLOT FILE GENERATION.................... OFF       
+         ORBIT EVENT IDENTIFIER.................... 3
+
+         NUMBER OF TARGETS.........................   2
+
+         ID'S =     22    23
+
+
+
+ FOR YOUR INFO:    TIME= 25-MAR-87 14:29:28
+    (NUMBER OF DATES)*(NUMBER OF NODES)*(NUMBER OF TARGS) =    1924
+             26                37                   2
+ START PROCESSING TARG NUMBER   1 OF   2 AT 25-MAR-87 14:29:28
+ START PROCESSING TARG NUMBER   2 OF   2 AT 25-MAR-87 14:31:09
+
+ END PROCESSING CASE  1     25-MAR-87 14:32:13
+
+
+
+
+
+ ********** START CASE  2 **********
+
+
+
+
+
+
+ ***************** USER GUIDE TABLE 1 *****************
+
+
+ <<< FIRST TIME AND INCREMENT(DAYS) CONTROLS >>>
+
+   FIRST VALUE =   870901.000000    
+   INCREMENT =     2.00000000000    
+   NUM VALUES =          26
+
+$  ENTER NEW CONTROLS -----> 
+
+
+                 //////////////////////////////////////
+
+        END --     SAMPLE PROMPT UNIT OUTPUT (unit 6)
+
+                 //////////////////////////////////////
+
+
+//////////////////////////////////////
+
+   SAMPLE STANDARD OUTPUT (unit 19)
+
+//////////////////////////////////////
+
+
+
+ START QUIKVIS PROGRAM     25-MAR-87 14:29:12
+
+
+
+ INFO READ FROM EXPERIMENT REQUIREMENTS FILE, UNIT=30
+
+ NUMBER OF EXPERIMENTS FOR WHICH REQUIREMENTS WERE WANTED =  1
+
+
+   EXPERIMENT NAME = EXAMPLE 
+
+     ORBIT DAY/NIGHT..........ORBIT NIGHT IS REQUIRED
+      
+     BRIGHT HORIZON AVOIDANCE ANGLE(DEG)....  17.00
+     DARK HORIZON AVOIDANCE ANGLE(DEG)......  17.00
+     VELOCITY VECTOR AVOIDANCE ANGLE(DEG)...  70.00
+     MAX ZENITH/TARGET SEPARATION(DEG)...... 180.00
+
+     NUMBER OF TARGETS =   2
+
+     ID=    22    23
+          CASE  1 STARTED AT 25-MAR-87 14:29:27
+
+
+
+
+ FIRST AND LAST TIMES(YYMMDD.HHMMSS) =  870901.000000  871021.000000
+
+         INCREMENT(DAYS) =   2.0
+         NUMBER OF TIMES =    26
+         TIME SPAN(DAYS) =  50.0
+
+ ORBIT SEMI-MAJOR AXIS(KM) =  6678.166  (PERIOD(MIN)=  90.520)
+ ORBIT INCLINATION(DEG) =       28.500
+
+ RAAN RANGE WAS INPUT:
+
+         FIRST AND FINAL RAAN(DEG) =     0.000  360.000
+         INCREMENT(DEG) =   10.000
+         NUMBER OF RAANS =      37
+         SPAN(DEG) =       360.000
+
+ OBSERVATION CONSTRAINTS:
+
+         EARTH AVOIDANCE(DEG)........  17.0
+         VEL VEC AVOIDANCE(DEG)......  70.0
+         MAX TARGET/ZENITH SEP(DEG).. 180.0
+         ORBIT NIGHT................. REQUIRED  
+
+ PROCESSING INDIVIDUAL TARGETS:
+
+         SUMMARY OUTPUT............................ ON        
+             MINIMUM AVAILABILITY REPORTED(MINS)...  10.0
+         DETAIL OUTPUT............................. OFF       
+             INFO LEVEL FOR DETAIL FILE............ 0
+         XYPLOT FILE GENERATION.................... OFF       
+         ORBIT EVENT IDENTIFIER.................... 3
+
+         NUMBER OF TARGETS.........................   2
+
+         ID'S =     22    23
+
+
+
+ FOR YOUR INFO:    TIME= 25-MAR-87 14:29:28
+    (NUMBER OF DATES)*(NUMBER OF NODES)*(NUMBER OF TARGS) =    1924
+             26                37                   2
+
+
+
+ TARGETS FOR THIS CASE ARE....
+
+      TARGET   TARGET            RACN    DECL
+        ID      NAME            (DEG)   (DEG)
+                                (M50)   (M50)
+
+         22   R=120,D=-45      120.000 -45.000
+         23   R=240,D=45       240.000  45.000
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        ***********************************************
+        *                                             *
+        *  AN OUTPUT PAGE BELONGING IN THIS SPOT HAS  *
+        *  THE SAME FORMAT AS EXAMPLE 1 IN SECTION 3  *
+        *                                             *
+        *   TO SAVE SPACE, IT WAS NOT INCLUDED HERE   *
+        *                                             *
+        ***********************************************
+
+
+
+ END QUIKVIS PROGRAM.
+
+    START TIME WAS 25-MAR-87 14:29:12
+      END TIME WAS 25-MAR-87 14:32:18
+
+ QUIKVIS. NORMAL END.                             
+
+
+                 //////////////////////////////////////
+
+        END --     SAMPLE STANDARD OUTPUT (unit 19)
+
+                 //////////////////////////////////////
+
+
+//////////////////////////////////////////////////////
+
+   SAMPLE XYPLOT OUTPUT (unit 25)
+
+   Option is turned on in table 6, variable DOXYPLOT1
+   File written by QUIKVIS5A1, QUIKVIS5A2B
+
+//////////////////////////////////////////////////////
+
+
+COMMENT:  one group of data is written for each date and target.  Data
+          consists of the RAAN value, the ascending node's mean solar
+          time, and the duration of target availability.  THIS FILE
+          CAN BECOME LARGE.
+
+          lower case text below is comments for this guide, not part
+          of the file
+
+
+
+ 3/    GENERATED BY QUIKVIS.   20-FEB-86 11:14:24      three title lines
+TARGET AVAILABILITY TIME -VS- ORBIT RAAN
+TARG ID =                    id is empty because multiple targets in run
+                             single-date runs put date info here
+ 3/                                                  three comment lines
+MIN/MAX ALT(KM)=  300  300  INCL(DEG)= 28.5  ARGP(DEG)=  0.0
+HORIZ AVOID=  0.0  VEL VEC AVOID= 90.0  MAX ZENITH SEP= 95.0
+ORBIT NIGHT IS REQUIRED  
+ 3/                                               three parameter output
+RIGHT ASCENSION OF ASCENDING NODE(DEG)                first of the three
+MINUTES AVAILABLE                                    second of the three
+MEAN SOLAR TIME OF ASCENDING NODE(HRS)                third of the three
+ ID=   23  Y/M/D= 87/09/01                  legend for first set of data
+   35.000,  9.532,  3.724,
+   40.000,  9.655,  4.057,
+   45.000,  9.846,  4.390,
+   50.000, 10.093,  4.724,
+   55.000, 10.389,  5.057,
+   60.000, 10.725,  5.390,
+   65.000, 11.093,  5.724,
+   70.000, 11.483,  6.057,
+   /                                 for reading in list-directed manner
+ ID=   23  Y/M/D= 87/10/01                 legend for second set of data
+   35.000,  1.882,  1.753,
+   40.000,  1.923,  2.086,
+   45.000,  2.031,  2.419,
+   50.000,  2.200,  2.753,
+   55.000,  2.426,  3.086,
+   60.000,  2.706,  3.419,
+   65.000,  3.037,  3.753,
+   70.000,  3.416,  4.086,
+   /
+ ID=  107  Y/M/D= 87/09/01
+   35.000, 23.281,  3.724,
+   40.000, 23.413,  4.057,
+   45.000, 23.579,  4.390,
+   50.000, 23.776,  4.724,
+   55.000, 23.902,  5.057,
+   60.000, 23.910,  5.390,
+   65.000, 23.920,  5.724,
+   70.000, 23.933,  6.057,
+   /
+ ID=  107  Y/M/D= 87/10/01
+   35.000, 15.720,  1.753,
+   40.000, 15.769,  2.086,
+   45.000, 15.851,  2.419,
+   50.000, 15.969,  2.753,
+   55.000, 16.124,  3.086,
+   60.000, 16.319,  3.419,
+   65.000, 16.553,  3.753,
+   70.000, 16.825,  4.086,
+   /
+
+
+//////////////////////////////////////////////////////
+
+   SAMPLE XYPLOT OUTPUT (unit 26)
+
+   Option is turned on in table 6, variable DOXYPLOT2
+   File written by QUIKVIS5A1, QUIKVIS5A2B
+
+//////////////////////////////////////////////////////
+
+
+
+COMMENT:  two groups of data are written for each target, one group
+          for minimum availability durations, the for maximums.  Data
+          consists of date information and the duration of target
+          availability.
+
+
+ 2/    GENERATED BY QUIKVIS.   18-APR-86 15:43:11
+MIN/MAX TARGET AVAILABILITY TIME -VS- DATE
+TARGET ID = 1    NAME = JUPITER         
+ 3/
+MIN/MAX ALT(KM)=  300  300  INCL(DEG)= 28.5  ARGP(DEG)=  0.0
+HORIZ AVOID=  0.0  VEL VEC AVOID= 30.0  MAX ZENITH SEP= 90.0
+ORBIT NIGHT IS REQUIRED         RAAN RANGE=   0.0 THRU 360.0
+ 2/
+DAYS SINCE Y/M/D= 89/01/01
+MINUTES AVAILABLE
+ MIN DURATION, TARG ID=    1
+    0.000, 22.009,
+    5.000, 20.415,
+   10.000, 18.848,
+   15.000, 17.435,
+         :
+         :
+         :
+         :
+  335.000, 26.129,
+  340.000, 27.552,
+  345.000, 28.988,
+  350.000, 30.424,
+  355.000, 30.572,
+  360.000, 30.654,
+   /
+ MAX DURATION, TARG ID=    1
+    0.000, 30.924,
+    5.000, 29.543,
+   10.000, 28.187,
+   15.000, 26.821,
+         :
+         :
+         :
+         :
+  335.000, 33.871,
+  340.000, 34.992,
+  345.000, 35.584,
+  350.000, 35.337,
+  355.000, 35.514,
+  360.000, 35.358,
+   /
+
+***************************************************************
+*    SECTION 12. DEFINITION OF THE DETAIL DATA FILE FORMAT    *
+***************************************************************
+
+
+   The file is written by subroutines QUIKVIS5A3, QUIKVIS5A2C, and
+   QUIKVIS5A2C3.
+
+
+
+
+The Detail Data File, unit 27, is generated when LEVDETAIL(section 10,
+table 6) is non-zero.  There are four levels of detail.  The file
+contains standard header records plus the following FOR EACH TARGET
+AND EACH DATE:
+
+
+     detail level 1 (minimum detail):
+
+         a) tells when the target is guaranteed to be availabile;
+            this is the availabilty period common to all RAAN's
+
+
+     detail level 2:
+
+         items a and...
+
+         b)  tells when the individual observation requirements are
+             guaranteed to be satisfied;  these periods are common to
+             all RAAN's
+
+
+     detail level 3:
+
+         items a, b, and...
+         
+         c)  for each RAAN processed, tells when the target is
+             available;
+
+
+     detail level 4 (maximum detail):
+
+         items a, b, c, and...
+
+         d) for each RAAN processed, tells when individual observation
+           constraints are satisfied
+
+
+The file is written so that a post-processing program can read it in a
+list-directed manner.  If QUIKVIS is executed with multiple cases and
+more than one case creates a detail data file, a single file is
+produced with the information from one case following that of a
+previous case.
+
+
+STORAGE REQUIREMENTS(within about a percent, in 512-byte blocks)
+--------------------
+
+   level 1:
+
+      0.20  *         1         *  number of dates  *  number of targets
+
+   level 2:
+
+      0.40  *         1         *  number of dates  *  number of targets
+
+   level 3:
+
+      0.19  *  number of RAANS  *  number of dates  *  number of targets
+
+   level 4:
+
+      0.35  *  number of RAANS  *  number of dates  *  number of targets
+
+
+
+
+HEADER RECORDS(records are the same for all levels of detail)
+--------------
+
+
+The header records give information about parameters used by QUIKVIS to
+generate the data present in this file.
+
+
+CAUTION:
+
+   if you write a program that reads this file, be aware that
+   the number of header records may change in the future if there is a
+   need and the number of observation requirements may also change.
+   Therefore, use the values you read from records 1 and 7 instead of
+   fixed values(13 and 4 are current at this writing).  If new
+   requirement types are added to QUIKVIS, new records will be added
+   after record 11 and new angle pairs will be added in the
+   node-specific detail data records(see items h and j).  If additional
+   information about QUIKVIS parameters is needed, they will be added
+   after record 13.
+
+
+DESCRIPTION:
+
+   rec 1 (1 integer value)
+
+            a) number of header records following this record;
+               currently, there are 13 header records following the
+               first one, so the value written in this record is 13
+
+   rec 2 (4 real values) - orbit parameters
+
+            a) SMA(km)   b) ECC   c) INCL(deg)   d) ARGP(deg)
+
+   rec 3 (1 real value)
+
+            a) orbit period(Keplerian) in minutes
+
+   rec 4 (1 integer value, 2 real values, 1 integer value) - node info
+
+            a) flag indicating how orbit nodes are specified
+               =1, RAAN specified directly
+               =2, mean solar time of RAAN is specified
+            b) first RAAN(deg) or RAAN mean solar time(hrs),
+            c) increment(deg or hours)
+            d) number of nodes
+
+   rec 5 (2 real values, 1 integer value) - date info
+
+            a) first date and time processed(YYMMDD.HHMMSS)
+            b) increment(days)
+            c) number of YYMMDD.HHMMSS's processed
+
+   rec 6 (1 integer value)
+
+            a) number of targets processed
+
+
+
+
+
+                   ( continued )
+
+
+
+
+                  ( continuation )
+
+
+  rec 7  (1 integer value)
+
+            a) number of observation requirement data records following
+               this one;  currently, QUIKVIS handles 4 types of
+               requirements, so the value in this record is 4
+
+  rec 8  (1 logical value, 1 real value)
+
+            a) T/F flag indicating whether earth horizon avoidance was
+               considered;  T = considered;   THIS IS ALWAYS TRUE
+            b) avoidance angle(deg)
+
+  rec 9  (1 logical value)
+
+            a) T/F flag indicating whether orbit night is an
+               observation requirement;  T = yes,  F = day/night ignored
+
+  rec 10 (1 logical value, 1 real value)
+
+            a) T/F flag indicating whether velocity vector avoidance was
+               considered;  T = considered
+            b) avoidance angle(deg)
+
+  rec 11 (1 logical value, 1 real value)
+
+            a) T/F flag indicating whether maximum zenith vector
+               separation was considered;  T = considered
+            b) max separation angle(deg)
+
+  rec 12 (1 integer value)
+
+            a) indicator identifying the orbit event to which relative
+               mean anomalies are referenced
+
+               = 1 s/c crosses orbit sunset
+               = 2 s/c crosses orbit sunrise
+               = 3 s/c crosses sun meridian
+               = 4 s/c crosses ascending node
+               = 5 s/c crosses descending node
+               = 6 s/c crosses target meridian
+               = 7 s/c crosses zero right ascension
+
+  rec 13 (1 integer value)
+
+            a) indicator identifying the detail level for this file
+               1 = minimum, 2 and 3 = intermediate, 4 = maximum
+
+  rec 14 (1 integer value)
+
+            a) the value zero;  the last header record;  present as a
+               visual separator between the header and the detail data
+               portion of this file so a person can read it more easily
+
+
+
+DETAIL DATA RECORDS
+-------------------
+
+
+Detail data records are created as follows(a record has 2 or more lines
+of text when listed): 
+
+
+1. FOR EACH TARGET, DO....
+
+      2. FOR EACH DATE, DO....
+
+             3. IF LEVEL 3 OR 4 IS WANTED:
+
+                  4. AS EACH RAAN IS PROCESSED, DO....
+
+                        WRITE AVAILABILITY INFO FOR THE CURRENT RAAN
+                          (if level is 4, include info about
+                           individual obs requirements)
+
+                        END OF INNER BLOCK 4
+
+                  END OF INNER BLOCK 3
+
+             WRITE A GUARANTEED AVAILABILITY DATA RECORD
+               (if level is greater than 1, include info telling when
+                individual requirements are guaranteed to be satisfied)
+
+             
+             IF LEVEL IS 3 OR 4, WRITE A VISUAL SEPARATOR RECORD
+
+             END OF INNER BLOCK 2
+
+      END OF OUTER BLOCK 1
+
+
+
+DATA DESCRIPTION:
+
+
+   a) integer value;  this is a counter identifying the target index
+      within the run(ie, the first, second, third, ... target processed)
+
+      for levels 3 and 4:
+
+             visual separators are present in the file;  the value of
+             item a is 0 in separator records;  in separator records,
+             the remaining data items are absent
+
+
+   b) integer value;  this is the target ID as specified in the
+      requirements file and as read from the target catalogue;
+
+
+   c) real value;  this is the date and time associated with this
+      record;  format is YYMMDD.HHMMSS
+
+
+
+
+                   ( continued )
+
+
+                  ( continuation )
+
+
+   d) real value;  this is the orbit RAAN associated with this record;
+      in degrees;
+
+      for levels 1 and 2:
+
+             value is always 999.000;  the only records present are
+             those giving guaranteed availability info
+
+      for levels 3 and 4:
+
+             this value is 999.000 for the guaranteed availability
+             records
+
+             if not 999.000, value is the RAAN value for for which
+             RAAN-specific availability info is being given in this
+             record
+
+
+   e) real value;  this is the target availability duration for the
+      date and time in item c and the RAAN value in item d;  in minutes;
+
+      if this is a guaranteed availability record(ie, item d value is
+      999.000) then the duration is for the guaranteed availability for
+      this date and for all nodes processed;  the accuracy is 1/3600 of
+      the orbital period
+
+
+   f) real value;  this is the mean solar time of the RAAN in item d;
+      in hours
+
+      if value is 999.000, then so is item d and this is a guaranteed
+      availability record
+
+
+   g) real value;  this is the mean anomaly at which occurs the orbit
+      event identified in header records ;  in degrees;
+
+      if value is 999.000, then so is item d and this is a guaranteed
+      availability record
+
+
+   h) integer value;  this is the number of angle pair data groups
+      present in this record(items i-m):
+
+                level   item h value
+                -----   ------------
+                  1          1
+                  2          5
+                  3          1 in RAAN-specific records
+                  3          5 for guaranteed availability records
+                  4          5
+
+      the 5's are based on the current number of observation
+      requirements being 4; see the caution note before the header
+      record description in this section
+
+
+
+                   ( continued )
+
+
+
+                  ( continuation )
+
+
+   i) first angle pair data group(always present):
+
+      integer value(=N1) followed by N1 pairs of real values;
+
+      N1 = the number of periods during the orbit when observation
+           requirements are satisfied simultaneously;  the periods are
+           defined by a pair of angles;  each angle is a mean anomaly,
+           relative to the orbit event identified in the header records
+
+      the first angle value in a pair tells when satisfaction begins,
+      the second tells where it ends;  the first value is always less
+      than or equal to the second, and may be negative
+
+      for RAAN-specific data records, the pairs give availability info
+      only for the RAAN involved;  for guaranteed availability data
+      records(ie, item d is 999.000), the pairs give availability when
+      all RAAN's have been considered;
+
+      for RAAN-specific data records, the values are accurate as
+      written; for guaranteed availability records, the values are
+      accurate to 0.1 degrees;
+
+
+   j) second angle pair data group(present when item h greater than 1):
+      (this is horizon avoidance info)
+      
+      integer value(=N2) followed by N2 pairs of real values;
+
+      N2 = the number of periods during the orbit when horizon avoidance
+           requirement is satisfied;  the periods are defined by a pair
+           of angles;  each angle is a mean anomaly relative to the
+           orbit event identified in the header records
+
+      the first angle value in a pair tells when satisfaction begins,
+      the second tells where it ends;  the first value is always less
+      than or equal to the second, and may be negative
+
+      for RAAN-specific data records, the pairs tell when the constraint
+      is satisfied for the RAAN involved;  for guaranteed availability
+      data records(ie, item d is 999.000), the pairs give the periods
+      common to all RAAN's processed
+
+      if there was no requirement, one pair is present with values
+      0. and 360.
+
+
+   k) third angle pair data group(present when item h greater than 1):
+      (this is orbit night info)
+      
+      integer value(=N3) followed by N3 pairs of real values;
+
+      same description as item j, but the constraint is orbit night
+
+
+   l) fourth angle pair data group(present when item h greater than 1):
+      (this is velocity vector avoidance info)
+      
+      integer value(=N4) followed by N4 pairs of real values;
+
+      same description as item j, but the constraint is velocity vector
+      avoidance
+
+
+   m) fifth angle pair data group(present when item h greater than 1):
+      (this is zenith direction separation info)
+      
+      integer value(=N5) followed by N5 pairs of real values;
+
+      same description as item j, but the constraint is max zenith
+      zeparation
+
+
+
+DETAIL DATA FILE EXAMPLES 
+------------------------
+
+Comments are present in the header records because this file is
+intended to be read by people as well as programs.  A list-directed
+read stops reading when a slash(/) is encoutered, so the presence of
+the comments is not a problem. 
+
+
+
+                <<<  EXAMPLE:  DETAIL LEVEL 1 >>>
+
+
+ 13/ >> NUM HEADER RECORDS FOLLOWING THIS ONE.  25-MAR-87 11:59:39
+  6674.166,  0.000001,  28.500,   0.000/ >> SMA, ECC, INCL, ARGP
+   90.43881/ >> ORBIT PERIOD IN MINUTES
+  1,   0.0000,  10.0000,   3/ >> RAAN FLAG, 1ST RAAN, INCR, NUMBER
+  870901.000000,   5.0,    7/ >> FIRST TIME, INCR(DAYS), NUM TIMES
+    2/ >> NUMBER OF TARGETS
+    4/ >> NUMBER OF REQMTS RECORDS FOLLOWING THIS RECORD
+    T,  17.000/ >> REQMT 1. EARTH AVOIDANCE FLAG, AVOIDANCE ANGLE
+    T         / >> REQMT 2. ORBIT NIGHT REQUIRED ? (T=YES,F=NO)
+    T,  70.000/ >> REQMT 3. VEL VEC AVOIDANCE FLAG, AVOID ANGLE
+    F, 180.000/ >> REQMT 4. ZENITH VEC MAX SEP FLAG, MAX SEP ANGLE
+  1/  >> EVENT MEAN ANOM IS FOR EVENT: CROSS ORBIT SUNSET
+  1/  >> INFO LEVEL PRESENT. 0=OFF, 1=MIN, 4=MAX
+  0/
+    1,   22, 870901.000000, 999.000,  0.000, 999.000, 999.000,  1,
+      1,   0.00,   0.00,
+  /
+    1,   22, 870906.000000, 999.000,  0.000, 999.000, 999.000,  1,
+      1,   0.00,   0.00,
+  /
+    1,   22, 870911.000000, 999.000,  0.000, 999.000, 999.000,  1,
+      1,   0.00,   0.00,
+  /
+    1,   22, 870916.000000, 999.000,  0.000, 999.000, 999.000,  1,
+      1,   0.00,   0.00,
+  /
+    1,   22, 870921.000000, 999.000,  0.000, 999.000, 999.000,  1,
+      1,   0.00,   0.00,
+  /
+    1,   22, 870926.000000, 999.000,  0.000, 999.000, 999.000,  1,
+      1,   0.00,   0.00,
+  /
+    1,   22, 871001.000000, 999.000,  0.000, 999.000, 999.000,  1,
+      1,   0.00,   0.00,
+  /
+    2,   23, 870901.000000, 999.000,  7.461, 999.000, 999.000,  1,
+      1,   0.00,  29.70,
+  /
+    2,   23, 870906.000000, 999.000,  6.205, 999.000, 999.000,  1,
+      1,   0.00,  24.70,
+  /
+    2,   23, 870911.000000, 999.000,  4.974, 999.000, 999.000,  1,
+      1,   0.00,  19.80,
+  /
+    2,   23, 870916.000000, 999.000,  3.743, 999.000, 999.000,  1,
+      1,   0.00,  14.90,
+  /
+    2,   23, 870921.000000, 999.000,  2.487, 999.000, 999.000,  1,
+      1,   0.00,   9.90,
+  /
+    2,   23, 870926.000000, 999.000,  1.256, 999.000, 999.000,  1,
+      1,   0.00,   5.00,
+  /
+    2,   23, 871001.000000, 999.000,  0.025, 999.000, 999.000,  1,
+      1,   0.00,   0.10,
+  /
+
+                <<<  EXAMPLE:  DETAIL LEVEL 2 >>>
+
+
+ 13/ >> NUM HEADER RECORDS FOLLOWING THIS ONE.  25-MAR-87 12:01:03
+  6674.166,  0.000001,  28.500,   0.000/ >> SMA, ECC, INCL, ARGP
+   90.43881/ >> ORBIT PERIOD IN MINUTES
+  1,   0.0000,  10.0000,   3/ >> RAAN FLAG, 1ST RAAN, INCR, NUMBER
+  870901.000000,   5.0,    7/ >> FIRST TIME, INCR(DAYS), NUM TIMES
+    2/ >> NUMBER OF TARGETS
+    4/ >> NUMBER OF REQMTS RECORDS FOLLOWING THIS RECORD
+    T,  17.000/ >> REQMT 1. EARTH AVOIDANCE FLAG, AVOIDANCE ANGLE
+    T         / >> REQMT 2. ORBIT NIGHT REQUIRED ? (T=YES,F=NO)
+    T,  70.000/ >> REQMT 3. VEL VEC AVOIDANCE FLAG, AVOID ANGLE
+    F, 180.000/ >> REQMT 4. ZENITH VEC MAX SEP FLAG, MAX SEP ANGLE
+  1/  >> EVENT MEAN ANOM IS FOR EVENT: CROSS ORBIT SUNSET
+  2/  >> INFO LEVEL PRESENT. 0=OFF, 1=MIN, 4=MAX
+  0/
+    1,   22, 870901.000000, 999.000,  0.000, 999.000, 999.000,  5,
+      1,   0.00,   0.00,
+      1, 155.12, 317.41,
+      1,   0.00, 144.66,
+      1,-171.84, 122.70,
+      1,   0.00, 360.00,
+  /
+    1,   22, 870906.000000, 999.000,  0.000, 999.000, 999.000,  5,
+      1,   0.00,   0.00,
+      1, 150.29, 312.49,
+      1,   0.00, 144.66,
+      1,-176.66, 117.87,
+      1,   0.00, 360.00,
+  /
+            :
+            :
+            :
+            :
+            :
+    1,   22, 871001.000000, 999.000,  0.000, 999.000, 999.000,  5,
+      1,   0.00,   0.00,
+      1, 125.97, 287.81,
+      1,   0.00, 144.78,
+      1,-200.99,  93.55,
+      1,   0.00, 360.00,
+  /
+    2,   23, 870901.000000, 999.000,  7.461, 999.000, 999.000,  5,
+      1,   0.00,  29.70,
+      1,-145.71,  29.66,
+      1,   0.00, 144.66,
+      1, -99.43, 158.28,
+      1,   0.00, 360.00,
+  /
+    2,   23, 870906.000000, 999.000,  6.205, 999.000, 999.000,  5,
+      1,   0.00,  24.70,
+      1,-150.53,  24.74,
+      1,   0.00, 144.66,
+      1,-104.35, 153.36,
+      1,   0.00, 360.00,
+  /
+            :
+            :
+            :
+            :
+    2,   23, 871001.000000, 999.000,  0.025, 999.000, 999.000,  5,
+      1,   0.00,   0.10,
+      1,-174.85,   0.06,
+      1,   0.00, 144.78,
+      1,-129.02, 128.68,
+      1,   0.00, 360.00,
+  /
+
+                <<<  EXAMPLE:  DETAIL LEVEL 3 >>>
+
+
+ 13/ >> NUM HEADER RECORDS FOLLOWING THIS ONE.  25-MAR-87 12:04:05
+  6674.166,  0.000001,  28.500,   0.000/ >> SMA, ECC, INCL, ARGP
+   90.43881/ >> ORBIT PERIOD IN MINUTES
+  1,   0.0000,  10.0000,   3/ >> RAAN FLAG, 1ST RAAN, INCR, NUMBER
+  870901.000000,   5.0,    7/ >> FIRST TIME, INCR(DAYS), NUM TIMES
+    2/ >> NUMBER OF TARGETS
+    4/ >> NUMBER OF REQMTS RECORDS FOLLOWING THIS RECORD
+    T,  17.000/ >> REQMT 1. EARTH AVOIDANCE FLAG, AVOIDANCE ANGLE
+    T         / >> REQMT 2. ORBIT NIGHT REQUIRED ? (T=YES,F=NO)
+    T,  70.000/ >> REQMT 3. VEL VEC AVOIDANCE FLAG, AVOID ANGLE
+    F, 180.000/ >> REQMT 4. ZENITH VEC MAX SEP FLAG, MAX SEP ANGLE
+  1/  >> EVENT MEAN ANOM IS FOR EVENT: CROSS ORBIT SUNSET
+  3/  >> INFO LEVEL PRESENT. 0=OFF, 1=MIN, 4=MAX
+  0/
+    1,   22, 870901.000000,   0.000,  0.000,   1.390, 264.980,  1,
+      1,   0.00,   0.00,/
+    1,   22, 870901.000000,  10.000,  0.000,   2.057, 256.129,  1,
+      1,   0.00,   0.00,/
+    1,   22, 870901.000000,  20.000,  2.035,   2.724, 247.110,  1,
+      1, 136.56, 144.66,/
+    1,   22, 870901.000000, 999.000,  0.000, 999.000, 999.000,  5,
+      1,   0.00,   0.00,
+      1, 155.12, 317.41,
+      1,   0.00, 144.66,
+      1,-171.84, 122.70,
+      1,   0.00, 360.00,
+  /
+  0/ *****************************************************************
+    1,   22, 870906.000000,   0.000,  0.000,   1.062, 269.806,  1,
+      1,   0.00,   0.00,/
+    1,   22, 870906.000000,  10.000,  0.000,   1.729, 260.987,  1,
+      1,   0.00,   0.00,/
+    1,   22, 870906.000000,  20.000,  3.271,   2.395, 252.030,  1,
+      1, 131.64, 144.66,/
+    1,   22, 870906.000000, 999.000,  0.000, 999.000, 999.000,  5,
+      1,   0.00,   0.00,
+      1, 150.29, 312.49,
+      1,   0.00, 144.66,
+      1,-176.66, 117.87,
+      1,   0.00, 360.00,
+  /
+  0/ *****************************************************************
+            :
+            :
+   TARGET 1 :  DATA FOR THE REMAINING DATES HAS THE SAME FORMAT AS ABOVE
+            :
+            :
+
+                  (example continues)
+
+
+                     (continuation
+
+
+            :
+            :
+   TARGET 1 :  DATA FOR THE REMAINING DATES HAS THE SAME FORMAT AS ABOVE
+            :
+            :
+  0/ *****************************************************************
+    2,   23, 870901.000000,   0.000,  8.774,   1.390, 264.980,  1,
+      1,   0.00,  34.92,/
+    2,   23, 870901.000000,  10.000,  7.814,   2.057, 256.129,  1,
+      1,   0.00,  31.10,/
+    2,   23, 870901.000000,  20.000,  7.451,   2.724, 247.110,  1,
+      1,   0.00,  29.66,/
+    2,   23, 870901.000000, 999.000,  7.461, 999.000, 999.000,  5,
+      1,   0.00,  29.70,
+      1,-145.71,  29.66,
+      1,   0.00, 144.66,
+      1, -99.43, 158.28,
+      1,   0.00, 360.00,
+  /
+  0/ *****************************************************************
+    2,   23, 870906.000000,   0.000,  7.561,   1.062, 269.806,  1,
+      1,   0.00,  30.10,/
+    2,   23, 870906.000000,  10.000,  6.593,   1.729, 260.987,  1,
+      1,   0.00,  26.24,/
+    2,   23, 870906.000000,  20.000,  6.215,   2.395, 252.030,  1,
+      1,   0.00,  24.74,/
+    2,   23, 870906.000000, 999.000,  6.205, 999.000, 999.000,  5,
+      1,   0.00,  24.70,
+      1,-150.53,  24.74,
+      1,   0.00, 144.66,
+      1,-104.35, 153.36,
+      1,   0.00, 360.00,
+  /
+  0/ *****************************************************************
+            :
+            :
+   TARGET 2 :  DATA FOR THE REMAINING DATES HAS THE SAME FORMAT AS ABOVE
+            :
+            :
+            :
+  0/ *****************************************************************
+
+                <<<  EXAMPLE:  DETAIL LEVEL 4 >>>
+
+
+ 13/ >> NUM HEADER RECORDS FOLLOWING THIS ONE.  25-MAR-87 12:11:08
+  6674.166,  0.000001,  28.500,   0.000/ >> SMA, ECC, INCL, ARGP
+   90.43881/ >> ORBIT PERIOD IN MINUTES
+  1,   0.0000,  10.0000,   3/ >> RAAN FLAG, 1ST RAAN, INCR, NUMBER
+  870901.000000,   5.0,    7/ >> FIRST TIME, INCR(DAYS), NUM TIMES
+    2/ >> NUMBER OF TARGETS
+    4/ >> NUMBER OF REQMTS RECORDS FOLLOWING THIS RECORD
+    T,  17.000/ >> REQMT 1. EARTH AVOIDANCE FLAG, AVOIDANCE ANGLE
+    T         / >> REQMT 2. ORBIT NIGHT REQUIRED ? (T=YES,F=NO)
+    T,  70.000/ >> REQMT 3. VEL VEC AVOIDANCE FLAG, AVOID ANGLE
+    F, 180.000/ >> REQMT 4. ZENITH VEC MAX SEP FLAG, MAX SEP ANGLE
+  1/  >> EVENT MEAN ANOM IS FOR EVENT: CROSS ORBIT SUNSET
+  4/  >> INFO LEVEL PRESENT. 0=OFF, 1=MIN, 4=MAX
+  0/
+    1,   22, 870901.000000,   0.000,  0.000,   1.390, 264.980,  5,
+      1,   0.00,   0.00,
+      1, 155.12, 335.75,1,   0.00, 145.20,1,-171.84, 122.70,1,   0.00, 360.00,/
+    1,   22, 870901.000000,  10.000,  0.000,   2.057, 256.129,  5,
+      1,   0.00,   0.00,
+      1, 147.95, 328.69,1,   0.00, 145.01,1,-203.71, 140.35,1,   0.00, 360.00,/
+    1,   22, 870901.000000,  20.000,  2.035,   2.724, 247.110,  5,
+      1, 136.56, 144.66,
+      1, 136.56, 317.41,1,   0.00, 144.66,1,   0.00, 360.00,1,   0.00, 360.00,/
+    1,   22, 870901.000000, 999.000,  0.000, 999.000, 999.000,  5,
+      1,   0.00,   0.00,
+      1, 155.12, 317.41,
+      1,   0.00, 144.66,
+      1,-171.84, 122.70,
+      1,   0.00, 360.00,
+  /
+  0/ *****************************************************************
+    1,   22, 870906.000000,   0.000,  0.000,   1.062, 269.806,  5,
+      1,   0.00,   0.00,
+      1, 150.29, 330.92,1,   0.00, 145.21,1,-176.66, 117.87,1,   0.00, 360.00,/
+    1,   22, 870906.000000,  10.000,  0.000,   1.729, 260.987,  5,
+      1,   0.00,   0.00,
+      1, 143.09, 323.83,1,   0.00, 145.02,1,-208.57, 135.49,1,   0.00, 360.00,/
+    1,   22, 870906.000000,  20.000,  3.271,   2.395, 252.030,  5,
+      1, 131.64, 144.66,
+      1, 131.64, 312.49,1,   0.00, 144.66,1,   0.00, 360.00,1,   0.00, 360.00,/
+    1,   22, 870906.000000, 999.000,  0.000, 999.000, 999.000,  5,
+      1,   0.00,   0.00,
+      1, 150.29, 312.49,
+      1,   0.00, 144.66,
+      1,-176.66, 117.87,
+      1,   0.00, 360.00,
+  /
+  0/ *****************************************************************
+               :
+               :
+     TARGET 1  :  DATA FOR REMAINING DATES HAS THE SAME FORMAT AS ABOVE
+               :
+               :
+
+                  (example continues)
+
+
+                    (continuation)
+               :
+               :
+     TARGET 1  :  DATA FOR REMAINING DATES HAS THE SAME FORMAT AS ABOVE
+               :
+               :
+  0/ *****************************************************************
+    2,   23, 870901.000000,   0.000,  8.774,   1.390, 264.980,  5,
+      1,   0.00,  34.92,
+      1,-145.71,  34.92,1,   0.00, 145.20,1,-112.66, 181.88,1,   0.00, 360.00,/
+    2,   23, 870901.000000,  10.000,  7.814,   2.057, 256.129,  5,
+      1,   0.00,  31.10,
+      1,-149.44,  31.10,1,   0.00, 145.01,1,-105.20, 166.87,1,   0.00, 360.00,/
+    2,   23, 870901.000000,  20.000,  7.451,   2.724, 247.110,  5,
+      1,   0.00,  29.66,
+      1,-150.81,  29.66,1,   0.00, 144.66,1, -99.43, 158.28,1,   0.00, 360.00,/
+    2,   23, 870901.000000, 999.000,  7.461, 999.000, 999.000,  5,
+      1,   0.00,  29.70,
+      1,-145.71,  29.66,
+      1,   0.00, 144.66,
+      1, -99.43, 158.28,
+      1,   0.00, 360.00,
+  /
+  0/ *****************************************************************
+    2,   23, 870906.000000,   0.000,  7.561,   1.062, 269.806,  5,
+      1,   0.00,  30.10,
+      1,-150.53,  30.10,1,   0.00, 145.21,1,-117.49, 177.05,1,   0.00, 360.00,/
+    2,   23, 870906.000000,  10.000,  6.593,   1.729, 260.987,  5,
+      1,   0.00,  26.24,
+      1,-154.29,  26.24,1,   0.00, 145.02,1,-110.06, 162.01,1,   0.00, 360.00,/
+    2,   23, 870906.000000,  20.000,  6.215,   2.395, 252.030,  5,
+      1,   0.00,  24.74,
+      1,-155.73,  24.74,1,   0.00, 144.66,1,-104.35, 153.36,1,   0.00, 360.00,/
+    2,   23, 870906.000000, 999.000,  6.205, 999.000, 999.000,  5,
+      1,   0.00,  24.70,
+      1,-150.53,  24.74,
+      1,   0.00, 144.66,
+      1,-104.35, 153.36,
+      1,   0.00, 360.00,
+  /
+  0/ *****************************************************************
+               :
+               :
+     TARGET 2  :  DATA FOR REMAINING DATES HAS THE SAME FORMAT AS ABOVE
+               :
+               :
+  0/ *****************************************************************
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    ***********************************
+                    *                                 *
+                    *    END OF QUIKVIS USER GUIDE    *
+                    *                                 *
+                    ***********************************

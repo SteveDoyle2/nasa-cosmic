@@ -1,0 +1,195 @@
+   (* $INCLUDE : 'compile.inc' *)
+   (* $INCLUDE : 'getparam.int' *)
+   (* $INCLUDE : 'utility.int' *)
+   (* $INCLUDE : 'vbpas.int' *)
+   (* $INCLUDE : 'dspas.int' *)
+   (* $INCLUDE : 'evapict.int' *)
+   (* $INCLUDE : 'evaexec.int' *)
+
+   implementation of evapict;
+
+      uses vbpas;
+
+      uses dspas;
+
+      uses evaexec;
+
+   procedure picture; extern;
+   procedure chartinfo; extern;
+   procedure get_list; extern;
+   procedure format; extern;
+
+   procedure skeleeva;
+
+   var
+	 i,j,k,l,n : integer;
+	 years	   : integer;
+	 varlabel  : array [1..17] of lstring(7);
+	 header    : array [1..8] of lstring(15);
+	 x,y	   : array[1..8] of integer;
+	 texts	   : lstring(28);
+	 month	   : array [0..12] of lstring(3);
+	 yr	   : lstring(2);
+	 year_flag : boolean;
+
+   begin
+   if plotchoice <> 2 then [THERE(0,24); WRITE('Skeleton Drawing...          ');];
+   if symbol = 1 then dsymbol(xy[47],xy[48],3,0,0,1);
+   (* the big box *)
+   dsline(xy[1],xy[2],xy[3],xy[2],color1,1,0);
+   dsline(xy[1],xy[2],xy[1],xy[4],color1,1,0);
+   dsline(xy[1],xy[4],xy[3],xy[4],color1,1,0);
+   dsline(xy[3],xy[2],xy[3],xy[4],color1,1,0);
+   dsline(xy[5],xy[6],xy[7],xy[8],color1,1,0); (*** below date ***)
+   for i := 1 to xy[13] do   (* variable labels on left hand side *)
+      begin
+	 j := xy[10] + (i-1) * xy[14];
+	 dsline(xy[9],j,xy[11],j,color1,1,0);
+      end;
+   for i := 1 to 4 do	(* 4 long and short lines for data values *)
+      begin
+	 j := 16 + i;  k := 22 + i;
+	 dsline(xy[15],xy[j],xy[16],xy[j],color1,1,0);
+	 dsline(xy[21],xy[k],xy[22],xy[k],color1,1,0);
+      end;
+
+   (* Vertical lines *)
+
+   dsline(xy[27],xy[28],xy[29],xy[19],color1,1,0); (* short vertical *)
+   dsline(xy[27],xy[20],xy[29],xy[30],color1,1,0); (* short vertical *)
+   dsline(xy[31],xy[32],xy[33],xy[17],color1,1,0);
+   dsline(xy[31],xy[18],xy[33],xy[19],color1,1,0);
+   dsline(xy[31],xy[20],xy[33],xy[30],color1,1,0);
+   dsline(xy[35],xy[36],xy[37],xy[19],color1,1,0);
+   dsline(xy[35],xy[20],xy[37],xy[30],color1,1,0);
+
+   for i := 1 to xy[39] do   (* data values *)
+      begin
+	 j := xy[41] + (i-1) * xy[40];
+	 dsline(j,xy[42],j,xy[43],color1,1,0);
+	 dsline(j,xy[45],j,xy[46],color1,1,0);
+      end;
+
+   (***** title *****)
+
+   texts := 'EARNED VALUE ANALYSIS REPORT';
+   i := ( xy[3] - 8 * texts.len ) div 2;
+   dstext(i,xy[2]+4,0,color1,texts,texts.len,0);
+
+   (***** header information *****)
+
+   header[1] := 'CONTRACT NO.: ';  x[1] := xy[1]+4;  y[1] := xy[1]+24;
+   header[2] := 'TYPE: ';          x[2] := x[1]+232; y[2] := y[1];
+   header[3] := 'CONTRACTOR: ';    x[3] := x[2]+152; y[3] := y[1];
+   header[4] := 'CATEGORY: ';      x[4] := x[1];     y[4] := y[1]+10;
+   header[5] := 'UNIT: ';          x[5] := x[1]+136; y[5] := y[4];
+   header[6] := 'BY: ';            x[6] := x[2]+16;  y[6] := y[4];
+   header[7] := 'SCOPE OF WORK: '; x[7] := x[1];     y[7] := y[4]+10;
+   header[8] := 'DATE: ';          x[8] := x[3]+48;  y[8] := y[4];
+   for i := 1 to 8 do
+   dstext(x[i],y[i],0,color1,header[i],header[i].len,0);
+
+   (***** year and period labels *****)
+
+   for i := 1 to 9 do
+      month[i].len := 2;
+   month[1] :='1/'; month[2] :='2/'; month[3] :='3/';
+   month[4] :='4/'; month[5] :='5/'; month[6] :='6/';
+   month[7] :='7/'; month[8] :='8/'; month[9] :='9/';
+   month[10]:='10/'; month[11]:='11/'; month[12]:='12/';
+   month[0] :='19';
+
+   case period of
+     0	  : texts := 'MONTH';
+     1..4 : texts := 'QUARTER';
+     5	  : texts := 'YEAR';
+     end;
+   dstext(xy[27]+20,xy[17]+2,0,color1,texts,texts.len,0);
+
+   l := xy[17] + 2; n := 0;
+   year.len := 2;
+   years := ( ord(year[1])-48 )*10 + ord(year[2])-48;
+   if (start > (fiscal_year*3)) and (fiscal_year <> 0) then years := years + 1;
+
+   for i := 1 to total do
+      begin
+	 case period of
+	   0	: begin
+		    j := ((i+start-2) mod 12) + 1;
+		    if ( j = ((fiscal_year * 3)+1) ) and (i <> 1) then
+			 years := years + 1;
+		  end;
+	   1..4 : begin
+		    j := ((i+period-2) mod 4) + 1;
+		    if (j = 1) and (i <> 1) then years := years + 1;
+		  end;
+	   5	: begin
+		    if i <> 1 then years := years + 1;
+		    j := 0;
+		  end;
+	 end;  (* case *)
+
+	 if (years = 100) then [month[0] := '20';years:=0;];
+	 yr.len := 2;
+	 yr[2] := chr( (years-10*(years div 10))+48);
+	 yr[1] := chr( (years div 10) + 48);
+
+	 k := xy[11] + 8 + xy[40] * ( i - 1 );
+	 if j >= 10 then [ k := k - 4; n := 8 ] else n := 0;
+	 dstext(k,l,0,color1,month[j],month[j].len,0);
+	 dstext(k+16+n,l,0,color1,yr,yr.len,0);
+     end; (* for *)
+
+   (***** variable type labels *****)
+
+   texts := 'INC';
+   dstext(xy[1]+3,xy[18]+4,0,color1,texts,texts.len,270);
+   texts := 'CUM';
+   dstext(xy[1]+3,xy[20]+4,0,color1,texts,texts.len,270);
+
+   (***** variable labels *****)
+
+   varlabel[1]	:= 'BAC    ';
+   varlabel[2]	:= 'EAC    ';
+   varlabel[3]	:= 'ACV  0+';
+   varlabel[4]	:= 'BCWS   ';
+   varlabel[5]	:= 'ACWP   ';
+   varlabel[6]	:= 'BCWP   ';
+   varlabel[7]	:= 'CV   0+';
+   varlabel[8]	:= '%CV  0+';
+   varlabel[9]	:= 'SV($)0+';
+   varlabel[10] := '%SV  0+';
+   varlabel[11] := 'SV(M)0+';
+   varlabel[12] := 'CPI  1+';
+   varlabel[13] := 'SPI  1+';
+   varlabel[14] := '%CPL   ';
+   varlabel[15] := '%SPT1  ';
+   varlabel[16] := '%SPT2  ';
+   varlabel[17] := 'TCPI 1+';
+
+   for i := 1 to 17 do
+      begin
+	 j := xy[1] + 4;
+	 k := xy[6] + 2 + (i-1) * xy[14];
+	 dstext(j,k,0,color1,varlabel[i],varlabel[i].len,0);
+      end;
+
+   varlabel[1] := 'BCWS';
+   varlabel[3] := 'BCWP';
+   varlabel[2] := 'ACWP';
+   l := xy[27] + 4;
+   for i := 1 to 3 do
+      begin
+	 j := xy[18] + 2 + (i-1) * xy[14];
+	 k := xy[20] + 2 + (i-1) * xy[14];
+	 dstext(l,j,0,color1,varlabel[i],varlabel[i].len,0);
+	 dstext(l,k,0,color1,varlabel[i],varlabel[i].len,0);
+      end;
+
+   end;
+   end.
+
+
+
+
+

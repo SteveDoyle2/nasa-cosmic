@@ -1,0 +1,126 @@
+H   VAX EXAMPLE RUN                                                             
+ IORB 0  ITAPE 0 IKPLR  1                                                       
+ IPLOT 1   IHREF 1  IHCALC 1                                                    
+ AS  35200.  E 0.6244  EI 90.0  W 0.0  BW 0.0  F  0.0                           
+ AS  35200.0 E 0.6244  EI 90.0  W 0.0  BW 0.0  F 180.0                          
+ IDATE  850321                                                                  
+ KPLOTS(1-9)  1                                                                 
+ KPLOTS(11)  1 0 1 0 0 0 1 0 1 0 0 0 1 0 1 0 0 0 1 0 1 0 0 0 1 0 1 0 0 0        
+ KPLOTS(41)  1 0 1 0 0 0                                                        
+ INOPT 1                                                                        
+ MODES  0  0  0  0  1  1                                                        
+ MODES 1  1  1  1  0  0                                                         
+ DELTAT 0.001                                                                   
+ BDYMI   386.0  0.0  0.0  0.0  386.0  0.0  0.0  0.0  468.0                      
+ IGRAV 0                                                                        
+ ZMS  25.0  SCO 6.83                                                            
+ NELMTS 6                                                                       
+ ZL0  656.0  262.3  656.0  262.3  20.0  20.0                                    
+ LK(3) 2  LK(4) 2  LLK(3) 2  LLK(4) 2                                           
+ LK(1) 2  LK(2) 2  LLK(1) 2  LLK(2) 2                                           
+ ZBZ(1,1)2  3.0   0.0  -3.0   0.0  0.0   0.0                                    
+ ZBZ(2,1)2  0.0  3.0   0.0  -3.0   0.0  0.0                                     
+ ZBZ(3,1)2  0.4  0.4   0.4   0.4   2.48 -2.48                                   
+ ALFAEK(1-6) 0.0                                                                
+ BETAEK  0.0  0.0  0.0  0.0  -90.0  90.0                                        
+ GAMAEK  0.0  90.0  180.0  270.0  0.0  0.0                                      
+ EMODLS(5-6)  0.900D+07                                                         
+ RTUBE(1-4) 0.010                                                               
+ THERMC(1-6) 8.85D-06                                                           
+ TIPMS  1.03D-04  9.23D-03  1.03D-04  9.23D-03                                  
+ TIPMS(5-6)  3.080D-04                                                          
+ SAO(5-6) 0.0416                                                                
+ SAO(1-4) 0.00167                                                               
+ STMK(1-4) 0.049                                                                
+ RHOK  1.84D-05  1.86D-04  1.84D-05  1.86D-04                                   
+ RHOK(5-6)  4.52D-04                                                            
+ POO 1.89D-07                                                                   
+ POO  0.0                                                                       
+ AERO  2.2                                                                      
+ AERO  0.0                                                                      
+ PSI1 0.0  THET1  90.0  PHI1  180.0                                             
+ PSI1 0.0  THET1  90.0  PHI1  0.0                                               
+ OMEG  0.0  0.0   60.0                                                          
+ IDAMP 0  IVISCS 0  IATTDE 0  IWHEEL 0  IMGMTS 1                                
+ IDAMP 0  IVISCS 0  IATTDE 0  IWHEEL 0  IMGMTS 0                                
+ CDAMP(1,1)2  0.005  0.005  0.005  0.005  0.0005  0.0005                        
+ A(1,1)1   0.0   0.0   0.0   0.0    0.0     0.0                                 
+ ZETTAD  0.0                                                                    
+ ETTAD  0.0                                                                     
+ DENSTY  56.2                                                                   
+ RADTBE  0.465                                                                  
+ RADRNG  33.0                                                                   
+ VISCTY  9.0                                                                    
+ DTOO    0.0                                                                    
+H     TWO AXIS GIMBLE PROPERTIES                                                
+ AZIN 0.5 0.0 0.0 0.0 0.5 0.0 0.0 0.0 0.75                                      
+ AZAX 0.0 0.0 3.3 AZCG 0.0 0.0 0.0                                              
+ AZMS 0.3                                                                       
+ ELIN 0.2 0.0 0.0 0.0 0.2 0.0 0.0 0.0 0.3                                       
+ ELAX 0.0 0.0 0.0 ELCG 0.0 0.0 0.0                                              
+ ELMS 0.2                                                                       
+H     PLATFORM GIMBLE FIXED ORIENTATION                                         
+ AZIM0 0.0 ROLL0 0.0 ELEV0 0.0                                                  
+H     INITIAL CONDITIONS                                                        
+ ELEVI -10.0 ELEVID 0.0                                                         
+ AZIMI 45.0 AZIMID -60.0                                                        
+ GMUP 1.0D-3 GMDN 1.0D-5                                                        
+ GMUP 1.0D-2 1.0D-2  GMDN 1.0D-4 1.0D-4                                         
+ IGMBL 1                                                                        
+ IGMBL 0                                                                        
+H     GIMBLE PLATFORM CONTROL PARAMETERS                                        
+ IPLTCS 1 1                                                                     
+ IPLTCS 0 0                                                                     
+ IPLTCS  1 0 1 10                                                               
+ IPLTCS  1 0 0 10                                                               
+ IPLTCS  0 0 0 10                                                               
+ PCSPRM(10) 0.02                                                                
+ PCSPRM(10) 0.2                                                                 
+ PCSPRM(11) 0.001   0.09  -0.09  1.0 1.0 0.6                                    
+ PCSPRM(21) 0.001   0.005 -0.005 1.0 0.0 0.4                                    
+ PCSPRM(30) 0.02 0.0001 6.0 6.0 6.0                                             
+ PCSPRM(35) 0.02 0.01                                                           
+  PCSPRM(41) 1.0  1.0 0.0 0.37 -0.37 0.0 0.01                                   
+ PCSPRM(51) 1.0  0.5 0.0 0.2  -0.2  0.0 0.01                                    
+H     TEST CASE FOR TWO AXIS GIMBLE PLATFORM CONTROL SYSTEM                     
+ MAGFLD 5                                                                       
+ KPLOTS(297) 1 1 1                                                              
+ KPLOTS(300) 1 1 1 1                                                            
+ KPLOTS(304)  1 1 1 1 1 1                                                       
+ KPLOTS(193)  1 1 1                                                             
+ KPLOTS(1)  1 1 1                                                               
+ KPLOTS(4)  1  1  1  0  1  1                                                    
+ KPLOTS(11)  1 0 1 0 0 0 1 0 0 1                                                
+H    SINGLE AXIS PLATFORM PHYSICAL PROPERTIES                                   
+ SAIN 0.5 0.0 0.0 0.0 0.5 0.0 0.0 0.0 0.75                                      
+ SAAX  0.0 0.0 0.0  SACG 0.0 0.0 0.0 SAMS 0.2                                   
+H    PLATFORM MOUNT STIFFNESS PROPERTIES                                        
+ SAGK1 0.0 SAGK2 0.0 SAGDM 0.0 SASTP 1.0E6                                      
+H    NOMINAL ORIENTATION OF THE PLATFORM                                        
+ SAAZ0 -180.0    SARL0 0.0 SAEL0 0.0                                            
+ SAAZ0  0.0      SARL0 0.0 SAEL0 0.0                                            
+H    INTEGRATION BOUNDS                                                         
+ SAUP 1.0D-2 1.0D-2 SADN 1.0D-4 1.0D-4                                          
+H    PLATFORM INITIAL ANGLE AND RATE                                            
+ SAAZI    0.0  SAAZID  0.0                                                      
+ SAAZI -10.    SAAZID -60.0                                                     
+H    PLATFORM CONTROL WORD                                                      
+ ISAGM 1                                                                        
+H    PLATFORM CONTROL SYSTEM CONTROL WORDS                                      
+ ISAPCS(1) 1 0 0 2                                                              
+H    PLATFORM CONTROL SYSTEM PARAMETERS                                         
+ SACSPM(10) 0.1  0.0001  100.0 -100.0 7.0 3.5 15.5                              
+H    PLATFORM CONTROL SYSTEM MOTOR PARAMETERS                                   
+ SACSPM(30)  0.02 0.0001 6.0 6.0 6.0                                            
+ SACSPM(41)  1.0 1.0 0.0 0.37 -0.37 0.0 0.01                                    
+ KPLOTS(1-309)  0                                                               
+H    PLOT CONTROL                                                               
+ IPLOT 1                                                                        
+ KPLOTS(4) 0 0 1                                                                
+ KPLOTS(343) 1 1 0 1 1 1                                                        
+H    TEST CASE FOR SINGLE AXIS PLATFORM CONTROL SYSTEM                          
+ TIME 0.0 TSTOP 49.5    FREQ 0.5                                                
+ KPLOTS(11)  1                                                                  
+ KPLOTS(341)  0 1                                                               
+1                                                                               
+END                                                                             

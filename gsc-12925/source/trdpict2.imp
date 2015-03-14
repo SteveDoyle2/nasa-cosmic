@@ -1,0 +1,320 @@
+   (* $INCLUDE : 'compile.inc' *)
+   (* $INCLUDE : 'getparam.int' *)
+   (* $INCLUDE : 'utility.int' *)
+   (* $INCLUDE : 'graphpak.int' *)
+   (* $INCLUDE : 'vbpas.int' *)
+   (* $INCLUDE : 'dspas.int' *)
+   (* $INCLUDE : 'trdexec.int' *)
+   (* $INCLUDE : 'trdpict.int' *)
+
+   implementation of trdpict;
+
+      uses getparam;
+
+      uses utility;
+
+      uses graphpak;
+
+      uses vbpas;
+
+      uses dspas;
+
+      uses trdexec;
+
+
+
+   function mxsrqq ( consts a, b : real ): real; extern;
+   function mnsrqq ( consts a, b : real ): real; extern;
+
+   procedure date (var s : string ); extern;
+
+   procedure chartinfo; extern;
+   procedure get_list; extern;
+   procedure skeletrd; extern;
+   procedure format; extern;
+
+
+   procedure picture;
+
+   var
+	xzero	    : integer;
+	yzero	    : integer;
+	size	    : byte;
+	bac	    : real;
+	var0	    : ^matrix;
+	cum	    : ^matrix;
+	var1	    : array [1..2] of ^supinteger;
+	current     : entity;
+	data	    : ^matrix;
+	day	    : string(8);
+	error	    : boolean;
+	i,j,k,n     : byte;
+	line,pix    : integer;
+	l,m	    : integer;
+	min	    : real;
+	max	    : real;
+	offset3     : byte4;
+	width3	    : byte4;
+	t	    : lstring(6);
+	temp	    : ^supreal;
+	temp1	    : ^supinteger;
+	tics2	    : tic10;
+	total1	    : byte;
+	draw	    : boolean;
+	d,e	    : byte;
+	newnode     : entity;
+	oldy	    : integer;
+	tem	    : real;
+	bcwpline    : byte;
+	acwpline    : byte;
+	ndon,ndoff  : integer;
+
+
+
+   begin
+      if plotchoice <> 2 then begin
+      there(0,24);
+      write('Calculating and Drawing...       ');
+      end;
+      total1 := total + 1;
+      new(data,3);
+      new(data^[1],total1);
+      new(data^[2],total1);
+      new(data^[3],total1);
+      new(cum,3);
+      new(cum^[1],total1);
+      new(cum^[2],total1);
+      new(cum^[3],total1);
+      new(var0,2);
+      new(var0^[1],total1);
+      new(var0^[2],total1);
+      new(var1[1],total1);
+      new(var1[2],total1);
+      new(temp,4);
+      new(temp1,4);
+
+      (***** alter display space and get data *****)
+
+      dsbar (xy[11]+1,xy[6]+1,xy[3]-1,xy[15]-1,0,9); (* erasing old *)
+      current := first;
+      i := 1; j := 1;
+      oldy := 0;
+      bcwpline := 0;
+      acwpline := 0;
+      t[1] := ' ';
+      repeat
+	 with current^ do
+	    begin
+	       size := node_data^[etype].character_size;
+	       case etype of
+		  7 : if (field^ = null) or (field^ = '        ') then
+			 begin
+			    date(day);
+			    field^.len := 8;
+			    field^[1] := day[1];
+			    field^[2] := day[2];
+			    field^[3] := '/';
+			    field^[4] := day[4];
+			    field^[5] := day[5];
+			    field^[6] := '/';
+			    field^[7] := day[7];
+			    field^[8] := day[8];
+			 end;
+		 11 : if i <= 3 then
+		       begin
+			 if enter_mode = 1 then 	   (* incremental *)
+			    recode (1,field^,data^[i]^[j])
+			 else				   (* cumulative  *)
+			    recode (1,field^, cum^[i]^[j]);
+			 if oldy = 0 then oldy := y;
+			 if i = 2 then
+			  if (field^ = null)or(field^ = '      ') then
+				 acwpline := acwpline + 1
+			  else
+				 acwpline := 0;
+			 if i = 3 then
+			  if (field^ = null)or(field^ = '      ') then
+				 bcwpline := bcwpline + 1
+			  else
+				 bcwpline := 0;
+
+			 j := j + 1;
+			 if j > total1 then
+			    begin
+			       j := 1;
+			       i := i + 1;
+			       oldy := current^.down^.y;
+			    end
+			  else
+			     if (oldy <> down^.y)and(j <> (total1*(i-1)+2)) then
+				begin
+				   create (newnode, etype);
+				   newnode^.x := x + xy[40];
+				   newnode^.y := y;
+				   link (current, newnode);
+				   current := current^.up;
+				end;
+		      end;
+		  otherwise begin end; end;
+	      if (j <> 2) or (enter_mode <> 0) then (*skip init values of CUM*)
+		 dstext(x,y,size,color1,field^,field^.len,0);
+	    end;
+	  current := current^.down;
+       until current = first;
+
+
+  if bcwpline < total then
+    begin
+
+
+      xzero := xy[11]; yzero := xy[15] - 10;
+      newnode := first^.up;
+      while newnode^.etype <> 11 do newnode := newnode ^.up;
+      pix := newnode^.x - (total - 1) * xy[40];
+      max := 0; min := 0;
+
+      width3[1] := 20; width3[2] := 10; width3[3] := 10;
+      offset3[1] := 0; offset3[2] := 16; offset3[3] := 12;
+      for i := 1 to 3 do
+	  if enter_mode = 1 then
+	     sum(1,total1,data^[i]^,cum^[i]^,error)
+	  else
+	     sum(2,total1,data^[i]^,cum^[i]^,error);
+      for i := 1 to total - bcwpline do
+	begin
+	  var0^[1]^[i] := cum^[3]^[i+1] - cum^[2]^[i+1];
+	  var0^[2]^[i] := cum^[3]^[i+1] - cum^[1]^[i+1];
+	  max := mxsrqq ( var0^[1]^[i], max );
+	  max := mxsrqq ( var0^[2]^[i], max );
+	  min := mnsrqq ( var0^[1]^[i], min );
+	  min := mnsrqq ( var0^[2]^[i], min );
+	end;
+      temp^[1] := max;
+      temp^[2] := min;
+
+	  ticlabel ( 2, temp^, d, tics2, error );
+	  recode(1,tics2[d],temp^[1]);
+	  recode(1,tics2[1],temp^[2]);
+	  temp^[3] := temp^[1] - temp^[2];
+
+
+	  (***** ticmark labels *****)
+
+	  t := '-';
+	  line := yzero - height;
+	  dsbar(xy[11]-50,xy[6]+10,xy[11]-1,xy[15]-2,0,9);
+	     for i := d downto 2 do
+	      begin
+		dstext (xzero - 6, line , 1, color1, t, 1, 0);
+		dstext (xzero - 50, line, 1, color1, tics2[i], 6, 0);
+		line := line + ((height div (d - 1)) div 2) * 2;
+	      end;
+	    dstext (xzero - 6, line , 1, color1, t, 1, 0);
+	    dstext (xzero - 50, line, 1, color1, tics2[1], 6, 0);
+	    case d of
+		7 : j := 2;
+		9 : j := 4;
+	     6,11 : j := 0;
+	     end;
+	    if min < 0 then
+	      temp1^[3] := yzero - (height div 2) + j
+	    else
+	      temp1^[3] := yzero + 2 * j - 4;
+
+
+
+
+	  if enter_mode = 1 then		(***** cumulatives *****)
+	    begin
+	      line := newnode^.y + 2;
+	      for i := 1 to 3 do
+		begin
+		  e := bcwpline;
+		  for n := 1 to total do
+		    begin
+		      if n <= total - e then
+			 begin
+			   cum^[i]^[n] := cum^[i]^[n+1];
+			   recode ( 2, t, cum^[i]^[n] );
+			   t.len := 6;
+			 end
+		      else copylst ('      ',t);
+		      l := pix + ((n-1)*xy[40]);
+		      m := line + (i*xy[9]);
+		      dstext (l,m,1,color1,t,t.len,0);
+		   end;
+	       end;
+	    end
+	  else begin		       (* incremental values		*)
+	     line := newnode^.y - 52;  (* back to the incremental field *)
+	     for  i := 1 to 3 do
+	       begin
+		  e := bcwpline;
+		  for n := 1 to total1 do
+		    begin
+		      if n <= (total1 - e) then
+			 [ recode(2, t, data^[i]^[n]);
+			   t.len :=  6;   ]
+		      else
+			   copylst ('      ', t);
+		      l := node_data^[11].x + ((n-1) * xy[40])
+		      m := line + ((i-1) * xy[9]);
+		      dstext (l, m, 1, color1, t, t.len, 0);
+		    end; (* for n *)
+	       end;	 (* for i *)
+	     line := line + 22;   (* skip the cumulative field *)
+	  end;	(* if enter_mode *)
+
+	  (***** variances *****)
+
+	  line := line + 32;
+	  for i := 1 to 2 do
+	    if (((i=1) and (varno <> 2)) or ((i=2) and (varno <> 1))) then
+		begin
+		      recode(2,t,temp^[3]);
+		      scale(total,var0^[i]^,var1[i]^,height,t,error);
+		       for n := 1 to total do
+			 begin
+			   if n <= total - e then
+			     begin
+			       recode(2,t,var0^[i]^[n]);
+			       t.len := 6;
+			     end
+			    else copylst ('      ',t);
+			   l := pix + ((n-1)* xy[40]);
+			   m := line + (i * xy[9]);
+			   dstext(l,m,1,color1,t,t.len,0);
+			 end;
+		       if pattern3[i] = 2 then [ ndon := 3; ndoff := 8 ]
+			 else if pattern3[i] = 1 then [ ndon := 2; ndoff := 2 ]
+			   else [ ndon := 1; ndoff := 0 ];
+		       dsline (pix - 42, m + 4, pix - 20, m + 4, color3[i], ndon, ndoff);
+		     ogive(total-e,var1[i]^,color3[i],ndon,ndoff,0,xzero,temp1^[3],xy[40]);
+		end;
+
+
+	  (***** total vertical line *****)
+	    dsline(xzero+(total-bcwpline)*xy[40],yzero+10,xzero+(total-bcwpline)*xy[40],yzero-height-10,color1,1,0);
+
+
+	  (***** zero line *****)
+
+	  dsline(xy[11]+1,temp1^[3],xzero+(total-bcwpline)*xy[40],temp1^[3],color1,1,0);
+
+	  if min >= 0 then dsbar (24,xy[15]-100,32,xy[15]-2,0,9);
+
+
+    end;
+
+    dispose (data^[3]);  dispose (data^[2]);  dispose (data^[1]);
+    dispose (data);
+    dispose (cum^[3]);	 dispose (cum^[2]);   dispose (cum^[1]);
+    dispose (cum);
+    dispose (var0^[2]);  dispose (var0^[1]);  dispose (var0);
+    dispose (var1[2]);	 dispose (var1[1]);
+    dispose (temp);	 dispose (temp1);
+
+
+   end;
+   end.
+

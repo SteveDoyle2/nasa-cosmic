@@ -1,0 +1,59 @@
+ NEWTONP - CUMULATIVE BINOMIAL PROGRAMS
+
+( Cal Tech/Jet Propulsion Lab. )
+
+     The cumulative binomial program, NEWTONP, is one of a set of three pro-
+grams which calculate cumulative binomial probability distributions for
+arbitrary inputs. The three programs, NEWTONP, CUMBIN (NPO-17555), and
+CROSSER (NPO-17557), can be used independently of one another. NEWTONP can
+be used by statisticians and users of statistical procedures, test plan-
+ners, designers, and numerical analysts. The program has been used for re-
+liability/availability calculations.
+
+     NEWTONP calculates the probably p required to yield a given system re-
+liability V for a k-out-of-n system. It can also be used to determine the
+Clopper-Pearson confidence limits (either one-sided or two-sided) for the
+parameter p of a Bernoulli distribution. NEWTONP can determine Bayesian
+probability limits for a proportion (if the beta prior has positive integer
+parameters). It can determine the percentiles of incomplete beta distri-
+butions with positive integer parameters. It can also determine the per-
+centiles of F distributions and the midian plotting positions in probabil-
+ity plotting. NEWTONP is designed to work well with all integer values 0 <
+k <= n. To run the program, the user simply runs the executable version and
+inputs the information requested by the program. NEWTONP is not designed to
+weed out incorrect inputs, so the user must take care to make sure the inputs
+are correct. Once all input has been entered, the program calculates and
+lists the result. It also lists the number of iterations of Newton's method
+required to calculate the answer within the given error.
+
+     The NEWTONP program is written in C. It was developed on an IBM AT with
+a numeric co-processor using Microsoft C 5.0. Because the source code is
+written using standard C structures and functions, it should compile cor-
+rectly with most C compilers. The program format is interactive. It has
+been implemented under DOS 3.2 and has a memory requirement of 26K. NEWTONP
+was developed in 1988.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: C-LANGUAGE
+
+MACHINE REQUIREMENTS: IBM PC SERIES
+
+PROGRAM SIZE: APPROXIMATELY 147 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 5.25 Inch IBM PC DOS Format Diskette
+
+PROGRAM NUMBER: NPO-17556
+
+DOMESTIC - DOCUMENTATION PRICE: $15.00    PROGRAM PRICE: $150.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $30.00   PROGRAM PRICE: $300.00
+
+
+
+                                        1
+

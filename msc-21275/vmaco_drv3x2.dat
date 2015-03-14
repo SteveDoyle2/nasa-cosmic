@@ -1,0 +1,168 @@
+ ************************************************************************
+
+     ITERATIONS =    1     NUMBER OF CALLS TO VMACO =    1
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   1.0000000E+00 X( 2)=   2.0000000E+00 X( 3)=   3.0000000E+00
+
+ THE VECTOR OF CONSTRAINT VALUES ARE:
+
+ C( 1)=  -1.0000000E+00 C( 2)=   2.0000000E+00
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    8.0000000E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =    2     NUMBER OF CALLS TO VMACO =    2
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   1.8000001E+00 X( 2)=  -6.0000014E-01 X( 3)=   1.0000000E+00
+
+ THE VECTOR OF CONSTRAINT VALUES ARE:
+
+ C( 1)=  -2.0800004E+00 C( 2)=   0.0000000E+00
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    4.6000004E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =    3     NUMBER OF CALLS TO VMACO =    3
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   2.5087965E-01 X( 2)=   3.9181948E-02 X( 3)=   1.0000000E+00
+
+ THE VECTOR OF CONSTRAINT VALUES ARE:
+
+ C( 1)=  -9.9017006E-01 C( 2)=   0.0000000E+00
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    1.0644758E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =    4     NUMBER OF CALLS TO VMACO =    5
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   4.8927295E-01 X( 2)=   3.9662942E-01 X( 3)=   1.0000000E+00
+
+ THE VECTOR OF CONSTRAINT VALUES ARE:
+
+ C( 1)=  -8.0593997E-01 C( 2)=   0.0000000E+00
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    1.3967029E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =    5     NUMBER OF CALLS TO VMACO =    7
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   7.7505779E-01 X( 2)=   7.4306256E-01 X( 3)=   1.0000000E+00
+
+ THE VECTOR OF CONSTRAINT VALUES ARE:
+
+ C( 1)=  -4.2408359E-01 C( 2)=   0.0000000E+00
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    2.1528566E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =    6     NUMBER OF CALLS TO VMACO =    8
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   1.0284286E+00 X( 2)=   1.0473150E+00 X( 3)=   1.0000000E+00
+
+ THE VECTOR OF CONSTRAINT VALUES ARE:
+
+ C( 1)=   7.7088594E-02 C( 2)=   0.0000000E+00
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    3.1545341E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =    7     NUMBER OF CALLS TO VMACO =    9
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   9.9673218E-01 X( 2)=   1.0046358E+00 X( 3)=   1.0000000E+00
+
+ THE VECTOR OF CONSTRAINT VALUES ARE:
+
+ C( 1)=   1.3527870E-03 C( 2)=   0.0000000E+00
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    3.0027680E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =    8     NUMBER OF CALLS TO VMACO =   10
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   9.9852234E-01 X( 2)=   1.0014743E+00 X( 3)=   1.0000000E+00
+
+ THE VECTOR OF CONSTRAINT VALUES ARE:
+
+ C( 1)=  -5.6028366E-06 C( 2)=   0.0000000E+00
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    2.9999976E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =    9     NUMBER OF CALLS TO VMACO =   11
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   9.9999762E-01 X( 2)=   1.0000002E+00 X( 3)=   1.0000000E+00
+
+ THE VECTOR OF CONSTRAINT VALUES ARE:
+
+ C( 1)=  -2.1457672E-06 C( 2)=   0.0000000E+00
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    2.9999957E+00
+ ************************************************************************
+ ************************************************************************
+
+     ITERATIONS =   10     NUMBER OF CALLS TO VMACO =   12
+
+ THE VECTOR OF CONTROL VARIABLE VALUES ARE:
+
+ X( 1)=   1.0000000E+00 X( 2)=   1.0000000E+00 X( 3)=   1.0000000E+00
+
+ THE VECTOR OF CONSTRAINT VALUES ARE:
+
+ C( 1)=   0.0000000E+00 C( 2)=   0.0000000E+00
+
+ THE OBJECTIVE FUNCTION VALUE IS:
+
+     F=    3.0000000E+00
+ ************************************************************************
+ 
+ ------------------------------------------------------------------------
+
+ THE VARIABLE METRIC ALGORITHM HAS DETERMINED AN OPTIMAL SOLUTION WITHIN 
+ THE ACCURACY DESIRED                                                    
+ *** ISTAT =  1 ***
+ ------------------------------------------------------------------------
+

@@ -1,0 +1,71 @@
+ MONITOR- MONTE CARLO INVESTIGATION OF TRAJECTORY OPERATIONS AND REQUIRE-
+MENTS
+
+( NASA Goddard Space Flight Center )
+
+     The Monte Carlo Investigation of Trajectory Operations and Require-
+ments (MONITOR) program was developed to perform spacecraft mission maneu-
+ver simulations for geosynchronous, single maneuver, and comet encounter
+type trajectories. MONITOR is a multifaceted program which enables the
+modeling of various orbital sequences and missions, the generation of Monte
+Carlo simulation statistics, and the parametric scanning of user requested
+variables over specified intervals. The MONITOR program has been used pri-
+marily to study geosynchronous missions and has the capability to model
+Space Shuttle deployed satellite trajectories. The ability to perform a
+Monte Carlo error analysis of user specified orbital parameters using pre-
+dicted maneuver execution errors can make MONITOR a significant part of any
+mission planning and analysis system.
+
+     The MONITOR program can be executed in four operational modes. In the
+first mode, analytic state covariance matrix propagation is performed us-
+ing state transition matrices for the coasting and powered burn phases of
+the trajectory. A two-body central force field is assumed throughout the
+analysis. Histograms of the final orbital elements and other state depen-
+dent variables may be evaluated by a Monte Carlo analysis. In the second
+mode, geosynchronous missions can be simulated from parking orbit injec-
+tion through station acquisition. A two-body central force field is as-
+sumed throughout the simulation. Nominal mission studies can be conducted;
+however, the main use of this mode lies in evaluating the behavior of perti-
+nent orbital trajectory parameters by making use of a Monte Carlo analysis.
+In the third mode, MONITOR performs parametric scans of user-requested
+variables for a nominal mission. Various orbital sequences may be speci-
+fied; however, primary use is devoted to geosynchronous missions. A maxi-
+mum of five variables may be scanned at a time. The fourth mode simulates a
+mission from orbit injection through comet encounter with optional Monte
+Carlo analysis. Midcourse maneuvers may be made to correct for burn errors
+and comet movements.
+
+     The MONITOR program is written in FORTRAN IV for batch execution and
+has been implemented on an IBM 360 series computer with a central memory re-
+quirement of approximately 255K of 8 bit bytes. The MONITOR program was de-
+veloped in 1980.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: IBM 360 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 8,369 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: GSC-12705
+
+DOMESTIC - DOCUMENTATION PRICE: $56.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $112.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

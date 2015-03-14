@@ -1,0 +1,11 @@
+1 STUB
+
+STUB is a program which creates a FORTRAN file containing subprogram stubs,
+using the FORTRAN 77 programming standards format for the prologues. An option
+to enter identical code in each subprogram is provided. See [MERLIN]STUB.DOC
+for more information.
+
+Enter:   STUB filespec
+
+where filespec is the name of the FORTRAN file to be created, less the .FOR
+suffix.

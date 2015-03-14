@@ -1,0 +1,46 @@
+C
+      SUBROUTINE ENTRPY(IX,NREC,NEL,NDEVI,IBAND,XMEAN,SIGMAX,XNTRPY)
+C
+C     THIS SUBROUTINE COMPUTES THE MEAN, VARIANCE, AND ENTROPY
+C     OF A DATA SET
+C
+C     ******************************************************************
+C
+      LOGICAL*1 IX(4,NEL)
+      DIMENSION IH(128)
+      DATA NPTS /128/
+C
+C     COMPUTE THE HISTOGRAM OF THE DATA
+      DO 5 I=1,NPTS
+    5 IH(I) = 0
+      DO 10 I=1,NREC
+      READ(NDEVI) IX
+C
+      DO 10 J=1,NEL
+      M = IX(IBAND,J)+1
+      IH(M)=IH(M)+1
+   10 CONTINUE
+C
+C     COMPUTE THE MEAN AND VARIANCE OF THE DATA
+      N=0
+      NXL=0
+      NXM=0
+      DO 20 I=1,NPTS
+      N = N + IH(I)
+      NXL = NXL + IH(I)*(I-1)
+      NXM = NXM + IH(I)*(I-1)**2
+   20 CONTINUE
+      XMEAN = FLOAT(NXL)/FLOAT(N)
+      SIGMAX = (NXM-N*XMEAN**2) / (N-1)
+C
+C     COMPUTE THE AVERAGE UNCERTAINTY (ENTROPY)
+      SUM=0.0
+      ALN2=ALOG10(2.0)
+      DO 30 I=1,NPTS
+      IF (IH(I).EQ.0) GO TO 30
+      PROBX=FLOAT(IH(I))/FLOAT(N)
+      SUM=SUM+PROBX*(ALOG10(PROBX)/ALN2)
+   30 CONTINUE
+      XNTRPY=-SUM
+      RETURN
+      END

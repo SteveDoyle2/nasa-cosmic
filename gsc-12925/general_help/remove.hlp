@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+When the remove key is pressed from the Create Slide Show Menu, the prompt asks
+for the number of the slide to remove.  This means whatever number is entered
+the slide at that line in the show where the cursor was will be removed from
+that show.  If a return is pressed when asking for the number, the slide where
+the cursor was located will be removed from the show.  When a slide is removed,
+the slides listed under it will all move up one line.  To not remove a slide
+press F1(Cancel).
+
+
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

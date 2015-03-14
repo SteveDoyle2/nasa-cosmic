@@ -1,0 +1,49 @@
+		LIST OF FILES ON TAPE LOOK
+		--------------------------
+
+AAAREADME.DAT	- This file.
+BLKIN.MAR	- File of block I/O subroutines (MACRO source).
+COMLVL.FOR	- Resultant FORTRAN source for file COMLVL.SFI.
+COMLVL.SFI	- Structured FORTRAN source for subroutine COMLVL.
+COMLVL.SFL	- Structured FORTRAN listing for file COMLVL.SFI.
+COSMIC.OUT	- COSMIC documentation for program LOOK.
+DODEF.FOR	- Resultant FORTRAN source for file DODEF.SFI.
+DODEF.SFI	- Structured FORTRAN source for subroutine DODEF.
+DODEF.SFL	- Structured FORTRAN listing for file DODEF.SFI.
+DOIT.FOR	- Resultant FORTRAN source for file DOIT.SFI.
+DOIT.SFI	- Structured FORTRAN source for subroutine DOIT.
+DOIT.SFL	- Structured FORTRAN listing for file DODEF.SFI.
+GETDEF.FOR	- Resultant FORTRAN source for file GETDEF.SFI.
+GETDEF.SFI	- Structured FORTRAN source for subroutine GETDEF.
+GETDEF.SFL	- Structured FORTRAN listing for file GETDEF.SFI.
+GETOWN.MAR	- MACRO source for subroutine GETOWN.
+HELPLIB.TXT	- Text used to construct LOOK.HLB.
+LINCON.FOR	- Resultant FORTRAN source for file LINCON.SFI.
+LINCON.SFI	- Structured FORTRAN source for subroutine LINCON.
+LINCON.SFL	- Structured FORTRAN listing for file LINCON.SFI.
+LOOK.EXE	- Program executable image.
+LOOK.HLB	- Program's help library (for internal help).
+LOOK.HLP	- Help file for users.
+LOOK.OLB	- Object library of all LOOK modules.
+LOOK.FOR	- Resultant FORTRAN source for file LOOK.SFI.
+LOOK.SFI	- Structured FORTRAN source for main program without
+		  any subroutines.
+LOOK.SFL	- Structured FORTRAN listing for file LOOK.SFI.
+LOOK.MAP	- Linkage map from creation of LOOK.EXE.
+LOOK.SSD	- Documentation created by a program which strips
+		  out comments from the code (said program is not
+		  fully working, so this file is not in its complete
+		  final form).
+LOOKSUB.FOR	- Resultant FORTRAN source for file LOOKSUB.SFI.
+LOOKSUB.SFI	- Structured FORTRAN source for various small subroutines.
+LOOKSUB.SFL	- Structured FORTRAN listing for file LOOKSUB.SFI.
+PRSCOM.FOR	- Resultant FORTRAN source for file PRSCOM.SFI.
+PRSCOM.SFI	- Structured FORTRAN source for suborutine PRSCOM.
+PRSCOM.SFL	- Structured FORTRAN listing for file PRSCOM.SFI.
+PRTOUT.MAR	- File containing region extraction and print subroutines
+		  (MACRO source).
+SETERM.MAR	- File containing various subroutines to change terminal
+		  characteristics (MACRO source).
+TTBRDINI.MAR	- File containing various subroutines to handle the
+		  trapping of broadcast messages sent to the terminal
+		  (MACRO source).

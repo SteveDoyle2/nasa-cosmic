@@ -1,0 +1,60 @@
+      SUBROUTINE TAVISPAK3(KREQMT,ELEMS,UTARG,ANGREQ,
+     *       KVISFLAG,EABEGIN,EACEASE,ORBDATA,LUERR,IERR)
+      IMPLICIT REAL*8 (A-H,O-Z)
+C
+C THIS ROUTINE IS PART OF TOSS'S TAVISPAK SET OF SUBROUTINES.  IT
+C ISSUES THE CALL TO THE APPROPRIATE AVAILABILITY ALGORITHM ACCORDING
+C TO THE VALUE OF KREQMT.
+C
+C***********************************************************************
+C
+C CODED BY C PETRUZZO, GSFC/742, 1/86.
+C    MODIFIED....
+C
+C***********************************************************************
+C
+C
+      REAL*8 UTARG(3),ORBDATA(20)
+      REAL*8 ELEMS(5)
+      REAL*8 PI     / 3.141592653589793D0 /
+      REAL*8 TWOPI  / 6.283185307179586D0 /
+      REAL*8 DEGRAD / 57.29577951308232D0 /
+C
+      IBUG = 0
+      LUBUG =19
+C
+C
+C
+      GO TO (1000,2000,3000),KREQMT
+C
+C *******************************************
+C *  HORIZON AND VELOCITY VECTOR AVOIDANCE  *  EXECUTE THE ALGORITHM
+C *******************************************
+C
+ 1000 CONTINUE
+ 2000 CONTINUE
+C
+      CALL TAVISPAK3A(KREQMT,ELEMS,UTARG,ANGREQ,
+     *       KVISFLAG,EABEGIN,EACEASE,ORBDATA,LUERR,IERR)
+      GO TO 9999
+C
+C ******************************************
+C *  ZENITH VECTOR SEPARATION REQUIREMENT  *  EXECUTE THE ALGORITHM
+C ******************************************
+C
+ 3000 CONTINUE
+C
+      CALL TAVISPAK3B(ANGREQ,UTARG,ORBDATA,EABEGIN,EACEASE,KVISFLAG,
+     *        LUERR,IERR)
+C
+      GO TO 9999
+C
+C *************
+C *  WRAP UP  *
+C *************
+C
+ 9999 CONTINUE
+C
+C
+      RETURN
+      END

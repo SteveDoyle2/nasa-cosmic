@@ -1,0 +1,67 @@
+ EXPERT SYSTEM EXECUTIVE
+
+( McDonnell Douglas Corp. )
+
+     Real-time data monitoring is a decision making process involving
+knowledge of the system being watched and inferences based upon the ob-
+served data. The Expert System Executive is a computer program which demon-
+strates the feasibility of automated real-time monitoring. Using the Ex-
+ecutive, the knowledge of a system is formally coded as a set of rules spec-
+ifying actions to be taken under various conditions. The program makes in-
+ferences about the observed data based on the rules. The Executive has been
+tested by monitoring the Shuttle onboard navigation console using flight
+data from an entry simulation. The test rule base pertaining to onboard
+state vectors is included in the program documentation. By supplying an ap-
+propriate set of rules, the Expert System Executive can be adapted to other
+real-time applications such as plant operations. Each rule must contain a
+schedule of conditions and the action to be executed when all its conditions
+are true.
+
+     When provided with a set of rules and real-time data, the Executive
+continuously compares the current status to the rule conditions, deter-
+mines which rules are applicable and which are not, and performs the re-
+quired action for the applicable rules. The Executive has three principal
+data structures: 1) an array containing the rules, 2) an array containing
+the conditions, and 3) the queues containing the conflict set. The princi-
+ple constraint on the Executive, as with all real-time programs, is execu-
+tion speed.
+
+     The Expert System Executive is written in the C language, which is a
+highly efficient compiled language allowing faster execution on conven-
+tional equipment than LISP-based systems. C is also an efficient manipula-
+tor of large data structures, which are used in the pattern matching algo-
+rithm.
+
+     The Expert System Executive is written in the C language for interac-
+tive execution and has been implemented on an HP 9000 series (system 1805)
+computer. This program was developed in 1984.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: C-LANGUAGE
+
+MACHINE REQUIREMENTS: HP 9000 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 1,192 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI ASCII Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: MSC-20908
+
+DOMESTIC - DOCUMENTATION PRICE: $21.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $42.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

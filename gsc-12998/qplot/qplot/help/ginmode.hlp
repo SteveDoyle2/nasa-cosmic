@@ -1,0 +1,300 @@
+1 GIN_mode  
+
+     When a plot is displayed on the screen, most subsequent input is 
+made using the graphics input (GIN) or "cursor" mode.  In this mode 
+the graphics cursor will appear, which is usually a small cross or a 
+set of crosshairs.  This cursor can be moved by using various keys or 
+controls on the terminal.  The exact nature of these controls is 
+terminal dependent.  When the graphics cursor is placed in the desired 
+position, the user presses a key on the keyboard to execute a command.
+Different commands are assigned to different keys.  
+
+     Most graphics mode commands use the position of the graphics cursor
+as additional input.  This information might be a point on the plot to
+be examined, the corner of a window for a zoom operation, or the
+position at which to place a label. 
+
+     An unexecutable command is signaled by sounding the terminal bell
+three times.  This might happen if the cursor was not at a valid point
+of the plot, or the status was not appropriate (e.g., attempting a
+zoom without the window being set). 
+
+     Many commands are application dependent, but many are common to
+different QPLOT applications.  For the sake of consistency, these
+common commands are described below. 
+
+2 Batch operation   
+
+     When in batch mode the cursor position is not meaningful.  A
+GIN mode command in batch mode will require three inputs, separated
+by spaces.  These are: 
+
+          a)  Command, only first letter is significant.
+          b)  X-position, a real number.
+          c)  Y-position, a real number.
+
+2 Summary           
+
+     This table summarizes the GIN mode commands.  The availability 
+columns indicate for which of the plot types the command is valid.  
+Whether input is needed or the cursor position is significant is also 
+indicated.  
+
+          COMMAND:                INPUT  CURSOR
+          ------------------      -----  ------
+          B-BackZoom                -       -
+          D-Dezoom                  -       -
+          E-Exit                    -       -
+          K-Keyboard              limits    -
+          L-Lower left              -       Y
+          P-Plot                    -       -
+          Q-square zoom area        -       -
+          R-Redraw                  -       -
+          U-Upper right             -       Y
+          X-Xit                     -       -
+          Z-Zoom                    -       -
+          #-Select frame number     -       -
+          *-Toggle select all frames       -       -
+          =-Select frame            -       -
+          .-Select background frame -       -
+          space-Cancel frame select -       -
+          ?-Count frame by bells    -       -
+          $-UTILITIES command    command    -
+          %-hardcopy                -       -
+          !-metafile                -       -
+          ^-user text          color,string -
+          \-user line          color,points -
+          ------------------      -----  ------
+
+2 B-BackZoom        
+
+     The scale of each view reached by using the <Z-Zoom> command is
+pushed onto a special stack.  This command will pop one view off of
+the stack, allowing a previous view to be reexamined.  Display items
+such as those resulting from the <F-find> and <V-values> commands will
+be lost. 
+
+     Additional input :     None 
+     Cursor position :      No effect. 
+
+2 D-DeZoom          
+
+     This command allows the user to reverse the <Z-zoom> command. The
+plot will be redrawn at the original scale.  Display items such as
+those resulting from the <F-find> and <V-values> commands will be
+lost. 
+
+     Additional input :     None 
+     Cursor position :      No effect. 
+
+2 E-Exit            
+
+     This command will cause an exit from the cursor mode and a return 
+to command mode.  The user can return to the cursor mode by using the 
+modifier <OLD> on the command that created the plot in question, for 
+example "PLOT OLD".  This command is the same as <X-Xit>.  
+
+     Additional input :     None
+     Cursor position :      No effect. 
+
+2 K-Keyboard        
+
+     This command allows the corners of the zoom area to be input from
+the keyboard.  The zoom area is defined by minima and maxima for both
+the X and Y coordinates.  After the coordinates are entered the area
+to be zoomed will be shown on the screen as a rectangle.  If the
+<L-Lower left> or <U-Upper right> commands are used before the zoom is
+executed that corner will be repositioned and the rectangle redrawn. 
+
+     Additional input :     Minimum, maximum values of X and Y.
+     Cursor position :      No effect.
+
+2 L-Lower left      
+
+     This command uses the cursor coordinates to set a corner of the
+zoom area.  The related command <U-Upper right> may be used to set the
+other corner.  When both corners are set the area to be zoomed will be
+shown on the screen as a rectangle.  If this command is repeated
+before the zoom is executed the corner will be repositioned and the
+rectangle redrawn.  It should be noted that the point selected using
+this command need not necessarily be the lowest or the leftmost of the
+two points selected. 
+
+     Additional input :     None 
+     Cursor position :      One of the corners of the Zoom Window.
+
+2 P-Plot            
+
+     This command allows the user to refresh the current plot.  The
+plot will be redrawn at the current scale, and with the same curves as
+were drawn originally.  Unlike the <R-Redraw> command, images such as
+those resulting from the <F-find> and <V-values> commands will be
+redrawn. 
+
+     Additional input :     None 
+     Cursor position :      No effect.
+
+2 Q-sQuare zoom area
+
+     This command will ensure that the zoom area is square, that is,
+has the same scale on the X and Y axes. The zoom area must be
+completely defined.  Both minima and maxima for both the X and Y
+coordinates must have been defined, at which point the area to be
+zoomed will be shown on the screen as a rectangle.  The square command
+will enlarge the rectangle so that it is a square having the size of
+the longer side of the rectangle.  This command should not be used if 
+the two axes represent wildly different quantities.
+
+     Additional input :     None 
+     Cursor position :      No effect.
+
+2 R-Redraw          
+
+     This command allows the user to refresh the current plot.  The
+plot will be redrawn at the current scale, and with the same curves as
+were drawn originally.  Images such as those resulting from the
+<F-find> and <V-values> commands will be lost. 
+
+     Additional input :     None 
+     Cursor position :      No effect.
+
+2 U-upper right     
+
+     This command uses the cursor coordinates to set a corner of the
+zoom area.  The related command <L-lower left> may be used to set the
+other corner.  When both corners are set the area to be zoomed will be
+shown on the screen as a rectangle.  If this command is repeated
+before the zoom is executed the corner will be repositioned and
+rectangle redrawn.  It should be noted that the point selected using
+this command need not necessarily be the uppermost or the rightmost of
+the two points selected. 
+
+     Additional input :     None 
+     Cursor position :      One of the corners of the Zoom Window.
+
+2 X-exit            
+
+     This command will cause an exit from the cursor mode and a return 
+to command mode.  The user can return to the cursor mode by using the 
+modifier <OLD> on the command that created the plot in question, for 
+example "PLOT OLD".  This command is the same as <E-exit>.  
+
+     Additional input :     None
+     Cursor position :      No effect.
+
+2 Z-zoom            
+
+     This command allows the user to enlarge a portion of a plot
+without recalculating any of the data.  Both minima and maxima for
+both the X and Y coordinates must have been defined, at which point
+the area to be zoomed will be shown on the screen as a rectangle. The
+zoom coordinates may be entered as real numbers using the <K-keyboard>
+command, or through use of the cursor by using the <L-lower left> and
+<U-Upper right> commands.  Use of the <Q-square zoom area> command
+will ensure that both X and Y axes have the same scale.  After this 
+command is used, the zoomed area will be filled in with the ZOOMFILL 
+color, and the user may use the R-Redraw command to create the zoomed 
+plot.
+
+     Additional input :     None 
+     Cursor position :      No effect.
+
+2 #-frame-select    
+
+      This command will select the frame for the next command that
+must be in a specific frame.  The next key pressed must be a number
+that is the number of the desired frame.  The background frame is
+number 0, and the first frame drawn is number 1.  The remaining frames
+are numbered in the order drawn.  Only frames up to number 9 can be
+accessed using this command. 
+
+     Additional input :     None
+     Cursor position :      No effect.
+
+2 *-toggle-frame-all
+
+      This command will toggle the select all frames flag.  When this
+flag is on, the commands B,D,K,L,Q,U, and Z will be sent to all 
+frames.
+
+     Additional input :     None
+     Cursor position :      No effect.
+
+2 =-frame-select    
+
+      This command will select the frame for the next command that
+must be in a specific frame.  The cursor must be in the plotting area
+(not border) of the current frame.
+
+     Additional input :     None
+     Cursor position :      No effect.
+
+2 .-backframe-select
+
+      This command will select the background frame for the next
+command that must be in a specific frame. 
+
+     Additional input :     None
+     Cursor position :      No effect.
+
+2 space-frame-cancel
+
+      The space bar will cancel the previous selection of a frame made 
+by either the "#" or "=" commands.  
+
+     Additional input :     None
+     Cursor position :      No effect.
+
+2 ?-frame-display   
+
+      This command will count off the current selected frame (from the 
+"#" or "=" commands.  This command does not count as the next 
+"command" for the purpose of those two frame-setting commands.
+
+     Additional input :     None
+     Cursor position :      No effect.
+
+2 $-UTILITIES-comm. 
+
+     This command allows the user to access the HELP library and VAX 
+facility from the graphics mode.  Other input will return to graphics 
+mode with no effect.
+
+     Additional input :     None.
+     Cursor position :      No effect.
+
+2 %-hardcopy        
+
+     This command allows the user to create a hardcopy of the 
+currently displayed plot.
+
+     Additional input :     As needed (terminal dependent).
+     Cursor position :      No effect.
+
+2 !-metafile        
+
+     This command allows the user to create a metafile of the 
+currently displayed plot.  The metafile can be displayed and
+edited using the QPLOT Graphics Editor and Replotter for 
+Metafiles (GERM) program.
+
+     Additional input :     None.
+     Cursor position :      No effect.
+
+2 ^-usertext        
+
+     This command allows the user to place text of any color any
+place on the plot.  The key used is shift-6 on most keyboards.
+
+     Additional input :     Color and text.
+     Cursor position :      Location text is to be placed.
+
+2 \-userline        
+
+     This command allows the user to draw a line on the plot.  
+The user is asked to enter the color and the user (real) coordinates 
+of two endpoints.  A line will then be drawn in the color selected.
+
+     Additional input :     Color and coordinates.
+     Cursor position :      No effect.
+

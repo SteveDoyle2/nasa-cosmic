@@ -1,0 +1,57 @@
+      SUBROUTINE SET(HEAD,IELEM,MODE,VALUE,IMAT)
+C
+C        'SET' CONTROLS OUTPUT OF THE VARIABLE NAMES
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      COMMON/PRCOM/STORE(10,30),ILINE,ICOL,ICNT,IHD
+C
+      DIMENSION HEADER(10),IW1(10),IW2(10),ICHAR(7)
+      DIMENSION IFMT(44),ICC(2),ISP(7)
+      DATA IFMT(1)/'(   '/,IFMT(3)/'1X  '/,IFMT(44)/')   '/
+      DATA ICC/'1H1,','1H ,'/
+      DATA ISP/'10X ',' 9X ',' 8X ',' 7X ',' 6X ',' 5X ',' 3X '/
+      DATA I1/'I1, '/,IA/'A1, '/
+      DATA ICHAR/',A1,',',A2,',',A3,',',A4,',',A5,',',A6,',',A8,'/
+      DATA IBLK/'    '/
+C
+      ICOL=ICOL+1
+      IF (ICOL .LE. 10)  GO TO 190
+      ILINE=ILINE+1
+      ICOL=1
+  190 STORE(ICOL,ILINE)=VALUE
+      IF (IHD .NE. 1)  RETURN
+      IFMT(2)=ICC(2)
+      IF (ILINE .EQ. 1)  IFMT(2)=ICC(1)
+      HEADER(ICOL)=HEAD
+      IF (ICOL .NE. 1)  GO TO 270
+      ICNT=ICNT+1
+      DO 240 I=1,10
+      J=(I-1)*4+4
+      IFMT(J)=IBLK
+      IFMT(J+1)=IBLK
+      IFMT(J+2)=IBLK
+  240 IFMT(J+3)=IBLK
+  270 IFMT((ICOL-1)*4+4)=IMAT
+      DO 271 I=1,7
+      IF (IMAT .EQ. ICHAR(I))  GO TO 272
+  271 CONTINUE
+  272 IFMT((ICOL-1)*4+7)=ISP(I)
+      IF (IELEM .EQ. 0)  GO TO 275
+      IFMT((ICOL-1)*4+5)=I1
+      IW1(ICOL)=IELEM
+  274 IF (MODE .EQ. 0)  GO TO 280
+      IFMT((ICOL-1)*4+6)=I1
+      IW2(ICOL)=MODE
+      GO TO 300
+  275 IFMT((ICOL-1)*4+5)=IA
+      IW1(ICOL)=IBLK
+      GO TO 274
+  280 IFMT((ICOL-1)*4+6)=IA
+      IW2(ICOL)=IBLK
+  300 IF (ICOL .EQ. 10)  GO TO 310
+      RETURN
+      ENTRY SETEND
+  310 WRITE (6,IFMT)  (HEADER(I),IW1(I),IW2(I),I=1,ICOL)
+      RETURN
+      END

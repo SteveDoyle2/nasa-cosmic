@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+The Bar/Line Format Menu consists of the following options:
+
+        Starting year          : Last 2 digits of starting year shown on chart
+        Starting month         : Month at which to start the chart
+        Type of period         : Period of time each box represents
+        Start of fiscal year   : Starting quarter of fiscal year, shown as
+                                 first month of quarter
+        Type of plot           : Bar curve, line curve or both
+        Values to be entered   : Cumulative if values entered are already
+                                 cumulated, otherwise incremental
+        Values to be displayed : Values to be graphed, cumulative/incremental
+        GSFC Symbol            : Display the GSFC symbol on the chart
+        Background Color       : Color of background in Window Mode
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

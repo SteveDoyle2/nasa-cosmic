@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+When the change drive key is pressed, the prompt for changing the current
+default disk drive is given.  A value from A to E is expected in upper or lower
+case letters and a colon is not required, but if a colon is given, it will be
+ignored.  If the changing of the drive causes the screen to be changed, then
+the screen will clear and the proper screen will be displayed.
+
+
+
+
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

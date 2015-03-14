@@ -1,0 +1,54 @@
+      SUBROUTINE TOTIMP(TVEC,TPAR,TMEAN,DELV)
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      COMMON/RPOOL3/ZMS,YIZM(3,2)
+C
+      DIMENSION TVEC(4),TPAR(4)
+C
+C
+      T1=TVEC(1)
+      T2=TVEC(2)
+      T3=TVEC(3)
+      T4=TVEC(4)
+C
+      A=TPAR(1)
+      B=TPAR(2)
+      C=TPAR(3)
+      D=TPAR(4)
+C
+      T21=T2-T1
+      T32=T3-T2
+      T43=T4-T3
+      ARG1=-B*T21
+      ARG2=C*T32
+      ARG3=-D*T43
+      E1=DEXP(ARG1)
+      E3=DEXP(ARG3)
+      P1=A*(1.0D0-E1)
+      CI1=0.0D0
+      CM1=0.0D0
+      IF(B.EQ.0.0D0) GO TO 1
+      CI1=A*T21-P1/B
+      CM1=A*T21*(T21/2.0D0+E1/B)-P1/(B*B)
+    1 CONTINUE
+      WS1=P1*T32
+      WS2=ARG2*T32/2.0D0
+      CI2=WS1+WS2
+      CM2=WS1*(T21+T32/2.0D0)+WS2*(T21+2.0D0*T32/3.0D0)
+      P2=P1+ARG2
+      CI3=P2*T43/2.0D0
+      CM3=CI3*(T21+T32+T43/3.0D0)
+      IF(D.EQ.0.0D0) GO TO 2
+      CI3=P2*(1.0D0+(1.0D0-E3)/ARG3)/D
+      WS1=D*(T21+T32)+2.0D0
+      WS2=D*(T21+T32+T43)+2.0D0
+      WS3=D*D
+      CM3=P2*(WS1+WS2*(1.0D0-E3)/ARG3)/WS3
+    2 CONTINUE
+      WS1=CI1+CI2+CI3
+      WS2=CM1+CM2+CM3
+      TMEAN=WS2/WS1
+      DELV=0.3048D-3*WS1/ZMS
+      RETURN
+      END

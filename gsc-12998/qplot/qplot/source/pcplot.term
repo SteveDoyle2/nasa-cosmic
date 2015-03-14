@@ -1,0 +1,270 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STANDARD',
+               'QLIBHOME:GENERAL',
+               'QLIBHOME:IO',
+               'QLIBHOME:COLOR',
+               'QLIBHOME:FIG',
+               'QLIBHOME:TERM_VAX',
+               'QLIBHOME:TERM_ANSI',
+               'QLIBHOME:TERM_4010'),
+  ENVIRONMENT ('QLIBHOME:PCPLOT.TEN') ]
+MODULE term_PCPLOT;
+{=============================================================================}
+{-- PROCEDURES FOR TERMINAL TYPE PCPLOT --------------------------------------}
+{=============================================================================}
+[ GLOBAL ]
+FUNCTION termname_PCPLOT (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0: termname_PCPLOT := '1';
+   1: termname_PCPLOT := 'PCPLOT  ';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+FUNCTION strofpos (ip : ipoint) : anystring;
+BEGIN
+strofpos := chr (ip.iy MOD 65536 DIV 3296 + 32) + 
+            chr (ip.iy MOD 3296  DIV 103  + 96) +
+            chr (ip.ix MOD 65536 DIV 3296 + 32) + 
+            chr (ip.ix MOD 3296  DIV 103  + 64);
+END;
+{-----------------------------------------------------------------------------}
+FUNCTION RGBIBofcolor (c : color_type) : anystring;
+VAR
+   hlsa  : hlsa_type;
+   RGBIB : anystring;
+BEGIN
+hlsa := hlsaofcolor (c);
+IF      hlsa.hue <  30 THEN RGBIB := '001'
+ELSE IF hlsa.hue <  90 THEN RGBIB := '011'
+ELSE IF hlsa.hue < 150 THEN RGBIB := '010'
+ELSE IF hlsa.hue < 210 THEN RGBIB := '110'
+ELSE IF hlsa.hue < 270 THEN RGBIB := '100'
+ELSE IF hlsa.hue < 330 THEN RGBIB := '101'
+ELSE                        RGBIB := '001';
+IF      hlsa.lightness > 80 THEN RGBIB := '1111'
+ELSE IF hlsa.lightness > 50 THEN RGBIB := RGBIB + '1'
+ELSE IF hlsa.lightness > 20 THEN RGBIB := RGBIB + '0'
+ELSE                             RGBIB := '0000';
+IF      hlsa.saturation > 50 THEN
+ELSE IF hlsa.lightness > 80 THEN RGBIB := '1111'
+ELSE IF hlsa.lightness > 50 THEN RGBIB := '1110'
+ELSE IF hlsa.lightness > 20 THEN RGBIB := '0001'
+ELSE                             RGBIB := '0000';
+CASE hlsa.attribute OF
+   'C':  RGBIB := '00000';
+   'B':  RGBIB := RGBIB + '1';
+   ' ':  RGBIB := RGBIB + '0';
+   END;
+RGBIBofcolor := RGBIB;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE colorsetup_PCPLOT;
+VAR
+   st,RGBIB : anystring;
+BEGIN
+IF env.mode = M_TEXT
+ THEN
+  BEGIN
+  st := '';
+  wait (0.2);
+  RGBIB := RGBIBofcolor ('TEXTBACK');
+  IF RGBIB[1] = '1' THEN st := st + ';10';
+  IF RGBIB[2] = '1' THEN st := st + ';11';
+  IF RGBIB[3] = '1' THEN st := st + ';12';
+  RGBIB := RGBIBofcolor ('TEXTCHAR');
+  IF RGBIB[1] = '1' THEN st := st + ';13';
+  IF RGBIB[2] = '1' THEN st := st + ';14';
+  IF RGBIB[3] = '1' THEN st := st + ';15';
+  IF RGBIB[4] = '1' THEN st := st + ';16';
+  IF RGBIB[5] = '1' THEN st := st + ';17';
+  qiowwrite (ESC + '[0;1;m');
+  wait (0.2);
+  qiowwrite (ESC + '[18;' + st + 'm');
+  wait (0.2);
+  END
+ ELSE
+  BEGIN
+  END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE executecom_PCPLOT;
+VAR
+   ch   : char;
+   rgba : rgba_type;
+{------------------------------}
+PROCEDURE bufferempty;
+VAR
+   ipt : ipoint;
+BEGIN
+CASE env.mode OF
+   M_TEXT:  BEGIN
+            wait (0.2);
+            qiowwrite (ESC + FF);
+            wait (0.2);
+            END;
+   M_DUAL:  BEGIN
+            ipt.ix := 20000;
+            ipt.iy := 20000;
+            qiowwrite (chr (29) + chr (31) + '  ' + CRLF);
+            END;
+   M_PLOT:  ;
+   END;
+env.mode := M_PLOT;
+IF length (env.buffer) <> 0 
+ THEN 
+  BEGIN
+  qiowwrite (env.buffer + CRLF);
+  env.buffer := '';
+  END;
+END;
+{------------------------------}
+PROCEDURE draw (ix,iy : integer);
+VAR
+   oldstr,newstr : VARYING [80] OF char;
+BEGIN
+IF NOT env.visible
+ THEN
+  BEGIN
+  bufferempty;
+  env.pos.ix := ix;
+  env.pos.iy := iy;
+  END
+ ELSE
+  BEGIN
+  IF length (env.buffer) > BUFFERSIZE-10 THEN bufferempty;
+  oldstr := strofpos (env.pos);
+  IF env.buffer = '' THEN env.buffer := chr(29) + oldstr;
+  env.pos.ix := ix;
+  env.pos.iy := iy;
+  newstr := strofpos (env.pos);
+  IF (newstr[1] <> oldstr[1]) OR (length(env.buffer)=5)
+   THEN env.buffer := env.buffer + newstr[1];
+  IF (newstr[3] <> oldstr[3]) OR (newstr[2] <> oldstr[2]) OR 
+                                 (length(env.buffer)=6)
+   THEN env.buffer := env.buffer + newstr[2];
+  IF (newstr[3] <> oldstr[3]) OR (length(env.buffer)=7)
+   THEN env.buffer := env.buffer + newstr[3];
+  IF (newstr <> oldstr) OR (length(env.buffer)=8)
+   THEN env.buffer := env.buffer + newstr[4];
+  END;
+END;
+{------------------------------}
+BEGIN
+WITH plotitem DO CASE ins OF
+   I_col:  BEGIN
+           bufferempty;
+           rgba := rgbaofhlsa (hlsaofcolor (st));
+           CASE rgba.r >= 0.5 OF
+              true:  CASE rgba.g >= 0.5 OF
+                        true:  IF rgba.b >= 0.5 THEN ch := '0' ELSE ch := '4';
+                        false: IF rgba.b >= 0.5 THEN ch := '6' ELSE ch := '1';
+                        END;
+              false: CASE rgba.g >= 0.5 OF
+                        true:  IF rgba.b >= 0.5 THEN ch := '5' ELSE ch := '2';
+                        false: IF rgba.b >= 0.5 THEN ch := '3' ELSE ch := '7';
+                        END;
+              END;
+           wait (0.2);
+           env.buffer := chr(31) + chr(33) + 'COL C' + ch;
+           bufferempty;
+           END;
+   I_pan:  ;
+   I_clo:  ;
+   I_pos:  BEGIN
+           bufferempty;
+           env.pos.ix := ix;
+           env.pos.iy := iy;
+           END;
+   I_dra:  draw (ix,iy);
+   I_siz:  ;
+   I_mar:  ;
+   I_pri:  IF env.visible AND (st <> '') 
+            THEN 
+             BEGIN
+             bufferempty;
+             env.buffer := chr(29) + strofpos (env.pos)  
+                         + chr(31) + st;
+             bufferempty;
+             END;
+   I_emp:  bufferempty;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE writeterm_PCPLOT (str : VARYING [l2] OF char);
+BEGIN
+IF env.mode = M_PLOT
+ THEN
+  BEGIN
+  env.mode := M_DUAL;
+  qiowwrite (chr(29) + strofpos (ipoint(10,1000)) + chr(31) + CRLF);
+  END;
+qiowwritevirtual (str);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE readterm_PCPLOT (VAR outstr : VARYING [l2] OF char);  
+BEGIN
+readterm_vax (outstr);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screenerase_PCPLOT;
+BEGIN
+IF env.mode IN [M_PLOT,M_DUAL] THEN qiowwrite (ESC + FF);
+wait (0.2);
+screenerase_ansi;
+wait (0.1);
+env.mode := M_TEXT;
+colorsetup_PCPLOT;
+wait (0.1);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screencopy_PCPLOT;
+BEGIN
+screencopy_4010;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE gin_PCPLOT (VAR key : char;  VAR ipt : ipoint;  color : color_type);
+VAR
+   st : VARYING [20] OF char;
+BEGIN
+IF env.mode IN [M_DUAL,M_TEXT] 
+ THEN qiowwrite (chr (29) + chr (31) + '  ' + CRLF);
+gin_4010 (key,ipt);
+ipt.ix := ipt.ix DIV 64 * 103;
+ipt.iy := ipt.iy DIV 64 * 103;
+END;
+{-----------------------------------------------------------------------------}
+[GLOBAL]
+FUNCTION readmenu_PCPLOT (default : char;  toplevel : boolean;
+   helpprefix : anystring) : command_type;
+BEGIN
+readmenu_PCPLOT := readmenu_ansi (default,toplevel,helpprefix,false);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE termconfig_PCPLOT (configcontrol : configcontrol_type);
+BEGIN
+CASE configcontrol OF
+   CON:  BEGIN
+         qiowwrite (ESC + FF);      { CODE TEK               }
+         qiowwrite (ESC + '[?3l');
+         config.ch := ch_type (800,1475,300,300);
+         config.resolution := 103;
+         config.dotsize    := 103;
+         config.starsize   := 515;
+         config.ansi364    := false;
+         config.drawblack  := false;
+         END;
+   QUE:  ;
+   REP:  ;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+END.

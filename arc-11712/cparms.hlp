@@ -1,0 +1,111 @@
+!        111111111122222222223
+!23456789012345678901234567890
+AND                 command parameters;
+                      source_layer logical_layer output_layer
+
+                    Logically Ands source_layer and logical_layer.
+ASPECT              Command parameters;
+                      source_layer output_layer
+                                 
+                    Computes the aspect (in degress) of elevation data.
+CLUSTER             Command parameters;
+                      "(" layer list ")" 
+                      <No. of clusters>, <min. pixels/cluster>,
+                      <min.distance between centroids.>,
+                      <max. # of cycles>, [StatLayer], OutputLayer
+                    Clusters the layers.
+CONTAB              command parameters;
+                      source_layer1 source_layer2 output_layer
+
+                    Produces a contingency table.
+CONTABS             command parameters;
+                      source_layer1 source_layer2 output_layer
+                            
+                    Produces a special contingency table.
+DELETE LAYER        Command parameters;
+                      Layer
+                               
+                    Deletes the specified layer. 
+EXIT                {no parameters}
+                          
+                    Exits IBASE.
+EXISTS?             Command parameters;
+                      layer
+                              
+                    Confirms the presence of a layer
+FILTER BANDPASS     Command parameters;
+                    source_layer output_layer lowvalue highvalue
+FILTER HIGHPASS     Command parameters;
+                      source_layer output_layer value
+FILTER LOWPASS      Command parameters;
+                      source_layer output_layer value
+GENSTATS            Command parameters;
+                      source_layer output_layer
+                                 
+                    Computes various statistics on an image.
+HIST                Command parameters;
+                      source_layer output_layer {"CUMULATIVE"}
+                                 
+                    Creates a histogram of the Layer.
+                      
+                    Options;
+                        Cumulative Histogram or Regular Histogram.
+LIST LAYERS         Command parameters;
+                      cube
+                           
+                    Lists all layers in cube.
+LIST CUBES          {no parameters}
+                         
+                    Lists all the cubes present in the master file.
+LIST FILES          {no parameters}
+                         
+                    Lists all the data files present in the master file.
+NOT                 Command parameters;
+                      source_layer output_layer
+                            
+                    Logically Ors source_layer and logical_layer.
+OR                  Command parameters;
+                      source_layer logical_layer output_layer
+                                     
+                    Logically Ors source_layer and logical_layer.
+QUIT                {no parameters}
+                            
+                    Exits IBASE.
+REGRESS             Command parameters;
+                      source_layer1 source_layer2 output_layer
+                        
+                    Performs a linear regression comparison of the two input
+                    layers.
+SCALE               Command parameters;
+                      source_layer output_layer low_value high_value
+                          
+                    Remaps the low and high values of the source_layer into
+                    the supplied range.
+SEND                Command parameters;
+                     layer
+
+                    Sends the report layer specified using the XMODEM protocol.
+SET CUBE            Command parameters;
+                     CubeName
+
+                    Sets the default GeoCube name.                    
+SHOW LAYERFILE      Command parameters;
+                      layer
+
+                    Returns the file name which contains the layer.
+SHOW LAYERLABEL     Command parameters;
+                      layer
+
+                    Returns the label of the layer.
+SLOPE               Command parameters;
+                      source_layer output_layer
+                                 
+                    Computes the slope (in degress) of elevation data.
+TYPE                Command parameters;
+                      output_layer
+                                 
+                    Prints the report layer at the terminal.
+XOR                 Command parameters;
+                      source_layer logical_layer output_layer
+                           
+                    Logically Xors source_layer and logical_layer.

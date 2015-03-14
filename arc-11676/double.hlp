@@ -1,0 +1,9 @@
+1 DOUBLE
+
+ The double program displays two files side-by-side on a VT-100 terminal.  The
+ terminal must be equipped with 132 column mode.  The first 65 columns of each
+ file is displayed.
+
+ Execute DOUBLE by entering :   @MERLIN:DOUBLE
+
+ You will be prompted for the names of the files to display.

@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+Window Mode is used to view 1/4 of the chart at a time.  This gives a clear
+picture of what is in that area of the chart.  When the window key is pressed,
+the quarter which is drawn has the current cursor position as near to the
+center as possible while still showing a full picture.  If there is no current
+cursor position when the window key is pressed, the upper left corner is
+displayed.
+
+To return to the last screen after pressing the window key, press F8(End
+Window)
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

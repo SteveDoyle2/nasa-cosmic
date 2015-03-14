@@ -1,0 +1,127 @@
+      SUBROUTINE GMBLD1(SY1,SY2,SY3,SZ1,SZ2,SZ3,CIY,CIZ)
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      COMMON/CGIMBD/DELIN(3,3),DELAX(3),DELCG(3),DELMS,ZTZT(3,3)
+C
+      COMMON/CONSTS/PI,TWOPI,RADIAN
+C
+      COMMON/GMBDWK/DELT,GAMGM(7),GMRHS,DI,DZML(7,7),Y1(3),Y2(3),Y4(3)
+C
+     1             ,Y5(3),Z1(3),Z3(3),Z4(3),Z5(3),ZT2(3),ZT3(3),ZT4(3)
+C
+     2             ,ZT5(3)
+C
+      COMMON/GMBDUT/AZ,AZD,EL,ELD,B(3,3),F(3,3),FB(3,3)
+C
+      COMMON/DMPRPL/GMBAZ,GMBAZD,GMBEL,GMBELD
+C
+      COMMON/IGIMBD/IGMBLD,NELEV,NE1
+C
+      COMMON/RPOOL1/DUM1(10),T,SA(3,3),FM1(3,3),DUM2(51),YBCM(3)
+C
+     1             ,DUM3(40),PHID,PHI
+C
+      COMMON/RPOOL3/ZMS,YIZM(3,2)
+C
+      COMMON/VARBLS/DEP(150),DER(150)
+C
+C
+      DIMENSION CIY(3,3),CIZ(3,3),DM1(3,3),DM2(3,3),DM3(3,3)
+      DIMENSION DM4(3,3),DM5(3,3),ZZ(3,3),YY(3,3)
+      DIMENSION Y3(3),Z2(3),ZT1(3)
+C
+      EQUIVALENCE (ZT1(1),DELCG(1)),(Z2(1),DELAX(1))
+      EQUIVALENCE (Y3(1),YIZM(1,1))
+C
+C
+      IF(IGMBLD.EQ.0) RETURN
+C
+      DELT=ZTZT(2,2)+ZTZT(3,3)
+      DI=1.0D0/DELT
+      AZ=PHI
+      AZD=PHID
+      EL=DEP(NELEV)
+      ELD=DEP(NE1)
+      SEL=DSIN(EL)
+      CEL=DCOS(EL)
+      GMBAZ=AZ/RADIAN
+      GMBAZD=AZD/RADIAN
+      GMBEL=EL/RADIAN
+      GMBELD=ELD/RADIAN
+      DO 2 I=1,3
+      DO 1 J=1,3
+      B(I,J)=0.0D0
+      F(I,J)=FM1(I,J)
+    1 CONTINUE
+      B(I,I)=CEL
+    2 CONTINUE
+      B(1,1)=1.0D0
+      B(2,3)=-SEL
+      B(3,2)=SEL
+C
+      CALL MPYMAT(F,B,DM1,1,1,FB,DM1)
+      CALL MATV(1,B,ZT1,Z1)
+      CALL MATV(1,FB,ZT1,Y1)
+      CALL MATV(1,F,Z2,Y2)
+      CALL MATV(2,B,Z2,ZT2)
+      CALL MATV(2,F,Y3,Z3)
+      CALL MATV(2,FB,Y3,ZT3)
+      CALL ADDV(Y2,Y3,Y4)
+      CALL ADDV(Z2,Z3,Z4)
+      CALL ADDV(ZT2,ZT3,ZT4)
+      CALL ADDV(Y1,Y4,Y5)
+      CALL ADDV(Z1,Z4,Z5)
+      CALL ADDV(ZT1,ZT4,ZT5)
+      CALL MPYMAT(B,ZTZT,B,2,2,DM1,ZZ)
+      CALL MPYMAT(FB,ZTZT,FB,2,2,DM1,YY)
+C
+      DO 5 I=1,3
+      DO 4 J=1,3
+      CIY(I,J)=CIY(I,J)+YY(I,J)+DELMS*Y5(I)*Y5(J)
+      CIZ(I,J)=CIZ(I,J)+ZZ(I,J)+DELMS*(Z1(I)+Z2(I))*(Z1(J)+Z2(J))
+    4 CONTINUE
+      YBCM(I)=YBCM(I)+DELMS*Y5(I)
+    5 CONTINUE
+C
+      SY1=SY1+DELMS*Y5(1)
+      SY2=SY2+DELMS*Y5(2)
+      SY3=SY3+DELMS*Y5(3)
+      SZ1=SZ1+DELMS*(Z1(1)+Z2(1))
+      SZ2=SZ2+DELMS*(Z1(2)+Z2(2))
+      SZ3=SZ3+DELMS*(Z1(3)+Z2(3))
+C
+      YTR=0.0D0
+      DO 10 I=1,3
+      GAMGM(I)=DELMS*(FB(I,3)*ZT1(2)-FB(I,2)*ZT1(3))
+      DO 9 J=1,3
+      DM4(I,J)=YY(I,J)+DELMS*Y1(I)*Y5(J)
+      DM3(I,J)=ZZ(I,J)+DELMS*(Z1(I)+Z2(I))*Z1(J)
+    9 CONTINUE
+      YTR=YTR+DM4(I,I)
+   10 CONTINUE
+C
+      DO 15 I=1,3
+      DO 14 J=1,3
+      DM5(I,J)=-DM4(I,J)
+   14 CONTINUE
+      DM5(I,I)=DM5(I,I)+YTR
+   15 CONTINUE
+C
+      DO 16 I=1,3
+      I3=I+3
+      GAMGM(I3)=FB(1,1)*DM5(I,1)+FB(2,1)*DM5(I,2)+FB(3,1)*DM5(I,3)
+   16 CONTINUE
+C
+      GAMGM(7)=-B(1,1)*DM3(1,2)+B(2,1)*(DM3(3,3)+DM3(1,1))
+     1         -B(3,1)*DM3(3,2)
+C
+      DO 18 I=1,7
+      DO 18 J=1,7
+      DZML(I,J)=DI*GAMGM(I)*GAMGM(J)
+   18 CONTINUE
+C
+C
+      RETURN
+C
+      END

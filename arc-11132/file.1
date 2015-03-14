@@ -1,0 +1,337 @@
+      PROGRAM MAINAT (INPUT,OUTPUT,TAPE5=INPUT,TAPE6=OUTPUT)
+      COMMON/DSAVE/SAVE(30,300),NB,NE,DT,TIME(300)
+      DIMENSION ATAB(20), VTAB(20),DTAB(20),TTAB(20),B(60)
+      DIMENSION XRAW(300),YRAW(300),HRAW(300),DRAW(300),VRAW(300)
+      DIMENSION NWT(20)  ,XSUM(60),YSUM(60),HSUM(60),ARAW(300)
+      DATA DOT/1H*/,BLANK/1H /
+      WRITE(6,800)
+C.......................READ IN CONSTANTS  .............................
+ 100  FORMAT(20A1,5F10.4/4I5)
+      READ(5,100) NWT,DT,WS,CLAO,ALPHAO,VAR,NR,NV,ND,NH
+      WRITE(6,200)NWT,DT,WS,CLAO,ALPHAO,VAR,NR,NV,ND,NH
+      WRITE(6,801)
+      DD=0.0
+      NW=0
+C.......................READ IN WINDS AND TEMPERATURE  .................
+101   FORMAT(F10.3,3F10.2)
+ 1009 READ(5,101)          H ,D,V,T
+      IF( EOF(5) .NE. 0) GO TO 1008
+      WRITE(6,101)         H ,D,V,T
+      NW=NW+1
+      ATAB(NW) = H*1000.
+      VTAB(NW) = V*1.69
+      TTAB(NW) = T
+      DTAB(NW) = D
+      GO TO 1009
+1008  CONTINUE
+      WRITE(6,802)
+C.......................READ IN RADAR DATA  ............................
+      J=0
+ 103  FORMAT(2I5,3F10.4,F10.1)
+ 1000 READ(5,103)IHOUR,MIN,SEC,Y,X,H
+      IF( EOF(5) .NE. 0) GO TO 1001
+      J=J+1
+      WRITE(6,203)J,IHOUR,MIN,SEC,Y,X,H
+      TIME(J) = IHOUR*3600 +MIN*60 +SEC
+      XRAW(J)= X*6080.3
+      YRAW(J)= Y*6080.3
+      HRAW(J) =H
+      ARAW(J)=0.0
+      VRAW(J)=0.0
+      DRAW(J)=0.0
+      GO TO 1000
+1001  CONTINUE
+      NB=1
+      NE=J
+C....................... PRE-SMOOTHING OF RAW DATA  ....................
+      MMIN  =(NR-1)/2 +1
+      MMAX=NE-MMIN +1
+      DO 1 J=MMIN,MMAX
+      DO 2 L=1,NR
+      LL=J +L -1 - (NR -1)/2
+      XSUM(L)=XRAW(LL)
+      YSUM(L)=YRAW(LL)
+      HSUM(L) = HRAW(LL)
+ 2    CONTINUE
+      CALL SMOOTH(XSUM,DT,NR,XSMOTH,XRATE,XACCL)
+      CALL SMOOTH(YSUM,DT,NR,YSMOTH,YRATE,YACCL)
+      CALL SMOOTH(HSUM,DT,NR,HSMOTH,HRATE,HACCL)
+      VRAW(J)= SQRT(XRATE**2 +YRATE**2)
+      DRAW(J)=ATAN2(YRATE,XRATE)
+      ARAW(J)=HRATE
+ 1    CONTINUE
+      WRITE(6,803)
+      DO 6 J=NB,NE
+      P=BLANK
+C....................... FINAL SMOOTHING FOR INERTIAL DATA  ............
+      DO 3 L=1,ND
+      LL=J +L -1 - (ND -1)/2
+      IF( LL .LT. MMIN) P=DOT
+      IF( LL .GT. MMAX) P=DOT
+      IF( LL .LT. MMIN) LL=MMIN
+      IF( LL .GT. MMAX) LL=MMAX
+      B(L) = DRAW(LL)
+      IF(L .EQ. 1) GO TO 7
+      BX = B(L) - B(L-1)
+      IF ( BX .GT. 3.141) B(L) = B(L) -6.283185
+      IF ( BX .LT.-3.141) B(L) = B(L) +6.283185
+ 7    CONTINUE
+      YSUM(L) = B(L)
+ 3    CONTINUE
+      DO 4 L=1,NV
+      LL=J +L -1 - (NV -1)/2
+      IF( LL .LT. MMIN) P=DOT
+      IF( LL .GT. MMAX) P=DOT
+      IF( LL .GT. MMAX) LL=MMAX
+      IF( LL .LT. MMIN) LL=MMIN
+      XSUM(L) = VRAW(LL)
+ 4    CONTINUE
+      DO 5 L=1,NH
+      LL=J +L -1 - (NH -1)/2
+      IF( LL .LT. MMIN) P=DOT
+      IF( LL .GT. MMAX) P=DOT
+      IF( LL .GT. MMAX) LL=MMAX
+      IF( LL .LT. MMIN) LL=MMIN
+      HSUM(L) = ARAW(LL)
+5     CONTINUE
+      CALL SMOOTH(YSUM,DT,ND,DRATE,DACCL,DXX)
+      CALL SMOOTH(XSUM,DT,NV,VRATE,VACCL,VXX)
+      CALL SMOOTH(HSUM,DT,NH,HRATE,HACCL,HXX)
+      XRATE = VRATE*COS(DRATE)
+      YRATE = VRATE*SIN(DRATE)
+      XACCL = VACCL*COS(DRATE) - DACCL*SIN(DRATE)*VRATE
+      YACCL = VACCL*SIN(DRATE) + DACCL*COS(DRATE)*VRATE
+C....................... AIR DATA  .......................................
+      HW=HRAW(J)
+      CALL TAINT(ATAB,VTAB,HW,VW,NW,1,NER,DD)
+      CALL TAINT(ATAB,DTAB,HW,DW,NW,1,NER,DD)
+      CALL TAINT(ATAB,TTAB,HW,TP,NW,1,NER,DD)
+      DELTA=(1.-(0.003566*HW    )/518.688)**5.2561
+      THBAR=(TP    +459.4)/518.688
+      F=0.457072*(10.**(-6.))
+      XWIND = VW*COS(DW/57.3)
+      YWIND = VW*SIN(DW/57.3)
+      VX=XRATE + XWIND
+      VY=YRATE + YWIND
+      VH=HRATE
+       VV  = SQRT( VX**2 +VY**2)
+       VT  = SQRT( VX**2 +VY**2 + VH**2)
+      V1 = VT/1.69
+      VC=(((((((((V1*V1)*(F/THBAR)+1.)**3.5)-1.)*DELTA)+1.)**0.285714)-1
+     1.)/F)**0.5
+      Q = 0.00119*VT**2 *( 1.0 -(HW*.000001 )*6.87535)**4.2561
+      XM = VT/( 49.04*SQRT(TP+459.4))
+      CLA =   CLAO*(3.8/( 1.8 +2.0*((1.0-XM**2)**0.5)))
+C....................... FORCES  .........................................
+      AT = SQRT( YACCL**2 + XACCL**2 + ( HACCL + 32.2)**2)/32.2
+      AV = HACCL/32.2 +1.0
+      AD =     ( YACCL*VY + XACCL*VX + ( HACCL + 32.2)*VH)/(32.2*VT)
+      AL= SQRT(AT**2 -AD**2)
+C....................... ANGLES  .......................................
+      ROLL =-57.3*ASIN( (XACCL*VY -YACCL*VX )/(   VV *AT*32.2))
+      ALPHA=ALPHAO+ (AL*WS)/(Q*CLA)
+      THETA   = ATAN2(VH,VV)*57.3 +ALPHA*COS(ROLL/57.3)
+      HDG     = ATAN2(VY,VX)*57.3 +ALPHA*SIN(ROLL/57.3)  +VAR
+C....................... SAVE DATA FOR PRINT AND PLOTS  ........ .......
+      SAVE( 1,J)=HRAW(J)
+      SAVE( 2,J)=VRATE/1.69
+      SAVE( 3,J)=DRATE*57.3
+      SAVE( 4,J)=HRATE
+      SAVE( 5,J)=ATAN2(HRATE,VRATE)*57.3
+      SAVE( 6,J)=AL
+      SAVE( 7,J)=AD
+      SAVE( 8,J)=ROLL
+      SAVE( 9,J)=THETA
+      SAVE(10,J)=HDG
+      SAVE(11,J)=VT/1.69
+      SAVE(12,J)=VC
+      SAVE(13,J)=XM
+      SAVE(14,J)=ARAW(J)
+      SAVE(15,J)=VRAW(J)/1.69
+      SAVE(16,J)=DRAW(J)*57.3
+      SAVE(17,J)=ATAN2(VH,VV)*57.3
+      SAVE(18,J)=AV
+      SAVE(19,J)=AT
+      SAVE(20,J)=ALPHA
+      SAVE(21,J)=Q
+      SAVE(22,J)=XRAW(J)/6080.3
+      SAVE(23,J)=YRAW(J)/6080.3
+      SAVE(24,J)=DW
+      SAVE(25,J)=VW/1.69
+      SAVE(26,J)=TIME(J)
+      SAVE(27,J)= (J-1)*DT
+      IHOUR = TIME(J)/3600.
+      MIN = ( TIME(J) -IHOUR*3600.)/60.
+      SEC =   TIME(J) -IHOUR*3600. -MIN*60.
+      WRITE(6,204)P,J,MIN,SEC, (SAVE(N,J),N=1,13)
+ 6    CONTINUE
+      WRITE(6,811)
+      CALL XPLOT
+ 200  FORMAT(20A1,2F10.2,F10.4,2F10.2,4I10)
+ 203  FORMAT(3I5,F9.3,2F10.3,F10.0)
+ 204  FORMAT(1X,A1,I4,I4,F6.2,F9.0,F9.1,3F9.2,4F8.2, F9.2,2F9.1,F6.2)
+ 800  FORMAT(1H1,50H PROGRAM TO PROCESS ATC RADAR DATA                /
+     1/// 23X, 52H.................CONSTANTS.......................    ,
+     1 40H.....NO. OF POINTS FOR SMOOTHING.......             ,
+     2//20H AIRCRAFT  ID               ,
+     3 3X,       50H  TIME     WEIGHT/    LIFT      ALPHA      MAG.    ,
+     4 60H    PRE-     GROUND     TRACK     ALTITUDE                   /
+     5       23X,50H  DIF.      AREA      CURVE     ZERO       VAR.    ,
+     6 60H   SMOOTH    SPEED      ANGLE                                /
+     7       23X,50H  SEC      LB/SQFT   PER DEG    DEG        DEG.   /)
+ 801  FORMAT(/////4X,  42HALTITUDE        WINDS          TEMPERATURE   /
+     1  4X,            42H 1000 FT    DEG      KNOTS     DEG F        /)
+ 802  FORMAT(1H1 ,25X,26HPRINTOUT  OF  INPUT DATA       ,//
+     1 60H POINT                      EAST      NORTH                 /
+     1 60H  NO   HOUR  MIN   SEC      RANGE     RANGE     ALTITUDE     /
+     1 58H                            NA MI     NA MI       FEET      /)
+ 803  FORMAT(1H1 ,25X,26HPRINTOUT  OF  OUTPUT  DATA,///8H POINT   ,8X,
+     1 60H             GROUND   TRACK    VERT.    FLIGHT      FORCES   ,
+     2 41H     .......ANGLES.........     AIRSPEED   /5H  NO   ,11X,
+     1 60H  ALTITUDE   SPEED    ANGLE    VEL.      PATH    LIFT     T- ,
+     2 55HD    ROLL   PITCH   HEADING   TRUE     IND.    MACH          /
+     1 16H       MIN   SEC            ,
+     1 60H    FEET     KNOTS     DEG     FPS       DEG     G,S      G, ,
+     3 55HS    DEG     DEG    DEG MAG   KNOTS    KNOTS                /)
+ 811  FORMAT(///50H * SMOOTHED VALUES ARE APPROXIMATE NEAR END POINTS  )
+      STOP
+      END
+      SUBROUTINE SMOOTH (X,DT,N,XS,XDOT,XACCEL)
+      INTEGER P
+      DIMENSION X(N)
+      PN=N
+      P=N-((N-1)/2)
+      Q1=3.*(3.*PN**2-7.)
+      Q2=4.*PN*(PN**2-4.)
+      C11=Q1/Q2
+      C13=-15./(PN*(PN**2-4.))
+      C22=12./(PN*(PN**2-1.))
+      C31=C13
+      C33=C22*(15./(PN**2-4.))
+      S1=0.0
+      S2=0.0
+      S3=0.0
+      DO 1 I=1,N
+      S1=S1+X(I)
+      S2=S2+X(I)*(I-P)
+      S3=S3+X(I)*(I-P)**2
+    1 CONTINUE
+      XS=C11*S1+C13*S3
+      XDOT=(C22*S2)/DT
+      A2=C31*S1+C33*S3
+      XACCEL=2.*A2/(DT**2)
+      RETURN
+      END
+      SUBROUTINE TAINT(XTAB,FTAB,X,FX,N,K,NER, MON)
+      DIMENSION XTAB(1),FTAB(1),T(10),C(10)
+CPS0400  TAINT SUBROUTINE- IN FORTRAN II.
+      IF (N - K) 1,1,2
+    1 NER=2
+      RETURN
+    2 IF (K-9) 3,3,1
+    3 IF ( MON) 4,4,5
+    5 IF ( MON-2) 6,7,4
+    4 J=0
+      NM1=N-1
+      DO 8 I=1,NM1
+      IF (XTAB(I)-XTAB(I+1)) 9,11,10
+   11 NER=3
+      RETURN
+    9 J=J-1
+      GO TO 8
+   10 J=J+1
+    8 CONTINUE
+      MON=1
+      IF (J) 12,6,6
+   12 MON=2
+    7 DO 13 I=1,N
+      IF (X-XTAB(I)) 14,14,13
+   14 J=I
+      GO TO 18
+   13 CONTINUE
+      GO TO 15
+    6 DO 16 I=1,N
+      IF (X-XTAB(I)) 16,17,17
+   17 J=I
+      GO TO 18
+   16 CONTINUE
+   15 J=N
+   18 J=J-(K+1)/2
+      IF (J) 19,19,20
+   19 J=1
+   20 M=J+K
+      IF (M-N) 21,21,22
+   22 J=J-1
+      GO TO 20
+   21 KP1=K+1
+      JSAVE=J
+   26 DO 23 L=1,KP1
+      C(L)=X-XTAB(J)
+      T(L)=FTAB(J)
+   23 J=J+1
+      DO 24 J=1,K
+      I=J+1
+   25 T(I)=(C(J)*T(I)-C(I)*T(J))/(C(J)-C(I))
+      I=I+1
+      IF (I-KP1) 25,25 ,24
+   24 CONTINUE
+      FX=T(KP1)
+      NER=1
+      RETURN
+      END
+      SUBROUTINE XPLOT
+      COMMON/DSAVE/SAVE(30,300),NB,NE,DT,TIME(300)
+      REAL LINE
+      DIMENSION NWY(30),NWX(30),LINE(102)
+      DATA DOT/1H*/,BLANK/1H /,PLUS/1H+/
+ 113  FORMAT(I10,30A1,2F10.2)
+ 1000 READ(5,113) NY,NWY,START,STOP
+      IF( EOF(5) .NE. 0) GO TO 1001
+ 800  FORMAT(1H1)
+      WRITE(6,800)
+      TM=STOP-START
+      T1=START+ TM*0.25
+      T2=START+ TM*0.5
+      T3=START+ TM*0.75
+      TY=100.0/TM
+      READ(5,113) NX,NWX,STARTX,STOPX
+        TX = 40.0/(STOPX-STARTX)
+      DO 105 M=1,41
+      DO 101 J=1,102
+ 101  LINE(J) = BLANK
+      LINE( 1) = DOT
+      LINE(101)= DOT
+      IF( M .EQ. 1) GO TO 97
+      IF( M .EQ.41) GO TO 97
+      IF( M .EQ. 2) GO TO 96
+      IF( M .EQ.40) GO TO 96
+      GO TO 98
+ 96   CONTINUE
+      LINE(26) = DOT
+      LINE(51) = DOT
+      LINE(76) = DOT
+      GO TO 98
+ 97   CONTINUE
+      DO 102 J=1,101
+ 102  LINE(J) = DOT
+98    CONTINUE
+      I=42-M
+      DO 301 N=NB,NE
+      MM=    TX*( SAVE(NX,N) - STARTX ) +1.5
+      IF( MM .NE. I) GO TO 301
+      J=           TY*( SAVE(NY,N)-START) +1.5
+      IF(J .LT. 1  ) GO TO 302
+      IF(J .GT. 102) GO TO 302
+      LINE(J) = PLUS
+ 302  CONTINUE
+ 301  CONTINUE
+      VALUE = STARTX + (  I-1)/TX
+      WRITE(6,104) VALUE,LINE
+ 104  FORMAT( 1H  , F15.2,5X 102A1)
+ 105  CONTINUE
+      WRITE(6,121)START,T1,T2,T3,STOP,NWX,NWY
+ 121  FORMAT( 14X,F10.2, 4(15X,F10.2)/1X,30A1/55X,30A1)
+      GO TO 1000
+ 1001 CONTINUE
+      RETURN
+      END

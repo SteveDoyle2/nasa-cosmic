@@ -1,0 +1,136 @@
+CHANGES TO INCA Version 2.01
+
+1.  JUL 85   Root locus problem fixed by inserting sharp bend 
+             criteria.
+2.  AUG 85   Andrew's New VT100 Terminal driver installed.  
+             Related changes to TERMIO module.
+3.  AUG 85   Logo suppressed if resolution > 150.
+4.  AUG 85   Normalize Computed function.
+5.  SEP 85   Terminal drivers installed for VT125 and VT240.
+6.  SEP 85   Terminal driver for DUMB given plot capability 
+             (press "%").
+7.  NOV 85   Usertext ("^") command added but not documented.
+8.  NOV 85   Terminal driver for TEK4109 and TEK4107 supports 
+             segments, that for TEK4106 does not.  TEK4109S 
+             is no more.
+9.  NOV 85   Another bug was found in one of the mathematics
+             routines.
+
+CHANGES TO INCA Version 2.02
+
+1.  DEC 85   Changed terminal output buffer size to 132.  
+             This fixed bug when FR/STAR command was given 
+             with long function names/expressions.
+2.  FEB 86   Corrected time response so that it provides the
+             proper inverse transformation of Z domain functions
+             with multiple poles or with poles at the origin.  
+            
+3.  FEB 86   Tek4109 Terminal Driver changed to handle 
+             Rasterizer.
+4.  FEB 86   Change made to help command to support VMS
+             Version 4.xx.
+5.  FEB 86   Fix up terminal driver for Tek4105.
+6.  FEB 86   Fix problem when used with DECserver system.
+
+CHANGES TO INCA Version 2.03
+
+1.  MAR 86   Now handles directories with more than 256 files 
+             (Now 512) and doesn't bomb out for larger ones.
+2.  MAR 86   Tek4106,TEK4109 Terminal Drivers changed to handle 
+             4510 Rasterizer, even without terminal ROM upgrade
+             that supplies 4510 support.
+
+CHANGES TO INCA Version 2.04
+
+1.  MAY 86   Fix bug in interpolation of data for gain margin
+             listing (M command) in frequency response plots.
+
+2.  MAY 86   Fix bug that made stability point on Nyquist plots
+             reflect onto point when it was supposed to be 
+             offscreen.
+
+CHANGES TO INCA Version 2.05
+
+1.  OCT 86   Fix bug in root locus that creates "impossible" locus
+             plots for certain functions with "near triple" 
+             breakpoints.
+
+CHANGES TO INCA Version 2.06
+
+1.  DEC 86   More root locus bug fixes.
+
+CHANGES TO INCA Version 2.07
+
+1.  JAN 87   Change TEK4109 driver to make wide lines and eliminate
+             rasterizer waiting period.
+
+2.  FEB 87   Change output format of negative numbers of large 
+             (>10^20) so that negative sign is printed.
+
+CHANGES TO INCA Version 2.10
+
+1.  JUL 85   Root locus problem fixed by inserting sharp bend criteria.
+2.  JUL 85   Andrew's New VT100 Terminal driver installed.  
+             Related changes to TERMIO.
+3.  JUL 85   Logo suppressed if resolution > 150.
+4.  JUL 85   QSET,QSHOW, and QTERM commands now in QPLOT.
+5.  JUL 85   Some QPLOT routines assigned to different modules.
+6.  JUL 85   Journal file capability added to QPLOT.
+7.  JUL 85   Normalize Computed function.
+
+CHANGES TO INCA Version 3.00
+
+1.  JAN 88   Changes too numerous to enumerate.  See New INCA 
+             Reference manual.
+
+CHANGES TO INCA Version 3.01
+
+1.  FEB 88   Changed printout of margins command slightly.
+2.  FEB 88   Changed Window Inset to zoom if zoomwindow is set.
+3.  FEB 88   Add @ command to cursor mode.
+
+CHANGES TO INCA Version 3.02
+
+1.  MAR 88   Fixed bug in "F" command and amplitude scaled 
+             frequency response plots.
+
+CHANGES TO INCA Version 3.03
+
+1.  MAR 88   Fixed bug that created excessive "dispose errors".
+             Dispose errors now ignored completly.
+2.  MAR 88   Changed limit on QZcutoff to 50.
+3.  MAR 88   Minor change in width formatting of dynamic functions.
+4.  MAR 88   $SCALE operator added.
+5.  MAR 88   Changed error message for unmatched complex roots.
+
+CHANGES TO INCA Version 3.04
+
+1.  JUN 88   Changed the conversion of the COMPUTE command. Now more
+             than one function can be placed after the command.  Note
+             a nill line needed to flag end of functions.
+ 
+CHANGES TO INCA Version 3.10
+
+1.  AUG 88   Merged in Tobin's describing function routines, after
+             clarifying and reformatting the code.
+
+CHANGES TO INCA Version 3.11
+
+1.  SEP 88   Add ! command to produce metafiles.
+2.  OCT 88   Improved Time Response error handling.
+3.  OCT 88   Added $PLACAN operator.
+
+CHANGES TO INCA Version 3.12
+
+1.  OCT 88   Fixed longstanding bug in inter-sample time response.
+             Changed trunc in fcnzoffcnsd to gile.
+
+CHANGES TO INCA Version 3.13
+
+1.  NOV 88   Fixed bug in cancellation of complex roots.  It used to
+             be they only counted as one root when cancelled, instead
+             of a pair.
+2.  NOV 88   Changed default values of closeness and nearness.
+3.  NOV 88   Put minimum values of 1e-18 on closeness and nearness.
+4.  NOV 88   Final value of set parameters is now always displayed.
+5.  NOV 88   Added $GOTOs and $IFs-$THENs-$ELSEs to source files.

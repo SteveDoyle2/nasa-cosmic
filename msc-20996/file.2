@@ -1,0 +1,25 @@
+//       TIME=(4,10),MSGLEVEL=(1,1)
+//RUN    PROC                                                           00000300
+//FORT   EXEC  PGM=FORTVS,REGION=880K,COND=(4,LT),                      00000400
+//   PARM='FIPS(F),GOSTMT,LC(35),LIST,MAP,OPT(3),XREF,NOTERM'           00000500
+//SYSPRINT     DD SYSOUT=A,DCB=BLKSIZE=3429                             00000600
+//SYSTERM      DD DUMMY                                                 00000700
+//SYSPUNCH     DD DUMMY                                                 00000800
+//SYSLIN       DD DSN=&&LOADSET,DISP=(MOD,PASS),UNIT=SYSDA,             00000900
+//             SPACE=(3200,(25,6)),DCB=BLKSIZE=3200                     00001000
+//LINK   EXEC  PGM=IEWL,REGION=220K,COND=(4,LT),                        00001100
+//   PARM='LET,LIST,MAP,XREF'                                           00001200
+//SYSPRINT     DD SYSOUT=A                                              00001300
+//SYSLIB       DD DSN=SYS1.VFORTLIB,DISP=SHR                            00001400
+//SYSUT1       DD UNIT=SYSDA,SPACE=(1024,(200,20))                      00001500
+//SYSLMOD      DD DSN=&&GOSET(MAIN),DISP=(,PASS),UNIT=SYSDA,            00001600
+//             SPACE=(TRK,(10,10,1),RLSE)                               00001700
+//SYSLIN       DD DSN=&&LOADSET,DISP=(OLD,DELETE)                       00001800
+//             DD DDNAME=SYSIN                                          00001900
+//GO     EXEC  PGM=*.LINK.SYSLMOD,REGION=100K,COND=(4,LT)               00002000
+//FT05F001     DD DDNAME=SYSIN                                          00002100
+//FT06F001     DD SYSOUT=A                                              00002200
+//FT07F001     DD SYSOUT=A,DCB=(RECFM=VBA,LRECL=116,BLKSIZE=3484)       00002300
+//             PEND                                                     00002400
+//             EXEC PROC=RUN                                            00002500
+//FORT.SYSIN   DD *                                                     00002600

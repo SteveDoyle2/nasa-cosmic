@@ -1,0 +1,219 @@
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+C
+C   FAULTHM - Definitions for the Fault Handling Model of CARE3MENU
+C
+C   VERSION:  1.1
+C   AUTHOR:  A. Roberts; Tesseract Systems, Inc.
+C   CREATION DATE:  05/26/83
+C   LAST REVISION DATE:  07/23/83
+C   LAST REVISED BY:  A. Roberts
+C
+C FUNCTION: Defintions and declarations for CARE3MENU fault occurance
+C		model.
+C
+C USEAGE:  included in CARE3MENU
+C
+C ARGUMENTS:  NA
+C
+C ERRORS:   NA
+C
+C NOTES:  Written in VAX/VMS FORTRAN. 
+C
+C PROCESS:  NA
+C
+C REVISION HISTORY:  0.0 - Created on 05/26/83 by A. Roberts;
+C				Tesseract Systems, Inc.
+C					------
+C		     1.0 - First clean release version.  06/08/83;
+C				A. Roberts
+C					------
+C		     1.1 - Changes after NASA Langley use. 
+C				07/23/83, A. Roberts
+C					------
+C		     1.2 - Changed defaults from uniform to exponential
+C				01/23/84, J. Pierce
+C
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
+C
+C Menu parameters
+C
+	parameter FHM_MITEMS = 15		! Items in menu
+	parameter FHM_H_LOGNAME = 'fhm'		! Help logical name
+
+	parameter FHM_SDT1 = NO_DAT .or. BOLD	! Special datatype for 
+						! Title
+	parameter FHM_SDT2 = STR_DAT .or. EARLY_END
+						! Early end datatype
+
+	parameter FHM_STOP_STR = 'END'		! Stop early string
+
+	parameter FHM_FTN_PNTR = 2		! Data pointers
+	parameter FHM_ALP_PNTR = 3
+	parameter FHM_BET_PNTR = 5
+	parameter FHM_DEL_PNTR = 7
+	parameter FHM_DELRT_PNTR = 8
+	parameter FHM_RHO_PNTR = 9
+	parameter FHM_RHORT_PNTR = 10
+	parameter FHM_EPS_PNTR = 11
+	parameter FHM_EPSRT_PNTR = 12
+	parameter FHM_PA_PNTR = 13
+	parameter FHM_PB_PNTR = 14
+	parameter FHM_C_PNTR = 15
+
+	parameter FHM_ALP_MIN = 0.0		! Limits and defaults
+	parameter FHM_ALP_MAX = 1.0E+38
+	parameter FHM_ALP_DEF = 0.0
+
+	parameter FHM_BET_MIN = 0.0
+	parameter FHM_BET_MAX = 1.0E+38
+	parameter FHM_BET_DEF = 0.0
+
+	parameter FHM_DEL_MIN = 0.1
+	parameter FHM_DEL_MAX = 1.0E+38
+	parameter FHM_DEL_DEF = 3.6E+3
+	parameter FHM_DELRT_DEF = 'EXPONENTIAL'
+
+	parameter FHM_RHO_MIN = 0.1
+	parameter FHM_RHO_MAX = 1.0E+38
+	parameter FHM_RHO_DEF = 0.0
+	parameter FHM_RHORT_DEF = 'EXPONENTIAL'
+
+	parameter FHM_EPS_MIN = 0.1
+	parameter FHM_EPS_MAX = 1.0E+38
+	parameter FHM_EPS_DEF = 0.0
+	parameter FHM_EPSRT_DEF = 'EXPONENTIAL'
+
+	parameter FHM_PA_MIN = 0.0
+	parameter FHM_PA_MAX = 1.0
+	parameter FHM_PA_DEF = 1.0
+
+	parameter FHM_PB_MIN = 0.0
+	parameter FHM_PB_MAX = 1.0
+	parameter FHM_PB_DEF = 0.0
+
+	parameter FHM_C_MIN = 0.0
+	parameter FHM_C_MAX = 1.0
+	parameter FHM_C_DEF = 1.0
+
+
+	parameter FHM_NONE_IN = '*** You Must Enter At Least One FHM ***'
+	parameter FHM_BAD_FTN = '*** Null Fault Type Name, Reenter ***'
+	parameter FHM_BAD_FTN2 = '*** Duplicate Fault Type Name, Reenter ***'
+	parameter FHM_BAD_ALP = '*** Invalid Alpha Input, Reenter Model ***'
+	parameter FHM_BAD_BET = '*** Invalid Beta Input, Reenter Model ***'
+	parameter FHM_BAD_DEL = '*** Invalid Delta Input, Reenter Model ***'
+	parameter FHM_BAD_DELRT = '*** Bad Delta Rate Type, Reenter Model ***'
+	parameter FHM_BAD_RHO = '*** Invalid Rho Input, Reenter Model ***'
+	parameter FHM_BAD_RHORT = '*** Bad Rho Rate Type, Reenter Model ***'
+	parameter FHM_BAD_EPS = '*** Invalid Epsilon Input, Reenter Model ***'
+	parameter FHM_BAD_EPSRT = '*** Bad Epsilon Rate Type, Reenter ***'
+	parameter FHM_BAD_PA = '*** Bad PA Probability, Reenter Model ***'
+	parameter FHM_BAD_PB = '*** Bad PB Probability, Reenter Model ***'
+	parameter FHM_BAD_C = '*** Bad C Probability, Reenter Model ***'
+	parameter FHM_BAD_MISC = '*** Invalid Parameter Combinations ***'
+						! Bad response lines
+
+	parameter FHM_EXP_CODE = 1		! Keyword lookup types
+	parameter FHM_UNI_CODE = 2
+
+C
+C Menu tables
+C
+	character*(MAX_STRING) fhm_labs(FHM_MITEMS)	! Item labels
+	integer*4 fhm_lpos(2,FHM_MITEMS)		! Item Positions
+	integer*4 fhm_dtype(FHM_MITEMS)			! Item Datatypes
+	integer*4 fhm_idat(FHM_MITEMS)			! INTEGER Data
+	real*4 fhm_rdat(FHM_MITEMS)			! REAL Data
+	character*(MAX_STRING) fhm_sdat(FHM_MITEMS)	! STRING Data
+
+C
+C Default restore tables
+C
+	integer*4 fhm_idat_def(FHM_MITEMS)		! Integer default
+	real*4 fhm_rdat_def(FHM_MITEMS)			! Real default
+	character*(MAX_STRING) fhm_sdat_def(FHM_MITEMS)	! String default
+
+C
+C Anything in the menu that is hardwired
+C
+	data fhm_labs /'Fault Handling Models',
+	2		'Fault Type:',
+	3		'Alpha =', '(Exponential FOM)',
+	4		'Beta =', '(Exponential FOM)',
+	5		'Delta =', 'Delta FHM:',
+	6		'Rho =', 'Rho FHM:',
+	7		'Epsilon =', 'Epsilon FHM:',
+	8		'Pa =', 'Pb =', 'C ='/
+
+
+	data fhm_lpos /1,29,
+	2		5,10,
+	3		8,10, 8,40,
+	4		9,10, 9,40,
+	5		11,10, 11,45,
+	6		12,10, 12,45,
+	7		13,10, 13,45,
+	8		15,10, 16,10, 17,10/
+
+	data fhm_dtype /FHM_SDT1,
+	2		FHM_SDT2,
+	3		REAL_DAT, NO_DAT,
+	4		REAL_DAT, NO_DAT,
+	5		REAL_DAT, STR_DAT,
+	6		REAL_DAT, STR_DAT,
+	7		REAL_DAT, STR_DAT,
+	8		REAL_DAT, REAL_DAT, REAL_DAT/
+
+C
+C Default values.  Coded in the active tables for the first call, and
+C the default follower tables for reload on secondary calls
+C
+	data fhm_sdat /' ',' ',' ',' ',' ',' ',' ',FHM_DELRT_DEF,
+	1		' ',FHM_RHORT_DEF,' ',FHM_EPSRT_DEF,' ',' ',' '/
+	data fhm_sdat_def /' ',' ',' ',' ',' ',' ',' ',FHM_DELRT_DEF,
+	1		' ',FHM_RHORT_DEF,' ',FHM_EPSRT_DEF,' ',' ',' '/
+
+	data fhm_idat /15*0/
+	data fhm_idat_def /15*0/
+
+	data fhm_rdat /0.0,0.0,FHM_ALP_DEF,0.0,FHM_BET_DEF,0.0,
+	1		FHM_DEL_DEF,0.0,FHM_RHO_DEF,0.0,FHM_EPS_DEF,
+	2		0.0,FHM_PA_DEF,FHM_PB_DEF,FHM_C_DEF/
+	data fhm_rdat_def /0.0,0.0,FHM_ALP_DEF,0.0,FHM_BET_DEF,0.0,
+	1		FHM_DEL_DEF,0.0,FHM_RHO_DEF,0.0,FHM_EPS_DEF,
+	2		0.0,FHM_PA_DEF,FHM_PB_DEF,FHM_C_DEF/
+
+C
+C Command Lookup Table Defintions
+C
+C LIB$LOOKUP_KEY is used to determine what FOM has been entered,
+C and return a numeric code which is used in the model.
+C
+C NOTE:  The keyword lookup table CANNOT be built entirely at
+C		compile time, since the keyword pointer table
+C		must be built with %LOC to point to the 
+C		keywords.  If you add keywords, be sure and
+C		modify the code just before the command menu
+C		call in CARE3MENU !!!
+C
+	parameter FHM_MAX_COMMANDS = 2		! Current maximum commands
+	parameter FHM_MAX_CMDSIZE = 11		! Current keyword max size
+
+	byte fhm_keywords(FHM_MAX_CMDSIZE + 1, FHM_MAX_COMMANDS)
+						! Keyword storage
+	integer*4 fhm_keytable(0:FHM_MAX_COMMANDS * 2)
+						! Keyword pointer table
+
+	integer*4 fhm_clen			! Command string length
+	integer*4 fhm_status			! Keyword Lookup Return
+	integer*4 fhm_ccode			! Command code
+
+	data fhm_keywords /
+	1	11,'E','X','P','O','N','E','N','T','I','A','L',
+	2	7,'U','N','I','F','O','R','M',' ',' ',' ',' '/
+						! Keywords in storage
+
+C
+C End of Menu Definition
+C

@@ -1,0 +1,167 @@
+      SUBROUTINE GMBLD2(ITEST,ZML,ETA)
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      COMMON/ADDMOM/HAWH(3),HAXWH(3),HELGM(3)
+C
+      COMMON/CGIMBD/DELIN(3,3),DELAX(3),DELCG(3),DELMS,ZTZT(3,3)
+C
+      COMMON/GMBDWK/DELT,GAMGM(7),GMRHS,DI,DZML(7,7),Y1(3),Y2(3),Y4(3)
+C
+     1             ,Y5(3),Z1(3),Z3(3),Z4(3),Z5(3),ZT2(3),ZT3(3),ZT4(3)
+C
+     2             ,ZT5(3)
+C
+      COMMON/GMBDUT/AZ,AZD,EL,ELD,B(3,3),F(3,3),FB(3,3)
+C
+      COMMON/IGIMBD/IGMBLD,NELEV,NE1
+C
+      COMMON/RPOOL1/DUM1(39),OMEG(3),DUM2(38),YBCM(3),DUM3(42)
+C
+      COMMON/RPOOL3/ZMS,YIZM(3,2)
+C
+      COMMON/TRQOUT/OUTTRQ(150)
+C
+      COMMON/VARBLS/DEP(150),DER(150)
+C
+C
+      DIMENSION ZML(7,7),ETA(7)
+      DIMENSION ZT01(3),ZT02(3),ZT03(3),ZT04(3),ZT05(3)
+      DIMENSION O1(3),O2(3),O3(3),O4(3),O5(3)
+      DIMENSION U1(3),U2(3),U3(3),U4(3),U5(3)
+      DIMENSION Y3(3),Z2(3),ZT1(3)
+C
+C
+      EQUIVALENCE (ZT1(1),DELCG(1)),(Z2(1),DELAX(1))
+      EQUIVALENCE (Y3(1),YIZM(1,1))
+C
+      IF(IGMBLD.EQ.0) RETURN
+C
+      IF(ITEST.EQ.2) GO TO 100
+C
+      DO 2 I=1,3
+      ZT01(I)=0.0D0
+      O1(I)=0.0D0
+    2 CONTINUE
+      O1(2)=AZD
+      ZT01(1)=ELD
+      CALL MATV(2,B,O1,ZT02)
+      CALL MATV(2,FB,OMEG,ZT03)
+      DO 3 I=1,3
+      ZT04(I)=ZT01(I)+2.0D0*(ZT02(I)+ZT03(I))
+    3 CONTINUE
+C
+C     SYSTEM TRANSLATION ADDED TERMS FROM ELEVATION PLATFORM
+C
+      WS=ELD*DELMS
+      U2(1)=WS*(ZT04(2)*ZT1(2)+ZT04(3)*ZT1(3))
+      U2(2)=-WS*ZT04(1)*ZT1(2)
+      U2(3)=-WS*ZT04(1)*ZT1(3)
+      CALL MATV(1,FB,U2,U1)
+C
+C      SYSTEM ROTATION ADDED TERMS FROM ELEVATION PLATFORM (U2)
+C
+      U3(1)=ELD*ZT04(1)*DELMS*(ZT1(2)*ZT5(3)-ZT1(3)*ZT5(2))
+      U3(2)=ELD*(ZT04(1)*(DELMS*ZT1(3)*ZT5(1)+ZTZT(1,3))
+     1          +ZT04(2)*(DELMS*ZT1(2)*ZT5(3)+ZTZT(3,2))
+     2          +ZT04(3)*(DELMS*ZT1(3)*ZT5(3)+ZTZT(3,3)))
+      U3(3)=-ELD*(ZT04(1)*(DELMS*ZT1(2)*ZT5(1)+ZTZT(1,2))
+     1           +ZT04(2)*(DELMS*ZT1(2)*ZT5(2)+ZTZT(2,2))
+     2           +ZT04(3)*(DELMS*ZT1(3)*ZT5(2)+ZTZT(2,3)))
+      CALL MATV(1,FB,U3,U2)
+C
+C     DAMPER EQUATION ADDED TERM FROM ELEVATION PLATFORM
+C
+      U4(1)=ELD*ZT04(1)*DELMS*(ZT1(2)*ZT2(3)-ZT1(3)*ZT2(2))
+      U4(2)=ELD*(ZT04(1)*(DELMS*ZT1(3)*(ZT1(1)+ZT2(1))+ZTZT(1,3))
+     1          +ZT04(2)*(DELMS*ZT1(2)*(ZT1(3)+ZT2(3))+ZTZT(3,2))
+     2          +ZT04(3)*(DELMS*ZT1(3)*(ZT1(3)+ZT2(3))+ZTZT(3,3)))
+      U4(3)=-ELD*(ZT04(1)*(DELMS*ZT1(2)*(ZT1(1)+ZT2(1))+ZTZT(1,2))
+     1           +ZT04(2)*(DELMS*ZT1(2)*(ZT1(2)+ZT2(2))+ZTZT(2,2))
+     2           +ZT04(3)*(DELMS*ZT1(3)*(ZT1(2)+ZT2(2))+ZTZT(2,3)))
+      CALL MATV(1,B,U4,U3)
+C
+      DO 6 I=1,3
+      I3=I+3
+      ETA(I)=ETA(I)-U1(I)
+      ETA(I3)=ETA(I3)-U2(I)
+    6 CONTINUE
+      ETA(7)=ETA(7)-U3(2)
+C
+C     TERMS FOR ELEVATION GIMBLE EQUATION OF MOTION
+C
+      GMRHS=ZT03(1)*ZT03(3)*(DELMS*ZT5(1)*ZT1(2)+ZTZT(1,2))
+     1     +ZT03(2)*ZT03(3)*(DELMS*ZT5(2)*ZT1(2)+ZTZT(2,2))
+     2     -(ZT03(1)*ZT03(1)+ZT03(2)*ZT03(2))*(DELMS*ZT5(3)*ZT1(2)
+     3                                        +ZTZT(3,2))
+     4     -ZT03(1)*ZT03(2)*(DELMS*ZT5(1)*ZT1(3)+ZTZT(1,3))
+     5
+     5     +(ZT03(3)*ZT03(3)+ZT03(1)*ZT03(1))*(DELMS*ZT5(2)*ZT1(3)
+     6                                        +ZTZT(2,3))
+     7     -ZT03(2)*ZT03(3)*(DELMS*ZT5(3)*ZT1(3)+ZTZT(3,3))
+C
+      DO 8 I=1,3
+      ZT05(I)=ZT02(I)+2.0D0*ZT03(I)
+    8 CONTINUE
+C
+      GMRHS=GMRHS
+     1     +ZT05(1)*ZT02(3)*(DELMS*(ZT1(1)+ZT2(1))*ZT1(2)+ZTZT(1,2))
+     2     +ZT05(2)*ZT02(3)*(DELMS*(ZT1(2)+ZT2(2))*ZT1(2)+ZTZT(2,2))
+     3     -(ZT05(1)*ZT02(1)+ZT05(2)*ZT02(2))*(DELMS*(ZT1(3)+ZT2(3))*
+     4                                        ZT1(2)+ZTZT(3,2))
+     5     -ZT05(1)*ZT02(2)*(DELMS*(ZT1(1)+ZT2(1))*ZT1(3)+ZTZT(1,3))
+     6     +(ZT05(3)*ZT02(3)+ZT05(1)*ZT02(1))*(DELMS*(ZT1(2)+ZT2(2))*
+     7                                        ZT1(3)+ZTZT(2,3))
+     8     -ZT05(3)*ZT02(2)*(DELMS*(ZT1(3)+ZT2(3))*ZT1(3)+ZTZT(3,3))
+C
+C
+      CALL GMDINF(ELIF)
+C
+      CALL GMDCNT(AZCNT,ELCNT)
+C
+C
+      GMRHS=GMRHS+ELIF-ELCNT
+C
+      ETA(7)=ETA(7)+AZCNT
+C
+      OUTTRQ(37)=AZCNT
+      OUTTRQ(38)=ELCNT
+C
+      DO 12 I=1,7
+      DO 11 J=1,7
+      ZML(I,J)=ZML(I,J)-DZML(I,J)
+   11 CONTINUE
+      ETA(I)=ETA(I)+GMRHS*DI*GAMGM(I)
+   12 CONTINUE
+C
+C
+      RETURN
+C
+  100 CONTINUE
+C
+C
+      DELD=-DI*GMRHS
+C
+      DO 110 I=1,7
+      DELD=DELD-DI*GAMGM(I)*ETA(I)
+  110 CONTINUE
+C
+      DER(NELEV)=DEP(NE1)
+      DER(NE1)=DELD
+C
+      DO 115 I=1,3
+      U4(I)=YBCM(I)/ZMS
+  115 CONTINUE
+      CALL MATV(2,FB,U4,U5)
+C  CALCULATE MOMENTUM FOR ELEVATION GIMBLE
+      O5(1)=ELD*(ZTZT(2,2)+ZTZT(3,3)+DELMS*((ZT4(2)-U5(2))*ZT1(2)+
+     1(ZT4(3)-U5(3))*ZT1(3)))
+      O5(2)=-ELD*(ZTZT(1,2)+DELMS*(ZT4(1)-U5(1))*ZT1(2))
+      O5(3)=-ELD*(ZTZT(1,3)+DELMS*(ZT4(1)-U5(1))*ZT1(3))
+      CALL MATV(1,FB,O5,HELGM)
+C
+C
+      RETURN
+C
+C
+      END

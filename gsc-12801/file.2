@@ -1,0 +1,867 @@
+      SUBROUTINE LAUNCH(NDAYS,DATE,NT,TITLE,JSU,LTU,TOP)
+      IMPLICIT REAL*8(A-H,O-Z)
+      LOGICAL*1 XV(50),SYM,BLANK
+      DIMENSION TITLE(50),TOP(3),DATE(130),S(50),P(3),LV(50)
+C
+C
+C     SUBROUTINE LAUNCH(NDAYS,DATE,NT,TITLE,JSU,LTU,TOP)
+C
+C
+C
+C     THE PURPOSE OF LAUNCH IS TO TABULATE THE LAUNCH TIMES AND
+C         DESIRED LAUNCH PARAMETERS.
+C
+C
+C
+C     ARGUMENTS IN THE CALLING SEQUENCE ARE DEFINED AS FOLLOWS.
+C
+C         ARGUMENT  TYPE    I/O         DEFINITION
+C
+C          NDAYS     I*4      I      NUMBER OF DAYS SCANNED IN
+C                                       GENERATING THE LAUNCH PARAMETER
+C                                       DATA.
+C          DATE      R*8      I      ARRAY OF LAUNCH DATES CORRESPONDING
+C                                       TO NDAYS.
+C          NT        I*4      I      NUMBER OF PARAMETERS TO BE INCLUDED
+C                                       IN LAUNCH TABLE IN ADDITION TO
+C                                       THE DATE AND TIME OF LAUNCH.
+C          TITLE     R*8      I      ARRAY OF COLUMN TITLES FOR ALL
+C                                       PARAMETERS IN THE LAUNCH TABLE.
+C          JSU       I*4      I      FORTRAN UNIT NUMBER FOR DISK USED
+C                                       TO STORE ALL LAUNCH PARAMETER
+C                                       DATA
+C          LTU       I*4      I      FORTRAN UNIT NUMBER USED FOR THE
+C                                       LAUNCH TABLE OUTPUT.
+C          TOP       R*8      I      MAIN TITLE AT TOP OF LAUNCH TABLE.
+C
+C
+      DATA SYM/'X'/,BLANK/' '/
+C     FORMAT 2 TO PRINT MAIN TITLE AT TOP OF LAUNCH TABLE
+C
+    2 FORMAT('1',///////////1X,'I',129('-'),'I'/1X,'I',129X,'I'/
+     1 1X,'I',53X,3A8,52X,'I'/  1X,'I',129X,'I'/  1X,'I',58X,
+     2 'MONTH/DAY/YEAR',57X,'I')
+C
+    3 FORMAT(1X,'I',60X,I2,' / ',I2,' / ',I2,57X,'I',/1X,'I',129X,'I')
+C     FORMAT 3 TO PRINT DATE AT TOP CENTER OF LAUNCH TABLE
+C
+C
+C     FORMAT 4 USED TO PRINT COLUMN TITLES
+C
+    4 FORMAT(1X,'I',129('-'),'I'/,1X,'I',4X,'GREENWICH',38X,
+     1 'LAUNCH WINDOW PARAMETERS',54X,'I'/,1X,'I',4X,'MEAN TIME',116X,
+     2 'I'/1X,'I',4X,'OF LAUNCH',116X,'I'/,1X,'I',2X,'HOUR  MIN  SEC',
+     3 2X,10(1X,A8,2X))
+C
+C     FORMAT 5 TO PRINT A RECORD FOR LAUNCH TABLE
+C
+    5 FORMAT(1X,'I',4X,I2,3X,I2,3X,I2,2X,10(2X,F7.2,2X))
+C
+C     FORMAT 6 FORMS THE BOTTOM BOUNDARY OF THE LAUNCH TABLE
+C
+    6 FORMAT(1X,'I',129('-'),'I')
+C
+C     FORMAT 7 USED TO CONTINUE LAUNCH TABLE WHEN LINES EXCEED THE
+C              MAXIMUM PER PAGE
+C
+    7 FORMAT(1X,'I',60X,I2,' / ',I2,' / ',I2,' (CONTINUATION)',42X,'I'
+     1 /1X,'I',129X,'I')
+C
+C     FORMAT 8 MESSAGE INDICATES NO LAUNCH ON GIVEN DATE
+C
+    8 FORMAT(1X,'I',44X,'NO AVAILABLE LAUNCH WINDOW FOR THIS DATE',45X,
+     1 'I',/,1X,'I',129('-'),'I')
+C
+C     FORMAT 9 USED TO PRINT 'I' AT END OF LINE IN LAUNCH TABLE
+C
+    9 FORMAT('+',T132,'I')
+C
+C     FORMAT 10 USED TO PRINT A LAUNCH TABLE RECORD WHICH CONTAINS
+C     CONSTRAINT VIOLATIONS
+C
+   10 FORMAT(1X,'I',3X,A1,I2,3X,I2,3X,I2,A1,1X,10(2X,F7.2,A1,1X))
+      REWIND JSU
+      KC = 1
+      KMAX = NT
+      KMIN = 1
+      IF(NT .LE. 10) GO TO 120
+  100 KMAX = MIN0(NT,KC*10)
+      KMIN = KC*10 - 9
+  120 CONTINUE
+      DO 700 I=1,NDAYS
+C     PRINT MAIN TITLE
+  200 WRITE(LTU,2) TOP
+C     DECODE AND PRINT THE MONTH,DAY,AND YEAR
+      DATE(I) = DATE(I) + .003
+      IYR = DATE(I)/100.
+      IMO = DATE(I) - IYR*100.
+      IDAY = (DATE(I) - (IYR*100. + IMO))*100.
+      WRITE(LTU,3) IMO,IDAY,IYR
+C
+C     PRINT THE COLUMN TITLES FOR EACH PARAMETER
+      WRITE(LTU,4) (TITLE(J),J=KMIN,KMAX)
+      WRITE(LTU,9)
+      WRITE(LTU,6)
+C     INITIALIZE ILINE, A FLAG TO CONTROL THE NUMBER OF LINES PER PAGE
+C
+      ILINE = 0
+      K = I - 1
+C     LOOP OVER PARAMETRIC DATA TO FIND PROPER DAY,K
+C
+  300 READ(JSU,END=500) LVI,P,(S(J),LV(J),J=1,NT)
+C
+C     P(1) = LAUNCH DATE
+C     P(2) = ELAPSED DAYS
+C     P(3) = LAUNCH TIME
+C
+C     IF LVI = 1, ALL CONSTRAINTS ARE SATISFIED
+C     IF LVI = 0, AT LEAST ONE CONSTRAINT IS VIOLATED
+      IF(IDINT(P(2)) .EQ. K) GO TO 400
+      GO TO 300
+  400 CONTINUE
+      DO 420 J=1,NT
+      XV(J) = BLANK
+      IF(LV(J) .EQ. 0) XV(J)=SYM
+  420 CONTINUE
+C     INCREMENT LINE COUNTER BY ONE
+      ILINE = ILINE + 1
+C     IF MAXIMUM NUMBER OF LINES HAVE BEEN WRITTEN, GO TO NEXT PAGE
+      IF(ILINE-35) 403,403,401
+  401 WRITE(LTU,6)
+      ILINE = 1
+      WRITE(LTU,2) TOP
+      WRITE(LTU,7) IMO,IDAY,IYR
+      WRITE(LTU,4) (TITLE(J),J=KMIN,KMAX)
+      WRITE(LTU,9)
+      WRITE(LTU,6)
+  403 CONTINUE
+C     DECODE THE HOUR,MINUTE,AND SECOND FOR THE LAUNCH TIME
+C
+      IHR = P(3)
+      XMN = (P(3) - IHR)*60.0
+      IMN = XMN
+      ISC = (XMN - IMN)*60.0
+      IF(LVI .EQ. 1) GO TO 405
+C
+C     PRINT ONE RECORD IN THE LAUNCH TABLE (AT LEAST ONE VIOLATION)
+C
+      WRITE(LTU,10) SYM,IHR,IMN,ISC,SYM,(S(J),XV(J),J=KMIN,KMAX)
+      GO TO 406
+C
+C     PRINT ONE RECORD IN THE LAUNCH TABLE (NO VIOLATIONS)
+C
+  405 WRITE(LTU,5) IHR,IMN,ISC,(S(J),J=KMIN,KMAX)
+  406 WRITE(LTU,9)
+      GO TO 300
+C     IF END OF FILE HAS BEEN REACHED,REWIND JSU,AND INCREMENT I
+  500 REWIND JSU
+      IF(ILINE .GE. 1) GO TO 650
+C     IF ILINE = 0, PRINT 'NO LAUNCH ON THIS DATE'
+  600 WRITE(LTU,8)
+      GO TO 700
+C     END OF DAY, CONTINUE LOOP OVER DATE
+  650 WRITE(LTU,6)
+  700 CONTINUE
+C
+C     LOOP TO NEXT SET OF PARAMETERS IF REQUIRED
+      IF(KMAX .EQ. NT) GO TO 900
+      REWIND JSU
+      KC = KC + 1
+      GO TO 100
+  900 CONTINUE
+      RETURN
+      END
+      SUBROUTINE LIST(N,K)
+      REAL*8 CARD(10)
+      KC = KC + 1
+C     THE PURPOSE OF LIST IS TO READ CARD IMAGES FROM FORTRAN
+C     UNIT N AND TO WRITE THEM ONTO UNIT K.
+      WRITE(K,10) N
+   10 FORMAT(1H1,/////,3X,'INPUT CARD IMAGES FROM DATA SET REF. NO. ',
+     1 I2///)
+  101 READ(N,11,END=800,ERR=500) CARD
+   11 FORMAT(10A8)
+      WRITE(K,13) CARD
+   13 FORMAT(1X,10A8)
+      GO TO 101
+  500 WRITE(K,12)
+   12 FORMAT(///5X,'INPUT ERROR',///)
+  800 REWIND N
+      RETURN
+      END
+C
+C     LAUNCH TABLE PROGRAM
+C
+C     MAIN PROGRAM
+C
+C
+C     THE PURPOSE OF THE MAIN PROGRAM IS TO READ THE NAMELIST INPUT,
+C         READ THE LAUNCH PARAMETER DATA, TEST FOR CONSTRAINT
+C         VIOLATIONS, AND WRITE ALL DATA WHICH SATISFIES THE CONSTRAINTS
+C
+C
+C     THERE ARE NO ARGUMENTS IN THE CALLING SEQUENCE.  ALL INPUT IS
+C         PASSED THROUGH NAMELIST AND BY TAPE OR DISK.
+C
+C
+C     NO SUBROUTINES CALL THE MAIN PROGRAM.
+C
+C     THE FOLLOWING SUBROUTINES ARE CALLED BY THE MAIN PROGRAM.
+C
+C         LAUNCH    LIST      PRNTPL
+C
+C
+C
+C
+C     THE NAMELIST,TABLE, VARIABLES ARE DEFINED AS FOLLOWS.
+C
+C
+C         VARIABLE   TYPE    I/O        DEFINITION (DEFAULT)
+C
+C          LDU       I*4      I      FORTRAN UNIT NUMBER FOR THE LAUNCH
+C                                       PARAMETER INPUT DATA (11).
+C
+C          NU        I*4      I      NUMBER OF SETS OF NAMELIST TO BE
+C                                       PROCESSED TO GENERATE ONE LAUNCH
+C                                       TABLE.  (1)
+C                                       IF IMERGE=1 NU SETS OF NAMELIST
+C                                       INPUT WILL BE READ.
+C
+C
+C          IMERGE    I*4      I      OPTION FOR MERGING LAUNCH DATA  (0)
+C                                       0  NO MERGING.  A COMPLETE
+C                                       LAUNCH TABLE IS GENERATED USING
+C                                       DATA FROM UNIT LDU
+C
+C                                       1  MERGING.  A LAUNCH TABLE IS
+C                                       GENERATED USING DATA FROM MORE
+C                                       THAN ONE UNIT LDU.  A SEPARATE
+C                                       NAMELIST INPUT IS REQUIRED FOR
+C                                       EACH LDU DATASET.  THE DATE SCAN
+C                                       AND THE TIME OR NODE SCAN MUST
+C                                       BE THE SAME FOR EACH DATASET.
+C
+C          NP        I*4      I      TOTAL NUMBER OF PARAMETERS PER
+C                                       RECORD ON INPUT UNIT LDU (10).
+C
+C          KX        I*4      I      WORD POSITION FOR THE DATE ON A
+C                                       RECORD FROM UNIT LDU (1).
+C
+C          KD        I*4      I      WORD POSITION FOR ELAPSED DAYS ON
+C                                       A RECORD FROM UNIT LDU (2).
+C
+C          KY        I*4      I      WORD POSITION FOR THE TIME OF
+C                                       LAUNCH ON A RECORD FROM UNIT
+C                                       LDU (3).
+C
+C          NT        I*4      I      NUMBER OF CONSTRAINT TESTS TO BE
+C                                       PERFORMED ON PARAMETERS FROM
+C                                       UNIT LDU.  SEE KP AND NTEST.
+C                                       MAXIMUM OF 50.  IF IMERGE=1 THE
+C                                       SUM OF THE NT FOR ALL UNITS MUST
+C                                       NOT EXCEED 50.
+C
+C          KP        I*4      I      ARRAY OF WORD POSITIONS DESIGNATING
+C                                       THE PARAMETERS TO BE CONSTRAINED
+C                                       FROM THE INPUT UNIT LDU.  IF THE
+C                                       WORD POSITION IS NEGATIVE THE
+C                                       PARAMETER WILL NOT BE PRINTED IN
+C                                       THE LAUNCH TABLE.  ALL NEGATIVE
+C                                       VALUES SHOULD BE PLACED AT THE
+C                                       END OF THE KP ARRAY.   (4,5,6,7,
+C                                       8,9,10,11,12,13)
+C
+C          NDAYS     I*4      I      NUMBER OF DATES SCANNED IN
+C                                       GENERATING THE LAUNCH PARAMETER
+C                                       DATA ON UNIT LDU (121).
+C                                       MAXIMUM OF 130.
+C
+C          CA        R*8      I      ARRAY OF CONSTRAINT VALUES USED TO
+C                                       TEST THE PARAMETERS SPECIFIED
+C                                       IN THE KP ARRAY.  FOR EACH ENTRY
+C                                       IN THE KP ARRAY, THERE MUST BE
+C                                       A CORRESPONDING VALUE IN THE CA
+C                                       ARRAY (50*0.0).  SEE NTEST.
+C
+C          CB        R*8      I      ARRAY OF CONSTRAINT VALUES
+C                                       COMPLEMENTARY TO THE CA ARRAY
+C                                       (50*0.0).  SEE NTEST.
+C
+C          RA        R*8      I      ARRAY SPECIFYING DAILY RATE OF
+C                                       CHANGE OF CORRESPONDING CA
+C                                       CONSTRAINT (50*0.0).  SEE NTEST.
+C
+C          RB        R*8      I      ARRAY SPECIFYING DAILY RATE OF
+C                                       CHANGE OF CORRESPONDING CB
+C                                       CONSTRAINT (50*0.0).  SEE NTEST.
+C
+C          NTEST     I*4      I      ARRAY OF CODES SPECIFYING WHICH
+C                                       CONSTRAINT TEST IS TO BE
+C                                       PERFORMED ON THE CORRESPONDING
+C                                       P(KP(K)) LAUNCH PARAMETER,
+C                                       WHERE K = 1 TO NT...(50*0).
+C                                       FOR EACH ENTRY IN THE KP ARRAY,
+C                                       THERE MUST BE A CORRESPONDING
+C                                       VALUE IN THE NTEST ARRAY.
+C                                       DAYS  = ELAPSED DAYS FROM
+C                                       THE INITIAL LAUNCH DATE.
+C
+C                                       0, NO TEST IS PERFORMED.
+C
+C                                       1, IF  P   .LT. CB(K)+RB(K)*DAYS
+C                                          THEN CONSTRAINT IS VIOLATED.
+C
+C                                       2, IF  P   .GT. CA(K)+RA(K)*DAYS
+C                                          THEN CONSTRAINT IS VIOLATED.
+C
+C                                       3, IF  P   .LT. CB(K)+RB(K)*DAYS
+C                                          AND
+C                                          IF  P   .GT. CA(K)+RA(K)*DAYS
+C                                          THEN CONSTRAINT IS VIOLATED.
+C
+C                                       4, IF  P   .LT. CA(K)+RA(K)*DAYS
+C                                          OR
+C                                          IF  P   .GT. CB(K)+RB(K)*DAYS
+C                                          THEN CONSTRAINT IS VIOLATED.
+C
+C          KBAD      I*4      I      FLAG FOR PRINTING DATA WHICH
+C                                       VIOLATES THE LAUNCH CONSTRAINTS
+C                                       (0).
+C
+C                                       0,      LAUNCH TABLE CONTAINS
+C                                       ONLY DATA WHICH SATISFIES ALL
+C                                       CONSTRAINTS (SEE NTEST).
+C
+C                                       1, VIOLATION DATA INCLUDED IN
+C                                       THE LAUNCH TABLE WITH AN X
+C                                       BEFORE AND AFTER THE LAUNCH TIME
+C                                       AND FOLLOWING EACH PARAMETER
+C                                       VALUE WHICH IS VIOLATED
+C
+C         TITLE     R*8      I      ARRAY OF COLUMN TITLES TO BE USED
+C                                       IN THE LAUNCH TABLE
+C                                       CORRESPONDING TO EACH PARAMETER
+C                                       SPECIFIED BY A POSITIVE KP.
+C                                       EACH TITLE ENTRY MAY CONTAIN UP
+C                                       TO 8 CHARACTERS.   (50*' ')
+C
+C          JSU       I*4      I      FORTRAN UNIT NUMBER FOR DATA
+C                                       STORAGE (12).
+C
+C          NSU       I*4      I      FORTRAN UNIT NUMBER FOR DATA
+C                                       STORAGE (13).
+C
+C          LTU       I*8      I      FORTRAN UNIT NUMBER FOR THE LAUNCH
+C                                       TABLE OUTPUT (14).
+C
+C          TOP       R*8      I      24 CHARACTER MAIN TITLE TO BE
+C                                       PRINTED AT TOP OF LAUNCH TABLE
+C                                       ('                      ').
+C
+C          IOUT      I*4      I      FLAGS TYPE OF OUTPUT (2).
+C                                       =1, PRINTER PLOT,
+C                                       =2, LAUNCH TABLE,
+C                                       =3, BOTH 1 AND 2 ABOVE.
+C
+C
+C
+C
+C
+C     INPUT FOR PRINTER PLOT
+C
+C
+C          NVL       I*4      I      NUMBER OF HORIZONTAL GRID LINES
+C                                       (NOT COUNTING AXIS)    (6)
+C          NVSP      I*4      I      NUMBER OF SPACES BETWEEN HORIZONTAL
+C                                       GRID LINES  (8)
+C
+C          NHL       I*4      I      NUMBER OF VERTICAL GRID LINES (NOT
+C                                       COUNTING AXIS)   (12)
+C          NHSP      I*4      I      NUMBER OF SPACES BETWEEN VERTICAL
+C                                       GRID LINES   (10)
+C          XMAX      R*4      I      ABSCISSA RIGHT SIDE  (120.0)
+C
+C          XMIN      R*4      I      ABSCISSA LEFT SIDE (0.0)
+C
+C          YMAX      R*4      I      TOP ORDINATE   (24.0)
+C
+C          YMIN      R*4      I      BOTTOM ORDINATE   (0.0)
+C
+C          XTITLE    L*1      I      X AXIS TITLE ENCLOSED IN
+C                                       APOSTROPHES (MAXIMUM OF 60
+C                                       CHARACTERS)   ('TIME IN DAYS')
+C
+C          YTITLE    L*1      I      Y AXIS TITLE ENCLOSED IN
+C                                       APOSTROPHES (MAXIMUM OF 60
+C                                       CHARACTERS)   ('H O U R S')
+C
+C          NSCALE    I*4      I      ARRAY TO DETERMINE SCALE FACTORS
+C                                       AND DECIMAL POINT POSITIONS FOR
+C                                       COORDINATE VALUES TO BE PRINTED
+C                                       AT LEFT OF AND BELOW THE GRID
+C                                       LINES.  NSCALE IS ZERO OR A FIVE
+C                                       ELEMENT ARRAY.  NSCALE =0 YIELDS
+C                                       THE STANDARD FORMAT OF F8.3 AND
+C                                       ABSCISSA FORMAT FW.D (W COMPUTED
+C                                       BY PRPLOT AND D=3 OR NHSP-1
+C                                       WHICHEVER IS SMALLER).  NSCALE
+C                                       ARRAY ALTERS STANDARD PRINTING.
+C                                       NSCALE(1) NOT ZERO
+C                                       NSCALE(2) AND NSCALE(3)
+C                                       DETERMINE THE ORDINATE FORMAT
+C                                       NPFW.D  (N=NSCALE(2), W=8, D IS
+C                                       THE SMALLER OF NSCALE(3) OR 7)
+C                                       NSCALE(4) AND NSCALE(5)
+C                                       DETERMINE THE ABSCISSA FORMAT
+C                                       NPFW.D  (N=NSCALE(4), D IS THE
+C                                       SMALLEST OF NSCALE(5), NHSP-1,
+C                                       9 AND PRPLOT COMPUTES W)
+C                                         (DEFAULT  NSCALE=1,0,1,0,1)
+C
+C
+C     USEFUL JCL INFORMATION
+C
+C         UNIT(DEFAULT)      I/O        RECORD LENGTH  RECORD FORMAT
+C
+C          LDU (11)           I         8*NP + 4           VBS
+C
+C          JSU (12)           O         NT*12+32           VBS
+C
+C          NSU (13)           O         NT*12+32           VBS
+C
+C          LTU (14)           O         133                VBA
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+      LOGICAL*1 XTITLE(60), YTITLE(60)
+      DIMENSION KP(50),CA(50),CB(50),RA(50),RB(50),NTEST(50),
+     * TITLE(50),TOP(3),DATE(130),P(100),S(50),
+     * LVP(50),HEAD(50),SQ(50),LVQ(50),Q(3),LVT(100),NSCALE(5)
+      DATA LDU/11/,NU/1/,NP/10/,KD/2/,KX/1/,KY/3/,NT/10/,
+     1 KP/4,5,6,7,8,9,10,11,12,13,40*0/,NDAYS/121/,CA/50*0.0/,
+     2 CB/50*0.0/,RA/50*0.0/,RB/50*0.0/,NTEST/50*0/,TITLE/50*' '/,
+     3 JSU/12/,NSU/13/,LTU/14/,TOP/3*' '/,DATE/130*0.0/,IMERGE/0/,
+     4 KBAD/0/,IOUT/2/
+      DATA NVL,NVSP,NHL,NHSP,XMAX,XMIN,YMAX,YMIN
+     *     /6,8,12,10,120.D0,0.D0,24.D0,0.D0/
+      DATA XTITLE /'T','I','M','E',' ','I','N',' ','D','A','Y','S',
+     *             48*' '/
+      DATA YTITLE /'H',' ','O',' ','U',' ','R',' ','S',51*' '/
+      DATA NSCALE /1,0,1,0,1/
+      NAMELIST/TABLE/LDU,NU,NP,KD,KX,KY,NDAYS,NT,KP,CA,CB,RA,RB,NTEST,
+     1JSU,TITLE,TOP,LTU,IMERGE,KBAD,IOUT,NVL,NVSP,NHL,NHSP,
+     *XMAX,XMIN,YMAX,YMIN,NSCALE,XTITLE,YTITLE
+      CALL LIST(5,6)
+   90 LC = 1
+      DAYS = 0.0
+      KFLAG = 0
+      M = 1
+      DATE(1) = 0.0
+      IPSUM = 0
+      XX = 0.0
+  100 READ(5,TABLE,END=900)
+      IF(LC .EQ. 1) KYY=JSU
+      IF(LC .EQ. 1) NXX=NSU
+C     READ A RECORD OF LAUNCH PARAMETER DATA
+  200 READ(LDU,END=600) (P(I),I=1,NP)
+      IF(LC .NE. 1) GO TO 250
+      IF(M .GT. NDAYS) GO TO 250
+      IF(P(KX) .EQ. XX) GO TO 250
+C     FILL IN LAUNCH DATE ARRAY
+      DATE(M) = P(KX)
+      XX = DATE(M)
+      M = M + 1
+  250 CONTINUE
+      IP = NT
+      KK = 1
+      DO 260 II=1,100
+  260 LVT(II) = 1
+      LVI = 1
+      DO 390 K=1,NT
+      I = IABS(KP(K))
+C     VALUE OF PARAMETER TO BE TESTED
+      T = P(I)
+      IF(KP(K) .GT. 0) GO TO 270
+      IP = IP - 1
+      GO TO 275
+  270 S(KK) = P(I)
+      KK = KK + 1
+  275 CONTINUE
+C     ELAPSED DAYS FROM INITIAL DATE
+      DAYS = P(KD)
+C     KIND OF TEST TO BE PERFORMED
+      J = NTEST(K) + 1
+      LV = 1
+C
+C     SET LV=0 IF CONSTRAINT IS VIOLATED
+C
+      GO TO (390,310,320,330,340),J
+  310 IF(T .LT.(CB(K)+RB(K)*DAYS)) LV=0
+      GO TO 380
+  320 IF(T .GT. (CA(K)+RA(K)*DAYS)) LV=0
+      GO TO 380
+  330 IF(T .LT. (CB(K)+RB(K)*DAYS) .AND. T .GT. (CA(K)+RA(K)*DAYS))LV=0
+      GO TO 380
+  340 IF(T.LT.(CA(K)+RA(K)*DAYS).OR.T.GT.(CB(K)+RB(K)*DAYS)) LV=0
+  380 LVI = LV*LVI
+      LVT(I) = LVT(I)*LV
+  390 CONTINUE
+      DO 410 K=1,IP
+      J = KP(K)
+  410 LVP(K) = LVT(J)
+C
+C     IF LVI=0 AFTER ALL TESTS HAVE BEEN PERFORMED, IT MEANS A
+C     VIOLATION OF AT LEAST ONE CONSTRAINT
+C
+      IF(IMERGE .NE. 1) GO TO 510
+      IF(LC .LE. 1) GO TO 510
+C
+C
+C     MERGING OF LAUNCH PARAMETER DATA
+C
+C     READ DATA FROM PREVIOUS DATASET
+C
+      READ(NXX,END=600) NVI,Q,(SQ(K),LVQ(K),K=1,IPSUM)
+C
+C     MULTIPLY CONSTRAINT FLAG NVI FROM RECORD ON PREVIOUS DATASET
+C     BY LVI FOR CURRENT RECORD
+      LVI = LVI*NVI
+C
+  510 CONTINUE
+C
+      DO 530 L=1,IP
+      LVQ(IPSUM+L) = LVP(L)
+  530 SQ(IPSUM+L) = S(L)
+      NN = IPSUM + IP
+      IF(LC .NE. NU) WRITE(KYY) LVI,P(KX),P(KD),P(KY),
+     * (SQ(K),LVQ(K),K=1,NN)
+      IF(LC .NE. NU) GO TO 200
+      IF(KBAD .EQ. 0) GO TO 550
+C
+C     IF LAST UNIT LDU HAS BEEN READ AND IF KBAD=1 WRITE ALL
+C     DESIRED DATA WHETHER OR NOT ALL CONSTRAINTS ARE SATISFIED.
+      WRITE(KYY) LVI,P(KX),P(KD),P(KY),(SQ(K),LVQ(K),K=1,NN)
+      KFLAG = 1
+      GO TO 200
+  550 IF(LVI .NE. 1) GO TO 200
+C
+C     IF LAST UNIT LDU HAS BEEN READ, WRITE ONLY DATA WHICH SATISFIES
+C     ALL CONSTRAINTS (LVI=1).
+C
+      WRITE(KYY) LVI,P(KX),P(KD),P(KY),(SQ(K),LVQ(K),K=1,NN)
+      KFLAG = 1
+      GO TO 200
+  600 CONTINUE
+      DO 650 K=1,IP
+  650 HEAD(K+IPSUM) = TITLE(K)
+      IPSUM = IPSUM + IP
+      LC = LC + 1
+      IF(LC .GT. NU) GO TO 700
+      IF(IMERGE .NE. 1) GO TO 700
+      REWIND KYY
+C     INTERCHANGE STORAGE UNITS NXX,KYY
+      NN = NXX
+      NXX = KYY
+      KYY = NN
+      REWIND LDU
+      GO TO 100
+  700 CONTINUE
+      IF(KFLAG .EQ. 1) GO TO 720
+C
+C     IF KFLAG = 0, PRINT 'NO LAUNCH WINDOW'
+      WRITE(6,10)
+   10 FORMAT(/////5X,'NO LAUNCH WINDOW')
+  720 CONTINUE
+      END FILE KYY
+C
+C     GENERATE THE LAUNCH TABLE
+C
+      IF (IOUT-2) 20,30,40
+   30 CALL LAUNCH(NDAYS,DATE,IPSUM,HEAD,KYY,LTU,TOP)
+      GO TO 90
+   40 CALL LAUNCH (NDAYS,DATE,IPSUM,HEAD,KYY,LTU,TOP)
+   20 REWIND KYY
+      CALL PRNTPL (KYY,NVL,NVSP,NHL,NHSP,XMAX,XMIN,YMAX,YMIN,
+     *             XTITLE,YTITLE,NSCALE)
+      GO TO 90
+  900 STOP
+      END
+      SUBROUTINE PRNTPL (KYY,NVL,NVSP,NHL,NHSP,XMAX,XMIN,YMAX,YMIN,
+     *                   XTITLE,YTITLE,NSCALE)
+      REAL*8 DATE,ELPDAY,DEPEND
+      LOGICAL*1 XTITLE(60), YTITLE(60)
+C
+C
+C     SUBROUTINE PRNTPL(KYY,NVL,NVSP,NHL,NHSP,XMAX,XMIN,YMAX,YMIN,
+C                       XTITLE,YTITLE,NSCALE)
+C
+C
+C     THE PURPOSE OF PRNTPL IS TO GENERATE A PRINTER PLOT SHOWING THE
+C         ACCEPTABLE LAUNCH TIMES WITH ASTERISKS.
+C
+C     ARGUMENTS IN THE CALLING SEQUENCE ARE DEFINED AS FOLLOWS.
+C
+C         ARGUMENT   TYPE    I/O        DEFINITION (UNITS)
+C
+C          KYY       I*4      I      FORTRAN UNIT NUMBER WHERE
+C                                       CONSTRAINED DATA IS STORED.
+C
+C          NVL       I*4      I      NUMBER OF HORIZONTAL GRID LINES
+C                                       (NOT COUNTING AXIS)
+C          NVSP      I*4      I      NUMBER OF SPACES BETWEEN HORIZONTAL
+C                                       GRID LINES
+C
+C          NHL       I*4      I      NUMBER OF VERTICAL GRID LINES (NOT
+C                                       COUNTING AXIS)
+C          NHSP      I*4      I      NUMBER OF SPACES BETWEEN VERTICAL
+C                                       GRID LINES
+C          XMAX      R*4      I      ABSCISSA RIGHT SIDE
+C
+C          XMIN      R*4      I      ABSCISSA LEFT SIE
+C
+C          YMAX      R*4      I      TOP ORDINATE
+C
+C          YMIN      R*4      I      BOTTOM ORDINATE
+C
+C          XTITLE    L*1      I      X AXIS TITLE ENCLOSED IN
+C                                       APOSTROPHES (MAXIMUM OF 60
+C                                       CHARACTERS)
+C
+C          YTITLE    L*1      I      Y AXIS TITLE ENCLOSED IN
+C                                       APOSTROPHES (MAXIMUM OF 60
+C                                       CHARACTERS)
+C
+C          NSCALE    I*4      I      ARRAY TO DETERMINE SCALE FACTORS
+C                                       AND DECIMAL POINT POSITIONS FOR
+C                                       COORDINATE VALUES TO BE PRINTED
+C                                       AT LEFT OF AND BELOW THE GRID
+C                                       LINES.  NSCALE IS ZERO OR A FIVE
+C                                       ELEMENT ARRAY.  NSCALE =0 YIELDS
+C                                       THE STANDARD FORMAT OF F8.3 AND
+C                                       ABSCISSA FORMAT FW.D (W COMPUTED
+C                                       BY PRPLOT AND D=3 OR NHSP-1
+C                                       WHICHEVER IS SMALLER).  NSCALE
+C                                       ARRAY ALTERS STANDARD PRINTING.
+C                                       NSCALE(1) NOT ZERO
+C                                       NSCALE(2) AND NSCALE(3)
+C                                       DETERMINE THE ORDINATE FORMAT
+C                                       NPFW.D  (N=NSCALE(2), W=8, D IS
+C                                       THE SMALLER OF NSCALE(3) OR 7)
+C                                       NSCALE(4) AND NSCALE(5)
+C                                       DETERMINE THE ABSCISSA FORMAT
+C                                       NPFW.D  (N=NSCALE(4), D IS THE
+C                                       SMALLEST OF NSCALE(5), NHSP-1,
+C                                       9 AND PRPLOT COMPUTES W)
+C
+C
+      DIMENSION NSCALE(5), GRID(8640), X(5000), Y(5000)
+      DATA X, Y, KOUNT /5000*0.,5000*0.,0/
+      DATA MAXPTS /5000/
+      WRITE (6,7)
+    7 FORMAT (1H1,//////////)
+   10 READ (KYY,ERR=100,END=200) LVI, DATE, ELPDAY, DEPEND
+      IF (LVI) 10,10,20
+   20 KOUNT=KOUNT+1
+      X(KOUNT)=ELPDAY
+      Y(KOUNT)=DEPEND
+      IF (KOUNT-MAXPTS) 10,10,30
+  200 CALL PLOT1 (NSCALE,NVL,NVSP,NHL,NHSP)
+      CALL PLOT2 (GRID,XMAX,XMIN,YMAX,YMIN)
+      CALL PLOT3 ('*',X,Y,KOUNT)
+      CALL PLOT4 (60,YTITLE)
+      WRITE (6,8) XTITLE
+    8 FORMAT (/T12,60A1)
+      RETURN
+   30 WRITE (6,5) MAXPTS
+    5 FORMAT (T5,'YOU HAVE EXCEEDED THE MAXIMUM NUMBER OF POINTS (5000)
+     *ALLOWED AS INPUT TO THE PRINTER PLOT ROUTINE.')
+      STOP
+  100 WRITE (6,6)
+    6 FORMAT (T5,'ERROR READING LAUNCH TABLE DATA.')
+      STOP
+      END
+      SUBROUTINE PRPLOT                                                   938000
+C   PETE SMIDINGER   SUMMER 1966  MATH & COMP BR  GSFC  NASA              939000
+      IMPLICIT  LOGICAL*1(W), LOGICAL*1(K)                                940000
+      DIMENSION  NSCALE(5),ABNOS(26),X(1),Y(1)                            941000
+      LOGICAL*1 NOS(10)/'0','1','2','3','4','5','6','7','8','9'/          942000
+      LOGICAL*1  IMAGE(1),CH,LABEL(1)                                     943000
+      LOGICAL*1   VC     ,HC/' '/,NC/'+'/,BL/' '/                         944000
+     L         , HF/'F'/,HF1/'.'/,HF2/','/                                945000
+      DATA VC /' '/                                                       946000
+      LOGICAL*1  FOR1(19)/'(','1','X','A','1',',','F','8','.',' ',',',
+     1'1','X','1','2','1','A','1',')'/
+      LOGICAL*1  FOR2(15)/'(','1','X','A','1',',',' ','9','X','1','2',
+     1'1','A','1',')'/
+      LOGICAL*1 FOR3(19)/'(','1','H','0','F',' ',' ','.',' ',',',' ',
+     1' ','F',' ',' ',' ','.',' ',')'/
+      DATA KPLOT1 /.FALSE./, KPLOT2/.FALSE./                              950000
+      DATA  KABSC,KORD,KBOTGL /3*.FALSE./                                 951000
+      DATA  ITAPE/6/                                                      952000
+C                                                                         953000
+      ENTRY PLOT1(NSCALE,NHL,NSBH,NVL,NSBV)                               954000
+      KPLOT1=.TRUE.                                                       955000
+      KPLOT2=.FALSE.                                                      956000
+125   NH=IABS(NHL)                                                        957000
+      NSH=IABS(NSBH)                                                      958000
+      NV=IABS(NVL)                                                        959000
+      NSV=IABS(NSBV)                                                      960000
+      NSCL=NSCALE(1)                                                      961000
+      IF(NH*NSH*NV*NSV.NE.0) GO TO 128                                    962000
+      WRITE (ITAPE,14)                                                    963000
+14    FORMAT(T5,'SOME PLOT1 ARG. ILLEGALLY 0')                            964000
+      KPLOT=.FALSE.                                                       965000
+      RETURN                                                              966000
+128   KPLOT=.TRUE.                                                        967000
+      IF(NV.LE.25) GO TO 126                                              968000
+      WRITE (ITAPE,12)                                                    969000
+      KPLOT=.FALSE.                                                       970000
+12    FORMAT(T5,'NO. OF VERTICAL LINES >25')                              971000
+      RETURN                                                              972000
+126   CONTINUE                                                            973000
+      NVM=NV-1                                                            974000
+      NVP=NV+1                                                            975000
+      NDH=NH*NSH                                                          976000
+      NDHP=NDH+1                                                          977000
+      NDV=NV*NSV                                                          978000
+      NDVP=NDV+1                                                          979000
+      NIMG=(NDHP*NDVP)                                                    980000
+      IF(NDV.LE.120) GO TO 130                                            981000
+      KPLOT=.FALSE.                                                       982000
+      WRITE (ITAPE,11)                                                    983000
+11    FORMAT(T5,'WIDTH OF GRAPH >121')                                    984000
+      RETURN                                                              985000
+130   CONTINUE                                                            986000
+      IF(NSCL.EQ.0) GO TO 70                                              987000
+      FSY=10.**NSCALE(2)                                                  988000
+      FSX=10.**NSCALE(4)                                                  989000
+      IY=MIN0(IABS(NSCALE(3)),7)+1                                        990000
+      IX=MIN0(IABS(NSCALE(5)),9)+1                                        991000
+      GO TO 75                                                            992000
+70    FSY=1.                                                              993000
+      FSX=1.                                                              994000
+      IY=4                                                                995000
+      IX=4                                                                996000
+75    FOR1(10)=NOS(IY)                                                    997000
+      NA=MIN0(IX,NSV)-1                                                   998000
+      NS=NA-MIN0(NA,120-NDV)                                              999000
+      NB=11-NS+NA                                                        1000000
+      I1=NB/10                                                           1001000
+      I2=NB-I1*10                                                        1002000
+      FOR3(6)=NOS(I1+1)                                                  1003000
+      FOR3(7)=NOS(I2+1)                                                  1004000
+      FOR3(9)=NOS(NA+1)                                                  1005000
+      IF(NV.GT.0) GO TO 90                                               1006000
+      DO 80 J=11,18                                                      1007000
+80    FOR3(J)=BL                                                         1008000
+      GO TO 100                                                          1009000
+90    I1=NV/10                                                           1010000
+      I2=NV-I1*10                                                        1011000
+      FOR3(11)=NOS(I1+1)                                                 1012000
+      FOR3(12)=NOS(I2+1)                                                 1013000
+      FOR3(13)=HF                                                        1014000
+      I1=NSV/100                                                         1015000
+      I3=NSV-I1*100                                                      1016000
+      I2=I3/10                                                           1017000
+      I3=I3-I2*10                                                        1018000
+      FOR3(14)=NOS(I1+1)                                                 1019000
+      FOR3(15)=NOS(I2+1)                                                 1020000
+      FOR3(16)=NOS(I3+1)                                                 1021000
+      FOR3(17)=HF1                                                       1022000
+      FOR3(18)=FOR3(9)                                                   1023000
+100   IF(KPLOT1) RETURN                                                  1024000
+      KPLOT1=.TRUE.                                                      1025000
+C                                                                        1026000
+      ENTRY PLOT2(IMAGE,XMAX,XMIN,YMAX,YMIN)                             1027000
+      KPLOT2=.TRUE.                                                      1028000
+      IF(KPLOT1) GO TO 210                                               1029000
+      NSCL=0                                                             1030000
+      NH=5                                                               1031000
+      NSH=10                                                             1032000
+      NV=10                                                              1033000
+      NSV=10                                                             1034000
+      GO TO 128                                                          1035000
+210   CONTINUE                                                           1036000
+      IF(.NOT.KPLOT)RETURN                                               1037000
+      YMX=YMAX                                                           1038000
+      DH=(YMAX-YMIN)/FLOAT (NDH)                                         1039000
+      DV=(XMAX-XMIN)/FLOAT(NDV)                                          1040000
+      DO 220 I=1,NVP                                                     1041000
+220   ABNOS(I)=(XMIN+FLOAT((I-1)*NSV)*DV)*FSX                            1042000
+      DO 225 I=1,NIMG                                                    1043000
+225   IMAGE(I)=BL                                                        1044000
+      DO 240 I=1,NDHP                                                    1045000
+      I2=I*NDVP                                                          1046000
+      I1=I2-NDV                                                          1047000
+      KNHOR=MOD(I-1,NSH).NE.0                                            1048000
+      IF(KNHOR) GO TO 230                                                1049000
+      DO 228 J=I1,I2                                                     1050000
+228   IMAGE(J)=HC                                                        1051000
+230   CONTINUE                                                           1052000
+      DO 240 J=I1,I2,NSV                                                 1053000
+      IF(KNHOR) GO TO 235                                                1054000
+      IMAGE(J)=NC                                                        1055000
+      GO TO 240                                                          1056000
+235   IMAGE(J)=VC                                                        1057000
+240   CONTINUE                                                           1058000
+      XMIN1=XMIN-DV/2.                                                   1059000
+      YMIN1=YMIN-DH/2.                                                   1060000
+      RETURN                                                             1061000
+C                                                                        1062000
+      ENTRY PLOT3(CH,X,Y,N3)                                             1063000
+300   IF(KPLOT2) GO TO 312                                               1064000
+301   WRITE (ITAPE,13)                                                   1065000
+13    FORMAT(T5,'PLOT2 MUST BE CALLED')                                  1066000
+      RETURN                                                             1067000
+312   CONTINUE                                                           1068000
+      IF(.NOT.KPLOT) RETURN                                              1069000
+      IF(N3.GT.0) GO TO 314                                              1070000
+      KPLOT=.FALSE.                                                      1071000
+      WRITE (ITAPE,15)                                                   1072000
+15    FORMAT(T5,'PLOT3, ARG4<0')                                         1073000
+      RETURN                                                             1074000
+314   DO 320 I=1,N3                                                      1075000
+      DUM1=(X(I)-XMIN1)/DV                                               1076000
+      DUM2=(Y(I)-YMIN1)/DH                                               1077000
+      IF(DUM1.LT.0..OR.DUM2.LT.0.) GO TO 320                             1078000
+      IF(DUM1.GE.NDVP.OR.DUM2.GE.NDHP) GO TO 320                         1079000
+      NX=1+INT(DUM1)                                                     1080000
+      NY=1+INT(DUM2)                                                     1081000
+315   J=(NDHP-NY)*NDVP+NX                                                1082000
+      IMAGE(J)=CH                                                        1083000
+320   CONTINUE                                                           1084000
+      RETURN                                                             1085000
+C                                                                        1086000
+      ENTRY PLOT4(NL,LABEL)                                              1087000
+      ENTRY FPLOT4(NL,LABEL)                                             1088000
+      IF(.NOT.KPLOT) RETURN                                              1089000
+      IF(.NOT.KPLOT2) GO TO 301                                          1090000
+      DO 420 I=1,NDHP                                                    1091000
+      IF(I.EQ.NDHP.AND.KBOTGL) GO TO 420                                 1092000
+      WL=BL                                                              1093000
+      IF(I.LE.NL) WL=LABEL(I)                                            1094000
+      I2=I*NDVP                                                          1095000
+      I1=I2-NDV                                                          1096000
+      IF(MOD(I-1,NSH).EQ.0.AND..NOT.KORD) GO TO 410                      1097000
+      WRITE (ITAPE,402)WL,(IMAGE(J),J=I1,I2)
+  402 FORMAT(1X,A1,9X,121A1)
+      GO TO 420                                                          1099000
+410   CONTINUE                                                           1100000
+      ORDNO=(YMX-FLOAT(I-1)*DH)*FSY                                      1101000
+      WRITE (ITAPE,401)WL,ORDNO,(IMAGE(J),J=I1,I2)
+  401 FORMAT(1X,A1,F8.3,1X,121A1)
+420   CONTINUE                                                           1103000
+      IF(KABSC) GO TO 430                                                1104000
+      WRITE (ITAPE,403)(ABNOS(J),J=1,NVP)
+  403 FORMAT(1H0,F7.1)
+430   RETURN                                                             1106000
+C                                                                        1107000
+      ENTRY OMIT(LSW)                                                    1108000
+      KABSC=MOD(LSW,2).EQ.1                                              1109000
+      KORD=MOD(LSW,4).GE.2                                               1110000
+      KBOTGL=LSW.GE.4                                                    1111000
+      RETURN                                                             1112000
+C                                                                        1113000
+      ENTRY PLTAPE(ITAPE1)                                               1114000
+      ITAPE=ITAPE1                                                       1115000
+      RETURN                                                             1116000
+      END                                                                1117000

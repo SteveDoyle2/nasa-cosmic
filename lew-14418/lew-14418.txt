@@ -1,0 +1,83 @@
+ FLUID- THERMODYNAMIC AND TRANSPORT PROPERTIES OF FLUIDS
+
+( NASA Lewis Research Center )
+
+     The accurate computation of the thermodynamic and transport proper-
+ties of fluids is a necessity for many engineering calculations. The FLUID
+program was developed to calculate the thermodynamic and transport prop-
+erties of pure fluids in both the liquid and gas phases. Fluid properties
+are calculated using a simple gas model, empirical corrections, and an ef-
+ficient numerical interpolation scheme. FLUID produces results that are
+in very good agreement with measured values, while being much faster than
+older more complex programs developed for the same purpose.
+
+     A Van der Waals equation of state model is used to obtain approximate
+state values. These values are corrected for real-gas effects by model cor-
+rection factors obtained from tables based on experimental data. These ta-
+bles also accurately compensate for the special circumstances which arise
+whenever phase conditions occur. Viscosity and thermal conductivity val-
+ues are computed directly from tables. Interpolation within tables is
+based on Lagrange's three point formula. A set of tables must be generated
+for each fluid implemented.
+
+     FLUID currently contains tables for nine fluids including dry air and
+steam. The user can add tables for any fluid for which adequate thermal
+property data is available. The FLUID routine is structured so that it may
+easily be incorporated into engineering programs.
+
+     The IBM 360 version of FLUID was developed in 1977. It is written in
+FORTRAN IV and has been implemented on an IBM 360 with a central memory re-
+quirement of approximately 222K of 8 bit bytes. The IBM PC version of FLUID
+is written in Microsoft FORTRAN 77 and has been implemented on an IBM PC with
+a memory requirement of 128K of 8 bit bytes. The IBM PC version of FLUID was
+developed in 1986.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                  IBM VERSION
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: IBM 360 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 12,562 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LEW-13127
+
+DOMESTIC - DOCUMENTATION PRICE: $14.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $28.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+
+
+
+
+                                 IBM PC VERSION
+
+LANGUAGE: FORTRAN 77
+
+MACHINE REQUIREMENTS: IBM PC SERIES
+
+PROGRAM SIZE: APPROXIMATELY 10,000 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 3.5 Inch IBM PC DOS Format Diskette
+
+PROGRAM NUMBER: LEW-14418
+
+DOMESTIC - DOCUMENTATION PRICE: $15.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $30.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

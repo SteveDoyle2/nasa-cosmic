@@ -1,0 +1,48 @@
+ TAPECERT- A TAPE CERTIFICATION UTILITY FOR DEC VAX/VMS COMPUTERS
+
+( Cal Tech/Jet Propulsion Lab. )
+
+     A tape certification program tests the useability of magnetic tape
+at different densities by writing test patterns and re-reading them. The
+ability to certify tapes is important in environments that do large amounts
+of tape processing. TAPECERT is a VAX utility for tape certification in use
+at the Jet Propulsion Laboratory Multi-Mission Image Processing Laboratory
+which handles data from projects such as Voyager and Galileo.
+
+     TAPECERT allows the user to select the tape density, the test pattern
+to use, the number of allowed retries, and whether to allow extended inter-
+record gaps to skip past bad spots on the tape. The program displays system
+error messages (parity errors, for instance) and record count information,
+with totals every 1000 blocks. TAPECERT is designed such that command pro-
+cedures can be set up with defaults for different types of certification
+runs.
+
+     TAPECERT is written in FORTRAN 77 for interactive execution and has
+been implemented on a DEC VAX series computer operating under VMS level 3.7
+and level 4.2. TAPECERT utilizes standard VMS system services and run-time
+library routines. This program was developed in 1985.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN 77
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 420 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX FILES-11 Format Magnetic Tape
+
+PROGRAM NUMBER: NPO-16876
+
+DOMESTIC - DOCUMENTATION PRICE: $11.00    PROGRAM PRICE: $400.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $22.00   PROGRAM PRICE: $800.00
+
+
+
+                                        1
+

@@ -1,0 +1,240 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STANDARD',
+               'QLIBHOME:IO',
+               'QLIBHOME:STRING',
+               'QLIBHOME:COLOR',
+               'QLIBHOME:FIG',
+               'QLIBHOME:TERM_VAX',
+               'QLIBHOME:TERM_ANSI',
+               'QLIBHOME:TERM_4010',
+               'QLIBHOME:TERM_4100'),
+  ENVIRONMENT ('QLIBHOME:TEK4105.TEN') ]
+MODULE term_TEK4105;
+{=============================================================================}
+{-- PROCEDURES FOR TERMINAL TYPE TEK4105 -------------------------------------}
+{=============================================================================}
+[ HIDDEN ] VAR
+   panelopen     : boolean := false;
+   termfig       : RECORD;
+                   dialoglines   : integer;
+                   END := (30);
+{=============================================================================}
+[ GLOBAL ]
+FUNCTION termname_TEK4105 (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0: termname_TEK4105 := '12';
+   1: termname_TEK4105 := 'TEK4105 ';
+   2: termname_TEK4105 := 'EM4105  ';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE colorsetup_EM4105 (colors,intensities : integer;  
+   candoblink : boolean);
+{------------------------------}
+PROCEDURE bufferempty;
+BEGIN
+qiowwrite (env.buffer + CRLF);
+env.buffer := '';
+END;
+{------------------------------}
+BEGIN
+initpalette (termpalette,colors,intensities,candoblink);
+IF env.mode = M_TEXT
+ THEN
+  BEGIN
+  getcolorindex_4100 (termpalette,'TEXTBACK',bufferempty);
+  qiowwrite (ESC + 'TG4'  + '0' + strofcolor_4100 ('TEXTBACK',false));
+  qiowwrite (ESC + 'TG4'  + '1' + strofcolor_4100 ('TEXTBOX',false));
+  qiowwrite (ESC + 'TG4'  + '2' + strofcolor_4100 ('TEXTCHAR',false));
+  qiowwrite (ESC + 'TG4'  + '3' + strofcolor_4100 ('CURSOR_1',false));
+  qiowwrite (ESC + 'TG4'  + '4' + strofcolor_4100 ('CURSOR_2',false));
+  qiowwrite (ESC + 'LI210');
+  qiowwrite (ESC + 'TD34');
+  END
+ ELSE
+  BEGIN
+  getcolorindex_4100 (termpalette,'PLOTBACK',bufferempty);
+  qiowwrite (ESC + 'TG4'  + '0' + strofcolor_4100 ('BLACK',false));
+  qiowwrite (ESC + 'TG4'  + '1' + strofcolor_4100 ('OVERBOX',false));
+  qiowwrite (ESC + 'TG4'  + '2' + strofcolor_4100 ('OVERCHAR',false));
+  qiowwrite (ESC + 'TG4'  + '3' + strofcolor_4100 ('CURSOR_1',false));
+  qiowwrite (ESC + 'TG4'  + '4' + strofcolor_4100 ('CURSOR_2',false));
+  IF clearcolor ('OVERBOX') 
+   THEN qiowwrite (ESC + 'LI200')
+   ELSE qiowwrite (ESC + 'LI210');
+  END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE colorsetup_TEK4105;
+BEGIN
+IF terminal.name = 'EM4105  '
+ THEN colorsetup_EM4105 (16,4,false)
+ ELSE colorsetup_4100 (8,4,false);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE executecom_TEK4105;
+VAR
+   ii,j          : integer;
+   oldpos        : ipoint;
+{------------------------------}
+PROCEDURE bufferempty;
+BEGIN
+CASE env.mode OF
+   M_TEXT:  BEGIN
+            qiowwrite (ESC + '%!0'      { CODE TEK               }
+                     + ESC + 'TM3');    { SET COLOR DEFINE MODE  }
+            env.mode := M_PLOT;
+            colorsetup_TEK4105;
+            IF config.overlaykill 
+             THEN qiowwrite (ESC + 'LV0');     { DIALOG AREA INVISIBLE  }
+            END;
+   M_DUAL:  IF config.overlaykill
+             THEN qiowwrite (ESC + 'LV0');     { DIALOG AREA INVISIBLE  }
+   M_PLOT:  ;
+   END;
+env.mode := M_PLOT;
+IF length (env.buffer) <> 0 
+ THEN 
+  BEGIN
+  qiowwrite (env.buffer + CRLF);
+  env.buffer := '';
+  END;
+END;
+{------------------------------}
+BEGIN
+WITH plotitem DO CASE ins OF
+   I_col:  BEGIN
+           bufferempty;
+           IF env.visible
+            THEN 
+             BEGIN
+             j := getcolorindex_4100 (termpalette,st,bufferempty);
+             env.buffer := ESC + 'ML' + strofi_4100 (j-1)
+                         + ESC + 'MT' + strofi_4100 (j-1);
+             END;
+           bufferempty;
+           END;
+   I_pan:  BEGIN
+           bufferempty;
+           j := getcolorindex_4100 (termpalette,st,bufferempty);
+           panelopen := j > 0;
+           IF panelopen
+            THEN env.buffer := ESC + 'MP' + strofi_4100 (1-j);
+           bufferempty;
+           END;
+   I_clo:  BEGIN
+           bufferempty;
+           env.buffer := ESC + 'LE';
+           bufferempty;
+           END;
+   I_pos:  BEGIN
+           bufferempty;
+           env.pos.ix := ix;
+           env.pos.iy := iy;
+           END;
+   I_dra:  draw_4100(ix,iy,panelopen,bufferempty);
+   I_siz:  ;
+   I_mar:  ;
+   I_pri:  IF env.visible AND (st <> '') 
+            THEN 
+             BEGIN
+             bufferempty;
+             env.buffer := chr(29) + strofpos_4100 (env.pos) 
+                         + ESC + 'LT' + strofi_4100 (length(st)) 
+                         + st;
+             bufferempty;
+             END;
+   I_emp:  bufferempty;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE writeterm_TEK4105 (str : VARYING [l2] OF char);
+BEGIN
+writeterm_4100 (str,termfig.dialoglines);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE readterm_TEK4105 (VAR outstr : VARYING [l2] OF char);  
+BEGIN
+readterm_vax (outstr);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screenerase_TEK4105;
+BEGIN
+env.mode := M_TEXT;
+qiowwrite (ESC + '%!0'      { CODE TEK               }
+         + ESC + 'TM3');    { SET COLOR DEFINE MODE  }
+colorsetup_TEK4105;
+qiowwrite (ESC + 'KA0'      { DIALOG AREA DISABLE    }
+         + ESC + 'LZ'       { DIALOG AREA CLEAR      }
+         + ESC + chr(12));
+qiowwrite (ESC + '%!2');
+screenerase_ansi;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screencopy_TEK4105;
+BEGIN
+qiowwrite (ESC + 'KH1');
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE gin_TEK4105 (VAR key : char;  VAR ipt : ipoint;  color : color_type);
+VAR
+   str    : VARYING [20] OF char;
+BEGIN
+CASE env.mode OF
+   M_TEXT:  qiowwrite (ESC + '%!0');
+   M_PLOT,
+   M_DUAL:  BEGIN
+            IF config.overlaykill THEN qiowwrite (ESC + 'LV0');
+            env.mode := M_PLOT;
+            END;
+   END;
+IF color <> '' THEN qiowwrite (ESC + 'TC' + strofcolor_4100 (color,false));
+{ THIS IS 4010 METHOD }
+qiowwrite (ESC + chr(26));
+str := '     ';
+qiowreadnoechopurge (str,5);
+key := str[1];
+ipt.ix  := (ord(str[2]) MOD 32) * 2048 + (ord(str[3]) MOD 32) * 64;
+ipt.iy  := (ord(str[4]) MOD 32) * 2048 + (ord(str[5]) MOD 32) * 64;
+qiowwrite (LF);
+END;
+{-----------------------------------------------------------------------------}
+[GLOBAL]
+FUNCTION readmenu_TEK4105 (default : char;  toplevel : boolean;
+   helpprefix : anystring) : command_type;
+BEGIN
+readmenu_TEK4105 := readmenu_ansi (default,toplevel,helpprefix,
+   terminal.name <> 'EM4105  ');
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE termconfig_TEK4105 (configcontrol : configcontrol_type);
+BEGIN
+WITH termfig DO CASE configcontrol OF
+   CON:  BEGIN
+         qiowwrite (ESC + '%!0'      { CODE TEK               }
+                  + ESC + 'TM3');    { SET COLOR DEFINE MODE  }
+         colorsetup_TEK4105;
+         qiowwrite (ESC + '%!2');     { CODE EDIT              }
+         config.ch := ch_type (820,1320,192,192);
+         config.resolution := 150;
+         config.dotsize    := 0;
+         config.starsize   := 512;
+         config.ansi364    := true;
+         config.drawblack  := true;
+         END;
+   QUE:  readint ('ENTER NUMBER OF DIALOG AREA LINES : ',
+                   dialoglines,3,100,dialoglines);
+   REP:  writeline (out,'NUMBER OF DIALOG LINES IS ' + strofi(dialoglines,3));
+   END;
+END;
+{-----------------------------------------------------------------------------}
+END.

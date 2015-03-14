@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+The Pie chart is a commonly used tool to show the percentage breakdown of the
+components of a variable.  The maximum number of components is 10.  Component
+percentages are computed if component counts are entered and component counts
+are computed if percentages are entered.  Each component is assigned a one
+letter label ("A" through "J") when the pie is drawn.
+The fields which are to be entered are as follows:
+        Title           : Displayed at the top and centered
+        Subtitle        : Displayed centered on line below the title
+        Author          : Up to 20 characters, displayed to left of subtitle
+        Date            : Up to 20 characters, displayed to right of subtitle
+        Column headers  : 2 to describe data, 2 to describe data descriptions
+        Component count : Ten values displayed next to letters on left side
+        Percentages     : Ten values displayed to right of descriptions
+        Descriptions    : 2 lines which describe each line of data
+        Total           : Total of component counts entered if entering percent
+        Footnotes       : Up to 3, located at bottom of chart
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

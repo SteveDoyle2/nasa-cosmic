@@ -1,0 +1,68 @@
+      SUBROUTINE RELOC(DEPEND)
+C
+C        'RELOC' STORES THE INPUT ELEMENT DEFLECTIONS AND VELOCITIES
+C        INTO THE DEPEND ARRAY FOR THE INITIAL CASE.
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+      COMMON /ANTENA/ A(10,3),ADOT(10,3),B(10,3),BDOT(10,3),DIN(10,3),
+     .                DINDOT(10,3),DOUT(10,3),DOUTDT(10,3),ZBZ(3,10),
+     .                NELMTS,NDAMPR,MODES(10)
+C
+      COMMON /IPOOL1/ IGRAV,IDAMP,IK,K1,ITIM,IAB,IAPS,IBB,IBPS,NK(10),
+     .                LK(10),LLK(10)
+C
+      COMMON /RPOOL1/ RHOK(10),TIME,SA(3,3),FM1(3,3),ZLK(10),OMEG(3),
+     .                ZLKP(10),ZLKDP(10),CMAT(3,3),GBAR(3,3),YBCM(3),
+     .                ZBZK(3,10),FCM(3,3),DTO,PHID,PHI
+C
+      DIMENSION DEPEND(150)
+      ISUM=0
+      DO 30 K=1,IK
+      IF (NK(K) .EQ. 0)  GO TO 30
+      ISUM=ISUM+NK(K)
+   30 CONTINUE
+      IF (ISUM .EQ. 0)  GO TO 110
+   40 IKOUNT=9
+      IF (IDAMP .EQ. 1)  IKOUNT=11
+      IA=2*ISUM
+      DO 70 K=1,IK
+      M=NK(K)
+      IF (M .EQ. 0)  GO TO 70
+      L=K-K1
+      DO 60 I=1,M
+      IC1=IKOUNT+I
+      IC2=IC1+M
+      IC3=IC1+IA
+      IC4=IC3+M
+      IF (K .GT. K1)  GO TO 50
+      IF(DABS(DIN(K,I)).LE.10.0D-30) DIN(K,I)=0.0D0
+      IF(DABS(DINDOT(K,I)).LE.10.0D-30) DINDOT(K,I)=0.0D0
+      IF(DABS(DOUT(K,I)).LE.10.0D-30) DOUT(K,I)=0.0D0
+      IF(DABS(DOUTDT(K,I)).LE.10.0D-30) DOUTDT(K,I)=0.0D0
+      DEPEND(IC1)=DOUT(K,I)
+      DEPEND(IC2)=DOUTDT(K,I)
+      DEPEND(IC3)=DIN(K,I)
+      DEPEND(IC4)=DINDOT(K,I)
+      GO TO 60
+   50 IF(DABS(A(L,I)).LE.10.0D-30) A(L,I)=0.0D0
+      IF(DABS(ADOT(L,I)).LE.10.0D-30) ADOT(L,I)=0.0D0
+   80 IF(DABS(B(L,I)).LE.10.0D-30) B(L,I)=0.0D0
+      IF(DABS(BDOT(L,I)).LE.10.0D-30) BDOT(L,I)=0.0D0
+      DEPEND(IC1)=A(L,I)
+      DEPEND(IC2)=ADOT(L,I)
+      DEPEND(IC3)=B(L,I)
+      DEPEND(IC4)=BDOT(L,I)
+   60 CONTINUE
+      IKOUNT=IKOUNT+2*M
+   70 CONTINUE
+  110 N=1
+      K2=IK-K1
+      DO 130 K=1,IK
+      L=K2+N
+      IF ((K-K1) .GT. 0)  L=K-K1
+      DO 120 I=1,3
+  120 ZBZK(I,K)=ZBZ(I,L)
+      N=N+1
+  130 CONTINUE
+      RETURN
+      END

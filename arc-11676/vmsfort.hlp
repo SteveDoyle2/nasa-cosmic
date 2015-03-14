@@ -1,0 +1,12 @@
+1 VMSFORT
+ The VMSFORT command converts a file in the standard, internal
+ VMS file format to the commonly used FORTRAN format (ie, '1',
+ '0', and ' ' as carriage control characters).
+
+ Syntax:
+      VMSFORT filespec
+
+ The file designated by 'filespec' will be replaced by a new
+ version of the file.
+
+ See also, FORTVMS.

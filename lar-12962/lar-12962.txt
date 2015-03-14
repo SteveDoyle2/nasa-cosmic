@@ -1,0 +1,78 @@
+ THREE DIMENSIONAL NAVIER-STOKES EQUATIONS FOR FLOW OVER NONAXISYMMETRIC
+NOZZLE CONFIGURATIONS
+
+( LOCKHEED MISSILES & SPACE CO. )
+
+     A set of computer codes has been developed for solving the three-
+dimensional Navier-Stokes equations for the flow over nonaxisymmetric
+nozzle configurations. The objective in developing these codes was to be
+able to compute the internal and external viscous flowfield about an iso-
+lated nozzle, so that the flow characteristics and performance of three-
+dimensional jet engine exhaust nozzles could be predicted. The approach is
+based on using an efficient implicit numerical method to solve the unsteady
+Navier-Stokes equations in a boundary-conforming curvilinear coordinate
+system to obtain the desired time-asymptotic steady-state solution. Flow
+turbulence effects are simulated by means of algebraic turbulence models
+for the effective turbulent eddy viscosity and Prandlt number.
+
+     This set of codes consists of three programs. The RGRIDD program con-
+structs a boundary-conforming curvilinear coordinate system and computa-
+tional grid for complicated three-dimensional nozzle configurations. The
+NOZLIC program can construct simple coordinate systems and grids for two-
+dimensional or axisymmetric converging-diverging nozzles and generates
+the initial conditions for the NOZL3D code. The NOZL3D program performs an
+implicit numerical solution to the spatially parabolized form of the three-
+dimensional unsteady Navier-Stokes equations in general curvilinear coor-
+dinates.
+
+     The NOZL3D program obtains its solution in the following manner. The
+three-dimensional flow region is represented by a computational space that
+consists of a rectangular parallelepiped. This computational space is cov-
+ered with a rectangular grid of nodal points that are equally spaced in each
+of the three coordinate directions in the space.
+
+     Finite-difference analogs of the unsteady Navier-Stokes equations are
+solved on this grid by an implicit numerical method that advances the so-
+lution over a sequence of time steps using a "sweeping" procedure to obtain
+the final steady-state solution.
+
+     These programs are written in FORTRAN IV and ASSEMBLER. There are both
+batch and interactive versions of the RGRIDD program each having a central
+memory requirement of approximately 60K (octal) of 60 bit words. The NO-
+ZLIC and NOZL3D are intended for batch execution. Both "disc" and "core"
+versions of NOZLIC and NOZL3D are supplied. The disc versions have been im-
+plemented on a CDC CYBER 170 series computer with central memory require-
+ments of approximately 140K (octal) and 175 (octal) of 60 bit words respec-
+tively. The core versions are for implementation on CDC 7600 or CDC 203 com-
+puters and have problem dependent central memory requirements. These pro-
+grams were developed in 1980.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: FORTRAN IV ( 99 %); ASSEMBLER ( 01 %);
+
+MACHINE REQUIREMENTS: CDC 7600 OR CDC CYBER 170 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 14,735 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI ASCII Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-12962
+
+DOMESTIC - DOCUMENTATION PRICE: $70.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $140.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

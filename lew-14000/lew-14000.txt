@@ -1,0 +1,57 @@
+ ANDUCT- VELOCITY GRADIENT METHOD FOR CALCULATING VELOCITIES IN AN AXISYM-
+METRIC ANNULAR DUCT
+
+( NASA Lewis Research Center )
+
+     Turbomachinery components are often connected by ducts, which are usu-
+ally annular. The configurations and aerodynamic characteristics of these
+ducts are crucial to the optimum performance of the turbomachinery blade
+rows. The ANDUCT computer program was developed to calculate the velocity
+distribution along an arbitrary line between the inner and outer walls of an
+annular duct with axisymmetric swirling flow. Although other programs are
+available for duct analysis, the use of the velocity gradient method makes
+the ANDUCT program fast and convenient while requiring only modest computer
+resources.
+
+     A fast and easy method of analyzing the flow through a duct with axisym-
+metric flow is the velocity gradient method, also known as the stream fila-
+ment or streamline curvature method. This method has been used extensively
+for blade passages but has not been widely used for ducts, except for the
+radial equilibrium equation. In ANDUCT, a velocity gradient equation de-
+rived from the momentum equation is used to determine the velocity varia-
+tion along an arbitrary straight line between the inner and outer wall of an
+annular duct. The velocity gradient equation is used with an assumed varia-
+tion of meridional streamline curvature. Upstream flow conditions may vary
+between the inner and outer walls, and an assumed total pressure distribu-
+tion may be specified. ANDUCT works best for well-guided passages and where
+the curvature of the walls is small as compared to the width of the passage.
+
+     The ANDUCT program is written in FORTRAN IV for batch execution and has
+been implemented on an IBM 370 series computer with a central memory re-
+quirement of approximately 60K of 8 bit bytes. The ANDUCT program was de-
+veloped in 1982.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: IBM 370 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 539 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LEW-14000
+
+DOMESTIC - DOCUMENTATION PRICE: $14.00    PROGRAM PRICE: $300.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $28.00   PROGRAM PRICE: $600.00
+
+
+
+                                        1
+

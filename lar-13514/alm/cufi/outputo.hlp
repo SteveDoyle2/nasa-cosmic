@@ -1,0 +1,56 @@
+	Now that you have finished the input of system and critical
+	pair fault trees, you must enter options which control the
+	output of CARE III.  These options will cause the program
+	to print and plot results.
+
+	The options are a mixture of logical inputs, integer inputs
+	and character string inputs.  The logical inputs should be
+	answered with a "T", "F", ".T.", ".F.", or some other valid
+	VAX/VMS logical input.  Integer inputs should be in the range
+	listed, and string inputs should be one of the choices 
+	shown.  As in other sections of the program, string inputs
+	can be abbreviated to the shortest non-ambiguous form, as
+	shown on the menu.
+.page
+            RELIABILITY PRINT SELECTION (1 - 4)
+
+        1)  Summary results only
+
+        2)  Summary plus P vectors (reliability per fault vector)
+
+        3)  Summary plus Q vectors (unreliability per fault vector)
+
+        4)  Summary plus P and Q vectors
+.page
+            COVERAGE FUNCTIONS PLOT (T OR F)
+
+        pdp(t) - single fault detected as permanent intensity
+
+        pf(t)  - single fault failure intensity
+
+        pdf(t) - double fault failure intensity
+
+        Pl(t)  - probability of latent single fault
+
+        Pb(t)  - probability single fault is benign
+         _
+        Pb(t)  - probability single fault is not benign
+.page
+                   RELIABILITY FUNCTIONS PLOT (T or F)
+ 
+            A plot file will be generated for the following
+        functions:
+
+        QSUM(t)  - probability of system failure due to imperfect fault
+                   handling.
+                   
+        P*SUM(t) - probability of system failure due to depletion
+                   of modules assuming perfect fault-handling.
+
+        QSUM(t) + P*SUM(t) - total system probability of failure
+                             due to all causes
+
+
+
+	Refer to the CARE III User's Guide NASA TM - 86404, April 1985
+        for a detailed description of the output control options.

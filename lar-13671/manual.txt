@@ -1,0 +1,223 @@
+C234567890123456789012345678901234567890123456789012345678901234567890123456789
+       OPERATING GUIDE FOR PROGRAMMABLE DISPLAY PUSHBUTTON LEGEND EDITOR
+
+
+INTRODUCTION
+
+The FORTRAN-based Programmable Display Pushbutton (PDP) legend editor encodes
+PDP control commands and legend data into message byte strings sent to a Logic
+Refresh and Control Unit (LRCU) which serves as the driver for a set of four
+PDPs.  The legend editor transmits user specified commands to the LRCU that
+control what is displayed on the 16 X 35 LED face of the individual PDPs.  Upon
+receiving a command, the LRCU transmits an acknowledge that the message was
+received and executed successfully.  The user then observes the effect of the
+command on the PDP displays and decides whether or not to send the byte code of
+the message to a data file so that it may be called by an applications program.
+
+
+GETTING STARTED
+
+Necessary for execution of the editing process are:  the hardware associated
+with four PDPs, two RS-232 VAX 11/780 terminal ports, a VT 100 terminal, the
+command procedure PDP.COM, the executable FORTRAN program SYSSERV, and the 
+executable FORTRAN program LEGEDT.  The VT 100 terminal is connected to one of
+the RS-232 ports, and the PDPs are connected by a dedicated line to the other
+RS-232 port.
+
+The PDP.COM command procedure sets the terminal characteristics for the VT 100
+port and the PDP port.  The procedure alters the default characteristics for
+the VT 100 terminal so that the terminal will generate valid escape sequences.
+The procedure then proceeds to alter the default terminal characteristics for
+the PDPs to /PASSALL, /EIGHTBIT, and /NOECHO.
+
+Upon starting an editing session and before applying power to the PDPs, execute
+the PDP.COM command procedure by typing @PDP.  The command procedure prompts
+the user for the name of the RS-232 terminal port to which the PDPs are
+connected.  This terminal specifier is sent to the FOR001.DAT file which is
+called by both SYSSERV and LEGEDT.  Confirmation that the PDP port has been
+allocated is displayed, and the procedure prompts the user for the baud rate of
+the PDP terminal.  It is important that the baud rate of the PDP terminal
+correspond to the baud rate specified by "DIP" switch 1 and "DIP" switch 2 on
+the LRCU board.  Also, for the purposes of editing, "DIP" switch 3 should be
+open so that LRCU output is enabled continuously, and "DIP" switch 4 should be
+closed so that the display refresh is re-enabled after the reception of each 
+end of message character.  The PDP.COM command procedure then executes SYSSERV
+whose purpose is to clear the PDP line of any messages transmitted by the LRCU
+when the PDPs are powered up.  The terminal screen will display the word
+WAITING.  On this mark, apply power to the PDPs.  The screen should respond and
+finally display FORTRAN STOP.  If the WAITING prompt persists, turn the power
+off and then on again.  If the WAITING prompt continues to persist, it is
+possible that the PDP terminal specification is incorrect or that the baud
+rates of the PDP terminal and the LRCU board do not correspond.
+
+Typing RUN LEGEDT begins execution of the legend editor program.  The program
+prompts the user for the name of the file to be edited.  If the file is new,
+the program creates in the user's default directory and opens both a .TXT and a
+.PDP file using the given prefixed name.  Otherwise, the old text and .PDP type
+files are opened.  Each record on the .PDP file contains the name of a message,
+the number of bytes comprising the message, and the decimal value of each byte
+of the specified message.  The text file contains only the names of the
+messages in the corresponding .PDP file.  Both the text and the .PDP files are
+classified as indexed files.  Therefore, it is advisable that all additions to
+and deletions from the files be done while running the LEGEDT editor.
+Tampering with a text or a .PDP file while in the VAX edit mode will make the
+file inaccessable to the LEGEDT editor.
+
+
+MAIN MENU
+
+The LEGEDT editor displays a main menu of the different categories of commands
+that can be executed.  It is recommended that the best way to become familiar
+with the capabilities of the editor is through trial and error.  If more
+information is desired on the structure of the commands, the user may wish to
+consult the PROGRAMABLE DISPLAY PUSHBUTTON INTERFACE MANUAL.  A brief
+description of each of the categories of commands follows.
+
+GENERAL CONTROL commands are directed to all PDPs controlled by the LRCU.  It
+is recommended that the RETRANSMIT command not be executed after either the
+CLEAR DISPLAY command or the END OF TRANSMISSION command because of an anomaly
+associated with the message transmitted by the LRCU when this occurs.
+
+SPECIFIC CONTROL commands are sent to only one of the four PDPs on the LRCU.
+
+CHARACTER commands have the ability to display two different sizes of ASCII
+characters at varying positions on a specific PDP.  The X coordinate, the user
+is asked to supply, specifies the number from 0 to 34 of unused LED (pixel)
+columns to the left of the first character.  The Y coordinate defines the
+number from 0 to 15 of unused pixel rows above the top of the characters.
+
+BIT MAP commands produce either horizontal or vertical straight lines of
+variable length and position on a selected PDP.  The same conventions for X and
+Y coordinate positioning used by CHARACTER commands are also used by BIT MAP
+commands.
+
+PATTERN MAP commands allow the user to control the on/off status of each of the
+560 LEDs on a PDP.  Any possible pattern within the limits of the 16 x 35 pixel
+format can be displayed.  One pattern map display requires that two messages be
+transmitted to the PDP:  one for the top half of the display and the other for
+the bottom.
+
+LUMINANCE commands control the luminance of all four PDPs on the LRCU.
+
+The EXECUTE MESSAGE FROM FILE option enables the user to call a message from
+the .PDP file and transmit it to the LRCU for execution.  If the message called
+is a PATTERN MAP command, the program prompts the user for the name of the
+other half of the display.  Instead of immediately executing the two PATTERN
+MAP messages, the program takes the user to the pattern map screen editor where
+the pattern map is displayed.
+
+The DELETE MESSAGE FROM FILE option is the only way to delete messages from
+file.  The message is deleted from both the text and .PDP files simultaneously.
+
+The LIST CONTENTS OF FILE option lists the names of every message on file.
+When doing this, the user will want to scroll the screen so that the names can
+be read.
+
+Upon transmitting a message to the LRCU, the program will prompt for a twenty
+character or less name if the message is to be sent to file.  Duplicate names
+are not allowed, and the program will ask for another name if a duplicate is
+already on file.
+
+The user should end the editing session and RUN LEGEDT when wanting to edit
+another file.
+
+ 
+NOTES FOR APPLICATIONS PROGRAMERS
+
+Applications programers who want to call from a legend editor .PDP file will
+want to open the .PDP file with the same OPEN statement that is found in the
+main program of LEGEDT.  RFILE is the character variable that holds the name of
+the file.
+
+      OPEN (UNIT=4, FILE=RFILE, DEFAULTFILE='.PDP',
+     $STATUS='UNKNOWN', ORGANIZATION='INDEXED', ACCESS='KEYED',
+     $RECORDTYPE='VARIABLE', FORM='FORMATTED', RECL=15000,
+     $KEY=(2:21:CHARACTER))
+
+Also necessary is a READ statement similar to that used in the EXECMES
+subroutine of LEGEDT.  NAME is the character variable that holds the name of a
+message on file.  NUMBER is the number of bytes in a message, and LEGEND is a
+44 element BYTE array representing each byte of a message.
+
+      READ (4,30,KEY=NAME,ERR=40) NUMBER, (LEGEND(I), I=1,NUMBER)
+30    FORMAT (22X,I2,2X,<NUMBER>(X,I4))
+
+After a message has been sent to the LRCU, a response byte transmitted by the
+LRCU must be read before it will accept another command.  The entire TALK
+subroutine of LEGEDT performs the function of transmitting messages to and
+receiving messages from the LRCU.  The TALK subroutine employs the QIOW system
+service for communicating with the THE LRCU.
+
+C***********************************************************************
+C                                                                      *
+C                            SUBROUTINE TALK                           *
+C                                                                      *
+C***********************************************************************
+C
+      SUBROUTINE TALK(LEGEND,NUMBER)
+C  Subroutine TALK sends to and receives messages from the micro
+C  switches using the QIOW system service.
+      INTEGER*4 SYS$ASSIGN
+C  SYS$ASSIGN assigns a channnel to an I/O process.
+      INTEGER*4 SYS$QIOW
+C  SYS$QIOW is queue I/O request and wait for event flag.
+      BYTE NUMBER
+C  NUMBER is number of bytes in a message.
+      BYTE LEGEND(NUMBER)
+C  Redimension the array LEGEND to be the size of the number of bytes
+C  sent by the calling routine plus the end of message byte and sumcheck
+C  byte.  LEGEND is the array that holds each byte of every message sent
+C  to a micro switch.  The maximum number of bytes in a message is 44.
+      BYTE OUTMES
+C  OUTMES is the response byte sent by the LRCU.
+      CHARACTER*4 TERM
+C  TERM is the name of the RS-232 terminal port to which the PDPs are
+C  connected.
+      COMMON TERM
+C  TERM is stored in a common block shared with the main program.
+C
+      INCLUDE '($IODEF)'
+C  Access $IODEF module in the FORSYSDEF library.
+C
+      JERRFLAG=SYS$ASSIGN(%DESCR(TERM),JOHN,,)
+C  Assign channel to I/O process and check status.
+C  JOHN is the channel number assigned by the system service.
+      IF(.NOT.JERRFLAG) WRITE (6,*) 'ASSIGN FAILURE'
+C
+      KERRFLAG=SYS$QIOW(%VAL(0),%VAL(JOHN),%VAL(IO$_WRITEVBLK),,,,
+     $%REF(LEGEND),%VAL(NUMBER),,,,)
+C  Write command message to LRCU and check status.
+C  0 is the flag to be set upon completion of the service.
+C  JOHN is the channel number for the service.
+C  IO$WRITEVBLK means to write a virtual block.
+C  LEGEND represents the block to be written.
+C  NUMBER is the number of bytes to be written.
+      IF(.NOT.KERRFLAG) WRITE (6,*) 'WRITE FAILURE'
+C
+10    LERRFLAG=SYS$QIOW(%VAL(1),%VAL(JOHN),%VAL(IO$_READVBLK),,,,
+     $%REF(OUTMES),%VAL(1),,,,)
+C  Read response byte from LRCU and check status.
+C  1 is the flag to be set upon completion of the service.
+C  JOHN is the channel number for the service.
+C  IO$_READVBLK means to read a virtual block.
+C  OUTMES is the address that is to receive the data read.
+C  1 is the number of bytes to be read.
+      IF(.NOT.LERRFLAG) WRITE (6,*) 'READ FAILURE'
+C
+      IF (OUTMES .EQ. 16) THEN
+        WRITE (6,*) 'MESSAGE ACKNOWLEDGED'
+        RETURN
+C  Return to calling routine.
+      ELSE IF (OUTMES .EQ. 4) THEN
+        WRITE (6,*) 'SELF TEST PASSED'
+      ELSE IF (LEGEND(1) .EQ. '88'X) THEN
+        CALL TESTFAIL(OUTMES)
+C  Call TESTFAIL subroutine to process self test failure messages.
+      ELSE
+        WRITE (6,*) OUTMES
+      END IF
+      GO TO 10
+C  Go to get more output.
+      END
+C
+C

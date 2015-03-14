@@ -1,0 +1,16 @@
+1 FORTList
+ Creates a neat listing of a FORTRAN source code including
+ a Table of Contents, an Index, and Page Headings consisting of
+ the date, page number and subprogram name.
+
+ Enter:
+    FORTL 'filespec'
+
+ Where 'filespec' is the name of the source code to be listed. The .FOR
+ suffix should not be included.
+2 /INCLUDE
+ The /INCLUDE flag causes FORTLIST to replace any occurrences of VAX 
+ FORTRAN INCLUDE statements with the file specified.  The INCLUDE state-
+ ment will not appear in the listing.  INCLUDE statements may appear
+ in INCLUDED files.  If this flag is not specified, the INCLUDE statement
+ will be shown but not the INCLUDEd file.

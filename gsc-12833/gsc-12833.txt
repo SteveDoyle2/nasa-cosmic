@@ -1,0 +1,54 @@
+ NASTRAN NASTPLT PLOTTING POST PROCESSOR
+
+( COMPUTER SCIENCES CORP. )
+
+     The NASTRAN NASTPLT Plotting Post Processor was developed to read NAS-
+TRAN generated NASTPLT plot files, to check the file contents for validity,
+and to translate the NASTPLT plot commands into appropriate calls to plot-
+ting routines for either CalComp, Tektronix PLOT10, or Versatec plotting
+systems. This program was originally written to generate a summary of the
+contents of a NASTPLT plot file for the purposes of debugging and checking
+the validity and characteristics of the file contents. The summary infor-
+mation generated includes the following information for each plot on the
+NASTPLT file: plot number, draw-lines summary, draw-axis summary, draw-
+character summary, maximum and minimum values in the x-range and y-range,
+and pen change information. The summary information also includes the fol-
+lowing information for the NASTPLT file as a whole: the number of records
+read, the number of commands, and the number of plots.
+
+     The summary generation program was extended to include the plot rou-
+tine calls for the CalComp, Tektronix PLOT10, and Versatec plotting sys-
+tems. The Post Processor is run interactively and prompts the user for all
+of the required input. The user may request the summary information and
+then use that information to determine which plots on the file are to be out-
+put. The Post Processor is compatible with either VAX or IBM NASTRAN gener-
+ated NASTPLT files.
+
+     The Post Processor is written in FORTRAN IV PLUS for interactive execu-
+tion and has been implemented on a DEC VAX-11/780 computer under VMS. This
+program was developed in 1981.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: DEC VAX-11/780
+
+PROGRAM SIZE: APPROXIMATELY 1,000 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX FILES-11 Format Magnetic Tape
+
+PROGRAM NUMBER: GSC-12833
+
+DOMESTIC - DOCUMENTATION PRICE: $18.00    PROGRAM PRICE: $400.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $36.00   PROGRAM PRICE: $800.00
+
+
+
+                                        1
+

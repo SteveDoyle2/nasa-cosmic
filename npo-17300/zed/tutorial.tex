@@ -1,0 +1,665 @@
+% ZED tutorial
+\magnification\magstephalf
+\hoffset1truein
+\voffset1truein
+\parindent0pt
+\parskip6pt plus1pt
+\font\bfs=amssbx10 scaled1314
+\centerline{\bfs ZED Tutorial}
+\bigskip
+\footline{\bf ZED Tutorial \hfil Peter Scott}
+\headline{\ifnum\count0>1 \rm April 1987 \hfil Page \folio\else\hfil\fi}
+\def\<{$\langle$} \def\>{$\rangle$}
+\def\sskip{\vskip1pt}
+\def\section#1{\bigskip{\bf #1}}
+\def\ZED{{\bf ZED}}
+The \ZED\ editor is suitable for editing text, programs in source
+form, data, etc, but not for operating on binary data except under
+unusual (and desperate) circumstances.
+
+\ZED\ is essentially a {\it line} editor rather than a {\it screen}
+editor such as EDT, TPU, EVE, VI, etc, which are customarily used for
+editing programs, etc.  This means that the user specifies the
+changes to be made in terms of line numbers or line content instead
+of moving a cursor or pointer on the screen.
+
+Therefore \ZED\ is not recommended for all editing uses.  Editing
+of programs, command procedures, memos, etc, is still likely to best
+be done with a full-screen editor.  \ZED\ is therefore better used
+for applications such as these:
+\def\bullitem{\item{$\bullet$}}
+\def\example{\hfil\break{\it Example: \ }}
+{\narrower\parindent15pt
+
+\bullitem Making systematic changes to text (source code, memos, etc)
+that go beyond the usual search-and-replace capabilities of EDT, etc;
+\example Everywhere in your {\tt FORTRAN} program that the command
+{\tt CALL VCOMP} appears, you want to change the first parameter to
+{\tt 1.0D0} and add another parameter, {\tt VREL(I)};
+
+\bullitem Editing one list into another;
+\example You want to make a {\tt FORTRAN} file that consists of
+{\tt INCLUDE} statements for every file in a particular sub-directory.
+You use the DCL command {\tt DIRECTORY/OUTPUT} and edit the result with a
+single line of ZED;
+
+\bullitem Text or data processing;
+\example You have a file of names and addresses on one line each,
+of the form {\it \<last name\>,
+\<first name\>, \<address\>, \<city\>, \<state\> \<zip\> \<phone \#\>}.
+You want to edit this into a double-columned file of labels of the form
+{\it \<first name\> \<last name\> / \<address\> / \<city\>, \<state\> \<zip\>};
+
+\bullitem Applying the same editing commands to different data;
+\example You repeatedly receive files of data from a tracking station
+that need to be converted into reports by extracting certain byte
+fields and inserting appropriate text, which may vary according as
+whether different items of data are present or not.
+
+}
+
+ZED contains the following features:
+\medskip
+\halign{\qquad\qquad$\bullet$ \ #& #\hfil&\qquad$\bullet$ \ #&#\hfil\cr
+&global changes&&`whenever' commands\cr
+\noalign{\smallskip}
+&many versatile search&&logical combinations of\cr
+\omit&qualifiers&\omit&search strings\cr
+\noalign{\smallskip}
+&conditional commands&&looping commands\cr
+\noalign{\smallskip}
+&command files&&journalling\cr
+\noalign{\smallskip}
+&switch input/output&&take commands from\cr
+\omit&from/to internal buffers&\omit&files and buffers\cr
+\omit&and external files&\omit&during editing\cr
+\noalign{\smallskip}
+&on-line help&&define command procedures\cr
+\noalign{\smallskip}
+&hexadecimal mode&&visible control characters\cr
+\noalign{\smallskip}
+&space compression&&automatic detabbing\cr
+}
+
+A complete specification of ZED is available by printing on a line-printer
+the file {\tt GROUCH::\-USER\$\-DISK:\-[PJS.ZED]COMPLETE.SPEC} (about 60 pages).
+A quick-reference card is available from Peter Scott ({\tt GROUCH::PJS}).
+\vfill\eject
+\section{How to invoke ZED:}
+
+On Groucho or NAIF, use the command {\tt SET COMMAND NAVTXT:ZED}\null.
+(If you wish to install \ZED\ on another system, please contact
+Peter Scott.)
+
+The syntax is then:
+
+{\parskip3pt plus1pt
+\qquad{\tt ZED input\_file [output\_file]}
+\smallskip
+Parameters:
+
+\quad{\tt input\_file}
+
+\qquad file to be edited (default type {\tt .LIS})
+
+\quad{\tt output\_file}
+
+\qquad Resulting file
+\smallskip
+The default output file is one version higher than the highest existing
+version of {\tt input\_file}.
+\medskip
+Qualifiers:
+
+\quad{\tt /WITH=filename}
+
+\qquad Take commands from {\tt filename} instead of {\tt SYS\$INPUT}
+(default type {\tt .COM}).
+
+\quad {\tt /VER=filename}
+
+\qquad Send verification of editing commands to {\tt filename}
+instead of {\tt SYS\$OUTPUT} (default type {\tt .LOG}).
+
+\quad{\tt /EPRINT=filename}
+
+\qquad Send copies of editing commands to {\tt filename} (default
+type {\tt .JOU}.)
+(Default is {\tt /NOEPRINT}).
+
+}
+
+{\tt /EPRINT} is useful for maintaining a journal of your editing
+session; in the event that the machine crashes, you will be able
+to recover your place by putting the EPRINT file as the argument
+to {\tt /WITH} (and of course, the EPRINT file itself is easy to edit,
+since \ZED\ commands are plain text).
+
+\section{Overview of ZED syntax:}
+
+\ZED\ commands are short in length, the most common being one letter
+long.  Only the first four letters of a command are significant.
+Commands may be separated on the same line from each other by semi-colons
+or spaces; no separation is needed if non-alphabetic characters intervene.
+Commands in parenthesis groups may continue over line breaks (but not
+in the middle of strings).
+
+Termination:
+
+(disallowed in interactive mode if non-empty buffers exist -- see below):
+\smallskip
+\halign{\qquad\tt #\qquad\hfil&#\hfil\cr
+W&windup (normal termination)\cr
+Q&quit (exit command level: same as {\tt W} unless obeying a command file)\cr
+STOP&exit without writing output (abandon edit session)\cr
+}
+
+Line Selection:
+\halign{&\qquad\tt #\qquad\hfil&#\hfil\cr
+M$a$&move to line $a$&M*&move to end-of-file\cr
+M-&move back as far as possible&M+&move forward to high water\cr
+N&move to next line&P&move to previous line\cr
+F $se$&find (forward)&BF $se$&backward find\cr
+}
+
+`High water' is the last line \ZED\ has read in from the source (lines
+are read in only when needed).
+\vfill\eject
+$se$ is a {\it search expression}, consisting of one or more
+strings delimited by any of a set of most punctuation characters
+{\tt `"', `+', `-', `.', `/', `*', `?', `|'} etc),
+and qualified by any combination (or none) of the following qualifiers:
+\medskip
+\halign{&\qquad\tt #\qquad\hfil&#\hfil\cr
+B&beginning&E&ending\cr
+C&control character (for FTN files)&L&last\cr
+P&precisely&W&word\cr
+S&significant ({\it i.e.}, non-white space)&U&uppercase\cr
+n&count&[m,n] $or$ \_\thinspace m,n\_&window\cr
+}
+
+Strings may also be terminated by end-of-line.
+\vfill
+Examples of Qualified Strings:
+
+{\tt UW/frog/} -- match any line containing the word
+{\tt frog} in any case letters;
+
+{\tt BS:!:} -- match any line containing a `{\tt !}' in the first non-blank
+column;
+
+Qualified strings may also be combined in logical forms using the {\tt \&} (AND)
+and {\tt |} (OR) operators, and parentheses to hold them together.
+
+{\it e.g.}: {\tt (NE|/| \& B/Section/)} -- match any
+line not ending in a slash and starting with the word {\tt Section};
+
+{\tt (/wombat/ | (3/marsupial/ \& /kangaroo/))} -- match any line
+containing {\tt wombat}, or {\tt kangaroo} and at least three
+occurrences of {\tt marsupial}.
+
+Before making changes to a particular line it must first be selected
+and made current.  This may be done by line number or by context,
+{\it i.e.}, specifying a character string within it.  Since all
+line numbers are assigned when the source is read in, inserted lines
+will not be numbered and these may be selected by context or by
+{\it relative movement} (using the {\tt N} (Next) or {\tt P} (Previous)
+commands).
+
+All \ZED\ commands may take a repeat count, {\it e.g.},
+{\tt 4N} -- move forward 4 lines; {\tt 10p} -- move back 10 lines
+(the case of \ZED\ commands is irrelevant).
+
+Having established a current line, it may be altered by use of
+a variety of commands:
+\smallskip
+\halign{&\qquad\tt #\hfil\qquad&#\hfil\cr
+A $q$/$s$/$t$/&after&AP $q$/$s$/$t$/&after and point\cr
+B $q$/$s$/$t$/&before&BP $q$/$s$/$t$/&before and point\cr
+E $q$/$s$/$t$/&exchange&EP $q$/$s$/$t$/&exchange and point\cr
+DFA $q$/$s$/&delete from after&DFB $q$/$s$/&delete from before\cr
+DTA $q$/$s$/&delete till after&DTB $q$/$s$/&delete till before\cr
+LC $q$/$s$/&force lower case&UC $q$/$s$/&force upper case\cr
+SHC $q$/$s$/&show column&CC/$s$/&set control character\cr
+LCL &force entire line to lower case&UCL &force entire line to upper case\cr
+'&repeat last string operation&UNDO&undo changes to current line\cr
+}
+
+where $q$ is a qualifier list (possibly null), $s$ is a string,
+and $t$ is a replacement string.  Pointing is explained on the
+following page.
+
+{\it E.g.}:
+\vfill
+{\tt\obeylines\obeyspaces\let =\ \parskip0pt\catcode`\\=12
+10.
+Now it is time for all of us to come to party, party, party
+E/it //; B/tim/the /; DFA/rty/; E/of us/good men/; A LW/to/ the aid of the
+10.
+Now is the time for all good men to come to the aid of the party
+}
+\medskip\filbreak
+Line Insertion and Deletion:
+\sskip
+Insert material for the {\tt I} and {\tt R} commands may be any one of
+\vskip-.02in plus.2in\centerline{\hbox to1in{\hrulefill}}
+\sskip
+\halign{\qquad\tt#\hfil\qquad&#\hfil\cr
+\noalign{\qquad\<in-line text, any \# of lines terminated by {\tt Z} on a new line\>}
+BUFF $n$&to insert an in-store buffer ($1 \le n \le 4$) {\it (destructive)}\cr
+COPY $n$&to insert a copy of an in-store buffer {\it (non-destructive)}\cr
+/$s$/&to insert a file with name $s$\cr
+}
+\vskip-.02in plus.2in\centerline{\hbox to1in{\hrulefill}}
+\sskip
+\halign{\qquad\tt #\qquad\hfil&#\hfil\cr
+IC&insert a copy of the current line before the current line\cr
+IS /$s$/&insert a line consisting of string $s$ before the current line\cr
+I$a$&insert before line $a$\cr
+R$a\ b$&replace lines $a$ to $b$\cr
+D$a\ b$&delete lines $a$ to $b$\cr
+DF $se$&delete until search expression $se$ is found\cr
+DREST&delete the rest of the source\cr
+DBUFF$n$&delete contents of buffer $n$\cr
+DBUFF&delete contents of all buffers\cr
+}
+
+$b$ is optional in the commands listed above; {\tt D}$a$ deletes line
+$a$ only.  {\tt D} deletes the current line.  {\tt R} is equivalent
+to {\tt D} followed by {\tt I}.  Repeat counts can be
+useful: $n${\tt D} deletes $n$ lines starting with the current line.
+
+In insert mode, text is inserted until a line consisting of precisely
+{\tt Z} (either case) or control-Z is found.  This terminator can be changed
+by use of the {\tt Z} command ({\it q.v.}).
+
+Line Windowing:
+\sskip
+\halign{\qquad\tt #\qquad\hfil&#\hfil\cr
+>&move character pointer to right\cr
+<&move character pointer to left\cr
+PR&reset character pointer to start\cr
+PA $q$/$s$/&point after\cr
+PB $q$/$s$/&point before\cr
+}
+
+Single Character Operations:
+\sskip
+\halign{&\qquad\tt #\qquad\hfil&#\hfil\cr
+\$&force lower case&\%&force upper case\cr
+{\bf\_}&change character to space&\#&delete character\cr
+}
+
+The character pointer normally points to the first character of the line,
+but can be moved by the above operations and the pointing variants of
+the {\tt A, B,} and {\tt E} commands.  When it has been moved, the interactive
+prompt consists of a {\tt >} character positioned just before and under the
+character in the line just verified that the character pointer is pointing
+at.  The single character operations can then be typed underneath the
+characters to which they apply.
+
+{\it E.g.}:
+\smallskip
+{\catcode`\%=12 \catcode`\#=12 \catcode`\_=12 \catcode`\$=12
+\tt\obeylines\obeyspaces\let =\ \parskip0pt\catcode`\\=12
+13.
+oh OYSTERS, comeaand Wallk wiTh us
+%>>$$$$$$$>>>>>>_>>>>$>#>>>>>$
+13.
+Oh oysters, come and walk with us
+                            >
+}
+\medskip\filbreak
+File and Buffer Control:
+\sskip
+\halign{\qquad\tt #\qquad\hfil&#\hfil\cr
+C /$s$/&take commands from file $s$\cr
+C BUFF$n$&take commands from buffer $n$ {\it (destructive)}\cr
+C COPY$n$&take commands from buffer $n$ ($1 \le n \le 4$)
+{\it (non-destructive)}\cr
+FROM BUFF$n$&select buffer $n$ as source\cr
+TO BUFF$n$&select buffer $n$ for output\cr
+TBUFF$n$&type contents of buffer $n$\cr
+DBUFF$n$&delete contents of buffer $n$\cr
+DBUFF&delete contents of all buffers\cr
+SHBUFF&show non-empty buffer \#'s\cr
+FROM /$s$/&select file $s$ for input\cr
+TO /$s$/&select file $s$ for output\cr
+FROM&select original input\cr
+TO&select original output\cr
+}
+\filbreak
+In interactive mode, all buffers must be empty and {\tt FROM \rm and \tt
+TO} must be allocated to the original input and output before {\tt Q \rm or
+\tt W} will be allowed.  This is a precaution
+against forgetting to put buffer contents back, etc. (You can type
+{\tt DBUFF; TO; FROM} to ensure that the condition for exit is met.)
+\smallskip
+So to put the next 3 lines in buffer 2, say, type
+\smallskip
+\centerline{\tt TO BUFF2; 3N; TO}
+\medskip\filbreak
+Splitting and Joining:
+\sskip
+\halign{\tt #\quad\hfil&#\hfil\cr
+SA $q$/$s$/&split line after string, make second half new current line\cr
+SB $q$/$s$/&split line before string, make second half new current line\cr
+CL /$s$/&concatenate current line with string $s$, then with\cr
+&the following line, and make it the new current line.\cr
+}
+\medskip\filbreak
+Conditionals And Loops:
+\sskip
+Wherever {\tt ELSE} appears it may be replaced by:
+\smallskip
+\leftline{\qquad\tt ELIF $se$ THEN $cg$ ELSE $cg$}
+\leftline{\qquad\qquad or}
+\leftline{\qquad\tt ELUL $se$ THEN $cg$ ELSE $cg$}
+
+where $cg$ is a {\it command group}, {\it i.e.}, either a single
+command or a series of commands, separated by semi-colons ({\tt ;})
+or carriage returns, enclosed by matching parentheses.  Nesting is
+allowed.  The keyword {\tt THEN} is optional.  Enclosing parentheses
+are needed if $cg$ contains more than one command, even if {\tt ELSE}
+follows.  The {\tt ELSE} keyword and clause is optional.
+\smallskip
+\halign{\quad\tt #\qquad\hfil&#\hfil\cr
+IF $se$ THEN $cg$ {\rm[}ELSE $cg$\rm]&if\cr
+UL $se$ THEN $cg$ {\rm[}ELSE $cg$\rm]&unless\cr
+IFEOF $cg$ {\rm[}ELSE $cg$\rm]&if end-of-file\cr
+ULEOF $cg$ {\rm[}ELSE $cg$\rm]&unless end-of-file\cr
+WH $se$ $cg$&while\cr
+UT $se$ $cg$&until\cr
+UTEOF $cg$&until end-of-file\cr
+RPT $cg$&repeat indefinitely\cr
+AGP&abandon command group and any enclosing repetitive command\cr
+}
+\filbreak
+
+{\it e.g.}, the command sequence
+\smallskip
+{\tt\obeylines\obeyspaces\let =\ \parskip0pt\catcode`\\=12
+UTEOF (UT  [1,6]BSU/C/ (IF /!/ (DFB/!/; COMM/Comment removed/); ELSE UCL; N); 
+       F N[1,6]BSU/C/)
+
+}
+
+which will go through a {\tt FORTRAN} file
+removing in-line comments and uppercasing lines without in-line
+comments. (Some more work would be
+necessary to ensure that {\tt !} characters inside quoted strings were
+ignored.)
+\medskip\filbreak
+Text Inspection:
+\sskip
+\halign{\qquad\tt #\qquad\hfil&#\hfil\cr
+T$n$&type $n$ lines, starting with the current line\cr
+TL$n$&type $n$ lines with line numbers in the left margin\cr
+TBUFF$n$&type buffer $n$\cr
+TBUFF&type all buffers\cr
+}
+\smallskip
+The {\tt T} command is most useful for displaying a range of lines
+exactly as they appear in the file.  If you want to display a screen of
+text and then add lines immediately after the last one without any other
+\ZED\ output appearing in between, type
+\smallskip
+\centerline{\tt T24; N; I}
+\medskip\filbreak
+Global Operations:
+\sskip
+\halign{\qquad\tt #\qquad\hfil&#\hfil\cr
+GE $q$/$s$/$t$/&global exchange\cr
+GA $q$/$s$/$t$/&global after\cr
+GB $q$/$s$/$t$/&global before\cr
+ON $se$ $cg$ {\rm [}ELSE $cg$\rm]&complicated global\cr
+CG$n$&cancel global $n$\cr
+DG$n$&disable global $n$\cr
+EG$n$&enable global $n$\cr
+SHG$n$&show global $n$\cr
+}
+\filbreak
+
+When you define a global command with the {\tt GA, GB, GE,} or {\tt ON}
+commands, \ZED\ will assign it a number and tell you that number.
+This is the $n$ that you use to refer to the global in the {\tt CG}, etc
+commands.  If you omit the $n$, the commands apply to all globals.
+\filbreak
+
+Globals are applied during forward movement through the source; if a
+line that is passed over satisfies any of the qualified strings $q$/$s$/,
+then all occurrences of $s$ on the line will be replaced with $t$
+as defined.  (When you finish editing, \ZED\ moves through
+the rest of the source code, so globals will apply to the whole source
+without your having to type {\tt M*}.)
+
+{\it E.g.}:
+\vfill
+{\tt\obeylines\obeyspaces\let =\ \parskip0pt\catcode`\\=12
+GE U/walrus/persimmon/
+GB /continent/in/
+GA W/Disney/land/
+
+}
+
+The {\tt ON} command can define any command group $cg$ to be obeyed
+when the search expression $se$ is found to be true for the current
+line.  The ELSE clause is optional as usual.
+
+{\it E.g.}:
+\vfill
+{\catcode`\&=12
+\tt\obeylines\obeyspaces\let =\ \parskip0pt\catcode`\\=12
+ON (U/Chapter/ & C/1/) (                                 \ Chapter & new page
+                         IF NW/1/ I BUFF1; ELSE 10IS//)  \ Headline or space
+}
+\medskip\filbreak
+Procedures:
+\sskip
+\halign{\qquad\tt #\qquad\hfil&#\hfil\cr
+PROC $name$ $cg$&define procedure $name$ to consist of commands $cg$\cr
+DO $name$&obey procedure called $name$\cr
+SHPROC $name$&show content of procedure called $name$\cr
+SHPROC&show all procedures\cr
+CPROC $name$&cancel procedure called $name$\cr
+CPROC&cancel all procedures\cr
+}
+
+Procedures are like parameterless subroutines.  They allow you to
+refer to a group of commands by one name.
+\smallskip
+{\it E.g.}:\hfil\break
+{\tt PROC GET (TO BUFF1;N;TO); PROC PUT (I BUFF1);
+PROC REV (I*\hfil\break
+unique line\hfil\break
+Z\hfil\break
+M-; UT P/unique line/ (DO GET; F P/unique line/; N; DO PUT; M-);D
+
+DO REV} will reverse the order of lines in a file unless the file
+is so long (many thousands of lines) that it cannot all be held
+in memory.
+
+The action of {\tt AGP} in a procedure is limited to the outermost
+level of that procedure.
+\medskip\filbreak
+Line Verification:
+\sskip
+\halign{\qquad\tt #\qquad\hfil&#\hfil\cr
+V $sw$&automatic verification\cr
+VI $sw$&verify with indicators\cr
+VG $sw$&global change verification\cr
+VN $sw$&verify line numbers\cr
+VT $sw$&verify line texts\cr
+VX $sw$&verify in hex for indicators\cr
+VE $sw$&verify edit commands\cr
+?&verify current line\cr
+!&ditto, with character indicators\cr
+}
+
+{\it Switches} in \ZED\ are denoted here by the name of the switch
+followed by $sw$, which can be either {\tt + \rm or \tt -}.  Thus {\tt VI+}
+means that whenever the current line is verified (typed out as a
+result of moving to or changing it), it will be in a two-line
+form that shows control characters by a {\tt \char'136} in the first
+row and either a capital letter or a `{\tt ?}' (for \<DEL\>) in
+the second row.  The same output will be produced for a single line
+with the {\tt !} command.
+\medskip\filbreak
+State Display:
+\sskip
+\halign{\qquad\tt #\qquad\hfil&#\hfil\cr
+SHD&show data (such as current {\tt '} command, current search expression, etc\cr
+SHF&show files (current values of FROM, TO, WITH, VER, EPRINT)\cr
+SHG&show globals (including enabled/disabled status, and number of times
+activated)\cr
+SHS&show switches\cr
+}
+\medskip\filbreak
+Hexadecimal Mode:
+\sskip
+\halign{\qquad\tt #\qquad\hfil&#\hfil\cr
+X $sw$&switch hex mode on/off\cr
+}
+
+In hexadecimal mode, all strings (other than filenames and comments)
+must contain an even number of hex
+digits (either case; spaces are ignored), all lines and all data other
+than filenames will be verified in hexadecimal.
+\medskip\filbreak
+Miscellaneous:
+\sskip
+\halign{\qquad\tt #\qquad\hfil&#\hfil\cr
+=n&set line number (renumber lines in store)\cr
+COLS&verify column numbers out to the width of the terminal\cr
+COLS+&verify column numbers out to the length of the current line\cr
+COLS $n$&verify column numbers out to column $n$\cr
+COMM/$s$/&send comment string $s$ to verification file\cr
+ERRSTOP $sw$&non-interactive error action (stop on error)\cr
+FLUSH&flush output queue to {\tt TO}\cr
+FN $sw$&find next mode ({\tt F} $\Rightarrow$ {\tt N} first; {\tt BF}
+$\Rightarrow$ {\tt P} first)\cr
+H$a$&halt at line $a$\cr
+HELP&\it sic\cr
+MXLL $n$&maximum line length (default 400; minimum 1, maximum 602)\cr
+TR $sw$&suppress trailing spaces on input and output\cr
+CS $sw$&compress spaces on input\cr
+WARN $sw$&warnings mode (enable warning messages)\cr
+WORD/$s$/&set characters in words (for {\tt W} qualifier)\cr
+DETAB $sw$&convert tabs to spaces on input and output\cr
+TAB $n$&set gap between tab columns\cr
+Z /$s$/&set insert terminator string\cr
+}
+
+{\tt H} can be useful for `flagging' items; if you are editing a
+long source and want to make sure that you don't miss any occurrence
+of the string {\tt /ORBIT/}, you can type ``{\tt ON U/ORBIT/ H.}'',
+which will cause a halt at the current line when the line contains
+the string.  To reset the default limit type {\tt H*}.
+\vfill\filbreak
+Example \ZED\ session:
+\smallskip
+\font\smalltt=amtt8
+{\catcode`\$=12
+\smalltt\obeylines\obeyspaces\let =\ \parskip0pt\baselineskip=9pt
+$ ZED TEST.DAT
+ZED (1.5) entered
+:TL
+   1  Sample file
+   2  Second line - this one's a bit longer
+   3  This one has a mispelling
+   4  THIS ONE NEEDSWORK
+   5  This is the last line, but hardly the least
+6*
+P; A L//./
+5.
+This is the last line, but hardly the least.
+P 
+4.
+THIS ONE NEEDSWORK 
+>$$$$$$$$$$$$$e// /;P
+4.
+This one needs work
+3.
+This one has a mispelling 
+E/sp/ssp/ E/has/doesn't have/ BF/weasel
+3.
+This one doesn't have a misspelling
+**No more previous lines available
+1.
+Sample file 
+cl/ / e/Second/first/ e l/er// w 
+1.
+Sample file first line - this one's a bit long
+$
+}
+\bigskip\filbreak
+Here, just for fun, is a \ZED\ command sequence that will convert
+the address list example from page 1, with comments {\it ad nauseam}:
+\vfill
+{\catcode`\&=12
+\catcode`\#=12
+\smalltt\obeylines\obeyspaces\let =\ \parskip0pt\catcode`\\=12\baselineskip=9pt
+PROC XPHN (                         \ Strip off telephone number
+            DFB L/ (/  )            \ Assume it contains the area code explicitly
+PROC GET  (                         \ Pick up the current line
+            TO BUFF1;N;TO )
+PROC PUT  (                         \ Put down the result of GET
+            I BUFF1 )
+PROC NAME (                         \ Get the name in the right order in the first line
+            SB/,/##                 \ ## erases ", " left before <first name>
+            SB/,/;P; DO GET         \ Split again, pick up first name
+            P;DO PUT;P;CL/ /        \ Put it down in front of last name & concatenate
+            N    )                  \ Leave us at the address line
+PROC ADDR (                         \ Get the address on a line of its own
+            ##SB/,/ )               \ Get rid of ", " from SB/,/, and split again
+PROC CITY (                         \ Get City, State Zip in right order
+            ##    )                 \ Just need to get rid of ", " again
+PROC LINE (                         \ Process a whole line to a label
+            DO XPHN;
+            DO NAME;
+            DO ADDR;
+            DO CITY;N;IS//)         \ Leave us pointing at next line; insert blank
+PROC ADSP (                         \ Add spaces on the end of a label
+            4(40A L// /             \ Make sure there's enough
+              39>;DFA//;N)          \ Strip off those we don't need and continue
+            4P    )                 \ Back where we started
+PROC CATL (                         \ Concatenate labels
+            4(4N                    \ Each label has 4 lines
+              IFEOF AGP             \ In case we have an odd number of labels
+              DO GET;               \ Pick up corresponding line
+              I COPY1;4P            \ Put it back for now so "4N" works each time
+              DO PUT;2P;            \ Put it after line to add to, move back
+              CL//;N )              \ Concatenate (already tabbed), and move on
+                       4D)          \ Delete the label we just copied
+       \ Actual commands:
+CS+                                 \ Compress multiple spaces to single spaces
+UTEOF (DO LINE); M-                 \ First make all labels, go back to beginning
+CS-                                 \ Now we'll need extra spaces
+UTEOF (DO ADSP; DO CATL)            \ Add space to end of odd labels and concatenate
+W
+}
+\vfill\vfill
+It's worth noting about the above that (1) there are many other ways of
+doing this, and I don't claim to be a \ZED\ expert, so some of them are
+likely to be simpler, more elegant, and shorter; (2) writing \ZED\ command
+sequences comes very naturally with only a little practice, and the above
+set of commands could very well be written without comments inside five
+minutes without preparatory thought, and (3) the above is {\it still} the
+shortest way I know of achieving those results in {\it any} language.
+\vfill
+Note: The \ZED\ editor was developed at Cambridge University, England,
+and has been in use there for over ten years, during which time it has
+been subject to ruthless evaluation by undergraduates and professors
+alike, and continually upgraded as a result of their feedback.
+While this is not a complete
+implementation, this subset strives to maintain the characteristics
+of the same subset of the Cambridge editor.  So if there's something
+that doesn't seem right to you, then either (1) there's a very good reason
+for it, or (2) it's a failing of this implementation to match the original.
+If you bring such cases to my attention, I'll tell you which category
+they fall into.  The Cambridge implementation has been shown to be functionally
+equivalent to a Turing machine, and this one probably is
+too.  People have written
+chess games, calculators, and programs for evaluating $\pi$ in \ZED.  I would
+be very interested in any similar efforts produced here.
+\end

@@ -1,0 +1,2796 @@
+
+0MBEGIN-ENTRY-MAIN
+
+HELP_USAGE       RHS_SYNTAX
+LIST_OF_TOPICS   USING_CLIPS
+CLIPS_OVERVIEW   APPENDICES
+LHS_SYNTAX       TEXT_PROCESSING
+
+END-ENTRY
+
+1IBEGIN-ENTRY-HELP_USAGE
+
+HELP_USAGE
+
+H.2 Using the Help Facility
+The first call to the help facility will take longer than successive calls, 
+for the system is loading the help information into an internal lookup table.  
+All later lookups will be virtually instantaneous (unless the help file is 
+unloaded - see Text Processing - Toss).
+
+The help facility displays menus of topics and prompts the user for a choice. 
+It then references the file named in CLIPS.H for that information.  The help 
+facility can be called with or without a command-line topic.
+
+Syntax :
+
+  (help [<path>])
+
+where <path> is the full path leading to a topic in the help tree. For 
+example, to access the entry on run-time error messages, you would type : 
+(help appendices error_messages run-time_errors).
+
+Each element or field in the path is delimited by white-space, and the help 
+facility is not case sensitive.  In addition, the entire name of a field need 
+not be specified. Only enough characters to distinguish the field from other 
+choices in the menu are necessary (if there is a conflict, the help facility 
+will pick the first one in the list).  For instance, (help app err run) would 
+be sufficient for the above example.
+
+There are a few special fields that can be specified :
+    ^    -  Branch up one level.
+    ?    -  When specified at the end of a path, this forces a display of the 
+current menu, even on branch-ups.
+  <nil>  -  Giving no topic field will branch up one level.
+
+A branch-up from the MAIN topic root node implies an exit from help.
+
+By default, the help facility comes up in the MAIN topic root menu, and the 
+user may make a choice as described above.  The prompt line always displays 
+the name of the current menu.  The help facility will branch through the help-
+tree until instructed to exit by a branch-up from the top level (see above).
+
+The level of the help-tree does not remain constant between calls to the help 
+facility.  The level is always reset to MAIN upon exit.
+
+END-ENTRY
+
+1IBEGIN-ENTRY-LIST_OF_TOPICS
+
+HELP
+CLIPS_OVERVIEW
+  RULES
+  FACTS
+  BASIC_CYCLE_OF_EXECUTION
+  REFERENCE_MANUAL_SYNTAX
+  DEFINING_CONSTRUCTS
+    DEFINING_RULES
+    DEFINING_INITIAL_FACTS
+    DEFINING_A_FACT_TEMPLATE
+  COMMENTING_CLIPS_RULES
+  INTEGRATION_WITH_OTHER_LANGUAGES
+
+LHS_SYNTAX_-_CONDITIONS
+  LITERAL_PATTERNS
+  WILDCARDS
+  VARIABLES
+  CONSTRAINING_FIELDS
+    LOGICAL_OPERATORS
+    PREDICATE_FUNCTIONS
+    CONSTRAINING_FIELDS_THROUGH_PATTERN_EXPANSION
+  USING_TEST_TO_CONSTRAIN_VARIABLES
+  PATTERN_MATCHING_WITH_TEMPLATE_FACTS
+  CONSTRAINING_PATTERNS
+    INCLUSIVE_OR
+    EXPLICIT_AND
+    PATTERN_NEGATION
+  PATTERN_BINDINGS
+  DECLARING_RULE_PROPERTIES
+    ASSIGNING_RULE_PRIORITY
+
+RHS_SYNTAX_-_ACTIONS
+  BASIC_ACTIONS
+    CREATING_NEW_FACTS
+      CALLING_EXTERNAL_FUNCTIONS
+    REMOVING_FACTS_FROM_THE_FACT-LIST
+    MODIFYING_TEMPLATE_FACTS
+    ASSERTING_A_STRING
+    BINDING_VARIABLES
+    STOPPING_CLIPS
+  MULTIFIELD_FUNCTIONS
+    NUMBER_OF_ELEMENTS
+    SPECIFYING_AN_ELEMENT
+    FINDING_AN_ELEMENT
+    COMPARING_MULTIFIELD_VARIABLES
+    DELETION_OF_FIELDS_IN_MULTIFIELD_VALUES
+    APPENDING_MULTIFIELD_VALUES
+    CREATING_MULTIFIELD_VALUES_FROM_STRINGS
+    CREATING_STRINGS_FROM_MULTIFIELD_VALUES
+    EXTRACTING_A_SUB-SEQUENCE_FROM A MULTIFIELD VALUE
+  STRING_FUNCTIONS
+    STRING_CONCATENATION
+    TAKING_A_STRING_APART
+    SEARCHING_A_STRING
+    EVALUATING_A_STRING
+    CONVERTING_A_STRING_TO_UPPERCASE
+    CONVERTING_A_STRING_TO_LOWERCASE
+    COMPARING_TWO_STRINGS
+  CLIPS_I/O_SYSTEM
+    LOGICAL_NAMES
+    COMMON_I/O_FUNCTIONS
+      OPEN
+      CLOSE
+      READ
+      READLINE
+      FPRINTOUT_AND_PRINTOUT
+      FORMAT
+  MATH_FUNCTIONS
+    STANDARD_MATH_FUNCTIONS
+    EXTENDED_MATH_FUNCTIONS
+  ADDITIONAL_FUNCTIONS
+    SYSTEM
+    GENSYM
+    SETGEN
+    CALL
+    IF...THEN...ELSE
+    WHILE
+    USING_CLIPS_INTERFACE_COMMANDS
+
+USING_CLIPS
+  ENVIRONMENT_COMMANDS
+  SYSTEM_STATUS_COMMANDS
+  DEBUGGING_COMMANDS
+  MEMORY_MANAGEMENT_COMMANDS
+  ADDITIONAL_COMMANDS
+  COMMAND-LINE_OPTIONS
+
+APPENDICES
+  RESERVED_FUNCTION_NAMES
+  INTEGRATED_EDITOR
+  SUPPORT_INFORMATION
+
+END-ENTRY
+
+1MBEGIN-ENTRY-CLIPS_OVERVIEW
+
+CLIPS_OVERVIEW
+
+Section 2 - CLIPS Overview
+This section gives a general overview of CLIPS and the basic concepts used 
+throughout this manual.
+
+Subtopics:
+RULES                      DEFINING_CONSTRUCTS
+FACTS                      COMMENTING_CLIPS_RULES
+BASIC_CYCLE_OF_EXECUTION   INTEGRATION_WITH_OTHER_LANGUAGES
+REFERENCE_MANUAL_SYNTAX
+
+END-ENTRY
+
+2IBEGIN-ENTRY-RULES
+
+CLIPS_OVERVIEW
+  RULES
+2.1 Rules
+The primary method of representing knowledge in CLIPS is a rule.  A rule is a 
+collection of conditions and the actions to be taken if the conditions are 
+met.  The developer of an expert system defines the rules which describe how 
+to solve a problem.  The entire set of rules in an expert system is called a 
+knowledge base.  CLIPS provides the mechanism (the inference engine) which 
+attempts to match the rules to the current state of the system and applies the 
+actions.  The current state is represented by a list of facts.
+
+END-ENTRY
+
+2IBEGIN-ENTRY-FACTS
+
+CLIPS_OVERVIEW
+  FACTS
+2.2 Facts
+Facts are the basic form of data in a CLIPS system.  Each fact represents a 
+piece of information which has been placed in the current list of facts, 
+called the fact-list.  Rules execute (or fire) based on the existence or 
+non-existence of facts.  A fact is constructed of several positional fields 
+separated by spaces or, a word followed by slots separated by parentheses.  
+Any number of fields may be stored in a fact, and the number of facts in the 
+fact-list is limited only by the amount of memory in the computer.  Facts may 
+be asserted into the fact-list prior to starting execution and may be added 
+(asserted) or removed (retracted) as the action of a rule firing.  If a fact 
+is asserted into the fact-list that exactly matches an already existing fact, 
+the new assertion will be ignored.
+
+Each field within a fact can be one of three things:  a number, a word,  or a 
+string.  A number is any field which consists only of numbers (0-9), a decimal 
+point (.), a sign (+ or -), and, optionally, an (e) for exponential notation 
+with its corresponding sign.  Some examples are
+
+  237               15.09             +12.9             -32.3e-7
+
+All numbers are stored as single-precision floating-point values, regardless 
+of whether a decimal point was included or not.  The number of significant 
+digits will depend on the machine implementation.  Roundoff errors also may 
+occur, again depending on the machine implementation.  As with any computer 
+language, care should be taken when comparing floating-point values.
+
+A word in CLIPS is any sequence of characters that starts with any printable 
+ASCII character and is followed by zero or more characters (there are 
+exceptions to this rule). When a delimiter is found, the word is ended. The 
+following characters act as delimiters, a space, a tab, a carriage return, a 
+line feed, a double quote, a opening and closing parentheses "(" and ")", an 
+ampersand "&", a bar "|", a less than "<", and a tilde "~". A semicolon ";" 
+starts a CLIPS comment (see sec. 2.6) and also acts as a delimiter. Some 
+simple examples are
+
+  foo                Hello                        B76-HI          bad_value
+
+CLIPS is case sensitive; i.e., uppercase letters only will match uppercase 
+letters. Some printable ASCII characters may or may not be used as the first 
+character in a word, depending on the character that follows it.
+
+A string is a set of characters that starts with a double quote (") and is 
+followed by one or more characters (any printable character).  A string ends 
+with double quotes.  Double quotes may be embedded within a string by placing 
+a backslash (\) in front of the character.  A backslash may be embedded by 
+placing two consecutive backslash characters in the string.  Some examples are
+
+  "foo"             "a and b"         "1 number"        "a\"quote"
+
+Note that a string surrounded by double quotes will only match another string.  
+A string will not match a word or vice versa.  Strings are sometimes referred 
+to as quoted strings.
+
+A slot consists of an opening parenthesis ("("), a slot name, one or more slot 
+values of type number, word, or string, and a closing parenthesis (")").  
+Slots may only be used when the first field of the fact is a word and that 
+word was previously declared as a template (See deftemplate below).  Slots may 
+not be mixed with the usual, or positional, fields.  Also, slots are required 
+when the value of the first field was declared to be a template.
+
+All fields may be of any allowed type, and no restriction is placed on the 
+ordering of  fields, except as follows. CLIPS facts are free form, which means 
+that there are very few reserved words.  The following words are reserved and 
+should not be used as the first field in a fact: test, and, or, not, declare. 
+These words are reserved only when used in the first position; they may be 
+used in any other field position.
+
+The first fact in the fact-list is asserted automatically by the system during 
+a reset.  This fact (initial-fact) can be treated like any other fact and may 
+be matched or retracted.
+
+END-ENTRY
+
+2IBEGIN-ENTRY-BASIC_CYCLE_OF_EXECUTION
+
+CLIPS_OVERVIEW
+  BASIC_CYCLE_OF_EXECUTION
+2.3 Basic Cycle of Execution
+Once a knowledge base (in the form of rules) is built and the fact-list is 
+prepared, CLIPS is ready to execute rules.  In a conventional language, the 
+starting point, the stopping point, and the sequence of operations are defined 
+explicitly by the programmer.  With CLIPS, the program flow does not need to 
+be defined quite so explicitly.  The knowledge (rules) and the data (facts) 
+are separated, and the inference engine provided by CLIPS is used to apply the 
+knowledge to the data.  The basic execution cycle is as follows:
+
+ a) The knowledge base is examined to see if any rule's conditions have been
+    met.
+
+ b) All rules whose conditions currently are met are activated and placed on
+    the agenda.  The agenda is essentially a stack.  Rules are pushed onto the
+    stack when they are activated.  If the priority of the new rule is less
+    than the rule currently on top of the stack, the new rule is pushed down
+    the stack until all rules of higher priority are above it.  Rules of equal
+    or lower priority will remain below the new rule.
+
+ c) The top rule on the agenda is selected and its right-hand side (RHS)
+    actions are executed.
+
+As a result of RHS actions, new rules can be activated or deactivated.  This 
+cycle is repeated until all rules that can fire have done so or until the rule 
+limit is reached.  The number of rule firings allowed in a cycle may be set by 
+the programmer and rule priorities can be assigned (see salience, sec. 3.8.1).
+
+END-ENTRY
+
+2IBEGIN-ENTRY-REFERENCE_MANUAL_SYNTAX
+
+CLIPS_OVERVIEW
+  REFERENCE_MANUAL_SYNTAX
+
+2.4 Reference Manual Syntax
+The terminology used throughout this manual to describe the CLIPS syntax is 
+fairly common to computer reference manuals.  Plain words or symbols, 
+particularly parentheses, are to be typed exactly as they appear.  Symbols 
+enclosed in single-angle brackets, such as <name>, represent a single field to 
+be defined by the user.  Symbols enclosed in double-angle brackets, such as 
+<<pattern>>, represent one or more fields which must be defined by the user.  
+Symbols enclosed within square brackets, such as [<<comment>>], are optional 
+parameters.  Vertical bars indicate a choice between multiple parameters.  
+White spaces (tabs, spaces, carriage returns) are used by CLIPS only as 
+delimiters between fields and are ignored otherwise (unless inside double 
+quotes).  Examples in this manual show recommended indentation style.
+
+Small pieces of C code also are used in this manual.  The syntax used for C 
+code is slightly different and is more in keeping with the convention used in 
+standard C manuals.
+
+END-ENTRY
+
+2MBEGIN-ENTRY-DEFINING_CONSTRUCTS
+
+CLIPS_OVERVIEW
+  DEFINING_CONSTRUCTS
+
+2.5 Defining Constructs
+Three defining constructs appear in CLIPS:  defrule, deffacts, and 
+deftemplate.  All constructs in CLIPS are surrounded by parentheses.  The 
+construct opens with a left parenthesis and closes with a right parenthesis.  
+Each pattern or block within a construct also opens and closes with 
+parentheses.
+
+Subtopics :
+
+    DEFINING_RULES    DEFINING_INITIAL_FACTS
+    DEFINING_A_FACT_TEMPLATE
+
+END-ENTRY
+
+3IBEGIN-ENTRY-DEFINING_RULES
+
+CLIPS_OVERVIEW
+  DEFINING_CONSTRUCTS
+    DEFINING_RULES
+
+2.5.1 Defining Rules
+Rules are defined using the defrule construct.
+Syntax
+    (defrule <name> ["<comment>"]
+        [(<<first pattern>>)
+            .
+            .        ; Left-Hand Side
+            .
+        (<<nth pattern>>)]
+        =>
+        [(<<first action>>)
+            .
+            .        ; Right-Hand Side
+            .
+        (<<mth action>>)])
+
+where <name> is similar to a word, except that it must start with an 
+alphabetic character. The comment is optional and can be any string enclosed 
+within double quotes.  The left-hand side (LHS) is made up of a series of 
+patterns which represent the condition elements for the rule.  An implicit and 
+always surrounds all of the patterns on the LHS.  On the right-hand side 
+(RHS), we have a list of  actions to be performed when the LHS of the rule is 
+satisfied.  The arrow (=>) separates the LHS from the RHS. There is no limit 
+to the number of conditions or actions a rule may have (other than the 
+limitation placed by actual available memory). Actions are performed 
+sequentially if, and only if, all condition elements on the LHS are satisfied.
+
+If no patterns are on the LHS, the pattern (initial-fact) is automatically 
+used. If no actions are on the RHS, the rule can be activated and fired, but 
+nothing will happen.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-DEFINING_INITIAL_FACTS
+
+CLIPS_OVERVIEW
+  DEFINING_CONSTRUCTS
+    DEFINING_INITIAL_FACTS
+
+2.5.2 Defining Initial Facts
+With the deffacts construct, facts can be added to the initial fact-list.  
+Facts asserted through deffacts may be retracted or pattern matched like any 
+other fact.  The initial fact-list, including any defined deffacts, is always 
+reconstructed after a reset.  All facts added via a deffacts may also be 
+retracted by using undeffacts to remove the fact-list (See Section 5.5).
+Syntax
+    (deffacts <name> ["<comment>"]
+        [(<<fact 1>>)
+             .
+            .
+            .
+        (<<fact n>>)])
+
+where <name> is similar to a word, except that it must start with an 
+alphabetic character. <name> is used to identify the set of facts.  An 
+optional comment also may be included.  There may be multiple deffacts 
+constructs.  Any number of facts may be asserted into the initial fact-list in 
+each deffacts statement.
+
+Dynamic expressions may be included in a fact by using the pattern expansion 
+(=) operator (See Section 3.4.3).  All such expressions are evaluated when 
+CLIPS is reset.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-DEFINING_A_FACT_TEMPLATE
+
+CLIPS_OVERVIEW
+  DEFINING_CONSTRUCTS
+    DEFINING_A_FACT_TEMPLATE
+
+2.5.3 Defining a Fact Template
+Facts, while free form, encode information positionally.  To access that 
+information a user must know, not only what data is stored in a fact, but 
+which field contains the data.  Templates provide the user with the ability to 
+abstract a fact's structure by assigning names to each field found within the 
+fact.
+
+Templates are created by using the deftemplate construct.
+Syntax
+(deftemplate <name> ["<comment>"]
+    (field <name>
+        (default ?NONE | <<One token of type word, string, or number>>) |
+        (type <<One or more of NUMBER, WORD, STRING>> | ?VARIABLE) |
+        (allowed-words <<list of allowed WORDS>>) |
+        (allowed-strings <<list of allowed strings>>) |
+        (allowed-numbers <<list of allowed numbers>>) |
+        (range <number> | ?VARIABLE <number> | ?VARIABLE)
+    ) |
+    (multi-field <name>
+        (default ?NONE | <<One or more tokens of type of word, string,
+         number>>) |
+        (min-number-of-elements <number> | ?VARIABLE) |
+        (max-number-of-elements <number> | ?VARIABLE) |
+        (type <<One or more of NUMBER, WORD, STRING>> | ?VARIABLE) |
+        (allowed-words <<list of allowed WORDS>>) |
+        (allowed-strings <<list of allowed strings>>) |
+        (allowed-numbers <<list of allowed numbers>>) |
+        (range <number> | ?VARIABLE <number> | ?VARIABLE)
+    )
+)
+
+where <name> is similar to a word, except that it must start with an 
+alphabetic character.  <name> is used to identify the template.  The value of 
+?VARIABLE must be taken in context.  For example, (range ?VARIABLE ?VARIABLE) 
+is equivalent to (range -. +.).  The attributes labeled "<ignored-..." are not 
+processed by CLIPS, hence the name.  They are provided for the CLIPS Cross 
+Reference, Style, and Verification (CRSV) utility.
+
+See the Monkees and Bananas Sample Problem for the complete example.
+
+A template may have, at most, one multi-field-slot.
+
+CLIPS enforces the definition of the template on all instances.  For example, 
+it is an error to store (or match) multiple values in a single value field.
+
+Fields which are not specified in a pattern are defaulted according to the 
+following rules:
+ .  If the pattern is in the LHS, unspecified slots are equivalent to
+    wildcarded (?) fields.  Unspecified multi-value slots are equivalent to
+    multi-value wildcards ($?).
+ .  If the pattern is in an assert, unspecified slots are equivalent to fields
+    specifying the default value(s) for that field.  The word nil is used as
+    the value of a single value slot that has no user-defined default.  The
+    default for a multi-value slot is nothing (i.e. a multifield value of
+    length 0).
+
+Redefining a deftemplate will result in the previous definition being 
+discarded; adverse effects on facts and rules loaded with the old definition 
+should be expected.  The reason for this is that the template acts as a 
+translator during fact and rule I/O; internally, facts and rules always use 
+positional fields.  Defining a new template may result in a different mapping 
+of name to position which then results in misinterpretation of previously 
+defined facts and rules.
+
+END-ENTRY
+
+2IBEGIN-ENTRY-COMMENTING_CLIPS_RULES
+
+CLIPS_OVERVIEW
+  COMMENTING_CLIPS_RULES
+
+2.6 Commenting CLIPS Rules
+As with any programming language, it is highly beneficial to comment the code.  
+The def... forms defrule, deffacts, and deftemplate allow a comment directly 
+following the construct name.  Comments also can be placed within CLIPS code 
+by using a semicolon (;).  Everything from the semicolon until the next return 
+character will be ignored by the CLIPS reader.  If the semicolon is the first 
+character in the line, the entire line will be treated as a comment.  Examples 
+of commented code will be provided throughout the reference manual.  Comment 
+text is not saved by CLIPS when loading rules.
+
+END-ENTRY
+
+2IBEGIN-ENTRY-INTEGRATION_WITH_OTHER_LANGUAGES
+
+CLIPS_OVERVIEW
+  INTEGRATION_WITH_OTHER_LANGUAGES
+
+2.7 Integration with Other Languages
+When using an expert system, two kinds of integration are important:  
+embedding CLIPS in other systems, and calling external functions from the RHS 
+or LHS of a CLIPS rule.  CLIPS was designed to allow both kinds of 
+integration.
+
+Using CLIPS as an embedded application allows the easy integration of CLIPS 
+with existing systems.  This is useful in cases where the expert system is a 
+small part of a larger task or needs to share data with other functions.  In 
+these situations, CLIPS can be called as a subroutine and information may be 
+passed both to and from CLIPS. Embedded applications are discussed in the 
+Advanced Programming Guide.
+
+It also may be useful to call external functions while executing a CLIPS rule.  
+CLIPS allows external function calls on both the LHS and RHS of a rule.  On 
+the LHS, they can be called as predicate functions to allow specialized 
+testing of a rule's conditions.  On the RHS of a rule, they can be called for 
+a number of reasons, such as a function to alert the user when an error 
+condition is detected.  User-defined external functions also may be called 
+from the top level of the interactive interface.  CLIPS variables or literal 
+values may be passed to an external function, and functions may return values 
+to CLIPS.  The easy addition of external functions allows CLIPS to be extended 
+or customized in almost any way.  The Advanced Programming Guide describes how 
+to integrate CLIPS with functions or systems written in C as well as in other 
+languages.
+
+END-ENTRY
+
+1MBEGIN-ENTRY-LHS_SYNTAX
+
+LHS_SYNTAX
+
+Section 3 - LHS Syntax - Conditions
+This section describes the syntax of patterns on the LHS of a rule.  These 
+patterns represent the conditions that must be satisfied before a rule can 
+fire.
+
+The template fact 'set' is used throughout this section.  The template 
+definition to define 'set' is as follows:
+
+(deftemplate set "A structure describing a set of numbers"
+    (field size
+        (type NUMBER)
+        (default 0))
+    (field avg
+        (type NUMBER)
+        (default 0.0))
+    (multi-field list
+        (type NUMBER)))
+
+Subtopics :
+
+  LITERAL_PATTERNS       USING_TEST_TO_CONSTRAIN_VARIABLES
+  WILDCARDS              CONSTRAINING_PATTERNS
+  VARIABLES              PATTERN_BINDINGS
+  CONSTRAINING_FIELDS    DECLARING_RULE_PROPERTIES
+
+END-ENTRY
+
+2IBEGIN-ENTRY-LITERAL_PATTERNS
+
+LHS_SYNTAX
+  LITERAL_PATTERNS
+
+3.1 Literal Patterns
+The most basic pattern is one which precisely defines the exact fact that will 
+match.  This is called a literal pattern.  It does not contain any variables 
+or wildcard fields. All fields in a literal pattern must be matched by all 
+fields in a pattern in the fact-list.
+
+Note that space or control characters inside double quotes (i.e., in a string) 
+could cause problems.  Roundoff errors also could make it difficult to match 
+numerical values to more than three or four decimal places.  Also, field 
+ordering does not affect matching when using a template (See previous 
+examples).
+
+END-ENTRY
+
+2IBEGIN-ENTRY-WILDCARDS
+
+LHS_SYNTAX
+  WILDCARDS
+
+3.2 Wildcards Single- and Multifield
+CLIPS has two wildcard symbols that may be used to represent fields in a 
+pattern.  These are the question (?) and dollar-question ($?) wildcards.  
+CLIPS interprets these wildcard symbols as standing in place of some part of a 
+fact.  The question wildcard matches any value (number, word, or string) 
+stored in exactly one field in the fact.  It is a single-field wildcard 
+symbol.  The dollar-question wildcard matches any value in zero or more fields 
+in a fact.  It is a multifield wildcard symbol standing in the place of 
+multiple fields. Single- and multifield wildcards may be combined in a single 
+pattern in any combination.
+
+Multifield wildcard and literal fields can be combined to provide very 
+powerful constructs.  A pattern to match all of the facts that have the word 
+YELLOW in any field (other than the first) could be written as
+
+    (data $? YELLOW $?)
+
+Some examples of what this pattern would match are
+
+    (data YELLOW blue red green)
+    (data YELLOW red)
+    (data red YELLOW)
+    (data YELLOW)
+    (data YELLOW data YELLOW)
+
+The last fact will match twice, since YELLOW appears twice in the fact.  The 
+use of multifield wildcards should be confined to cases of patterns in which 
+the single-field wildcard cannot create a pattern that satisfies the match 
+required, since the multifield wildcard produces every possible match 
+combination that can be derived from a fact.  This derivation of matches 
+requires a significant amount of time to perform compared to the time needed 
+to perform a single-field match.
+
+END-ENTRY
+
+2IBEGIN-ENTRY-VARIABLES
+
+LHS_SYNTAX
+  VARIABLES
+
+3.3 Variables Single- and Multifield
+Wildcard symbols replace portions of a fact pattern and accept any value.  The 
+value of the field being replaced may be captured in a variable for 
+comparison, display, or other manipulations.  This is done by directly 
+following the wildcard symbol with a variable name.
+Syntax
+    ?<name>            ; a single-field variable
+    $?<name>           ; a multifield variable
+
+where <name> is similar to a word, except that it must start with an 
+alphabetic character.  Double quotes are not allowed as part of a variable 
+name; i.e. a string cannot be used for a variable name.  The rules for pattern 
+matching are similar to those for wildcard symbols.  On its first appearance, 
+a variable acts just like a wildcard in that it will bind to any value in the 
+field(s).  However, later appearances of the variable require the field(s) to 
+match the variable's binding.  The binding will only be true within the scope 
+of the rule in which it occurs.  Each rule has a private list of variable 
+names with their associated values; thus, variables are local to a rule.  
+Bound variables can be passed to external functions.
+
+Once the initial binding of a variable occurs, all references to that same 
+variable have to match the same value that the first binding matched. This 
+applies to both single- and multifield variables.  It also applies across 
+patterns.
+
+END-ENTRY
+
+2MBEGIN-ENTRY-CONSTRAINING_FIELDS
+
+LHS_SYNTAX
+  CONSTRAINING FIELDS
+
+3.4 Constraining Fields
+Field constraints are functions that constrain the range of values which a 
+particular field within a pattern may have.  There are two types of field 
+constraints:  logical operators and predicate functions.
+
+Subtopics :
+
+    LOGICAL_OPERATORS     CONSTRAINING_FIELDS_THROUGH_PATTERN_EXPANSION
+    PREDICATE_FUNCTIONS
+
+END-ENTRY
+
+3IBEGIN-ENTRY-LOGICAL_OPERATORS
+
+LHS_SYNTAX
+  CONSTRAINING FIELDS
+    LOGICAL_OPERATORS
+
+3.4.1 Logical Operators
+Three logical operators are available for constraining values inside of a 
+pattern.  These are the & (AND), | (OR), and ~ (NOT) operators.  The logical 
+operators can be combined in almost any manner or number to constrain the 
+value of specific fields while pattern matching.  Evaluation of multiple 
+constraints can be considered to occur from left to right.
+Syntax
+    <value1>&<value2>                 ; the AND operator
+    <value1>|<value2>                 ; the OR operator
+    ~<value>                          ; the NOT operator
+
+The AND operator typically is used only in conjunction with the other logical 
+operators or variable bindings.  Logical operators may be used together with 
+variable bindings.
+More Syntax
+    ?x&<value1>|<value2>                 ; the OR operator with variable
+    ?x&~<value>                          ; the NOT operator with variable
+
+If this is the first occurrence of the variable name, the field will be 
+constrained according to the logical operators only.  The resulting value will 
+be stored in the variable.  If the variable has been bound previously, it is 
+considered an additional constraint along with the logical operators; i.e., 
+the field must have the same value already bound to the variable and it 
+additionally must match the constraints defined by the logical operators.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-PREDICATE_FUNCTIONS
+
+LHS_SYNTAX
+  CONSTRAINING_FIELDS
+    PREDICATE_FUNCTIONS
+
+3.4.2 Predicate Functions
+Sometimes it becomes necessary to constrain a field to more complex values 
+than can be defined by logic operators.  CLIPS allows the use of predicate 
+functions to accomplish this.  Predicate functions check to see if the value 
+of the field meets the constraints defined in the function.  If it does, the 
+function returns TRUE and pattern matching continues.  Otherwise, it returns 
+FALSE and the pattern fails to match. Predicate functions are called by 
+combining a logical operator with a colon (&:, |: or ~:).  The value of the 
+field must be bound to a variable and passed to the function.
+Syntax
+    ?x&:(<function> <<arguments>>)
+    ?x|:(<function> <<arguments>>)
+    ?x&~:(<function> <<arguments>>)
+
+Multiple predicate functions may be used to constrain a single field. They are 
+evaluated from left to right and are each separated by a logical 
+operator/colon. Several predicate functions are provided by CLIPS; users also 
+may develop their own predicate functions.  Predicate functions operate on the 
+arguments passed to them.  The predicate functions provided by CLIPS are
+
+      Function                                  Purpose
+    (numberp <arg>)                       Is the value a number?
+    (stringp <arg>)                       Is the value a string?
+    (wordp <arg>)                         Is the value a word?
+
+In addition to these functions, the following functions are included in the 
+CLIPS extended math package. integerp does not imply a CLIPS integer data 
+type.
+
+    (evenp<arg>)                          Is the value an even number?
+    (oddp <arg>)                          Is the value an odd number?
+    (integerp <arg>)                      Is the value a whole number?
+
+
+END-ENTRY
+
+3IBEGIN-ENTRY-CONSTRAINING_FIELDS_THROUGH_PATTERN_EXPANSION
+
+LHS_SYNTAX
+  CONSTRAINING_FIELDS
+    CONSTRAINING_FIELDS_THROUGH_PATTERN_EXPANSION
+
+3.4.3 Constraining Fields through Pattern Expansion
+It is possible to use the return value of an external function to constrain 
+the value of a field.  The pattern expansion (=) operator allows the user to 
+call external functions from inside of a pattern.  (The pattern expansion 
+operator (=) is different from the comparison function which uses the same 
+symbol (=).  The difference can be determined from context.)  The return value 
+must be either a string, a word, or a number.  This value is incorporated 
+directly into the pattern at the position at which the function was called, 
+and any matching patterns must match this value as though the rule were typed 
+with that value.
+Syntax
+    =(<function> <<args...>>)
+
+Note that the return from a pattern expansion may be negated.
+
+Pattern expansion also can be used within variable bindings and combined with 
+other logical operators.
+
+END-ENTRY
+
+2IBEGIN-ENTRY-USING_TEST_TO_CONSTRAIN_VARIABLES
+
+LHS_SYNTAX
+  USING_TEST_TO_CONSTRAIN_VARIABLES
+
+3.5 Using Test to Constrain Variables
+The field constraint functions allow very descriptive constraints to be 
+applied to pattern matching.  An additional constraint capability is provided 
+with the test function.  As with predicate functions, the user can compare the 
+variable bindings that already have occurred in any manner.  Mathematical 
+comparisons on variables (e.g., is the difference between ?x and ?y greater 
+than some value?) and complex logical or equality comparisons can be done.  
+External functions also can be called which compare variables in any way that 
+the user desires.
+
+Any kind of external function may be embedded within a test operation (or 
+within field constraints).  User-defined predicate functions must take 
+arguments as defined in the Advanced Programming Guide and should return FALSE 
+for false and TRUE for true.  (The symbols, TRUE and FALSE, are defined in the 
+clips.h file which always should be included in files with user-defined 
+functions.)  All defined functions use the prefix notation, so the operands to 
+a function always appear after the function name.  Several logical, 
+comparison, and arithmetic functions are provided by CLIPS.  A complete list 
+of CLIPS-defined functions can be found in appendix A.
+Syntax
+    (test (<defined-function> [<<arguments>>]))
+
+Since test is a special type of function call, patterns may not use the word 
+test as the first field in a pattern.  A test operation also may not be the 
+first pattern on the LHS of a rule. Functions within a test can be nested and 
+are evaluated from the inside out.  The functions inherit their syntax and 
+terminology from both LISP and C.
+
+The comparison functions (=, !=, >=, etc.) are valid only for comparing 
+numeric fields.  When checking the equality of strings, the eq and neq 
+comparison functions should be used.  eq and neq can compare strings or 
+numbers and will not produce an error when comparing a string to a number. All 
+the comparison functions also will compare more than two values; e.g., if eq 
+is given a list of values, it will only return true if all the values are 
+equal to the first value, if >= is given a value, it will return true only if 
+each value is greater than the preceding value.
+
+The logical functions and and or provide short-circuited logical operations.  
+For those not familiar with short-circuited logic, the functions perform as 
+follows.  The and (or) function evaluates its arguments from left-to-right and 
+returns false (true) immediately after evaluating an argument whose value was 
+false (true).  If all arguments evaluate to true (false) then the function 
+returns true (false).  The advantages of short-circuited forms are two-fold.  
+First, they are faster since not all of their arguments need be evaluated.  
+Secondly, a programmer can use the short-circuited behavior to implement 
+optionally executed software.
+
+All defined functions may be used as predicates, although usually it is 
+meaningful only for the comparison functions.
+
+END-ENTRY
+
+2IBEGIN-ENTRY-PATTERN_MATCHING_WITH_TEMPLATE_FACTS
+
+LHS_SYNTAX
+  PATTERN_MATCHING_WITH_TEMPLATE_FACTS
+
+3.6 Pattern Matching with Template Facts
+Template facts provide users with the ability to abstract fact structure.  
+Templates are a derivative of the relation form of fact.  In this form the 
+first field of a fact specifies a "relation" that applied to the remaining 
+fields in the fact.  For example, (father-of jack bill) states that bill is 
+the father of jack.  Templates differ from relations by using slots for the 
+fields following the template name.  The template name (i.e. relation) is 
+required since CLIPS uses it to determine the set of valid slot names.
+
+The example relation, father-of, may be abstracted by choosing names for the 
+two variable fields.  For this example, the slot names parent and child are 
+chosen.  The resulting template may be declared with the deftemplate form:
+
+(deftemplate father-of
+    (field parent
+        (default ?NONE))
+    (field child
+        (default ?NONE)))
+
+Now that father-of is a template, the fact that bill is jack's father may be 
+expressed as either (father-of (parent bill) (child jack)) or (father-of 
+(child jack) (parent bill)).  The immediate advantages of clarity and slot 
+order independence should be readily apparent.  There is an additional, less 
+obvious advantage associated with using templates.
+
+That advantage is that a template pattern need not contain all of the slots 
+defined for that template.  When the pattern is on the LHS of a rule, the 
+missing slots are equivalent to specifying the slot with a wildcard.  For 
+example, the pattern (father-of (parent ?father)) is equivalent to (father-of 
+(parent ?father) (child ?)).  Missing slots in a template being asserted are 
+assigned their default value, if any, nil if it is a single value slot, or 
+nothing (i.e. a multifield value of length 0) if it is a multivalue slot.
+
+Template patterns may be used wherever patterns are permitted.  Provided, of 
+course, that the deftemplate defining a template is parsed prior to all 
+instances of that template.
+
+Template fields are declared at definition time (See deftemplate) to contain 
+either single or multiple values.  Patterns which do not conform to the 
+template definition will be flagged as errors.
+
+A single value slot used in the LHS may only contain constraints intended to 
+match a single value, $? and $?<var> may not be used.
+
+A multi-value slot has not limitations on the number of values.
+
+END-ENTRY
+
+2MBEGIN-ENTRY-CONSTRAINING_PATTERNS
+
+LHS_SYNTAX
+  CONSTRAINING_PATTERNS
+
+3.6 Constraining Patterns
+The LHS of a CLIPS rule is made up of a series of relation or template 
+patterns which represent the conditions that must be satisfied for the rule to 
+be placed on the agenda.  CLIPS assumes that all rules have an implicit and 
+surrounding the patterns on the LHS.  This means that all conditions on the 
+LHS must be met before the rule can be activated.  There is no need to 
+explicitly define an implicit and condition.  However, it is possible to 
+override this default and define other logical combinations of conditions 
+which would cause a rule to fire.
+
+Logical pattern blocks allow patterns to be combined using inclusive or and 
+explicit and logic. The entire block is treated as a single condition on the 
+LHS and must be satisfied together with all other conditions before the rule 
+can fire.  Logical blocks may be mixed with other logical blocks in any order, 
+and patterns within the logical block may use field constraints.  As with all 
+CLIPS features, the blocks are marked by opening and closing parentheses.
+
+Subtopics :
+
+    INCLUSIVE_OR   PATTERN_NEGATION
+    EXPLICIT_AND
+
+END-ENTRY
+
+3IBEGIN-ENTRY-INCLUSIVE_OR
+
+LHS_SYNTAX
+  CONSTRAINING_PATTERNS
+    INCLUSIVE_OR
+
+3.6.1 Inclusive Or
+The or logical block allows any one of several patterns to trigger a rule 
+firing.  If any of the patterns inside of the or block exist, the constraint 
+is satisfied.  If all other LHS conditions are true, the rule will be 
+activated.  Any number of patterns may be within an or block.  The identical 
+effect could be accomplished by writing multiple rules with similar left- and 
+right-hand sides.
+Syntax
+    (defrule <name>
+        [(<<additional patterns>>)]
+        (or (<<pattern 1>>) 
+                  .
+                  .
+            (<<pattern n>>))
+        [(<<additional patterns>>)]
+        =>
+        [(<<actions>>)])
+
+If more than one of the patterns in the or block can be met, the rule will 
+fire multiple times, once for each satisfied combination of conditions.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-EXPLICIT_AND
+
+LHS_SYNTAX
+  CONSTRAINING_PATTERNS
+    EXPLICIT_AND
+
+3.6.2 Explicit And
+An explicit and is provided to allow the mixing of and and or conditions.  
+This allows logical combinations of patterns within an or block.  The 
+constraint will be satisfied when all of the patterns inside of the explicit 
+and block are satisfied.  If all other LHS conditions are true, the rule will 
+be activated.  Any number of patterns may be placed in an and block.  Any 
+number of and's may be within an or block.
+Syntax
+    (defrule <name>
+        [(<<additional patterns>>)]
+        (or     (and(<<pattern 1>>) 
+                .
+                .
+                (<<pattern n>>))
+            (<<other patterns>>))
+        [(<<additional patterns>>)]
+        =>
+        [(<<actions>>)])
+
+END-ENTRY
+
+3IBEGIN-ENTRY-PATTERN_NEGATION
+
+LHS_SYNTAX
+  CONSTRAINING_PATTERNS
+    PATTERN_NEGATION
+
+3.6.3 Pattern Negation
+Sometimes the lack of information is meaningful; i.e., one wishes to fire a 
+rule if a fact does not exist in the fact-list.  The not function provides 
+this capability.  As with logic blocks, any number of additional patterns may 
+be on the LHS of the rule and field constraints may be used within the negated 
+pattern.
+Syntax
+    (defrule <name>
+        [(<<preceding patterns>>)]
+        (not (<<pattern 2>>))
+        [(<<additional patterns>>)]
+        =>
+        [(<<actions>>)])
+
+Only one pattern may be negated at a time.  Multiple patterns may be negated 
+by using multiple not statements.  And and or logic blocks may not be placed 
+inside of a not pattern, although a not may be placed inside of an and or or.  
+Care must be taken when combining not with or and and blocks; the results are 
+not always obvious!  The same holds true for variable bindings within a 
+negated pattern.  Variables that are previously bound may be used freely 
+inside of a negated pattern.  However, variables bound for the first time 
+within a negated pattern can be used only in that pattern.  Since negated 
+patterns are treated differently by CLIPS, users always should perform a reset 
+after creating or loading rules that include negated patterns.
+
+Negating a not is illegal; i.e., a (not (not (<<pattern>>))) is not allowed.
+
+END-ENTRY
+
+2IBEGIN-ENTRY-PATTERN_BINDINGS
+
+LHS_SYNTAX
+  PATTERN_BINDINGS
+
+3.7 Pattern Bindings
+Certain RHS actions, such as retract, operate on an entire fact.  To signify 
+which fact they are to act upon, a variable can be bound to an entire fact.
+Syntax
+    ?<var-name><-(<<fields>>)
+
+The left arrow, "<-", is a required part of the syntax. A variable bound to a 
+fact can be compared to other fact variables or passed to external functions. 
+A fact variable is not 'defined' until the entire pattern has been parsed (see 
+examples below).
+
+END-ENTRY
+
+2MBEGIN-ENTRY-DECLARING_RULE_PROPERTIES
+
+LHS_SYNTAX
+  DECLARING_RULE_PROPERTIES
+
+3.8 Declaring Rule Properties
+This feature allows the properties or characteristics of a rule to be defined.  
+The characteristics are declared on the LHS of a rule using the declare 
+construct.  A rule may have multiple declare constructs, but all declare 
+statements must appear before the first pattern on the LHS.  The general 
+syntax is
+Syntax
+    (declare (<something> [<<args>>]))
+
+Currently, only one declarative feature, salience, is allowed.  Future CLIPS 
+versions may provide other declarative capabilities as well as functions to 
+allow users to define their own declarative properties.
+
+Subtopics :
+
+    ASSIGNING_RULE_PRIORITY
+
+END-ENTRY
+
+3IBEGIN-ENTRY-ASSIGNING_RULE_PRIORITY
+
+LHS_SYNTAX
+  DECLARING_RULE_PROPERTIES
+    ASSIGNING_RULE_PRIORITY
+
+3.8.1 Assigning Rule Priority
+A salience statement allows the user to assign a priority to a rule.  When 
+multiple rules are in the agenda, the rule with the highest priority will fire 
+first.
+Syntax
+    (declare (salience <num>))
+
+where <num> must be an integer.  If not specified, the salience value for a 
+rule defaults to zero.  Salience values may be either positive or negative.  
+The largest allowed value is 10000.  The smallest allowed value is -10000.
+
+END-ENTRY
+
+1MBEGIN-ENTRY-RHS_SYNTAX
+
+RHS_SYNTAX
+
+Section 4 - RHS Syntax - Actions
+This section describes the various actions available on the RHS of rules.
+
+Subtopics :
+
+  BASIC_ACTIONS         CLIPS_I/O_SYSTEM
+  MULTIFIELD_FUNCTIONS  MATH_FUNCTIONS
+  STRING_FUNCTIONS      ADDITIONAL_FUNCTIONS
+
+END-ENTRY
+
+2MBEGIN-ENTRY-BASIC_ACTIONS
+
+RHS_SYNTAX
+  BASIC_ACTIONS
+
+4.1 Basic Actions
+The following actions are the most commonly used RHS actions.  They deal with 
+basic functions like asserting and retracting facts.
+
+Subtopics :
+
+  CREATING_NEW_FACTS                 ASSERTING_A_STRING
+  REMOVING_FACTS_FROM_THE_FACT-LIST  BINDING_VARIABLES
+  MODIFYING_TEMPLATE_FACTS           STOPPING_CLIPS
+
+END-ENTRY
+
+3MBEGIN-ENTRY-CREATING_NEW_FACTS
+
+RHS_SYNTAX
+  BASIC_FACTS
+    CREATING_NEW_FACTS
+
+4.1.1 Creating New Facts
+The assert action allows the user to add a fact to the fact-list.  Multiple 
+facts may be asserted with each call and multiple asserts may be placed on the 
+RHS of a rule.
+Syntax
+    (assert  (<<pattern>>)
+            [(<<additional patterns>>)])
+
+The fact asserted may contain bound variables, function calls, and literal 
+values.  If an identical copy of the fact already exists in the fact-list, the 
+fact will not be added.
+
+Subtopics :
+
+      CALLING_EXTERNAL_FUNCTIONS
+
+END-ENTRY
+
+4IBEGIN-ENTRY-CALLING_EXTERNAL_FUNCTIONS
+
+RHS_SYNTAX
+  BASIC_ACTIONS
+    CREATING_NEW_FACTS
+      CALLING_EXTERNAL_FUNCTIONS
+
+4.1.1.1 Calling External Functions
+Sometimes it is preferable to call an external function from inside an assert.  
+The return value from the function is incorporated directly into the pattern 
+at the position at which the function was called.  As with pattern expansion 
+on the LHS of a rule, the pattern expansion operator (=) is used.
+Syntax
+    (assert ([<<fields>>] =(<function> <<args...>>) [<<fields>>]))
+
+This is the same as binding a variable to the return from a function using the 
+bind function, then placing the variable inside the assert.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-REMOVING_FACTS_FROM_THE_FACT-LIST
+
+RHS_SYNTAX
+  BASIC_ACTIONS
+    REMOVING_FACTS_FROM_THE_FACT-LIST
+
+4.1.2 Removing Facts from the Fact-list
+The retract action allows the user to remove facts from the fact-list.  
+Multiple facts may be retracted with a single retract statement.  The 
+retraction of a fact also removes all rules that depended upon that fact for 
+activation from the agenda.
+Syntax
+    (retract ?<fact-var> [?<<fact-vars>>] | <fact-num> [<<fact-nums>>])
+
+Facts may be identified either as fact variables (?<fact-var>) bound on the 
+LHS as described in section 3.7 or by number (<fact-num>).  Note that the 
+number generally is not known during the execution of a program, so facts 
+usually are retracted by binding them on the LHS of a rule.  Only fact 
+variables or fact numbers may be used in a retract. External functions may not  
+be called.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-MODIFYING_TEMPLATE_FACTS
+
+RHS_SYNTAX
+  BASIC_ACTIONS
+    MODIFYING_TEMPLATE_FACTS
+
+4.1.3 Modifying Template Facts
+The modify action allows the user to modify template facts on the fact-list.  
+Only one fact may be modified with a single modify statement.  The 
+modification of a fact is equivalent to retracting the present fact and 
+asserting the modified fact.
+Syntax
+      (modify ?<fact-var> <<(<field-name> <<field-value>>)>>)
+
+Facts may be identified either as fact variables (?<fact-var>) bound on the 
+LHS as described in section 3.7 or by number (<fact-num>).  Note that the 
+number generally is not known during the execution of a program, so facts 
+usually are modified by binding them on the LHS of a rule.  Only fact 
+variables or fact numbers may be used in a modify. External functions may not  
+be called.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-ASSERTING_A_STRING
+
+RHS_SYNTAX
+  BASIC_ACTIONS
+    ASSERTING_A_STRING
+
+4.1.4 Asserting a String
+The str-assert function is similar to assert in that it will add a fact to the 
+fact-list.  However, str-assert takes a single string and breaks it into 
+separate fields prior to asserting the fact.  The standard delimiters defined 
+in section 2.2 will be used between fields.  Only one fact may be asserted 
+with each str-assert statement.
+Syntax
+    (str-assert <quoted-string>)
+
+If an identical copy of the fact already exists in the fact-list, the fact 
+will not be added.  Fields may contain a quoted string by escaping the quote 
+with a backslash.  This function is particularly effective when used with the 
+readline function (see sec. 4.3.2.4). Note that this function takes a string 
+and turns it into fields. If the fields within that string are going to 
+contain special characters, they need to be escaped twice.
+
+In previous versions of CLIPS, this capability was provided by the 
+string_assert and str_assert functions. The name was changed for reasons of 
+consistency. Rules that use either string_assert or str_assert will be 
+accepted by CLIPS for compatibility, but they should be changed to ensure 
+compatibility with future versions of CLIPS.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-BINDING_VARIABLES
+
+RHS_SYNTAX
+  BASIC_ACTIONS
+    BINDING_VARIABLES
+
+4.1.5 Binding Variables
+Occasionally it is important to create new variables or modify the value of 
+previously bound variables on the RHS of a rule.  The bind function provides 
+this capability.
+Syntax
+    (bind ?<var-name>  <value> or <variable> or (<defined-function>))
+
+where <var-name> must be a variable name (it may have been bound previously).  
+<var-name> can be bound to literal values, to other bound variables, or to the 
+return from a function call.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-STOPPING_CLIPS
+
+RHS_SYNTAX
+  BASIC_ACTIONS
+    STOPPING_CLIPS
+
+4.1.6 Stopping CLIPS
+The halt function may be used on the RHS of a rule to prevent further rule 
+firing.  It is called without arguments.  After halt is called, control is 
+returned to the top-level program.  The agenda is left intact, and execution 
+may be continued with a run command.
+Syntax
+    (halt)
+
+END-ENTRY
+
+2MBEGIN-ENTRY-MULTIFIELD_FUNCTIONS
+
+RHS_SYNTAX
+  MULTIFIELD_FUNCTIONS
+
+4.2 Multifield Functions
+The following functions operate on multifield variables.
+
+Subtopics :
+
+    NUMBER_OF_ELEMENTS     FINDING_AN_ELEMENT
+    SPECIFYING_AN_ELEMENT  COMPARING_MULTIFIELD_VARIABLES
+
+END-ENTRY
+
+3IBEGIN-ENTRY-NUMBER_OF_ELEMENTS
+
+RHS_SYNTAX
+  MULTIFIELD_FUNCTIONS
+    NUMBER_OF_ELEMENTS
+
+4.2.1 Number of Elements
+The length function returns the number of elements bound to a multifield 
+variable.
+Syntax
+    (length <variable>)
+
+where <variable> must be a multifield variable ($?).  If the variable is not a 
+multifield variable, length returns a negative one (-1).
+
+END-ENTRY
+
+3IBEGIN-ENTRY-SPECIFYING_AN_ELEMENT
+
+RHS_SYNTAX
+  MULTIFIELD_FUNCTIONS
+    SPECIFYING_AN_ELEMENT
+
+4.2.2 Specifying an Element
+The nth function will return a specified element from a multifield variable.  
+It is similar in use to the LISP nth function.
+Syntax
+    (nth <constant-or-variable> <mvariable>)
+
+where <constant-or-variable> is an integer from 1 to the number of elements 
+bound to the <mvariable>. <mvariable> must be a multifield variable ($?).  The 
+symbol nil will be returned if <constant-or-variable> is greater than the 
+number of elements in the variable.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-FINDING_AN_ELEMENT
+
+RHS_SYNTAX
+  MULTIFIELD_FUNCTIONS
+    FINDING_AN_ELEMENT
+
+4.2.3 Finding an Element
+The member function will tell if an atom is in a multifield variable.
+Syntax
+    (member <atom> $?<var>)
+
+where <atom> can be either a literal value or a variable.  <var> must be bound 
+to a multifield variable.  If <atom> is one of the values bound to <var>, 
+member will return the number of the element.  Otherwise it will return 0.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-COMPARING_MULTIFIELD_VARIABLES
+
+RHS_SYNTAX
+  MULTIFIELD_FUNCTIONS
+    COMPARING_MULTIFIELD_VARIABLES
+
+4.2.4 Comparing Multifield Variables
+This function checks if one multifield variable is a subset of another; i.e., 
+if all the elements in the first set are also in the second set.
+Syntax
+    (subset $?<list1> $?<list2>)
+
+Both variables must have been bound previously.  If <list1> is a subset of 
+<list2>, the function returns TRUE; otherwise it returns FALSE.  The order of 
+the list is not considered.  If $?<list1> is bound to an empty set, subset 
+always returns TRUE.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-DELETION_OF_FIELDS_IN_MULTIFIELD_VALUES
+
+RHS_SYNTAX
+  MULTIFIELD_FUNCTIONS
+    DELETION_OF_FIELDS_IN_MULTIFIELD_VALUES
+
+4.2.5 Deletion of Fields in Multifield Values
+This function deletes an indexed field from a multifield value.
+Syntax
+    (mv-delete <field-index> <list>)
+
+where <field-index> may be any CLIPS number and <list> may be any multifield 
+value.  The modified multifield value is returned which is the same as 
+<list>with the field specified by <field-index> removed.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-APPENDING_MULTIFIELD_VALUES
+
+RHS_SYNTAX
+  MULTIFIELD_FUNCTIONS
+    APPENDING_MULTIFIELD_VALUES
+
+4.2.6 Appending Multifield Values
+This function appends any number of values to create a multifield value.
+Syntax
+    (mv-append [<Item 1> <Item 2> <Item 3> ..... <Item n>])
+
+where <Item i>  may be any CLIPS value.  A multifield value is returned as the 
+result.  If any <item> is not multifield then it is assumed to be a multifield 
+value of length 1. If mv-append is called with no arguments, it returns an 
+empty multifield variable (which is meaningful!). If it is called with one 
+argument, it turns that value into a multifield variable.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-CREATING_MULTIFIELD_VALUES_FROM_STRINGS
+
+RHS_SYNTAX
+  MULTIFIELD_FUNCTIONS
+    CREATING_MULTIFIELD_VALUES_FROM_STRINGS
+
+4.2.7 Creating Multifield Values from Strings.
+This function constructs a multifield value from a string by using each field 
+in a string as a field in a new multifield value.
+Syntax
+    (str-explode <string>)
+
+A new multifield value is created in which each delimited field in order in 
+string is taken to be a field in the new multifield value which is returned.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-CREATING_STRINGS_FROM_MULTIFIELD_VALUES
+
+RHS_SYNTAX
+  MULTIFIELD_FUNCTIONS
+    CREATING_STRINGS_FROM_MULTIFIELD_VALUES
+
+4.2.8 Creating Strings from Multifield Values
+This function creates a single string from a multifield value.
+Syntax
+    (str-implode <list>)
+
+Each field in list in order is concatenated into a string value with a single 
+blank separating fields.  The new string is returned.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-EXTRACTING_A_SUBSEQUENCE_FROM_A_MULTIFIELD_VALUE
+
+RHS_SYNTAX
+  MULTIFIELD_FUNCTIONS
+    EXTRACTING_A_SUBSEQUENCE_FROM_A_MULTIFIELD_VALUE
+
+4.2.9 Extracting a Sub-sequence from a Multifield Value
+This function extracts a specified range from a multifield value and returns a 
+new multifield value containing just the sub-sequence.
+Syntax
+    (mv-subseq <start-index> <end-index> <list>)
+
+where <start-index> and <end-index> are integers specifying the starting and 
+ending points of the desired sub-sequence in <list>.
+
+END-ENTRY
+
+3MBEGIN-ENTRY-STRING_FUNCTIONS
+
+RHS_SYNTAX
+  STRING_FUNCTIONS
+
+4.3 String Functions
+The following functions perform operations that are related to strings.
+
+END-ENTRY
+
+3MBEGIN-ENTRY-STRING_CONCATENATION
+
+RHS_SYNTAX
+  STRING_FUNCTIONS
+    STRING_CONCATENATION
+
+4.3.1 String Concatenation
+The str-cat function will concatenate words, numbers, or quoted strings and 
+return a single quoted string.
+Syntax
+    (str-cat <item1> <<items>>)
+
+Each item can be any one of:  a word,  number,  string, bound variable, or 
+function.
+
+In previous versions of CLIPS, this capability was provided by the str_cat 
+function. The name was changed for reasons of consistency. Rules that use 
+str_cat will be accepted by CLIPS for compatibility, but they should be 
+changed to ensure compatibility with future versions of CLIPS.
+
+END-ENTRY
+
+3MBEGIN-ENTRY-TAKING_A_STRING_APART
+
+RHS_SYNTAX
+  STRING_FUNCTIONS
+    TAKING_A_STRING_APART
+
+4.3.2 Taking a String Apart
+The sub-string function will retrieve a portion of a string from another 
+string.
+Syntax
+    (sub-string <starting-position> <ending-position> <string>)
+
+where <starting-position>, counting from one, must be a number marking the 
+beginning position in <string> to get the sub-string, <ending-position> must 
+be a number marking the ending position in <string>, and <string> may be any 
+valid CLIPS string. If <starting-position> is greater than or equal  to 
+<ending-position>, a null string is returned.
+
+END-ENTRY
+
+3MBEGIN-ENTRY-SEARCHING_A_STRING
+
+RHS_SYNTAX
+  STRING_FUNCTIONS
+    SEARCHING_A_STRING
+
+4.3.3 Searching a String
+The str-index function will retrieve  the position of a string inside another 
+string.
+Syntax
+    (str-index  <string-to-find> <string-to-search>)
+
+where <string-to-search> is searched for the first occurrence of 
+<string-to-find>.  Returns the starting position, counting from one, of 
+<string-to-find> in <string-to-search> or returns 0 if not found.
+
+END-ENTRY
+
+3MBEGIN-ENTRY-EVALUATING_A_STRING
+
+RHS_SYNTAX
+  STRING_FUNCTIONS
+    EVALUATING_A_STRING
+
+4.3.4 Evaluating a String
+The eval function evaluates the string as though it were entered at the 
+command prompt.
+Syntax
+    (eval  <string-or-word>)
+
+where <string-or-word> the command to be executed.  Note:  eval does not 
+permit the use of variables nor will it evaluate any of the construct 
+definition forms (i.e. defrule, deffacts, deftemplate).
+
+The eval function is not available for run-time modules.
+
+END-ENTRY
+
+3MBEGIN-ENTRY-CONVERTING_A_STRING_TO_UPPERCASE
+
+RHS_SYNTAX
+  STRING_FUNCTIONS
+    CONVERTING_A_STRING_TO_UPPERCASE
+
+4.3.5 Converting a String to Uppercase
+The upcase function will return a string or word with uppercase alphabetic 
+characters.
+Syntax
+    (upcase  <string-or-word>)
+
+where <string-or-word> is the string to be converted.
+
+END-ENTRY
+
+3MBEGIN-ENTRY-CONVERTING_A_STRING_TO_LOWERCASE
+
+RHS_SYNTAX
+  STRING_FUNCTIONS
+    CONVERTING_A_STRING_TO_LOWERCASE
+
+4.3.6 Converting a String to Lowercase
+The lowcase function will return a string or word with lowercase alphabetic 
+characters.
+Syntax
+    (lowcase  <string-or-word>)
+
+where <string-or-word> is the string to be converted.
+
+END-ENTRY
+
+3MBEGIN-ENTRY-COMPARING_TWO_STRINGS
+
+RHS_SYNTAX
+  STRING_FUNCTIONS
+    COMPARING_TWO_STRINGS
+
+4.3.7 Comparing Two Strings
+The str-compare function will compare two strings to determine their logical 
+relationship (i.e. equal, less than, greater than).  The comparison is 
+performed character-by-character until the strings are exhausted (implying 
+equal strings) or unequal characters are found.  The positions of the unequal 
+characters within the ASCII character set are used to determine the logical 
+relationship of unequal strings.
+Syntax
+    (str-compare  <string-or-word1> <string-or-word2>)
+
+returns 0 if the strings are equal, < 0 if string-or-word1 < string-or-word2, 
+and > 0 if string-or-word1 > string-or-word2.
+
+END-ENTRY
+
+2MBEGIN-ENTRY-CLIPS_I/O_SYSTEM
+
+RHS_SYNTAX
+  CLIPS_I/O_SYSTEM
+
+4.4 The CLIPS I/O System
+CLIPS uses a system called input/output (I/O) routing to provide very flexible 
+I/O while remaining portable.  A more complete discussion of I/O routing is 
+covered in the Advanced Programming Guide.
+
+Subtopics :
+
+    LOGICAL_NAMES   COMMON_I/O_FUNCTIONS
+
+END-ENTRY
+
+3IBEGIN-ENTRY-LOGICAL_NAMES
+
+RHS_SYNTAX
+  CLIPS_I/O_SYSTEM
+    LOGICAL_NAMES
+
+4.4.1 Logical Names
+One of the key concepts of I/O routing is the use of logical names. Logical 
+names allow reference to an I/O device without having to understand the 
+details of the implementation of the reference.  Many functions in CLIPS make 
+use of logical names.  A logical name can be either a word, a number, or a 
+string.  Several logical names are predefined by CLIPS and used extensively 
+throughout the CLIPS code.
+
+END-ENTRY
+
+3MBEGIN-ENTRY-COMMON_I/O_FUNCTIONS
+
+RHS_SYNTAX
+  CLIPS_I/O_SYSTEM
+    COMMON_I/O_FUNCTIONS
+
+4.4.2 Common I/O Functions
+CLIPS provides some of the most commonly needed I/O capabilities through 
+several predefined functions.
+
+Subtopics :
+
+      OPEN       PRINTOUT
+      CLOSE      FPRINTOUT_AND_PRINTOUT
+      READ       FORMAT
+      READLINE
+
+END-ENTRY
+
+4IBEGIN-ENTRY-OPEN
+
+RHS_SYNTAX
+  CLIPS_I/O_SYSTEM
+    COMMON_I/O_FUNCTIONS
+      OPEN
+
+4.4.2.1 Open
+The open function allows a user to open a file from the RHS of a rule and 
+attaches a logical name to it.  This function takes three arguments:  (1) the 
+name of the file to be opened; (2) the logical name which will be used by 
+other CLIPS I/O functions to access the file; and (3) an optional mode 
+specifier.  The mode specifier must be one of the following:
+
+     Mode                     Means
+       r                       read access only
+       w                       write access only
+       r+                      read and write access
+       a                       append access only
+
+If the mode is not specified, a default of read access only is assumed.  The 
+access mode may not be meaningful in some operating systems.
+Syntax
+    (open "<file-name>" <logical-name> ["<mode>"])
+
+The <file-name> must be enclosed in double quotes and may include directory 
+specifiers.  The backslash (\) and any other special characters that are part 
+of <file-name> must be escaped with a backslash.  The logical name should not 
+have been used previously.
+
+END-ENTRY
+
+4IBEGIN-ENTRY-CLOSE
+
+RHS_SYNTAX
+  CLIPS_I/O_SYSTEM
+    COMMON_I/O_FUNCTIONS
+      CLOSE
+
+4.4.2.2 Close
+The close function closes a file stream previously opened with the open 
+command.  The file is specified by a logical name previously attached to the 
+desired stream.
+Syntax
+    (close [<logical-name>])
+
+If close is called without arguments, all open files will be closed.
+
+The user is responsible for closing all files opened during execution.  If 
+files are not closed, the contents are not guaranteed to be correct.
+
+END-ENTRY
+
+4IBEGIN-ENTRY-READ
+
+RHS_SYNTAX
+  CLIPS_I/O_SYSTEM
+    COMMON_I/O_FUNCTIONS
+      READ
+
+4.4.2.3 Read
+The read function allows a user to input information for a single field.  All 
+of the standard field rules (e.g., multiple words must be embedded within 
+quotes) apply.
+Syntax
+    (read [<logical-name>])
+
+where <logical-name> is an optional parameter.  If specified, read tries to 
+read from whatever is attached to the logical file name.  If <logical-name> is 
+t or is not specified, the function will read from stdin.  All the delimiters 
+defined in section 2.2 can be used as delimiters.  If an end of file (EOF) is 
+encountered while reading, read will return the word EOF.  If errors are 
+encountered while reading, the string "*** READ ERROR ***" will be returned.
+
+END-ENTRY
+
+4IBEGIN-ENTRY-READLINE
+
+RHS_SYNTAX
+  CLIPS_I/O_SYSTEM
+    COMMON_I/O_FUNCTIONS
+      READLINE
+
+4.4.2.4 Readline
+The readline function is similar to the read function, but it allows a whole 
+string to be input instead of a single field.  Normally, read will stop when 
+it encounters a delimiter.  readline only stops when it encounters a carriage 
+return, a semicolon or an end of file.  Any tabs or spaces in the input are 
+returned by readline as a part of the string.  readline returns a quoted 
+string.
+Syntax
+    (readline [<logical-name>])
+
+where <logical-name> is an optional parameter.  If specified, readline tries 
+to read from whatever is attached to the logical file name.  If <logical-name> 
+is t or is not specified, the function will read from stdin.  As with read, if 
+an end of file is encountered, readline will return the word EOF.  If an error 
+is encountered during input, readline returns the quoted string "*** READ 
+ERROR ***".
+
+END-ENTRY
+
+4IBEGIN-ENTRY-FPRINTOUT
+
+RHS_SYNTAX
+  CLIPS_I/O_SYSTEM
+    COMMON_I/O_FUNCTIONS
+      FPRINTOUT__AND_PRINTOUT
+
+4.4.2.5 Fprintout and Printout
+These functions,  fprintout and printout, allow output to a device attached to 
+a logical name.  The logical name must be specified and the device must have 
+been prepared previously for output (e.g., a file must be opened first).  To 
+send output to stdout, use a t for the logical name. The function will 
+evaluate variable bindings and print the value of a variable in the output 
+string.  Any number of items may be placed in an fprintout or a printout.
+Syntax
+    (fprintout <logical-name> <item> ... <item> [crlf])
+    (printout <logical-name> <item> ... <item> [crlf])
+
+where <item> is a literal value, a bound variable, or a function call.  The 
+word crlf will force a carriage return/newline and may be placed anywhere in 
+the item list.
+
+Note that the printout function has been modified from releases previous to 
+version 4.2 of CLIPS and uses the same syntax as fprintout. This function is 
+still provided for compatibility with code written in earlier releases of 
+CLIPS, but t will have to be supplied as the logical name to the printout 
+function call.
+
+END-ENTRY
+
+4IBEGIN-ENTRY-FORMAT
+
+RHS_SYNTAX
+  CLIPS_I/O_SYSTEM
+    COMMON_I/O_FUNCTIONS
+      FORMAT
+
+4.4.2.6 Format
+The format function allows a user to send formatted output to a device 
+attached to a logical name.  It can be used in place of printout when special 
+formatting of output information is desired.  Although a slightly more 
+complicated function, format provides much better control over how the output 
+is formatted.  The format commands are similar to the printf statement in C.  
+The format function always returns a string containing the formatted output.  
+A logical name of nil may be used when the formatted return string is desired 
+without writing to a device.
+Syntax
+    (format <logical-name> "<control-string>" <<parameter-list>>)
+
+where <logical-name> is any logical name.  If t is given, output is sent to 
+stdout.  The <control-string> is a quoted string which specifies how the 
+output should be formatted.  The <<parameter-list>> is the bound variables or 
+literal values which are to be output.   Function calls also may be embedded 
+in the <<parameter-list>> and the return from the function will be output.  
+Format currently does not support multifield variables in the 
+<<parameter-list>>.
+
+The control string consists of text and format flags.  Text is output exactly 
+as specified, and format flags describe how each parameter in the 
+<<parameter-list>> is to be formatted.  The first format flag corresponds to 
+the first value in the parameter list, the second flag corresponds to the 
+second value, and so on.  The format flags must be preceded by a percent sign 
+(%) and are of the general format
+
+    %-M.Nx
+
+where x is one of the flags listed below, the minus sign is an optional 
+justification flag, and M and N are optional parameters which specify the 
+field width and number of digits following the decimal place.  If M is used, 
+at least M characters will be output.  If more than M characters are required 
+to display the value, format expands the field as needed.  If M starts with a 
+0 (e.g., %07d), a zero is used as the pad character; otherwise spaces are 
+used.  If N is not specified, it defaults to six digits for floating-point 
+numbers.  If a minus sign is included before the M, the value will be left 
+justified; otherwise the value is right justified.
+
+Format Flags
+    d        Display parameter as an integer.  (The N specifier has no
+             meaning.)
+
+    f        Display parameter as a floating-point number.
+
+    e        Display parameter as a floating-point using power of 10 notation.
+
+    g        Display parameter in the most general format, whichever is
+             shorter.
+
+    o        Display parameter as an unsigned octal number.  (The N specifier
+             has no meaning.)
+
+    x        Display parameter as an unsigned hexadecimal number.  (The N
+             specifier has no meaning.)
+
+    s        Display parameter as a string.  Quoted strings will have the
+             leading and trailing quotes stripped.  (The N specifier has no
+             meaning.  Zero also cannot be used for the pad character.)
+
+n        Put a carriage return/line feed in the output.
+.
+%        Put the percent character into the output.
+
+Portability Note
+The format function uses the C function sprintf as a base.  Some systems may 
+not support sprintf or may not support all of these features, which may affect 
+how format works.
+
+END-ENTRY
+
+2MBEGIN-ENTRY-MATH_FUNCTIONS
+
+RHS_SYNTAX
+  MATH_FUNCTIONS
+
+4.5 Math Functions
+CLIPS provides several functions for mathematical computations.  They are 
+split into two packages:  a set of standard math functions and a set of 
+extended math functions.
+
+Subtopics :
+
+    STANDARD_MATH_FUNCTIONS   EXTENDED_MATH_FUNCTIONS
+
+END-ENTRY
+
+3IBEGIN-ENTRY-STANDARD_MATH_FUNCTIONS
+
+RHS_SYNTAX
+  MATH_FUNCTIONS
+    STANDARD_MATH_FUNCTIONS
+
+4.5.1 Standard Math Functions
+The standard math functions include add, subtract, multiply, and divide.  
+These functions should be used only on numeric arguments.  An error message 
+will be printed if a string argument is passed to a math function.
+
+Arithmetic function calls can be used anywhere that an external function is 
+valid.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-EXTENDED_MATH_FUNCTIONS
+
+RHS_SYNTAX
+  MATH_FUNCTIONS
+    EXTENDED_MATH_FUNCTIONS
+
+4.5.2 Extended Math Functions
+In addition to the standard math functions, CLIPS also provides a large number 
+of scientific and trigonometric math functions for more extensive 
+computations.  Although included in the generic version of CLIPS, if an expert 
+system does not need these capabilities, these functions may be excluded from 
+the executable element of CLIPS to provide more memory (see the Advanced 
+Programming Guide).
+
+The following functions all take one argument:
+General Syntax
+    (<fun> <arg>)
+
+     Function                 Returns
+       acos            arccosine
+       acosh           hyperbolic arccosine
+       acot            arccotangent
+       acoth           hyperbolic arccotangent
+       acsc            arccosecant
+       acsch           hyperbolic arccosecant
+       asec            arcsecant
+       asech           hyperbolic arcsecant
+       asin            arcsine
+       asinh           hyperbolic arcsine
+       atan            arctangent
+       atanh           hyperbolic arctangent
+       cos             cosine
+       cosh            hyperbolic cosine
+       cot             cotangent
+       coth            hyperbolic tangent
+       csc             cosecant
+       csch            hyperbolic cosecant
+       sec             secant
+       sech            hyperbolic secant
+       sin             sine
+       sinh            hyperbolic sine
+       tan             tangent
+       tanh            hyperbolic tangent
+
+  NOTE:  All trigonometric functions expect RADIAN arguments.
+
+       abs             absolute value
+       deg-grad        convert from degrees to gradiant
+       deg-rad         convert from degrees to radians
+       exp             e**<arg>
+       grad-deg        convert from gradiant to degrees
+       log             log base e
+       log10           log base 10
+       rad-deg         convert from radians to degrees
+       sqrt            square root
+       trunc           truncates argument to integer
+
+The following functions take multiple arguments:
+
+ Function          No. of arguments        Returns
+  **                2                arg1 raised to the arg2 power
+  max               1 or more        max value of all args
+  min               1 or more        min value of all args
+  mod               2                modulus of arg1 by arg2
+  pi                none             the value of pi
+
+Portability Note
+These mathematical functions use the C library math.h.  If the user's system 
+does not support this library, the user needs to make some adjustments to 
+math.c.  The system-dependent math functions are called from clcos, clsin, and 
+so on.  The user must change each of these to call the appropriate functions 
+from his system.  The user also must make sure that the functions clcos, 
+clsin, etc., always return FLOATING point numbers.  To link these functions, 
+most compilers provide a separate math library that must be included during 
+linking.
+
+END-ENTRY
+
+2MBEGIN-ENTRY-ADDITIONAL_FUNCTIONS
+
+RHS_SYNTAX
+  ADDITIONAL_FUNCTIONS
+
+4.6 Additional Functions
+The following are additional functions for use on the RHS of CLIPS rules.
+
+Subtopics :
+
+    SYSTEM   IF...THEN...ELSE
+    GENSYM   WHILE
+    SETGEN   STRING_CONCATENATION
+    CALL     USING_CLIPS_INTERFACE_COMMANDS
+
+END-ENTRY
+
+3IBEGIN-ENTRY-SYSTEM
+
+RHS_SYNTAX
+  ADDITIONAL_FUNCTIONS
+    SYSTEM
+
+4.6.1 System
+The system function allows a call to the operating system.  It is patterned 
+after the system function provided to C on most UNIX systems.
+Syntax
+    (system <<args>>)
+
+Note that any spaces needed for proper parsing of the system command must be 
+added by the user in the call to system.
+
+Portability Note
+Not all operating systems/compilers provide this function.  The code is stored 
+in the sysdep.c file, and the default coding for generic CLIPS is a 
+nonfunctional stub that will compile on any machine.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-GENSYM
+
+RHS_SYNTAX
+  ADDITIONAL_FUNCTIONS
+    GENSYM
+
+4.6.2 Gensym
+The gensym function returns a special, sequenced word that can be stored as a 
+single field. This is primarily for tagging patterns that need a unique 
+identifier, but the user does not care what the identifier is.  Multiple calls 
+to gensym are guaranteed to return different identifiers of the form
+
+                genX
+
+where X is a positive integer.  The first call to gensym returns gen1; all 
+subsequent calls increment the number.  Note that gensym is not reset after a 
+call to clear.  If users plan to use the gensym feature, they should avoid 
+creating facts which include a user-defined field of this form.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-SETGEN
+
+RHS_SYNTAX
+  ADDITIONAL_FUNCTIONS
+    SETGEN
+
+4.6.3 Setgen
+The setgen function allows the user to set the starting number used by gensym 
+(see sec. 4.5.2).
+Syntax
+    (setgen <num>)
+
+where <num> must be a positive integer value.  All subsequent calls to gensym 
+will return a sequenced word with the numeric portion of the word starting at 
+<num>.
+
+After this, calls to gensym will return gen32, gen33, etc.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-CALL
+
+RHS_SYNTAX
+  ADDITIONAL_FUNCTIONS
+    CALL
+
+4.6.4 Call
+Previous versions of CLIPS provide access to external functions through the 
+call syntax.  CLIPS now allows external functions to be called directly from 
+the RHS.  To provide compatibility with code written for earlier versions, 
+call is still available. Arguments may be passed to the external function as 
+described in the Advanced Programming Guide.
+Syntax
+    (call (<function-name> [<<args...>>]))
+
+Functions called in this manner must be called for effect only.  The return 
+value will not be captured.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-IF...THEN...ELSE
+
+RHS_SYNTAX
+  ADDITIONAL_FUNCTIONS
+    IF...THEN...ELSE
+
+4.6.5 If...then...else
+Under certain circumstances, it is preferable to take actions based on 
+parameter testing on the RHS of a rule instead of writing two or more rules.  
+CLIPS provides an if...then...else structure to allow for this kind of 
+operation.
+Syntax
+    (if (<predicate-function> [<<args...>>])
+    then
+        [(<<action 1>>)
+            .
+        (<<action n>>)]
+    [else
+        (<<action 1>>)
+            .
+        (<<action n>>)])
+
+Any number of allowable RHS actions may be used inside of the then or else 
+section, including another if...then...else structure.  The else portion is 
+optional.  All predicate functions are available for use in this structure and 
+are used as proscribed in test.  Variables used in the comparison must have 
+been bound previously.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-WHILE
+
+RHS_SYNTAX
+  ADDITIONAL_FUNCTIONS
+    WHILE
+
+4.6.6 While
+The while structure is provided to allow simple looping on the RHS of a rule.  
+Its use is similar to that of if...then...else.
+Syntax
+    (while (<predicate-function> [<<args...>>]) [do]
+        [(<<action 1>>)
+            .
+        (<<action n>>)])
+
+Again, all predicate functions are available for use in while.  Any number of 
+allowable RHS actions may be placed inside the while block, including 
+if...then...else or additional while structures.  The test is performed prior 
+to the first execution of the loop. The while may optionally include the word 
+do after the predicate function and before the first action.
+
+END-ENTRY
+
+3IBEGIN-ENTRY-USING_CLIPS_INTERFACE_COMMANDS
+
+RHS_SYNTAX
+  ADDITIONAL_FUNCTIONS
+    USING_CLIPS_INTERFACE_COMMANDS
+
+4.6.7 Using CLIPS Interface Commands
+Most of the commands documented in section 5.1 as part of the CLIPS 
+interactive interface are available on the RHS of a rule.  They may be called 
+just like any other action.  The exceptions are the run, reset, clear, and 
+excise commands. These commands are disabled when called from the RHS of a 
+rule since the consequences are unpredictable.  See section 5.1 for 
+descriptions of the available commands.
+
+END-ENTRY
+
+1MBEGIN-ENTRY-USING_CLIPS
+
+USING_CLIPS
+
+Section 5 - Using CLIPS
+CLIPS expert systems may be executed in three ways:  interactively using a 
+simple, line-type interface, interactively using a window/menu/mouse interface 
+on certain machines, or as embedded expert systems in which the user provides 
+a main program and controls execution of the expert system.  Embedded 
+applications are discussed in the Advanced Programming Guide.  In addition a 
+command line option is available to allow commands normally issued in the 
+line-type interface to be read directly from a file.
+
+The generic CLIPS interface is a simple, interactive, line-type interface for 
+high portability.  The standard usage is to create or edit rules using any 
+standard text editor and save the file(s) as a text file, to exit the editor 
+and execute CLIPS, then load rule file(s) into CLIPS.  The interface provides 
+commands for viewing the current state of the system, tracing execution, 
+adding or removing information, or clearing CLIPS.
+
+A more sophisticated window interface is available for Macintosh and MS-DOS 
+machines. All of the interface commands described in this section are 
+available in the window interfaces. These interfaces are described in more 
+detail in the Utilities and Interfaces Guide.
+
+Subtopics :
+
+  ENVIRONMENT_COMMANDS     MEMORY_MANAGEMENT_COMMANDS
+  SYSTEM_STATUS_COMMANDS   ADDITIONAL_COMMANDS
+  DEBUGGING_COMMANDS       ON-LINE_HELP_SYSTEM
+
+END-ENTRY
+
+2IBEGIN-ENTRY-ENVIRONMENT_COMMANDS
+
+USING_CLIPS
+  ENVIRONMENT_COMMANDS
+
+5.1 Environment Commands
+The following commands control the CLIPS environment:
+
+ (bload <file-name>)      Loads the rules and deffacts stored in the file
+                          specified by <file-name> into the environment.  The
+                          specified file must have been created by bsave.
+                          Example    (bload "rules.bin")
+
+ (bsave <file-name>)      Saves all of the rules and deffacts in the current
+                          environment into the file specified by <file-name>.
+                          The save file is written using a binary format which
+                          results in a smaller file, and faster save/load
+                          commands.  The save file must be loaded via the
+                          bload command.  Defrelation and deftemplate forms
+                          are not saved in the save file.
+                          Example    (bsave "rules.bin")
+
+ (clear)                  Removes all rules and deffacts from the environment.
+                          Removes all activations from the agenda and all
+                          facts from the fact-list.
+
+ (exit)                   Quit CLIPS.
+
+ (help-path [<path>])     Report or change location of on-line help file to
+                          path (see sec. 5.7).
+
+ (help <path>)            Get information from the on-line help system (see
+                          sec. 5.7).
+
+ (load-facts <file>)      This function will assert a file of information as
+                          facts into the CLIPS fact-list.  It can read files
+                          created with save-facts or any ASCII text file.
+                          Each line is treated as a separate fact. Input lines
+                          must be less than 512 characters.
+
+ (load <file-name>)       Loads the rules and deffacts stored in the file
+                          specified by <file-name> into the environment.
+                          Files generated with the save command can not be
+                          loaded using load.
+                          Example    (load "rules.txt")
+
+ (reset)                  Resets CLIPS.  Removes all activations from the
+                          agenda and all facts from the fact-list, then
+                          asserts all facts listed in deffacts statements into
+                          the fact-list.
+
+ (run [<limit>])          Starts execution of the rules.  If <limit> is
+                          positive, execution will cease after <limit> rule
+                          firings or when the agenda contains no rule
+                          activations.  If <limit> is not specified or is a
+                          negative integer, execution will cease when the
+                          agenda contains no rule activations.
+                          Example   (run 3)
+
+ (save-facts <file>)      This function saves all of the facts in the current
+                          fact-list into the file specified by <file>.
+                          Printed facts must not exceed 512 characters.
+
+ (save <file-name>)       Saves all of the rules and deffacts in the current
+                          environment into the file specified by <file-name>.
+                          Example    (save "rules.txt")
+
+END-ENTRY
+
+2IBEGIN-ENTRY-SYSTEM_STATUS_COMMANDS
+
+USING_CLIPS
+  SYSTEM_STATUS_COMMANDS
+
+5.2 System Status Commands
+The following commands display the current CLIPS status:
+
+ (agenda)                            Displays all activations on the agenda.
+
+(facts [<start> [<end> [<max>]]])    Displays facts stored in the fact-list.
+                                     Without any arguments, it displays all
+                                     facts. If only <start> is specified, it
+                                     displays all facts with id numbers
+                                     greater than or equal to <start>. If both
+                                     <start> and <end> are specified, it
+                                     displays all facts between <start> and
+                                     <end>, exclusive. If <start>, <end>, and
+                                     <max> are specified, it displays all
+                                     facts between <start> and <end> up to a
+                                     limit of <max> facts.
+
+ (list-deffacts)                     Displays the names of all deffact blocks
+                                     currently loaded in CLIPS.
+
+ (list-deftemplates)                 Displays the names of all deftemplate
+                                     forms currently loaded in CLIPS.
+
+ (options)                           Generates a textual description of the
+                                     status of the CLIPS compiler flags.
+
+ (ppdeffact <ID>)                    Displays the text of the deffacts block
+                                     named <ID>.
+
+ (ppdeftemplate <ID>)                Displays the text of the deftemplate
+                                     named <ID>.
+
+ (pprule <rule>)                     Displays the text of the rule named
+                                     <rule>.
+                                     Example  (pprule bogus-name)
+
+ (rules)                             Displays the names of all rules stored in
+                                     the data base.
+
+ (time)                              Returns the elapsed seconds since the
+                                     system reference time.
+
+END-ENTRY
+
+2IBEGIN-ENTRY-DEBUGGING_COMMANDS
+
+USING_CLIPS
+  DEBUGGING_COMMANDS
+
+5.3 Debugging Commands
+The following commands control the CLIPS debugging aids:
+
+ (crsv-trace-off)        Stop sending trace information to a file.
+
+ (crsv-trace-on <file>)  Sends all information normally generated by a (watch
+                         all) to the specified file using a format that is
+                         more efficient for CRSV to read than the format used
+                         by watch.
+
+ (dribble-off)           Stops sending watch information to a file.
+
+ (dribble-on <file>)     Sends all information normally sent to the logical
+                         names wclips, wdialog, wdisplay, werror, wtrace,
+                         wagenda, and stdout to <file> as well as to their
+                         normal place.  Additionally, all information received
+                         from logical name stdin is also sent to <file> as
+                         well as being returned by the requesting function.
+
+ (matches <rule>)        Displays a list of facts which matches each pattern
+                         on the LHS of the rule and the combinations, if any.
+
+ (remove-break [<name>]) Removes a breakpoint for the rule <name>.  If no rule
+                         name is given, removes all breakpoints.
+
+ (set-break <name>)      Sets a breakpoint for the rule <name>.  If a
+                         breakpoint is set for rule <name> execution will stop
+                         prior to executing rule <name>. At least one rule
+                         must fire before a breakpoint will stop execution.
+
+ (show-breaks)           Shows all current breakpoints.
+
+ (unwatch <item>)        Deactivates the watch command for <item>.
+                         Example  (unwatch rules)
+
+ (watch <item>)          If <item> is facts, all fact assertions and
+                         retractions will be displayed.  If <item> is rules,
+                         all rule firings will be displayed.  If <item> is
+                         activations, all rule activations and deactivations
+                         will be displayed.  If <item> is compilations, the
+                         progress of rule compilations will be displayed.  If
+                         <item> is all, facts, rules, activations, and
+                         compilations will all be displayed.
+                         Example  (watch rules)
+
+END-ENTRY
+
+2IBEGIN-ENTRY-MEMORY_MANAGEMENT_COMMANDS
+
+USING_CLIPS
+  MEMORY_MANAGEMENT_COMMANDS
+
+5.4 Memory Management Commands
+The following commands display CLIPS memory status information:
+
+ (mem-used)            Displays the number of bytes CLIPS has currently in-use
+                       or held for later use.
+
+ (mem-requests)        Displays the number of times CLIPS has requested memory
+                       from the operating system.
+
+ (release-mem)         Releases all free memory held internally by CLIPS back
+                       to the operating system.
+
+ (conserve-mem <arg>)  Turns on or off the storage of information used for
+                       save and pretty print commands.  <arg> either may be on
+                       or off.  This can save considerable memory in a large
+                       system.  It should be called prior to loading any
+                       rules.
+                       Example  (conserve-mem on)
+
+These functions generally should not be called unless the user knows exactly  
+what he is doing.  CLIPS memory management is described more fully in the 
+Advanced Programming Guide.
+
+END-ENTRY
+
+2IBEGIN-ENTRY-ADDITIONAL_COMMANDS
+
+USING_CLIPS
+  ADDITIONAL_COMMANDS
+
+5.5 Additional Commands
+The following commands also are available:
+
+(<name> [<<args>>])        Any function, user-defined or CLIPS-defined, may be 
+called directly from the top level.
+                          Example  (system "dir")
+
+(assert <<facts>>)         Asserts <facts> into the data base.
+                          Example  (assert (this is a fact))
+
+(batch <file>)         Allows "batch" processing of CLIPS interactive 
+commands. Processes all commands stored in <file> as though they had been 
+entered at the top level.  All interface commands can be used in a batch file, 
+including rule definitions and responses to read or readline calls.  Full 
+error checking will not be done on rules defined in this manner (Users should 
+use a load command in the batch file rather the explicit defrule commands).
+                          Example (batch "rules.bat") where "rules.bat" 
+contains a number of load commands which will cause all rules to be loaded.
+
+(deffacts <<facts>>)      Defines a new deffacts block, as described in 
+section 2.5.2.  If a deffacts with the same name already exists, the previous 
+deffacts will be excised, even if the new deffacts has errors in it.
+
+(defrule <<rule>>)        Defines a new rule, as described in section 2.5.1.  
+If a rule with the same name already exists, the previous rule will be 
+excised, even if the new rule has errors in it.
+
+(deftemplate <<template>>)    Defines a new template, as described in section 
+2.5.3.  If a template with the same name already exists, the previous template 
+will be excised, even if the new template has errors in it.  Furthermore, 
+rules loaded under the old template may not be compatible with the rules 
+loaded under the new template.
+
+ (excise <rule>)           Removes the rule named <rule> from the system.
+
+ (retract <<fact#>>)       Retracts the fact(s) with number(s) <<fact#>> from
+                           the data base.
+                           Example    (retract 4)  or  (retract 3 24 7)
+
+ (undeffacts <name>)       Reverses the effect of a deffacts statement.  All
+                           facts listed in the deffacts construct named <name>
+                           will no longer be put into the initial fact-list
+                           after a reset.
+
+ (undeftemplate <name>)    Reverses the effect of a deftemplate statement.  No
+                           further uses of the template <name> are permitted.
+                           Existing <name> facts will be displayed using
+                           positional notation.  Rules previously compiled
+                           with patterns using template <name> are still
+                           valid.
+
+In addition to the commands described here, most of the actions described in 
+section 4 can be used. As mentioned in section 4.5.10, most of the interface 
+commands also can be called from the RHS of a rule, but users must be aware of 
+how to display the information.  Some information, such as from functions like 
+pprule, facts, agenda, and rules, are actual printouts which always are sent 
+through the router system to some output device. Other information sent to the 
+screen while using the interface is actually a return value from the function 
+call.  Functions such as mem-used and all of the math functions are in this 
+category.  This second kind of function can be used on the RHS, but its value 
+must be captured in a variable using bind and the variable printed.
+
+The actions run, reset, excise, or clear commands should not be called from 
+the RHS of a rule since their effects will be unpredictable.  The actions 
+defrule, deffacts and deftemplate will give an error message if they are used 
+on the RHS.
+
+END-ENTRY
+
+2MBEGIN-ENTRY-COMMAND-LINE_OPTIONS
+
+USING_CLIPS
+  COMMAND-LINE_OPTIONS
+
+5.6 Command-line Options
+By using a command-line option, all commands normally input at the CLIPS 
+prompt may be read from a file instead. The syntax is as follows:
+Syntax
+    clips -f <filename>
+
+The -f is required, and <filename> is a file that contains CLIPS commands. If 
+the (exit) command is included in the file then, CLIPS will halt and the user 
+is returned to the operating system after executing the commands in the file. 
+If an (exit) command is not in the file, CLIPS will enter in its interactive 
+state after executing the commands in the file.
+
+Unlike batch, reading from the command line file will not replace stdin. Any 
+read or readline commands in the file which read from stdin (or t) must still 
+be input from the keyboard. Also, the CLIPS prompt or any commands will not be 
+displayed until CLIPS enters interactive state.
+
+END-ENTRY
+
+1MBEGIN-ENTRY-APPENDICES
+
+APPENDICES
+
+Subtopics:
+
+RESERVED_FUNCTION_NAMES   INTEGRATED_EDITOR
+SUPPORT_INFORMATION
+
+END-ENTRY
+
+2IBEGIN-ENTRY-RESERVED_FUNCTION_NAMES
+
+APPENDICES
+  RESERVED_FUNCTION_NAMES
+
+Appendix A - Reserved Function Names
+This appendix lists all the functions provided by either standard CLIPS or 
+various CLIPS extensions. They should be considered reserved function names 
+and users should not create user-defined functions with any of these names.
+
+Standard functions
+The following table lists all of the basic functions provided by standard 
+CLIPS.
+
+agenda
+assert
+batch
+bind
+bload
+bsave
+call
+clear
+close
+conserve-mem
+crsv-trace-off
+crsv-trace-on
+deffacts
+defrule
+deftemplate
+dribble-off
+dribble-on
+edit
+eval
+excise
+exit
+facts
+format
+fprintout
+gensym
+halt
+if
+length
+list-deffacts
+list-deftemplates
+load
+load-facts
+lowcase
+matches
+mem-requests
+mem-used
+member
+modify
+mv-append
+mv-delete
+mv-subseq
+nth
+open
+ppdeffact
+ppdeftemplate
+pprule
+printout
+read
+readline
+release-mem
+remove-break
+reset
+retract
+rules
+rules-to-c
+run
+save
+save-facts
+set-break
+setgen
+show-breaks
+str-assert
+str-cat
+str-compare
+str-explode
+str-implode
+str-index
+str-length
+string_assert
+sub-string
+subset
+system
+time
+undeffacts
+undefrule
+undeftemplate
+unwatch
+upcase
+watch
+while
+
+Logical Functions
+The following table lists all of the logical functions provided by standard 
+CLIPS.
+
+!
+&&
+and
+not
+or
+||
+
+Comparison Functions
+The following table lists all of the comparison functions provided by standard 
+CLIPS.
+
+!=
+<
+<=
+=
+>
+>=
+eq
+neq
+
+Math Functions
+The following table lists all of the math functions provided by standard 
+CLIPS.
+
+*
++
+-
+/
+
+On-line Help functions
+The following table list the functions available when the on-line help option 
+is used.
+
+help
+help-path
+
+Text Processing functions
+The following table list the functions available when either the text 
+processing or the on-line help option is used.
+
+fetch
+print-region
+toss
+
+Extended Math functions
+The following table list the functions available when the extended math option 
+is used.
+
+**
+abs
+acos
+acosh
+acot
+acoth
+acsch
+asec
+asech
+asin
+asinh
+atan
+atanh
+cos
+cosh
+cot
+coth
+csc
+csch
+deg-grad
+deg-rad
+exp
+grad-deg
+integerp
+log
+log10
+max
+min
+mod
+pi
+rad-deg
+sec
+sech
+sin
+sinh
+sqrt
+tan
+tanh
+trunc
+
+Internal functions
+These functions are used internally by CLIPS.  They can be called from the top 
+level, but would not be useful to most applications.
+
+do-nothing
+progn
+show-pn
+slow-assert
+
+END-ENTRY
+
+2IBEGIN-ENTRY-INTEGRATED_EDITOR
+
+APPENDICES
+  INTEGRATED_EDITOR
+
+Appendix B - Integrated Editor
+CLIPS includes a fully integrated version of the full screen MicroEMACS 
+editor. You may call the editor from CLIPS, compile full buffers or just 
+sections of the editor (incremental compile), temporarily exit the editor back 
+to CLIPS, or permanently exit the editor.  Since the editor is full screen, 
+portions of it are highly machine dependent.  As it is currently set up, the 
+editor will run on VAX VMS machines using VT100- or VT240-compatible 
+terminals, UNIX systems which support TERMCAP, the IBM PC, and most IBM 
+compatibles.
+
+The editor may be called from CLIPS with the following command:
+
+    (edit ["<file-name>"])
+
+The file name is optional. If one is given, that file would be loaded.  If no 
+file name is given, the editor is entered without loading a file.  Once in the 
+file, all of the EMACS commands listed below are applicable.  To exit the 
+editor and clear all buffers, use <Ctrl-Z> or <Ctrl-X><Ctrl-C>.  To 
+temporarily exit the editor and retain the information in the buffers, use 
+<Ctrl-X> Q.  To compile a rules section, mark a region and type 
+<Ctrl-X><Ctrl-T>. To compile the entire buffer, use <Meta-T>. The editor can 
+use extensive amounts of memory and a flag is available in clips.h to remove 
+all of the editor code.
+
+When using the editor on multiuser machines like the VAX or many UNIX 
+environments, be careful with the control S and control Q commands; they could 
+conflict with terminal XON/XOFF communications. All of the control S commands 
+have a work around built into the editor. The save file command, normally 
+<Ctrl-X><Ctrl-S>, is also <Meta> Z. The forward search command, normally 
+<Ctrl-S>, is also <Meta> J. The control Q command is rarely needed in a CLIPS 
+file and, therefore, has no substitute.
+
+        Control Commands
+ <ctrl-@>          Set mark at current position.
+ <ctrl-A>          Move cursor to beginning of line.
+ <ctrl-B>          Move cursor BACK one character.
+ <ctrl-C>          Start a new interactive command shell.  Be careful!
+ <ctrl-D>          DELETE character under cursor.
+ <ctrl-E>          Move cursor to END of line.
+ <ctrl-F>          Move cursor FORWARD one character.
+ <ctrl-G>          Abort any command.
+ <ctrl-H>          (backspace) delete previous character.
+ <ctrl-I>          Insert a TAB.
+ <ctrl-J>          Insert a CR-LF and indent next line.
+ <ctrl-K>          KILL (delete) to end of line.
+ <ctrl-L>          Redisplay screen.
+ <ctrl-M>          Insert a CR-LF.
+ <ctrl-N>          Move cursor to NEXT line.
+ <ctrl-O>          OPEN a new line.
+ <ctrl-P>          Move to PREVIOUS line.
+ <ctrl-Q>          QUOTE the next character (insert the next character typed).
+ <ctrl-R>          Reverse SEARCH.
+ <ctrl-S>          Forward SEARCH (also <Meta-J>).
+ <ctrl-T>          TRANSPOSE characters.
+ <ctrl-U>          Enter repeat count for next command.
+ <ctrl-V>          VIEW the next screen (scroll up one screen).
+ <ctrl-W>          KILL region (all text between cursor and last mark set).
+ <ctrl-X>          Extended command prefix - see below.
+ <ctrl-Y>          YANK (undelete) last text killed.
+ <ctrl-Z>          Quick save of file in current buffer (only) and exit.
+
+         Extended (Control-X) Commands
+ <ctrl-X>(             Begin keyboard Macro.
+ <ctrl-X>)             End keyboard Macro.
+ <ctrl-X>!             Execute a single external command.
+ <ctrl-X>=             Show current cursor column and line number.
+ <ctrl-X>:             Go to a specific line number.
+ <ctrl-X>1             Display current window only.
+ <ctrl-X>2             Split the current window.
+ <ctrl-X>B             Switch to a different BUFFER.
+ <ctrl-X>E             EXECUTE keyboard Macro.
+ <ctrl-X>F             Set FILL column.
+ <ctrl-X>K             KILL a buffer (other than current buffer).
+ <ctrl-X>M             MATCH parenthesis (or {} or []).
+ <ctrl-X>N             Move to NEXT window.
+ <ctrl-X>P             Move to PREVIOUS window.
+ <ctrl-X>R             Global search and REPLACE (backwards).
+ <ctrl-X>S             Global SEARCH and replace (forwards).
+ <ctrl-X>Z             Enlarge current window by repeat count <ctrl-U> lines.
+
+ <ctrl-X><ctrl-B>      Show active BUFFERS.
+ <ctrl-X><ctrl-C>      Exit without saving buffers.
+ <ctrl-X><ctrl-F>      FIND file.  Load if not already in buffer.
+ <ctrl-X><ctrl-N>      Scroll current window up by repeat count lines.
+ <ctrl-X><ctrl-P>      Scroll current window down by repeat count lines.
+ <ctrl-X><ctrl-R>      RENAME file.  Change file name for buffer.
+ <ctrl-X><ctrl-S>      SAVE (write) current buffer into its file.
+ <ctrl-X><ctrl-V>      VISIT a file.  Read file and display in current window.
+ <ctrl-X><ctrl-W>      WRITE buffer to file.  Option to change name of file.
+ <ctrl-X><ctrl-Z>      Reduce current window by repeat count lines.
+
+     Special characters
+ <del>                 Delete previous character.
+                       (also <ctrl-H> on some terminals)
+ <esc>                 Meta command prefix.
+                       (also <ctrl-[> on some terminals)
+
+        Meta Commands  (Activated by <esc> or <ctrl-[>)
+ <meta>!                Move current line to repeat count lines from top of
+                        window.
+ <meta>>                Move cursor to end of buffer.
+ <meta><                Move cursor to beginning of buffer.
+ <meta>.                Set mark.
+ <meta>B                Move cursor BACK one word.
+ <meta>C                CAPITALIZE first letter of word.
+ <meta>D                DELETE next word.
+ <meta>F                Move cursor FORWARD one word.
+ <meta>J                SEARCH forward (same as <ctrl-S>).
+ <meta>L                LOWERCASE (lowercase) next word.
+ <meta>R                Query search and REPLACE (backwards).
+ <meta>S                Query SEARCH and replace (forwards).
+ <meta>U                UPPERCASE (uppercase) next word.
+ <meta>V                VIEW the previous screen (scroll down one screen).
+ <meta>W                COPY region into kill buffer.
+ <meta>Z                SAVE current buffer into file (same as
+                        <ctrl-X><ctrl-S>).
+ <meta><del>            DELETE previous word.
+
+END-ENTRY
+
+2IBEGIN-ENTRY-SUPPORT_INFORMATION
+
+APPENDICES
+  SUPPORT_INFORMATION
+
+Appendix E - Support Information
+
+CLIPS is available through the Computer Software Management and Information 
+Center (COSMIC), the distribution point for NASA software.  The program number 
+is MSC-21208.  The program price is $200.00, and the documentation price is 
+$54.00 (as of September 1987).  The program price is for the source code.  
+Further information can be obtained from
+
+                COSMIC
+                382 E. Broad St.
+                Athens, GA  30602
+                (404) 542-3265
+
+If you have problems using or installing CLIPS, a CLIPS Help Line is available 
+from 8:00 a.m. to 5:00 p.m. (Central Standard Time).  The number is (713) 
+280-2233.  Leave your name and number and a support person will get back to 
+you.
+
+
+END-ENTRY
+
+

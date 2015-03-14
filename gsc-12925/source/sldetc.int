@@ -1,0 +1,20 @@
+interface;
+
+  unit sldetc ( createsld, deletesld, sldlist, sldname, sldtype, plchoice);
+
+  USES utility;
+
+  var
+    sldname : lstring(14);
+    sldtype : lstring(8);
+    plchoice : integer;
+
+  procedure createsld ( var current:entity; current_node : byte );
+
+  procedure deletesld ( var current : entity );
+
+  procedure sldlist ( var firstsld : entity );
+
+  begin
+  end;
+

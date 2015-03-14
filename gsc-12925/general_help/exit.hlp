@@ -1,0 +1,35 @@
+cancel.hlp
+save.hlp
+
+
+
+
+
+
+
+
+When exiting with no changes made to the latest saved chart, the Main Menu will
+be displayed immediately, but if any changes were made a prompt will appear
+asking if you want to save this latest version of the current chart.  To save
+it answer Y or press F8(Save).  To return to the chart without saving it press
+F1(Cancel).  To go to the Main Menu without saving it answer N or press F10
+(Exit).  To recieve more help on the individual keys, use one of the function
+keys given below.
+
+
+To obtain help for any of the following subjects, press the function key next
+to the desired subject.
+
+        F1  Cancel
+        F2  Save
+
+
+
+
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

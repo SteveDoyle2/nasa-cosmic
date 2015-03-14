@@ -1,0 +1,28 @@
+  interface;
+
+  unit mlsexec ( perform2,add2,weekdiv,daysperx,redraw,exit,enter,
+                 sldredraw );
+
+  USES utility;
+
+  var
+      add2     : boolean;
+      weekdiv  : boolean;
+      daysperx : real;
+
+  procedure exit ( var current, first    : entity );
+  procedure enter ( var current, first    : entity );
+
+  procedure redraw ( code : integer;var current, first  : entity );
+
+  procedure sldredraw ( var current, first : entity );
+
+  procedure perform2 ( var inkey         : byte;
+                       var current       : entity;
+                       var current_node  : byte;
+                       var first         : entity );
+
+
+  begin
+  end;
+

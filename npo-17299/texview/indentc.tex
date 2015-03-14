@@ -1,0 +1,105 @@
+% Indentation control
+\newskip\tempskip
+\tempskip=0in
+\newskip\leftindent
+\leftindent=\parindent
+\newcount\indentlevel
+\newcount\indentmode
+\newcount\tempcount
+% No more than 5 indentation levels
+\newcount\markstart
+\newtoks\marka
+\markstart=\allocationnumber
+% Room for 5 levels of indentation without adding more tokens
+\newtoks\markb
+\newtoks\markc
+\newtoks\markd
+\newtoks\marke
+% These count registers hold the indentation character codes
+\newcount\countstart
+\newcount\counta
+\countstart=\allocationnumber
+\newcount\countb
+\newcount\countc
+\newcount\countd
+\newcount\counte
+% These token registers hold the fore and aft characters for
+%  automatic indentation
+\newcount\forestart
+\newtoks\forea
+\forestart=\allocationnumber
+\newtoks\foreb
+\newtoks\forec
+\newtoks\fored
+\newtoks\foree
+\newcount\aftstart
+\newtoks\afta
+\aftstart=\allocationnumber
+\newtoks\aftb
+\newtoks\aftc
+\newtoks\aftd
+\newtoks\afte
+\def\incindent{\advance\indentlevel by1%
+ \ifnum\indentlevel>4 \indentlevel=4\fi
+ \setgentoken{\indentlevel}\par\setparindent}
+\def\decindent{\advance\indentlevel by-1%
+ \ifnum\indentlevel<0 \indentlevel=0\fi
+ \setgentoken{\indentlevel}\par\setparindent}
+\def\gotoindent#1{\indentlevel=#1\ifnum\indentlevel<0 \indentlevel=0%
+ \else \ifnum\indentlevel>4 \indentlevel=4 \fi\fi
+ \setgentoken{\indentlevel}\par\setparindent}
+\def\setmarktoken{\global\count255=\markstart
+  \global\advance\count255 by\indentlevel
+  \xdef\marktoken{\the\toks\count255}}
+\def\setgentoken#1{\ifnum#1=\indentlevel \global\count255=\countstart
+ \global\advance\count255 by#1 \global\tempcount=\count\count255
+ \ifnum\tempcount<0 \setmarktoken\else\setautomark\fi\fi}
+\def\setparindent{\advance\leftskip by-\tempskip
+ \tempskip=\leftindent \count255=\indentlevel
+ \multiply\tempskip by\count255 \advance\leftskip by\tempskip}
+\def\setmarker#1#2{
+ \global\count255=\markstart \global\advance\count255 by#1 \toks\count255={#2}
+ \setgentoken{#1}}
+\def\setindentchar{\count255=`}
+% #5 is format - arabic | roman | ROMAN.
+\def\autoindenton#1#2#3#4#5{\setindentchar #3\tempcount=\count255
+ \def\dd{#5} \ifx\dd\roman \advance\tempcount by-48\fi
+ \ifx\dd\ROMAN \advance\tempcount by-24\fi
+ \count255=\countstart\advance\count255 by#1 \global\count\count255=\tempcount
+ \count255=\forestart
+ \advance\count255 by#1 \global\toks\count255={#2}\count255=\aftstart
+ \advance\count255 by#1 \global\toks\count255={#4}\setgentoken{#1}}
+\def\changemark{\count255=\countstart\advance\count255 by\indentlevel
+ \ifnum\count\count255>-1\global\advance\count\count255 by1
+ \global\tempcount=\count\count255 \setautomark\else\setmarktoken\fi}
+\def\setautomark{\chardef\cc=\tempcount
+ \ifnum\tempcount<24\xdef\cc{\romannumeral\tempcount}\else
+ \ifnum\tempcount<48\advance\tempcount by-24
+  \xdef\cc{\uppercase{\romannumeral\tempcount}}\fi\fi
+ \count255=\forestart \advance\count255 by\indentlevel
+ \tempcount=\aftstart \advance\tempcount by\indentlevel
+ \xdef\marktoken{\the\toks\count255{\cc}\the\toks\tempcount\relax}}
+\def\autoindentoff#1{\par\count255=\countstart\advance\count255 by#1
+ \global\count\count255=-1\setmarktoken}
+\def\indentinline{\indentmode=1}
+\def\indentafter{\indentmode=0}
+\def\markbullet{\ifmmode\bullet\else$\bullet$\fi}
+\def\markthindash{{\rm\ifmmode$---$\else---\fi}}
+\def\markthickdash{\vrule width 10pt height3pt depth-2pt}
+\def\marknull{\relax}
+\parskip=10pt plus2pt
+\indentlevel=0               % outermost level is 0
+\indentinline
+\setmarker{0}{\markbullet}
+\setmarker{1}{\markbullet}
+\setmarker{2}{\markthickdash}
+\setmarker{3}{\markthindash}
+\setmarker{4}{\marknull}
+\autoindentoff{0}
+\autoindentoff{1}
+\autoindentoff{2}
+\autoindentoff{3}
+\autoindentoff{4}
+\everypar={\llap{\marktoken\kern5pt\indent}\changemark}
+%\tempcount=\countstart\advance\tempcount by\indentlevel%
+%\tempcount=\count\tempcount\showthe\tempcount}

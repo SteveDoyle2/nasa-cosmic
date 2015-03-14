@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+The Insert Connector key in the Text Mode of the N-square chart is used to
+insert a connector.  To insert a connector, place the cursor at the field to be
+inserted.  Press F3 and if box option was chosen, a blank line will be created
+on which the new connector can be entered.  If using circle option, no text
+can be entered and the cursor will automatically move to the next field.
+
+
+
+
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

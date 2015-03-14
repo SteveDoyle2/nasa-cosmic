@@ -1,0 +1,23 @@
+  interface;
+
+  unit execute ( perform,gtype,pltype,name,newdraw,saved,skipfield );
+
+  USES utility;
+
+    var
+      gtype   : lstring(8);
+      pltype  : lstring(8);
+      name    : lstring(14);
+      skipfield:set of byte;
+      newdraw : boolean;
+      saved   : boolean;
+
+  procedure perform ( var inkey         : byte;
+                      var current       : entity;
+                      var current_node  : byte;
+                      var first         : entity );
+
+
+  begin
+  end;
+

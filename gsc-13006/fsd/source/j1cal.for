@@ -1,0 +1,29 @@
+      SUBROUTINE J1CAL(J1,SUM,YYDB,BDYMI,ISO)
+C
+C     'J1CAL' CALCULATES THE TOTAL MOMENT OF INERTIA OF THE SATELLITE IN
+C     THE BODY FRAME
+C
+      IMPLICIT REAL*8 (A-H,O-Z)
+      REAL*8 ISO(3,3),J1(3,3)
+C
+      DIMENSION SUM(6),YYDB(3,3),BDYMI(3,3)
+C
+C
+      ISO(1,1)=BDYMI(1,1) + SUM(1) + YYDB(2,2) + YYDB(3,3)
+      ISO(2,2)=BDYMI(2,2) + SUM(2) + YYDB(1,1) + YYDB(3,3)
+      ISO(3,3)=BDYMI(3,3) + SUM(3) + YYDB(1,1) + YYDB(2,2)
+C
+      ISO(1,2)=BDYMI(1,2) + SUM(4) + YYDB(1,2)
+      ISO(1,3)=BDYMI(1,3) + SUM(5) + YYDB(1,3)
+      ISO(2,3)=BDYMI(2,3) + SUM(6) + YYDB(2,3)
+C
+      ISO(2,1)=ISO(1,2)
+      ISO(3,1)=ISO(1,3)
+      ISO(3,2)=ISO(2,3)
+C
+      DO 10 I=1,3
+      J1(I,I)=ISO(I,I)
+      DO 10 J=1,3
+   10 IF(I.NE.J) J1(I,J)=-ISO(I,J)
+      RETURN
+      END

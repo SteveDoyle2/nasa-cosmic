@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+save.hlp
+
+Plot is used to save a chart in the format used by the Slide Show Program
+(VDM).  This format is necessary to combine different type charts into one
+slide show.  The plot key is accessed from the View Screen.  After pressing the
+plot key, a temporary file is created.  After this file is done, the prompt
+asks for the new format's filename which is saved in a different directory than
+the charts.  This directory is maintained using the Slide Show Program, not the
+chart program.  After the name and description are given, the file is saved and
+the user is returned to the View Screen.  To return to the View Screen without
+saving the chart press F1(Cancel) at the first prompt.
+
+The available function keys are the same as the save menu except when
+F1(Cancel) is pressed, the second save menu used for maintenance is not
+displayed.  To recieve more help on those keys, press F9(More Help) to display
+the Save Menu help.
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+        F9  More Help
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

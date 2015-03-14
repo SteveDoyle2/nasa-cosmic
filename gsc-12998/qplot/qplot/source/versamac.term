@@ -1,0 +1,163 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STANDARD',
+               'QLIBHOME:IO',
+               'QLIBHOME:FIG',
+               'QLIBHOME:TERM_VAX',
+               'QLIBHOME:TERM_ANSI',
+               'QLIBHOME:TERM_4010'),
+  ENVIRONMENT ('QLIBHOME:VERSAMAC.TEN') ]
+MODULE term_VERSAMAC;
+{=============================================================================}
+{-- PROCEDURES FOR TERMINAL TYPE VERSAMAC ------------------------------------}
+{=============================================================================}
+[ HIDDEN ] VAR
+   termfig       : RECORD;
+                   charsize : char;
+                   END := (';');
+{=============================================================================}
+[ GLOBAL ]
+FUNCTION termname_VERSAMAC (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0: termname_VERSAMAC := '1';
+   1: termname_VERSAMAC := 'VERSAMAC';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE colorsetup_VERSAMAC;
+BEGIN
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE executecom_VERSAMAC;
+{------------------------------}
+PROCEDURE bufferempty;
+VAR
+   ipt : ipoint;
+BEGIN
+CASE env.mode OF
+   M_TEXT:  qiowwrite (ESC + FF);
+   M_DUAL:  BEGIN
+            ipt.ix := 20000;
+            ipt.iy := 20000;
+            qiowwrite (chr (29) + chr (31) + '  ' + CRLF);
+            END;
+   M_PLOT:  ;
+   END;
+env.mode := M_PLOT;
+IF length (env.buffer) <> 0 
+ THEN 
+  BEGIN
+  qiowwrite (env.buffer + CRLF);
+  env.buffer := '';
+  END;
+END;
+{------------------------------}
+BEGIN
+WITH plotitem DO CASE ins OF
+   I_col:  bufferempty;
+   I_pan:  ;
+   I_clo:  ;
+   I_pos:  BEGIN
+           bufferempty;
+           env.pos.ix := ix;
+           env.pos.iy := iy;
+           END;
+   I_dra:  draw_4010 (ix,iy,false,bufferempty);
+   I_siz:  ;
+   I_mar:  ;
+   I_pri:  IF env.visible AND (st <> '') 
+            THEN 
+             BEGIN
+             bufferempty;
+             env.buffer := ESC + termfig.charsize 
+                         + chr(29) + strofpos_4010 (env.pos)  
+                         + chr(31) + st;
+             bufferempty;
+             END;
+   I_emp:  bufferempty;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE writeterm_VERSAMAC (str : VARYING [l2] OF char);
+BEGIN
+IF env.mode = M_PLOT 
+ THEN 
+  BEGIN
+  qiowwrite (ESC + '2');
+  env.mode := M_DUAL;
+  END;
+qiowwritevirtual (str);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE readterm_VERSAMAC (VAR outstr : VARYING [l2] OF char);  
+BEGIN
+readterm_vax (outstr);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screenerase_VERSAMAC;
+BEGIN
+IF env.mode IN [M_PLOT,M_DUAL] THEN qiowwrite (ESC + FF + ESC + '2' + CRLF);
+screenerase_ansi;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screencopy_VERSAMAC;
+BEGIN
+screencopy_4010;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE gin_VERSAMAC (VAR key : char;  VAR ipt : ipoint;  color : color_type);
+VAR
+   st : VARYING [20] OF char;
+BEGIN
+IF env.mode IN [M_DUAL,M_TEXT] 
+ THEN qiowwrite (chr (29) + chr (31) + '  ' + CRLF);
+gin_4010 (key,ipt);
+END;
+{-----------------------------------------------------------------------------}
+[GLOBAL]
+FUNCTION readmenu_VERSAMAC (default : char;  toplevel : boolean;
+   helpprefix : anystring) : command_type;
+BEGIN
+readmenu_VERSAMAC := readmenu_ansi (default,toplevel,helpprefix,false);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE termconfig_VERSAMAC (configcontrol : configcontrol_type);
+BEGIN
+WITH termfig DO CASE configcontrol OF
+   CON:  BEGIN
+         qiowwrite (ESC + FF);      { CODE TEK               }
+         qiowwrite (ESC + '2' + ESC + '[?3l');
+         CASE termfig.charsize OF
+            ';':  config.ch := ch_type (496,768,96,208);
+            ':':  config.ch := ch_type (544,848,64,176);
+            '9':  config.ch := ch_type (816,1312,96,304);
+            '8':  config.ch := ch_type (896,1408,96,288);
+            END;
+         config.resolution := 64;
+         config.dotsize    := 64;
+         config.starsize   := 320;
+         config.ansi364    := false;
+         config.drawblack  := false;
+         END;
+   QUE:  BEGIN
+         readch ('ENTER TEK CHARACTER SIZE CODE : ',charsize,'89:;',charsize);
+         CASE termfig.charsize OF
+            ';':  config.ch := ch_type (496,768,96,208);
+            ':':  config.ch := ch_type (544,848,64,176);
+            '9':  config.ch := ch_type (816,1312,96,304);
+            '8':  config.ch := ch_type (896,1408,96,288);
+            END;
+         END;
+   REP:  writeline (out,'Character size code is "' + charsize + '"');
+   END;
+END;
+{-----------------------------------------------------------------------------}
+END.

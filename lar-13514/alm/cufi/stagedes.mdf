@@ -1,0 +1,132 @@
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+C
+C   STAGEDES - Definitions for the Stage Description Menu of CARE3MENU
+C
+C   VERSION:  1.1
+C   AUTHOR:  A. Roberts; Tesseract Systems, Inc.
+C   CREATION DATE:  05/23/83
+C   LAST REVISION DATE:  07/23/83
+C   LAST REVISED BY:  A. Roberts
+C
+C FUNCTION: Defintions and declarations for CARE3MENU command level
+C		menu.
+C
+C USEAGE:  included in CARE3MENU
+C
+C ARGUMENTS:  NA
+C
+C ERRORS:   NA
+C
+C NOTES:  Written in VAX/VMS FORTRAN.  This menu has default values,
+C		so it uses a duplicate set of tables to contain
+C		defaults.  Thus DEF tables should be copied to
+C		the active tables on subsequent inputs.  This
+C		file also contains range checking constants for
+C		menu items.
+C
+C PROCESS:  NA
+C
+C REVISION HISTORY:  0.0 - Created on 05/23/83 by A. Roberts;
+C				Tesseract Systems, Inc.
+C					------
+C		     1.0 - First release version.  06/08/83,
+C				A. Roberts
+C					------
+C		     1.1 - Minor changes from NASA.  07/23/83,
+C				A. Roberts
+C
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
+C
+C Menu parameters
+C
+	parameter SD_MITEMS = 7			! Items in menu
+	parameter SD_H_LOGNAME = 'sd'		! Help logical name
+
+	parameter SD_SDT1 = NO_DAT .or. BOLD	! Special datatype for 
+						! Title
+	parameter SD_SDT2 = STR_DAT .or. EARLY_END
+						! Early end on stage name
+
+	parameter SD_STOP_STR = 'END'		! End stage input string
+
+	parameter SD_SN_PNTR = 2		! Data pointers
+	parameter SD_BM_PNTR = 3
+	parameter SD_MM_PNTR = 4
+	parameter SD_CPF_PNTR = 6
+	parameter SD_CFT_PNTR = 7
+
+	parameter SD_BM_MIN = 1			! Data Limits, defaults
+	parameter SD_BM_MAX = 100
+	parameter SD_BM_DEF = 1
+
+	parameter SD_MM_MIN = 0
+	parameter SD_MM_DEF = 1
+
+	parameter SD_CFT_DEF = 0
+
+	parameter SD_NONE_IN = ' *** You Must Enter At Least One Stage *** '
+	parameter SD_BAD_SN = ' *** Null Stage Name, Reenter Stage *** '
+	parameter SD_BAD_BM = ' *** Bad Beginning Modules, Reenter Stage *** '
+	parameter SD_BAD_MM = ' *** Bad Minimum Modules, Reenter Stage *** '
+	parameter SD_BAD_CPF = ' *** Bad Critical Pair Set(s) *** '
+	parameter SD_BAD_CFT = ' *** Bad Critical Fault Threshold *** '
+						! Bad response lines
+
+C
+C Menu tables
+C
+	character*(MAX_STRING) sd_labs(SD_MITEMS)	! Item labels
+	integer*4 sd_lpos(2,SD_MITEMS)			! Item Positions
+	integer*4 sd_dtype(SD_MITEMS)			! Item Datatypes
+	integer*4 sd_idat(SD_MITEMS)			! INTEGER Data
+	real*4 sd_rdat(SD_MITEMS)			! REAL Data
+	character*(MAX_STRING) sd_sdat(SD_MITEMS)	! STRING Data
+
+C
+C Default restore tables
+C
+	integer*4 sd_idat_def(SD_MITEMS)		! INTEGER Data
+	real*4 sd_rdat_def(SD_MITEMS)			! REAL Data
+	character*(MAX_STRING) sd_sdat_def(SD_MITEMS)	! STRING Data
+
+C
+C Anything in the menu that is hardwired
+C
+	data sd_labs /'Stage Description Input',
+	1		'Stage Name:',
+	2		'Number of Beginning Modules In Stage:',
+	3		'Minimum Number of Modules for Stage Operation:',
+	4		'Set(s) of Modules Subject to Critical',
+	5		'     Pair Failures:',
+	5		'Critical Fault Threshold:'/
+
+	data sd_lpos /1,28,
+	1		5,10,
+	2		6,10,
+	3		7,10,
+	4		8,10,
+	5		9,10,
+	6		10,10/
+
+	data sd_dtype /SD_SDT1,
+	1			SD_SDT2,
+	2			INT_DAT,
+	3			INT_DAT,
+	4			NO_DAT,
+	5			STR_DAT,
+	6			INT_DAT/
+
+C
+C Default values.  Coded in the active tables for the first call, and
+C the default follower tables for reload on secondary calls
+C
+	data sd_sdat /' ',' ',' ',' ',' ',' ',' '/
+	data sd_sdat_def /' ',' ',' ',' ',' ',' ',' '/
+
+	data sd_idat /0,0,SD_BM_DEF,SD_MM_DEF,0,0,SD_CFT_DEF/
+	data sd_idat_def /0,0,SD_BM_DEF,SD_MM_DEF,0,0,SD_CFT_DEF/
+
+C
+C End of Menu Definition
+C

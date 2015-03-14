@@ -1,0 +1,363 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                      System Manual for NAMEIO Program
+
+
+
+                              August 30, 1985
+
+
+
+                           Part I - User's Manual
+
+
+
+
+I. Creating the NAMEIO Subprograms
+
+The NAMEIO program creates the three subprograms (there are actually more than three
+subprograms generated, but only three user-callable entry points) automatically by
+reading the standard FORTRAN source code for the COMMON blocks to be processed and any
+applicable specification statements.  The following requirements apply to this file : 
+
+1. The specification statements for the variables in a COMMON block must appear below
+the COMMON statement in this file.  It is not necessary for the specification statements
+to appear after any COMMON statement which does not contain variables referenced by
+them. 
+
+2. Only full-word type specification and/or DIMENSION statements may be used for the
+first release.  The CHARACTER statement and word size specification statements (eg,
+INTEGER*2) are not permitted in this release.  Arrays are presently restricted to one
+dimension. 
+
+3. Parameter statements may not be used in the first release.
+
+4. It is anticipated that the following capabilities will be available in second release:
+CHARACTER statements, PARAMETER statements, and multiple array dimensions. 
+
+5. Although the FORTRAN 77 standard requires all variable and common names to be 6 
+characters or less in length, NAMEIO provides for names up to 8 characters long.  If any 
+common names are longer than this, NAMEIO will not function properly.  If any variable 
+names are longer than this, they must be unique in the first 8 characters in order for 
+NAMEIO to function properly.
+
+6. By third release, all of the remaining requirements of the specification shall be
+fulfilled. 
+
+To use the NAMEIO program, enter :
+
+   @MERLIN:NAMEIO filespec
+
+where filespec is the name of the file containing the COMMON specifications. A file
+called OUTPUT.FOR will be created on your directory containing the source code for the
+READC, WRITEC, and INITC routines and their support routines. See appendix A.
+
+The default values for the attention character (default '&'), input logical file number
+(5 by default), and output logical file number (6 by default) can be changed by
+including a command line as the first line of the COMMON file. This line must begin with
+the characters '!!'.  The attention character can be changed by entering 'SIGNAL=c'
+where 'c' is the new signal character.  The input logical file number is changed by
+'IN=nn' where 'nn' is the new logical file number.  The output logical file number is
+changed by 'OUT=nn'.  No spaces are permitted within these command strings, but may be
+included between them. 
+
+Example:
+
+!! IN=7  OUT=11 SIGNAL=$
+
+
+
+
+
+II. Using the NAMEIO Subprograms
+
+The OUTPUT.FOR file mentioned above may be used in one of two ways.  It may be included
+in the source code of the program that will use the subprograms or it can be compiled
+seperately and linked with the calling program.  This latter approach has the advantage
+of reducing the time to compile the calling program. IT IS CRITICALLY IMPORTANT THAT 
+THE NAMEIO PROGRAM BE USED TO RECREATE THESE SUBPROGRAMS IF ANY CHANGE IS 
+MADE TO THE COMMON BLOCKS BEING PROCESSED!  Both the NAMEIO program and the 
+subprograms it generates require the MERLIB library.  Documentation on MERLIB is 
+available elsewhere on the system.
+
+READC has no arguments.  The appearance of a COMMON block name in the input stream
+specifies where data will be placed.  The FORTRAN logical unit number from which to read
+is specified by the variable NIN in the source of OUTPUT.FOR and may be changed by
+changing the DATA statement in the BLOCK DATA subprogram in that file. 
+
+INITC has one argument; this argument is the name of a COMMON block or a blank word.  If
+the argument is blank, all COMMON blocks known to NAMEIO will be set to zeros and FALSEs
+(as appropriate).  Second release will also set character data to blanks.  If the
+argument is a COMMON name, only that COMMON will be initialized. 
+
+WRITEC has one argument, the name of the COMMON block to write.  The FORTRAN logical
+unit number for output is specified by the variable NOUT in the source of OUTPUT.FOR and
+may be changed by changing the DATA statement in the BLOCK DATA subprogram in that file.
+
+
+
+
+
+III. The Input Data Stream
+
+Data is read by the READC subprogram from a card-image file (80 column formatted).  This
+file may contain formatted input for other portions of the program both before and after
+the READC data (ie, before the first &common_name and after the &END.  If the next record
+in the file does not contain a &COMMON_NAME as the first entry on the record when a call
+to READC is issued, an error will be issued and data will be skipped until the
+&COMMON_NAME is found or an end of file is reached.  In the latter case, the program will
+be terminated.  More than one call to READC can be issued on a file as long as these
+requirements are met each time. 
+
+The format of the file or section of file being read is :
+
+1. &COMMON_NAME followed by one or more spaces.
+
+2. VARIABLE_SPECIFICATION followed by '=' followed by a value; where
+VARIABLE_SPECIFICATION is either a variable name, array name, or an array name followed
+by an index. 
+
+3. Optionally, repeat step 2 for other variables, separated by a comma.
+
+4. Optionally, repeat steps 1 through 3 for other COMMON blocks.
+
+5. The &END stream terminator.
+
+Spaces can be used as desired for readability with only two restricitions: there must
+always be at least one space after the COMMON name and there may not be any spaces
+embedded in the COMMON names, variable names, or values.  Comments may be included in
+the input stream on any line up to and including the line containing the &END terminator
+by preceding the text of the comment by an exclamation mark.  All text that appears 
+after the &END terminator, to the end of that record, will also be treated as comments.
+
+Example:
+
+   COMMON / ABC / A, C(10), I
+   COMMON / DEF / E, F
+   COMMON / GHI / G, J(4)
+   INTEGER F
+   .
+   .
+   &ABC A = 1.0, I=14,C(2)=10E2
+   !This is a comment
+   &DEF E =-2.0 &GHI J=(100,101,102,-1) &END
+
+
+
+                                     Appendix A
+
+                       List of Subprograms and COMMON Blocks Created
+
+
+Subprograms :
+
+INITC,  READC,  WRITEC,  GETOK0,  DOTOK0,  GETC0,  ERROR0,  ASSIGN0,  OUTP0,  FLUSH0
+
+
+COMMONs :
+
+NAMCM0,  READC0,  WRITE0
+
+
+
+                               Part II - Programmer's Reference
+
+
+I. Introduction
+
+The NAMEIO program creates an output file on logical unit 8 which contains compilable 
+FORTRAN 77 source code.  This source code has embedded within it the COMMON blocks that 
+the user wishes to input and output.  Most of the source code produced is copied from the 
+file NAMESTUF.FOR.  This file contains all non-COMMON-specific coding for the INITC, 
+READC, and WRITEC routines and their support routines.  Embedded in NAMESTUF.FOR are 
+comment statements which signal the NAMEIO program to generate the COMMON-specific code 
+at the appropriate locations in the output file.  The output file can then be included in 
+the user's source file or compiled seperately and linked with the user's object file.
+
+
+
+II. NAMEIO
+
+The NAMEIO program is divided into two large sections: the first reads the file 
+containing the COMMON blocks for the user's program and extracting the required 
+information; and the second (the subroutine FINIS) which generates the output source 
+code.
+
+Initialization for NAMEIO consists of setting the default values for logical unit 
+numbers, clearing the text arrays, reading a look-ahead record from the COMMON file, and 
+checking that record for changes to the default settings.
+
+NAMEIO then extracts the name of the next common block, the names and dimensions (if any)
+for all of the variables in the commons, the default type for each variable, and the 
+location of that variable in the common block.  If type specification statements are 
+found, the default types are reset.  Similarly, if dimension statements (or dimensions in 
+type statements) are found, the sizes and locations of the variables are changed.
+
+The FINIS subroutine generates the final source code.  Most of the source code is 
+identical regardless of the common blocks which are to be processed.  As a result, the 
+invariant source is kept in a file (NAMESTUF.FOR) with comment cards signalling the 
+location where variant code is to be inserted.  There are five sections of variant code 
+denoted by the comments '**', '*1', '*2', '*3', and '*4'.  The '**' comment is replaced 
+with the common block containing the common block descriptive information.  The '*1' 
+comment is replaced by the user's common blocks where the list of variables is replaced 
+by a single dimensioned array with the same length as the original block.  The '*2' 
+comment is replaced with the code to read a given variable.  The '*3' comment is replaced 
+with the code to write a given variable.  The '*4' comment is replaced with the code to 
+initialize a given common block.
+
+NAMEIO reads the common file from unit 7, writes messages to unit 6, and writes the 
+output file to unit 8.
+
+
+III. OUTPUT
+
+The file OUTPUT.FOR is the file generated by NAMEIO.
+
+The first subprogram in OUTPUT is a block data subprogram containing the descriptive 
+information for all of the common blocks and the values for the logical unit numbers used 
+for read and write operations.  The amount of storage required is quite large since the 
+names, types, sizes, and locations within the common block must be stored for every 
+variable.  (Note: this is also true for the non-standard FORTRAN extension, NAMELIST.  
+NAMEIO may be slightly less efficient than a NAMELIST feature in this respect.)  In 
+addition, for the sake of simplicity and execution efficiency, empty storage space is 
+allocated for the descriptive data for each common block, except the longest one, so that 
+the length of the descriptive data for each common block is identical.
+
+The next subprogram generated is INITC.  INITC fills every variable with a binary zero.  
+If the system is transported to a computer in which real zero, integer zero, and .FALSE. 
+do not have the same internal representation this section will have to be changed.  The 
+substance of the required changes can be derived from the type conversions done in READC.
+
+READC (and its support routines) is generated next.  READC works by reading in tokens 
+delimited by a comma.  The only problem with this approach is the reading of an entire 
+array of data.  This is done by setting a flag (INARR) which tells subsequent entries 
+into DOTOK0 to leave the variable name, location, and size unchanged and to update only 
+the array subscript each time.  The READC routine uses a look-ahead buffer and calls to 
+routine GETC0 to extract characters.  Because of this, there must be at least one record 
+present in the input file for each call to READC.
+
+WRITEC is fairly straight forward; selecting variable types is done in the same manner as 
+READC.  Formatting is difficult to perfect for this type of output routine.  As of the 
+present version, extra spaces are used liberally in an attempt to improve readability of 
+the output file.  Of course, the user can choose to use some other form of formatted 
+output to get any desired layout.  The output file is assumed to be 132 columns wide.  
+Column one is always left blank for compatibility with standard FORTRAN carriage control. 
+Although READC does not require column one to be blank, there is no problem if it is left 
+blank.  The output from WRITEC can be used, unmodified, for later input to READC.
+
+
+                 Part III - Specification for NAMEIO Program
+
+
+
+
+
+I. Introduction
+
+The NAMEIO program is a program which will process FORTRAN specifications for COMMON
+blocks and produce a set of subprograms which will simplify input/output operations on
+data in COMMON.  The subprograms will be useable in a manner similar to the non-standard
+FORTRAN feature, NAMELIST, but will be as transportable as possible and written
+primarily in standard FORTRAN 77. 
+
+The requirements in this manual are generally refered to as either first, second, or
+third level capability.  There are presently no plans for a higher level capability.  A
+prime requirement throughout the development effort shall be transportability to any
+machine using ANSI-standard FORTRAN 77. 
+
+
+
+
+
+
+
+II. Requirements
+
+
+1.  The input shall be a standard FORTRAN 77 code segment containing the COMMON
+statements and type specifications for the COMMON blocks to be available.  No other
+information shall appear in this code fragment.  The COMMON statements shall appear
+before the specification statements which reference the variables in that COMMON
+statement. 
+
+
+2.  Three subprograms shall be generated: an initialization routine which shall fill the
+COMMONs with zeros, falses, and blanks as per the data type of the variable; a read
+routine; and a write routine. 
+
+
+3.  The read routine shall accept data in the following format :
+    a. The name of the COMMON block into which the data is to be read preceded 
+       by the attention character (& by default).
+    b. The name of the variable followed by an equal sign followed by the value 
+       of the variable.  If the variable is an array name, the variable name 
+       may have a subscript (in which case a single element is read); if no 
+       subscript is specified, the entire array will be initialized to a set of 
+       values enclosed in parentheses (see example, below).
+    c. Optionally, repeat step b. with each entry delimited by a comma or a 
+       comma and one or more spaces.
+    d. Optionally, repeat steps a. through c. (Note that there is no &END statement 
+       between COMMON names if this option is used).
+    e. The &END statement which signals return from the read routine.
+    f. Anywhere within the data to be read, up to and including the line with the 
+       &END statement, comments may be included by preceding them with an exclamation 
+       mark.  These comments are ignored, they are not stored nor output by the 
+       write subprogram.
+
+
+4.  Read example :
+
+    &ABC   A=1,B=2 ,C=4  ! This is a comment
+    ! This is a comment, too.
+    &DEF   D = .TRUE., E(3)= 2.0E12, F=(1.,2.0,3.3,4.7) &END
+
+Note that, within the restrictions listed in requirement 3, the input is free-field. 
+The order of the variables within a COMMON block or the order of COMMON blocks within
+the subprogram shall not restrict the order in which data may be read. 
+
+
+5.  The write routine shall produce output in a format compatible with the input routine;
+ie, the output routine shall produce a format which can be read by the read routine. 
+
+
+6.  The order of the variables on output shall be the same order as they appear in the
+COMMON block, but at user option, the variables shall be sorted in ascending alphabetic
+order for output. 
+
+
+7.  The write routine shall not use FORTRAN-specific carriage control except that the 
+first column shall always be left blank. 
+
+
+8.  The output routine shall have the name of a COMMON block as input and shall output
+only the variables in that COMMON block for each call. 
+
+
+9.  The initial release of the package will recognize full-word INTEGER, REAL, and
+LOGICAL variable and singly dimensioned array types only.  The second release shall also
+recognize half word INTEGERs, single byte logicals, character strings, and doubly
+dimensioned arrays.  The second release shall be capable of reading portions of an array 
+using the repeat specification (ie, n*value).
+
+
+10.  The FORTRAN logical unit numbers for read and write and the sort option flag shall
+be parameterized and available to the user. 
+

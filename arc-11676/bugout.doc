@@ -1,0 +1,838 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                           BUGOUT System Manual
+  
+                              July 30, 1985
+
+
+
+
+
+
+
+
+                            Arthur E. Ragosta
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                   Part I
+
+                                User's Manual
+
+
+  
+
+I. Introduction
+
+
+FORTRAN programs are prone to many types of errors and problems. The BUGOUT
+series of programs has proven very useful in assisting in the debugging of
+a particular kind of error and in optimizing of CPU-intensive codes by
+determining precisely which subprograms are using the most CPU time. 
+
+
+The particular type of error that is found by BUGOUT is the illegal
+addressing of data or code as a result of subtle FORTRAN errors that are
+not caught by the compiler or (necessarily) at run time.  This involves one
+of the following conditions: 
+
+     1 - A COMMON block with different sizes in different subprograms.
+     2 - A CALL statement with a different number of arguments than
+          are in the associated SUBROUTINE statement. 
+     3 - Storage units (words, short words, double words, etc) which are 
+          not aligned on proper address boundaries.
+     4 - Accessing arrays or strings beyond their declared bounds.
+
+Error number 3 is now found (and usually corrected) by modern FORTRAN
+compilers, and is not checked by the newest version of BUGOUT. Error number
+4 is found by the VAX compiler by setting the array bounds checking switch
+on during compile; this has the unfortunate side-effect of producing
+compile time errors for DIMENSION X(1) type statements in subprograms. The
+IBM version of BUGOUT inserts DEBUG SUBCHK statements into the source code
+to find error number 4 on IBM computers. 
+
+
+In addition to debugging of addressing errors, BUGOUT provides some attempt to 
+debug variable usage for uninitialized variables often caused by misspelling.  
+Also provided are COMMON/SUBPROGRAM, CALLs/SUBPROGRAM, and VARIABLE/SUBPROGRAM 
+cross reference charts for documentation purposes.
+
+
+The language recognized by BUGOUT is ANSI-standard FORTRAN 77 with the
+non-standard extension, NAMELIST.  Most other non-standard extensions are
+ignored and don't affect BUGOUT processing.  It is generally required that
+the main program appear first, physically, in a file. Although only the
+TIME and TRACE steps are critical of this, the other steps may produce
+meaningless output if MAIN is not first. 
+
+
+
+
+
+II.  CALL Statement Checking
+
+
+CALL statements are checked by counting the number of arguments in the
+statement and storing this number.  If the subprogram has been defined or
+called previously, the numbers are compared.  If a SUBROUTINE statement is
+found, similar processing occurs.  FUNCTIONs are printed out, but due to
+the complexity of finding FUNCTION invocations in the source code they are
+not checked automatically.  If BUGOUT does not report any errors, but
+addressing errors occur at run-time, this is a prime item to check by hand.
+ The restrictions regarding the use of FORTRAN keywords and the embedding
+of blanks in keywords that existed in older versions of BUGOUT have been
+removed, all valid CALL statements and SUBROUTINE statements are now
+accurately checked. 
+
+If the MAPCALLS option is chosen, a cross-reference map is produced showing
+the appearance of CALLed names in subprograms. 
+
+
+
+
+
+
+
+
+
+
+
+
+III. COMMON Checking
+
+
+The program is compiled so that the FORTRAN compiler can determine the
+actual length of each COMMON block.  This is necessary due to the extreme
+complexity of evaluating specification statements.  The compiler listing is
+then searched and the size of each COMMON block is stored.  If the COMMON
+has been found previously, the sizes are compared.  Blank COMMON is treated
+as any other COMMON block; thus varying length blank COMMON will produce an
+error message. This has been kept this way for two reasons: first is the
+authors conviction that this is generally poor programming practice, and
+second is the consideration that the blank COMMON may have been meant to be
+the same size and so discrepancies in size might result in errors other
+than addressing errors. 
+
+
+If the MAPCOMMON option is specified, a cross-reference map is produced
+showing the appearance of COMMON blocks in subprograms.  Blank COMMON
+appears on the VAX version printouts as '$BLANK'. 
+  
+
+
+
+
+IV. TRACE Processing
+
+
+The TRACE step of BUGOUT performs two types of processing: TRACE insertions
+and TIME insertions. 
+
+
+The TRACE option inserts FORTRAN statements which will produce a traceback
+every time a subprogram is entered or exited.  This generally produces a
+lot of boring output and should be used only when you are not sure the
+program is following the right execution path. 
+
+
+The TIME option inserts FORTRAN calls which extract the CPU time used by a
+subprogram and tallies this number throughout the run.  A summary is
+produced at the end of the run if the run ends normally.  The present
+version of BUGOUT only adds the actual CPU time used by each subprogram;
+the previous versions printed the CPU usage of the subprogram and all
+subprograms it called.  About half of the overhead of the CPU extraction
+routines is added to the called subprogram and half to the calling
+subprogram; thus a small subprogram that is called a very large number of
+times ( or has a very large number of calls ) might show a misleadingly
+high CPU usage.  The actual overhead on a Vax 11/780 running VMS version
+4.1 is about .00252 CPU seconds per each subprogram call.  Thus to correct
+the printed CPU time for the actual time you should subtract
+(.00252/2)*(number of calls to this subprogram) to correct for the overhead
+of calling this routine and (.00252/2)* (number of calls performed) for the
+overhead of called routines.  It is because of the difficulty of
+determining this latter number that the program doesn't automatically
+correct for these.  If the size of the instrumented subprograms is large,
+these corrections are relatively minor. 
+
+
+TRACE has several restrictions on its use.  First, the MAIN routine must
+appear first, physically, in the file.  The reason for this is to ensure
+that main suprograms without the PROGRAM card are still recognized as
+MAINs.  Secondly, BUGOUT is not smart enough to recognize statement
+function definitions and so inserts executable code before them.  If your
+program contains statement functions, it will be necessary to edit it and
+move the statement function definitions above the inserted CALLs. 
+
+
+
+
+V. Variable Checking
+
+
+The most recent version of BUGOUT has a new step following the COMMON 
+checking.  This step is used to search for potential errors or poor 
+programming related to variables.  The same cross-reference listing 
+produced for the COMMON step is searched by the VARIABLE program.  The 
+purpose of this step is to determine if any variables, arrays, labels, or 
+parameters are used but not initialized, initialized but not used, or 
+neither initialized or used.  This step is particularly useful in finding 
+misspelled variables or variables that have been removed due to 
+modification of the program but where not completely expunged.
+
+The VARIABLE program works by extracting the line number references in the 
+cross-reference listing and checking to make sure that the variable has 
+been used properly.  Variables in COMMON are not checked.  There are two 
+main instances in which an error may be reported when in fact no error 
+exists : the first is the use of a DO loop or implied DO loop index that is 
+not otherwise used; the second is when the variable appears in an I/O 
+statement.  As such, all printout from this program must be verified by 
+hand, but this still has proved very useful in finding misspelled 
+variables.
+
+
+  
+
+
+
+VI. RUN-TIME Options
+
+
+Options are selected by creating a file containing various keywords. 
+If no file is used, the default options will be assumed.  The option
+keywords are: 
+
+   NOCALL       - do not run the CALL statement checking program.
+   NOCOMMON     - do not run the COMMON checking program.
+   TIME         - insert CPU extraction calls.
+   TRACE        - insert traceback statements.
+   INDEX        - insert DEBUG SUBCHK (ignored by VAX version).
+   VARIABLES    - check for variable initialization problems
+   FIRST        - verify that the first reference to a variable is an 
+                   initialization (this produces a lot of messages that 
+                   must be verified by hand since often the first reference
+                   is a specification statement).
+   PRINT=n      - produce minimal (n=0) to maximum (n=2) detail in
+                   printouts. 
+   UNIT=m       - produce TIME/TRACE printout to unit m (single digit
+                   only). 
+   MAPCALLS     - produce a subprogram/CALL statement cross-reference
+                   map.
+   MAPCOM       - produce a COMMON block/subprogram cross-reference
+                   map. 
+   MAPVARIABLES - produce a VARIABLE/subprogram cross-reference map.
+                   (This option is not yet implemented).
+   NOSORT       - do not sort the COMMON and CALL cross-reference maps
+                   by subprogram name. 
+   SAVE         - save the COMMON, CALL, and SUBROUTINE descriptive
+                   information so that large programs can be checked
+                   in parts .
+   RESTORE      - restore the SAVEd information before continuing
+                   processing. 
+   SAVENAME='file' - specify a file name for the SAVE/RESTORE file.
+                   CALSAVE.DAT and COMSAVE.DAT are the default names for
+                   the CALL and COMMON programs, respectively.  Specifying
+                   SAVENAME implies SAVE.
+
+The default options are:
+
+CALLS,COMMONS,NOTRACE,NOTIME,NOINDEX,NOMAPCAL,NOMAPCOM,PRINT=1,...
+UNIT=6,SORT,NOMAPVARIABLES,VARIABLES
+
+WARNING!!! Never use RESTORE and MAP together; errors will result.
+  
+
+
+
+
+VII. Interpretation of Output
+
+
+When an error is found, it will be quite clear.  The error message
+will be printed out surrounded by asterisks. The line number and
+subprogram name or COMMON block name will be printed out. The total
+number of errors found will be printed at the top of the page in the
+summary page. 
+
+
+The COMMON block map has the COMMON block names listed vertically
+along the top border of the page (or pages) with the subprogram names
+down the left side. If the COMMON block appears in that subprogram, an
+X will be placed in the column with the COMMON block name. 
+
+
+The CALL statement map is similar to the COMMON block map.  The names
+of sub- programs which are called appear across the top; the names of
+subprograms in FUNCTION or SUBROUTINE statements appear down the left
+column.  If a subprogram is called in the present subprogram, an 'X'
+will appear under the called sub- program's name. 
+
+
+The TRACE back printout is self-explanatory.  The CPU time printout
+includes the printout of a counter showing the number of times the
+subprogram was called, the CPU time used (in minutes for the IBM,
+seconds for the VAX), and a histogram showing percentage of total CPU
+time where each asterisk is one percent. 
+
+
+The printout from the VARIABLE program includes several lines of 
+explanation.  The error messages refer to one of three conditions: a 
+variable is referenced but never initialized, a variable is initialized but 
+not used, or a variable is neither initialized or used.  Each of these 
+errors should be verified by hand since such considerations as I/O 
+statements and EQUIVALENCEs can result in erroneous output.
+  
+
+
+
+
+VIII. Invocation
+
+
+
+
+A. IBM S&E under CMS
+
+
+Link userid RTLCHES and access as your Q mini-disk extension to your A
+mini-disk, ie : 
+
+      LINK RTLCHES 191 200 RR
+      ACCESS 200 Q/A
+
+then enter :
+
+      BUGOUT filename [optionsfile]
+
+where filename is the name of the FORTRAN source file and optionsfile
+is the name of a file of type DATA which contains all options on a
+single line.  If it is omitted, the default options are used.  There
+is a sample options file named OPTIONS DATA Q on the RTLCHES userid. 
+
+
+
+
+
+
+
+
+
+B. VAX MERLIN at RTL headquarters
+
+Enter :
+
+      BUGOUT filename [optionsfile]
+
+where filename is the name of the FORTRAN source code less the '.FOR'
+suffix and optionsfile is the full file specification for the options
+file.  If it is omitted, the default options are used.  There is a
+sample options file named MERLIN:OPTIONS.DAT . 
+  
+
+
+
+IX. Errata and Restrictions
+
+
+
+A. A previously released version of BUGOUT on the VAX had the following
+line in the .COM file :
+
+      $ ASSIGN BUGOUT.LIS FOR009
+
+the correct line is :
+
+      $ ASSIGN BUGOUT.LIS FOR008
+
+
+
+
+B. The CALL statement checking portion of the system now handles most 
+arguments, including text strings, properly.  It does not, however, 
+recognize Hollerith (nH) strings and these may cause trouble.  It does 
+recognize a single embedded quote in a text string, but does not recognize 
+two or more consecutive quotes; ie, the following is not handled properly :
+
+      CALL MESSAG ( 'Here are two quotes '''' ')
+
+although this is :
+
+      CALL MESSAG ( 'Here''s just one.' )
+
+
+
+
+C. All programs have been updated to more accurately recognize a true FORTRAN
+statement but there are two situations which still cause trouble: the use of
+a FORTRAN keyword as a variable and certain embedded strings.  Both of the
+following situations cause trouble :
+
+      FUNCTION = ABC ( 1, 2 )
+
+      and
+
+      STRING = ')RETURN'
+
+Note that the latter example is only a problem with ')RETURN' and ')STOP',
+not with 'RETURN' and 'STOP'.
+
+
+
+
+X. Transportability
+
+
+To the maximum extent possible, BUGOUT has been made transportable with a 
+minimum amount of effort.  There are, however, certain considerations which 
+prevent it from being fully transportable; the prime among these is the use of 
+the FORTRAN cross-reference listing format to minimize the processing required 
+within the BUGOUT programs themselves.  The COMMON and VARIABLE programs are 
+the programs which read the cross-reference listing.  For the most part, the 
+BUGOUT programs process ANSI standard FORTRAN 77.  This can cause a problem 
+for some versions of the program (eg, DEC VAX) because of non-standard 
+extensions to the language (such as variable names which are not unique in the 
+first six characters).  Other non-standard extensions, notably tab characters 
+and lower case letters, are now generally handled properly.  In order to 
+modify the programs, the MERLIB library of subprograms is necessary.  MERLIB 
+is available from the same source as BUGOUT.
+
+
+
+
+
+
+
+
+
+XI.  Efficiency
+
+
+Its not.
+
+BUGOUT is intended as a debugging aid and documentation tool.  As such, it is 
+intended to be used only occasionally on any given program.  It has not been 
+deemed cost-effective to spend time on optimization, especially since this 
+might inhibit maintainability or transportability.  There are certainly areas 
+which could be improved in the character handling functions which have been 
+written in FORTRAN for transportability.  The biggest improvement in 
+efficiency would probably be realized by combining the CALLS program with the 
+TRACER program and the COMMON program with the VARIABLE program.  There are no 
+plans to do this at this time.
+
+
+
+
+XII. Conclusions
+
+
+The BUGOUT series has been found to be very helpful in finding errors
+which are extremely difficult to find by other means.  The expenditure
+of CPU time used to find the errors is almost always trivial when
+compared to the cost of even a few hours of debugging.  If used
+judiciously, the CPU time accounting can also be well worthwhile.  The
+entire system is written in standard FORTRAN 77 except for the actual
+routines which are called to provide the calendar date, time, and CPU
+time.  Transportability is very good except for the COMMON checking
+program which requires detailed knowledge of the format of the listing
+produced by the system-specific FORTRAN compiler. 
+
+
+All problems, questions, requests for source code, and recommendations
+for enhancements should be addressed to the author: 
+   
+    Arthur E. Ragosta
+    USAVSCOM Research and Technology Laboratory
+    MS 207-5
+    Ames Research Center
+    Moffett Field, Calif.   94035
+    (415) 694-5578
+    (AUTO) 359-5578
+    (FTS) 464-5578
+
+
+Permission is granted for reproduction and dissemination of any
+material provided as a part of this program with the following
+restriction:  the materials may not be sold for profit.
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                    Part II
+
+                               Programmer's Manual
+  
+
+
+
+IBM VM/CMS EXEC to run BUGOUT :
+
+&CONTROL OFF
+&IF &INDEX NE 0 &GOTO -OK
+&BEGTYPE
+ 
+***   ERROR... NO DATA SET NAME SPECIFIED...
+***            PLEASE ENTER DATA SET NAME
+ 
+&END
+&READ ARGS
+&IF &INDEX EQ 0 &EXIT
+-OK &CONTINUE
+FI  3 DISK CALLS   ERROR   A ( RECFM F LRECL 133
+FI  4 DISK OPTIONS DATA    A
+FI  5 DISK &1      FORTRAN A
+FI  6 DISK &1      CALBOD  A ( RECFM F LRECL 133
+FI 10 DISK &1      CALSUM  A ( RECFM F LRECL 133
+CALLS
+TYPE &1 CALSUM A
+CP DEFINE T3370 500 10000
+&BEGSTACK
+YES
+TMP
+&END
+FORMAT 500 F
+FI 4 DISK OPTIONS DATA    A
+FI 5 DISK &1      FORTRAN A
+FI 7 DISK TRACTMP FORTRAN F ( LRECL 80 RECFM FB BLOCK 8000 XTENT 20000
+TRACER
+FORTVS TRACTMP (NOS NOSF MAP
+COPY TRACTMP LISTING F COMDUM LISTING A ( RECFM F LRECL 133
+FI  4 DISK OPTIONS DATA
+FI  6 DISK &1      COMBOD  A ( RECFM FB LRECL 133 BLOCK 1330
+FI  9 DISK COMDUM  LISTING
+FI 10 DISK &1      COMSUM  A ( RECFM FB LRECL 133 BLOCK 1330
+COMMON
+ERASE COMDUM LISTING A
+TYPE &1 COMSUM
+FI * CLEAR
+  
+
+
+
+VAX VMS COM file to run BUGOUT :
+
+$ SET NOVERIFY
+$ !
+$ ! -------------------------------------------------------
+$ !
+$ !  BUGOUT               BUGOUT                  BUGOUT
+$ !
+$ !  BUGOUT FORTRAN DEBUGGING PROGRAM...
+$ !  SEE MERLIN:BUGOUT.DOC FOR DETAILS.
+$ !
+$ ! -------------------------------------------------------
+$ !
+$ ON ERROR THEN GOTO OUT
+$ IF P1 .NES. "" THEN GOTO POK
+$NOP:
+$ INQUIRE P1 "Filename"
+$ IF P1 .EQS. "" THEN GOTO NOP
+$POK:
+$ DEASSIGN/ALL
+$ DIRECTORY/DATE/OUT='P1'.DRR 'P1'.FOR
+$ ASSIGN 'P1'.DRR FOR002
+$ !
+$ ! CHECK FOR NON-DEFAULT OPTIONS
+$ !
+$ IF P2 .NES. "" THEN GOTO USER
+$ ASSIGN MERLIN:OPTIONS.DAT FOR004
+$ GOTO CONT
+$USER:
+$ ASSIGN 'P2' FOR004
+$CONT:
+$ !
+$ ! CALLS STEP
+$ !
+$ ASSIGN 'P1'.FOR FOR005
+$ ASSIGN 'P1'.CAS FOR010
+$ ASSIGN 'P1'.CAB FOR006
+$ RUN MERLIN:CALLS
+$ !
+$ ! TIME/TRACE STEP
+$ !
+$ ASSIGN BUGOUT.FOR FOR007
+$ ASSIGN TRACE.LIS FOR006
+$ RUN MERLIN:TRACER
+$ !
+$ ! FORT STEP
+$ !
+$ ON ERROR THEN GOTO CONTIN
+$ FORTRAN/LIST/CROSS/CHECK=BOUNDS BUGOUT.FOR
+$CONTIN:
+$ ON ERROR THEN GOTO OUT
+$ !
+$ ! COMMON STEP
+$ !
+$ ASSIGN 'P1'.COB FOR006
+$ ASSIGN BUGOUT.LIS FOR008
+$ ASSIGN 'P1'.COS FOR010
+$ RUN MERLIN:COMMON
+$ !
+$ ! VARIABLE CHECK STEP
+$ !
+$ ASSIGN 'P1'.VAS FOR010
+$ ASSIGN 'P1'.VAB FOR006
+$ RUN MERLIN:VARIABLE
+$ !
+$ DELETE BUGOUT.LIS;*
+$OUT:
+$ COPY MERLIN:BUGOUT. BUGOUT.
+$ DELETE 'P1'.DRR;
+$ PRI/DELETE BUGOUT.,'P1'.CAS,'P1'.CAB,TRACE.LIS,'P1'.COS,'P1'.COB, -
+  'P1'.VAS,'P1'.VAB
+$ DEASSIGN/ALL
+  
+
+
+
+Vax command file for a batch BUGOUT run :
+
+$ SET NOVERIFY
+$ ON ERROR THEN EXIT
+$ !
+$ !  BUGBAT.COM  --  Command file to submit a batch BUGOUT run
+$ !     by Art Ragosta       July 30, 1985
+$ !
+$ ! UserID for SEND command
+$ !
+$ NAME = F$GETJPI("","USERNAME")
+$ !
+$ ! Source file name
+$ !
+$ IF P1 .NES. "" THEN GOTO POK
+$NOP:
+$ INQUIRE P1 "Filename"
+$ IF P1 .EQS. "" THEN GOTO NOP
+$POK:
+$ !
+$ ! Subdirectory name
+$ !
+$ DIR = "''F$LOGICAL("SYS$DISK")'''F$DIRECTORY()'"
+$ LEN = F$LENGTH(''P1')
+$ L   = F$LOCATE("[",''P1')
+$ IF L .EQ. LEN THEN GOTO NODIR
+$ LL  = F$LOCATE("]",''P1')
+$ IF LL .NE. LEN THEN GOTO DIROK
+$ WRITE SYS$OUTPUT "%BUGOUT-E-POORTYPIST, error in filename."
+$ EXIT
+$DIROK:
+$ !
+$ !  Check to make sure filename is not ""
+$ !
+$ IF LL .NE. (LEN-1) THEN GOTO FILEOK
+$ WRITE SYS$OUTPUT "%BUGOUT-E-NOFILE, no file specified."
+$ EXIT
+$FILEOK:
+$ !
+$ !  Break full filespec into parts
+$ !
+$ DIR = "''F$EXTRACT(L,LL-L+1,P1)'"
+$ P1  = "''F$EXTRACT(LL+1,LEN-LL,P1)'"
+$NODIR:
+$ !
+$ !  Log file name
+$ !
+$ LEN = F$LENGTH(''P1')
+$ L   = F$LOCATE(".",''P1')
+$ IF L .EQ. LEN THEN GOTO NODOT
+$ LL  = 0
+$ P1  = "''F$EXTRACT(LL,L,P1)'"
+$NODOT:
+$ LFILE = "''DIR'''P1'.LOG"
+$ !
+$ ! Look for queue name
+$ !
+$ QNAME = "BAT$MEDIUM"
+$ I = 2
+$LOOP:
+$ PP = P'I'
+$ AA = "''PP'"
+$ IF AA .NES. "SHORT" THEN GOTO LONG
+$ P'I' = ""
+$ QNAME = "SYS$BATCH"
+$ GOTO SUB
+$LONG:
+$ IF AA .NES. "LONG" THEN GOTO XLONG
+$ P'I' = ""
+$ QNAME = "BAT$LONG"
+$ GOTO SUB
+$XLONG: 
+$ IF AA .NES. "XLONG" THEN GOTO NONE
+$ P'I' = ""
+$ QNAME = "BAT$XLONG"
+$ GOTO SUB
+$NONE:
+$ I = I + 1
+$ IF I .LE. 6 THEN GOTO LOOP
+$SUB:
+$ SUBMIT/PARAM=('P1','NAME','DIR',"''P2'") -
+   /QUE='QNAME' /LOG='LFILE' MERLIN:BATBUG.COM
+  
+
+
+
+BUGOUT.COM modified for batch submission:
+
+$ SET NOVERIFY
+$ !
+$ ! -------------------------------------------------------
+$ !
+$ !  BATCH BUGOUT                              BATCH BUGOUT
+$ !
+$ !         BUGOUT FORTRAN DEBUGGING PROGRAM...
+$ !         SEE MERLIN:BUGOUT.DOC FOR DETAILS.
+$ !
+$ ! -------------------------------------------------------
+$ !
+$ ON ERROR THEN GOTO OUT
+$ SET DEFAULT 'P3'
+$ DIRECTORY/DATE/OUT='P1'.DRR 'P1'.FOR
+$ ASSIGN 'P1'.DRR FOR002
+$ !
+$ ! CHECK FOR NON-DEFAULT OPTIONS
+$ !
+$ IF P4 .NES. "" THEN GOTO USER
+$ ASSIGN MERLIN:OPTIONS.DAT FOR004
+$ GOTO CONT
+$USER:
+$ ASSIGN 'P4' FOR004
+$CONT:
+$ !
+$ ! CALLS STEP
+$ !
+$ ASSIGN 'P1'.FOR FOR005
+$ ASSIGN 'P1'.CAS FOR010
+$ ASSIGN 'P1'.CAB FOR006
+$ RUN MERLIN:CALLS
+$ !
+$ ! TIME/TRACE STEP
+$ !
+$ ASSIGN BUGOUT.FOR FOR007
+$ ASSIGN TRACE.LIS FOR006
+$ RUN MERLIN:TRACER
+$ !
+$ ! FORT STEP
+$ !
+$ ON ERROR THEN GOTO CONTIN
+$ FORTRAN/LIST/CROSS/CHECK=BOUNDS BUGOUT.FOR
+$CONTIN:
+$ ON ERROR THEN GOTO OUT
+$ !
+$ ! COMMON STEP
+$ !
+$ ASSIGN 'P1'.COB FOR006
+$ ASSIGN BUGOUT.LIS FOR008
+$ ASSIGN 'P1'.COS FOR010
+$ RUN MERLIN:COMMON
+$ !
+$ ! VARIABLE CHECK STEP
+$ !
+$ ASSIGN 'P1'.VAS FOR010
+$ ASSIGN 'P1'.VAB FOR006
+$ RUN MERLIN:VARIABLE
+$ !
+$ DELETE BUGOUT.LIS;*
+$OUT:
+$ ON ERROR THEN GOTO OUT1
+$ COPY MERLIN:BUGOUT. BUGOUT.
+$ DELETE 'P1'.DRR;
+$ PRINT/QUE=LPA0/DELETE BUGOUT.,'P1'.CAS,'P1'.CAB,TRACE.LIS,'P1'.COS,'P1'.COB, -
+  'P1'.VAS,'P1'.VAB
+$OUT1:
+$ ON ERROR THEN EXIT
+$ SEND 'P2' "Your BUGOUT run is complete."
+  
+
+
+
+
+FORTRAN logical unit numbers used throughout the BUGOUT command procedure :
+
+2  - the file containing the directory listing for the original source code
+3  - internal debugging printout
+4  - the OPTIONS.DAT file
+5  - the original FORTRAN source file
+6  - bulk printout
+7  - instrumented code output
+8  - FORTRAN cross-reference listing
+9  - SAVE file
+10 - step-by-step summary printout
+11 - RESTORE file
+
+  
+
+
+
+Machine-dependent routines :
+
+The major machine-dependent portion of the code are the programs which search 
+the FORTRAN compiler cross-reference listing.  The version of the compilers 
+which are required are (for IBM): VS FORTRAN 2.0  and (for VAX): VAX FORTRAN 
+4.0.  The remainder of the programs will work with practically any FORTRAN 77 
+compiler.
+
+A smaller machine dependency is the CPU time extracting routines in the TRACER 
+program.  The IBM version inserts calls to two small machine language 
+routines.  The Vax version inserts calls to a System Service routine.  The 
+index checking in the same program is also machine-dependent; the Vax version 
+compiles with the flag /CHECK=BOUNDS flag and the IBM version inserts DEBUG 
+SUBCHK statements in every subprogram.
+
+You are free to transport these programs to any other machine with the 
+following restricitions:  These programs may not be sold for profit and the 
+source of the programs and Author's information must be maintained in all 
+versions.  I would appreciate a copy of any new versions that might be 
+developed.

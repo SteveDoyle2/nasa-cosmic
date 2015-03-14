@@ -1,0 +1,249 @@
+L-0- All prices will be inflated or deflated to this year. The program
+     Llooks for possible entry errors by checking to see if the report year
+     Lgiven is within certain range. This range usually goes from the base
+      Lyear to the manufacturing year.
+                                           L-1- If you type a Y PC-IPEG will assume that you want the reports in
+      Lthe given report year. If you type N or a CR then PC-IPEG will give
+       Lyou an opportunity to re-enter the report year.
+                           L
+                                                                          L-2- Pressing any key will tell PC-IPEG to continue displaying the
+         Lcompany data on your screen.
+                                              L
+                                                                          L
+                                                                          L-3- All company data has being displayed. When ready to continue press
+    Lany key.
+                                                                  L
+                                                                          L
+                                                                          L-4- All process data has being displayed. When ready to continue
+          Lpress any key.
+                                                            L
+                                                                          L
+                                                                          L-5- This list can be separated by commas or blank spaces. The CR
+          Lwill end the list. Any repeated or illegal numbers will be ignored
+        Lby PC-IPEG.
+                                                               L
+                                                                          L-6- When ready to continue press any key. PC-IPEG will continue
+           Ldisplaying the values of the requested independent variables.
+             L
+                                                                          L
+                                                                          L-7- When ready to continue press any key. PC-IPEG will continue printing
+  Lthe status of the working variables.
+                                      L
+                                                                          L
+                                                                          L-8- All working variables that are different from the saved variables
+     Lhave been displayed. Press any key when ready to continue.
+                L
+                                                                          L
+                                                                          L-9- Be careful that the new value is a realistic number.
+                  L
+                                                                          L
+                                                                          L
+                                                                          L-10- PC-IPEG looks for possible data entry errors by checking to see
+      Lif the new value just typed is within a usual range. Thus if you
+          Lgoofed just type a Y, otherwise press  the CR.
+                            L
+                                                                          L-11- This number must be valid. i.e. it has to match one of the numbers
+   Lin the menu. PC-IPEG will not accept an invalid number. To exit
+           Lthis loop just type a 0.
+                                                  L
+                                                                          L-12- If you have any questions about this variable consult the user's
+     Lmanual.  There you will find the variable definitions and default values.
+ L
+                                                                          L
+                                                                          L-13- Standard minimum and maximum values are used by PC-IPEG to test
+      Lfor possible data entry errors. If you wish to keep the value you
+         Ljust typed press the CR, otherwise type N and PC-IPEG will give
+           Lyou another chance.
+                                                       L-14- The maximum number of characters is 9.  This is a traditional
+        Llength used by mainframe IPEG and kept in PC-IPEG for consistency.
+        LThis is the name of the company or process being analyzed.
+                L
+                                                                          L-15- The maximum number of characters is 80.  This is a traditional
+       Llength used by mainframe IPEG and kept in PC-IPEG for consistency.
+        LThis gives you an opportunity to describe the company or process being
+    Lanalyzed.
+                                                                 L-16- The maximum number of characters is 80.  This is a traditional
+       Llength used by mainframe IPEG and kept in PC-IPEG for consistency.
+        LThe industry units refer to the industry production units.
+                L
+                                                                          L-17- The maximum number of characters is 80.  This is a traditional
+       Llength used by mainframe IPEG and kept in PC-IPEG for consistency.
+        LThe product units refer to the company or process final product
+           Lunits.
+                                                                    L-18- All other IPEG parameters used to compute the transformation
+         Lmatrix have default values. Thus pressing the CR will initialize
+          Lthe rest of the parameters to those defaults. This is almost the
+          Lsame as running an IPEG2 analysis.
+                                        L-19- This is your chance to change any of the independent variable
+        Lworking values. Thus the prices computed will be based on the new
+         Lvalues given. PC-IPEG always keeps the initial values and later it
+        Lwill give you a chance to reinitialize everything to these values.
+        L-20- If you wish to create your own IPEG case type any legal file
+         Lname. PC-IPEG will then ask you if you wish to create a case. If
+          Lthe file name you give is found, PC-IPEG will assume that you intend
+      Lto process that file, which must be PC-IPEG generated.
+                    L-21- If you do not want to create an IPEG case then press the CR.
+         LPC-IPEG will ask you again for the file name.
+                             L
+                                                                          L
+                                                                          L-22- You must have an IPEG input file with the same format as that
+        Lgenerated by SAMIS. You can create it with an editor but care must
+        Lbe taken to follow exactly the same format as the sample IPEG input
+       Lfile shown in the PC-IPEG user's guide.
+                                   L-23- When you are ready to continue press any key. Remember to press
+      Lthe CtrlPrtSc keys if you want to send the transformation matrix
+          Lto the printer.
+                                                           L
+                                                                          L-24- This number must be valid. i.e. it has to match one of the numbers
+   Lin the menu. PC-IPEG will not accept an invalid number.
+                   Lnumber 46 is not a valid independent variable.
+                            L
+                                                                          L-25- Press any key to continue. You are doing fine.
+                       L
+                                                                          L
+                                                                          L
+                                                                          L-26- Your response must be a number in the range of 1 to 4. PC-IPEG
+       Lwill not take any other numbers. Read the description of each
+             Loption carefully to save yourself some time in typing.
+                    L
+                                                                          L-27- The list of values has to be terminated by a CR. A comma or
+          La blank space can be used as delimiters. All numbers will be tested
+       Lby PC-IPEG for possible typing errors.
+                                    L
+                                                                          L-28- No help for this question. You should not have any problems
+          Linterpreting it.
+                                                          L
+                                                                          L
+                                                                          L-29- Keep in mind that the maximum number of values is 100.
+               LWho will want to do sensitivity analyses on more values?
+                  L
+                                                                          L
+                                                                          L-30- If that is the value you want type CR. PC-IPEG is just being
+         Lvery friendly by checking all your inputs for possible "GOOFS".
+           L
+                                                                          L
+                                                                          L-31- This gives you a chance to check all the values visually. If you
+     Lare sure that you did everything right then type N.
+                       L
+                                                                          L
+                                                                          L-32- If you are planning to send the PC-IPEG price report to the
+          Lprinter you might as well give it  meaningful title. If
+                   Lyou couldn't care less then type a CR.
+                                    LTo send something to the printer type Shift PrtSc.
+                        L-33- You have a maximum of 80 characters for the title so be explicit
+     Lin you report title.
+                                                      L
+                                                                          L
+                                                                          L-34- If the IPEG input file you are using only has one size then
+          Lchoose the (D)efault option. Otherwise choose the N option and
+            LPC-IPEG will ask you for the size. If you have run PC-IPEG through
+        Lthis case you can use the P option to select the previous value.
+          L-35- Make sure the value you type is a valid size index for your
+          Lparticular case.  If PC-IPEG does not find it, it will tell you so and
+    Lgive you another chance to type the value.
+                                L
+                                                                          L-36- The D option will tell PC-IPEG to use the first company found in
+     Lthe IPEG input file for processing. If you have more than one company
+     Lin the file and wish to process one not found first in the file then
+      Lchoose the N option and PC-IPEG will ask you for the name.
+                L-37- Make sure the name of the company you want is exactly as you
+         Ltype it. Otherwise PC-IPEG will assume that your input is invalid and
+     Lwill give you another opportunity to type the name.
+                       L
+                                                                          L-38- Sometimes even though the given industry size and company name
+       Lcorresponds to one of the sizes and company names in the IPEG input
+       Lfile respectively, they do not describe the same case. If this is
+         Ltrue you do want to start over.
+                                           L-39- This gives you a chance to look at all values found in the IPEG
+      Linput file. They will be labeled.
+                                         L
+                                                                          L
+                                                                          L-40- If you want to analyze a single process within the company then
+      Ltype P otherwise CR.
+                                                      L
+                                                                          L
+                                                                          L-41- Make sure that the name you type matches exactly one of the
+          Lprocesses belonging to the company. They are listed below.
+                L
+                                                                          L
+                                                                          L-42- This gives you an opportunity to display the values that are
+         Lunique to this process.
+                                                   L
+                                                                          L
+                                                                          L-43- If you did something wrong you can start again by pressing Y.
+        LPC-IPEG will go back and ask you for the industry size,company or
+         Lprocess name, etc.
+                                                        L
+                                                                          L-44- The report year refers to the year in which the prices are reported.
+ LThe Default value is the company report year under which SAMIS was
+        Lrun.
+                                                                      L
+                                                                          L-45- The report year can be almost any year. However PC-IPEG will check
+   Lto see if the report year you type is within the normal range which is
+    Lfrom the base year to the manufacturing year. If not, PC-IPEG gives
+       Lyou a chance to change your mind.
+                                         L-46- This is a cyclic question. Since you are running PC-IPEG you
+         Lcertainly want to process a case. If you already did and you do not have
+  Lany other cases within the IPEG input file to be analyzed then type
+       LN and the PC-IPEG main menu will be displayed.
+                            L-47- The saved variable values are those found in the IPEG input file.
+    LThey may be different from the working values which are used by PC-IPEG
+   Lto compute the transformation matrix and therefore the prices.
+            L
+                                                                          L-48- The transformation matrix is used to compute the prices by multi-
+    Lplying it by the expense vector described in the user's guide. PC-IPEG
+    Lgives you a chance to display this matrix if you are interested.
+          L
+                                                                          L-49- A sensitivity study consists of altering the values of an inde-
+      Lpendent variable and seeing how the dependent variables change relative
+   Lto these changes. This is the main feature of PC-IPEG. Try it!
+            L
+                                                                          L-50- If you have changed the working variables or have already done a
+     Lsensitivity analysis this is a chance to re-initialize all the inde-
+      Lpendent values to their original values.
+                                  L
+                                                                          L-51- This is a chance to change any of the working variable values.
+       LPC-IPEG will ask you later for the values of the variable you want
+        Lto use for sensitivity. Don't be confused.
+                                L
+                                                                          L-52- PC-IPEG will display the results of the sensitivity in a tabular
+     Lform if you press the CR. You also will have a chance to plot the
+         Lresults. If you do not have a graphics display this is your only chance
+   Lto see the sensitivity results.
+                                           L-53- This will only work if you have a graphics display.
+                  L
+                                                                          L
+                                                                          L
+                                                                          L-54- This is your chance to save the case you are currently working
+       Lwith.  If later you want to use it just run PC-IPEG and choose the
+        Lcommand B in the main menu.
+                                               L
+                                                                          L-55- Be very careful not to give this file the name of a file already
+     Lexisting on your working directory unless you want to replace it.
+         Lthe name should be a DOS valid file name.
+                                 L
+                                                                          L-56- If you just want to get familiar with PC-IPEG select A and use
+       Lthe sample IPEG input file supplied in the PC-IPEG diskette (PCIPEG.IPE).
+ LIf you are very familiar with how IPEG works and wish to create an
+        LIPEG case from scratch choose B and ask for help on the next question.
+    L-57- Your choices are obvious. Why ask for help?
+                          LPC-IPEG will not listen to you if the choice you type is not a 1 or 2.
+    L
+                                                                          L
+                                                                          L-58- This is the dependent variable. It will be plotted against the
+       Lindependent variable you chose for sensitivity analysis.
+                  L
+                                                                          L
+                                                                          L-59- The variable you choose will be plotted along the vertical axis
+      L
+                                                                          L
+                                                                          L
+                                                                          L-60- This is the dependent variable to be plotted against the
+             Ldependent variable chosen before.
+                                         L
+                                                                          L
+                                                                          L-61- Question asked is self-explanatory.  Why did you ask for help?
+       L
+                                                                          L
+                                                                          L
+                                                                          

@@ -1,0 +1,1072 @@
+{ $INCLUDE : 'compile.inc' }
+{ $INCLUDE : 'getparam.int' }
+{ $INCLUDE : 'sfpas.int' }
+{ $INCLUDE : 'vbpas.int' }
+{ $INCLUDE : 'dspas.int' }
+{ $INCLUDE : 'dialog.int' }
+{ $INCLUDE : 'utility.int' }
+{ $INCLUDE : 'alterl.int' }
+{ $INCLUDE : 'ldb.int' }
+{ $INCLUDE : 'execute.int' }
+{ $INCLUDE : 'vdmgen.int' }
+{ $INCLUDE : 'display.int' }
+{ $INCLUDE : 'sldetc.int' }
+{ $INCLUDE : 'sld.int' }
+
+  
+  implementation of sld;
+
+  USES getparam;
+  USES sfpas;
+  USES vbpas;
+  USES dspas;
+  USES dialog;
+  USES utility;
+  USES alterl;
+  USES ldb;
+  USES execute;
+  USES vdmgen;
+  USES display;
+  USES sldetc;
+
+  const
+    lenpage = 5;
+    prompt_line = 22;
+    xgap = 14;
+
+  var
+    status : mode;
+    length : byte;
+    buffer : lstring(127);
+    buf,buf1:lstring(80);
+    f      : text;
+    inkey1 : byte;
+    drive1 : char;
+    firstsld : entity;
+    current1, first : entity;
+    b79    : string(79);
+
+  value
+    b79 = '                                                                               ';
+   
+  procedure redraw (code : integer;var current, first : entity);extern;
+
+  procedure sldredraw ( var current, first : entity ); extern;
+
+  procedure sldalts ( mode : integer; var firstsld : entity );
+
+    var
+      current : entity;
+      i       : integer;
+      toohigh : boolean;
+
+    begin
+      case mode of
+        0: begin
+             current := firstsld;
+             repeat
+               there ( current^.xtext, current^.ytext );
+               if current^.field^.len>0 then write ( current^.field^ );
+               current := current^.down;
+             until (current=firstsld)or(current^.etype=3);
+             i := 0;
+             while (i<lenpage*2)and(current^.etype in [3,4]) do
+               begin
+                 current^.xtext := (i div lenpage)*40;
+                 there ( current^.xtext, current^.ytext );
+                 if current^.field^.len>0 then write(current^.field^);
+                 current := current^.down;
+                 current^.xtext := (i div lenpage)*40+9;
+                 there ( current^.xtext,current^.ytext );
+                 if current^.field^.len>0 then write(current^.field^);
+                 current := current^.down;
+                 i := i + 1;
+               end;
+             while current^.etype in [3,4] do
+               begin
+                 current^.xtext := (i div lenpage)*40;
+                 current := current^.down;
+                 current^.xtext := (i div lenpage)*40+9;
+                 current := current^.down;
+                 i := i + 1;
+               end;
+             page := 1;
+           end;
+        1: begin
+             repeat
+             i := 1;
+             toohigh := false;
+             current := firstsld;
+             while current^.etype <> 3 do
+               current := current^.down;
+             while current^.etype in [3,4] do
+               begin
+                 current^.xtext := (((i-1) div lenpage)-(page-1)*2)*40;
+                 current := current^.down;
+                 current^.xtext := (((i-1) div lenpage)-(page-1)*2)*40+9;
+                 current := current^.down;
+                 i := i + 1;
+               end;
+             if (page>1)and(i-1<=(page-1)*2*lenpage) then
+               begin
+                 page := page - 1;
+                 toohigh := true;
+               end;
+             until not toohigh;
+             there ( 77, 14 );
+             write ( page:1,' ' );
+             current := firstsld;
+             while current^.etype <> 3 do
+               current := current^.down;
+             i := 1;
+             buf := '                                      ';
+             while current^.etype in [3,4] do
+               begin
+                 if (current^.xtext>=0)and(current^.xtext<80) then
+                   begin
+                     there ( current^.xtext, current^.ytext );
+                     write ( current^.field^ );
+                     if current^.etype=4 then i := i + 1;
+                   end;
+                 current := current^.down;
+               end;
+             while i<=2*lenpage do
+              begin
+               there(((i-1) div lenpage)*40,((i-1) mod lenpage)+17);
+               write ( buf );
+               i := i + 1;
+              end;
+           end;
+       otherwise
+       end;
+     end;
+
+  procedure sldperform;
+
+  var
+    i        : integer;
+
+procedure newdrive;
+
+  var
+    ch : char;
+    inchar : twobyte;
+
+  begin
+      ch := ' ';
+      there ( 0 , prompt_line );
+      write ( 'Enter drive letter ( A-E ):                                                    ' );
+      there ( 29, prompt_line );
+    repeat
+      get_input ( inchar );
+      if inchar[1] in [97..101] then inchar[1]:=inchar[1]-32;
+      ch := chr ( inchar[1] );
+      write ( ch );
+       while not (inchar[1] in [8,13]) do get_input(inchar);
+       if inchar[1] = 8 then [write(chr(8),' ',chr(8));ch:=' ';];
+    until ((ch in ['A'..'E','a'..'e'])or(ch=chr(13));
+    if ch > 'Z' then ch := chr ( ord ( ch ) - 32 );
+    if (ch=' ')or(ch=chr(13))or(ch=drive) then inkey := 0
+      else drive1 := ch;
+    there ( 0, prompt_line );
+    write ( b79 );
+    there ( 0, prompt_line );
+  end;
+
+  procedure inssld;
+
+    var
+      i,j       : integer;
+      msglen    : byte;
+      temp      : entity;
+
+    begin
+      buf := null;
+      repeat
+      inkey := 0; length := 0;
+      msglen := messages^[102].len+1;
+      incom(prompt_line,messages^[102],buf,-1,rtype,0,
+            msglen,prompt_line,3,2,105,1,1,1,1,1,1,
+            status,buffer,length,inkey);
+      if inkey in [2,22,23,25..28] then
+          perform ( inkey,  current, current_node, firstsld );
+      until not (inkey in [22,23,25..28,2]);
+      if not (inkey in [1,3,102]) then
+        begin
+          if length > 0 then
+            begin
+              if length=1 then i := ord(buffer[1])-48
+                else i := ord(buffer[2])-48+(ord(buffer[1])-48)*10;
+              if (i>=1)and(i<=10) then
+                begin
+              while current^.etype <> 1 do current := current^.up;
+              for j := 1 to i do
+                current := current^.down;
+                end
+                else begin
+                 there(msglen+2,prompt_line);
+                 write(chr(7));
+                end;
+            end;
+          if (length = 0) or ((i>=1)and(i<=10)) then
+            begin
+          if current^.etype = 2 then current := current^.up;
+          createsld ( temp, 2 );
+          link ( current, temp );
+          while current^.down^.etype = 2 do
+            begin
+              with current^ do
+                begin
+                  y := down^.y;
+                  ytext := down^.ytext;
+                  xtext := down^.xtext;
+                  there ( xtext, ytext );
+                  for i := 1 to field^.len do
+                    buf[i] := field^[i];
+                  for i := field^.len+1 to 8 do
+                    buf[i] := ' ';
+                  buf.len := 8;
+                  write ( buf );
+                end;
+              current := current^.down;
+            end;
+          deletesld ( current );
+          current := temp;
+          saved := false;
+            end;
+        end;
+      if inkey = 3 then inkey := 0;
+    end;
+
+procedure delsld;
+
+    var
+      i,j       : integer;
+      msglen    : byte;
+      temp,newnode : entity;
+
+    begin
+      buf := null;
+      repeat
+      inkey := 0; length := 0;
+      msglen := messages^[103].len+1;
+      incom(prompt_line,messages^[103],buf,-1,rtype,0,
+            msglen,prompt_line,3,2,105,1,1,1,1,1,1,
+            status,buffer,length,inkey);
+      if inkey in [2,22,23,25..28] then
+          perform ( inkey, current, current_node, firstsld );
+      until not (inkey in [22,23,25..28,2]);
+      if not (inkey in [1,3,102]) then
+        begin
+          if length > 0 then
+            begin
+              if length=1 then i := ord(buffer[1])-48
+                else i := ord(buffer[2])-48+(ord(buffer[1])-48)*10;
+              if (i>=1)and(i<=10) then
+                begin
+              while current^.etype <> 1 do current := current^.up;
+              for j := 1 to i do
+                current := current^.down;
+                end
+                else begin
+                     there(msglen+2,prompt_line);
+                     write(chr(7));
+                     end;
+            end;
+          if (length=0)or((i>=1)and(i<=10)) then
+            begin
+          temp := current;
+           while current^.down^.etype = 2 do current := current^.down;
+           create ( newnode, 2 );
+           link ( current, newnode );
+           current := current^.down;
+           while current^.up <> temp do
+             begin
+               current := current^.up;
+               with current^ do
+                 begin
+                   y := up^.y;
+                   ytext := up^.ytext;
+                   xtext := up^.xtext;
+                   there ( xtext, ytext );
+                  for i := 1 to field^.len do
+                    buf[i] := field^[i];
+                  for i := field^.len+1 to 8 do
+                    buf[i] := ' ';
+                  buf.len := 8;
+                  write ( buf );
+                 end;
+             end;
+           current := current^.up;
+           deletesld ( current );
+           saved := false;
+            end;
+        end;
+      if inkey = 3 then inkey := 0;
+    end;
+
+  procedure movesld;
+
+    var
+      i,j,k,l,n     : integer;
+      msglen        : byte;
+      newnum,oldnum : integer;
+      newptr,oldptr : entity;
+
+    begin
+      buf := null;
+      oldnum := 0;
+      newnum := 0;
+      repeat
+      inkey := 0; length := 0;
+      msglen := messages^[104].len+1;
+      incom(prompt_line,messages^[104],buf,-1,rtype,0,
+            msglen,prompt_line,3,2,105,1,1,1,1,1,1,
+            status,buffer,length,inkey);
+      if inkey in [2,22,23,25..28] then
+          perform ( inkey, current, current_node, firstsld );
+      until not (inkey in [22,23,25..28,2]);
+      if not (inkey in [1,3,102]) then
+        begin
+          if length > 0 then
+            begin
+              if length=1 then oldnum := ord(buffer[1])-48
+                else oldnum := ord(buffer[2])-48+(ord(buffer[1])-48)*10;
+                if (oldnum<1) or (oldnum>10) then
+                 begin
+                   there(msglen+2,prompt_line);
+                   write(chr(7));
+                 end;
+            end
+           else oldnum := current^.ytext-3;
+          if length = 0 then
+            begin
+              oldnum := 1;
+              oldptr := current;
+              while oldptr^.etype <> 1 do oldptr := oldptr^.up;
+              while (oldptr <> current) and (oldptr^.etype = 2 ) do
+                begin
+                  oldnum := oldnum + 1;
+                  oldptr := oldptr^.down;
+                end;
+              if oldptr^.etype <> 2 then oldnum := 0;
+            end;
+          if ((oldnum>=1)and(oldnum<=10)) then
+            begin
+          promptupd := 0;
+          repeat
+          inkey := 0; length := 0;
+          msglen := messages^[105].len+1;
+          incom(prompt_line,buf,messages^[105],-1,rtype,0,
+                msglen,prompt_line+1,3,2,105,1,1,1,1,1,1,
+                status,buffer,length,inkey);
+          if inkey in [2,22,23,25..28] then
+            perform ( inkey, current, current_node, firstsld );
+          until not (inkey in [22,23,25..28,2]);
+          if not (inkey in [1,3,102]) then
+            begin
+              if length > 0 then
+                begin
+                  if length=1 then newnum := ord(buffer[1])-48
+                   else newnum := ord(buffer[2])-48+(ord(buffer[1])-48)*10;
+                 if (newnum<1) or (newnum>10) then
+                  begin
+                   there(msglen+2,prompt_line);
+                   write(chr(7));
+                  end;
+                end
+               else newnum := current^.ytext-3;
+          if length = 0 then
+            begin
+              newnum := 1;
+              newptr := current;
+              while newptr^.etype <> 1 do newptr := newptr^.up;
+              while (newptr <> current) and (newptr^.etype = 2 ) do
+                begin
+                  newnum := newnum + 1;
+                  newptr := newptr^.down;
+                end;
+              if newptr^.etype <> 2 then newnum := 0;
+            end;
+              if (newnum<>oldnum)and((newnum>=1)and(newnum<=10)) then
+                begin
+              saved := false;
+              while current^.etype <> 1 do current := current^.up;
+              oldptr := current;
+              newptr := current;
+              for i := 1 to oldnum do oldptr := oldptr^.down;
+              for i := 1 to newnum do newptr := newptr^.down;
+              if oldnum<newnum then newptr:=newptr^.down;
+              current := oldptr^.up;
+              current^.down := oldptr^.down;
+              oldptr^.down^.up := current;
+              oldptr^.down := newptr;
+              oldptr^.up := newptr^.up;
+              newptr^.up^.down := oldptr;
+              newptr^.up := oldptr;
+              if oldnum < newnum then
+                begin
+                  j := oldptr^.ytext;
+                  k := oldptr^.y;
+                  l := oldptr^.xtext;
+                  current := oldptr;
+                  for i := newnum downto oldnum+1 do
+                    begin
+                      with current^ do
+                        begin
+                          y := up^.y;
+                          ytext := up^.ytext;
+                          xtext := up^.xtext;
+                          there ( xtext, ytext );
+                          for n := 1 to field^.len do
+                            buf[n] := field^[n];
+                          for n := field^.len+1 to 8 do
+                            buf[n] := ' ';
+                          buf.len := 8;
+                          write ( buf );
+                        end;
+                      current := current^.up;
+                    end;
+                  with current^ do
+                    begin
+                      y := k;
+                      ytext := j;
+                      xtext := l;
+                      there ( xtext, ytext );
+                      for n := 1 to field^.len do
+                        buf[n] := field^[n];
+                      for n := field^.len+1 to 8 do
+                        buf[n] := ' ';
+                      buf.len := 8;
+                      write ( buf );
+                    end;
+                  current := oldptr;
+                end
+               else
+                begin
+                  j := oldptr^.ytext;
+                  l := oldptr^.xtext;
+                  k := oldptr^.y;
+                  current := oldptr;
+                  for i := newnum to oldnum-1 do
+                    begin
+                      with current^ do
+                        begin
+                          y := down^.y;
+                          ytext := down^.ytext;
+                          xtext := down^.xtext;
+                          there ( xtext, ytext );
+                          for n := 1 to field^.len do
+                            buf[n] := field^[n];
+                          for n := field^.len+1 to 8 do
+                            buf[n] := ' ';
+                          buf.len := 8;
+                          write ( buf );
+                        end;
+                      current := current^.down;
+                    end;
+                  with current^ do
+                    begin
+                      ytext := j;
+                      y := k;
+                      xtext := l;
+                      there ( xtext, ytext );
+                      for n := 1 to field^.len do
+                        buf[n] := field^[n];
+                      for n := field^.len+1 to 8 do
+                        buf[n] := ' ';
+                      buf.len := 8;
+                      write ( buf );
+                    end;
+                  current := oldptr;
+                end;
+               end;
+            end;
+           end;
+        end;
+      if inkey = 3 then inkey := 0;
+    end;
+
+procedure clearsld;
+
+  var
+    ch : char;
+    inchar : twobyte;
+
+  begin
+      ch := ' ';
+      there ( 0 , prompt_line );
+      write ( b79 );
+      there ( 0, prompt_line );
+      write ( messages^[107] );
+    repeat
+      get_input ( inchar );
+      ch := chr ( inchar[1] );
+      write ( ch );
+       while not (inchar[1] in [8,13]) do get_input(inchar);
+       if inchar[1] = 8 then [write(chr(8),' ',chr(8));ch:=' ';];
+    until (ch in ['y','Y','n','N'])or(ch=chr(13));
+    if ch in ['Y','y'] then
+      begin
+        while current^.etype <> 1 do current := current^.up;
+        current := current^.down;
+        while current^.etype = 2 do
+          begin
+            copylst ( '        ',current^.field^ );
+            there ( current^.xtext, current^.ytext );
+            write ( current^.field^ );
+            current := current^.down;
+          end;
+        saved := false;
+      end;
+    while current^.etype in skipfield do current:= current^.down;
+    there ( 0, prompt_line );
+    write ( b79 );
+    there ( 0, prompt_line );
+  end;
+
+  procedure sld_upd;
+
+    var
+      i,k : integer;
+
+  begin
+     if status = txt then inkey := 36;
+     if status <> fctkey then
+       if rtype < 4 then
+             if length > 0 then
+               begin
+                 with current^ do
+                   begin
+                     k := 0;
+                     if length<>current^.field^.len then saved := false
+                       else for i := 1 to length
+                              if buffer[i]<>current^.field^[i] then
+                                saved := false;
+                     alter_entity_list ( current, buffer, length, k );
+                   end;
+               end;
+      if (inkey in [22..29,36]) and (promptupd=2) then promptupd := 3;
+  end;
+
+  procedure sldloop ( var inkey : byte; vksi,dt : byte; r : integer );
+
+    var
+      i,j : integer;
+      inputlength : byte;
+
+    begin
+        inkey := 0;
+        current_node  := current^.etype;
+        promptupd := 2;
+        if (gtype = 'bul') and (vksi = 103) then
+             vksi := 22;
+        while not(inkey in [1,3..5,20,102,104,109,112..117]) do
+          begin
+              buf := null;
+              inkey := 0;
+              with current^ do
+                begin
+                  length := field^.len;
+                  buffer.len := length;
+                  for i := 1 to length do buffer[i] := field^[i];
+                end;
+              case current^.etype of
+                1 : inputlength := 10;
+              2,3 : inputlength := 8;
+                4 : inputlength := 30;
+              otherwise
+              end;
+              if r = -1 then [i:=current^.xtext;j:=current^.ytext]
+               else [i:=0;j:=prompt_line+1;length:=0;buffer:=null;
+                     inputlength := 0;];
+              if (vksi=103) or (vksi=22) then buf1:=null else buf1:=messages^[101];
+              repeat
+                if (vksi=22) and (inkey in [22,24,27,29,36]) then
+                  buf := messages^[33];
+                inkey :=0;
+                incom(prompt_line,buf1,buf,r,2,0,i,j,dt,
+                      inputlength,vksi,1,1,1,1,1,1,status,buffer,
+                      length,inkey);
+              sld_upd;
+                if (vksi=22) and (inkey in [22,24,27,29,36]) then
+                  begin
+                    case inkey of
+                      22 : pagenum := 1;
+                      24 : pagenum := pagenum - 1;
+                      27 : pagenum := 1000;
+                   36,29 : pagenum := pagenum + 1;
+                      otherwise
+                    end;
+                    sldredraw (current1,first);
+                  end;
+              until not ((vksi=22) and (inkey in [22,24,27,29,36]));
+
+              sldperform (inkey,sldname,current,current_node,firstsld);
+              perform(inkey, current, current_node, firstsld);
+            end;
+    end;
+
+    procedure sldheader ( var buf : lstring; var firstsld : entity );
+
+      var
+        i,j : integer;
+
+      begin
+        there ( (80-buf.len) div 2, 0 );
+        write ( buf );
+        for i := 1 to 10 do
+          begin
+            there ( 6-ord(i=10), i + 2 );
+            write ( i:1 );
+          end;
+        there ( 8,2 );
+        buf.len := 13;
+        for i := 1 to 39 do buf[i] := chr(205);
+        write ( chr(201),buf,chr(203),buf,chr(203),buf,chr(203),buf,
+                chr(203),buf,chr(187) );
+        there ( 8,13 );
+        write ( chr(200),buf,chr(202),buf,chr(202),buf,chr(202),buf,
+                chr(202),buf,chr(188) );
+        for i := 3 to 12 do
+          for j := 1 to 6 do
+            begin
+              there ( (j-1)*xgap+8,i );
+              write ( chr(186) );
+            end;
+        buf.len := 39;
+        there ( 0,16 );
+        write ( buf, ' ',buf );
+        copylst('Directory on Drive ',buf);
+        there ( (78-buf.len) div 2, 14 );
+        write ( buf );
+        there (40+(buf.len div 2), 14 );
+        write ( drive );
+        there ( 72, 14 );
+        page := 1;
+        write ( 'page ',page:1 );
+        there ( 0,15 );
+        copylst('Filename          Description',buf);
+        write ( buf );
+        there ( 40,15 );
+        write ( buf );
+        sldalts ( 0, firstsld );
+      end;
+
+  procedure sldmenu;
+
+  begin
+    saved := true;
+    sldname[1] := drive;
+    sldname.len := 1;
+    concat ( sldname, ':' );
+    concat ( sldname, sldtype );
+    concat ( sldname, '.000' );
+    screen ( 2 );
+    colors ( 0, 1 );
+    sldlist ( firstsld );
+    buf := 'CREATE/REVISE Slide Show';
+    sldheader ( buf,firstsld );
+    current := firstsld;
+    skipfield := [3,4];
+    repeat
+      sldloop ( inkey, 101, 0, -1 );
+      inkey1 := 0;
+        if not saved then
+          begin
+            escape := true;
+            length := 1;
+            buffer := 'Y';
+            buf := null;
+            repeat
+            inkey1 := 0;
+            incom(prompt_line,messages^[106],buf,-1,
+                  rtype,0,0,prompt_line+1,2,1,
+                  8,1,1,1,1,1,1,status,buffer,length,inkey1);
+            if inkey1 = 2 then help ( 0 );
+            until inkey1 <> 2;
+            if (length > 0)and(not(inkey1 in [1,3]))then
+            if ((length>0)and(buffer[1] in ['y','Y']))or(inkey1=4) then
+              ldbman ( inkey1, sldtype, ssl, firstsld, sldname );
+            if inkey1 = 1 then inkey := 1;
+          end;
+    until inkey1 <> 3;
+    while firstsld <> nil do deletesld (firstsld);
+    if inkey = 20 then drive := drive1;
+  end;
+
+  procedure sldview;
+
+  var
+    plname         : lstring(14);
+    i,j,k,plchoice : integer;
+    inchar         : twobyte;
+    oldd           : char;
+
+  begin
+      if current^.etype = 1 then
+        begin
+          j := 10;
+          current := current^.down;
+        end
+       else j := 1;
+      i := 1;
+      while (i<=j)and(not (inkey in [1,3,20,102,104])) do
+        begin
+          oldd := drive;
+          copylst (current^.field^,name1 );
+          for k := 1 to name1.len do
+            if name1[k]>'Z' then name1[k]:=chr(ord(name1[k])-32);
+          while name1.len<8 do concat ( name1, ' ' );
+          name:=null;
+          if name1 = '        ' then name1 := null
+           else begin
+             for k:=1 to 25 do
+              if fctn_map^[3][k]=5 then
+                 fctn_map^[3][k]:=104;
+              ldbman (inkey,gtype, srt, first, name);
+              for k:=1 to 25 do
+                if fctn_map^[3][k]=104 then
+                  fctn_map^[3][k]:=5;
+              end;
+          if (name <> null) and (name1 <> null) then
+            begin
+              plchoice:=plotchoice;
+              dsinit;
+              plotchoice:=plchoice;
+              if plotchoice <> 0 then begin
+                 load_chart(name,first);
+                 pagenum := 0;
+               end;
+              sldredraw (current1, first);
+              sldloop ( inkey, 103, 4, 0 );
+              if inkey = 113 then begin
+                 copylst  (pltype, plname);
+                 concat   (plname, '.001');
+                 assign   (plfile, plname);
+                 plfile.trap  := true;
+                 plfile.errs  := 0   ;
+                 rewrite  (plfile);
+                 if plfile.errs=0 then
+                  begin
+                  plchoice:=plotchoice;
+                  plotchoice   := 2   ;
+                  vdminit;
+                  redraw   ( 2, current1, first ) ;
+                  if plfile.errs = 0 then 
+                    [  vdmend; close ( plfile );
+                       ldbman  ( inkey, pltype, add, first, plname ) ;];
+                  end
+                  else
+                   begin
+                    there(0,prompt_line);
+                       writeln ( 'Disk full error. File not created. Press any key to continue.');
+                       get_input ( inchar ) ;
+                       there (0, prompt_line);
+                       writeln( b79 );
+                    end;
+                   if plfile.errs <> 0 then
+                    begin
+                       plfile.errs := 0 ;
+                       discard ( plfile ) ;
+{                       plfile.errs := 8 ;      }
+                    end;
+                 if inkey = 3 then inkey := 0;
+                 plotchoice:=plchoice;
+              end; (* if inkey = 113 *)
+              if plotchoice<>0 then while first<>nil do delete (first);
+            end;
+        if (inkey = 112) or (name1=null) then
+          begin
+          current := current^.down;
+          i := i + 1;
+          end;
+       drive := oldd;
+        end;
+{       if inkey = 104 then inkey := 0;
+     end;
+    until (inkey in [1,20,102,104]);
+    while firstsld <> nil do deletesld (firstsld);}
+  end;
+
+  procedure sldprint;
+
+  var
+    first,current1 : entity;
+    i,j,k,plchoice : integer;
+    inchar : twobyte;
+
+  begin
+{   sldname[1] := drive;
+    sldname.len := 1;
+    concat ( sldname, ':' );
+    concat ( sldname, sldtype );
+    concat ( sldname, '.000' );
+    sldlist ( firstsld );
+    skipfield := [2,4];
+    repeat
+    screen ( 2 );
+    colors ( 0, 1 );
+    buf := 'PRINT Slide Show';
+    sldheader ( buf,firstsld );
+    current := firstsld;
+    sldloop ( inkey, 106, 4, -1 );
+    if inkey = 20 then drive := drive1;
+    if not (inkey in [1,3,20,102,104,116]) then
+     begin}
+    there ( 0, prompt_line );
+    write ( b79 );
+    there ( 0, prompt_line );
+    write ( messages^[108] );
+    get_input ( inchar );
+    if (inchar[1]=0)and(inchar[2]=59) then inkey := 3;
+    if not (inkey in [1,3,20,102,104,116]) then
+     begin
+      if current^.etype = 1 then
+        begin
+          j := 10;
+          current := current^.down;
+        end
+       else j := 1;
+      i := 1;
+      while (i<=j)and(not (inkey in [1,3,20,102,104,116])) do
+        begin
+          copylst ( current^.field^, name1 );
+          for k := 1 to name1.len do
+            if name1[k]>'Z' then name1[k]:=chr(ord(name1[k])-32);
+          while name1.len<8 do concat ( name1, ' ' );
+          name:=null;
+          if name1 = '        ' then name1 := null
+           else ldbman ( inkey, gtype, srt, first, name );
+          if (name <> null)and(name1 <> null) then
+            begin
+              plchoice:=plotchoice;
+              dsinit;
+              plotchoice:=plchoice;
+              if plotchoice <> 0 then load_chart(name,first);
+              sldredraw (current1, first);
+              inkey := 6;
+              perform ( inkey, current, current_node, first );
+              if plotchoice<>0 then while first<>nil do delete (first);
+              if key_board_status then
+                begin
+                  get_input ( inchar );
+                  if inchar[1]=0 then inkey:=fctn_map^[106][inchar[2]-58];
+                end;
+            end;
+          current := current^.down;
+          i := i + 1;
+        end;
+        end;
+{       if inkey = 104 then inkey := 0;
+     end;
+     end;
+    until (inkey in [1,20,102,104,116]);
+    while firstsld <> nil do deletesld (firstsld);}
+  end;
+
+  procedure sldplot;
+
+  var
+    first,current1 : entity;
+    i,j,k,plchoice : integer;
+    inchar : twobyte;
+    done : boolean;
+
+  begin
+{   sldname[1] := drive;
+    sldname.len := 1;
+    concat ( sldname, ':' );
+    concat ( sldname, sldtype );
+ 
+    sldlist ( firstsld );
+    skipfield := [2,4];
+    repeat
+    screen ( 2 );
+    colors ( 0, 1 );
+    buf := 'PLOTTER Slide Show';
+    sldheader ( buf,firstsld );
+    current := firstsld;
+    sldloop ( inkey, 107, 4, -1 );
+    if inkey = 20 then drive := drive1;
+    if not (inkey in [1,3,20,102,104,114,116]) then
+     begin
+    plchoice:=plotchoice;
+    plotchoice := 2;}
+    there ( 0, prompt_line );
+    write ( b79 );
+    there ( 0, prompt_line );
+    write ( messages^[108] );
+    get_input ( inchar );
+    if (inchar[1]=0)and(inchar[2]=59) then inkey := 3;
+    if not (inkey in [1,3,20,102,104,114,116]) then
+     begin
+      if current^.etype = 1 then
+        begin
+          j := 10;
+          current := current^.down;
+        end
+       else j := 1;
+      i := 1;
+      while (i<=j)and(not (inkey in [1,3,20,102,104,114,116])) do
+        begin
+          copylst ( current^.field^, name1 );
+          for k := 1 to name1.len do
+            if name1[k]>'Z' then name1[k]:=chr(ord(name1[k])-32);
+          while name1.len<8 do concat ( name1, ' ' );
+          name:=null;
+          if name1 = '        ' then name1 := null
+           else ldbman ( inkey, gtype, srt, first, name );
+          if (name <> null)and(name1 <> null) then
+            begin
+              there(0,prompt_line);
+              writeln('Plotting proceeding ... , press cancel to stop. ');
+              sldredraw (current1, first);
+{             if plotchoice<>0 then while first<>nil do delete (first);}
+              current1 := current^.down;
+              done := true;
+              while (current1^.etype = 2)and(done) do
+                begin
+                  for k := 1 to current1^.field^.len do
+                    if current1^.field^[k] <> ' ' then done := false;
+                  current1 := current1^.down;
+                end;
+              if done then inkey := 3
+               else
+                begin
+    there ( 0, prompt_line );
+    write ( b79 );
+    there ( 0, prompt_line );
+    write ( messages^[108] );
+    get_input ( inchar );
+    if (inchar[1]=0)and(inchar[2]=59) then inkey := 3;
+                end;
+            end;
+          current := current^.down;
+          i := i + 1;
+        end;
+    end;
+{   plotchoice := plchoice;
+        if inkey = 104 then inkey := 0;
+     end;
+     end;
+    until (inkey in [1,20,102,104,114,116]);
+    while firstsld <> nil do deletesld (firstsld);}
+  end;
+
+  procedure sldform(vks:integer);
+
+  begin
+    sldname[1] := drive;
+    sldname.len := 1;
+    concat ( sldname, ':' );
+    concat ( sldname, sldtype );
+    concat ( sldname, '.000' );
+    sldlist ( firstsld );
+    skipfield := [2,4];
+    repeat
+    screen ( 2 );
+    colors ( 0, 1 );
+    case vks of
+      102 : if gtype = 'sld' then copylst ('VIEW Slide Show', buf )
+             else
+               copylst ( 'PRINT/VIEW Slide Show', buf );
+      106 : copylst ('Print Slide Show', buf);
+      107 : begin
+              plchoice := plotchoice;
+              plotchoice := 2;
+              copylst ( 'PLOT Slide Show', buf );
+            end;
+      otherwise
+      end;
+    sldheader ( buf,firstsld );
+    current := firstsld;
+    sldloop ( inkey, vks, 4, -1 );
+    if inkey = 20 then drive := drive1;
+    if not (inkey in [1,3,20,102,104,114,116]) then
+      begin
+        if ((vks=102) and (inkey=117)) or (vks=106) then
+          sldprint
+         else if (vks=102) then
+           sldview;
+        if vks=107 then
+          sldplot;
+        if inkey = 104 then inkey := 0;
+      end;
+    if vks = 107 then plotchoice := plchoice;
+    until (inkey in [1,20,102,104,114,116]);
+    while firstsld <> nil do deletesld (firstsld);
+  end;
+
+    begin
+      case inkey of
+        101 : repeat sldmenu; until inkey <> 20;
+        103 : begin
+                repeat sldform(102); until inkey <> 20;
+              end;
+        105 : delsld;
+        106 : inssld;
+        107 : movesld;
+        108 : clearsld;
+        113 : begin
+               if plotchoice = 0 then
+                repeat sldform(107); until inkey <> 20;
+              end;
+        115 : repeat sldform(106); until inkey <> 20;
+          8 : begin
+                i := 1;
+                while (i<=25)and(fctn_map^[2][i]<>1) do i := i + 1;
+                if i <=25 then fctn_map^[2][i] := 0;
+                perform ( inkey, current,current_node,firstsld);
+                if i <=25 then fctn_map^[2][i] := 1;
+              end;
+         20 : newdrive;
+         22 : begin
+                current := firstsld;
+                if page > 1 then [page := 1; sldalts ( 1, firstsld );];
+                inkey := 0;
+              end;
+23,25,26,28 : begin
+                perform(inkey,current,current_node,firstsld);
+                if current^.xtext>79 then [page:=page+1;sldalts(1,firstsld);];
+                if current^.xtext<0 then [page:=page-1;sldalts(1,firstsld);];
+                inkey := 0;
+              end;
+         27 : begin
+                current := firstsld^.up;
+                while (current^.xtext>79)or(current^.etype in skipfield) do current := current^.up;
+                inkey := 0;
+              end;
+      24,29 : begin
+                if inkey = 29 then page := page + 1;
+                if (inkey = 24)and(page>1) then page := page - 1;
+                sldalts ( 1, firstsld );
+                if current^.xtext>79 then
+                  while (current^.xtext>79)or(current^.etype in skipfield) do
+                    current:=current^.up;
+                if current^.xtext<0 then
+                 while (current^.xtext<1)or(current^.etype in skipfield) do
+                    current:=current^.down;
+              end;
+      36:   begin
+             repeat
+               current := current^.down;
+             until not (current^.etype in skipfield);
+             if (current^.xtext>79) then
+               begin
+                 page := page + 1;
+                 sldalts(1,firstsld);
+               end;
+             if (current^.xtext<0) then
+               begin
+                 page := 1;
+                 sldalts(1,firstsld);
+               end;
+             inkey := 0;
+            end;
+      otherwise
+      end;
+    if inkey = 1 then inkey := 102;
+    end;
+end.
+

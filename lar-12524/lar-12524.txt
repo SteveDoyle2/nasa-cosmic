@@ -1,0 +1,85 @@
+ A STEADY AND OSCILLATORY KERNEL FUNCTION METHOD FOR INTERFERING SURFACES
+IN SUBSONIC, TRANSONIC AND SUPERSONIC FLOW
+
+( GENERAL DYNAMICS CORP. )
+
+     Interest has grown considerably in aircraft designed to operate ef-
+ficiently in the high subsonic regime. This interest has increased the
+need for better unsteady transonic aerodynamic analysis techniques so that
+flutter and dynamic response characteristics can be accurately predicted
+in this flow regime. The characteristic of transonic flow which causes
+the greatest difficulty when attempting to apply uniform flow theory to
+such problems is the presence of shocks imbedded in the flow. Linear the-
+ory cannot account for this phenomenon and finite difference approaches of-
+ten require extremely costly amounts of computer time. This computer pro-
+gram was developed to provide an analysis method based on a kernel func-
+tion technique which uses assumed pressure functions with unknown coeffi-
+cients. With this technique, generalized forces can be calculated in un-
+steady flow and pressure distributions can be obtained in both steady and
+unsteady flow. Once the aerodynamic matrices are computed and inverted,
+they may be saved and used on subsequent problems at very little cost as long
+as Mach number, reduced frequencies, and aerodynamic geometry remain un-
+changed. This method should be very useful for design applications where
+the structural mode shapes change continually due to structural changes and
+payload variations but the aerodynamic parameters remain constant.
+
+     In this program, a wing over which the flow has mixed subsonic and su-
+personic components with imbedded shocks is treated as an array of general
+aerodynamic lifting surface elements. Each element is allowed to have mu-
+tual interference with the other elements. Each element is assigned the
+appropriate Mach number and its downwash modified accordingly. The Mach
+number distribution and shock geometry may be obtained either experimen-
+tally or by a finite difference technique. The solution proceeds in a man-
+ner identical to ordinary aerodynamic interference methods based on a col-
+location technique. The unknown pressure function is assumed to be com-
+posed of a series of polynomials weighted by a user selected weighting func-
+tion that is characteristic of each lifting surface. The non-planar ker-
+nel function is computed using a Mach number and a reduced frequency deter-
+mined from values at a downwash control point. To link subsonic and super-
+sonic linear theory solutions, it is assumed that the appropriate Mach num-
+ber for computing downwash at a point is the Mach number at that point and
+that the reduced frequency is modified according to the local velocity such
+that the physical frequency is held constant. Thus, the computation pro-
+cedure becomes a problem of testing the Mach number of the downwash point.
+If the downwash point is supersonic, the self-induced downwash and all in-
+terference effects at that point are computed with the supersonic kernel
+function. Likewise, if the downwash point is subsonic, the subsonic kernel
+function is used. The presence of a normal shock is simulated by a line dou-
+blet which represents the load induced by shock movement. The appropriate
+steady or unsteady normal shock boundary conditions are satisfied across
+the shock along the surface of the wing. The computed aerodynamic matrices
+may be saved on magnetic tape for use in subsequent analyses.
+
+
+
+                                        1
+
+     This program is written in FORTRAN IV and has been implemented on the
+CDC CYBER 175 computer with a central memory requirement of approximately
+111K (octal) of 60 bit words. The program is overlayed to reduced core re-
+quirements. The program was developed in 1976.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC CYBER 70 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 5,948 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-12524
+
+DOMESTIC - DOCUMENTATION PRICE: $33.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $66.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

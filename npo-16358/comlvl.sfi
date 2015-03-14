@@ -1,0 +1,583 @@
+      SUBROUTINE COMLVL(CLINE,DONE)
+CDM   This routine implements the "command" mode of look, by processing
+CDM   one command which is passed to it.
+CDM
+CDM    Programmer - Jon Vavrus  26 AUG 1981
+CDM    Revised    - Jon Vavrus   3 SEP 1981
+CDM    Revised    - Jon Vavrus  18 SEP 1981
+CDM    Revised    - Jon Vavrus   3 MAR 1982 (added SETNAR/SETWID)
+CDM    Revised    - Jon Vavrus   4 MAY 1982 (handles non-AVO VT100's)
+CDM    Revised    - Jon Vavrus  15 JUL 1982 (changed to handle only one
+CDM                                          command)
+CDM    Revised    - Jon Vavrus  18 AUG 1982 (Bigger arrays)
+CDM    Revised    - Jon Vavrus   9 SEP 1982
+CDM    Revised    - Jon Vavrus   4 APR 1983 (add broadcast and spawn stuff)
+CDM    Revised    - Jon Vavrus  17 MAY 1983
+CDM    Revised    - Jon Vavrus  28 MAY 1983 (check defined symbols)
+CDM    Revised    - Jon Vavrus  17 AUG 1983 (GETDEF changed)
+CDM    Revised    - Jon Vavrus  27 SEP 1983
+CM
+CM         This routine allows the use of the following commands:
+CM              DEFINE s := a1 a2 ...
+CM                             - which defines a symbol s in the same man-
+CM                               ner as a line in the definitions file (see
+CM                               below), including line continuations.
+CM              EXIT           - returns to the normal "look" mode.
+CM              HELP a         - where a is one of the commands shown above.
+CM              READ           - outputs the broadcast messages (if any)
+CM                               which have been received.
+CM              SET [NO]switch - with switch being any of WRAP, BOX, WIDE
+CM                               or NARROW.  These have the same affect as
+CM                               the command line switches of the same
+CM                               names (WIDE is the same as NONARROW),
+CM                               with the NO qualifier turning them off.
+CM              SHOW [s]       - where s is a defined symbol.  This will
+CM                               show what commands a symbol is defined
+CM                               as. (if s is omitted, all defined symbols
+CM                               are shown).
+CM              SPAWN          - starts a sub-process up to allow the user
+CM                               to do DCL commands.
+CM              @filename      - Inputs the file filename as a definitions
+CM                               file.
+CM
+CM          Upon return DONE is set .TRUE. if the command was EXIT, .FALSE.
+CM      otherwise.
+C
+C***   CALLED ROUTINES
+C
+CC    CLRWRP  Sets the terminal NOWRAP
+CC    DODEF   Processes a symbol file
+CC    GETDEF  Translates a line into a symbol definition
+CC    SETNAR  Set VT100 terminal to 80 columns
+CC    SETWID  Set VT100 terminal to 132 columns
+CC    SETWRP  Sets the terminal WRAP
+CC    TTSPAWN Spawns a sub-process (needed to get rid of broadcast
+CC            trap
+C
+C***   COMMON AREAS
+C
+CS    BRDCM1  Contains character variables for broadcast handling.
+CS              BRDNOT holds the notice to be displayed on the screen.
+CS              BRDMSG which holds broadcast messages.
+C
+CS    BRDCM2  Contains non-character information for broadcast handling.
+CS              BRDLEN the length of strings in BRDMSG.
+CS              BRDCNT the count of strings in BRDMSG.
+CS              BRDFLG a flag telling if there are unread messages.
+C
+CS    CHARS   Used to pass character variables; contains LINES a character
+CS            array of the output lines, and SRCHBF the search buffer, and
+CS            CRLF which contains <CR><LF>, and REVVID + REGVID which are
+CS            the VT100 control sequences to set/unset reverse video
+C
+CS    DOITNM  Contains information transferred from the main program:
+CS                 INCHAN - input channel of the terminal
+CS                 TIME   - scrolling speed in -10000000*seconds/line
+CS                 SBFFLG - flag indicating whether there is a string
+CS                          in the search buffer
+CS                 DIRECT - flag for reverse (-1 for reverse, else 1)
+CS                 EBK    - EBK of input file
+CS                 SBFLEN - length of string(s) in search buffer(s)
+CS                 RECBLK - number of bytes used per block in FIX-BLK files
+CS                 RANGE  - beginning and ending block numbers and pointers
+CS                          of the print range
+CS                 VT100  - flag set .TRUE. if terminal is VT100.
+CS                 LRL    - length of the longest record in input file.
+CS                 LENLMT - maximum output length (if <0 then WRAP set)
+CS                 PAGEND - line number of last line output to screen
+CS                 PAGLEN - number of lines per page
+CS                 COMLIN - line number for command input (bottom of screen)
+CS                 VT100A - flag set .TRUE. if VT100 has advanced video option
+C
+CS    INPUTC  Contains the input character buffer INLINE and the defined
+CS            symbols SYMS and the definition search buffers DEFBUF
+C
+CS    INPUTN  Contains the input character buffer length LENSAV, and the
+CS            symbol definitions DEFS, the number of such definitions
+CS            (NDEFS), the definition flags DEFFLG, and the definition
+CS            numbers NUDMEF
+C
+      CHARACTER*(*) CLINE
+      CHARACTER*1024 LINE
+      CHARACTER*132 LINES(600)
+      CHARACTER*128 INLINE,BRDMSG(20)
+      CHARACTER*64 IMAGE
+      CHARACTER*30 DEFBUF(10,10,60),SRCHBF(10)
+      CHARACTER*22 BRDNOT
+      CHARACTER*6 DEFINE,NARROW
+      CHARACTER*5 SPAWN
+      CHARACTER*4 EXIT,HELP,SHOW,REVVID,REGVID,WRAP,WIDE,READ
+      CHARACTER*3 SET,BOX
+      CHARACTER*2 CRLF
+      CHARACTER*1 SYMS(60),COMAND(13),ALLSYM(42)
+      REAL*4 NUMDEF(10,60)
+      INTEGER*4 INCHAN,TIME,EBK,RANGE(2,2),PAGEND,GETLIS(4),TTSPAWN
+      INTEGER*2 DIRECT,SBFLEN(10),RECBLK,DEFS(11,10,60),LENLMT,PAGLEN,
+     1          LENSAV,COMLIN,BRDCNT,BRDLEN(20)
+      LOGICAL GETDEF
+      LOGICAL*1 SBFFLG,VT100,DEFFLG(3,10,60),NO,VT100A,DONE,BRDFLG,
+     1          OKFLAG
+
+      COMMON /BRDCM1/BRDNOT,BRDMSG
+      COMMON /BRDCM2/BRDLEN,BRDCNT,BRDFLG
+      COMMON /CHARS/LINES,SRCHBF,CRLF,REVVID,REGVID
+      COMMON /DOITNM/INCHAN,TIME,SBFFLG,DIRECT,EBK,SBFLEN,RECBLK,RANGE,
+     1               VT100,LRL,LENLMT,PAGEND,PAGLEN,COMLIN,VT100A
+      COMMON /INPUTC/INLINE,SYMS,DEFBUF
+      COMMON /INPUTN/LENSAV,DEFS,NDEFS,DEFFLG,NUMDEF
+
+      DATA NUMCOM,COMAND/13,'$','%','^','!','#','(',')','*',' ','&','@',
+     1                   '+','<'/
+      DATA NUMALL,ALLSYM/42,'A','B','C','D','E','F','G','H','I','J','K',
+     1                   'L','M','N','O','P','Q','R','S','T','U','V',
+     2                   'W','X','Y','Z','_','=','`','~','[',']','{',
+     3                   '}',';',':',',','>','?','/','\','|'/
+      DATA GETLIS(1),GETLIS(4)/'2070040'X,0/,IMAGE/'{'/
+      DATA BOX , SET , WRAP , EXIT , HELP , SHOW , WIDE , DEFINE/
+     1    'BOX','SET','WRAP','EXIT','HELP','SHOW','WIDE','DEFINE'/
+      DATA READ , SPAWN , NARROW/
+     1    'READ','SPAWN','NARROW'/
+
+      IF (LEN(CLINE) .EQ. 0)
+        EXECUTE (ERROR)
+      ENDIF
+C
+C***   Get any continuation lines
+C
+      CALL STR$TRIM(LINE,CLINE,LENGTH)
+      DO FOREVER
+       UNDO IF (LINE(LENGTH:LENGTH) .NE. '-')
+       CALL LIB$GET_INPUT(LINE(LENGTH:),'-',J)
+       LENGTH = LENGTH + J
+      END DO FOREVER
+      CALL STR$TRANSLATE(LINE(:LENGTH),LINE(:LENGTH),' ','	')
+      CALL STR$UPCASE(LINE(:LENGTH),LINE(:LENGTH))
+C
+C***   Trim leading blanks
+C
+      I = LIB$SKPC(' ',LINE)
+      IF (I .LE. LENGTH)
+        LINE = LINE(I:LENGTH)
+        I = INDEX(LINE,' ') - 1
+C
+C***   Check for set
+C
+        IF (I .LE. 3)
+          IF (LINE(:I) .EQ. SET(:I))
+            J = LIB$SKPC(' ',LINE(I+1:)) + I
+            IF (J .LT. I)
+              EXECUTE (ERROR)
+            ENDIF
+            LINE = LINE(J:)
+            I = INDEX(LINE,' ') - 1
+C
+C---   NO?
+C
+            NO = .FALSE.
+            IF (I .GT. 2)
+              IF (LINE(:2) .EQ. 'NO')
+                NO = .TRUE.
+                LINE = LINE(3:)
+                I = I - 2
+              ENDIF
+            ENDIF
+C
+C---   BOX?
+C
+            IF (I .LE. 3)
+              IF (LINE(:I) .EQ. BOX(:I))
+                IF (NO)
+                  PAGLEN = COMLIN - 1
+                ELSE
+                  PAGLEN = COMLIN - 2
+                ENDIF
+                EXECUTE (OK_RETURN)
+              ENDIF
+            ENDIF
+C
+C---   WRAP?
+C
+            IF (I .LE. 4)
+              IF (WRAP(:I) .EQ. LINE(:I))
+                IF (NO)
+                  LENLMT = IABS(LENLMT)
+                  CALL CLRWRP(INCHAN)
+                ELSE
+                  LENLMT = -IABS(LENLMT)
+                  CALL SETWRP(INCHAN)
+                ENDIF
+                EXECUTE (OK_RETURN)
+              ENDIF
+C
+C---   WIDE?
+C
+              IF (WIDE(:I) .EQ. LINE(:I) .AND. VT100)
+                IF (NO)
+                  EXECUTE (SET_NARROW)
+                ELSE
+                  EXECUTE (SET_WIDE)
+                ENDIF
+                EXECUTE (OK_RETURN)
+              ENDIF
+            ENDIF
+C
+C---   NARROW?
+C
+            IF (I .LE. 6)
+              IF (LINE(:I) .EQ. NARROW(:I) .AND. VT100)
+                IF (NO)
+                  EXECUTE (SET_WIDE)
+                ELSE
+                  EXECUTE (SET_NARROW)
+                ENDIF
+                EXECUTE (OK_RETURN)
+              ENDIF
+            ENDIF
+            EXECUTE (ERROR)
+          ENDIF
+        ENDIF
+C
+C***   Check for EXIT
+C
+        IF (I .LE. 4)
+          IF (LINE(:I) .EQ. EXIT(:I))
+            DONE = .TRUE.
+            RETURN
+          ENDIF
+C
+C***   Check for HELP
+C
+          IF (LINE(:I) .EQ. HELP(:I))
+C
+C---   Open help file
+C
+            CALL LBR$INI_CONTROL(J,1)
+            IF (IMAGE .EQ. '{')
+              GETLIS(2) = %LOC(IMAGE)
+              GETLIS(3) = %LOC(K)
+              CALL SYS$GETJPI(,,,GETLIS,,,)
+              L = INDEX(IMAGE,']')
+              IF (L .EQ. 0)
+                IMAGE = 'LOOK.HLB'
+              ELSE
+                IMAGE = IMAGE(:L)//'LOOK.HLB'
+              ENDIF
+            ENDIF
+            IF (.NOT.LBR$OPEN(J,IMAGE))
+              CALL LIB$PUT_OUTPUT('***   COULD NOT OPEN HELP LIBRARY')
+              DONE = .FALSE.
+              RETURN
+            ENDIF
+C
+C---   Output message, close file
+C
+            K = INDEX(LINE(I+1:),'*') + I + 1
+            IF (K .NE. (I + 1))
+              LINE = 'ASTERISK '//LINE(K:)
+            ELSE
+              K = INDEX(LINE(I+1:),'%') + I + 1
+              IF (K .NE. (I + 1))
+                LINE = 'PERCENT '//LINE(K:)
+              ELSE
+                K = INDEX(LINE(I+1:),'!') + I + 1
+                IF (K .NE. (I + 1))
+                  LINE = 'EXCLAMATION '//LINE(K:)
+                ELSE
+                  K = LIB$SKPC(' ',LINE(I+1:)) + I
+                  IF (I .EQ. K)
+                    LINE = 'INFO'
+                  ELSE
+                    LINE = LINE(K:)
+                  ENDIF
+                ENDIF
+              ENDIF
+            ENDIF
+            CALL STR$TRIM(LINE,LINE,I)
+            K = INDEX(LINE,' ') - 1
+            IF (K .EQ. I) THEN
+              CALL LBR$GET_HELP(J,,,,LINE)
+            ELSE
+              I = LIB$SKPC(' ',LINE(K+1:)) + K
+              CALL LBR$GET_HELP(J,,,,LINE(:K),LINE(I:))
+            ENDIF
+            CALL LBR$CLOSE(J)
+            EXECUTE (OK_RETURN)
+          ENDIF
+C
+C***   Check for show
+C
+          IF (LINE(:I) .EQ. SHOW(:I))
+            J = LIB$SKPC(' ',LINE(I+1:)) + I
+            IF (LINE(J+1:) .NE. ' ')
+              EXECUTE (ERROR)
+            ENDIF
+            IF (J .EQ. I)
+              DO FOR ISYM=1,NDEFS
+               EXECUTE (SHOW_SYMBOL)           
+              END DO FOR
+              EXECUTE (OK_RETURN)
+            ELSE
+              DO FOR ISYM=1,NDEFS
+               IF (LINE(J:J) .EQ. SYMS(ISYM))
+                 EXECUTE (SHOW_SYMBOL)
+                 EXECUTE (OK_RETURN)
+               ENDIF
+              END DO FOR
+              EXECUTE (ERROR)
+            ENDIF
+          ENDIF
+C
+C***   Check for read
+C
+          IF (LINE(:I) .EQ. READ(:I))
+            IF (BRDCNT .EQ. 0)
+              CALL LIB$PUT_OUTPUT(CRLF//'No broadcast messages have '
+     1                            //'been received.'//CRLF)
+            ELSE
+              CALL LIB$PUT_OUTPUT(CRLF//'The following messages '//
+     1                            'have been received:')
+              IF (BRDCNT .LE. 20)
+                J = BRDCNT
+              ELSE
+                J = 20
+              ENDIF
+              DO FOR I=1,J
+C
+C---   Remove bells from message
+C
+               DO FOREVER
+                K = INDEX(BRDMSG(I)(:BRDLEN(I)),CHAR(7))
+                UNDO IF (K .EQ. 0)
+                BRDMSG(I) = BRDMSG(I)(:K-1)//BRDMSG(I)(K+1:)
+                BRDLEN(I) = BRDLEN(I) - 1
+               END DO FOREVER
+C
+C---   Output message
+C
+               CALL LIB$PUT_OUTPUT(BRDMSG(I)(:BRDLEN(I)))
+              END DO FOR
+              IF (BRDCNT .GT. 20)
+                CALL LIB$PUT_OUTPUT(CRLF//
+     1               'There were too many messages!  The buffer over-'
+     2               //'flowed, there were un-seen messages'//CRLF)
+              ELSE
+                CALL LIB$PUT_OUTPUT(CRLF)
+              ENDIF
+              BRDCNT = 0
+            ENDIF
+            BRDFLG = .FALSE.
+            EXECUTE (OK_RETURN)
+          ENDIF
+        ENDIF
+C
+C***  SPAWN?
+C
+        IF (I .LE. 5)
+          IF (SPAWN(:I) .EQ. LINE(:I))
+            IF (.NOT.TTSPAWN()) CALL LIB$PUT_OUTPUT
+     1          ('Unable to spawn sub-process')
+            EXECUTE (OK_RETURN)
+          ENDIF
+        ENDIF
+C
+C***   DEFINE?
+C
+        IF (I .LE. 6)
+          IF (DEFINE(:I) .EQ. LINE(:I))
+            J = LIB$SKPC(' ',LINE(I+1:)) + I
+            IF (J .EQ. I)
+              EXECUTE (ERROR)
+            ENDIF
+            LINE = LINE(J:)
+            CALL STR$TRIM(LINE,LINE,LENGTH)
+            I = INDEX(LINE,':=') - 1
+            J = INDEX(LINE,'"') - 1
+            K = INDEX(LINE,'''') - 1
+            IF (I .LT. 1 .OR. (J .LT. I .AND. J .GE. 0) .OR. (K .LT. I
+     1          .AND. K .GE. 0))
+C
+C---   If no := then error
+C
+              EXECUTE (ERROR)
+            ENDIF
+C
+C---   Make sure that it is definable
+C
+            OKFLAG = .FALSE.
+            DO FOR L=1,NUMALL
+             IF (LINE(1:1) .EQ. ALLSYM(L)) OKFLAG = .TRUE.
+            END DO FOR
+            IF (OKFLAG)
+              EXECUTE (DEFINE_SYMBOL)
+              EXECUTE (OK_RETURN)
+            ELSE
+              EXECUTE (ERROR)
+            ENDIF
+          ENDIF
+        ENDIF
+C
+C***   Check for @
+C
+        IF (LINE(1:1) .EQ. '@')
+          OPEN (UNIT=30,NAME=LINE(2:I),TYPE='OLD',ERR=700,READONLY)
+          CALL DODEF
+          DO LABEL
+            LABEL 700
+              I = INDEX(LINE,' ') - 1
+              CALL LIB$PUT_OUTPUT('***   UNABLE TO OPEN '//LINE(:I))
+          END DO LABEL
+          EXECUTE (OK_RETURN)
+        ENDIF
+        EXECUTE (ERROR)
+      ENDIF
+      DONE = .FALSE.
+      RETURN
+      PROCEDURE (DEFINE_SYMBOL)
+CP    This procedure defines a symbol.
+C
+C***   See if symbol is already defined
+C
+900     DO
+         DO FOR II=1,NDEFS
+          UNDO 900 IF (SYMS(II) .EQ. LINE(1:1))
+         END DO FOR
+         NDEFS = NDEFS + 1
+         II = NDEFS
+         SYMS(II) = LINE(1:1)
+        END DO
+        LINE = LINE(I+3:)
+        LENGTH = LENGTH - I - 2
+C
+C***   Actually get definitions
+C
+        IF (.NOT.GETDEF(LINE(:LENGTH),II))
+          EXECUTE (ERROR)
+        ENDIF
+      END PROCEDURE
+      PROCEDURE (ERROR)
+CP    This writes an error message
+        CALL STR$TRIM(LINE,LINE,I)
+        IF (I .NE. 0) CALL LIB$PUT_OUTPUT(LINE(:I)//' ??')
+        DONE = .FALSE.
+        RETURN
+      END PROCEDURE
+      PROCEDURE (OK_RETURN)
+CP    This procedure sets DONE to false and returns.
+        DONE = .FALSE.
+        RETURN
+      END PROCEDURE
+      PROCEDURE (SET_NARROW)
+CP    This procedure sets the terminal to 80 column mode.
+        LENLMT = 80*LENLMT/IABS(LENLMT)
+        CALL SETNAR(INCHAN)
+        IF (.NOT.VT100A)
+          COMLIN = 24
+          PAGLEN = PAGLEN + 10
+        ENDIF
+      END PROCEDURE
+      PROCEDURE (SET_WIDE)
+CP    This procedure sets the terminal to 132 column mode.
+        LENLMT = 132*LENLMT/IABS(LENLMT)
+        CALL SETWID(INCHAN)
+        IF (.NOT.VT100A)
+          COMLIN = 14
+          PAGLEN = PAGLEN - 10
+        ENDIF
+      END PROCEDURE
+      PROCEDURE (SHOW_SYMBOL)
+CP    This procedure writes out the definition for one symbol
+        LINE = SYMS(ISYM)//' := '
+        L = 6
+        DO FOR K=1,10
+         UNDO IF (DEFS(1,K,ISYM) .EQ. 0)
+C
+C***   Convert the number
+C
+         IF (DEFFLG(1,K,ISYM))
+           WRITE (UNIT=LINE(L:),FMT=1000)NUMDEF(K,ISYM)
+1000       FORMAT (F10.3)
+           M = LIB$SKPC(' ',LINE(L:))
+           LINE(L:) = LINE(L+M-1:)
+           L = 11 + L - M
+           IF (LINE(L-3:L-1) .EQ. '000') L = L - 4
+         ENDIF
+C
+C***   Is it --&?
+C
+         IF (DEFS(1,K,ISYM) .EQ. 9)
+           LINE(L:) = '--& '
+           L = L + 4
+           CYCLE
+         ENDIF
+C
+C***   Set minus if necessary
+C
+         IF (DEFFLG(2,K,ISYM))
+           LINE(L:) = '-'
+           L = L + 1
+         ENDIF
+C
+C***   Search?
+C
+         IF (DEFS(1,K,ISYM) .EQ. 3)
+           IF (DEFFLG(3,K,ISYM))
+             LINE(L:) = '"'//DEFBUF(1,K,ISYM)(:DEFS(2,K,ISYM))
+             KK = L
+             L = L + 3 + DEFS(2,K,ISYM)
+             DO FOREVER
+              LL = INDEX(LINE(KK+1:),'"') + KK
+              UNDO IF (LL .EQ. KK)
+              LINE(LL:) = '"'//LINE(LL:)
+              L = L + 1
+              KK = LL + 2
+             END DO FOREVER
+             LINE(L-2:L-2) = '"'
+             DO FOR JJ=2,10
+              UNDO IF (DEFS(1+JJ,K,ISYM) .EQ. 0)
+              LINE(L:) = ''''//DEFBUF(JJ,K,ISYM)(:DEFS(1+JJ,K,ISYM))
+              KK = L
+              L = L + 3 + DEFS(1+JJ,K,ISYM)
+              DO FOREVER
+               LL = INDEX(LINE(KK+1:),'''') + KK
+               UNDO IF (LL .EQ. KK)
+               LINE(LL:) = ''''//LINE(LL:)
+               L = L + 1
+               KK = LL + 2
+              END DO FOREVER
+              LINE(L-2:L-2) = ''''
+             END DO FOR
+             LINE(L-1:) = '^'
+             L = L + 1
+           ELSE
+             LINE(L:) = '^ '
+             L = L + 2
+           ENDIF
+           CYCLE
+         ENDIF
+C
+C***   Set LINE
+C
+         DO FOR M=1,NUMCOM
+          IF (DEFS(1,K,ISYM) .EQ. M)
+            LINE(L:) = COMAND(M)
+            L = L + 2
+            UNDO
+          ENDIF
+         END DO FOR
+        END DO FOR
+C
+C***   Output line
+C
+        M = 1
+        L = L - 1
+        DO FOREVER
+         IF ((L - M) .LT. IABS(LENLMT))
+           CALL LIB$PUT_OUTPUT(LINE(M:L-1))
+           UNDO
+         ELSE
+           CALL LIB$PUT_OUTPUT(LINE(M:M+IABS(LENLMT)-1))
+         ENDIF
+         M = M + IABS(LENLMT)
+        END DO FOREVER
+      END PROCEDURE
+      END

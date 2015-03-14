@@ -1,0 +1,70 @@
+; PORT   NAME   HARDCOPY CONFIGURATION FILE comments
+;----- -------- -------- ------------------ ---------------------
+; Non terminal ports
+;----- -------- -------- ------------------ ---------------------
+OPA0   DUMB     LOCAL                       B11 S332  = DecWriter
+CRA0   NONE     NONE                        B11 S332  = Card Rdr
+DUA0   NONE     NONE                        B11 S332  = Hard Disc
+DUA1   NONE     NONE                        B11 S332  = Hard Disc
+DUA2   NONE     NONE                        B11 S332  = Hard Disc
+;----- -------- -------- ------------------ ---------------------
+RTA0   UNKNOWN  LOCAL                       DecNet
+RTA1   UNKNOWN  LOCAL                       DecNet
+RTA2   UNKNOWN  LOCAL                       DecNet
+RTA3   UNKNOWN  LOCAL                       DecNet
+;----- -------- -------- ------------------ ---------------------
+; TTAx group
+;----- -------- -------- ------------------ ---------------------
+TTA0   UNKNOWN  LOCAL                       DTI 53135
+TTA1   UNKNOWN  LOCAL                       DTI 53136
+TTA2   TEK4109  LOCAL    LCL4510            B11 S221
+TTA3   TEK4107  LOCAL    LCL4510            B11 S221
+TTA4   TV922    LOCAL                       B11 S221B
+TTA5   TEK4107  LOCAL    LCL4510            B11 S221
+TTA6   VT100    LOCAL                       B11 S121
+TTA7   TEK4207  LOCAL                       B11 S129
+;----- -------- -------- ------------------ ---------------------
+; TTBx group
+;----- -------- -------- ------------------ ---------------------
+TTB0   VT240    LOCAL                       B5  (AFJPS)
+TTB1   UNKNOWN  LOCAL                       B5
+TTB2   UNKNOWN  LOCAL                       DTI
+TTB3   UNKNOWN  LOCAL                       
+TTB4   TV922    BITMAP   CI300              B11 S332
+TTB5   TV922    LOCAL                       B11 S332
+TTB6   DUMB     LOCAL                       B5  (AFRSS)
+TTB7   UNKNOWN  LOCAL                       Phone
+;----- -------- -------- ------------------ ---------------------
+; TTCx group
+;----- -------- -------- ------------------ ---------------------
+TTC0   UNKNOWN  LOCAL                       B5
+TTC1   UNKNOWN  LOCAL                       B5
+TTC2   UNKNOWN  LOCAL                       DTI 53134
+TTC3   UNKNOWN  LOCAL                       Phone
+TTC4   UNKNOWN  LOCAL                       DTI 53137
+TTC5   UNKNOWN  LOCAL                       DTI 53138
+TTC6   UNKNOWN  LOCAL                       DTI 53139
+TTC7   UNKNOWN  LOCAL                       DTI 53140
+;----- -------- -------- ------------------ ---------------------
+; TXAx group
+;----- -------- -------- ------------------ ---------------------
+TXA0   UNKNOWN  NONE                        B5 = Fast printer
+TXA1   UNKNOWN  LOCAL                       Phone
+TXA2   UNKNOWN  LOCAL                       B5
+TXA3   UNKNOWN  LOCAL                       B5
+TXA4   TEK4107  LOCAL                       B5
+TXA5   UNKNOWN  LOCAL                       B5
+TXA6   UNKNOWN  LOCAL                       B5
+TXA7   TEK4114  LOCAL                       B11 S332
+;----- -------- -------- ------------------ ---------------------
+; TXBx group
+;----- -------- -------- ------------------ ---------------------
+TXB0   UNKNOWN  LOCAL                       Phone 
+TXB1   UNKNOWN  LOCAL                       Phone 
+TXB2   VT100    LOCAL                       B11
+TXB3   DUMB     LOCAL                       B11
+TXB4   VS550    LOCAL                       B11 E221
+TXB5   VS550    LOCAL                       B11 E208
+TXB6   VT125    LOCAL                       B11 E235 = Pro 380
+TXB7   VT125    LOCAL                       B11 ???? = MacIntosh
+;----- -------- -------- ------------------ ---------------------

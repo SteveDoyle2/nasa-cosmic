@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+After the move key is pressed from the Create a Slide Show Menu, the prompt
+asks for the number of the slide which is to be moved.  After the number is
+entered the prompt will ask for the number of the location of where to move the
+slide.  After the second number is entered the slide is removed from the
+present position and inserted in the new position.  Pressing a return or
+F1(Cancel) will cancel the move.  When the slide is moved the slide will first
+be taken from the location it was, all the slides in between will be shifted,
+and the slide will be placed in the new location.  No slide will be deleted.
+
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

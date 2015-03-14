@@ -1,0 +1,39 @@
+/*****************************************************************************/
+/*                                                                           */
+/*  Reqr_all                                                                 */
+/*                                                                           */
+/*  This function scans all of the conditions which control a single rule    */
+/*  and marks them as being required.  The condition in the "only_false"     */
+/*  field of the rule is not affected because its value was already          */
+/*  required.                                                                */
+/*                                                                           */
+/*  Input:  rule - pointer to a rule.                                        */
+/*  Output: none.                                                            */
+/*                                                                           */
+/*  Method: For each condition which the rule depends on                     */
+/*              if the condition is not the only false                       */
+/*                  increment the "is_val_required" counter.                 */
+/*                                                                           */
+/*  Programmer: G R Goodrum, MDTSCO, June 1984                               */
+/*                                                                           */
+/*****************************************************************************/
+
+#include "structures.inc"
+
+reqr_all ( rule )
+struct rule_info *rule;
+{
+    struct cond_info **list;
+    struct cond_info *cond;
+
+    list  =  rule -> cond_list;
+    while  ( ( cond = *list++ ) != NULL )
+    {                                                           /* debug */
+        count ( 7, 0 );                                         /* debug */
+        cond -> is_val_required  +=  1;
+    }                                                           /* debug */
+    count ( 7, 1 );                                             /* debug */
+
+    rule -> only_false -> is_val_required  -=  1;
+
+}

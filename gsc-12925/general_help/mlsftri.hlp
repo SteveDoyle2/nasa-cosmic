@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+When the Fill Triangle key is pressed from the Graphics Mode of the milestone
+chart, the prompt asks for the date of the triangle to be filled.  Enter the
+date, or if the cursor is on the desired triangle, press return.  The triangle
+will be filled.  If the date is not directly on a triangle, the closest 
+triangle to the left will be filled.
+
+
+
+
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

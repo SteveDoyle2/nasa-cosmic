@@ -1,0 +1,55 @@
+ PROGRAMMABLE DISPLAY PUSHBUTTON LEGEND EDITOR
+
+( NASA Langley Research Center )
+
+     The Programmable Display Pushbutton (PDP) is a pushbutton device
+available from Micro Switch which has a programmable 16 x 35 matrix of LEDs
+on the pushbutton surface. Any desired legends can be displayed on the
+PDPs, producing user-friendly applications which greatly reduce the need
+for dedicated manual controls. Because the PDP can interact with the opera-
+tor, it can call for the correct response before transmitting its next mes-
+sage. It is both a simple manual control and a sophisticated programmable
+link between the operator and the host system.
+
+     The Programmable Display Pushbutton Legend Editor, PDPE, is used to
+create the LED displays for the pushbuttons. PDPE encodes PDP control com-
+mands and legend data into message byte strings sent to a Logic Refresh and
+Control Unit (LRCU). The LRCU serves as the driver for a set of four PDPs.
+The legend editor (PDPE) transmits to the LRCU user specified commands that
+control what is displayed on the LED face of the individual pushbuttons.
+Upon receiving a command, the LRCU transmits an acknowledgement that the
+message was received and executed successfully. The user then observes the
+effect of the command on the PDP displays and decides whether or not to send
+the byte code of the message to a data file so that it may be called by an ap-
+plications program.
+
+     The PDPE program is written in FORTRAN for interactive execution. It
+was developed on a DEC VAX 11/780 under VMS. It has a central memory require-
+ment of approximately 12800 bytes. It requires four Micro Switch PDPs and
+two RS-232 VAX 11/780 terminal ports. The PDPE program was developed in
+1985.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN 77
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 1,003 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX FILES-11 Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-13671
+
+DOMESTIC - DOCUMENTATION PRICE: $14.00    PROGRAM PRICE: $300.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $28.00   PROGRAM PRICE: $600.00
+
+
+
+                                        1
+

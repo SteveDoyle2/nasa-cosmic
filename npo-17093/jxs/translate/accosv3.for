@@ -1,0 +1,242 @@
+      SUBROUTINE OUTPUT1
+C*****THIS SUBROUTINE WILL PRINT A CODEV LENS DECK
+C
+C  LOCAL DECLARATION OF VARIABLES.
+      LOGICAL*1 FBBC     ! LOCAL FLAG FOR TORIC PRINTOUT. BBC 11/84.
+C*****COMMON BLOCK BBC DECLARATIONS
+C ADD COMMON BLOCK TO STORE THE F() ARRAY FOR APERTURE DATA.
+C BBC 12/84.
+	REAL*4 TEMPBBC(225)
+C*****COMMON BLOCK CODEV DECLARATIONS
+      CHARACTER*4 DIM,APERT(225)
+      INTEGER*4 ICCY(0:225),ITHC(0:225),IGLC(0:225),IWTW1,IWTW2,IWTW3
+      INTEGER*4 IWTW4,IWTW5,IWTW6,IWTW7,ICCX(30),KC(66),IAC(66),IBC(66)
+      INTEGER*4 ICC(66),IDC(66),IXDC(100),IYDC(100),IADC(100),IBDC(100)
+      INTEGER*4 ICDC(100),ICCF(66)
+      REAL*4 ORDER(66),WLF1,WLF2,WLF3,WLF4,WLF5,WLF6,WLF7
+      REAL*4 F(225),AL(66),AM(66),AN(66)
+      REAL*8 RFND1(99),RFND2(99),RFND3(99),RFND4(99),RFND5(99)
+C*****COMMON BLOCK BOTH DECLARATIONS
+      CHARACTER*4 SOLVE(40)
+      CHARACTER*3 CPARM(30)
+      CHARACTER*13 GLASS(0:225)
+      CHARACTER*64 TITLE
+      INTEGER*4 I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,I11,M,ISTOP,IREF,ISURF
+      INTEGER*4 NAPERT(225),NDECE(100),NSOLVE(40),NUMA,MESSAGE(20)
+      REAL*4 DIF(66)
+      REAL*8 ADE(100),BDE(100),CDE(100),XDE(100),YDE(100),CURVEY(0:225)
+      REAL*8 THICKNS(0:225),RK(66),A(66),B(66),C(66),D(66),SOLVF1(40)
+      REAL*8 F1(225),REF_OBJ_HT
+      LOGICAL AFO,IC(66),CUF(66)
+C*****COMMON BLOCK ACONLY DECLARATIONS
+      CHARACTER*4 TORIC(10),COMMAND(100),PIKUP(200),SHAPE(225),CASE(10)
+      CHARACTER*4 SPECSF(225)
+      CHARACTER*36 SUBMES1(20)
+      CHARACTER*40 SUBMES2(20)
+      CHARACTER*48 SUBMES3(20)
+      INTEGER*4 INDEX(20),NTORIC(10),NCASE(10),NUMBER(10),IPIKTO(200)
+      INTEGER*4 IPIKFR(200),NASP(66),J10,K1,NGRT(10),NSHAPE(225)
+      REAL*4 PIKA(200),DDIST(10),RNUMBER(10),RIC1(225),RIC2(225)
+      REAL*4 RCUF1(225),RCUF2(225)
+      REAL*8 TCVR(10),PY,PUCY,RADIUS(0:225),PIKB(200),NAO,YAN
+      LOGICAL OB(225)
+  
+      COMMON /CODEV/DIM,APERT,ICCY,ITHC,IGLC,IWTW1,IWTW2,IWTW3,IWTW4,
+     *        IWTW5,IWTW6,ILWTW7,ICCX,KC,IAC,IBC,ICC,IDC,ORDER,IXDC,
+     *        IYDC,IADC,IBDC,ICDC,ICCF,WLF1,WLF2,WLF3,WLF4,WLF5,WLF6,
+     *        WLF7,RFND1,RFND2,RFND3,RFND4,RFND5,F,AL,AM,AN
+      COMMON /BOTH/I1,I2,I3,I4,I5,I6,I7,I8,I9,I10,I11,GLASS,MESSAGE,M,
+     *        ISTOP,IREF,ISURF,AFO,NAPERT,NDECE,F1,DIF,ADE,BDE,CDE,XDE,
+     *        YDE,CURVEY,THICKNS,RK,A,B,C,D,IC,CUF,NSOLVE,SOLVF1,SOLVE,
+     *        TITLE,NUMA,REF_OBJ_HT
+      COMMON /ACONLY/TCVR,PY,PUCY,INDEX,NTORIC,DDIST,SUBMES1,SUBMES2,
+     *        SUBMES3,TORIC,NCASE,COMMAND,NUMBER,RADIUS,PIKA,PIKB,
+     *        IPIKTO,IPIKFR,PIKUP,SHAPE,CASE,NASP,OB,SPECSF,NAO,YAN,
+     *        J10,K1,NGRT,RIC1,RIC2,RCUF1,RCUF2,RNUMBER,NSHAPE
+      COMMON /BBC/ TEMPBBC
+C******************************************************************************
+C*****FORMAT STATEMENTS
+C REMOVED EXTRA SPACE AT BEGINNING OF FORMATS TO FIT CODE V. BBC 9/84.
+  1   FORMAT(A12)
+  2   FORMAT(A64)
+  4   FORMAT(A4,6X,F10.5,F10.5,F10.5,F10.5,F10.5)
+  5   FORMAT(A13)
+  6   FORMAT(A4,6X,I4,6X,I4,6X,I4,6X,I4,6X,I4)
+  8   FORMAT(G15.8,I4,1X,G15.8,I4,1X,A13,2X,I4,16X,A1,1X,A4)
+  9   FORMAT(A6)
+ 10   FORMAT(G15.8,I4,1X,G15.8,I4,1X,A13,2X,I4,18X,A4)
+ 11   FORMAT(A3)
+ 12   FORMAT(G15.8,I4,1X,G15.8,5X,G15.8,I4)
+ 13   FORMAT(A4)
+ 14   FORMAT(G15.8,I4,1X,G15.8,I4,1X,G15.8,I4,1X,G15.8,I4)
+ 16   FORMAT(F15.8,I4)
+ 18   FORMAT(F8.5,2X,F9.6,2X,F5.2,5X,F5.2,5X,F5.2)
+ 20   FORMAT(A3,7X,G10.4)
+ 22   FORMAT(A3,7X,A4)
+ 24   FORMAT(A2,8X,F9.3,1X,F9.3,1X,F9.3,1X,F9.3,1X,F9.3)
+ 26   FORMAT(A3,6X,I4,6X,I4,6X,I4,6X,I4,6X,I4)
+ 28   FORMAT(A3,6X,I4)
+ 30   FORMAT(A3,I3,4X,G15.8)
+ 32   FORMAT(A10,F9.6,1X,F9.6,1X,F9.6,1X,F9.6,1X,F9.6)
+ 34   FORMAT(A3,I3,1X,A3,F10.5)
+ 36   FORMAT(A46)
+ 37   FORMAT(A1,A36)
+ 38   FORMAT(A31)
+ 39   FORMAT(A44,A32)
+ 40   FORMAT(A1,A40)
+ 41   FORMAT(A49)
+ 42   FORMAT(A42)
+ 43   FORMAT(A1,A48)
+ 44   FORMAT(A44,A36)
+ 45   FORMAT(A3)
+C******************************************************************************
+C*****MAIN PROGRAM
+C*****SURFACE DATA
+      WRITE(5,13)'DATA'
+      WRITE(5,2)TITLE
+      WRITE(5,1)'SURFACE DATA'
+      DO 300,I=0,ISURF
+        DO 125,J=1,I2
+          IF (NDECE(J) .EQ. I) THEN
+            WRITE(5,4)'DECE',XDE(J),YDE(J),ADE(J),BDE(J),CDE(J)
+            WRITE(5,6)'DECC',IXDC(J),IYDC(J),IADC(J),IBDC(J),ICDC(J)
+          END IF
+125     CONTINUE
+        IF (ISTOP .EQ. I) THEN
+          WRITE(5,8)CURVEY(I),ICCY(I),THICKNS(I),ITHC(I),GLASS(I),
+     *      IGLC(I),'S',SPECSF(I)
+        ELSE
+          WRITE(5,10)CURVEY(I),ICCY(I),THICKNS(I),ITHC(I),GLASS(I),
+     *      IGLC(I),SPECSF(I)
+        END IF
+        IF ((SPECSF(I) .EQ. 'ASP') .OR. (SPECSF(I) .EQ. 'YTO') .OR.
+     *      (SPECSF(I) .EQ. 'GRT')) THEN
+C FLAG ON WHETHER WE NEED EXTRA SET OF LINES FOR TORICS.  BBC 11/84.
+	  FBBC = .FALSE.
+          DO 130,K=1,I4
+            IF (NASP(K) .EQ. I) THEN
+	      FBBC = .TRUE.
+              WRITE(5,12)RK(K),KC(K),RIC2(K),RCUF2(K),100
+              WRITE(5,14)A(K),IAC(K),B(K),IBC(K),C(K),ICC(K),D(K),
+     *          IDC(K)
+            END IF
+130       CONTINUE
+          IF (.NOT. FBBC .AND. (SPECSF(I) .EQ. 'YTO'))  THEN
+C WRITE EXTRA SET OF LINES FOR TORICS. BBC 11/84.
+            WRITE (5,12) 0.,100,0.,0.,100
+            WRITE (5,14) 0.,100,0.,100,0.,100,0.,100
+          END IF
+        END IF
+        IF ((SPECSF(I) .EQ. 'YTO') .OR. (SPECSF(I) .EQ. 'CYL')) THEN
+          DO 135,K=1,I4
+            IF (NTORIC(K) .EQ. I) WRITE(5,16)TCVR(K),ICCX(K)
+135       CONTINUE
+        END IF
+        IF (SPECSF(I) .EQ. 'GRT') THEN
+          DO 140,K=1,J10
+            IF (NGRT(K) .EQ. I) WRITE(5,18)RNUMBER(K),DDIST(K),
+     *        1.0,0.0,0.0
+140       CONTINUE
+        END IF
+300   CONTINUE
+C******************************************************************************
+C*****SPECIFICATION DATA
+      WRITE(5,11)'SPC'
+      WRITE(5,20)'NAO',NAO
+      WRITE(5,22)'DIM',DIM
+      WRITE(5,24)'WL',WLF1,WLF2,WLF3,WLF4,WLF5
+      WRITE(5,26)'WTW',IWTW1,IWTW2,IWTW3,IWTW4,IWTW5
+      WRITE(5,28)'REF',IREF
+      IF (AFO) WRITE(5,11)'AFO'
+      WRITE(5,20)'YAN',YAN
+      WRITE(5,45) 'RDO'		! MORE SPEC DATA FOR CODEV. BBC 10/84.
+C******************************************************************************
+C*****APERTURES
+      IF (NUMA .GT. 0) WRITE(5,5)'APERTURE DATA'
+      DO 325,I=1,NUMA
+        WRITE(5,30)APERT(I),NAPERT(I),TEMPBBC(I)	! INSTEAD OF F() ARRAY.
+							! BBC. 12/84.
+325   CONTINUE
+C******************************************************************************
+C*****PRIVATE CATALOG
+      IF (I7 .GT. 0) THEN
+        WRITE(5,11)'PRV'
+        WRITE(5,24)'WL',WLF1,WLF2,WLF3,WLF4,WLF5
+      END IF
+      DO 350,I=1,I7
+C CHANGED .OR.'S TO .AND.'S. THE STATEMENT WAS ALWAYS LOGICALLY TRUE BEFORE.
+C BBC 9/84.
+        IF ((GLASS(INDEX(I))(1:4) .NE. 'HOYA') .AND.
+     *      (GLASS(INDEX(I))(1:6) .NE. 'SCHOTT') .AND.
+     *      (GLASS(INDEX(I))(1:5) .NE. 'OHARA') .AND.
+     *      (GLASS(INDEX(I))(1:3) .NE. 'AIR') .AND.
+     *      (GLASS(INDEX(I))(1:4) .NE. 'REFL') .AND.
+     *      (GLASS(INDEX(I))(1:1) .NE. ' ')) THEN
+           WRITE(5,32)GLASS(INDEX(I)),RFND1(I),RFND2(I),RFND3(I),
+     *       RFND4(I),RFND5(I)
+        END IF
+350   CONTINUE
+C******************************************************************************
+C*****SOLVES
+      IF (I6 .GT. 0) WRITE(5,9)'SOLVES'
+      DO 375,I=1,I6
+        IF (SOLVE(I) .EQ. '1   ') THEN
+          WRITE(5,34)'THI',NSOLVE(I),'MRY',SOLVF1(I)
+        ELSE IF (SOLVE(I) .EQ. '2   ') THEN
+          WRITE(5,34)'THI',NSOLVE(I),'CRY',SOLVF1(I)
+        ELSE IF (SOLVE(I) .EQ. '3   ') THEN
+          WRITE(5,34)'THI',NSOLVE(I),'MRX',SOLVF1(I)
+        ELSE IF (SOLVE(I) .EQ. '4   ') THEN
+          WRITE(5,34)'THI',NSOLVE(I),'CRX',SOLVF1(I)
+        ELSE IF (SOLVE(I) .EQ. '5   ') THEN
+          WRITE(5,34)'CUY',NSOLVE(I),'MRY',SOLVF1(I)
+        ELSE IF (SOLVE(I) .EQ. '6   ') THEN
+          WRITE(5,34)'CUY',NSOLVE(I),'CRY',SOLVF1(I)
+        ELSE IF (SOLVE(I) .EQ. '7   ') THEN
+          WRITE(5,34)'CUY',NSOLVE(I),'AMY',SOLVF1(I)
+        ELSE IF (SOLVE(I) .EQ. '8   ') THEN
+          WRITE(5,34)'CUY',NSOLVE(I),'IMY',SOLVF1(I)
+        ELSE IF (SOLVE(I) .EQ. '9   ') THEN
+          WRITE(5,34)'CUY',NSOLVE(I),'ACY',SOLVF1(I)
+        ELSE IF (SOLVE(I) .EQ. '10  ') THEN
+          WRITE(5,34)'CUY',NSOLVE(I),'ICY',SOLVF1(I)
+        ELSE IF (SOLVE(I) .EQ. '11  ') THEN
+          WRITE(5,34)'CUX',NSOLVE(I),'MRX',SOLVF1(I)
+        ELSE IF (SOLVE(I) .EQ. '12  ') THEN
+          WRITE(5,34)'CUX',NSOLVE(I),'CRX',SOLVF1(I)
+        ELSE IF (SOLVE(I) .EQ. '13  ') THEN
+          WRITE(5,34)'CUX',NSOLVE(I),'AMX',SOLVF1(I)
+        ELSE IF (SOLVE(I) .EQ. '14  ') THEN
+          WRITE(5,34)'CUX',NSOLVE(I),'IMX',SOLVF1(I)
+        ELSE IF (SOLVE(I) .EQ. '15  ') THEN
+          WRITE(5,34)'CUX',NSOLVE(I),'ACX',SOLVF1(I)
+        ELSE IF (SOLVE(I) .EQ. '16  ') THEN
+          WRITE(5,34)'CUX',NSOLVE(I),'ICX',SOLVF1(I)
+        END IF
+375   CONTINUE
+C******************************************************************************
+C*****MESSAGES
+      DO 400,I=1,M
+      IF (MESSAGE(I) .EQ. 1) THEN
+        WRITE(5,36)':The following data type cannot be translated.'
+        WRITE(5,37)':',SUBMES1(I)
+      ELSE IF (MESSAGE(I) .EQ. 2) THEN
+        WRITE(5,38)':X-torics cannot be translated.'
+      ELSE IF (MESSAGE(I) .EQ. 3) THEN
+        WRITE(5,39)':The following pick up cannot be translated ',
+     *    'due to the non-zero B value.'
+        WRITE(5,40)':',SUBMES2(I)
+      ELSE IF (MESSAGE(I) .EQ. 4) THEN
+        WRITE(5,41)':The following pick up type cannot be translated.'
+        WRITE(5,40)':',SUBMES2(I)
+      ELSE IF (MESSAGE(I) .EQ. 5) THEN
+        WRITE(5,42)':The following solve cannot be translated.'
+        WRITE(5,43)':',SUBMES3(I)
+      ELSE IF (MESSAGE(I) .EQ. 6) THEN
+        WRITE(5,44)':The following pick up cannot be translated ',
+     *    'because the A value must equal +-1.0'
+        WRITE(5,40)':',SUBMES2(I)
+      END IF
+400   CONTINUE
+      RETURN
+      END

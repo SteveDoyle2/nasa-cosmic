@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+After the rename key is pressed, the prompt will ask for the filename of the
+chart to be renamed.  To rename the chart enter the filename and when prompted
+enter in the new filename and description.  To not rename the chart, press a
+return on the first prompt.
+
+If the directory was being displayed when the rename key was pressed, the
+screen will clear and the directory will be redisplayed with the new filename
+shown.
+
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

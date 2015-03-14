@@ -1,0 +1,50 @@
+  interface;
+
+  unit barexec ( curve, color1, color2, fill2, pattern2, form, height,
+		 period, year, size, start, symbol, first_create,
+		 enter_mode, dis_mode, exit, enter, redraw, perform2,
+                 sldredraw, fiscal_year, char2, integer2 ) ;
+  
+  USES getparam;
+
+  USES utility;
+
+   type 
+     char2     = array [1..2] of char;
+     integer2  = array [1..2] of integer;
+
+   var
+     curve	     : integer;
+     color1	     : integer;
+     color2	     : integer2;
+     fill2	     : integer2;
+     pattern2	     : integer2;
+     form	     : byte;
+     height	     : integer;
+     period	     : byte;
+     year	     : lstring(2);
+     size	     : byte;
+     start	     : integer;
+     symbol	     : integer;
+     first_create    : boolean;
+     fiscal_year     : byte;
+     enter_mode      : byte;
+     dis_mode	     : byte;
+
+  procedure exit ( var current, first	: entity );
+
+  procedure enter (var current, first	: entity );
+
+  procedure redraw ( code : integer; var current, first : entity );
+
+  procedure sldredraw ( var current, first : entity );
+
+  procedure perform2 (var inkey 	: byte;
+		      var first 	: entity;
+		      var name		: lstring;
+		      var xy		: supinteger ) ;
+
+
+  begin
+  end;
+

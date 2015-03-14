@@ -1,0 +1,35 @@
+mlsdel2.hlp
+mlsbar.hlp
+mlstri.hlp
+anno.hlp
+window.hlp
+mlsfbar.hlp
+mlsftri.hlp
+
+
+
+The Graphics Mode for the milestone chart allows entering bars and triangles
+to describe each milestone id.  When in graphics mode, the crosshair cursor
+shows the location on the chart.  Whenever doing any operation on a graphics
+symbol, the cursor must be on the same milestone line.  When entering a date
+for any of the entries, it must be in the format day/month/year with a maximum
+of 2 digits for each division.
+
+
+
+To obtain help for any of the following subjects,  press the function key next
+to the desired subject.
+
+        F1  Delete
+        F2  Create Bar
+        F3  Create Triangle
+        F4  Annotation Mode
+        F5  Window Mode
+        F6  Fill Bar
+        F7  Fill Triangle
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

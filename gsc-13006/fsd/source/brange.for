@@ -1,0 +1,86 @@
+      SUBROUTINE BRANGE
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      COMMON/CANTNA/ A(10,3),ADOT(10,3),B(10,3),BDOT(10,3),DIN(10,3),
+     1               DINDOT(10,3),DOUT(10,3),DOUTDT(10,3)
+C
+      COMMON/IPOOL1/ IGRAV,IDAMP,IK,K1,ITIM,IAB,IAPS,IBB,IBPS,
+     1               NK(10),LK(10),LLK(10)
+C
+      COMMON/RPOOL1/ DUM01(29),XLK(10),DUM02(86)
+C
+      COMMON/SLANTN/ AP(10,3),APD(10,3),BP(10,3),BPD(10,3),
+     1               SAP(10),SAPD(10),SBP(10),SBPD(10)
+C
+      COMMON/TMSINR/ TIPINR(3,10),RTSQ(3,10),XIPL(6),BETL(6)
+C
+      COMMON/VARBLS/ DEP(150),DER(150)
+C
+C
+C
+      DO 10 I=1,10
+      SAP(I)=0.0D0
+      SAPD(I)=0.0D0
+      SBP(I)=0.0D0
+      SBPD(I)=0.0D0
+      DO 10 J=1,3
+      A(I,J)=0.0D0
+      AP(I,J)=0.0D0
+      ADOT(I,J)=0.0D0
+      APD(I,J)=0.0D0
+      B(I,J)=0.0D0
+      BP(I,J)=0.0D0
+      BDOT(I,J)=0.0D0
+      BPD(I,J)=0.0D0
+      DIN(I,J)=0.0D0
+      DINDOT(I,J)=0.0D0
+      DOUT(I,J)=0.0D0
+      DOUTDT(I,J)=0.0D0
+   10 CONTINUE
+C
+C
+      IKOUNT=9
+      IF(IDAMP.EQ.1) IKOUNT=11
+      DO 40 K=1,IK
+      M=NK(K)
+      IF(M.EQ.0) GO TO 40
+      XL=XLK(K)
+      ILK=LK(K)
+      I1=3*(ILK-1)
+      DO 15 I=1,M
+      IKOUNT=IKOUNT+1
+      I2=I1+I
+      AP(K,I)=DEP(IKOUNT)*XIPL(I2)/XL
+      SAP(K)=SAP(K)+AP(K,I)
+   15 CONTINUE
+C
+      DO 20 I=1,M
+      IKOUNT=IKOUNT+1
+      I2=I1+I
+      APD(K,I)=DEP(IKOUNT)*XIPL(I2)/XL
+      SAPD(K)=SAPD(K)+APD(K,I)
+   20 CONTINUE
+C
+      DO 25 I=1,M
+      IKOUNT=IKOUNT+1
+      I2=I1+I
+      BP(K,I)=DEP(IKOUNT)*XIPL(I2)/XL
+      SBP(K)=SBP(K)+BP(K,I)
+   25 CONTINUE
+C
+      DO 30 I=1,M
+      IKOUNT=IKOUNT+1
+      I2=I1+I
+      BPD(K,I)=DEP(IKOUNT)*XIPL(I2)
+      BPD(K,I)=DEP(IKOUNT)*XIPL(I2)/XL
+      SBPD(K)=SBPD(K)+BPD(K,I)
+   30 CONTINUE
+C
+   40 CONTINUE
+C
+      CALL ARANGE
+C
+      RETURN
+C
+      END

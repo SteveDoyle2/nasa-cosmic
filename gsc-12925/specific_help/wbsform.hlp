@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+The Work Breakdown Structure Format Menu consists of the following options :
+
+        Mid-level entries           : The number of mid-levels determines the
+                                      number of characters in each mid and
+                                      low-level, therefore increasing the
+                                      number of mid-levels may truncate the
+                                      existing text entries
+        Display number levels       : Show level numbers on boxes or not
+        Level number starting value : Level number displayed on top box
+        GSFC Symbol                 : Display the GSFC symbol on the chart
+        Background Color            : Color of background in Window Mode
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

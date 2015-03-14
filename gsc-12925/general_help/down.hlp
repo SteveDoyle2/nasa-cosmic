@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+When the download key is pressed from the Upload/Download Menu, the program
+will automatically call the communication program to call the host.  Follow
+all the prompts given and after the file to be downloaded has been chosen,
+the communication program will automatically place the file into HOSTMAIL.
+The communication program will then run the chart that was running and the user
+will be at the Main Menu ready to press F2 to review what was downloaded.
+
+
+
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

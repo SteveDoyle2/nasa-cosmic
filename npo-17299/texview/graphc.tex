@@ -1,0 +1,44 @@
+\def\boxit#1{\leavevmode\setbox0=\hbox{#1}\skip0=\dp0
+ \advance\skip0 by3.4pt\lower\skip0
+ \vbox{\hrule\hbox{\vrule\kern3pt
+ \vbox{\kern3pt\box0\kern3pt}\kern3pt\vrule}\hrule}}
+\def\begindiagram{}
+\def\enddiagram{}
+\newskip\chartwidth
+\newskip\chartdepth
+\newskip\barwidth
+\newskip\bartitlewidth
+\newcount\chartmode
+\chartwidth=6.8truein
+\chartdepth=4.1truein
+\bartitlewidth=1.2truein
+\def\horizontalbarchart#1#2#3{\bgroup
+ \offinterlineskip\everypar{}
+ \parskip0pt\parindent0pt\rightskip0in
+ \barwidth=#3 \divide\barwidth by#2
+ \divide\chartwidth by#1\chartmode=0\advance\barwidth by-3pt\par
+}
+\def\verticalbarchart#1#2#3{\null\bgroup\vskip\chartdepth
+ \offinterlineskip\everypar{}\rightskip=0in
+ \barwidth=#3 \divide\barwidth by#2
+ \divide\chartdepth by#1\chartmode=1\advance\barwidth by-3pt\smallskip
+}
+\def\chartbar#1#2{\ifcase\chartmode\hchartbar{#1}{#2}
+ \or\vchartbar{#1}{#2}\else\relax\fi
+}
+\def\hchartbar#1#2{%skip0=barlength=length/scale*maxwidth=length*chartwidth
+ \skip0=\chartwidth \multiply\skip0 by#1 \hfil\break\noindent
+ \setbox0=\hbox to\bartitlewidth{#2 \hss} \dp0=0pt\box0
+ \setbox1=\hbox{\vrule height0pt width0pt depth3pt
+ \vrule width\skip0 height\barwidth depth0pt} \box1
+}
+\def\vchartbar#1#2{%skip0=barlength=length/scale*maxwidth=length*chartdepth
+ \noindent \skip0=\chartdepth \multiply\skip0 by#1
+ \vbox to0pt{\vss\hbox{\vrule depth\skip0 height0pt width\barwidth}
+ \vskip2pt\hbox to\barwidth{\hss #2\hss}}\hskip3pt
+}
+\def\endchart{\hfil\break\chartmode=2\smallskip\egroup
+%This is so that the global values are reset for the next charts
+\chartwidth=6.8truein\chartdepth=4.1truein
+}
+\chartmode=2

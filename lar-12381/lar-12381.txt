@@ -1,0 +1,79 @@
+ NUMERICAL ANALYSES FOR TREATING DIFFUSION IN SINGLE-, TWO-, AND THREE-
+PHASE BINARY ALLOY SYSTEMS
+
+( NASA Langley Research Center )
+
+     This package consists of a series of three computer programs for treat-
+ing one-dimensional transient diffusion problems in single and multiple
+phase binary alloy systems. An accurate understanding of the diffusion
+process is important in the development and production of binary alloys.
+Previous solutions of the diffusion equations were highly restricted in
+their scope and application. The finite-difference solutions developed
+for this package are applicable for planar, cylindrical, and spherical ge-
+ometries with any diffusion-zone size and any continuous variation of the
+diffusion coefficient with concentration. Special techniques were in-
+cluded to account for differences in modal volumes, initiation and growth
+of an intermediate phase, disappearance of a phase, and the presence of an
+initial composition profile in the specimen. In each analysis, an effort
+was made to achieve good accuracy while minimizing computation time.
+
+     The solutions to the diffusion equations for single-, two-, and three-
+phase binary alloy systems are numerically calculated by the three programs
+NAD1, NAD2, and NAD3. NAD1 treats the diffusion between pure metals which
+belong to a single-phase system. Diffusion in this system is described by a
+one-dimensional Fick's second law and will result in a continuous composi-
+tion variation. For computational purposes, Fick's second law is expressed
+as an explicit second-order finite difference equation. Finite difference
+calculations are made by choosing the grid spacing small enough to give con-
+vergent solutions of acceptable accuracy. NAD2 treats diffusion between
+pure metals which form a two-phase system. Diffusion in the twophase sys-
+tem is described by two partial differential equations (a Fick's second law
+for each phase) and an interface-flux-balance equation which describes the
+location of the interface. Actual interface motion is obtained by a mass
+conservation procedure. To account for changes in the thicknesses of the
+two phases as diffusion progresses, a variable grid technique developed by
+Murray and Landis is employed. These equations are expressed in finite dif-
+ference form and solved numerically. Program NAD3 treats diffusion between
+pure metals which form a two-phase system with an intermediate third phase.
+Diffusion in the three-phase system is described by three partial differ-
+ential expressions of Fick's second law and two interface-flux-balance
+equations. As with the two-phase case, a variable grid finite difference
+is used to numerically solve the diffusion equations. Computation time is
+minimized without sacrificing solution accuracy by treating the three-
+phase problem as a two-phase problem when the thickness of the intermediate
+phase is less than a preset value. Comparisons between these programs and
+other solutions have shown excellent agreement.
+
+     The programs are written in FORTRAN IV for batch execution on the CDC
+6600 with a central memory requirement of approximately 51K (octal) 60 bit
+words.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC 6000 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 1,450 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-12381
+
+DOMESTIC - DOCUMENTATION PRICE: $26.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $52.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

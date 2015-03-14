@@ -1,0 +1,85 @@
+ IPEG- IMPROVED PRICE ESTIMATION GUIDELINES
+
+( Cal Tech/Jet Propulsion Lab. )
+
+     The Improved Price Estimation Guidelines, IPEG, program provides a
+simple yet accurate estimate of the price of a manufactured product. IPEG
+facilitates sensitivity studies of price estimates at considerably less
+expense than would be incurred by using the Standard Assembly-line Manufac-
+turing Industry Simulation, SAMIS, program (COSMIC program NPO-16032). A
+difference of less than one percent between the IPEG and SAMIS price esti-
+mates has been observed with realistic test cases. However, the IPEG sim-
+plification of SAMIS allows the analyst with limited time and computing re-
+sources to perform a greater number of sensitivity studies than with SAMIS.
+Although IPEG was developed for the photovoltaics industry, it is readily
+adaptable to any standard assembly line type of manufacturing industry.
+
+     IPEG estimates the annual production price per unit. The input data
+includes cost of equipment, space, labor, materials, supplies, and util-
+ities. Production on an industry wide basis or a process wide basis can be
+simulated. Once the IPEG input file is prepared, the original price is es-
+timated and sensitivity studies may be performed. The IPEG user selects
+a sensitivity variable and a set of values. IPEG will compute a price es-
+timate and a variety of other cost parameters for every specified value of
+the sensitivity variable. IPEG is designed as an interactive system and
+prompts the user for all required information and offers a variety of output
+options.
+
+     The IPEG/PC program is written in TURBO PASCAL for interactive execu-
+tion on an IBM PC computer under DOS 2.0 or above with at least 64K of mem-
+ory. The IBM PC color display and color graphics adapter are needed to use
+the plotting capabilities in IPEG/PC. IPEG/PC was developed in 1984. The
+original IPEG program is written in SIMSCRIPT II.5 for interactive execu-
+tion and has been implemented on an IBM 370 series computer with a central
+memory requirement of approximately 300K of 8 bit bytes. The original IPEG
+was developed in 1980.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                 IBM 370 VERSION
+
+LANGUAGE: SIMSCRIPT
+
+MACHINE REQUIREMENTS: IBM 370 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 4,651 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: NPO-15569
+
+DOMESTIC - DOCUMENTATION PRICE: $57.00    PROGRAM PRICE: $200.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $114.00   PROGRAM PRICE: $400.00
+
+
+
+                                        1
+
+
+
+
+                                 IBM PC VERSION
+
+LANGUAGE: PASCAL
+
+MACHINE REQUIREMENTS: IBM PC
+
+PROGRAM SIZE: APPROXIMATELY 2,363 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 5.25 Inch IBM PC DOS Format Diskette
+
+PROGRAM NUMBER: NPO-16583
+
+DOMESTIC - DOCUMENTATION PRICE: $57.00    PROGRAM PRICE: $200.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $114.00   PROGRAM PRICE: $400.00
+
+
+
+                                        2
+

@@ -1,0 +1,292 @@
+
+                             C H A P T E R   5
+                      S Y S T E M   U T I L I T I E S
+
+          The options under the System Utilities Menu allow you to ex-
+     ecute system commands, run other programs from within SCAT and          
+     transfer data bases, data base structures, or SCAT data between        
+     different systems. 
+
+          From the main menu select option three "SCAT SYSTEM        
+     UTILITIES".  The System Utilities Menu will then appear on the        
+     screen as shown in Figure 5.0-1.  On the VAX version option two of        
+     the System Utilities Menu is labeled "RUN RIM".
+
+     ------------------------------------------------------------------
+     |                                                      menu 3.0  |
+     |                                                                |
+     |                                                                |
+     |                   SCAT SYSTEM UTILITIES MENU                   |
+     |                                                                |
+     |               1)  EXECUTE AN OPERATING SYSTEM COMMAND          |
+     |               2)  RUN R:BASE 5000                              |
+     |               3)  UNLOAD A DATA BASE                           |
+     |               4)  LOAD A DATA BASE                             |
+     |                                                                |
+     |       <Esc> RETURN TO PREVIOUS MENU       <F1>  HELP           |
+     |                                                                |
+     |                                                                |
+     | ENTER SELECTION:                                               |
+     |                                                                |
+     |                                                                |
+     ------------------------- Figure 5.0-1 ---------------------------
+
+
+
+     5.1   EXECUTING AN OPERATING SYSTEM COMMAND
+                   
+          Any operating system command including running another pro-
+     gram can be executed from within SCAT.  As soon as the command has        
+     finished executing control will return to SCAT.  The only restric-        
+     tion in the PC version is the amount of memory available for the        
+     command.  SCAT remains resident in memory at all times and takes        
+     up approximately 270K bytes of memory.  If there are no other        
+     resident programs this leaves about 330K left for other commands        
+     on a 640K machine (DOS uses up about 35K at all times).  The VAX        
+     version does not have any limitations.
+
+
+
+
+
+
+
+
+
+                                   5 - 1
+
+          From the System Utilities Menu select option one "EXECUTE AN       
+     OPERATING SYSTEM COMMAND".  SCAT will then prompt for a system        
+     command as shown if Figure 5.1-1.  At this point, the command to        
+     be executed is entered.
+
+     ----------------------------B C D E F G H I J K L M N O P Q R S T U V W X Y Z [ \ ] ^ _ ` a b c
+   d e f g h i j k l m n o p q r s t u v w x y z { | } ~
+
+
+
+
+
+
+*
+            DO YOU WISH TO MODIFY THE PREVIOUS SELECTION CRITERIA?
+
+
+
+       SCAT has been given a select criteria.  If you want to modify the
+   existing selection criteria answer "Y". If you want to define a whole new
+   selection criteria from scratch answer "N" or press <Return>.
+
+       If you don't answer either "Y" or "N", SCAT will assume that you wantle called TEMP.DOC.  When the editor is exited        
+     execution will be returned to the same prompt shown in Figure        
+     5.1-1.  At that point another system command can be executed or        
+     you can return to the System Utilities Menu by pressing the <ESC>        
+     key.
+
+
+     5.2   RUNNING R:BASE/RIM
+
+          SCAT's data files are compatible with RIM on the VAX and
+     R:base on the PC.  Experienced RIM/R:base users can utilize the
+     data base package capabilities directly for data entry, data
+     modification, report generation and other advanced operations. 
+     For more infor-mation on the structure of SCAT data files see Ap-
+     pendix C.  For more information on the data base packages see the
+     appropriate manual.
+
+          From the System Utilities Menu select option two "RUN R:BASE        
+     5000".  SCAT will then invoke R:base (RIM on the VAX).  All of the        
+     functions available in the data base package are then available as        
+     though the data base package was invoked from the operating system        
+     prompt.  Parameters set within SCAT (data base name, password,        
+     etc.) do not carry over to the data base package.  When the data        
+     base package is finished control will be returned to SCAT.
+
+
+     5.3   UNLOADING A DATA BASE
+
+          The "UNLOAD DATA BASE" option provides the capability to        
+     share data bases, data base structures and data from the micro        
+     version of SCAT to the VAX version and vice versa.  Because of        
+     differences between R:base and RIM the data base files of the two        
+     versions are not directly transportable.
+
+
+
+
+
+                                   5 - 2
+
+
+          In order to transfer information between the two versions it        
+     is necessary to unload the desired information to a text file in        
+     the proper format and then to input information in that file to        
+     the other system.  By selecting and sorting the data before un-        
+     loading it you have the ability to create new subset data bases        
+     from an existing data base.
+
+          From the System Utilities Menu select option three "UNLOAD        
+     DATA BASE."  Menu 3.3 will then be displayed on the screen as        
+     shown in Figure 5.3-1.
+
+          Options 1 through 4 work in exactly the same way as the cor-        
+     responding options in the Commonality Analysis menu.  For help on        
+     options 1 - 4 refer to Chapter 3.  The selection and sort criteria        
+     that are defined for a data base with the options in this menu de-        
+     fine the items (rows of data) that will be unloaded and the order        
+     in which they will be unloaded.  To unload all data from a data        
+     base do not define a selection criteria.  
+
+
+     ------------------------------------------------------------------
+     | DATA BASE: NONE       0 ITEMS                        menu 3.3  |
+     |                                                                |
+     |                                                                |
+     |                UNLOAD DATA BASE MENU                           |
+     |                                                                |
+     |               1)  OPEN A DATA BASE                             |
+     |               2)  SELECT ITEMS TO UNLOAD                       |
+     |               3)  SORT ITEMS TO UNLOAD                         |
+     |               4)  VIEW ITEMS TO UNLOAD                         |
+     |               5)  UNLOAD TO NEW R:BASE DATA BASE               |
+     |               6)  UNLOAD TO A FILE                             |
+     |                                                                |
+     |       <Esc> RETURN TO PREVIOUS MENU       <F1>  HELP           |
+     |                                                                |
+     |                                                                |or developed.
+
+
+
+
+
+
+ *
+        ENTER THE NAME OF THE FILE THAT YOU WANT RIM/R:BASE TO EXECUTE.
+
+     The file must contain valid RIM/R:BASE commands.  If the file was created
+ with the SCAT UNLOAD utility there should be no problems with the content of
+ the file.  The VAX version will accept 7 characters max for the file name.
+ The micro version will accept a file name with a maximum of 20 characters,
+ including path names and extensions.  The extension .DAT is the default,
+ therefore if the ase.
+
+          Option 5 brings up a prompt for what format of information
+
+
+
+
+
+
+
+
+                                            5 - 3
+                    
+     you wish to unload and the name of the new data base (Figure        
+     5.3-2).  When unloading to a new data base SCAT allows you to un-        
+     load the entire data base (structure and data) or just the data        
+     base structure.  The data base structure consists of the attribute        
+     names, type and their corresponding descriptions.
+
+     ------------------------------------------------------------------
+     |                                                                |
+     |  ENTER TYPE OF UNLOAD FORMAT                                   |
+     |     (0 = STRUCTURE AND DATA, 1 = STRUCTURE, [0] ?              |
+     |                                                                |
+     |  NAME FOR NEW DATA BASE?                                       |
+     |                                                                |
+     ------------------------- Figure 5.3-2 ---------------------------
+
+
+          Option 6 "UNLOAD TO A FILE" creates a RIM/R:base 5000 file        
+     with the required commands and data to perform the requested op-        
+     erations.  The file is compatible with both RIM and R:base 5000.         
+     This feature is useful for transporting data bases or data between        
+     the two versions of SCAT.  When this option is selected the fol-        
+     lowing prompts will be displayed (Figure 5.3-3).
+
+
+     ------------------------------------------------------------------
+     |                                                                |
+     |  ENTER NUMBER FOR VALUES TO UNLOAD                             |
+     |     (0 = STRUCTURE AND DATA, 1 = STRUCTURE, 2 = DATA, [0] ?    |
+     |                                                                |
+     |  NAME FOR NEW DATA BASE?                                       |
+     |                                                                |
+     |  NAME OF FILE TO UNLOAD DATA TO ?                              |
+     |                                                                |
+     ------------------------- Figure 5.3-3 ---------------------------
+
+
+          Note the prompts are similar to those shown in Figure 5.3-2,        
+     except you now have the capability to unload data without the ac-        
+     companying data base structure and the ability to name the file        
+     that will contain the unloaded information.  Should you choose to        
+     unload only the data, then the prompt "NAME FOR NEW DATA BASE?"        
+     will be omitted.  
+
+          The file name entered must be 1-7 characters long without an        
+     extension.  The extension ".DAT" will automatically be appended     
+
+
+
+
+
+
+                                   5 - 4
+
+
+
+     onto the file name specified.  The file created must be transmit-
+     ted to its destination system via the microcomputer communications        
+     package that is availiable on your system.  If your communications        
+     package is small enough (under 270K) you can invoke it with the        
+     SCAT System Utilities Menu option 1 "EXECUTE AN OPERATING SYSTEM         
+     COMMAND", otherwise you will have to exit SCAT to transmit the
+     file.
+
+
+     5.4   LOADING A DATA BASE
+                 
+          The file of RIM/R:base commands and data that is created with        
+     the unload option can be installed on the destination SCAT system        
+     with option 6 "LOAD A DATA BASE" of the SCAT System Utilities        
+     Menu.  After option 6 is selected the prompt shown in Figure 5.4-1        
+     is displayed.  At this point enter the name of the file that was        
+     created with the unload command.
+
+     ------------------------------------------------------------------
+     |                                                                |
+     |  NAME OF FILE FOR R:BAage will be used in an uncontrolled
+ real time environment with restricive performance requirements and/or
+ where human life may be at stake.  Extensive testing and validation of the
+ program will be required under a wide variety of possible situations.
+ *
+                         ENTER AN ATTRIBUTE NAME
+
+  Attribute names can not be more than 8 characters long and can be composed of
+  any alpha-numeric or printable characters (except the <SPACE> character).
+  The name can not be the same as an exicome scrambled.  If the file directs operations to
+     an existing data base, then make a backup copy of that data base
+     before passing the file to the data base package.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                            5 - 5
+
+
+

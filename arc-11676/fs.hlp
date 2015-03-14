@@ -1,0 +1,26 @@
+1 FS
+ The FS command submits a job to do a FORTRAN compile in batch mode.
+
+ Syntax:
+         FS filespec [option [,option...]]
+
+ where filespec is the name of the FORTRAN file to compile.
+
+ The user will receive a message at his terminal giving the status of the
+ job when it has completed.  
+
+ The FS uses the following convention for subdirectory specification: if the
+ user specifies a subdirectory in the filespec (eg,[JONES.STUFF]FILE1 ), 
+ that will be the default subdirectory; otherwise, the default directory
+ is the subdirectory from which the FS command was issued. 
+
+ See also, HELP FLS.
+2 Options
+ The options consist of qualifiers to the FORTRAN command (eg, /LIST or
+ /MAP) and an optional queue name(SHORT, LONG, or XLONG... MEDIUM is the
+ default).  A maximum of 5 FORTRAN qualifiers (seperated by spaces) can 
+ be added, but they can be combined if more than 5 options are desired 
+ (eg, /MAP/LIST ).  
+
+ See HELP FORTRAN for a full list of FORTRAN qualifiers and HELP BATCHQ
+ to see the CPU time limits on each batch queue.

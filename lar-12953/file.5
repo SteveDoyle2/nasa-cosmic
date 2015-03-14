@@ -1,0 +1,118 @@
+C     PROGRAM  MODFOL(INPUT,OUTPUT,TAPE5=INPUT,TAPE6=OUTPUT)
+
+C*******************************************************************************
+C
+C
+C*
+C     EXECUTIVE PROGRAM FOR MODEL FOLLOWING PROBLEM
+C
+C
+C
+C*******************************************************************************
+      IMPLICIT REAL*8 (A-H,O-Z)
+      DIMENSION A(16),B(8),AM(36),HM(24),Q(16),R(4),F(20),P(40),DUMMY(70
+     10),AC(100),BC(20),X(10)
+      DIMENSION NA(2),NB(2),NAM(2),NHM(2),NQ(2),NR(2),NF(2),NP(2),NAC(2)
+     1,NBC(2),IOP(5),NDUM(2),T(2),NX(2)
+      LOGICAL  DISC,NEWT,STABLE,HIDENT,HMIDENT
+C
+C     INPUT HOLLERITH DATA FOR TITLE OF OUTPUT
+      CALL RDTITL
+C
+C     INPUT COEFFICIENT MATRICES FOR PLANT AND MODEL
+      CALL READ(5,A,NA,B,NB,AM,NAM,HM,NHM,X,NX)
+C
+C     DEFINE WEIGHTING MATRICES
+      NQ(1)= NA(1)
+      NQ(2)= NQ(1)
+      NR(1)= NB(2)
+      NR(2)= NR(1)
+      CALL UNITY(Q,NQ)
+      CALL SCALE(Q,NQ,Q,NQ,10.)
+      CALL UNITY(R,NR)
+C
+C     COMPUTE MODEL-FOLLOWING GAINS
+      IOP(1) = 1
+      IOP(2) = 1
+      IOP(3) = 0
+      IOP(4) = 0
+      IOP(5) = 1
+      DISC = .FALSE.
+      NEWT = .FALSE.
+      STABLE = .FALSE.
+      HIDENT=.TRUE.
+      HMIDENT = .FALSE.
+C
+      CALL EXPMDF(A,NA,B,NB,H,NH,AM,NAM,HM,NHM,Q,NQ,R,NR,F,NF,P,NP,HIDE
+     1NT,HMIDENT,DISC,NEWT,STABLE,FNULL,ALPHA,IOP,DUMMY)
+C
+C     GENERATE MATRICES FOR TRANSIENT RESPONSE SUBROUTINE
+      NDUM(1) = NAM(1)
+      NDUM(2) = NA(1)
+      CALL NULL(DUMMY,NDUM)
+      CALL JUXTR(A,NA,DUMMY,NDUM,AC,NAC)
+      NDUM(1) = NA(1)
+      NDUM(2) = NAM(1)
+      CALL NULL(DUMMY,NDUM)
+      N1 = NDUM(1)*NDUM(2) + 1
+      CALL JUXTR(DUMMY,NDUM,AM,NAM,DUMMY(N1),NHM)
+      N2=NHM(1)*NHM(2)+N1
+      CALL JUXTC(AC,NAC,DUMMY(N1),NHM,DUMMY(N2),NDUM)
+      CALL EQUATE(DUMMY(N2),NDUM,AC,NAC)
+      NDUM(1) = NAM(1)
+      NDUM(2) = NB(2)
+      CALL NULL(DUMMY,NDUM)
+      CALL JUXTR(B,NB,DUMMY,NDUM,BC,NBC)
+C
+C     COMPUTE TRANSIENT RESPONSE TO OBSERVE MODEL-FOLLOWING ACCURACY
+      IOP(1) = 0
+      IOP(2) = 0
+      IOP(3) = 0
+      T(1) = 26.
+      T(2) = 2.
+C
+      CALL LNCNT(100)
+      PRINT 100,NA(1),NAM(1)
+  100 FORMAT('       IN THE TRAJECTORY OUTPUT TO FOLLOW THE FIRST''I4''
+     1COLUMNS CORRESPOND TO X TRANSPOSE''/''   AND THE NEXT''I4'' COLUMN
+     2S TO XM TRANSPOSE')
+C
+      CALL TRNSIT(AC,NAC,BC,NBC,H,NH,G,NG,F,NF,V,NV,T,X,NX,DISC,STABLE,
+     1IOP,DUMMY)
+C
+      STOP
+      END
+        OUTPUT FOR MODEL FOLLOWING PROBLEM
+ A         4   4
+      -2.6       .25      -38.       0.0
+     -.075      -.27       4.4       0.0
+      .078      -.99      -.23      .052
+        1.      .078       0.0       0.0
+ B         4   2
+       17.        7.
+       .82      -3.2
+       0.0      .046
+       0.0       0.0
+ AM        6   6
+     -.981      .177      -10.       0.0      6.34      4.58
+       .03     -.092      5.23       0.0      -.69     -2.65
+       0.0       -1.     -.732      .052       0.0       0.0
+        1.       0.0       0.0       0.0       0.0       0.0
+       0.0       0.0       0.0       0.0       0.0       0.0
+       0.0       0.0       0.0       0.0       0.0       0.0
+ HM        4   6
+        1.       0.0       0.0       0.0       0.0       0.0
+       0.0        1.       0.0       0.0       0.0       0.0
+       0.0       0.0        1.       0.0       0.0       0.0
+       0.0       0.0       0.0        1.       0.0       0.0
+ X        10   1
+       0.0
+       0.0
+       0.0
+       0.0
+       0.0
+       0.0
+       0.0
+       0.0
+        2.
+       0.0

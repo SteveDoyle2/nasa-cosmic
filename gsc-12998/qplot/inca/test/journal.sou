@@ -1,0 +1,129 @@
+; Configure TEK terminals for TEK4510 rasterizer.
+UTILITIES SET VERIFY OFF
+UTILITIES TERMINAL /CONFIG
+24
+B
+V
+C
+N
+1
+1
+L
+D
+;
+UTILITIES SET VERIFY ON
+MISC ZAP
+UTILITIES SET VERIFY OFF
+MISC ZAP
+U S N 0
+U S M Q X D
+U S M E F E S
+U S M Z M N Y
+U S M Y U T S SMG
+SET FREQUENCY_PLOT       C-NICHOLS
+UTILITIES SET VERIFY ON
+M Z
+Set Wrap 
+-135
+Curve Load ROLLWCOMP.FR 
+Curve Load FILTER.FR 
+Plot New 
+ROLLWCOMP 
+
+s
+n
+y
+n
+        0       0
+X       0       0
+Utilities Qplot_Input_File LASER 
+Utilities Hardcopy External Tek4014H
+@@QPLOTHOME:LASER.COM
+@;
+Plot Old 
+%       0       0
+%       0       0
+%       0       0
+%       0       0
+X       0       0
+Utilities Qplot_Input_File CI300 
+Utilities Hardcopy External Bitmap
+@@QPLOTHOME:CI300.COM
+Plot New 
+ROLLWCOMP 
+
+p
+n
+n
+n
+S    9952   10352
+W    9952   10352
+0
+R    9952   10352
+%    9952   10352
+%    9952   10352
+%    9952   10352
+X    9952   10352
+Function ~ 
+Utilities Edit_File 
+inca.sou
+Utilities Input_Source_File 
+inca
+UTILITIES SET VERIFY OFF
+MISC ZAP
+U S N 0
+U S M Q X D
+U S M E F E S
+U S M Z M N Y
+U S M Y U T S SMG
+U C S XGRID    DARKGRAY
+U C S XSUBGRID DARKGRAY
+U C S YGRID    DARKGRAY
+U C S YSUBGRID DARKGRAY
+U C S POLARGRID DARKGRAY
+SET FREQUENCY_PLOT       C-NICHOLS
+UTILITIES SET VERIFY ON
+M Z
+Misc ~ 
+Set Wrap 
+-135
+Plot New 
+ROLLWCOMP 
+
+s
+n
+y
+n
+X    9952   10352
+Utilities Qplot_Input_File LASER 
+Utilities Hardcopy External Tek4014H
+@@QPLOTHOME:LASER.COM
+@;
+Plot Old 
+%    9952   10352
+%    9952   10352
+%    9952   10352
+%    9952   10352
+X    9952   10352
+Utilities Terminal Auto 
+; Configure TEK terminals for TEK4510 rasterizer.
+UTILITIES SET VERIFY OFF
+UTILITIES TERMINAL /CONFIG
+24
+B
+V
+C
+N
+1
+1
+L
+D
+;
+UTILITIES SET VERIFY ON
+MISC ZAP
+Plot New 
+ROLLWCOMP 
+
+c
+
+

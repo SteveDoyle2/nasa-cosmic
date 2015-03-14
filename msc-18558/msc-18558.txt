@@ -1,0 +1,53 @@
+ ORBITING SOLAR ARRAY SIMULATION MODEL
+
+( ROCKWELL INTERNATIONAL CORP. )
+
+     Solar arrays are becoming an increasingly important means of gener-
+ating power for earth orbiting spacecraft. Currently, almost all unmanned
+earth satellites utilize solar array electrical power generation systems.
+Applications for solar arrays in the near future include providing power
+for space shuttle payloads and manned space stations. This computer pro-
+gram was developed to simulate the capabilities of earth orbiting arrays.
+The model used is based on an improved version of a finite-element radiation
+shape factor subprogram. The inherent simplicity and speed of the original
+subprogram has been augmented with an improved shadow evaluation technique
+to provide the user with an efficient array model.
+
+     The program allows the characteristics of orbiting arrays to be evalu-
+ated with a minimum of user effort and computer cost. Input to the program
+consists of a brief description of the array and the orbital parameters.
+The orbital parameters are used to determine the direct solar radiation in-
+cident on the cells, incident solar radiation reflected to cells from the
+earth, and the shadowing of any cells. Once the amount of thermal radiation
+gained and lost by the array is known, the amount of power which can be gen-
+erated and the temperature of the array is determined.
+
+     This program is written in FORTRAN IV for batch execution and has been
+implemented on a CDC CYBER 170 series computer with a central memory re-
+quirement of approximately 76K (octal) of 60 bit words. Input is taken via
+NAMELIST. This program was developed in 1979.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC CYBER 170 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 717 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: MSC-18558
+
+DOMESTIC - DOCUMENTATION PRICE: $14.00    PROGRAM PRICE: $300.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $28.00   PROGRAM PRICE: $600.00
+
+
+
+                                        1
+

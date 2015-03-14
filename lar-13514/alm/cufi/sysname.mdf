@@ -1,0 +1,67 @@
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+C
+C   SYSNAME - Definitions for the System Name Menu of CARE3MENU
+C
+C   VERSION:  1.0
+C   AUTHOR:  A. Roberts; Tesseract Systems, Inc.
+C   CREATION DATE:  05/24/83
+C   LAST REVISION DATE:  06/08/83
+C   LAST REVISED BY:  A. Roberts
+C
+C FUNCTION: Defintions and declarations for CARE3MENU system name
+C		input menu.
+C
+C USEAGE:  included in CARE3MENU
+C
+C ARGUMENTS:  NA
+C
+C ERRORS:   NA
+C
+C NOTES:  Written in VAX/VMS FORTRAN. 
+C
+C PROCESS:  NA
+C
+C REVISION HISTORY:  0.0 - Created on 05/24/83 by A. Roberts;
+C				Tesseract Systems, Inc.
+C		    			------
+C		     1.0 - First release version.  06/08/83;
+C				A. Roberts
+C
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
+C
+C Menu parameters
+C
+	parameter SYSN_MITEMS = 2		! Items in menu
+	parameter SYSN_H_LOGNAME = 'sysn'	! Help logical name
+
+	parameter SYSN_SDT1 = NO_DAT .or. BOLD	! Special datatype for 
+						! Title
+
+	parameter SYSN_DPNTR = 2		! Location of name data
+
+C
+C Menu tables
+C
+	character*(MAX_STRING) sysn_labs(SYSN_MITEMS)	! Item labels
+	integer*4 sysn_lpos(2,sysn_MITEMS)		! Item Positions
+	integer*4 sysn_dtype(SYSN_MITEMS)		! Item Datatypes
+	integer*4 sysn_idat(SYSN_MITEMS)		! INTEGER Data
+	real*4 sysn_rdat(SYSN_MITEMS)			! REAL Data
+	character*(MAX_STRING) sysn_sdat(SYSN_MITEMS)	! STRING Data
+
+C
+C Anything in the menu that is hardwired
+C
+	data sysn_labs /'System Name Entry',
+	1		'Name of System:'/
+
+	data sysn_lpos /1,31,
+	1		8,20/
+
+	data sysn_dtype /SYSN_SDT1,
+	1			STR_DAT/
+
+C
+C End of Menu Definition
+C

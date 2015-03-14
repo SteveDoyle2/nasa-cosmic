@@ -1,0 +1,8 @@
+
+	EXIT will exit the CARE3MENU program.  The exit function
+	does not perform an explicit save of any information
+	which the user may have input using the ENTER function,
+	the STORE function MUST BE EXPLICITLY CALLED for this
+	to happen.  An exit without a store will result in the
+	loss of any model which has been entered but not yet
+	stored.

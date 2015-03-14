@@ -1,0 +1,42 @@
+ OWL-1200 VIDEO TERMINAL EMULATOR FOR THE IBM PERSONAL COMPUTER
+
+( BOEING SERVICES INTERNATIONAL )
+
+     An OWL-1200 video terminal emulator has been written for the IBM Per-
+sonal Computer. The OWL-1200 is a simple user terminal with some intelli-
+gent capabilities. These capabilities include screen formatting and block
+transmission of data. Several programs, such as Systonetics' VIS1ON soft-
+ware for hierarchial scheduling, require this type of terminal. The emula-
+tor software provides the IBM Personal Computer with all of the capabili-
+ties of the OWL-1200 terminal. Even those features which are implemented in
+hardware on the OWL-1200 are fully provided by the emulator software.
+
+     This emulator is written in Pascal and Assembler for the IBM Personal
+Computer operating under DOS 1.1. Minimum machine requirements include one
+disk drive, a serial communication board, a color graphics adapter, and 128
+Kb of memory. This emulator was developed in 1983.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: PASCAL ( 80 %); ASSEMBLER ( 20 %);
+
+MACHINE REQUIREMENTS: IBM PC SERIES
+
+PROGRAM SIZE: APPROXIMATELY 1,000 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 3.5 Inch IBM PC DOS Format Diskette
+
+PROGRAM NUMBER: KSC-11293
+
+DOMESTIC - DOCUMENTATION PRICE: $12.00    PROGRAM PRICE: $100.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $24.00   PROGRAM PRICE: $200.00
+
+
+
+                                        1
+

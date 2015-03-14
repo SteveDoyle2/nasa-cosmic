@@ -1,0 +1,2 @@
+RESTORE failed:  There were no tape drives free to mount the archive tape
+

@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+The list of remaining acronyms is as follows :
+        EAC  : the estimated cost at completion,                               
+        ACV  : at completion cost variance,  ACV = BAC - EAC,                  
+        CV   : the cost variance,             CV = BCWP - ACWP,                
+        %CV  : the cost variance percentage, %CV = CV / BCWP,                  
+        SV($): the scheduled variance in $ ,    SV($) = BCWP - BCWS,           
+        %SV  : the scheduled variance percentage, %SV = SV($) / BCWP,          
+        SV(M): the scheduled variance in months,                               
+                        SV(M) = SV($) * no. of months / BCWP,                  
+        CPI  : the cost performance index,       CPI = BCWP / ACWP,            
+        SPI  : the scheduled performance index,  SPI = BCWP / ACWP,            
+        %CPL : the percentage of completion,    %CPL = BCWP / BAC,             
+        %SPT1: the percentage of BAC spent,    %SPT1 = ACWP / BAC,             
+        %SPT2: the percentage of EAC spent,    %SPT2 = ACWP / EAC,             
+        TCPI : to completion performance index,                                
+                        TCPI = ( BAC - BCWP ) / ( EAC - ACWP ).                
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

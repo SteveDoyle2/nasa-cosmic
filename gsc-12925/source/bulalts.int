@@ -1,0 +1,20 @@
+  interface;
+
+  unit bulalts  ( alter_screen, first_item, first_line, last_item,
+                  last_line );
+
+  USES utility;
+
+  var
+     first_line     : integer;
+     last_line      : integer;
+     first_item     : entity;
+     last_item      : entity;
+
+  procedure alter_screen ( var first         : entity;
+                           var current       : entity;
+                           mode              : integer );
+
+  begin
+  end;
+

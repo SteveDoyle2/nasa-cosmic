@@ -1,0 +1,275 @@
+  { $INCLUDE : 'compile.inc' }
+  { $INCLUDE : 'vbpas.int' }
+  { $INCLUDE : 'sfpas.int' }
+  { $INCLUDE : 'getparam.int' }
+  { $INCLUDE : 'utility.int' }
+  { $INCLUDE : 'ldb.int' }
+  { $INCLUDE : 'nsqdraw.int' }
+  { $INCLUDE : 'nsqalts.int' }
+ 
+  implementation of nsqalts;
+
+  USES vbpas;
+
+  USES sfpas;
+
+  USES getparam;
+
+  USES utility;
+
+  USES ldb;
+
+  USES nsqdraw;
+
+  var
+      ibuf      : lstring(80);
+
+  value
+      ibuf.len := 80;
+      ibuf := '                                                                                ';
+
+
+  procedure alter_screen;
+
+  var temp      : entity;
+      next_line : integer;
+      next_col  : integer;
+      i, j, n   : integer;
+      l, m      : integer;
+      low_max   : integer;
+      header    : array[1..5]of lstring(30);
+
+  (**************************************************************)
+
+  procedure write_field ( var current : entity );
+
+    var
+      i : byte;
+
+    begin
+      with current^ do
+        begin
+          if field^.len>node_data^[etype].input_length then
+            field^.len := node_data^[etype].input_length;
+          there ( xtext, ytext );
+          write ( field^ );
+          if not (etype in [1,10,18]) then
+            begin
+               i := node_data^[2].input_length - field^.len;
+               if (xtext+(field^.len+i)*2+1>80)and(not(etype in [1,10,18]) then
+                 i := 80 - xtext - field^.len
+                else
+                 i := i + 1;
+              write ( ibuf:i );
+            end;
+        end;
+    end;
+
+  (**************************************************************)
+
+  procedure write_line;
+
+    var
+      i : integer;
+      x1,y1,n : integer;
+
+  begin
+      x1:=next_col;
+      y1:=next_line;
+      n:=node_data^[temp^.etype].nfields;
+      for i := 1 to 4 do
+          if i > n then
+            begin
+              there(x1,y1+i-1);
+              write(ibuf:node_data^[2].input_length+1);
+            end
+           else
+            begin
+              temp^.ytext := next_line+i-1;
+              temp^.xtext := next_col;
+              write_field ( temp );
+              temp := temp^.down;
+            end;
+  end;
+
+ (******************************************************************)
+
+  procedure write_levels;
+
+    var
+      i,j,k         : integer;
+      node1, node2  : integer;
+
+    begin
+     if (icol<>0)and(irow<>0) then
+      begin
+      if icol < leftnode then leftnode := icol;
+      if icol > leftnode + nmids-1 then leftnode := icol - nmids + 1;
+      if irow < topnode then topnode := irow;
+      if irow > topnode + nlows-1 then topnode := irow - nlows + 1;
+      end
+     else [topnode := 1;leftnode := 1;];
+      node1:=leftnode; node2:=topnode;
+      if node2 > 1 then
+        for i := 1 to node2 - 1 do
+         begin
+            for k := 1 to node_data^[temp^.etype].nfields do
+             begin
+              if i<node1 then temp^.xtext := -10+i
+               else if i>(node1+nmids-1) then temp^.xtext:=80+i
+                     else
+                 temp^.xtext:=next_col;
+              temp^.ytext := node_data^[2].ytext-1;
+              temp := temp^.down;
+             end;
+            if (i>=node1)and(i<=node1+nmids-1) then
+              next_col:=next_col+node_data^[2].input_length+1;
+         end;
+          for j := 1 to nlows do
+            begin
+              if node2+j-1<node1 then
+                for k := 1 to node_data^[temp^.etype].nfields do
+                  begin
+                    temp^.ytext := next_line+k-1;
+                    temp^.xtext := -10+node2+j-1;
+                    temp := temp^.down;
+                  end
+                else if node2+j-1>node1+nmids-1 then
+                for k := 1 to node_data^[temp^.etype].nfields do
+                  begin
+                    temp^.ytext := next_line+k-1;
+                    temp^.xtext := 80+node2+j-1;
+                    temp := temp^.down;
+                  end
+                else
+                  begin
+                    write_line;
+                    next_col:=next_col+node_data^[2].input_length+1;
+                  end;
+              next_line := next_line + 5;
+            end;
+          for j := nlows+node2 to funcnum do
+          begin
+           for k := 1 to node_data^[temp^.etype].nfields do
+            begin
+              temp^.ytext := last_line+1;
+              if node2+j-1<node1 then temp^.xtext:=-10+node2+j-1
+               else if node2+j-1>node1+nmids-1 then
+                      temp^.xtext := 80+node2+j-1
+                       else
+                        temp^.xtext := next_col;
+              temp := temp^.down;
+            end;
+            if (node2+j-1>=node1)and(node2+j-1<=node1+nmids-1) then
+              next_col:=next_col+node_data^[2].input_length+1;
+          end;
+          next_col := node_data^[2].xtext;
+          next_line := first_line;
+      if node2 > 1 then
+        for i := 1 to node2 - 1 do
+         begin
+            for j := 1 to funcnum do
+             if i<>j then
+              begin
+                for k := 1 to node_data^[temp^.etype].nfields do
+                  begin
+             if j<node1 then temp^.xtext := -10+i
+              else if j>(node1+nmids-1) then temp^.xtext:=80+i
+                     else
+                 temp^.xtext:=(j-node1)*(node_data^[2].input_length+1)+node_data^[2].xtext;
+            temp^.ytext := node_data^[2].ytext-1;
+            temp := temp^.down;
+                  end;
+              end;
+         end;
+      for i := 1 to nlows do
+        begin
+              if node1 > 1  then
+                for j := 1 to node1-1 do
+                 if i+node2-1<>j then
+                  for k := 1 to node_data^[temp^.etype].nfields do
+                   begin
+                    temp^.ytext := next_line+k-1;
+                    temp^.xtext := -10+j;
+                    temp := temp^.down;
+                   end;
+          for j := 1 to nmids do
+            begin
+              if i+node2-1<>j+node1-1 then
+                write_line;
+              next_col := next_col + node_data^[2].input_length + 1;
+            end;
+          for j := nmids+node1 to funcnum do
+           if i+node2-1<>j then
+            for k := 1 to node_data^[temp^.etype].nfields do
+            begin
+              temp^.ytext := next_line+k-1;
+              temp^.xtext := 80+i;
+              temp := temp^.down;
+            end;
+          next_col := node_data^[2].xtext;
+          next_line := next_line+5;
+        end;
+      for i := nlows+node2 to funcnum do
+            begin
+            for j := 1 to funcnum do
+             if i<>j then
+              begin
+                for k := 1 to node_data^[temp^.etype].nfields do
+                  begin
+             if j<node1 then temp^.xtext := -10+i
+              else if j>(node1+nmids-1) then temp^.xtext:=80+i
+                     else
+                 temp^.xtext:=(j-node1)*(node_data^[2].input_length+1)+node_data^[2].xtext;
+            temp^.ytext := last_line+1;
+            temp := temp^.down;
+                  end;
+              end;
+            end;
+    end;
+
+  (*-------------------------------------------------------------*)
+
+  begin
+
+    nmids := 81 div (node_data^[2].input_length + 1);
+    if nmids>funcnum then nmids := funcnum;
+    case mode of
+      0: begin  { display title, sub_title, data, date, name and org. }
+           screen ( 3 );
+           colors ( 0, color );
+           there ( (80-cname.len-6) div 2, 0 );
+           write ( cname, ' Chart' );
+           header[1] := 'Title : ';
+           there ( first^.xtext-header[1].len, first^.ytext );
+           write ( header[1] );
+           write_field ( first );
+           temp := first^.down;
+           icol := 0;
+           irow := 0;
+           next_line := first_line;
+           next_col  := node_data^[2].xtext;
+           write_levels;
+           header[1] := 'Footnotes : ';
+           there ( 0, temp^.ytext-1 );
+           write ( header[1] );
+           for i := 1 to 3 do
+             begin
+               there ( temp^.xtext, temp^.ytext );
+               write ( temp^.field^ );
+               temp := temp ^.down;
+             end;
+         end;
+      1: begin  { scrolling of data items }
+           temp := first^.down;
+               next_line := first_line;
+               next_col := node_data^[2].xtext;
+               write_levels;
+         end;
+      2: write_field ( current );
+      otherwise
+    end;
+
+  end;
+  end.
+

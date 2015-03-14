@@ -1,0 +1,31 @@
+/*****************************************************************************/
+/*                                                                           */
+/*  true_set_list                                                            */
+/*                                                                           */
+/*  This function sets all conditions in a list to true.                     */
+/*                                                                           */
+/*  Input:  list - pointer to a list of condition pointers.                  */
+/*  Output: none                                                             */
+/*                                                                           */
+/*  Method:  For each condition in the list                                  */
+/*              Call set_true.                                               */
+/*                                                                           */
+/*  Programmer: G R Goodrum, MDTSCO, June 1984                               */
+/*                                                                           */
+/*****************************************************************************/
+
+#include "structures.inc"
+
+true_set_list ( list )
+struct cond_info **list;
+{
+    struct cond_info *cond;
+
+    while  ( ( cond = *list++ ) != NULL )
+    {                                                           /* debug */
+        count ( 12, 0 );                                        /* debug */
+        set_true ( cond );
+    }                                                           /* debug */
+    count ( 12, 1 );                                            /* debug */
+
+}

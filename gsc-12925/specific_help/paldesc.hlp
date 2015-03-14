@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+ 
+
+The Progress and Level of Effort Chart is used for project performance analysis
+allowing the user to compare actual versus planned progress or level of effort
+data.  Essentially, it is a Bar/Line chart that is customized for project
+performance use.
+ 
+The fields which are to be entered are as follows:
+        Contract no.  : Contact id number
+        Type          : Contract type
+        Category      : Reporting category
+        Unit          : Unit of values entered
+        By            : Preparation person
+        Date          : 8 characters, if none given today's date displayed
+        Scope of work : Contract and category description
+        BAC           : budgeted amount at completion
+        Data values   : 2 lines of up to 13 values, one initial value each line
+        Footnotes     : Up to 3, located at bottom of chart
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

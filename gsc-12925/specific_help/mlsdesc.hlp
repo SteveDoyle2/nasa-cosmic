@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+The milestone chart allows you to display the actual and projected dates for
+the accomplishment of specific tasks.  Triangles marking significant events can
+be shown on a time line.  Bars may be entered to specify the period of time
+needed to complete the task.  The graphic figures can be filled to signify the
+amount of completion of a task or event.
+The fields which are to be entered are as follows :
+        Title                  : For this chart
+        Organization           : Can be automatic if specified on Format Menu
+        Approved by            : Individual for approves project
+        Accomplished by        : Individual to do project
+        Original approval date : Day/month/year with returns between each value
+        Last Change date       : Day/month/year with returns between each value
+        Status as of date      : Day/month/year with returns between each value
+        Page # of #            : For multiple page charts
+        Milestone id's         : 20 milestone task id's per page
+        Footnotes              : 3 lines of description
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

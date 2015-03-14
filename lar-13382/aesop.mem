@@ -1,0 +1,1400 @@
+
+
+
+
+
+
+                      AESOP.LSP - Franz Lisp Source Code
+
+
+
+
+
+
+
+(setq max-prob 0.9)     ;This value can be changed to change the probalility
+
+                        ;factor used to confirm/reject a hypothesis
+
+;
+
+(setq result-file 'results.)    ;This filename can be changed to re-route
+
+                                ;the results of the diagnosis
+
+;
+
+;
+
+(setq n (setq no (setq dc 0)))
+
+(setq y (setq ye (setq yes 10)))
+
+(setq maybe (setq may (setq ma (setq m 5))))
+
+(setq probably (setq prob (setq pr (setq p 7))))
+
+(setq likely (setq like (setq li (setq l probably))))
+
+(setq nl 3)
+
+;
+
+(defun start ()
+
+  (prog ()
+
+    (terpri)
+
+    (terpri)
+
+    (terpri)
+
+    (princ  '" ******************************************************************")(terpri)
+
+    (terpri)
+
+    (princ '"                             A E S O P")
+
+    (terpri)
+
+    (terpri)
+
+    (princ '"          An Expert System engine Operative with Probabilities")
+
+    (terpri)
+
+    (princ  '" ******************************************************************")
+
+    (terpri)
+
+    (terpri)
+
+    (terpri)
+
+    (princ '"     Enter name of rules/hypotheses file -->")
+
+    (setq rules-filename (read))(load rules-filename)
+
+    (setq first-round-flag nil)
+
+    (expert-system)
+
+    (exit)
+
+   )
+
+)
+
+(defun expert-system ()
+
+  (prog (response) 
+
+    iter
+
+    (cond (first-round-flag
+
+            (terpri)
+
+            (terpri)
+
+            (princ '"     Options are next, done, how, why, help" )
+
+            (prompt)
+
+            (setq response (read))
+
+            (cond ((not (member response '(n next d done s stop e ex exit q quit halt explain how why help ?)))
+
+                     (terpri)
+
+                     (princ response '"      invalid response" )
+
+                     (terpri)
+
+                     (go iter))
+
+                   ((member response '(? help ))
+
+                     (terpri)
+
+                     (princ '"     Options are:" )(terpri)(terpri)
+
+                     (princ '"     next -- to evaluate another task")(terpri)
+
+                     (princ '"     d,done,q,quit -- to exit")(terpri)
+
+                     (princ '"     how, why -- to see an explanation of results")(terpri)
+
+                     (princ '"     help,? -- to see this message" )(terpri)
+
+                     (go iter))
+
+                   ((member response '(q x ex none stop quit halt d exit done))
+
+                     (return 'done))
+
+                   ((member response '(how why explain))
+
+                     (mapcar 'explain hypothesesnodes) (go iter))
+
+                   (t t))))
+
+    (setq first-round-flag t)
+
+    (setq already-asked '())
+
+    (setq already-answered '())
+
+    (terpri)(initial-prompt)
+
+    helploop
+
+    (terpri)
+
+    (princ '"     Please enter as a single string, with no spaces")(terpri)
+
+    (prompt)
+
+    (setq task (read))
+
+    (cond ((member task '(help ? what))
+
+             (terpri)
+
+             (princ '"     Enter without imbedded spaces (use a hyphen to form" )(terpri)
+
+             (princ '"     breaks between words)")
+
+             (terpri)
+
+             (go helploop)
+
+           )
+
+    )
+
+    (cond ((member task '(q x ex none stop quit halt d exit done))
+
+             (return 'done)
+
+          )
+
+    )
+
+    (terpri)
+
+    (terpri)
+
+    (princ ' "         You may answer the following questions with a" )(terpri)
+
+    (princ ' "      y (yes), n (no), m (maybe), l (likely), nl (not")(terpri)
+
+    (princ ' "      likely), p (probably), dk (don't know), dc (don't")(terpri)
+
+    (princ ' "      care), or a probability factor ranging from 0")(terpri)
+
+    (princ ' "      (least certain) to 10 (most certain).")(terpri)(terpri)
+
+    (princ ' "         Enter a how or a why to see an explanation,")(terpri)
+
+    (princ ' "      and to get help, type HELP or ?" )(terpri)
+
+    (terpri)(princ '"         Please wait...")(terpri)
+
+    (diagnose)     ; initiate diagnostic routine
+
+                   ; (and what is locale of control?)
+
+    (store-results)     ;save results in 'results.
+
+    (go iter))
+
+)
+
+(defun prompt ()
+
+  (terpri)
+
+  (terpri)
+
+  (terpri)
+
+  (princ '"     > ")
+
+)
+
+(defun newsym (s)
+
+    (readlist (append (explode s) 
+
+                      (explode (putprop s 
+
+                                       (1+ (cond ((get s 'count))
+
+                                                  (t 0)
+
+                                           )
+
+                                       )
+
+                               'count))))
+
+)
+
+                                     ;ILISP OLDSYM (but quote s)
+
+(defun oldsym (s)
+
+   (readlist (append (explode s) 
+
+                     (explode (cond ((get s 'count)) 
+
+                                    (t 1)
+
+                              )
+
+                     )
+
+             )
+
+   )
+
+)
+
+(defun fassoc (key a-list)
+
+    (cond ((assoc key (cdr a-list)))
+
+          (t (cadr (rplacd (last a-list)
+
+                           (list (list key))
+
+                   )
+
+             )
+
+           )
+
+     )
+
+)
+
+(defun fremove (frame slot facet value)
+
+  (prog (slots facets values target)
+
+    (setq slots (fgetframe frame))
+
+    (setq facets (assoc slot (cdr slots)))
+
+    (setq values (assoc facet (cdr facets)))
+
+    (setq target (assoc value (cdr values)))
+
+    (delete target values)
+
+    (cond ((null (cdr values))
+
+             (delete values facets)
+
+          )
+
+    )
+
+    (cond ((null (cdr facets))
+
+             (delete facets slots)
+
+          )
+
+    )
+
+    (return (not (null target)))
+
+  )
+
+)
+
+(defun fput (frame slot facet value)
+
+  (cond  ((member value (fget frame slot facet)) nil)
+
+         (t (fassoc value
+
+                    (fassoc facet
+
+                            (fassoc slot
+
+                                    (fgetframe frame))))
+
+                    value)
+
+         )
+
+)
+
+(defun fget (frame slot facet)
+
+   (reverse (mapcar 'car 
+
+                     (cdr (assoc facet
+
+                          (cdr (assoc slot
+
+                                     (cdr (get frame 'frame))))))
+
+            )
+
+   )
+
+)
+
+(defun fgetframe (frame)
+
+    (cond ((get frame 'frame))
+
+          (t (putprop frame (list frame) 'frame))
+
+    )
+
+)
+
+(defun maketree ()
+
+   (prog ()
+
+     (setq topnodes (mapcar '(lambda (a) (makesubtree a)) *rules))
+
+     (setq hypothesesnodes
+
+          (delete nil (mapcar '(lambda (a) 
+
+                       (cond ((member (car (fget a 'fact 'value)) *hypotheses)
+
+                                a)
+
+                             (t nil)
+
+                       )
+
+                               )
+
+                       topnodes)))
+
+    (mapcar '(lambda (a) 
+
+              (cond ((not (member a hypothesesnodes))
+
+                       (mapcar '(lambda (b)
+
+                                   (search-and-splice a b))
+
+                                      hypothesesnodes))
+
+              ))
+
+            topnodes)
+
+    (mapcar '(lambda (a) (fput a 'count 'value 0))
+
+             hypothesesnodes)
+
+;initialize counts on all hypotheses frames to zero
+
+    (linkup-competing-hypotheses hypothesesnodes)
+
+  )
+
+)
+
+(defun search-and-splice (frameA frameB)
+
+   (cond ((equal (fget frameA 'fact 'value) (fget frameB 'fact 'value))
+
+              (fput frameA 'use 'used-by (car (fget frameB 'use 'used-by)))
+
+              (putprop frameB (get frameA 'frame) 'frame)
+
+              (fput frameB 'ask 'ask? t))
+
+           ((null (fget frameB 'use 'uses)) nil)
+
+           (t (mapcar '(lambda (a) (search-and-splice frameA a))
+
+                                  (preconditions frameB)))
+
+   )
+
+)
+
+(defun flatten (x)
+
+      (cond ((null x) nil)
+
+            ((atom (car x)) (cons (car x) (flatten (cdr x))))
+
+            (t (append (flatten (car x)) (flatten (cdr x))))
+
+      )
+
+)
+
+(defun preconditions (frame)
+
+      (delete nil (mapcar '(lambda (a) (cond ((numberp a) nil) (t a)))
+
+                           (flatten (fget frame 'use 'uses))))
+
+)
+
+(defun linkup-competing-hypotheses (hypothesesnodes)
+
+  (prog (hyps)
+
+      (setq hyps (append (last hypothesesnodes) hypothesesnodes))
+
+    iter
+
+      (cond ((equal (length hyps) 1) (return t)))
+
+      (fput (car hyps) 'competes-with 'value (cadr hyps))
+
+      (setq hyps (cdr hyps))
+
+      (go iter)
+
+   )
+
+)
+
+(defun makesubtree (rule)
+
+   (prog (framename)
+
+        (setq framename (newsym 'frame))
+
+        (fput framename 'fact 'value (car rule))
+
+        (fput framename 'certainty 'value 0)
+
+        (mapcar '(lambda (a)
+
+                 (cond ((equal (cadr a) 'and)
+
+                          (fput framename 'use 'uses
+
+                                (append (mapcar '(lambda (b) 
+
+                                           (make-precondition-frame
+
+                                               framename b (newsym 'frame))
+
+                                           (oldsym 'frame)
+
+                                                  )
+
+                                           (cddr a)
+
+                                         )
+
+                                         (list (car a))
+
+                                 )
+
+                           )
+
+                       )
+
+                       (t
+
+                           (fput framename 'use
+
+                                  'uses (list (newsym 'frame) (car a)))
+
+                           (make-precondition-frame framename
+
+                                     (cdr a) (oldsym 'frame))
+
+                       )
+
+                  )
+
+                  )
+
+          (cdadr rule))
+
+        (return framename)
+
+))
+
+(defun make-precondition-frame (parent-framename precondition precond-name)
+
+   (prog ()
+
+      (fput precond-name 'fact 'value precondition)
+
+      (fput precond-name 'certainty 'value 0)
+
+      (fput precond-name 'ask 'ask? t)
+
+      (fput precond-name 'use 'used-by parent-framename)
+
+   )
+
+)
+
+(defun diagnose ()
+
+  (prog ()
+
+    (maketree)
+
+    (initialize-path-pointers hypothesesnodes)
+
+    (setq current-hypothesis (car hypothesesnodes))
+
+    (terpri)
+
+    (terpri)
+
+   iter
+
+    (cond ((null (delete nil (mapcar '(lambda (a) (car 
+
+                                                 (fget a 'use 'use-next)))
+
+                              hypothesesnodes)
+
+                 )
+
+           )
+
+     ; if there are no more paths to check
+
+            (terpri)
+
+            (prettyprincsentence 
+
+                 '(No hypothesis can be confirmed with certainty))
+
+            (terpri)
+
+            (status-of-hypotheses)
+
+            (return nil)
+
+           ) 
+
+          ((greaterp (car (fget current-hypothesis 'certainty 'value)) max-prob)
+
+            (terpri)
+
+            (princ '" The hypothesis")
+
+            (prettyprincsentence 
+
+                  (subst task '* (car (fget current-hypothesis 
+
+                                         'fact 'value))))
+
+            (princ '"is confirmed with certainty")
+
+            (prettyprincsentence 
+
+                  (list (car (fget current-hypothesis 'certainty 'value))))
+
+            (terpri)
+
+            (return t)
+
+           )
+
+          ((or (and (greaterp (car (fget current-hypothesis 'count 'value)) 3)
+
+                    (lessp (car (fget current-hypothesis 
+
+                                    'certainty 'value)) 0.8)
+
+               )
+
+            (null (car (fget current-hypothesis 'use 'use-next)))
+
+           )
+
+; if either the count is too large
+
+; or the branches are exhausted
+
+            (mapcar '(lambda (a) (fremove current-hypothesis 'count 'value a))
+
+                    (fget current-hypothesis 'count 'value)
+
+            )
+
+            (fput current-hypothesis 'count 'value 0)      
+
+; reset the count to zero
+
+            (setq current-hypothesis (car (fget current-hypothesis
+
+                                               'competes-with
+
+                                               'value)))
+
+; and go check the next hypothesis
+
+            (go iter)
+
+           )
+
+    )
+
+    (fput current-hypothesis 'certainty 'value
+
+          (plus (car (fget current-hypothesis 'certainty 'value))
+
+                (times (difference 1.0  
+
+                                   (car (fget current-hypothesis 
+
+                                             'certainty 'value)))
+
+                       (ask-next-question-about 
+
+                           (car (fget current-hypothesis 'use 'use-next)))
+
+                )
+
+          )
+
+     )
+
+;     (princ '"     certainty of ")
+
+;     (princ current-hypothesis )
+
+;     (princ '" is " )
+
+;     (fget current-hypothesis 'certainty 'value) t)
+
+     (fput current-hypothesis 'count 'value
+
+           (add1 (car (fget current-hypothesis 'count 'value)))
+
+     )
+
+     (fput current-hypothesis 'use 'use-next
+
+           (cadr (member (car (fget current-hypothesis 'use 'use-next))
+
+                         (reverse (fget current-hypothesis 'use 'uses))))
+
+     )
+
+     (go iter)
+
+  )
+
+)
+
+(defun initialize-path-pointers (nodelist)
+
+  (mapcar 'recursice-initialize-path-pointers nodelist)
+
+)
+
+(defun recursice-initialize-path-pointers (node)
+
+   (fput node 'use 'use-next (car (reverse (fget node 'use 'uses))))
+
+   (initialize-path-pointers (preconditions node))
+
+)
+
+(defun ask-next-question-about (facts-and-attenuation)
+
+  (cond ((null facts-and-attenuation) 0)
+
+        ((equal (length facts-and-attenuation) 2) ; single or branch
+
+           (times (quotient (cadr facts-and-attenuation) 10)
+
+                  (ask-about (car facts-and-attenuation)))
+
+        )
+
+        (t (times (quotient (car (last facts-and-attenuation)) 10)
+
+                  (eval (cons 'min (mapcar 'ask-about
+
+                                    (reverse 
+
+                                      (cdr (reverse
+
+                                                 facts-and-attenuation)))
+
+                                   )
+
+                        )
+
+                  )
+
+           )
+
+        )
+
+   )
+
+)
+
+(defun ask-about (fact)
+
+  (prog (answer)
+
+    errorloop
+
+                  (cond ((recall fact)(return (get-old-answer fact))))
+
+                  (pretty-ask (subst task '* (car (fget fact 'fact 'value))))
+
+                  (prompt)
+
+                  (setq answer (read))
+
+      (cond ((and (fget fact 'ask 'ask?)
+
+                  (not (equal answer 'dk))
+
+                  (cond ((member answer '(done stop halt exit quit q x))
+
+                           (status-of-hypotheses)
+
+                           (expert-system) (break nil)
+
+                         )
+
+                        ((member answer '(help what ?))
+
+                           (princ '"      Options are: " )(terpri)(terpri)
+
+                           (princ '"      d,done,q,quit -- quit here ")(terpri)
+
+                           (princ '"      help,? -- this message ")(terpri)
+
+                           (princ '"      why,how -- explain why this question is asked")(terpri)
+
+                           (princ '"      y,yes -- definitely")(terpri)
+
+                           (princ '"      n,no -- definitely not")(terpri)
+
+                           (princ '"      p,probably,l,likely -- likely")(terpri)
+
+                           (princ '"      nl -- not likely")(terpri)
+
+                           (princ '"      m,maybe -- maybe")(terpri)
+
+                           (princ '"      dk -- don't know")(terpri)
+
+                           (princ '"      dc -- don't care")(terpri)
+
+                           (princ '"      a number between 0 and 10 -- certainty value")(terpri)
+
+                           (princ '"          where 10 is most certain (same as yes)")(terpri)
+
+                           (princ '"          and 0 is least certain (same as no)" )(terpri)
+
+                    (go errorloop))
+
+                  ((member answer '(why how)) 
+
+                (princ '"     The fact ")(terpri)
+
+                    (prettyprincsentence 
+
+                 (subst task '* (car (fget fact 'fact 'value))))
+
+                (terpri)
+
+                (princ '"     may be used to establish ")(terpri)
+
+                (prettyprincsentence 
+
+                 (subst task '* (car 
+
+                               (fget (car (fget fact 'use 'used-by))
+
+                                         'fact
+
+                                        'value))))
+
+                  (terpri)
+
+                   (go errorloop))
+
+                  ((not (or (and (numberp answer) 
+
+                             (lessp answer 10.001)
+
+                                 (greaterp answer -0.0001))
+
+                       (member answer '(yes no y n dc
+
+                                               maybe may ma m probably 
+
+                                               prob pr p likely like li 
+
+                                               l nl))))
+
+                   (terpri)
+
+                   (princ  answer)
+
+                   (princ '"      invalid certainty factor.")
+
+              (go errorloop))
+
+                  ((greaterp (eval answer) 0) 
+
+               (fput (car (fget fact 'use 'used-by))
+
+                         'use 'used fact)
+
+              (fput fact 'certainty 'value (quotient
+
+                                            (eval answer) 10.0)) t)
+
+                  (t t)))
+
+      (remember fact (quotient (eval answer) 10.0))
+
+      (return (quotient (eval answer) 10.0)))
+
+   (t (setq answer 0)
+
+         (mapcar '(lambda (a) 
+
+               (setq answer
+
+                     (plus answer
+
+                             (times (difference 1 answer)
+
+                                         (ask-next-question-about a)))))
+
+             (reverse (fget fact 'use 'uses)))
+
+          (cond ((greaterp (eval answer) 0) 
+
+                 (fput (car (fget fact 'use 'used-by))
+
+                      'use 'used fact)
+
+           (fput fact 'certainty 'value answer)))
+
+        (remember fact answer)
+
+        (return answer))))
+
+)
+
+(defun pretty-ask (fact)
+
+  (cond ((equal (cadr fact) 'is)
+
+          (terpri)
+
+          (prettyprincsentence 
+
+             (append (cons 'is (cons (car fact) (cddr fact)))))
+
+          (princ '"?")
+
+          (terpri)
+
+         )
+
+        ((member (cadr fact) verbs)
+
+          (terpri)
+
+          (prettyprincsentence
+
+             (append (cons 'does 
+
+                        (cons (car fact) 
+
+                             (cons (splice (cadr fact))
+
+                              (cddr fact))))))
+
+          (princ '"?")
+
+          (terpri)
+
+        )
+
+       (t (terpri)
+
+          (princ '"      With what certainty can you assert:")
+
+          (terpri)
+
+          (prettyprincsentence fact)
+
+          (princ '"?")
+
+          (terpri)
+
+        )
+
+    )
+
+)
+
+(defun splice (verb)
+
+  (implode (reverse (cdr (reverse (explode verb)))))
+
+)
+
+(setq verbs '(involves requires entails))
+
+(defun prettyprincsentence (list)
+
+  (prog (counter list1 max-length)
+
+    (setq counter 0)
+
+    (setq list1 list)
+
+    (setq max-length 50)
+
+    (princ "     ")
+
+    loop
+
+    (cond ((null list1) (return t))
+
+          ((greaterp counter max-length)
+
+              (setq counter 0)
+
+              (terpri) (princ "      ")
+
+          )
+
+    )
+
+    (princ (car list1)) (princ " ")
+
+    (setq list1 (cdr list1))
+
+    (setq counter (plus counter (add1 (length (explode (car list1))))))
+
+    (go loop)
+
+  )
+
+)
+
+(defun status-of-hypotheses ()
+
+  (mapcar '(lambda (a) (princ '"  Hypothesis ")
+
+                  (prettyprincsentence 
+
+                   (subst task '* 
+
+                           (car (fget a 'fact 'value))))
+
+                 (msg "     has certainty " 
+
+                           (car (fget a 'certainty 'value)) t))
+
+        hypothesesnodes) t)
+
+(defun evidence-adjective (n)
+
+  (cond ((or (equal n 0) (equal n 0.0)) '(no))
+
+        ((lessp n 0.2) '(very weak))
+
+        ((greaterp n 0.8) '(very strong))
+
+        ((greaterp n 0.5) '(strong))
+
+        (t '(weak))
+
+  )
+
+)
+
+(defun explain (fact)
+
+  (cond ((null (fget fact 'use 'used))
+
+            (terpri)  
+
+            (prettyprincsentence 
+
+                (append '(there was)
+
+                         (evidence-adjective (car (fget fact 'certainty
+
+                                                   'value)))
+
+                        '(evidence that)
+
+                         (car (subst task '* (fget fact 'fact 'value)))))
+
+            (terpri)
+
+         )
+
+        (t (terpri)
+
+           (prettyprincsentence 
+
+               (append '(there was)
+
+                        (evidence-adjective (car (fget fact 'certainty
+
+                                                  'value)))
+
+                       '(evidence that)
+
+                        (car (subst task '* (fget fact 'fact 'value)))))
+
+           (terpri)
+
+           (prettyprincsentence
+
+           (append '(this)
+
+                   '(followed from)
+
+                    (list (length (fget fact 'use 'used)))
+
+                   '(things:)))
+
+           (terpri)
+
+           (mapcar 'explain (fget fact 'use 'used))
+
+         )
+
+    )
+
+)
+
+(defun rotate (list)
+
+  (cons (car (last list)) 
+
+        (delete (car (last list)) list)
+
+  )
+
+)
+
+(defun princ-rule (rule)
+
+  (princ-rule-sub-fn (car rule) (cadr rule))
+
+)
+
+(defun princ-rule-sub-fn (consequent antecedents)
+
+  (cond ((equal (car antecedents) 'or)
+
+           (mapcar '(lambda (a) (princ-rule-sub-fn consequent a))
+
+                    (cdr antecedents))
+
+        )
+
+        ((equal (cadr antecedents) 'and)
+
+        )
+
+  )
+
+)
+
+(defun append-to-file (list-of-items)
+
+  (prog (o)
+
+    (setq o (outfile result-file 'a))   
+
+    (princ '********** o)(terpri o)
+
+    (princ (status ctime) o)(terpri o)
+
+    (princ list-of-items o)(terpri o)
+
+    (close o)
+
+  )
+
+)
+
+(defun store-results ()
+
+  (append-to-file
+
+    (list
+
+          (mapcan '(lambda (a) (subst task '*
+
+                                   (list (car (fget a 'fact 'value))
+
+                                         (car (fget a 'certainty 'value)))))
+
+                    hypothesesnodes)
+
+    ))
+
+)
+
+(defun print-rules ()
+
+  (mapcar 'print-rule (subst 'the-task '* *rules)) t)
+
+(defun print-rule (rule)
+
+  (prog (head tail count)
+
+    (setq head (car rule))
+
+    (setq tail (cdadr rule))
+
+    (setq count 1)
+
+   iter
+
+    (cond ((null tail) (return t)))
+
+    (msg t "---------------------------------" t (newsym 'Rule) ":" t t)
+
+    (setq count (add1 count))
+
+    (cond ((equal (cadar tail) 'AND)
+
+             (prog (conjunct)
+
+                (setq conjunct (cddar tail))
+
+                (msg t "IF" t)
+
+               iter
+
+                (terpri)
+
+                (cond ((equal (length conjunct) 1)
+
+                         (prettyprintsentence (car conjunct))
+
+                         (return t)
+
+                      )
+
+                )
+
+                (prettyprintsentence (car conjunct))
+
+                (msg t t "AND" t)
+
+                (setq conjunct (cdr conjunct))
+
+                (go iter)
+
+              )
+
+           )
+
+          (t (prettyprintsentence (cons 'IF (cdar tail))))
+
+    )
+
+    (msg t t) 
+
+    (prettyprintsentence 
+
+          (append '(THEN THERE IS) 
+
+                   (evidence-adjective (quotient (caar tail)  10.0))
+
+                  '(EVIDENCE THAT) 
+
+                    head))
+
+    (msg t)
+
+    (setq tail (cdr tail))
+
+    (go iter)
+
+  )
+
+)
+
+;
+
+;  code added 5 apr 1984
+
+;
+
+(defun recall (fact)
+
+   (prog (question)
+
+      (setq question (car (fget fact 'fact 'value)))
+
+      (cond ((member question already-asked)
+
+             (return t))
+
+      )
+
+      (return nil)
+
+   )
+
+)
+
+(defun get-old-answer (fact)
+
+   (prog (question)
+
+      (setq question (car (fget fact 'fact 'value)))
+
+      (setq pointer (-
+
+                       (length already-asked)
+
+                       (length (member question already-asked))
+
+                    )
+
+      )
+
+      (setq pointer (add1 pointer))
+
+      (return (get-answer pointer))
+
+   )
+
+)
+
+(defun get-answer (index)
+
+   (prog (counter templist)
+
+      (setq counter 1)
+
+      (setq templist already-answered)
+
+      loop
+
+         (cond ((equal counter index)(return (car templist))))
+
+         (setq templist (cdr templist))
+
+         (setq counter (add1 counter))
+
+         (go loop)
+
+   )
+
+)
+
+;
+
+; code added 18 may 1984
+
+;
+
+(defun remember (fact answer)
+
+   (prog (question question1 question2)
+
+      (setq question (car (fget fact 'fact 'value)))
+
+      (setq already-asked (append already-asked (list question)))
+
+      (setq already-answered (append already-answered (list answer)))
+
+      (mapcar '(lambda (e)
+
+         (setq question1 (list (car e))) (setq question2 (cdr e))
+
+         (cond (
+
+               (equal (list question) question1)
+
+       (setq already-asked (append already-asked question2))
+
+       (setq already-answered (append already-answered (list (minus (sub1 answer)))))
+
+               )
+
+
+
+               (
+
+               (equal (list question) question2)
+
+       (setq already-asked (append already-asked question1))
+
+       (setq already-answered (append already-answered (list (minus (sub1 answer)))))
+
+               )
+
+
+
+         )
+
+               ) *opposites)
+
+   )
+
+)
+
+
+
+
+
+
+
+                         AESOP.COM - VAX Command File
+
+
+
+$ prevdir = f$directory()
+
+$ set def aesop:
+
+$ assign/user sys$output: sys$input:
+
+$ lisp
+
+$ set def 'prevdir'
+
+
+
+
+
+
+
+                     LISPRC. - Franz Lisp Environment File
+
+
+
+(load 'aesop.lsp)
+
+(start)
+
+(exit)
+

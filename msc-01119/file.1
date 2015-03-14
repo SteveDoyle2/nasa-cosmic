@@ -1,0 +1,1791 @@
+CIBFTC
+C     MULTIPHASE CHEMICAL EQUILIBRIUM COMPOSITION                       10400030
+C     L.W. FESLER     196-415  SID                                      10400040
+C                                                                       10400050
+C                *****      *****      *****      *****                 10400060
+C                                                                       10400070
+C     THIS PROGRAM COMPUTES THE CHEMICAL COMPOSITION OF A GENERAL       10400080
+C     (C,O,H,N,SI,E,A,AL,B,CA,X,X) SYSTEM IN CHEMICAL EQUILIBRIUM.      10400090
+C     ANY SUBSET OF THE GENERAL SYSTEM MAY BE SPECIFIED.  PERMANENT     10400100
+C     THERMODYNAMIC DATA FOR THE VARIOUS SPECIES IS AN INTEGRAL         10400110
+C     PART OF THE PROGRAM DECK.  THE CHEMICAL COMPOSITION IS            10400120
+C     DETERMINED BY THE MINIMIZATION OF FREE ENERGY TECHNIQUE.          10400130
+C                                                                       10400140
+C                *****      *****      *****      *****                 10400150
+C                                                                       10400200
+C     PROGRAM OUTLINE --                                                10400210
+C        MAIN PROGRAM                                                   10400220
+C        SUBROUTINE CHEMEQ                                              10400230
+C        FUNCTION TLAIR                                                 10400240
+C        FUNCTION TLABL                                                 10400250
+C        FUNCTION TLCND                                                 10400260
+C                                                                       10400300
+C                *****      *****      *****      *****                 10400310
+C                                                                       10400400
+      DIMENSION AW(12),IS(95),CM(95,2)                                  10400410
+      DIMENSION CMP(12),ISAIR(20),ISABL(60),ISCND(15),                  10400420
+     1          ISN(50),DTM(50),BIO(50),TR(100),PR(100),                10400421
+     2          TMIN(10),TMAX(10),DELT(10),PMIN(10),PMAX(10),DELP(10),  10400422
+     3          TFILE(200),PFILE(200),BCD(95,2),TIO(50),                10400423
+     4          IFG(95),DFG(95)                                         10400424
+C                                                                       10400500
+ 0110 FORMAT(4I12,F12.3,1X,F9.7,I2/6F12.6/6F12.6)                       10400520
+ 0120 FORMAT(I12,20I1/I12,60I1/I12,15I1)                                10400530
+ 0130 FORMAT(I12,5(I2,1X,F8.3,A1))                                      10400540
+ 0135 FORMAT(6(I2,1X,F8.3,A1))                                          10400545
+ 0140 FORMAT(6F12.3)                                                    10400550
+ 0150 FORMAT(I12,5(I2,1X,F9.2))                                         10400560
+ 0155 FORMAT(6(I2,1X,F9.2))                                             10400565
+ 0200 FORMAT(1H18X,43HMULTIPHASE CHEMICAL EQUILIBRIUM COMPOSITION/      10400600
+     11H 8X,35H(C,O,H,N,SI,E,A,AL,B,CA,X,X) SYSTEM//1H 8X,              10400601
+     29HCMP(C)  =F12.6,5H (LB),15X,9HCMP(A)  =F12.6,5H (LB)/1H 8X,      10400602
+     39HCMP(O)  =F12.6,5H (LB),15X,9HCMP(AL) =F12.6,5H (LB)/1H 8X,      10400603
+     49HCMP(H)  =F12.6,5H (LB),15X,9HCMP(B)  =F12.6,5H (LB)/1H 8X,      10400604
+     59HCMP(N)  =F12.6,5H (LB),15X,9HCMP(CA) =F12.6,5H (LB)/1H 8X,      10400605
+     69HCMP(SI) =F12.6,5H (LB),15X,18HCMP(X)  = NOT USED/1H 8X,         10400606
+     79HCMP(E)  =F12.6,5H (LB),15X,18HCMP(X)  = NOT USED)               10400607
+ 0210 FORMAT(1H08X,27HTOTAL MASS OF SYSTEM, TMS =F12.6,5H (LB)//        10400610
+     11H 8X,13HTEMPERATURE =F12.3,8H (DEG R)/                           10400611
+     21H 8X,13HPRESSURE    =F12.3,6H (ATM))                             10400612
+ 0220 FORMAT(1H08X,23HENTHALPY OF GAS       =F12.3,9H (BTU/LB)/         10400620
+     11H 8X,23HENTHALPY OF CONDENSED =F12.3,9H (BTU/LB)/                10400621
+     21H 8X,23HGAS MOLECULAR WEIGHT  =F12.3,13H (LB/LB-MOLE)/           10400622
+     31H 8X,23HITERATION LIMIT       =I12/                              10400623
+     41H 8X,23HCONVERGENCE TOLERANCE =F12.9/                            10400624
+     51H 8X,21HSUM OF MASS FRACTIONS/1H 8X,16X,7HTOTAL =F12.9)          10400625
+ 0230 FORMAT(1H+8X,36X,40H****************************************,     10400630
+     120H********************)                                          10400631
+ 0240 FORMAT(1H 8X,12X,11HCONDENSED =F12.9//                            10400640
+     11H 8X,31HCHEMICAL COMPOSITION OF SPECIES/                         10400641
+     21H 8X,3X,22HSPECIES IDENTIFICATION12X,7HCM(I,1)12X,7HCM(I,2)/     10400642
+     31H 8X,6X,4HFILE11X,4HNAME6X,13H(LB-MOLE/TMS)11X,8H(LB/TMS))       10400643
+ 0250 FORMAT(1H 8X,I10,3X,2A6,2F19.9)                                   10400650
+ 0310 FORMAT(1H-8X,26H*****  INCOMPATIBLE SYSTEM/1H 8X,                 10400710
+     122H*****  GO TO NEXT CASE)                                        10400711
+ 0320 FORMAT(1H-8X,22H*****  SINGULAR MATRIX/1H 8X,                     10400720
+     128H*****  GO TO NEXT (T,P) PAIR)                                  10400721
+ 0330 FORMAT(1H-8X,28H*****  NON-CONVERGENT SYSTEM/1H 8X,               10400730
+     144H*****  PRINT RESULTS OF FINAL ITERATION PASS)                  10400731
+ 0340 FORMAT(1H-8X,32H*****  INCOMPATIBLE MASS BALANCE/1H 8X,           10400740
+     128H*****  GO TO NEXT (T,P) PAIR)                                  10400741
+C                                                                       10410010
+C     SPECIES NAMES                                                     10410020
+      DATA (BCD(I,1),I=1,83) / 83*1H  /                                 10410030
+      DATA (BCD(I,1),I=84,85) / 6H     A,6H     A /                     10410040
+      DATA (BCD(I,1),I=86,95) / 10*1H  /                                10410050
+      DATA (BCD(I,2),I=1,20) / 6H  N2 G,6H  O2 G,6H   A G,6H  NO G,     10410060
+     16H   N G,6H   O G,6H   E G,6H N2+ G,6H O2+ G,6H NO+ G,6H  N+ G,   10410070
+     26H  O+ G,6H  A+ G,6H  O- G,6H      ,6H      ,6H      ,6H      ,   10410080
+     36H      ,6H       /                                               10410090
+      DATA (BCD(I,2),I=21,80) / 6H  H2 G,6H   H G,6H H2O G,6H  OH G,    10410100
+     16H      ,6H   C G,6H  C2 G,6H  C3 G,6H  CO G,6H CO2 G,6H  CN G,   10410110
+     26HC2N2 G,6H HCN G,6H      ,6H  CH G,6H CH2 G,6H CH3 G,6H CH4 G,   10410120
+     36H C2H G,6HC2H2 G,6HC2H4 G,6HC2H6 G,6H C3H G,6HC3H2 G,6HC3H3 G,   10410130
+     46HC3H4 G,6H C4H G,6HC4H2 G,6HC5H4 G,6HC6H6 G,6H      ,6H  NH G,   10410140
+     56H NH2 G,6H NO2 G,6H N2O G,6HN2O3 G,6HN2O4 G,6HN2O5 G,6H      ,   10410150
+     66H  SI G,6H SI2 G,6H SIO G,6HSIO2 G,6H      ,6H      ,6H  AL G,   10410160
+     76H ALO G,6HAL2O G,6H      ,6H   B G,6H  BC G,6H  BO G,6H BOH G,   10410170
+     86H  BN G,6HB2O3 G,6H      ,6H  CA G,6H      ,6H      ,6H       /  10410180
+      DATA (BCD(I,2),I=81,95) / 6H   C C,6H SIC C,6HSIO2 C,6HL4C3 C,    10410190
+     16HL2O3 C,6H B4C C,6HB2O3 C,6H  BN C,6H  CA C,6H      ,6H      ,   10410200
+     26H      ,6H      ,6H      ,6H       /                             10410210
+C                                                                       10411010
+C     INITIALIZE                                                        10411020
+ 1100 DO 1110 I=1,95                                                    10411030
+      IS(I)=0                                                           10411040
+      CM(I,1)=0.0                                                       10411050
+      CM(I,2)=0.0                                                       10411060
+ 1110 CONTINUE                                                          10411070
+      DO 1120 J=1,12                                                    10411080
+      AW(J)=0.0                                                         10411090
+ 1120 CONTINUE                                                          10411100
+      NPS=0                                                             10411110
+C                                                                       10412010
+C     INPUT DATA                                                        10412020
+ 1200 READ (5,110) NCASE,NPT,NGD,ITER,TOLR,FRST,ISPT,(CMP(I),I=1,12)    10412030
+      ISP=IABS(ISPT)                                                    10412040
+      IF (ISP-2) 1250,1210,1210                                         10412050
+ 1210 READ (5,120) ICD1,(ISAIR(I),I=1,20),ICD2,(ISABL(I),I=1,60),       10412060
+     1ICD3,(ISCND(I),I=1,15)                                            10412070
+      IF (ISP-2) 1250,1230,1220                                         10412080
+ 1220 READ (5,130) NPS,(ISN(I),DTM(I),BIO(I),I=1,5)                     10412090
+      IF (NPS-5) 1230,1230,1225                                         10412100
+ 1225 READ (5,135) (ISN(I),DTM(I),BIO(I),I=6,NPS)                       10412110
+ 1230 IF (ISPT) 1240,1250,1250                                          10412120
+ 1240 READ (5,150) NFG,(IFG(I),DFG(I),I=1,5)                            10412130
+      IF (NFG-5) 1250,1250,1245                                         10412140
+ 1245 READ (5,155) (IFG(I),DFG(I),I=6,NFG)                              10412150
+ 1250 IF (NPT) 1270,1270,1260                                           10412200
+ 1260 READ (5,140) (TR(I),PR(I),I=1,NPT)                                10412210
+ 1270 IF (NGD) 1300,1300,1280                                           10412220
+ 1280 READ (5,140) (TMIN(I),TMAX(I),DELT(I),PMIN(I),                    10412230
+     1PMAX(I),DELP(I),I=1,NGD)                                          10412240
+C                                                                       10413010
+C     SET UP AW FILE                                                    10413020
+ 1300 AW(1)=CMP(1)/12.011                                               10413030
+      AW(2)=CMP(2)/16.000                                               10413040
+      AW(3)=CMP(3)/1.008                                                10413050
+      AW(4)=CMP(4)/14.008                                               10413060
+      AW(5)=CMP(5)/28.090                                               10413070
+      AW(6)=CMP(6)/10000000000.0                                        10413080
+      AW(7)=CMP(7)/39.944                                               10413090
+      AW(8)=CMP(8)/26.980                                               10413100
+      AW(9)=CMP(9)/10.820                                               10413110
+      AW(10)=CMP(10)/40.080                                             10413120
+      TMS=0.0                                                           10413150
+      DO 1310 I=1,12                                                    10413160
+      TMS=TMS+CMP(I)                                                    10413170
+ 1310 CONTINUE                                                          10413180
+C                                                                       10414010
+C     SET UP IN-OUT TEST                                                10414020
+ 1400 IF (NPS) 1500,1500,1410                                           10414030
+ 1410 DO 1420 I=1,NPS                                                   10414040
+      TIO(I)=SIGN(1.0,BIO(I))                                           10414050
+ 1420 CONTINUE                                                          10414060
+C                                                                       10415010
+C     SET UP FILE                                                       10415020
+ 1500 NFILE=0                                                           10415030
+      IF (NPT) 1530,1530,1510                                           10415040
+ 1510 NFILE=NPT                                                         10415050
+      DO 1520 I=1,NFILE                                                 10415060
+      TFILE(I)=TR(I)                                                    10415070
+      PFILE(I)=PR(I)                                                    10415080
+ 1520 CONTINUE                                                          10415090
+ 1530 IF (NGD) 2000,2000,1540                                           10415100
+ 1540 DO 1590 I=1,NGD                                                   10415110
+      ADDT=0.0                                                          10415120
+      ITT=1                                                             10415130
+ 1550 TMN=TMIN(I)+ADDT*DELT(I)                                          10415140
+      ADDT=ADDT+1.0                                                     10415150
+      IF (TMAX(I)-TMN) 1555,1555,1560                                   10415160
+ 1555 ITT=2                                                             10415170
+      TMN=TMAX(I)                                                       10415180
+ 1560 ADDP=0.0                                                          10415190
+      ITP=1                                                             10415200
+ 1570 PMN=PMIN(I)+ADDP*DELP(I)                                          10415210
+      ADDP=ADDP+1.0                                                     10415220
+      IF (PMAX(I)-PMN) 1575,1575,1580                                   10415230
+ 1575 ITP=2                                                             10415240
+      PMN=PMAX(I)                                                       10415250
+ 1580 NFILE=NFILE+1                                                     10415260
+      TFILE(NFILE)=TMN                                                  10415270
+      PFILE(NFILE)=PMN                                                  10415280
+      IF (ITP-1) 1570,1570,1585                                         10415290
+ 1585 IF (ITT-1) 1550,1550,1590                                         10415300
+ 1590 CONTINUE                                                          10415310
+C                                                                       10420010
+C     GENERAL LOOP                                                      10420020
+ 2000 DO 2900 IL=1,NFILE                                                10420030
+      TO=TFILE(IL)                                                      10420040
+      PO=PFILE(IL)/(14.69*144.0)                                        10420050
+      WRITE (6,200) CMP(1),CMP(7),CMP(2),CMP(8),CMP(3),CMP(9),          10420100
+     1CMP(4),CMP(10),CMP(5),CMP(6)                                      10420110
+      WRITE (6,210) TMS,TO,PO                                           10420120
+      IPS=ISPT+1                                                        10420150
+      CM(1,1)=FRST                                                      10420160
+      IF (ISP-2) 2200,2100,2100                                         10420200
+C                                                                       10421010
+C     SET UP IS FILE                                                    10421020
+ 2100 DO 2110 I=1,20                                                    10421030
+      IS(I)=ISAIR(I)                                                    10421040
+ 2110 CONTINUE                                                          10421050
+      DO 2120 I=1,60                                                    10421060
+      ISO=I+20                                                          10421070
+      IS(ISO)=ISABL(I)                                                  10421080
+ 2120 CONTINUE                                                          10421090
+      DO 2130 I=1,15                                                    10421100
+      ISO=I+80                                                          10421110
+      IS(ISO)=ISCND(I)                                                  10421120
+ 2130 CONTINUE                                                          10421130
+      IF (ISP-2) 2200,2200,2150                                         10421200
+ 2150 DO 2190 I=1,NPS                                                   10421210
+      IF (TO-DTM(I)) 2190,2160,2160                                     10421220
+ 2160 ISO=ISN(I)                                                        10421230
+      IF (TIO(I)) 2180,2190,2170                                        10421240
+ 2170 IS(ISO)=1                                                         10421250
+      GO TO 2190                                                        10421260
+ 2180 IS(ISO)=0                                                         10421270
+ 2190 CONTINUE                                                          10421280
+      IPS=3                                                             10421290
+C                                                                       10422010
+C     INITIAL COMPOSITION                                               10422020
+ 2200 IF (ISPT) 2210,2300,2300                                          10422030
+ 2210 IPS=4                                                             10422040
+      DO 2220 I=1,95                                                    10422050
+      CM(I,1)=0.0                                                       10422060
+ 2220 CONTINUE                                                          10422070
+      DO 2230 I=1,NFG                                                   10422080
+      IK=IFG(I)                                                         10422090
+      CM(IK,1)=DFG(I)                                                   10422100
+ 2230 CONTINUE                                                          10422110
+C                                                                       10423010
+C     EQUILIBRIUM COMPOSITION                                           10423020
+ 2300 CALL CHEMEQ(TO,PO,AW,IPS,IS,ITER,TOLR,CM,HG,HC,GMW,IERR)          10423030
+      IF (IERR-2) 2360,2320,2310                                        10423040
+ 2310 IF (IERR-4) 2330,2340,2350                                        10423050
+ 2320 WRITE (6,310)                                                     10423060
+      GO TO 1100                                                        10423070
+ 2330 WRITE (6,320)                                                     10423080
+      GO TO 2900                                                        10423090
+ 2340 WRITE (6,330)                                                     10423100
+      GO TO 2360                                                        10423110
+ 2350 WRITE (6,340)                                                     10423120
+      GO TO 2900                                                        10423130
+ 2360 STOT=0.0                                                          10423150
+      SCND=0.0                                                          10423160
+      DO 2380 I=1,95                                                    10423170
+      STOT=STOT+CM(I,2)                                                 10423180
+      IF (I-80) 2380,2380,2370                                          10423190
+ 2370 SCND=SCND+CM(I,2)                                                 10423200
+ 2380 CONTINUE                                                          10423210
+      STOT=STOT/TMS                                                     10423220
+      SCND=SCND/TMS                                                     10423230
+C                                                                       10424010
+C     PRINT RESULTS FOR (T,P) PAIR                                      10424020
+ 2400 WRITE (6,220) HG,HC,GMW,ITER,TOLR,STOT                            10424030
+      IF (ABS(STOT-1.0)-0.001) 2420,2420,2410                           10424040
+ 2410 WRITE (6,230)                                                     10424050
+ 2420 WRITE (6,240) SCND                                                10424060
+      DO 2440 I=1,95                                                    10424070
+      IF (IS(I)) 2440,2440,2430                                         10424080
+ 2430 WRITE (6,250) I,BCD(I,1),BCD(I,2),CM(I,1),CM(I,2)                 10424090
+ 2440 CONTINUE                                                          10424100
+C                                                                       10429010
+ 2900 CONTINUE                                                          10429020
+      GO TO 1100                                                        10429030
+      END                                                               10429040
+$IBFTC CHEMEQ  NODD                                                     10450020
+C     SUBROUTINE CHEMEQ OF PROGRAM APD104                               10450030
+C     L.W. FESLER     196-415  SID                                      10450040
+C                                                                       10450050
+C                *****      *****      *****      *****                 10450060
+C                                                                       10450070
+C     THIS SUBROUTINE COMPUTES THE EQUILIBRIUM CHEMICAL COMPOSITION     10450080
+C     OF AN ARBITRARY SUBSYSTEM OF A MULTIPHASE CHEMICAL SYSTEM         10450090
+C     (C,O,H,N,SI,E,A,AL,B,CA,X,X) BASED ON THE MINIMIZATION            10450100
+C     OF FREE ENERGY TECHNIQUE.                                         10450110
+C                                                                       10450120
+C                *****      *****      *****      *****                 10450130
+C                                                                       10450140
+C     CHEMICAL COMPOSITION                                              10450150
+C        SYSTEM ELEMENTS                                                10450160
+C                                01-C               07-A                10450165
+C                                02-O               08-AL               10450170
+C                                03-H               09-B                10450175
+C                                04-N               10-CA               10450180
+C                                05-SI              11-NOT USED         10450185
+C                                06-E               12-NOT USED         10450190
+C        SYSTEM SPECIES                                                 10450200
+C                                01(01)-N2(G)       49(29)-C5H4(G)      10450203
+C                                02(02)-O2(G)       50(30)-C6H6(G)      10450206
+C                                03(03)-A(G)        51(31)-NOT USED     10450210
+C                                04(04)-NO(G)       52(32)-NH(G)        10450213
+C                                05(05)-N(G)        53(33)-NH2(G)       10450216
+C                                06(06)-O(G)        54(34)-NO2(G)       10450220
+C                                07(07)-E(G)        55(35)-N2O(G)       10450223
+C                                08(08)-N2+(G)      56(36)-N2O3(G)      10450226
+C                                09(09)-O2+(G)      57(37)-N2O4(G)      10450230
+C                                10(10)-NO+(G)      58(38)-N2O5(G)      10450233
+C                                11(11)-N+(G)       59(39)-NOT USED     10450236
+C                                12(12)-O+(G)       60(40)-SI(G)        10450240
+C                                13(13)-A+(G)       61(41)-SI2(G)       10450243
+C                                14(14)-O-(G)       62(42)-SIO(G)       10450246
+C                                15(15)-NOT USED    63(43)-SIO2(G)      10450250
+C                                16(16)-NOT USED    64(44)-NOT USED     10450253
+C                                17(17)-NOT USED    65(45)-NOT USED     10450256
+C                                18(18)-NOT USED    66(46)-AL(G)        10450260
+C                                19(19)-NOT USED    67(47)-ALO(G)       10450263
+C                                20(20)-NOT USED    68(48)-AL2O(G)      10450266
+C                                21(01)-H2(G)       69(49)-NOT USED     10450270
+C                                22(02)-H(G)        70(50)-B(G)         10450273
+C                                23(03)-H2O(G)      71(51)-BC(G)        10450276
+C                                24(04)-OH(G)       72(52)-BO(G)        10450280
+C                                25(05)-NOT USED    73(53)-BOH(G)       10450283
+C                                26(06)-C(G)        74(54)-BN(G)        10450286
+C                                27(07)-C2(G)       75(55)-B2O3(G)      10450290
+C                                28(08)-C3(G)       76(56)-NOT USED     10450293
+C                                29(09)-CO(G)       77(57)-CA(G)        10450296
+C                                30(10)-CO2(G)      78(58)-NOT USED     10450300
+C                                31(11)-CN(G)       79(59)-NOT USED     10450303
+C                                32(12)-C2N2(G)     80(60)-NOT USED     10450306
+C                                33(13)-HCN(G)      81(01)-C(C)         10450310
+C                                34(14)-NOT USED    82(02)-SIC(C)       10450313
+C                                35(15)-CH(G)       83(03)-SIO2(C)      10450316
+C                                36(16)-CH2(G)      84(04)-AL4C3(C)     10450320
+C                                37(17)-CH3(G)      85(05)-AL2O3(C)     10450323
+C                                38(18)-CH4(G)      86(06)-B4C(C)       10450326
+C                                39(19)-C2H(G)      87(07)-B2O3(C)      10450330
+C                                40(20)-C2H2(G)     88(08)-BN(C)        10450333
+C                                41(21)-C2H4(G)     89(09)-CA(C)        10450336
+C                                42(22)-C2H6(G)     90(10)-NOT USED     10450340
+C                                43(23)-C3H(G)      91(11)-NOT USED     10450343
+C                                44(24)-C3H2(G)     92(12)-NOT USED     10450346
+C                                45(25)-C3H3(G)     93(13)-NOT USED     10450350
+C                                46(26)-C3H4(G)     94(14)-NOT USED     10450353
+C                                47(27)-C4H(G)      95(15)-NOT USED     10450356
+C                                48(28)-C4H2(G)                         10450360
+C                                                                       10450400
+C                *****      *****      *****      *****                 10450410
+C                                                                       10450420
+C     LIST OF ARGUMENTS                                                 10450430
+C        TP      - TEMPERATURE                    (DEG R)               10450435
+C        P       - PRESSURE                       (ATM)                 10450440
+C        AW(J)   - NUMBER OF ATOMIC WEIGHTS                             10450445
+C        IT      - SPECIES TEST                                         10450450
+C                              1-USE ALL SPECIES                        10450453
+C                              2-USE GASEOUS SPECIES                    10450456
+C                              3-USE SPECIES FILE                       10450460
+C                              4-USE FILE AND FIRST GUESS               10450463
+C        IS      - SPECIES FILE                                         10450465
+C        ITER    - NUMBER OF ITERATIONS                                 10450470
+C        TOLR    - CONVERGENCE TOLERANCE                                10450475
+C        CM(I,K) - COMPOSITION                                          10450480
+C                              CM(I,1)            (LB-MOLE/TMS)         10450485
+C                              CM(I,2)            (LB/TMS)              10450490
+C        HG      - ENTHALPY OF GAS                (BTU/LB)              10450495
+C        HC      - ENTHALPY OF CONDENSED          (BTU/LB)              10450500
+C        GMW     - GAS MOLECULAR WEIGHT           (LB/MOLE)             10450505
+C        IERR    - ERROR FLAG                                           10450510
+C                              1-SUCCESSFUL SOLUTION                    10450515
+C                              2-INCOMPATIBLE SYSTEM                    10450520
+C                              3-SINGULAR MATRIX                        10450525
+C                              4-NON-CONVERGENT SYSTEM                  10450530
+C                              5-INCOMPATIBLE MASS BALANCE              10450535
+C                                                                       10450540
+C                *****      *****      *****      *****                 10450550
+C                                                                       10450600
+      SUBROUTINE CHEMEQ(TP,P,AW,IT,IS,ITER,TOLR,CM,HG,HC,GMW,IERR)      10450610
+C                                                                       10450700
+      DIMENSION AW(12),IS(95),CM(95,2)                                  10450710
+      DIMENSION FHG(80),HHG(80),WG(80),NGST(80),                        10450720
+     1          FHC(15),HHC(15),WC(15),NCST(15),                        10450721
+     2          AG(80,12),YG(80),XG(80),CG(80),FG(80),                  10450722
+     3          AC(15,12),YC(15),XC(15),CC(15),ADST(15),                10450723
+     4          NEST(12),NESL(12),NCSL(15),                             10450724
+     5          BC(12),BT(12),R(12,12),ALPHA(12),PHI(12),               10450725
+     6          COET(28,28),CNST(28),IDMY(28)                           10450726
+C                                                                       10451010
+C     INITIALIZE                                                        10451020
+ 5100 RC=1.987                                                          10451030
+      T=TP/1.8                                                          10451040
+      DMY=0.000001                                                      10451050
+      PE=AMAX1(P,DMY)                                                   10451060
+      PLOG=ALOG(PE)                                                     10451070
+      IERR=1                                                            10451080
+      NES=12                                                            10451100
+      NGS=80                                                            10451110
+      NCS=15                                                            10451120
+      SCP=AW(1)*12.011+AW(2)*16.000+AW(3)*1.008+AW(4)*14.008            10451130
+     1+AW(5)*28.090+AW(7)*39.944+AW(8)*26.980+AW(9)*10.820              10451140
+     2+AW(10)*40.080                                                    10451150
+      ACS=TOLR*SCP*10.0**(TP/1000.0)                                    10451160
+      ACS=AMIN1(ACS,0.01)                                               10451170
+ 5130 DO 5160 IG=1,NGS                                                  10451200
+      IF (IG-20) 5135,5135,5145                                         10451210
+ 5135 DO 5140 J=1,NES                                                   10451220
+      AG(IG,J)=TLAIR(IG,4,0.0,J)                                        10451230
+ 5140 CONTINUE                                                          10451240
+      GO TO 5160                                                        10451250
+ 5145 IGO=IG-20                                                         10451260
+      DO 5150 J=1,NES                                                   10451270
+      AG(IG,J)=TLABL(IGO,4,0.0,J)                                       10451280
+ 5150 CONTINUE                                                          10451290
+ 5160 CONTINUE                                                          10451300
+      DO 5170 IC=1,NCS                                                  10451310
+      DO 5170 J=1,NES                                                   10451320
+      AC(IC,J)=TLCND(IC,4,0.0,J)                                        10451330
+ 5170 CONTINUE                                                          10451340
+C                                                                       10452010
+C     SET UP ELEMENTS                                                   10452020
+ 5200 NESO=0                                                            10452030
+      DO 5220 J=1,NES                                                   10452040
+      NEST(J)=0                                                         10452050
+      IF (AW(J)) 5220,5220,5210                                         10452060
+ 5210 NESO=NESO+1                                                       10452070
+      NESL(NESO)=J                                                      10452080
+      NEST(J)=1                                                         10452090
+ 5220 CONTINUE                                                          10452100
+C                                                                       10453010
+C     SET UP SPECIES                                                    10453020
+ 5300 IF (IT-2) 5310,5310,5360                                          10453030
+ 5310 IPO=1                                                             10453040
+      DO 5330 IG=1,NGS                                                  10453050
+      NGST(IG)=0                                                        10453060
+      IS(IG)=0                                                          10453070
+      DO 5320 J=1,NES                                                   10453080
+      IF (AG(IG,J)) 5313,5320,5313                                      10453090
+ 5313 IF (NEST(J)) 5325,5325,5316                                       10453100
+ 5316 NGST(IG)=1                                                        10453110
+      IS(IG)=1                                                          10453120
+ 5320 CONTINUE                                                          10453130
+      GO TO 5330                                                        10453140
+ 5325 NGST(IG)=0                                                        10453150
+      IS(IG)=0                                                          10453160
+ 5330 CONTINUE                                                          10453170
+      DO 5350 IC=1,NCS                                                  10453180
+      ICO=IC+80                                                         10453190
+      NCST(IC)=-1                                                       10453200
+      IS(ICO)=0                                                         10453210
+      IF (IT-2) 5332,5350,5332                                          10453215
+ 5332 DO 5340 J=1,NES                                                   10453220
+      IF (AC(IC,J)) 5333,5340,5333                                      10453230
+ 5333 IF (NEST(J)) 5345,5345,5336                                       10453240
+ 5336 NCST(IC)=0                                                        10453250
+      IS(ICO)=1                                                         10453260
+ 5340 CONTINUE                                                          10453265
+      GO TO 5350                                                        10453270
+ 5345 NCST(IC)=-1                                                       10453275
+      IS(ICO)=0                                                         10453280
+ 5350 CONTINUE                                                          10453285
+      GO TO 5400                                                        10453290
+ 5360 IPO=3                                                             10453300
+      DO 5370 IG=1,NGS                                                  10453310
+      NGST(IG)=IS(IG)                                                   10453320
+ 5370 CONTINUE                                                          10453330
+      DO 5380 IC=1,NCS                                                  10453340
+      ICO=IC+80                                                         10453350
+      NCST(IC)=IS(ICO)                                                  10453360
+      IF (NCST(IC)) 5380,5375,5380                                      10453370
+ 5375 NCST(IC)=-1                                                       10453380
+ 5380 CONTINUE                                                          10453390
+C                                                                       10454010
+C     TEST FOR INCOMPATIBLE SYSTEM                                      10454020
+ 5400 GO TO 5500                                                        10454030
+C                                                                       10455010
+C     MINIMIZE ARRAY SIZES                                              10455020
+ 5500 DO 5520 J=1,NES                                                   10455030
+      IF (NEST(J)) 5520,5520,5510                                       10455040
+ 5510 NS=J                                                              10455050
+ 5520 CONTINUE                                                          10455060
+      NES=NS                                                            10455070
+      NS=1                                                              10455080
+      DO 5540 IG=1,NGS                                                  10455090
+      IF (NGST(IG)) 5540,5540,5530                                      10455100
+ 5530 NS=IG                                                             10455110
+ 5540 CONTINUE                                                          10455120
+      NGS=NS                                                            10455130
+      NS=1                                                              10455140
+      DO 5560 IC=1,NCS                                                  10455150
+      IF (NCST(IC)) 5560,5550,5550                                      10455160
+ 5550 NS=IC                                                             10455170
+ 5560 CONTINUE                                                          10455180
+      NCS=NS                                                            10455190
+C                                                                       10456010
+C     INITIAL COMPOSITION                                               10456020
+ 5600 IF (IT-3) 5605,5605,5670                                          10456030
+ 5605 DO 5610 J=1,12                                                    10456035
+      BC(J)=0.0                                                         10456040
+ 5610 CONTINUE                                                          10456050
+      DO 5630 J=1,NES                                                   10456060
+      DO 5620 IG=1,NGS                                                  10456070
+      IF (NGST(IG)) 5620,5620,5615                                      10456080
+ 5615 BC(J)=BC(J)+AG(IG,J)                                              10456090
+ 5620 CONTINUE                                                          10456100
+      DO 5630 IC=1,NCS                                                  10456110
+      IF (NCST(IC)) 5630,5630,5625                                      10456120
+ 5625 BC(J)=BC(J)+AC(IC,J)                                              10456130
+ 5630 CONTINUE                                                          10456140
+      SBC=0.0                                                           10456150
+      SAW=0.0                                                           10456155
+      DO 5640 J=1,NES                                                   10456160
+      IF (NEST(J)) 5640,5640,5635                                       10456170
+ 5635 SBC=SBC+BC(J)                                                     10456180
+      SAW=SAW+AW(J)                                                     10456190
+ 5640 CONTINUE                                                          10456200
+      FXY=SAW/SBC                                                       10456205
+      IF (CM(1,1)) 5643,5643,5642                                       10456207
+ 5642 FXY=CM(1,1)                                                       10456210
+ 5643 DO 5650 IG=1,NGS                                                  10456215
+      IF (NGST(IG)) 5650,5650,5645                                      10456220
+ 5645 XG(IG)=FXY                                                        10456230
+ 5650 CONTINUE                                                          10456240
+      DO 5660 IC=1,NCS                                                  10456250
+      IF (NCST(IC)) 5660,5660,5655                                      10456260
+ 5655 XC(IC)=ACS                                                        10456270
+ 5660 CONTINUE                                                          10456280
+      GO TO 5700                                                        10456380
+ 5670 DO 5680 IG=1,80                                                   10456500
+      XG(IG)=CM(IG,1)                                                   10456510
+ 5680 CONTINUE                                                          10456520
+      DO 5690 IC=1,15                                                   10456530
+      ICO=IC+20                                                         10456540
+      XC(IC)=CM(ICO,1)                                                  10456550
+ 5690 CONTINUE                                                          10456560
+C                                                                       10457010
+C     COMPUTE TABLE VALUES                                              10457020
+ 5700 DO 5740 IG=1,NGS                                                  10457030
+      FHG(IG)=0.0                                                       10457040
+      HHG(IG)=0.0                                                       10457050
+      WG(IG)=0.0                                                        10457060
+      IF (NGST(IG)) 5740,5740,5710                                      10457070
+ 5710 IF (IG-20) 5720,5720,5730                                         10457080
+ 5720 FHG(IG)=TLAIR(IG,1,T,0)                                           10457090
+      HHG(IG)=TLAIR(IG,2,T,0)                                           10457100
+      WG(IG)=TLAIR(IG,3,0.0,0)                                          10457110
+      GO TO 5740                                                        10457120
+ 5730 IGO=IG-20                                                         10457130
+      FHG(IG)=TLABL(IGO,1,T,0)                                          10457140
+      HHG(IG)=TLABL(IGO,2,T,0)                                          10457150
+      WG(IG)=TLABL(IGO,3,0.0,0)                                         10457160
+ 5740 CONTINUE                                                          10457170
+      DO 5760 IC=1,NCS                                                  10457180
+      FHC(IC)=0.0                                                       10457190
+      HHC(IC)=0.0                                                       10457200
+      WC(IC)=0.0                                                        10457210
+      IF (NCST(IC)) 5760,5750,5750                                      10457220
+ 5750 FHC(IC)=TLCND(IC,1,T,0)                                           10457230
+      HHC(IC)=TLCND(IC,2,T,0)                                           10457240
+      WC(IC)=TLCND(IC,3,0.0,0)                                          10457250
+ 5760 CONTINUE                                                          10457260
+C                                                                       10458010
+C     COMPUTE CG AND CC                                                 10458020
+ 5800 DO 5820 IG=1,NGS                                                  10458030
+      CG(IG)=0.0                                                        10458040
+      IF (NGST(IG)) 5820,5820,5810                                      10458050
+ 5810 CG(IG)=1.987*FHG(IG)/RC+PLOG                                      10458060
+ 5820 CONTINUE                                                          10458070
+      DO 5840 IC=1,NCS                                                  10458080
+      CC(IC)=0.0                                                        10458090
+      IF (NCST(IC)) 5840,5830,5830                                      10458100
+ 5830 CC(IC)=1.987*FHC(IC)/RC                                           10458110
+ 5840 CONTINUE                                                          10458120
+C                                                                       10460010
+C     PHASE LOOP                                                        10460020
+ 6000 DO 6890 IP=IPO,3                                                  10460030
+      IF (IPO-3) 6005,6100,6100                                         10460035
+ 6005 IF (IP-1) 6100,6100,6010                                          10460040
+ 6010 DO 6030 IG=1,NGS                                                  10460050
+      IF (NGST(IG)) 6030,6030,6020                                      10460060
+ 6020 XG(IG)=FXY                                                        10460070
+ 6030 CONTINUE                                                          10460080
+      DO 6050 IC=1,NCS                                                  10460090
+      IF (NCST(IC)) 6050,6050,6040                                      10460100
+ 6040 XC(IC)=ACS                                                        10460110
+ 6050 CONTINUE                                                          10460120
+C                                                                       10461010
+C     ITERATION LOOP                                                    10461020
+ 6100 DO 6790 IL=1,ITER                                                 10461030
+      DO 6120 IG=1,NGS                                                  10461040
+      IF (NGST(IG)) 6120,6120,6110                                      10461050
+ 6110 YG(IG)=XG(IG)                                                     10461060
+ 6120 CONTINUE                                                          10461070
+      NCSO=0                                                            10461100
+      DO 6140 IC=1,NCS                                                  10461110
+      IF (NCST(IC)) 6140,6140,6130                                      10461120
+ 6130 YC(IC)=XC(IC)                                                     10461130
+      NCSO=NCSO+1                                                       10461140
+      NCSL(NCSO)=IC                                                     10461150
+ 6140 CONTINUE                                                          10461160
+C                                                                       10462010
+C        COMPUTE VALUES                                                 10462020
+ 6200 YBAR=0.0                                                          10462030
+      DO 6220 IG=1,NGS                                                  10462040
+      IF (NGST(IG)) 6220,6220,6210                                      10462050
+ 6210 YBAR=YBAR+YG(IG)                                                  10462060
+ 6220 CONTINUE                                                          10462070
+      SFG=0.0                                                           10462100
+      DO 6240 IG=1,NGS                                                  10462110
+      IF (NGST(IG)) 6240,6240,6230                                      10462120
+ 6230 DMY=0.000000000001                                                10462125
+      YGL=AMAX1(YG(IG),DMY)                                             10462130
+      FG(IG)=YG(IG)*(CG(IG)+ALOG(YGL/YBAR))                             10462140
+      SFG=SFG+FG(IG)                                                    10462150
+ 6240 CONTINUE                                                          10462160
+      DO 6260 J=1,NESO                                                  10462200
+      JR=NESL(J)                                                        10462210
+      DO 6260 J1=1,NESO                                                 10462220
+      JC=NESL(J1)                                                       10462230
+      R(J,J1)=0.0                                                       10462240
+      DO 6260 IG=1,NGS                                                  10462250
+      IF (NGST(IG)) 6260,6260,6250                                      10462260
+ 6250 R(J,J1)=R(J,J1)+AG(IG,JR)*AG(IG,JC)*YG(IG)                        10462270
+ 6260 CONTINUE                                                          10462280
+      DO 6280 J=1,NESO                                                  10462300
+      JR=NESL(J)                                                        10462310
+      ALPHA(J)=0.0                                                      10462320
+      BT(J)=AW(JR)                                                      10462330
+      DO 6280 IG=1,NGS                                                  10462340
+      IF (NGST(IG)) 6280,6280,6270                                      10462350
+ 6270 ALPHA(J)=ALPHA(J)+AG(IG,JR)*YG(IG)                                10462360
+      BT(J)=BT(J)+AG(IG,JR)*FG(IG)                                      10462370
+ 6280 CONTINUE                                                          10462380
+C                                                                       10463010
+C        SOLVE SYSTEM                                                   10463020
+ 6300 DO 6310 IRW=1,28                                                  10463030
+      CNST(IRW)=0.0                                                     10463040
+      DO 6310 ICM=1,28                                                  10463050
+      COET(IRW,ICM)=0.0                                                 10463060
+ 6310 CONTINUE                                                          10463070
+      DO 6320 IRW=1,NESO                                                10463100
+      CNST(IRW)=BT(IRW)                                                 10463110
+      COET(IRW,1)=ALPHA(IRW)                                            10463120
+      COET(NESO+1,IRW+1)=ALPHA(IRW)                                     10463130
+      DO 6320 ICM=1,NESO                                                10463140
+      COET(IRW,ICM+1)=R(IRW,ICM)                                        10463150
+ 6320 CONTINUE                                                          10463160
+      CNST(NESO+1)=SFG                                                  10463170
+      ISTM=NESO+1+NCSO                                                  10463180
+      IF (NCSO) 6350,6350,6330                                          10463190
+ 6330 DO 6340 I=1,NCSO                                                  10463300
+      IC=NCSL(I)                                                        10463310
+      IRW=NESO+1+I                                                      10463320
+      CNST(IRW)=CC(IC)                                                  10463330
+      DO 6340 I1=1,NESO                                                 10463340
+      JR=NESL(I1)                                                       10463350
+      COET(IRW,I1+1)=AC(IC,JR)                                          10463360
+      COET(I1,IRW)=AC(IC,JR)                                            10463370
+ 6340 CONTINUE                                                          10463380
+ 6350 DO 6370 IRW=1,28                                                  10463500
+      CNST(IRW)=(1000.0/SCP)*CNST(IRW)                                  10463510
+      DO 6360 ICM=1,28                                                  10463520
+      COET(IRW,ICM)=(1000.0/SCP)*COET(IRW,ICM)                          10463530
+ 6360 CONTINUE                                                          10463540
+ 6370 CONTINUE                                                          10463550
+ 6380 M=ISIMEQ(28,ISTM,1,COET,CNST,DMY,IDMY)                            10463560
+      IF (M-2) 6400,6400,6390                                           10463570
+ 6390 IERR=3                                                            10463580
+      GO TO 6990                                                        10463590
+C                                                                       10464010
+C        STORE VARIABLES                                                10464020
+ 6400 XYBAR=COET(1,1)                                                   10464030
+      DO 6410 J=1,NESO                                                  10464040
+      PHI(J)=COET(J+1,1)                                                10464050
+ 6410 CONTINUE                                                          10464060
+      IF (NCSO) 6440,6440,6420                                          10464100
+ 6420 DO 6430 I=1,NCSO                                                  10464110
+      IC=NCSL(I)                                                        10464120
+      IRW=NESO+1+I                                                      10464130
+      XC(IC)=COET(IRW,1)                                                10464140
+ 6430 CONTINUE                                                          10464150
+ 6440 DO 6470 IG=1,NGS                                                  10464200
+      IF (NGST(IG)) 6470,6470,6450                                      10464210
+ 6450 XG(IG)=YG(IG)*XYBAR-FG(IG)                                        10464220
+      DO 6460 J=1,NESO                                                  10464230
+      JR=NESL(J)                                                        10464240
+      XG(IG)=XG(IG)+PHI(J)*AG(IG,JR)*YG(IG)                             10464250
+ 6460 CONTINUE                                                          10464260
+ 6470 CONTINUE                                                          10464270
+C                                                                       10465010
+C        SET UP POSITIVE SET                                            10465020
+ 6500 DO 6590 I1=1,25                                                   10465030
+      DXY=0.0                                                           10465040
+      IMIN=0                                                            10465050
+      DO 6510 IG=1,NGS                                                  10465060
+      IF (NGST(IG)) 6510,6510,6503                                      10465070
+ 6503 IF (XG(IG)) 6505,6505,6510                                        10465080
+ 6505 IF (XG(IG)-YG(IG)-DXY) 6507,6510,6510                             10465090
+ 6507 DXY=XG(IG)-YG(IG)                                                 10465100
+      IMIN=IG                                                           10465110
+ 6510 CONTINUE                                                          10465120
+      IF (NCSO) 6530,6530,6513                                          10465130
+ 6513 DO 6525 IC=1,NCS                                                  10465140
+      IF (NCST(IC)) 6525,6525,6515                                      10465150
+ 6515 IF (XC(IC)) 6517,6517,6525                                        10465160
+ 6517 IF (XC(IC)-YC(IC)-DXY) 6520,6525,6525                             10465170
+ 6520 DXY=XC(IC)-YC(IC)                                                 10465180
+      IMIN=-IC                                                          10465190
+ 6525 CONTINUE                                                          10465200
+ 6530 IF (IMIN) 6533,6600,6536                                          10465210
+ 6533 IMIN=-IMIN                                                        10465220
+      FTR=0.99*(-YC(IMIN)/DXY)                                          10465230
+      GO TO 6540                                                        10465240
+ 6536 FTR=0.99*(-YG(IMIN)/DXY)                                          10465250
+ 6540 XBAR=0.0                                                          10465270
+      DO 6545 IG=1,NGS                                                  10465280
+      IF (NGST(IG)) 6545,6545,6543                                      10465290
+ 6543 XBAR=XBAR+XG(IG)                                                  10465300
+ 6545 CONTINUE                                                          10465310
+      DFL=0.0                                                           10465320
+      DO 6550 IG=1,NGS                                                  10465330
+      IF (NGST(IG)) 6550,6550,6547                                      10465340
+ 6547 XGL=(YG(IG)+FTR*(XG(IG)-YG(IG)))/(YBAR+FTR*(XBAR-YBAR))           10465350
+      DMY=0.000000000001                                                10465355
+      XGL=AMAX1(XGL,DMY)                                                10465360
+      DFL=DFL+(XG(IG)-YG(IG))*(CG(IG)+ALOG(XGL))                        10465370
+ 6550 CONTINUE                                                          10465380
+      DO 6556 IC=1,NCS                                                  10465390
+      IF (NCST(IC)) 6556,6556,6553                                      10465400
+ 6553 DFL=DFL+(XC(IC)-YC(IC))*CC(IC)                                    10465410
+ 6556 CONTINUE                                                          10465420
+      IF (DFL) 6570,6570,6560                                           10465430
+ 6560 FTR=0.75*FTR                                                      10465440
+ 6570 FTR=AMAX1(FTR,0.01)                                               10465450
+      DO 6576 IG=1,NGS                                                  10465480
+      IF (NGST(IG)) 6576,6576,6573                                      10465490
+ 6573 XG(IG)=YG(IG)+FTR*(XG(IG)-YG(IG))                                 10465500
+ 6576 CONTINUE                                                          10465510
+      IF (NCSO) 6590,6590,6580                                          10465520
+ 6580 DO 6586 IC=1,NCS                                                  10465530
+      IF (NCST(IC)) 6586,6586,6583                                      10465540
+ 6583 XC(IC)=YC(IC)+FTR*(XC(IC)-YC(IC))                                 10465550
+ 6586 CONTINUE                                                          10465560
+ 6590 CONTINUE                                                          10465570
+      IERR=5                                                            10465580
+      GO TO 6990                                                        10465590
+C                                                                       10466010
+C        DELETE TRACE SPECIES                                           10466020
+ 6600 DMY=0.0000001                                                     10466025
+      TOR=AMIN1(TOLR/10.0,DMY)                                          10466030
+      STOT=0.0                                                          10466035
+      DO 6630 IG=1,NGS                                                  10466040
+      IF (NGST(IG)) 6630,6630,6610                                      10466050
+ 6610 IF (XG(IG)-TOR) 6620,6620,6625                                    10466060
+ 6620 NGST(IG)=0                                                        10466070
+ 6625 STOT=STOT+XG(IG)*WG(IG)                                           10466075
+ 6630 CONTINUE                                                          10466080
+      IF (NCSO) 6700,6700,6640                                          10466100
+ 6640 DO 6670 IC=1,NCS                                                  10466110
+      IF (NCST(IC)) 6670,6670,6650                                      10466120
+ 6650 IF (XC(IC)-TOR) 6660,6660,6665                                    10466130
+ 6660 NCST(IC)=0                                                        10466140
+ 6665 STOT=STOT+XC(IC)*WC(IC)                                           10466150
+ 6670 CONTINUE                                                          10466160
+C                                                                       10467010
+C        TEST FOR CONVERGENCE                                           10467020
+ 6700 DO 6720 IG=1,NGS                                                  10467030
+      IF (NGST(IG)) 6720,6720,6710                                      10467040
+ 6710 IF (ABS(XG(IG)-YG(IG))-TOLR) 6720,6720,6790                       10467050
+ 6720 CONTINUE                                                          10467060
+      IF (NCSO) 6760,6760,6730                                          10467100
+ 6730 DO 6750 IC=1,NCS                                                  10467110
+      IF (NCST(IC)) 6750,6750,6740                                      10467120
+ 6740 IF (ABS(XC(IC)-YC(IC))-TOLR) 6750,6750,6790                       10467130
+ 6750 CONTINUE                                                          10467140
+ 6760 IF (ABS((STOT/SCP)-1.0)-0.01) 6800,6800,6790                      10467150
+C                                                                       10467900
+ 6790 CONTINUE                                                          10467910
+      IERR=4                                                            10467920
+C                                                                       10468010
+C     ADD CONDENSED SPECIES                                             10468020
+ 6800 IF (IT-2) 6802,6900,6802                                          10468025
+ 6802 IADD=0                                                            10468030
+      IF (IP-2) 6803,6810,6890                                          10468033
+ 6803 IF (NCST(1)) 6890,6805,6890                                       10468036
+ 6805 IF (CC(1)-PHI(1)) 6807,6890,6890                                  10468040
+ 6807 NCST(1)=1                                                         10468043
+      GO TO 6890                                                        10468047
+ 6810 DO 6830 IC=1,15                                                   10468050
+      ADST(IC)=0.0                                                      10468060
+      IF (NCST(IC)) 6830,6815,6830                                      10468070
+ 6815 ADST(IC)=CC(IC)                                                   10468080
+      DO 6820 J=1,NESO                                                  10468090
+      JR=NESL(J)                                                        10468100
+      ADST(IC)=ADST(IC)-PHI(J)*AC(IC,JR)                                10468110
+ 6820 CONTINUE                                                          10468120
+ 6830 CONTINUE                                                          10468130
+      DO 6880 IC=1,NCS                                                  10468140
+      GO TO (6840,6850,6880,6850,6880,6850,6880,6840,6840),IC           10468150
+ 6840 IF (ADST(IC)) 6870,6880,6880                                      10468160
+ 6850 IF (ADST(IC)-ADST(IC+1)) 6840,6840,6860                           10468170
+ 6860 IF (ADST(IC+1)) 6865,6880,6880                                    10468180
+ 6865 IADD=1                                                            10468190
+      NCST(IC+1)=1                                                      10468200
+      GO TO 6880                                                        10468220
+ 6870 IADD=1                                                            10468230
+      NCST(IC)=1                                                        10468240
+ 6880 CONTINUE                                                          10468260
+      IF (IADD) 6900,6900,6890                                          10468270
+C                                                                       10468900
+ 6890 CONTINUE                                                          10468910
+C                                                                       10469010
+C     COMPOSITION AND ENTHALPY                                          10469020
+ 6900 DO 6920 IG=1,80                                                   10469030
+      CM(IG,1)=0.0                                                      10469040
+      CM(IG,2)=0.0                                                      10469050
+      IF (IG-NGS) 6910,6910,6920                                        10469060
+ 6910 IF (NGST(IG)) 6920,6920,6915                                      10469070
+ 6915 CM(IG,1)=XG(IG)                                                   10469080
+      CM(IG,2)=XG(IG)*WG(IG)                                            10469090
+ 6920 CONTINUE                                                          10469100
+      DO 6940 IC=1,15                                                   10469110
+      ICO=IC+80                                                         10469120
+      CM(ICO,1)=0.0                                                     10469130
+      CM(ICO,2)=0.0                                                     10469140
+      IF (IC-NCS) 6930,6930,6940                                        10469150
+ 6930 IF (NCST(IC)) 6940,6940,6935                                      10469160
+ 6935 CM(ICO,1)=XC(IC)                                                  10469170
+      CM(ICO,2)=XC(IC)*WC(IC)                                           10469180
+ 6940 CONTINUE                                                          10469190
+      HG=0.0                                                            10469300
+      GMW=0.0                                                           10469310
+      WGO=0.0                                                           10469320
+      DO 6950 IG=1,NGS                                                  10469330
+      IF (NGST(IG)) 6950,6950,6945                                      10469340
+ 6945 HG=HG+XG(IG)*HHG(IG)                                              10469350
+      GMW=GMW+XG(IG)                                                    10469360
+      WGO=WGO+XG(IG)*WG(IG)                                             10469370
+ 6950 CONTINUE                                                          10469380
+      GMW=WGO/GMW                                                       10469385
+      HG=1.8*HG/WGO                                                     10469390
+      HC=0.0                                                            10469400
+      WCO=0.0                                                           10469410
+      DO 6960 IC=1,NCS                                                  10469420
+      IF (NCST(IC)) 6960,6960,6955                                      10469430
+ 6955 HC=HC+XC(IC)*HHC(IC)                                              10469440
+      WCO=WCO+XC(IC)*WC(IC)                                             10469450
+ 6960 CONTINUE                                                          10469460
+      IF (WCO) 6990,6990,6970                                           10469470
+ 6970 HC=1.8*HC/WCO                                                     10469480
+C                                                                       10469900
+ 6990 RETURN                                                            10469910
+      END                                                               10469920
+$IBFTC TLAIR   NODD                                                     10480020
+C     FUNCTION TLAIR OF SUBROUTINE CHEMEQ                               10480030
+C     L.W. FESLER     196-415  SID                                      10480040
+C                                                                       10480050
+C                *****      *****      *****      *****                 10480060
+C                                                                       10480070
+C     THIS FUNCTION CONTAINS THE GASEOUS AIR SPECIES THERMODYNAMIC      10480080
+C     DATA EXPRESSED AS POLYNOMIAL APPROXIMATIONS.                      10480090
+C                                                                       10480100
+C        (H-DHF)/RT = A+B*T+C*T**2+D*T**3+E*T**4                        10480110
+C                                                                       10480120
+C        (F-DHF)/RT = A*(1.0-LOG(T))-B*T-(C/2.0)*T**2-(D/3.0)*T**3      10480130
+C                     -(E/4.0)*T**4-CK                                  10480140
+C                                                                       10480150
+C                *****      *****      *****      *****                 10480160
+C                                                                       10480200
+C     DATA STATEMENT FORMAT TDAIR(I,IS)                                 10480203
+C        01 - TABLE NUMBER                                              10480206
+C        02 - SPECIES NAME                                              10480210
+C        03 - NOT USED                                                  10480213
+C        04 - GAS MOLECULAR WEIGHT                                      10480216
+C        05 - HEAT OF FORMATION                                         10480220
+C        06 - NOT USED                                                  10480223
+C        07 - ATOMS OF CARBON                                           10480226
+C        08 - ATOMS OF OXYGEN                                           10480230
+C        09 - ATOMS OF HYDROGEN                                         10480233
+C        10 - ATOMS OF NITROGEN                                         10480236
+C        11 - ATOMS OF SILICON                                          10480240
+C        12 - ATOMS OF ELECTRONS                                        10480243
+C        13 - ATOMS OF ARGON                                            10480246
+C        14 - ATOMS OF ALUMINUM                                         10480250
+C        15 - ATOMS OF BORON                                            10480253
+C        16 - ATOMS OF CALCIUM                                          10480256
+C        17 - NOT USED                                                  10480260
+C        18 - NOT USED                                                  10480263
+C        19,25,31 - A                                                   10480266
+C        20,26,32 - B                                                   10480270
+C        21,27,33 - C                                                   10480273
+C        22,28,34 - D                                                   10480276
+C        23,29,35 - E                                                   10480280
+C        24,30,36 - CK                                                  10480283
+C                                                                       10480286
+C                *****      *****      *****      *****                 10480290
+C                                                                       10480300
+C     LIST OF ARGUMENTS                                                 10480310
+C        IS - TABLE NUMBER                                              10480320
+C        IV - DEPENDENT VARIABLE NUMBER                                 10480330
+C                                1-F/RT                                 10480340
+C                                2-H                                    10480350
+C                                3-GMW                                  10480360
+C                                4-A(IS,JE)                             10480370
+C        T  - INDEPENDENT VARIABLE                                      10480380
+C        JE - ELEMENT NUMBER                                            10480390
+C                                                                       10480400
+C                *****      *****      *****      *****                 10480410
+C                                                                       10480500
+      FUNCTION TLAIR(IS,IV,T,JE)                                        10480510
+C                                                                       10480520
+      DIMENSION TDAIR(36,20)                                            10480530
+C                                                                       10480600
+      DATA (TDAIR(I,01),I=1,36) /  1.0, 6HN2    , 1H ,                  10480610
+     1 28.016,      0.0  , 0.0,                                         10480611
+     2 0.0, 0.0, 0.0, 2.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10480612
+     3 0.35710170E 01,-0.45380000E-03, 0.82012504E-06,-0.37109232E-09,  10480613
+     4 0.57661586E-13, 0.28612033E 01,                                  10480614
+     5 0.31500579E 01, 0.58561452E-03,-0.13565538E-06, 0.16483379E-10,  10480615
+     6-0.80060153E-15, 0.46721904E 01,                                  10480616
+     7 0.35326328E 01, 0.27538232E-03,-0.37585858E-07, 0.24327028E-11,  10480617
+     8-0.47899839E-16, 0.25735255E 01 /                                 10480618
+      DATA (TDAIR(I,02),I=1,36) /  2.0, 6HO2    , 1H ,                  10480620
+     1 32.000,      0.0  , 0.0,                                         10480621
+     2 0.0, 2.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10480622
+     3 0.35083693E 01,-0.30303919E-03, 0.10960539E-05,-0.65520889E-09,  10480623
+     4 0.12752514E-12, 0.47219887E 01,                                  10480624
+     5 0.35080149E 01, 0.36524283E-03,-0.45809864E-07, 0.38419081E-11,  10480625
+     6-0.17020372E-15, 0.44241667E 01,                                  10480626
+     7 0.40725898E 01, 0.13809036E-03,-0.11493055E-07, 0.83653064E-12,  10480627
+     8-0.17433329E-16, 0.92952425E 00 /                                 10480628
+      DATA (TDAIR(I,03),I=1,36) /  3.0, 6HA     , 1H ,                  10480630
+     1 39.944,      0.0  , 0.0,                                         10480631
+     2 0.0, 0.0, 0.0, 0.0, 0.0,  0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10480632
+     3 0.25632821E 01,-0.35917696E-04, 0.74692076E-08,-0.67470340E-12,  10480633
+     4 0.22340191E-16, 0.40009390E 01,                                  10480634
+     5 0.25632821E 01,-0.35917696E-04, 0.74692076E-08,-0.67470340E-12,  10480635
+     6 0.22340191E-16, 0.40009390E 01,                                  10480636
+     7 0.24574266E 01, 0.10019740E-04, 0.36875247E-09,-0.21451270E-12,  10480637
+     8 0.11820686E-16, 0.46394071E 01 /                                 10480638
+      DATA (TDAIR(I,04),I=1,36) /  4.0, 6HNO    , 1H ,                  10480640
+     1 30.008,  21477.000, 0.0,                                         10480641
+     2 0.0, 1.0, 0.0, 1.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10480642
+     3 0.39279639E 01,-0.12064916E-02, 0.18034135E-05,-0.90791018E-09,  10480643
+     4 0.16061294E-12, 0.34627022E 01,                                  10480644
+     5 0.33806329E 01, 0.51528176E-03,-0.12150505E-06, 0.14929798E-10,  10480645
+     6-0.73135025E-15, 0.56646578E 01,                                  10480646
+     7 0.39864263E 01, 0.10947758E-03,-0.11232592E-07, 0.71394383E-12,  10480647
+     8-0.13902358E-16, 0.22166637E 01 /                                 10480648
+      DATA (TDAIR(I,05),I=1,36) /  5.0, 6HN     , 1H ,                  10480650
+     1 14.008, 112590.640, 0.0,                                         10480651
+     2 0.0, 0.0, 0.0, 1.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10480652
+     3 0.24982132E 01, 0.74508277E-05,-0.10039447E-07, 0.57441899E-11,  10480653
+     4-0.11719578E-14, 0.41957751E 01,                                  10480654
+     5 0.24240862E 01, 0.10019211E-03,-0.47088335E-07, 0.89629050E-11,  10480655
+     6-0.49697306E-15, 0.45553945E 01,                                  10480656
+     7 0.22709060E 01, 0.56908488E-05, 0.13919943E-07,-0.98269092E-12,  10480657
+     8 0.20694811E-16, 0.57505818E 01 /                                 10480658
+      DATA (TDAIR(I,06),I=1,36) /  6.0, 6HO     , 1H ,                  10480660
+     1 16.000,  58980.000, 0.0,                                         10480661
+     2 0.0, 1.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10480662
+     3 0.28350605E 01,-0.51133283E-03, 0.41351121E-06,-0.16728894E-09,  10480663
+     4 0.26544993E-13, 0.34652811E 01,                                  10480664
+     5 0.26212192E 01,-0.45548896E-04, 0.40810460E-08, 0.92530057E-12,  10480665
+     6-0.99494870E-16, 0.44182308E 01,                                  10480666
+     7 0.24064829E 01, 0.30989428E-04,-0.49745093E-09,-0.60177432E-13,  10480667
+     8 0.30351736E-17, 0.57316839E 01 /                                 10480668
+      DATA (TDAIR(I,07),I=1,36) /  7.0, 6HE     , 1H ,                  10480670
+     1  0.001,      0.0  , 0.0,                                         10480671
+     2 0.0, 0.0, 0.0, 0.0, 0.0,  1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10480672
+     3 2.5, 0.0, 0.0, 0.0,                                              10480673
+     4 0.0, -11.735,                                                    10480674
+     5 2.5, 0.0, 0.0, 0.0,                                              10480675
+     6 0.0, -11.735,                                                    10480676
+     7 2.5, 0.0, 0.0, 0.0,                                              10480677
+     8 0.0, -11.735 /                                                   10480678
+      DATA (TDAIR(I,08),I=1,36) /  8.0, 6HN2+   , 1H ,                  10480680
+     1 28.015, 359229.000, 0.0,                                         10480681
+     2 0.0, 0.0, 0.0, 2.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10480682
+     3 0.24540084E 01, 0.79368908E-03,-0.87237414E-07, 0.43243693E-11,  10480683
+     4-0.80372748E-16, 0.95957417E 01,                                  10480684
+     5 0.24540084E 01, 0.79368908E-03,-0.87237414E-07, 0.43243693E-11,  10480685
+     6-0.80372748E-16, 0.95957417E 01,                                  10480686
+     7 0.29073906E 01, 0.59780307E-03,-0.57077224E-07, 0.23758124E-11,  10480687
+     8-0.35938098E-16, 0.68555503E 01 /                                 10480688
+      DATA (TDAIR(I,09),I=1,36) /  9.0, 6HO2+   , 1H ,                  10480690
+     1 31.999, 277909.000, 0.0,                                         10480691
+     2 0.0, 2.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10480692
+     3 0.38698004E 01, 0.18327366E-03,-0.33380012E-07, 0.35324529E-11,  10480693
+     4-0.10394630E-15, 0.23671114E 01,                                  10480694
+     5 0.38698004E 01, 0.18327366E-03,-0.33380012E-07, 0.35324529E-11,  10480695
+     6-0.10394630E-15, 0.23671114E 01,                                  10480696
+     7 0.53113509E 01,-0.44114506E-03, 0.63044119E-07,-0.27151973E-11,  10480697
+     8 0.38877355E-16,-0.63310571E 01 /                                 10480698
+      DATA (TDAIR(I,10),I=1,36) / 10.0, 6HNO+   , 1H ,                  10480700
+     1 30.007, 235330.000, 0.0,                                         10480701
+     2 0.0, 1.0, 0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10480702
+     3 0.33973853E 01, 0.37493844E-03,-0.60620299E-07, 0.46375057E-11,  10480703
+     4-0.11077039E-15, 0.42005627E 01,                                  10480704
+     5 0.33973853E 01, 0.37493844E-03,-0.60620299E-07, 0.46375057E-11,  10480705
+     6-0.11077039E-15, 0.42005627E 01,                                  10480706
+     7 0.42572272E 01, 0.35013199E-05,-0.34131434E-08, 0.93940866E-12,  10480707
+     8-0.26387290E-16,-0.98682264E 00 /                                 10480708
+      DATA (TDAIR(I,11),I=1,36) / 11.0, 6HN+    , 1H ,                  10480710
+     1 14.007, 447837.000, 0.0,                                         10480711
+     2 0.0, 0.0, 0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10480712
+     3 0.25757910E 01,-0.37015943E-04, 0.95137883E-08,-0.65765024E-12,  10480713
+     4 0.15109594E-16, 0.44944800E 01,                                  10480714
+     5 0.25757910E 01,-0.37015943E-04, 0.95137883E-08,-0.65765024E-12,  10480715
+     6 0.15109594E-16, 0.44944800E 01,                                  10480716
+     7 0.24359303E 01, 0.23315832E-04, 0.23137100E-09,-0.58013265E-13,  10480717
+     8 0.14331832E-17, 0.53375241E 01 /                                 10480718
+      DATA (TDAIR(I,12),I=1,36) / 12.0, 6HO+    , 1H ,                  10480720
+     1 15.999, 372969.000, 0.0,                                         10480721
+     2 0.0, 1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10480722
+     3 0.27407408E 01,-0.11438162E-03, 0.16119922E-07,-0.51316881E-12,  10480723
+     4 0.18620895E-17, 0.29625601E 01,                                  10480724
+     5 0.27407408E 01,-0.11438162E-03, 0.16119922E-07,-0.51316881E-12,  10480725
+     6 0.18620895E-17, 0.29625601E 01,                                  10480726
+     7 0.29287151E 01,-0.19585564E-03, 0.28715020E-07,-0.13302722E-11,  10480727
+     8 0.20563094E-16, 0.18307374E 01 /                                 10480728
+      DATA (TDAIR(I,13),I=1,36) / 13.0, 6HA+    , 1H ,                  10480730
+     1 39.943, 363318.000, 0.0,                                         10480731
+     2 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10480732
+     3 0.27309989E 01,-0.41325008E-04, 0.40298716E-08,-0.20074317E-12,  10480733
+     4 0.39733576E-17, 0.44659938E 01,                                  10480734
+     5 0.27309989E 01,-0.41325008E-04, 0.40298716E-08,-0.20074317E-12,  10480735
+     6 0.39733576E-17, 0.44659938E 01,                                  10480736
+     7 0.27162466E 01,-0.35024099E-04, 0.30694577E-08,-0.13919427E-12,  10480737
+     8 0.25783810E-17, 0.45550237E 01 /                                 10480738
+      DATA (TDAIR(I,14),I=1,36) / 14.0, 6HO-    , 1H ,                  10480740
+     1 16.001,  26701.200, 0.0,                                         10480741
+     2 0.0, 1.0, 0.0, 0.0, 0.0,  1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10480742
+     3 0.27530840E 01,-0.21699334E-03, 0.54397483E-07,-0.39586343E-11,  10480743
+     4 0.92511296E-16, 0.34579083E 01,                                  10480744
+     5 0.27530840E 01,-0.21699334E-03, 0.54397483E-07,-0.39586343E-11,  10480745
+     6 0.92511296E-16, 0.34579083E 01,                                  10480746
+     7 0.18754903E 01, 0.16193706E-03,-0.39489625E-08,-0.18725630E-12,  10480747
+     8 0.64572398E-17, 0.87469047E 01 /                                 10480748
+      DATA (TDAIR(I,15),I=1,36) / 36*0.0 /                              10480750
+      DATA (TDAIR(I,16),I=1,36) / 36*0.0 /                              10480760
+      DATA (TDAIR(I,17),I=1,36) / 36*0.0 /                              10480770
+      DATA (TDAIR(I,18),I=1,36) / 36*0.0 /                              10480780
+      DATA (TDAIR(I,19),I=1,36) / 36*0.0 /                              10480790
+      DATA (TDAIR(I,20),I=1,36) / 36*0.0 /                              10480800
+C                                                                       10481010
+ 8100 IF (IV-3) 8130,8110,8120                                          10481020
+ 8110 TLAIR=TDAIR(4,IS)                                                 10481030
+      GO TO 8190                                                        10481040
+ 8120 TLAIR=TDAIR(JE+6,IS)                                              10481050
+      GO TO 8190                                                        10481060
+ 8130 IT=19                                                             10481100
+      IF (T-2000.0) 8160,8160,8140                                      10481110
+ 8140 IT=25                                                             10481120
+      IF (T-6000.0) 8160,8160,8150                                      10481130
+ 8150 IT=31                                                             10481140
+ 8160 A=TDAIR(IT,IS)                                                    10481200
+      B=TDAIR(IT+1,IS)                                                  10481210
+      C=TDAIR(IT+2,IS)                                                  10481220
+      D=TDAIR(IT+3,IS)                                                  10481230
+      E=TDAIR(IT+4,IS)                                                  10481240
+      CK=TDAIR(IT+5,IS)                                                 10481250
+      DHF=TDAIR(5,IS)                                                   10481260
+      R=1.987                                                           10481270
+      IF (IV-1) 8170,8170,8180                                          10481300
+ 8170 FRTO=-(((E*T/4.0+D/3.0)*T+C/2.0)*T+B)*T+A-CK-A*ALOG(T)            10481310
+      TLAIR=FRTO+DHF/(R*T)                                              10481320
+      GO TO 8190                                                        10481330
+ 8180 HO=(((E*T+D)*T+C)*T+B)*T+A                                        10481340
+      TLAIR=R*T*HO+DHF                                                  10481350
+ 8190 RETURN                                                            10481500
+      END                                                               10481510
+$IBFTC TLABL   NODD                                                     10482020
+C     FUNCTION TLABL OF SUBROUTINE CHEMEQ                               10482030
+C     L.W. FESLER     196-415  SID                                      10482040
+C                                                                       10482050
+C                *****      *****      *****      *****                 10482060
+C                                                                       10482070
+C     THIS FUNCTION CONTAINS THE GASEOUS ABLATION PRODUCTS SPECIES      10482080
+C     THERMODYNAMIC DATA EXPRESSED AS POLYNOMIAL APPROXIMATIONS.        10482090
+C                                                                       10482100
+C        (H-DHF)/RT = A+B*T+C*T**2+D*T**3+E*T**4                        10482110
+C                                                                       10482120
+C        (F-DHF)/RT = A*(1.0-LOG(T))-B*T-(C/2.0)*T**2-(D/3.0)*T**3      10482130
+C                     -(E/4.0)*T**4-CK                                  10482140
+C                                                                       10482150
+C                *****      *****      *****      *****                 10482160
+C                                                                       10482200
+C     DATA STATEMENT FORMAT TDABL(30,60)                                10482203
+C        01 - TABLE NUMBER                                              10482206
+C        02 - SPECIES NAME                                              10482210
+C        03 - NOT USED                                                  10482213
+C        04 - GAS MOLECULAR WEIGHT                                      10482216
+C        05 - HEAT OF FORMATION                                         10482220
+C        06 - NOT USED                                                  10482223
+C        07 - ATOMS OF CARBON                                           10482226
+C        08 - ATOMS OF OXYGEN                                           10482230
+C        09 - ATOMS OF HYDROGEN                                         10482233
+C        10 - ATOMS OF NITROGEN                                         10482236
+C        11 - ATOMS OF SILICON                                          10482240
+C        12 - ATOMS OF ELECTRONS                                        10482243
+C        13 - ATOMS OF ARGON                                            10482246
+C        14 - ATOMS OF ALUMINUM                                         10482250
+C        15 - ATOMS OF BORON                                            10482253
+C        16 - ATOMS OF CALCIUM                                          10482256
+C        17 - NOT USED                                                  10482260
+C        18 - NOT USED                                                  10482263
+C        19,25 - A                                                      10482266
+C        20,26 - B                                                      10482270
+C        21,27 - C                                                      10482273
+C        22,28 - D                                                      10482276
+C        23,29 - E                                                      10482280
+C        24,30 - CK                                                     10482283
+C                                                                       10482286
+C                *****      *****      *****      *****                 10482290
+C                                                                       10482295
+C     LIST OF ARGUMENTS                                                 10482300
+C        IS - TABLE NUMBER                                              10482303
+C        IV - DEPENDENT VARIABLE NUMBER                                 10482306
+C                                1-F/RT                                 10482310
+C                                2-H                                    10482313
+C                                3-GMW                                  10482316
+C                                4-A(IS,JE)                             10482320
+C        T  - INDEPENDENT VARIABLE                                      10482323
+C        JE - ELEMENT NUMBER                                            10482326
+C                                                                       10482330
+C                *****      *****      *****      *****                 10482335
+C                                                                       10482350
+      FUNCTION TLABL(IS,IV,T,JE)                                        10482360
+C                                                                       10482370
+      DIMENSION TDABL(30,60)                                            10482380
+      COMMON /ABL/ TDABL                                                10482385
+C                                                                       10482390
+C**** BECAUSE OF THE LIMITATIONS AND INADEQUACY OF THE FORTRAN IV       10482400
+C**** SYSTEM IT WAS NECESSARY TO DIVIDE THE PERMANENT DATA ARRAY        10482410
+C**** TDABL(30,60) INTO TWO SECTIONS AND ENTER THE DATA BY BLOCK        10482420
+C**** DATA PROGRAMS BLK1 AND BLK2.                                      10482430
+C                                                                       10483010
+ 8300 IF (IV-3) 8330,8310,8320                                          10483020
+ 8310 TLABL=TDABL(4,IS)                                                 10483030
+      GO TO 8390                                                        10483040
+ 8320 TLABL=TDABL(JE+6,IS)                                              10483050
+      GO TO 8390                                                        10483060
+ 8330 IT=19                                                             10483100
+      IF (T-2000.0) 8360,8360,8340                                      10483110
+ 8340 IT=25                                                             10483120
+ 8360 A=TDABL(IT,IS)                                                    10483200
+      B=TDABL(IT+1,IS)                                                  10483210
+      C=TDABL(IT+2,IS)                                                  10483220
+      D=TDABL(IT+3,IS)                                                  10483230
+      E=TDABL(IT+4,IS)                                                  10483240
+      CK=TDABL(IT+5,IS)                                                 10483250
+      DHF=TDABL(5,IS)                                                   10483260
+      R=1.987                                                           10483270
+      IF (IV-1) 8370,8370,8380                                          10483300
+ 8370 FRTO=-(((E*T/4.0+D/3.0)*T+C/2.0)*T+B)*T+A-CK-A*ALOG(T)            10483310
+      TLABL=FRTO+DHF/(R*T)                                              10483320
+      GO TO 8390                                                        10483330
+ 8380 HO=(((E*T+D)*T+C)*T+B)*T+A                                        10483340
+      TLABL=R*T*HO+DHF                                                  10483350
+ 8390 RETURN                                                            10483500
+      END                                                               10483510
+$IBFTC BLK1    NODD                                                     10482020
+C     BLOCK DATA FOR FUNCTION TLABL                                     10482030
+C     L.W. FESLER     196-415  SID                                      10482040
+C                                                                       10482050
+      BLOCK DATA                                                        10482060
+      DIMENSION TDABL(30,60)                                            10482070
+      COMMON /ABL/ TDABL                                                10482080
+C                                                                       10482390
+      DATA (TDABL(I,01),I=1,30) /  1.0, 6HH2    , 1H ,                  10482400
+     1  2.016,      0.0  , 0.0,                                         10482401
+     2 0.0, 0.0, 2.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482402
+     3 0.34332800E 01,-0.81710003E-05, 0.96699001E-07,-0.14439200E-10,  10482403
+     4 0.00000000E 00,-0.38447000E 01,                                  10482404
+     5 0.32375731E 01, 0.23187578E-03, 0.50938301E-08,-0.39631804E-11,  10482405
+     6 0.29310414E-15,-0.28804000E 01 /                                 10482406
+      DATA (TDABL(I,02),I=1,30) /  2.0, 6HH     , 1H ,                  10482410
+     1  1.008,  51620.000, 0.0,                                         10482411
+     2 0.0, 0.0, 1.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482412
+     3 0.25000000E 01, 0.00000000E 00, 0.00000000E 00, 0.00000000E 00,  10482413
+     4 0.00000000E 00,-0.45931002E 00,                                  10482414
+     5 0.25000000E 01, 0.00000000E 00, 0.00000000E 00, 0.00000000E 00,  10482415
+     6 0.00000000E 00,-0.45931002E 00 /                                 10482416
+      DATA (TDABL(I,03),I=1,30) /  3.0, 6HH2O   , 1H ,                  10482420
+     1 18.016, -57103.000, 0.0,                                         10482421
+     2 0.0, 1.0, 2.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482422
+     3 0.40163995E 01,-0.32429851E-03, 0.95815507E-06,-0.38905443E-09,  10482423
+     4 0.54982065E-13,-0.10525896E 00,                                  10482424
+     5 0.32070284E 01, 0.12329580E-02,-0.21374240E-06, 0.20194233E-10,  10482425
+     6-0.78968023E-15, 0.35982653E 01 /                                 10482426
+      DATA (TDABL(I,04),I=1,30) /  4.0, 6HOH    , 1H ,                  10482430
+     1 17.008,   9273.000, 0.0,                                         10482431
+     2 0.0, 1.0, 1.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482432
+     3 0.35582589E 01, 0.41086110E-04,-0.17715295E-06, 0.20736232E-09,  10482433
+     4-0.51894624E-13, 0.18252661E 01,                                  10482434
+     5 0.31996845E 01, 0.36306351E-03,-0.46935213E-07, 0.30640791E-11,  10482435
+     6-0.63828070E-16, 0.36251730E 01 /                                 10482436
+      DATA (TDABL(I,05),I=1,30) / 30*0.0 /                              10482440
+      DATA (TDABL(I,06),I=1,30) /  6.0, 6HC     , 1H ,                  10482450
+     1 12.011, 169580.000, 0.0,                                         10482451
+     2 1.0, 0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482452
+     3 0.26167394E 01,-0.10759307E-03, 0.38601044E-07,-0.45084646E-11,  10482453
+     4 0.18258099E-15, 0.41144000E 01,                                  10482454
+     5 0.26167394E 01,-0.10759307E-03, 0.38601044E-07,-0.45084646E-11,  10482455
+     6 0.18258099E-15, 0.41144000E 01 /                                 10482456
+      DATA (TDABL(I,07),I=1,30) /  7.0, 6HC2    , 1H ,                  10482460
+     1 24.022, 198000.000, 0.0,                                         10482461
+     2 2.0, 0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482462
+     3 0.46083000E 01,-0.43094741E-03, 0.25534049E-06,-0.50605532E-10,  10482463
+     4 0.34887751E-14,-0.18514979E 01,                                  10482464
+     5 0.46083000E 01,-0.43094741E-03, 0.25534049E-06,-0.50605532E-10,  10482465
+     6 0.34887751E-14,-0.18514979E 01 /                                 10482466
+      DATA (TDABL(I,08),I=1,30) /  8.0, 6HC3    , 1H ,                  10482470
+     1 36.033, 189000.000, 0.0,                                         10482471
+     2 3.0, 0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482472
+     3 0.40611273E 01, 0.25016562E-02,-0.14916690E-05, 0.53389410E-09,  10482473
+     4-0.76824207E-13, 0.10152922E 01,                                  10482474
+     5 0.45770171E 01, 0.11354603E-02,-0.20837176E-06, 0.17096995E-10,  10482475
+     6-0.49578196E-15,-0.99026691E 00 /                                 10482476
+      DATA (TDABL(I,09),I=1,30) /  9.0, 6HCO    , 1H ,                  10482480
+     1 28.011, -27200.000, 0.0,                                         10482481
+     2 1.0, 1.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482482
+     3 0.35762013E 01,-0.50856456E-03, 0.98468426E-06,-0.48194529E-09,  10482483
+     4 0.80773933E-13, 0.35749098E 01,                                  10482484
+     5 0.32107929E 01, 0.56428421E-03,-0.12910708E-06, 0.15422228E-10,  10482485
+     6-0.73561882E-15, 0.50686030E 01 /                                 10482486
+      DATA (TDABL(I,10),I=1,30) / 10.0, 6HCO2   , 1H ,                  10482490
+     1 44.011, -93965.000, 0.0,                                         10482491
+     2 1.0, 2.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482492
+     3 0.29022453E 01, 0.32561896E-02,-0.11822300E-05, 0.16317823E-09,  10482493
+     4 0.45991777E-14, 0.73711025E 01,                                  10482494
+     5 0.39341597E 01, 0.17218579E-02,-0.42399979E-06, 0.53086876E-10,  10482495
+     6-0.26159483E-14, 0.24342309E 01 /                                 10482496
+      DATA (TDABL(I,11),I=1,30) / 11.0, 6HCN    , 1H ,                  10482500
+     1 26.019, 108215.000, 0.0,                                         10482501
+     2 1.0, 0.0, 0.0, 1.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482502
+     3 0.35716587E 01,-0.50942533E-03, 0.10461930E-05,-0.53693795E-09,  10482503
+     4 0.95984557E-13, 0.41938270E 01,                                  10482504
+     5 0.36361025E 01, 0.12787315E-04, 0.11587906E-06,-0.20653567E-10,  10482505
+     6 0.10937905E-14, 0.35873899E 01 /                                 10482506
+      DATA (TDABL(I,12),I=1,30) / 12.0, 6HC2N2  , 1H ,                  10482510
+     1 52.038,  73428.000, 0.0,                                         10482511
+     2 2.0, 0.0, 0.0, 2.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482512
+     3 0.31064808E 01, 0.84281380E-02,-0.64932457E-05, 0.27374549E-08,  10482513
+     4-0.46113706E-12, 0.71130328E 01,                                  10482514
+     5 0.56847845E 01, 0.23270883E-02,-0.58848133E-06, 0.74573633E-10,  10482515
+     6-0.37309927E-14,-0.42422010E 01 /                                 10482516
+      DATA (TDABL(I,13),I=1,30) / 13.0, 6HHCN   , 1H ,                  10482520
+     1 27.027,  31291.000, 0.0,                                         10482521
+     2 1.0, 0.0, 1.0, 1.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482522
+     3 0.29900835E 01, 0.28133083E-02,-0.12460734E-05, 0.38078708E-09,  10482523
+     4-0.54247180E-13, 0.57018982E 01,                                  10482524
+     5 0.35669684E 01, 0.17255994E-02,-0.38346782E-06, 0.45334635E-10,  10482525
+     6-0.21560801E-14, 0.30302629E 01 /                                 10482526
+      DATA (TDABL(I,14),I=1,30) / 30*0.0 /                              10482530
+      DATA (TDABL(I,15),I=1,30) / 15.0, 6HCH    , 1H ,                  10482540
+     1 13.019, 140400.000, 0.0,                                         10482541
+     2 1.0, 0.0, 1.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482542
+     3 0.28257001E 01, 0.10263324E-02,-0.27358156E-06, 0.37943585E-10,  10482543
+     4-0.20471105E-14, 0.51903999E 01,                                  10482544
+     5 0.28257001E 01, 0.10263324E-02,-0.27358156E-06, 0.37943585E-10,  10482545
+     6-0.20471105E-14, 0.51903999E 01 /                                 10482546
+      DATA (TDABL(I,16),I=1,30) / 16.0, 6HCH2   , 1H ,                  10482550
+     1 14.027,  66800.000, 0.0,                                         10482551
+     2 1.0, 0.0, 2.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482552
+     3 0.41719941E 01,-0.12281708E-02, 0.27862253E-05,-0.13699268E-08,  10482553
+     4 0.23149420E-12,-0.13597490E-01,                                  10482554
+     5 0.29730734E 01, 0.19864158E-02,-0.43346948E-06, 0.54597060E-10,  10482555
+     6-0.29521265E-14, 0.50497741E 01 /                                 10482556
+      DATA (TDABL(I,17),I=1,30) / 17.0, 6HCH3   , 1H ,                  10482560
+     1 15.035,  33400.000, 0.0,                                         10482561
+     2 1.0, 0.0, 3.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482562
+     3 0.38732017E 01, 0.58091294E-04, 0.24043293E-05,-0.13392185E-08,  10482563
+     4 0.23656423E-12, 0.10135495E 01,                                  10482564
+     5 0.28534190E 01, 0.30017346E-02,-0.69738700E-06, 0.83750037E-10,  10482565
+     6-0.40427253E-14, 0.52291692E 01 /                                 10482566
+      DATA (TDABL(I,18),I=1,30) / 18.0, 6HCH4   , 1H ,                  10482570
+     1 16.043, -15987.000, 0.0,                                         10482571
+     2 1.0, 0.0, 4.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482572
+     3 0.38795723E 01,-0.11941799E-02, 0.61483753E-05,-0.38163569E-08,  10482573
+     4 0.79973610E-12, 0.25274362E 00,                                  10482574
+     5 0.21142316E 01, 0.46999314E-02,-0.11162007E-05, 0.13638225E-09,  10482575
+     6-0.66735613E-14, 0.72880040E 01 /                                 10482576
+      DATA (TDABL(I,19),I=1,30) / 19.0, 6HC2H   , 1H ,                  10482580
+     1 25.030, 116700.000, 0.0,                                         10482581
+     2 2.0, 0.0, 1.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482582
+     3 0.30062715E 01, 0.27689386E-02,-0.11704486E-05, 0.31215005E-09,  10482583
+     4-0.37926176E-13, 0.69208020E 01,                                  10482584
+     5 0.35134808E 01, 0.17945357E-02,-0.44103586E-06, 0.57630263E-10,  10482585
+     6-0.30599071E-14, 0.46019891E 01 /                                 10482586
+      DATA (TDABL(I,20),I=1,30) / 20.0, 6HC2H2  , 1H ,                  10482590
+     1 26.038,  54329.000, 0.0,                                         10482591
+     2 2.0, 0.0, 2.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482592
+     3 0.23289312E 01, 0.70891094E-02,-0.53113534E-05, 0.24484787E-08,  10482593
+     4-0.47113463E-12, 0.72793016E 01,                                  10482594
+     5 0.39188681E 01, 0.29099296E-02,-0.70821408E-06, 0.88418588E-10,  10482595
+     6-0.44052944E-14, 0.44387526E 00 /                                 10482596
+      DATA (TDABL(I,21),I=1,30) / 21.0, 6HC2H4  , 1H ,                  10482600
+     1 28.054,  14522.000, 0.0,                                         10482601
+     2 2.0, 0.0, 4.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482602
+     3 0.25126357E 01, 0.51356317E-02, 0.95158218E-06,-0.15770466E-08,  10482603
+     4 0.40690971E-12, 0.87992938E 01,                                  10482604
+     5 0.27714255E 01, 0.60302800E-02,-0.14936028E-05, 0.18842894E-09,  10482605
+     6-0.94492063E-14, 0.70208985E 01 /                                 10482606
+      DATA (TDABL(I,22),I=1,30) / 22.0, 6HC2H6  , 1H ,                  10482610
+     1 30.070, -16517.000, 0.0,                                         10482611
+     2 2.0, 0.0, 6.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482612
+     3 0.28820337E 01, 0.51609956E-02, 0.39714804E-05,-0.37081981E-08,  10482613
+     4 0.89499087E-12, 0.75890567E 01,                                  10482614
+     5 0.14308044E 01, 0.94449137E-02,-0.23480331E-05, 0.29680060E-09,  10482615
+     6-0.14899616E-13, 0.14508035E 02 /                                 10482616
+      DATA (TDABL(I,23),I=1,30) / 23.0, 6HC3H   , 1H ,                  10482620
+     1 37.041, 127100.000, 0.0,                                         10482621
+     2 3.0, 0.0, 1.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482622
+     3 0.24738457E 01, 0.58754341E-02,-0.26816217E-05, 0.68224095E-09,  10482623
+     4-0.70896669E-13, 0.10543281E 02,                                  10482624
+     5 0.39647124E 01, 0.31001513E-02,-0.75517814E-06, 0.92928222E-10,  10482625
+     6-0.45250161E-14, 0.37058851E 01 /                                 10482626
+      DATA (TDABL(I,24),I=1,30) / 24.0, 6HC3H2  , 1H ,                  10482630
+     1 38.049, 106700.000, 0.0,                                         10482631
+     2 3.0, 0.0, 2.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482632
+     3 0.16680767E 01, 0.11096069E-01,-0.73086456E-05, 0.27752806E-08,  10482633
+     4-0.43068258E-12, 0.13049121E 02,                                  10482634
+     5 0.45017672E 01, 0.43481052E-02,-0.10515540E-05, 0.13104652E-09,  10482635
+     6-0.65298127E-14, 0.68046870E 00 /                                 10482636
+      DATA (TDABL(I,25),I=1,30) / 25.0, 6HC3H3  , 1H ,                  10482640
+     1 39.057,  77300.000, 0.0,                                         10482641
+     2 3.0, 0.0, 3.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482642
+     3 0.25883490E 01, 0.94553431E-02,-0.46425397E-05, 0.13852428E-08,  10482643
+     4-0.18153173E-12, 0.10317994E 02,                                  10482644
+     5 0.46580022E 01, 0.52533909E-02,-0.13184641E-05, 0.16806648E-09,  10482645
+     6-0.84964306E-14, 0.96578907E 00 /                                 10482646
+      DATA (TDABL(I,26),I=1,30) / 26.0, 6HC3H4  , 1H ,                  10482650
+     1 40.065,  46017.000, 0.0,                                         10482651
+     2 3.0, 0.0, 4.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482652
+     3 0.27456673E 01, 0.89646730E-02,-0.24146174E-05,-0.18017475E-10,  10482653
+     4 0.11837438E-12, 0.91385314E 01,                                  10482654
+     5 0.42478072E 01, 0.68147984E-02,-0.17049343E-05, 0.21671030E-09,  10482655
+     6-0.10929408E-13, 0.19597684E 01 /                                 10482656
+      DATA (TDABL(I,27),I=1,30) / 27.0, 6HC4H   , 1H ,                  10482660
+     1 49.052, 154000.000, 0.0,                                         10482661
+     2 4.0, 0.0, 1.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482662
+     3 0.26958197E 01, 0.11338410E-01,-0.81694026E-05, 0.32868476E-08,  10482663
+     4-0.53474997E-12, 0.10403358E 02,                                  10482664
+     5 0.58736852E 01, 0.37016900E-02,-0.90964158E-06, 0.11093365E-09,  10482665
+     6-0.52750488E-14,-0.34665899E 01 /                                 10482666
+      DATA (TDABL(I,28),I=1,30) / 28.0, 6HC4H2  , 1H ,                  10482670
+     1 50.060, 111300.000, 0.0,                                         10482671
+     2 4.0, 0.0, 2.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482672
+     3 0.20709969E 01, 0.15778182E-01,-0.12167776E-04, 0.51191154E-08,  10482673
+     4-0.85545302E-12, 0.10341325E 02,                                  10482674
+     5 0.63751956E 01, 0.48240731E-02,-0.12354182E-05, 0.15976494E-09,  10482675
+     6-0.81617653E-14,-0.81913174E 01 /                                 10482676
+      DATA (TDABL(I,29),I=1,30) / 29.0, 6HC5H4  , 1H ,                  10482680
+     1 64.087, 103600.000, 0.0,                                         10482681
+     2 5.0, 0.0, 4.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482682
+     3 0.24680605E 01, 0.21145341E-01,-0.14297878E-04, 0.55644763E-08,  10482683
+     4-0.89018613E-12, 0.11210826E 02,                                  10482684
+     5 0.79318016E 01, 0.81754555E-02,-0.20979093E-05, 0.27149224E-09,  10482685
+     6-0.13871758E-13,-0.12705896E 02 /                                 10482686
+      DATA (TDABL(I,30),I=1,30) / 30.0, 6HC6H6  , 1H ,                  10482690
+     1 78.114,  24000.000, 0.0,                                         10482691
+     2 6.0, 0.0, 6.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482692
+     3 0.35111861E 00, 0.18769964E-01,-0.26490692E-05,-0.18772620E-08,  10482693
+     4 0.60770927E-12, 0.19860121E 02,                                  10482694
+     5 0.46198719E 01, 0.14404811E-01,-0.37484515E-05, 0.48940859E-09,  10482695
+     6-0.25155032E-13,-0.11677987E 01 /                                 10482696
+C                                                                       10482993
+      END                                                               10482996
+$IBFTC BLK2    NODD                                                     10482020
+C     BLOCK DATA FOR FUNCTION TLABL                                     10482030
+C     L.W. FESLER     196-415  SID                                      10482040
+C                                                                       10482050
+      BLOCK DATA                                                        10482060
+      DIMENSION TDABL(30,60)                                            10482070
+      COMMON /ABL/ TDABL                                                10482080
+C                                                                       10482090
+      DATA (TDABL(I,31),I=1,30) / 30*0.0 /                              10482700
+      DATA (TDABL(I,32),I=1,30) / 32.0, 6HNH    , 1H ,                  10482710
+     1 15.016,  79188.000, 0.0,                                         10482711
+     2 0.0, 0.0, 1.0, 1.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482712
+     3 0.34853056E 01,-0.48317615E-04, 0.87968711E-07, 0.54426995E-10,  10482713
+     4-0.23672381E-13, 0.19506681E 01,                                  10482714
+     5 0.30957084E 01, 0.49635613E-03,-0.89460672E-07, 0.92500827E-11,  10482715
+     6-0.39925302E-15, 0.38152470E 01 /                                 10482716
+      DATA (TDABL(I,33),I=1,30) / 33.0, 6HNH2   , 1H ,                  10482720
+     1 16.024,  40987.000, 0.0,                                         10482721
+     2 0.0, 0.0, 2.0, 1.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482722
+     3 0.40582908E 01,-0.50657309E-03, 0.12536737E-05,-0.54655756E-09,  10482723
+     4 0.82262105E-13,-0.26621755E 00,                                  10482724
+     5 0.31965876E 01, 0.13294569E-02,-0.26386990E-06, 0.27782160E-10,  10482725
+     6-0.12029467E-14, 0.35871394E 01 /                                 10482726
+      DATA (TDABL(I,34),I=1,30) / 34.0, 6HNO2   , 1H ,                  10482730
+     1 46.008,   8734.000, 0.0,                                         10482731
+     2 0.0, 2.0, 0.0, 1.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482732
+     3 0.36702014E 01, 0.12555312E-02, 0.88728365E-06,-0.86935833E-09,  10482733
+     4 0.19455315E-12, 0.70858829E 01,                                  10482734
+     5 0.41977321E 01, 0.13896313E-02,-0.35389137E-06, 0.44797118E-10,  10482735
+     6-0.22307496E-14, 0.41674567E 01 /                                 10482736
+      DATA (TDABL(I,35),I=1,30) / 35.0, 6HN2O   , 1H ,                  10482740
+     1 44.016,  20320. 000, 0.0,                                        10482741
+     2 0.0, 1.0, 0.0, 2.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482742
+     3 0.29045396E 01, 0.36948046E-02,-0.17374682E-05, 0.43522125E-09,  10482743
+     4-0.44105372E-13, 0.79109731E 01,                                  10482744
+     5 0.41598692E 01, 0.15952192E-02,-0.39546712E-06, 0.49006548E-10,  10482745
+     6-0.23976313E-14, 0.20030059E 01 /                                 10482746
+      DATA (TDABL(I,36),I=1,30) / 36.0, 6HN2O3  , 1H ,                  10482750
+     1 76.016,  21556.000, 0.0,                                         10482751
+     2 0.0, 3.0, 0.0, 2.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482752
+     3 0.41446220E 01, 0.93108439E-02,-0.59540446E-05, 0.20920703E-08,  10482753
+     4-0.30536728E-12, 0.87827774E 01,                                  10482754
+     5 0.73964365E 01, 0.28303877E-02,-0.73066140E-06, 0.93489560E-10,  10482755
+     6-0.46967562E-14,-0.60411403E 01 /                                 10482756
+      DATA (TDABL(I,37),I=1,30) / 37.0, 6HN2O4  , 1H ,                  10482760
+     1 92.016,   4593.000, 0.0,                                         10482761
+     2 0.0, 4.0, 0.0, 2.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482762
+     3 0.33121648E 01, 0.13137170E-01,-0.79619767E-05, 0.25965632E-08,  10482763
+     4-0.34981493E-12, 0.10822832E 02,                                  10482764
+     5 0.81050302E 01, 0.39903452E-02,-0.10265131E-05, 0.13068651E-09,  10482765
+     6-0.65297624E-14,-0.11189155E 02 /                                 10482766
+      DATA (TDABL(I,38),I=1,30) / 38.0, 6HN2O5  , 1H ,                  10482770
+     1108.016,   6153.000, 0.0,                                         10482771
+     2 0.0, 5.0, 0.0, 2.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482772
+     3 0.27966224E 01, 0.16948515E-01,-0.10197183E-04, 0.32588763E-08,  10482773
+     4-0.42674145E-12, 0.13285686E 02,                                  10482774
+     5 0.90875982E 01, 0.50334074E-02,-0.12973680E-05, 0.16528525E-09,  10482775
+     6-0.82590228E-14,-0.15634080E 02 /                                 10482776
+      DATA (TDABL(I,39),I=1,30) / 30*0.0 /                              10482780
+      DATA (TDABL(I,40),I=1,30) / 40.0, 6HSI    , 1H ,                  10482790
+     1 28.090, 104964.000, 0.0,                                         10482791
+     2 0.0, 0.0, 0.0, 0.0, 1.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482792
+     3 0.34791724E 01,-0.19585127E-02, 0.18890183E-05,-0.86014172E-09,  10482793
+     4 0.14997511E-12, 0.13081725E 01,                                  10482794
+     5 0.27606166E 01,-0.17684664E-03, 0.79509296E-07,-0.13033089E-10,  10482795
+     6 0.74717962E-15, 0.44448571E 01 /                                 10482796
+      DATA (TDABL(I,41),I=1,30) / 41.0, 6HSI2   , 1H ,                  10482800
+     1 56.180, 130223.000, 0.0,                                         10482801
+     2 0.0, 0.0, 0.0, 0.0, 2.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482802
+     3 0.32316687E 01, 0.22235993E-02,-0.19585783E-05, 0.85072578E-09,  10482803
+     4-0.14223273E-12, 0.81355971E 01,                                  10482804
+     5 0.40159715E 01, 0.29190765E-03,-0.73024891E-07, 0.96843338E-11,  10482805
+     6-0.49927959E-15, 0.47265549E 01 /                                 10482806
+      DATA (TDABL(I,42),I=1,30) / 42.0, 6HSIO   , 1H ,                  10482810
+     1 44.090, -21700.000, 0.0,                                         10482811
+     2 0.0, 1.0, 0.0, 0.0, 1.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482812
+     3 0.34027869E 01, 0.20470617E-03, 0.65236913E-06,-0.49533845E-09,  10482813
+     4 0.10547706E-12, 0.58505756E 01,                                  10482814
+     5 0.35155816E 01, 0.51726391E-03,-0.13253809E-06, 0.17219863E-10,  10482815
+     6-0.87743004E-15, 0.51093804E 01 /                                 10482816
+      DATA (TDABL(I,43),I=1,30) / 43.0, 6HSIO2  , 1H ,                  10482820
+     1 60.090, -75888.000, 0.0,                                         10482821
+     2 0.0, 2.0, 0.0, 0.0, 1.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10482822
+     3 0.28984058E 01, 0.56759868E-02,-0.39639067E-05, 0.14467054E-08,  10482823
+     4-0.21301889E-12, 0.80955669E 01,                                  10482824
+     5 0.50334843E 01, 0.12749161E-02,-0.33101074E-06, 0.42285889E-10,  10482825
+     6-0.21140034E-14,-0.15600578E 01 /                                 10482826
+      DATA (TDABL(I,44),I=1,30) / 30*0.0 /                              10482830
+      DATA (TDABL(I,45),I=1,30) / 30*0.0 /                              10482840
+      DATA (TDABL(I,46),I=1,30) / 46.0, 6HAL    , 1H ,                  10482850
+     1 26.980,  77440.000, 0.0,                                         10482851
+     2 0.0, 0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,     10482852
+     3 0.30367404E 01,-0.11256395E-02, 0.11204272E-05,-0.52197977E-09,  10482853
+     4 0.91442035E-13, 0.30125658E 01,                                  10482854
+     5 0.26352499E 01,-0.70754078E-04, 0.20376402E-07,-0.34175085E-11,  10482855
+     6 0.26740807E-15, 0.47349529E 01 /                                 10482856
+      DATA (TDABL(I,47),I=1,30) / 47.0, 6HALO   , 1H ,                  10482860
+     1 42.980,  21429.000, 0.0,                                         10482861
+     2 0.0, 1.0, 0.0, 0.0, 0.0,  0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,     10482862
+     3 0.32837864E 01, 0.91817354E-03,-0.15165282E-06,-0.11329322E-09,  10482863
+     4 0.39106286E-13, 0.70160067E 01,                                  10482864
+     5 0.36771838E 01, 0.45085728E-03,-0.11334745E-06, 0.14697478E-10,  10482865
+     6-0.74540547E-15, 0.50953102E 01 /                                 10482866
+      DATA (TDABL(I,48),I=1,30) / 48.0, 6HAL2O  , 1H ,                  10482870
+     1 69.960, -30859.000, 0.0,                                         10482871
+     2 0.0, 1.0, 0.0, 0.0, 0.0,  0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0,     10482872
+     3 0.34975572E 01, 0.38380390E-02,-0.22653347E-05, 0.67400020E-09,  10482873
+     4-0.78545350E-13, 0.91229445E 01,                                  10482874
+     5 0.49942974E 01, 0.10509208E-02,-0.27631889E-06, 0.35716036E-10,  10482875
+     6-0.18049637E-14, 0.22344339E 01 /                                 10482876
+      DATA (TDABL(I,49),I=1,30) / 30*0.0 /                              10482880
+      DATA (TDABL(I,50),I=1,30) / 50.0, 6HB     , 1H ,                  10482890
+     1 10.820, 131399.000, 0.0,                                         10482891
+     2 0.0, 0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,     10482892
+     3 0.25992096E 01,-0.23076542E-03, 0.24334589E-06,-0.11758120E-09,  10482893
+     4 0.21130829E-13, 0.37426829E 01,                                  10482894
+     5 0.25202455E 01,-0.10621131E-04, 0.33276701E-08,-0.68154348E-12,  10482895
+     6 0.68011720E-16, 0.40761964E 01 /                                 10482896
+      DATA (TDABL(I,51),I=1,30) / 51.0, 6HBC    , 1H ,                  10482900
+     1 22.831, 196464.000, 0.0,                                         10482901
+     2 1.0, 0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,     10482902
+     3 0.34415162E 01, 0.84674066E-05, 0.85321399E-06,-0.57757322E-09,  10482903
+     4 0.11782794E-12, 0.53592802E 01,                                  10482904
+     5 0.34512965E 01, 0.55738927E-03,-0.14145689E-06, 0.18485036E-10,  10482905
+     6-0.94769887E-15, 0.50718859E 01 /                                 10482906
+      DATA (TDABL(I,52),I=1,30) / 52.0, 6HBO    , 1H ,                  10482910
+     1 26.820,   5000.000, 0.0,                                         10482911
+     2 0.0, 1.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,     10482912
+     3 0.35616215E 01,-0.49915161E-03, 0.11351663E-05,-0.60769304E-09,  10482913
+     4 0.10934805E-12, 0.43353349E 01,                                  10482914
+     5 0.32761635E 01, 0.56613685E-03,-0.13387700E-06, 0.16346440E-10,  10482915
+     6-0.79375183E-15, 0.54036201E 01 /                                 10482916
+      DATA (TDABL(I,53),I=1,30) / 53.0, 6HBOH   , 1H ,                  10482920
+     1 27.828, -47000.000, 0.0,                                         10482921
+     2 0.0, 1.0, 1.0, 0.0, 0.0,  0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,     10482922
+     3 0.30325583E 01, 0.25360361E-02,-0.56949920E-06,-0.58709701E-10,  10482923
+     4 0.33869456E-13, 0.57278672E 01,                                  10482924
+     5 0.37551396E 01, 0.17216973E-02,-0.41599510E-06, 0.50583553E-10,  10482925
+     6-0.24384463E-14, 0.21337083E 01 /                                 10482926
+      DATA (TDABL(I,54),I=1,30) / 54.0, 6HBN    , 1H ,                  10482930
+     1 24.830, 151000.000, 0.0,                                         10482931
+     2 0.0, 0.0, 0.0, 1.0, 0.0,  0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,     10482932
+     3 0.34968816E 01,-0.25771039E-03, 0.10856451E-05,-0.66243365E-09,  10482933
+     4 0.12913420E-12, 0.56242647E 01,                                  10482934
+     5 0.33874278E 01, 0.56584086E-03,-0.13988722E-06, 0.17862710E-10,  10482935
+     6-0.89896537E-15, 0.58569071E 01 /                                 10482936
+      DATA (TDABL(I,55),I=1,30) / 55.0, 6HB2O3  , 1H ,                  10482940
+     1 69.640,-209232.000, 0.0,                                         10482941
+     2 0.0, 3.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0,     10482942
+     3 0.29289877E 01, 0.65715536E-02,-0.13827957E-05,-0.42243614E-09,  10482943
+     4 0.17110145E-12, 0.11957076E 02,                                  10482944
+     5 0.52691770E 01, 0.38067989E-02,-0.96756113E-06, 0.12249751E-09,  10482945
+     6-0.61067696E-14, 0.46464527E 00 /                                 10482946
+      DATA (TDABL(I,56),I=1,30) / 30*0.0 /                              10482950
+      DATA (TDABL(I,57),I=1,30) / 57.0, 6HCA    , 1H ,                  10482960
+     1 40.080,   1481.300, 0.0,                                         10482961
+     2 0.0, 0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,     10482962
+     3-0.28333217E 01, 0.13544738E-01,-0.15512642E-04, 0.81559040E-08,  10482963
+     4-0.15992429E-11, 0.28504317E 02,                                  10482964
+     5-0.28333217E 01, 0.13544738E-01,-0.15512642E-04, 0.81559040E-08,  10482965
+     6-0.15992429E-11, 0.28504317E 02 /                                 10482966
+      DATA (TDABL(I,58),I=1,30) / 30*0.0 /                              10482970
+      DATA (TDABL(I,59),I=1,30) / 30*0.0 /                              10482980
+      DATA (TDABL(I,60),I=1,30) / 30*0.0 /                              10482990
+C                                                                       10482993
+      END                                                               10482996
+$IBFTC TLCND   NODD                                                     10484020
+C     FUNCTION TLCND OF SUBROUTINE CHEMEQ                               10484030
+C     L.W. FESLER     196-415  SID                                      10484040
+C                                                                       10484050
+C                *****      *****      *****      *****                 10484060
+C                                                                       10484070
+C     THIS FUNCTION CONTAINS THE CONDENSED SPECIES THERMODYNAMIC        10484080
+C     DATA EXPRESSED AS POLYNOMIAL APPROXIMATIONS.                      10484090
+C                                                                       10484100
+C        (H-DHF)/RT = A+B*T+C*T**2+D*T**3+E*T**4                        10484110
+C                                                                       10484120
+C        (F-DHF)/RT = A*(1.0-LOG(T))-B*T-(C/2.0)*T**2-(D/3.0)*T**3      10484130
+C                     -(E/4.0)*T**4-CK                                  10484140
+C                                                                       10484150
+C                *****      *****      *****      *****                 10484160
+C                                                                       10484200
+C     DATA STATEMENT FORMAT TDCND(I,IS)                                 10484203
+C        01 - TABLE NUMBER                                              10484206
+C        02 - SPECIES NAME                                              10484210
+C        03 - MELTING TEMPERATURE                                       10484213
+C        04 - MOLECULAR WEIGHT                                          10484216
+C        05 - HEAT OF FORMATION-SOLID                                   10484220
+C        06 - HEAT OF FORMATION-LIQUID                                  10484223
+C        07 - ATOMS OF CARBON                                           10484226
+C        08 - ATOMS OF OXYGEN                                           10484230
+C        09 - ATOMS OF HYDROGEN                                         10484233
+C        10 - ATOMS OF NITROGEN                                         10484236
+C        11 - ATOMS OF SILICON                                          10484240
+C        12 - ATOMS OF ELECTRONS                                        10484243
+C        13 - ATOMS OF ARGON                                            10484246
+C        14 - ATOMS OF ALUMINUM                                         10484250
+C        15 - ATOMS OF BORON                                            10484253
+C        16 - ATOMS OF CALCIUM                                          10484256
+C        17 - NOT USED                                                  10484260
+C        18 - NOT USED                                                  10484263
+C        19,25 - A                                                      10484266
+C        20,26 - B                                                      10484270
+C        21,27 - C                                                      10484273
+C        22,28 - D                                                      10484276
+C        23,29 - E                                                      10484280
+C        24,30 - CK                                                     10484283
+C                                                                       10484286
+C                *****      *****      *****      *****                 10484290
+C                                                                       10484300
+C     LIST OF ARGUMENTS                                                 10484310
+C        IS - TABLE NUMBER                                              10484320
+C        IV - DEPENDENT VARIABLE NUMBER                                 10484330
+C                                1-F/RT                                 10484340
+C                                2-H                                    10484350
+C                                3-GMW                                  10484360
+C                                4-A(IS,JE)                             10484370
+C        T  - INDEPENDENT VARIABLE                                      10484380
+C        JE - ELEMENT NUMBER                                            10484390
+C                                                                       10484400
+C                *****      *****      *****      *****                 10484410
+C                                                                       10484500
+      FUNCTION TLCND(IS,IV,T,JE)                                        10484510
+C                                                                       10484520
+      DIMENSION TDCND(30,15)                                            10484530
+C                                                                       10484600
+      DATA (TDCND(I,01),I=1,30) /  1.0, 6HC     ,    0.0,               10484610
+     1 12.011,      0.0  ,      0.0  ,                                  10484611
+     2 1.0, 0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10484612
+     3-0.10076000E 00, 0.22446700E-02,-0.70226303E-06, 0.81522303E-10,  10484613
+     4 0.00000000E 00, 0.64410001E-01,                                  10484614
+     5 0.16176600E 01, 0.38497602E-03,-0.32116701E-07, 0.11281204E-11,  10484615
+     6 0.00000000E 00,-0.86885000E 01 /                                 10484616
+      DATA (TDCND(I,02),I=1,30) /  2.0, 6HSIC   , 2773.0,               10484620
+     1 40.101, -13400.000,  -7562.000,                                  10484621
+     2 1.0, 0.0, 0.0, 0.0, 1.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10484622
+     3-0.31805249E 01, 0.13738654E-01,-0.10076872E-04, 0.35312141E-08,  10484623
+     4-0.46052604E-12, 0.13276269E 02,                                  10484624
+     5 0.14644806E 01, 0.26436357E-02,-0.48250262E-06, 0.25384663E-10,  10484625
+     6 0.12693640E-14,-0.45498257E 01 /                                 10484626
+      DATA (TDCND(I,03),I=1,30) /  3.0, 6HSIO2  , 1883.0,               10484630
+     1 60.090,-216311.000,-215948.000,                                  10484631
+     2 0.0, 2.0, 0.0, 0.0, 1.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,     10484632
+     3-0.15091509E 00, 0.11730395E-01,-0.65240536E-05, 0.11731599E-08,  10484633
+     4 0.63285679E-13,-0.26720209E 00,                                  10484634
+     5 0.38491809E 00, 0.59469355E-02,-0.16180053E-05, 0.21241472E-09,  10484635
+     6-0.10799498E-13, 0.16506366E 01 /                                 10484636
+      DATA (TDCND(I,04),I=1,30) /  4.0, 6HAL4C3 ,    0.0,               10484640
+     1143.953, -48600.000, -48600.000,                                  10484641
+     2 3.0, 0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 4.0, 0.0, 0.0, 0.0, 0.0,     10484642
+     3-0.18799741E 02, 0.85805436E-01,-0.84464716E-04, 0.39368860E-07,  10484643
+     4-0.69054471E-11, 0.78788376E 02,                                  10484644
+     5 0.11570419E 02, 0.45181873E-02, 0.35225118E-06,-0.43336785E-09,  10484645
+     6 0.62976548E-13,-0.50478182E 02 /                                 10484646
+      DATA (TDCND(I,05),I=1,30) /  5.0, 6HAL2O3 , 2318.0,               10484650
+     1101.960,-397494.000,-366770.000,                                  10484651
+     2 0.0, 3.0, 0.0, 0.0, 0.0,  0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0,     10484652
+     3-0.22881103E 01, 0.27052104E-01,-0.20825262E-04, 0.78281125E-08,  10484653
+     4-0.11278641E-11, 0.56408895E 01,                                  10484654
+     5-0.22800408E 01, 0.10547992E-01,-0.27257095E-05, 0.34351778E-09,  10484655
+     6-0.16910065E-13, 0.26056340E 02 /                                 10484656
+      DATA (TDCND(I,06),I=1,30) /  6.0, 6HB4C   , 2500.000,             10484660
+     1 55.291, -12124.000,  10942.000,                                  10484661
+     2 1.0, 0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0,     10484662
+     3-0.32921518E 01, 0.22588250E-01,-0.14536572E-04, 0.47028603E-08,  10484663
+     4-0.59927118E-12, 0.10328478E 02,                                  10484664
+     5-0.26652560E 02, 0.41818304E-01,-0.16607095E-04, 0.29360142E-08,  10484665
+     6-0.19290851E-12, 0.13806640E 03 /                                 10484666
+      DATA (TDCND(I,07),I=1,30) /  7.0, 6HB2O3  ,  723.0,               10484670
+     1 69.640,-303871.000,-300978.000,                                  10484671
+     2 0.0, 3.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0,     10484672
+     3-0.29158574E 00, 0.11669847E-01, 0.17874322E-04,-0.47963879E-07,  10484673
+     4 0.31228594E-10, 0.20030753E 00,                                  10484674
+     5 0.98353434E 00, 0.12204040E-01,-0.45468865E-05, 0.77344204E-09,  10484675
+     6-0.48502534E-13,-0.90261552E 00 /                                 10484676
+      DATA (TDCND(I,08),I=1,30) /  8.0, 6HBN    ,    0.0,               10484680
+     1 24.828, -59613.000, -59613.000,                                  10484681
+     2 0.0, 0.0, 0.0, 1.0, 0.0,  0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,     10484682
+     3-0.52061284E 00, 0.62319946E-02,-0.31247787E-05, 0.80522795E-09,  10484683
+     4-0.83332844E-13, 0.14800685E 01,                                  10484684
+     5 0.13293349E 01, 0.29405654E-02,-0.91362198E-06, 0.14168216E-09,  10484685
+     6-0.86067124E-14,-0.70975279E 01 /                                 10484686
+      DATA (TDCND(I,09),I=1,30) /  9.0, 6HCA    ,    0.0,               10484690
+     1 40.080,   1375.000,   1375.000,                                  10484691
+     2 0.0, 0.0, 0.0, 0.0, 0.0,  0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,     10484692
+     3-0.22107952E 01, 0.98543561E-02,-0.78320014E-05, 0.41016947E-08,  10484693
+     4-0.97809442E-12, 0.12780967E 02,                                  10484694
+     5-0.22107952E 01, 0.98543561E-02,-0.78320014E-05, 0.41016947E-08,  10484695
+     6-0.97809442E-12, 0.12780967E 02 /                                 10484696
+      DATA (TDCND(I,10),I=1,30) / 30*0.0 /                              10484700
+      DATA (TDCND(I,11),I=1,30) / 30*0.0 /                              10484710
+      DATA (TDCND(I,12),I=1,30) / 30*0.0 /                              10484720
+      DATA (TDCND(I,13),I=1,30) / 30*0.0 /                              10484730
+      DATA (TDCND(I,14),I=1,30) / 30*0.0 /                              10484740
+      DATA (TDCND(I,15),I=1,30) / 30*0.0 /                              10484750
+C                                                                       10485010
+ 8500 IF (IV-3) 8530,8510,8520                                          10485020
+ 8510 TLCND=TDCND(4,IS)                                                 10485030
+      GO TO 8590                                                        10485040
+ 8520 TLCND=TDCND(JE+6,IS)                                              10485050
+      GO TO 8590                                                        10485060
+ 8530 IT=19                                                             10485100
+      DHF=TDCND(5,IS)                                                   10485110
+      TMP=2000.0                                                        10485120
+      IF (TDCND(3,IS)) 8540,8540,8535                                   10485130
+ 8535 TMP=TDCND(3,IS)                                                   10485140
+ 8540 IF (T-TMP) 8560,8560,8550                                         10485150
+ 8550 IT=25                                                             10485160
+      DHF=TDCND(6,IS)                                                   10485170
+ 8560 A=TDCND(IT,IS)                                                    10485200
+      B=TDCND(IT+1,IS)                                                  10485210
+      C=TDCND(IT+2,IS)                                                  10485220
+      D=TDCND(IT+3,IS)                                                  10485230
+      E=TDCND(IT+4,IS)                                                  10485240
+      CK=TDCND(IT+5,IS)                                                 10485250
+      R=1.987                                                           10485260
+      IF (IV-1) 8570,8570,8580                                          10485300
+ 8570 FRTO=-(((E*T/4.0+D/3.0)*T+C/2.0)*T+B)*T+A-CK-A*ALOG(T)            10485310
+      TLCND=FRTO+DHF/(R*T)                                              10485320
+      GO TO 8590                                                        10485330
+ 8580 HO=(((E*T+D)*T+C)*T+B)*T+A                                        10485340
+      TLCND=R*T*HO+DHF                                                  10485350
+ 8590 RETURN                                                            10485500
+      END                                                               10485510
+$IBFTC ISIMEQ                     N.A.A. SUBROUTINE LIBRARY             N5350000
+C     SUBPROGRAM TO SOLVE SIMULTANEOUS LINEAR EQUATIONS  J.C.LONG SID   N5350010
+C       ARGUMENTS-                                                      N5350020
+C                DSM        DIMENSIONED SIZE OF COEFFICIENT MATRIX      N5350030
+C                NE         ACTUAL NUMBER OF EQUATIONS FOR THIS CALL    N5350040
+C                NC         NUMBER OF COLUMNS IN CONSTANT MATRIX        N5350050
+C                A          COEFFICIENT MATRIX                          N5350060
+C                B          CONSTANT MATRIX                             N5350070
+C                DET        INPUT - SCALE FACTOR, OUTPUT - FACTOR TIMES N5350080
+C                           DETERMINANT VALUE OF COEFFICIENT MATRIX     N5350090
+C                C          TEMPORARY STORAGE FOR SUBROUTINE            N5350100
+C                ISIMEQ     RETURNS 1 IF OK, 2 IF OVFLO, 3 IF SINGULAR  N5350110
+C       NOTE -   IF NE IS NEGATIVE, ONLY THE DETERMINANT VALUE IS       N5350120
+C                REQUIRED AS OUTPUT, MATRIX B AND ARRAY C ARE NOT USED. N5350130
+C                IF NC IS NEGATIVE, THE INVERSE OF THE COEFFICIENT      N5350140
+C                MATRIX IS REQUIRED, MATRIX B IS SET UP AS IDENTITY.    N5350150
+      FUNCTION ISIMEQ( DSM , NE , NC , A , B , DET , C )                N5350160
+      LOGICAL DVO                                                       N5350170
+      INTEGER DSM, C, T, SUB1, SUB2,    R, D                            N5350180
+      DIMENSION A(1), B(1), C(1)                                        N5350190
+C     INITIALIZE                                                        N5350200
+      N = IABS(NE)                                                      N5350210
+      D = DSM                                                           N5350220
+      M = IABS(NC)                                                      N5350230
+      ISIMEQ = 1                                                        N5350240
+      IF (NE) 5000, 2000, 5100                                          N5350250
+ 5000   DVO = .TRUE.                                                    N5350260
+       GO TO 15                                                         N5350270
+ 5100   DVO = .FALSE.                                                   N5350280
+      DO 1 I = 1,N                                                      N5350290
+    1 C(I) = I                                                          N5350300
+      IF(NC) 5, 15, 15                                                  N5350310
+C     INVERSE REQUIRED                                                  N5350320
+    5 SUB2 = 0                                                          N5350330
+      DO 10 J = 1,N                                                     N5350340
+        SUB1 = SUB2                                                     N5350350
+        DO 6 I = 1,N                                                    N5350360
+        SUB1 = SUB1 + 1                                                 N5350370
+    6   B(SUB1) = 0.0                                                   N5350380
+       SUB1  = SUB2 + J                                                 N5350390
+       B(SUB1) = 1.0                                                    N5350400
+   10 SUB2 = SUB2 + D                                                   N5350410
+C     START MAIN LOOP                                                   N5350420
+   15 DO 1000 L = 1,N                                                   N5350430
+         LP1 = L+ 1                                                     N5350440
+        DO 40 I = L,N                                                   N5350450
+         PIVOT = 0.0                                                    N5350460
+          SUB1 = (L-1) * D + I                                          N5350470
+          SUB2 = SUB1                                                   N5350480
+            DO 20 J = L,N                                               N5350490
+             IF(ABS(PIVOT) .GE. ABS(A(SUB1))) GO TO 20                  N5350500
+             PIVOT = A(SUB1)                                            N5350510
+             JB = J                                                     N5350520
+   20       SUB1 = SUB1 + D                                             N5350530
+C     COMPUTE DETERMINANT                                               N5350540
+      CALL OVERFL(T)                                                    N5350550
+        DET = DET * PIVOT                                               N5350560
+        CALL OVERFL(T)                                                  N5350570
+       IF (T.EQ. 1  .AND.  DVO) ISIMEQ = 2                              N5350580
+C     TEST FOR SINGULAR MATRIX                                          N5350590
+       IF (PIVOT .EQ. 0.0) GO TO 2000                                   N5350600
+            DO 25 J = L,N                                               N5350610
+            A(SUB2) = A(SUB2) / PIVOT                                   N5350620
+   25       SUB2 = SUB2 + D                                             N5350630
+         IF (DVO) GO TO 35                                              N5350640
+           SUB1 = I                                                     N5350650
+            DO 30 J = 1,M                                               N5350660
+            B(SUB1) = B(SUB1) / PIVOT                                   N5350670
+   30       SUB1 = SUB1 + D                                             N5350680
+   35    IF (I .EQ. L) JP = JB                                          N5350690
+   40   CONTINUE                                                        N5350700
+C     INTERCHANGE COLUMNS                                               N5350710
+  100   IF (JP .EQ. L) GO TO 260                                        N5350720
+      IF (DVO) GO TO 110                                                N5350730
+        T = C(L)                                                        N5350740
+        C(L) = C(JP)                                                    N5350750
+        C(JP) = T                                                       N5350760
+  110     R = D * L - D                                                 N5350770
+          T = D * JP - D                                                N5350780
+          DO 120 I = 1,N                                                N5350790
+          SUB1 = R + I                                                  N5350800
+          SUB2 =  T + I                                                 N5350810
+          S = A(SUB1)                                                   N5350820
+          A(SUB1) = A(SUB2)                                             N5350830
+  120     A(SUB2) = S                                                   N5350840
+        DET = -DET                                                      N5350850
+C     REDUCE PIVOT COLUMN                                               N5350860
+  260   R = D* L - D                                                    N5350870
+        DO 400 I = 1,N                                                  N5350880
+         IP = R + I                                                     N5350890
+         PIVOT = A(IP)                                                  N5350900
+        IF (I .EQ. L .OR. PIVOT .EQ. 0.0) GO TO 400                     N5350910
+         SUB1 = L                                                       N5350920
+         SUB2 = I                                                       N5350930
+          DO 360 J = 1,N                                                N5350940
+           IF (J .LT. LP1) GO TO 300                                    N5350950
+            S = PIVOT * A(SUB1)                                         N5350960
+            A(SUB2) = A(SUB2) - S                                       N5350970
+           IF (ABS(A(SUB2)) .LT. ABS(3.0E-8 * S)) A(SUB2) = 0.0         N5350980
+  300     IF (DVO .OR. J .GT. M) GO TO 350                              N5350990
+            B(SUB2) = B(SUB2) - PIVOT * B(SUB1)                         N5351000
+  350      SUB1 = SUB1 + D                                              N5351010
+  360     SUB2 = SUB2 + D                                               N5351020
+  400   CONTINUE                                                        N5351030
+ 1000 CONTINUE                                                          N5351040
+      IF (DVO) GO TO 1500                                               N5351050
+C     REARRANGE VARIABLES                                               N5351060
+ 1100 DO 1200 L = 1,N                                                   N5351070
+       SUB1 = C(L)                                                      N5351080
+       SUB2 = L                                                         N5351090
+        DO 1200 J = 1,M                                                 N5351100
+         A(SUB1) = B(SUB2)                                              N5351110
+         SUB1 = SUB1 + D                                                N5351120
+ 1200    SUB2 = SUB2 + D                                                N5351130
+ 1500 RETURN                                                            N5351140
+C     SINGULAR COEFFICIENT MATRIX                                       N5351150
+ 2000 ISIMEQ = 3                                                        N5351160
+      RETURN                                                            N5351170
+      END                                                               N5351180

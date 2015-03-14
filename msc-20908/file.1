@@ -1,0 +1,65 @@
+#define TRACE
+#define SINGLE  1
+#define GROUP  2
+#define FALSE  0
+#define TRUE  1
+#define UNDEF  -1
+#define SPACE_SIZE  1000
+#define NULL  0
+
+struct rule_info
+{
+        char *ri_tag;
+        int rule_type;                          /* single or group      */
+        struct rule_queue *queue_id;            /* which queue to use   */
+        struct rule_queue *group_queue;         /* queue for rule group */
+        struct cond_info **cond_list;           /* conds must be true   */
+        struct cond_info *only_false;           /* only false condtion  */
+        int false_count;                        /* # of false conditions*/
+        int undef_count;                        /* # of undef conditions*/
+        float delta_t;                          /* time between firings */
+        double next_fire_time;                  /* time of next firing  */
+        struct queue_element *queue_posn;       /* queue position       */
+        int (*action)();                        /* action subroutine    */
+        struct cond_info **true_list;           /* true conditions      */
+        struct cond_info **false_list;          /* false conditions     */
+        struct cond_info **undef_list;          /* unknown conditions   */
+#ifdef TRACE
+        int trace;
+#endif
+};
+
+
+struct cond_info
+{
+        char *ci_tag;
+        int last_value;                         /* last value, t or f   */
+        int is_val_required;                    /* != 0 if val is rqrd  */
+        int mark;                               /* temporary marker     */
+        int (*evaluate)();                      /* evaluation function  */
+        struct rule_info **rule_list;           /* list affected rules  */
+        struct cond_info **tt_list;             /* implied value lists  */
+        struct cond_info **tf_list;
+        struct cond_info **ft_list;
+        struct cond_info **ff_list;
+#ifdef TRACE
+        int trace;
+#endif
+};
+
+
+struct queue_element
+{
+        struct rule_info *rule;                 /* rule to fire         */
+        struct queue_element *next;             /* next elt in queue    */
+        struct queue_element *previous;         /* prev elt in queue    */
+};
+
+
+struct rule_queue
+{
+        char *rq_tag;
+        struct queue_element begin_elt;         /* points to 1st elt    */
+        struct queue_element end_elt;           /* points to last elt   */
+        struct rule_info *stop_sentinel;        /* stop executing here  */
+};

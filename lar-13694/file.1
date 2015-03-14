@@ -1,0 +1,2194 @@
+      SUBROUTINE RSUTDS(N,NK,X,Y,DF,XK,IPK,PK,DEV,NN,IW,
+     1NKMAX,ITMAX,XR,R,C,WK,IERR)
+C***********************************************************************
+C*                                                                     *
+C*    PURPOSE:                                                         *
+C*                 SUBROUTINE RSUTDS FITS A SMOOTH RATIONAL SPLINE TO A*
+C*                 UNIVARIATE FUNCTION.  DATA MAY BE UNEQUALLY SPACED. *
+C*                                                                     *
+C     E3.4                                                             *
+C*                                                                     *
+C*        USE:                                                         *
+C*                 CALL RSUTDS(N,NK,X,Y,DF,XK,IPK,PK,DEV,NN,           *
+C*                             IW,NKMAX,ITMAX,XR,R,C,WK,IERR)          *
+C*                                                                     *
+C*         N       AN INPUT INTEGER SPECIFYING THE NUMBER OF DATA      *
+C*                 POINTS FOR THE INDEPENDENT VARIABLE.                *
+C*                                                                     *
+C*         NK      AN INPUT INTEGER SPECIFYING THE NUMBER OF KNOTS.    *
+C*                 NK>=3.                                              *
+C*                                                                     *
+C*         X       AN INPUT ONE-DIMENSIONAL REAL ARRAY DIMENSIONED AT  *
+C*                 AT LEAST N IN THE CALLING PROGRAM.  X CONTAINS THE  *
+C*                 X-COORDINATES OF THE DATA POINTS.                   *
+C*                                                                     *
+C*         Y       AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH           *
+C*                 CONTAINS THE FUNCTION VALUES OF THE DATA POINTS.    *
+C*                 Y MUST BE DIMENSIONED AT LEAST N.                   *
+C*                                                                     *
+C*         DF      AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS  *
+C*                 A SET OF POSITIVE WEIGHTS INDICATING THE STANDARD   *
+C*                 DEVIATION OF THE ERROR OF Y(I).  IF THE STANDARD    *
+C*                 DEVIATION IS NOT KNOWN, A SUGGESTED VALUE IS        *
+C*                 DF(I)=1.0E-4, I=1,...,N.  DF MUST BE DIMENSIONED    *
+C*                 AT LEAST N.                                         *
+C*                                                                     *
+C*         XK      AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH           *
+C*                 CONTAINS THE X-COORDINATES OF THE SELECTED KNOTS.   *
+C*                 XK MUST BE DIMENSIONED AT LEAST NK.  THE FIRST      *
+C*                 AND LAST KNOTS MUST COINCIDE WITH X(1) AND X(N),    *
+C*                 RESPECTIVELY, WHILE THE INTERVENING KNOTS MUST BE   *
+C*                 CHOSEN TO LIE BETWEEN X(1) AND X(N),                *
+C*                 IE, X(1)=XK(1)  XK(2)...XK(NK-1) XK(NK)=X(N).       *
+C*                 KNOTS MUST BE CHOSEN SO THAT THERE ARE AT LEAST     *
+C*                 THREE DATA POINTS IN EACH INTERVAL DEFINED BY       *
+C*                 CONSECUTIVE PAIRS OF KNOTS.                         *
+C*                                                                     *
+C*         IPK     AN INPUT ONE-DIMENSIONAL INTEGER ARRAY WHICH        *
+C*                 CONTAINS THE TENSION FACTOR ADJUSTMENT FLAGS.       *
+C*                 IPK MUST BE DIMENSIONED AT LEAST NK-1.              *
+C*                                                                     *
+C*                 IPK(K)=0  FACTOR K MAY BE ADJUSTED.                 *
+C*                                                                     *
+C*                 IPK(K)=1  FACTOR K IS HELD CONSTANT.                *
+C*                                                                     *
+C*         PK      AN INPUT/OUTPUT ONE-DIMENSIONAL REAL ARRAY WHICH    *
+C*                 CONTAINS THE TENSION FACTORS APPLIED ON THE         *
+C*                 INTERVALS BETWEEN KNOTS.  PK MUST BE DIMENSIONED AT *
+C*                 LEAST NK-1.  PK(K) MUST BE GREATER THAN -1. ON ENTRY*
+C*                 IF IPK(K)=1, PK(K) WILL CONTAIN THE FINAL TENSION   *
+C*                 FACTOR TO BE USED IN INTERVAL K.  IF IPK(K)=0, PK(K)*
+C*                 MUST CONTAIN AN INITIAL VALUE OF TENSION FACTOR FOR *
+C*                 INTERVAL K.  A VALUE OF 0.0 IS SUGGESTED.  ON       *
+C*                 RETURN, PK(K) WILL CONTAIN THE FINAL TENSION FACTOR *
+C*                 FOR INTERVAL K.                                     *
+C*                                                                     *
+C*         DEV     AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH           *
+C*                 CONTAINS THE ALLOWED PERCENTAGE OF DEVIATION OF     *
+C*                 THE APPROXIMATED SOLUTION FROM THE LINEAR SOLUTION  *
+C*                 IN THE INTERVAL BETWEEN KNOT I AND KNOT I+1, FOR    *
+C*                 I=1,...,NK-1. DEV MUST BE DIMENSIONED AT LEAST NK-1.*
+C*                                                                     *
+C*         NN      AN INPUT INTEGER WHOSE ABSOLUTE VALUE SPECIFIES     *
+C*                 THE NUMBER OF POINTS AT WHICH INTERPOLATION         *
+C*                 IS DESIRED.  IF NN IS POSITIVE, THE POINTS AT WHICH *
+C*                 INTERPOLATION IS DESIRED MAY BE UNEQUALLY SPACED.   *
+C*                 IF NN IS NEGATIVE, THE POINTS WILL BE EQUALLY SPACED*
+C*                 BETWEEN XR(1) AND XR(ABS(NN)).  NN CANNOT BE -1     *
+C*                 OR ZERO.                                            *
+C*                                                                     *
+C*                                                                     *
+C*         IW      AN INPUT/OUTPUT INTEGER.                            *
+C*                                                                     *
+C*                 INPUT   ON THE FIRST CALL TO RSUTDS , IW MUST BE    *
+C*                         SET TO 0.  ON SUBSEQUENT CALLS, IW SHOULD BE*
+C*                         SET TO 1 TO PROVIDE ADDITIONAL INTERPOLATION*
+C*                         ON THE SAME FITTING CALCULATIONS.           *
+C*                                                                     *
+C*                 OUTPUT  IW IS AUTOMATICALLY SET TO 1.               *
+C*                                                                     *
+C*                                                                     *
+C*                                                                     *
+C*         NKMAX   AN INPUT INTEGER WHICH AGREES EXACTLY WITH THE      *
+C*                 FIRST DIMENSION OF ARRAY C. NKMAX MUST BE GREATER   *
+C*                 THAN OR EQUAL TO 2*NK.                              *
+C*                                                                     *
+C*         ITMAX   AN INPUT INTEGER SPECIFYING THE MAXIMUM NUMBER      *
+C*                 OF ITERATIONS PERMITTED IN ACHIEVING THE ALLOWED    *
+C*                 DEVIATIONS.   ITMAX<=35.                            *
+C*                                                                     *
+C*         XR      AN INPUT/OUTPUT  ONE-DIMENSIONAL REAL ARRAY         *
+C*                 DIMENSIONED AT LEAST ABS(NN), WHICH CONTAINS        *
+C*                 POINTS TO BE INTERPOLATED.                          *
+C*
+C*                 INPUT    IF NN IS POSITIVE, THE FIRST NN ELEMENTS   *
+C*                          OF XR MUST ALL BE DEFINED.  IF NN IS       *
+C*                          NEGATIVE, ONLY ELEMENTS XR(1) AND          *
+C*                          XR(ABS(NN)) NEED BE DEFINED.               *
+C*                                                                     *
+C*                 OUTPUT   IF NN IS POSITIVE, XR IS UNCHANGED.  IF NN *
+C*                          IS NEGATIVE, THE FIRST ABS(NN) ELEMENTS OF *
+C*                          XR CONTAIN EQUALLY SPACED INTERPOLATION    *
+C*                          POINTS.                                    *
+C*                                                                     *
+C*         R       AN OUTPUT ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS *
+C*                 THE VALUES OF THE INTERPOLATED DEPENDENT VARIABLE   *
+C*                 CORRESPONDING TO XR.  R MUST BE DIMENSIONED AT LEAST*
+C*                 ABS(NN).                                            *
+C*                                                                     *
+C*         C       AN OUTPUT TWO-DIMENSIONAL REAL ARRAY WHICH          *
+C*                 CONTAINS THE CORRELATION MATRIX.  C MUST  HAVE      *
+C*                 A FIRST DIMENSION OF NKMAX AND A SECOND DIMENSION   *
+C*                 OF AT LEAST 2*NK.                                   *
+C*                                                                     *
+C*         WK      AN INPUT/OUTPUT ONE-DIMENSIONAL REAL ARRAY WHICH    *
+C*                 MUST BE DIMENSIONED AT LEAST 16*NK**2-6*NK+5.       *
+C*                                                                     *
+C*                 INPUT   IF IW = 0, WK NEED NOT CONTAIN VALUES.      *
+C*                                                                     *
+C*                         IF IW = 1, WK SHOULD CONTAIN THE VALUES     *
+C*                         WHICH WERE STORED IN WK BY A PREVIOUS CALL  *
+C*                         TO RSUTDS.                                  *
+C*                                                                     *
+C*                 OUTPUT  WK CONTAINS INFORMATION NECESSARY FOR       *
+C*                         SUCCEEDING CALLS TO RSUTDS USING THE SAME   *
+C*                         INPUT DATA WITHOUT REINITIALIZATION.        *
+C*                                                                     *
+C*        IERR     OUTPUT ERROR PARAMETER:                             *
+C*                 = 0  NORMAL RETURN.  NO ERROR DETECTED.             *
+C*                 =-1  AN INTERVAL CONTAINS LESS THAN THREE DATA      *
+C*                      POINTS.                                        *
+C*                 =-2  DID NOT CONVERGE IN ALLOWED NUMBER OF ITERAT-  *
+C*                      IONS, INDICATING THAT TENSION MAY NOT HAVE     *
+C*                      BEEN ADJUSTED IN ONE OR MORE INTERVALS.        *
+C*                 =-3  NO SOLUTION DETERMINED BECAUSE SECBI FAILED.   *
+C*                 =-4  ONE OR MORE VALUES FOR WHICH INTERPOLATION     *
+C*                      HAS BEEN REQUESTED REQUIRES EXTRAPOLATION      *
+C*                      WHICH IS NOT PERFORMED.                        *
+C*                 =-5  NO SOLUTION DETERMINED AS A MATRIX USED IN     *
+C*                      CALCULATING THE SPLINE WAS NOT SYMMETRIC       *
+C*                      POSITIVE DEFINITE AS REQUIRED.  IT MAY BE      *
+C*                      POSSIBLE TO ELIMINATE THE PROBLEM BY SPACING   *
+C*                      KNOTS FURTHER APART.                           *
+C*                 =-6  NN IS -1 OR ZERO.                              *
+C*                 =-7  XK(1) OR XK(ABS(NK)) DOES NOT COINCIDE WITH    *
+C*                      X(1) OR X(N), RESPECTIVELY.                    *
+C*                 =-8  NK IS LESS THAN 3.                             *
+C*                 =-9  PK(I) <= -1.0                                  *
+C*                 = J  THE J-TH ELEMENT OF THE X ARRAY IS NOT IN      *
+C*                      STRICTLY INCREASING ORDER.                     *
+C*                                                                     *
+C*                                                                     *
+C*                 UPON RETURN FROM RSUTDS, THIS PARAMETER SHOULD BE   *
+C*                 TESTED IN THE CALLING PROGRAM.                      *
+C*                                                                     *
+C*                                                                     *
+C*                                                                     *
+C*    REQUIRED ROUTINES                QXZ063,QXZ275,QXZ276,QXZ277,    *
+C*                                     QXZ278,QXZ279,QXZ280,SECBI(C2.5)*
+C*                                     SYMPDS(F4.3)                    *
+C*                                                                     *
+C*    SOURCE                           PROGRAM RASPFIT BY JAMES R.     *
+C*                                     SCHIESS AND PATRICIA A. KERR    *
+C*                                     MODIFIED BY COMPUTER SCIENCES   *
+C*                                     CORPORATION                     *
+C*                                                                     *
+C*    LANGUAGE                         FORTRAN                         *
+C*                                                                     *
+C*    DATE RELEASED                    FEBRUARY, 1986                  *
+C*                                                                     *
+C*    LATEST REVISION                  FEBRUARY, 1986                  *
+C***********************************************************************
+C
+C
+      DIMENSION X(*),Y(*),XK(*),IPK(*),PK(*),DEV(*),
+     1R(*),WK(*),C(NKMAX,*),DF(*),XR(*)
+      IERR=0
+      NN1=IABS(NN)
+      NK1=NK-1
+      IZ=N-1
+      DO 10 I=1,IZ
+      IF(X(I+1)-X(I).GT.0)GO TO 10
+      IERR=I+1
+      RETURN
+10    CONTINUE
+      IF(NK.GE.3)GO TO 12
+      IERR=-8
+      GO TO 120
+12    IF((NN.NE.-1).AND.(NN.NE.0))GO TO 15
+      IERR=-6
+      GO TO 120
+15    IF(NN.GT.0)GO TO 30
+      XDIF=XR(NN1)-XR(1)
+      XDIF=XDIF/(NN1-1)
+      NN2=NN1-2
+      DO 20 I=1,NN2
+      XR(I+1)=XR(I)+XDIF
+20    CONTINUE
+30    CONTINUE
+      DO 40 I=1,NN1
+      IF((XR(I).GE.XK(1)).AND.(XR(I).LE.XK(NK)))GO TO 40
+      IERR=-4
+      GO TO 120
+40    CONTINUE
+      IF(XK(1).EQ.X(1).AND.XK(NK).EQ.X(N))GO TO 45
+      IERR=-7
+      GO TO 120
+45    DO 47 I=1,NK1
+      IF(PK(I).GT.-1.0)GO TO 47
+      IERR=-9
+      GO TO 120
+47    CONTINUE
+60    DO 77 I=1,N
+      DF(I)=1.0/(DF(I)+1.0)
+77    CONTINUE
+
+      L=NK
+      LM1=L-1
+      LM2=L-2
+      L2=L*2
+      LL=L2+1
+      INDA=1
+      INDH=2*L+1
+      INDE=3*L
+      INDD=4*L**2+5*L
+      INDGG=8*L**2+5*L
+      INDG=9*L**2+L+4
+      INDB=10*L**2-3*L+8
+      INDXLAM=12*L**2-7*L+8
+      INDT=12*L**2-6*L+6
+      IF(IW.EQ.1)GO TO 500
+      CALL QXZ275(X,Y,DF,XK,PK,IPK,DEV,LM1,N,L,ITMAX,XR,R,NN,NN1,
+     *C,WK(INDA),L2,LM2,LL,WK(INDE),WK(INDD),WK(INDGG),
+     1WK(INDG),WK(INDB),WK(INDXLAM),WK(INDT),IW,IERR,NKMAX)
+      GO TO 130
+500   CALL QXZ275(X,Y,DF,XK,PK,IPK,DEV,LM1,N,L,ITMAX,XR,R,NN,NN1,
+     *C,WK(INDA),L2,LM2,LL,WK(INDE),WK(INDD),WK(INDGG),
+     1WK(INDG),WK(INDB),WK(INDXLAM),WK(INDT),IW,IERR,NKMAX)
+130   DO 88 I=1,N
+      DF(I)=1.0/DF(I)-1.0
+88    CONTINUE
+      NK1=NK-1
+      DO 133 I=1,NK1
+      DXK=(XK(I+1)-XK(I))**2
+      WK(INDH+I-1)=DXK/(2.*PK(I)**2+3.*PK(I)+3.)
+133   CONTINUE
+120   RETURN
+      END
+      SUBROUTINE RSDSDR(N,NK,X,Y,DF,XK,IPK,PK,DEV,NN,IW,
+     1NKMAX,ITMAX,XR,R,DER1,DER2,C,WK,IERR)
+C***********************************************************************
+C*                                                                     *
+C*    PURPOSE:                                                         *
+C*                 SUBROUTINE RSDSDR FITS A SMOOTH RATIONAL SPLINE TO A*
+C*                 UNIVARIATE FUNCTION AND PROVIDES INTERPOLATORY      *
+C*                 CAPABILITIES FOR THE DEPENDENT VARIABLE AND THE     *
+C*                 FIRST AND SECOND DERIVATIVES.  DATA MAY BE UNEQUALLY*
+C*                 SPACED.                                             *
+C*                                                                     *
+C     D4.7                                                             *
+C*                                                                     *
+C*        USE:                                                         *
+C*                 CALL RSDSDR(N,NK,X,Y,DF,XK,IPK,PK,DEV,NN,IW,NKMAX,  *
+C*                             ITMAX,XR,R,DER1,DER2,C,WK,IERR)         *
+C*                                                                     *
+C*         N       AN INPUT INTEGER SPECIFYING THE NUMBER OF DATA      *
+C*                 POINTS FOR THE INDEPENDENT VARIABLE.                *
+C*                                                                     *
+C*         NK      AN INPUT INTEGER SPECIFYING THE NUMBER OF KNOTS.    *
+C*                 NK>=3.                                              *
+C*                                                                     *
+C*         X       AN INPUT ONE-DIMENSIONAL REAL ARRAY DIMENSIONED AT  *
+C*                 AT LEAST N IN THE CALLING PROGRAM.  X CONTAINS THE  *
+C*                 X-COORDINATES OF THE DATA POINTS.                   *
+C*                                                                     *
+C*         Y       AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH           *
+C*                 CONTAINS THE FUNCTION VALUES OF THE DATA POINTS.    *
+C*                 Y MUST BE DIMENSIONED AT LEAST N.                   *
+C*                                                                     *
+C*         DF      AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS  *
+C*                 A SET OF POSITIVE WEIGHTS INDICATING THE STANDARD   *
+C*                 DEVIATION OF THE ERROR OF Y(I).  IF THE STANDARD    *
+C*                 DEVIATION IS NOT KNOWN, A SUGGESTED VALUE IS        *
+C*                 DF(I)=1.0E-4, I=1,...,N.  DF MUST BE DIMENSIONED    *
+C*                 AT LEAST N.                                         *
+C*                                                                     *
+C*         XK      AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH           *
+C*                 CONTAINS THE X-COORDINATES OF THE SELECTED KNOTS.   *
+C*                 XK MUST BE DIMENSIONED AT LEAST NK.  THE FIRST      *
+C*                 AND LAST KNOTS MUST COINCIDE WITH X(1) AND X(N),    *
+C*                 RESPECTIVELY, WHILE THE INTERVENING KNOTS MUST BE   *
+C*                 CHOSEN TO LIE BETWEEN X(1) AND X(N),                *
+C*                 IE, X(1)=XK(1)  XK(2)...XK(NK-1) XK(NK)=X(N).       *
+C*                 KNOTS MUST BE CHOSEN SO THAT THERE ARE AT LEAST     *
+C*                 THREE DATA POINTS IN EACH INTERVAL DEFINED BY       *
+C*                 CONSECUTIVE PAIRS OF KNOTS.                         *
+C*                                                                     *
+C*         IPK     AN INPUT ONE-DIMENSIONAL INTEGER ARRAY WHICH        *
+C*                 CONTAINS THE TENSION FACTOR ADJUSTMENT FLAGS.       *
+C*                 IPK MUST BE DIMENSIONED AT LEAST NK-1.              *
+C*                                                                     *
+C*                 IPK(K)=0  FACTOR K MAY BE ADJUSTED.                 *
+C*                                                                     *
+C*                 IPK(K)=1  FACTOR K IS HELD CONSTANT.                *
+C*                                                                     *
+C*         PK      AN INPUT/OUTPUT ONE-DIMENSIONAL REAL ARRAY WHICH    *
+C*                 CONTAINS THE TENSION FACTORS APPLIED ON THE         *
+C*                 INTERVALS BETWEEN KNOTS.  PK MUST BE DIMENSIONED AT *
+C*                 LEAST NK-1.  PK(K) MUST BE GREATER THAN -1. ON ENTRY*
+C*                 IF IPK(K)=1, PK(K) WILL CONTAIN THE FINAL TENSION   *
+C*                 FACTOR TO BE USED IN INTERVAL K.  IF IPK(K)=0, PK(K)*
+C*                 MUST CONTAIN AN INITIAL VALUE OF TENSION FACTOR FOR *
+C*                 INTERVAL K.  A VALUE OF 0.0 IS SUGGESTED.  ON       *
+C*                 RETURN, PK(K) WILL CONTAIN THE FINAL TENSION FACTOR *
+C*                 FOR INTERVAL K.                                     *
+C*                                                                     *
+C*         DEV     AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH           *
+C*                 CONTAINS THE ALLOWED PERCENTAGE OF DEVIATION OF     *
+C*                 THE APPROXIMATED SOLUTION FROM THE LINEAR SOLUTION. *
+C*                 DEV MUST BE DIMENSIONED AT LEAST NK-1.              *
+C*                 IN THE INTERVAL BETWEEN KNOT I AND KNOT I+1, FOR    *
+C*                 I=1,...,NK-1. DEV MUST BE DIMENSIONED AT LEAST NK-1.*
+C*                                                                     *
+C*         NN      AN INPUT INTEGER WHOSE ABSOLUTE VALUE SPECIFIES     *
+C*                 THE NUMBER OF POINTS AT WHICH INTERPOLATION         *
+C*                 IS DESIRED.  IF NN IS POSITIVE, THE POINTS AT WHICH *
+C*                 INTERPOLATION IS DESIRED MAY BE UNEQUALLY SPACED.   *
+C*                 IF NN IS NEGATIVE, THE POINTS WILL BE EQUALLY SPACED*
+C*                 BETWEEN XR(1) AND XR(ABS(NN)).  NN CANNOT BE -1     *
+C*                 OR ZERO.                                            *
+C*                                                                     *
+C*                                                                     *
+C*         IW      AN INPUT/OUTPUT INTEGER.                            *
+C*                                                                     *
+C*                 INPUT   ON THE FIRST CALL TO RSDSDR , IW MUST BE    *
+C*                         SET TO 0.  ON SUBSEQUENT CALLS, IW SHOULD BE*
+C*                         SET TO 1 TO PROVIDE ADDITIONAL INTERPOLATION*
+C*                         ON THE SAME FITTING CALCULATIONS.           *
+C*                                                                     *
+C*                 OUTPUT  IW IS AUTOMATICALLY SET TO 1.               *
+C*                                                                     *
+C*                                                                     *
+C*                                                                     *
+C*         NKMAX   AN INPUT INTEGER WHICH AGREES EXACTLY WITH THE      *
+C*                 FIRST DIMENSION OF ARRAY C.  NKMAX MUST BE GREATER  *
+C*                 THAN OR EQUAL TO 2*NK.
+C*                                                                     *
+C*         ITMAX   AN INPUT INTEGER SPECIFYING THE MAXIMUM NUMBER      *
+C*                 OF ITERATIONS PERMITTED IN ACHIEVING THE ALLOWED    *
+C*                 DEVIATIONS.   ITMAX <=35.
+C*                                                                     *
+C*         XR      AN INPUT/OUTPUT  ONE-DIMENSIONAL REAL ARRAY         *
+C*                 DIMENSIONED AT LEAST ABS(NN), WHICH CONTAINS        *
+C*                 POINTS TO BE INTERPOLATED.                          *
+C*
+C*                 INPUT    IF NN IS POSITIVE, THE FIRST NN ELEMENTS   *
+C*                          OF XR MUST ALL BE DEFINED.  IF NN IS       *
+C*                          NEGATIVE, ONLY ELEMENTS XR(1) AND
+C*                          XR(ABS(NN)) NEED BE DEFINED.
+C*
+C*                 OUTPUT   IF NN IS POSITIVE, XR IS UNCHANGED.  IF NN *
+C*                          IS NEGATIVE, THE FIRST ABS(NN) ELEMENTS OF *
+C*                          XR CONTAIN EQUALLY SPACED INTERPOLATION    *
+C*                          POINTS.                                    *
+C*                                                                     *
+C*                                                                     *
+C*         R       AN OUTPUT ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS *
+C*                 THE VALUES OF THE INTERPOLATED DEPENDENT VARIABLE   *
+C*                 CORRESPONDING TO XR.  R MUST BE DIMENSIONED AT LEAST*
+C*                 ABS( NN).                                           *
+C*                                                                     *
+C*         DER1     AN OUTPUT ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS*
+C*                 THE VALUES OF THE FIRST DERIVATIVE OF THE INTER-    *
+C*                 POLATED DEPENDENT VARIABLE CORRESPONDING TO XR.     *
+C*                 DER1 MUST BE DIMENSIONED AT LEAST ABS(NN).          *
+C*                                                                     *
+C*         DER2     AN OUTPUT ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS*
+C*                 THE VALUES OF THE SECOND DERIVATIVE OF THE INTER-   *
+C*                 POLATED DEPENDENT VARIABLE CORRESPONDING TO XR.     *
+C*                 DER2 MUST BE DIMENSIONED AT LEAST ABS(NN).          *
+C*                                                                     *
+C*         C       AN OUTPUT TWO-DIMENSIONAL REAL ARRAY WHICH          *
+C*                 CONTAINS THE CORRELATION MATRIX.  C MUST  HAVE      *
+C*                 A FIRST DIMENSION OF NKMAX AND A SECOND DIMENSION   *
+C*                 OF AT LEAST 2*NK.                                   *
+C*                                                                     *
+C*         WK      AN INPUT/OUTPUT ONE-DIMENSIONAL REAL ARRAY WHICH    *
+C*                 MUST BE DIMENSIONED AT LEAST 16*NK**2-6*NK+5.       *
+C*                                                                     *
+C*                 INPUT   IF IW = 0, WK NEED NOT CONTAIN VALUES.      *
+C*                                                                     *
+C*                         IF IW = 1, WK SHOULD CONTAIN THE VALUES     *
+C*                         WHICH WERE STORED IN WK BY A PREVIOUS CALL  *
+C*                         TO RSDSDR.                                  *
+C*                                                                     *
+C' *               OUTPUT  WK CONTAINS INFORMATION NECESSARY FOR       *
+C*                         SUCCEEDING CALLS TO RSDSDR USING THE SAME   *
+C*                         INPUT DATA WITHOUT REINITIALIZATION.        *
+C*                                                                     *
+C*        IERR     OUTPUT ERROR PARAMETER:                             *
+C*                 = 0  NORMAL RETURN.  NO ERROR DETECTED.             *
+C*                 =-1  AN INTERVAL CONTAINS LESS THAN THREE DATA      *
+C*                      POINTS.                                        *
+C*                 =-2  DID NOT CONVERGE IN ALLOWED NUMBER OF ITERAT-  *
+C*                      IONS, INDICATING THAT TENSION MAY NOT HAVE     *
+C*                      BEEN ADJUSTED IN ONE OR MORE INTERVALS.        *
+C*                 =-3  NO SOLUTION DETERMINED BECAUSE SECBI FAILED.   *
+C*                 =-4  ONE OR MORE VALUES FOR WHICH INTERPOLATION     *
+C*                      HAS BEEN REQUESTED REQUIRES EXTRAPOLATION      *
+C*                      WHICH IS NOT PERFORMED.                        *
+C*                 =-5  NO SOLUTION DETERMINED AS A MATRIX USED IN     *
+C*                      CALCULATING THE SPLINE WAS NOT SYMMETRIC       *
+C*                      POSITIVE DEFINITE AS REQUIRED.  IT MAY BE      *
+C*                      POSSIBLE TO ELIMINATE THE PROBLEM BY SPACING   *
+C*                      KNOTS FURTHER APART.                           *
+C*                 =-6  NN IS -1 OR ZERO.                              *
+C*                 =-7  XK(1) OR XK(ABS(NK)) DOES NOT COINCIDE WITH    *
+C*                      X(1) OR X(N), RESPECTIVELY.                    *
+C*                 =-8  NK IS LESS THAN 3.                             *
+C*                 = J  THE J-TH ELEMENT OF THE X ARRAY IS NOT IN      *
+C*                      STRICTLY INCREASING ORDER.                     *
+C*                                                                     *
+C*                                                                     *
+C*                 UPON RETURN FROM RSDSDR, THIS PARAMETER SHOULD BE   *
+C*                 TESTED IN THE CALLING PROGRAM.                      *
+C*                                                                     *
+C*                                                                     *
+C*                                                                     *
+C*    REQUIRED ROUTINES                QXZ063,QXZ276,QXZ277,QXZ278,    *
+C*                                     QXZ279,QXZ280,QXZ281,QXZ282,    *
+C*                                     SECBI(C2.5),SYMPDS(F4.3)        *
+C*                                                                     *
+C*    SOURCE                           PROGRAM RASPFIT BY JAMES R.     *
+C*                                     SCHIESS AND PATRICIA A. KERR    *
+C*                                     MODIFIED BY COMPUTER SCIENCES   *
+C*                                     CORPORATION                     *
+C*                                                                     *
+C*    LANGUAGE                         FORTRAN                         *
+C*                                                                     *
+C*    DATE RELEASED                    FEBRUARY, 1986                  *
+C*                                                                     *
+C*    LATEST REVISION                  FEBRUARY, 1986                  *
+C***********************************************************************
+C
+C
+      DIMENSION X(1),Y(1),XK(1),IPK(1),PK(1),DEV(1),
+     1R(1),WK(1),C(NKMAX,1),DF(1),XR(1),DER1(1),DER2(1)
+      IERR=0
+      NN1=IABS(NN)
+      IZ=N-1
+      DO 10 I=1,IZ
+      IF(X(I+1)-X(I).GT.0)GO TO 10
+      IERR=I+1
+      RETURN
+10    CONTINUE
+      IF(NK.GE.3)GO TO 12
+      IERR=-8
+      GO TO 120
+12    IF((NN.NE.-1).AND.(NN.NE.0))GO TO 15
+      IERR=-6
+      GO TO 120
+15    IF(NN.GT.0)GO TO 30
+      XDIF=XR(NN1)-XR(1)
+      XDIF=XDIF/(NN1-1)
+      NN2=NN1-2
+      DO 20 I=1,NN2
+      XR(I+1)=XR(I)+XDIF
+20    CONTINUE
+30    CONTINUE
+      DO 40 I=1,NN1
+      IF((XR(I).GE.XK(1)).AND.(XR(I).LE.XK(NK)))GO TO 40
+      IERR=-4
+      GO TO 120
+40    CONTINUE
+      IF(XK(1).EQ.X(1).AND.XK(NK).EQ.X(N))GO TO 60
+      IERR=-7
+      GO TO 120
+60    DO 77 I=1,N
+      DF(I)=1.0/(DF(I)+1.0)
+77    CONTINUE
+
+      L=NK
+      LM1=L-1
+      LM2=L-2
+      L2=L*2
+      LL=L2+1
+      INDA=1
+      INDH=2*L+1
+      INDE=3*L
+      INDD=4*L**2+5*L
+      INDGG=8*L**2+5*L
+      INDG=9*L**2+L+4
+      INDB=10*L**2-3*L+8
+      INDXLAM=12*L**2-7*L+8
+      INDT=12*L**2-6*L+6
+      IF(IW.EQ.1)GO TO 500
+      CALL QXZ281(X,Y,DF,XK,PK,IPK,DEV,LM1,N,L,ITMAX,XR,R,NN,NN1,DER1,
+     *DER2,C,WK(INDA),L2,LM2,LL,WK(INDE),WK(INDD),WK(INDGG),
+     1WK(INDG),WK(INDB),WK(INDXLAM),WK(INDT),IW,IERR,NKMAX)
+      GO TO 130
+500   CALL QXZ281(X,Y,DF,XK,PK,IPK,DEV,LM1,N,L,ITMAX,XR,R,NN,NN1,DER1,
+     *DER2,C,WK(INDA),L2,LM2,LL,WK(INDE),WK(INDD),WK(INDGG),
+     1WK(INDG),WK(INDB),WK(INDXLAM),WK(INDT),IW,IERR,NKMAX)
+130   DO 88 I=1,N
+      DF(I)=1.0/DF(I)-1.0
+88    CONTINUE
+      NK1=NK-1
+      DO 133 I=1,NK1
+      DXK=(XK(I+1)-XK(I))**2
+      WK(INDH+I-1)=DXK/(2.*PK(I)**2+3.*PK(I)+3.)
+133   CONTINUE
+120   RETURN
+      END
+      SUBROUTINE SECBI (X1,X2,DX,FX,EPS,ROOT,IERR)
+C     C2.5
+C***********************************************************************
+C*
+C*            PURPOSE
+C*               TO DETERMINE A ROOT OF THE REAL VALUED FUNCTION  F(X)=0
+C*               GIVEN A SPECIFIED INTERVAL BY EMPLOYING A FRONT END
+C*               SEEKER AND A COMBINATION BISECTION/LINEAR INTERPOLATION
+C*               INVERSE QUADRATIC INTERPOLATION ITERATION TECHNIQUE
+C*
+C*            USAGE
+C*               CALL SECBI (X1,X2,DX,FX,EPS,ROOT,IERR)
+C*
+C*            PARAMETERS
+C*               X1      - INPUT  VARIABLE  CONTAINING THE INITIAL VALUE
+C*                         OF THE INDEPENDENT VARIABLE TO START THE
+C*                         ITERATION
+C*               X2      - INPUT VARIABLE CONTAINING THE FINAL VALUE OF
+C*                         THE INDEPENDENT VARIABLE TO END THE ITERATION
+C*                         FX MUST BE NAMED IN AN EXTERAL STATEMENT IN
+C*                         THE CALLING PROGRAM
+C*               DX      - AN INPUT PARAMETER CONTAINING THE INCREMENT
+C*                         STEP SIZE
+C*               FX      - A VALUE OF THE USER SUPPLIED EXTERAL FUNCTION
+C*                         FX MUST BE IN AN EXTERNAL STATEMENT IN
+C*                         THE CALLING PROGRAM
+C*               EPS     - A ONE DIMENSIONAL ERROR ARRAY DIMESIONED 3
+C*                         IN THE CALLING PROGRAM
+C*               EPS(1)  - MAXIMUM RELATIVE ERROR
+C*               EPS(2)  - MAXIMUM ABSOLUTE ERROR
+C*               EPS(3)  - THRESHOLD ERROR
+C*                         SEE SUBROUTINE WRITE-UP FOR DETAILED DESCRIP-
+C*                         TION OF EPS ARRAY
+C*               ROOT    - AN OUTPUT PARAMETER CONTAINING THE ROOT OF
+C*                         THE FUNCTION FX
+C*               IERR    - AN INTEGER RETURNED BY SECBI AS AN ERROR CODE
+C*                         IT SHOULD BE TESTED BY THE USER UPON RETURN
+C*                         TO THE CALLING PROGRAM
+C*                            - 0 NORMAL RETURN
+C*                            - 3 MAXIMUM OF 50 ITERATIONS IN SUBROUTINE
+C*                                QXZ019 IS EXCEEDED
+C*                            - 8 IMPROPER INITIAL CONDITIONS WERE
+C*                                SPECIFIED (SEE SUBROUTINE WRITE-UP)
+C*                            - 9 A ROOT CANNOT BE FOUND IN THE INTER-
+C*                                VAL BOUNDED BY X1 AND X2 WITH THE
+C*                                GIVEN DX. (SEE SUBROUTINE WRITE-UP)
+C*
+C*            REQUIRED ROUTINES
+C                 SUBROUTINE QXZ019(F,EPS,A,B,ITMAX,IERR)
+C*               SUBROUTINE QXZ255 (EPSILON,VAL,IFLAG)
+C*               FUNCTION FX(X)
+C*
+C*            AUTHOR / IMPLEMENTOR
+C*               COMPUTER SCIECES CORPORATION / ACD PROGRAMMER SUPPORT
+C*                                              GROUP EXT. 3548
+C*
+C*            LANGUAGE                 FORTRAN
+C*
+C*            DATE RELEASED            MARCH 1973
+C*
+C*            LATEST REVISION          AUGUST 15, 1980
+C*
+C***********************************************************************
+C
+      DIMENSION EPS(3),X(2),F(2)
+      EXTERNAL FX
+      LOGICAL IFLAG
+C
+C             DETERMINE IF INPUT MEETS INITIAL CONDITIONS AND RESET THE
+C             THE INCREMENT STEP SIZE WHEN NECESSARY
+      IFLAG = .FALSE.
+      IF(DX.EQ.0)GO TO 100
+      DX=ABS(DX)
+      IF (X2-X1) 10,100,20
+   10 DX = -DX
+   20 MAX=ABS((X2-X1)/DX)
+      IF(MAX.GT.100)GO TO 100
+C
+C             SET UP FIRST LOWER BOUND ON SEQUENCE OF SUBINTERVALS AND
+C             COMPUTE FUNCTION VALUE
+      X(1)=X1
+      F(1)=FX(X(1))
+      IF (F(1)) 40,30,40
+C
+   30 ROOT = X(1)
+      GO TO 80
+C             SECTION TO SEARCH FOR SUBINTERVAL (X1,X2) CONTAINING A
+C
+C             POSSIBLE ROOT
+   40 X(2) = X(1)+DX
+      IF (DX*X(2) .LE. DX*X2) GO TO 45
+      IF (IFLAG) GO TO 90
+      X(2) = X2
+      IFLAG = .TRUE.
+   45 F(2) = FX(X(2))
+      IF ( F(1)*F(2) ) 70,50,60
+C
+   50 ROOT = X(2)
+      GO TO 80
+   60 X(1) = X(2)
+      F(1)=F(2)
+      GO TO 40
+C
+C            CALL SUBROUTINE QXZ019 TO APPLY BISECTION/SECANT METHOD TO
+C             DETERMINE ROOT (ACCURACY DETERMINED BY SUBROUTINE QXZ255)
+   70 ITMAX = 50
+      CALL QXZ019(FX,EPS,X(1),X(2),ITMAX,IERR)
+      ROOT = X(2)
+      RETURN
+C
+   80 IERR = 0
+      RETURN
+   90 IERR = 9
+      RETURN
+  100 IERR = 8
+      RETURN
+      END
+      SUBROUTINE SYMPDS (MAXN,N,A,NRHS,B,IOPT,IFAC,DETERM,ISCALE,P,IERR)
+C     F4.3
+C***********************************************************************
+C*                                                                     *
+C*            PURPOSE                                                  *
+C*               TO SOLVE THE MATRIX EQUATION AX=B WHERE A IS SYMMETRIC*
+C*               POSITIVE DEFINITE MATRIX AND B IS A MATRIX OF CONSTANT*
+C*               VECTORS. THE DETERMINANT OF MATRIX A MAY ALSO BE      *
+C*               EVALUATED.                                            *
+C*                                                                     *
+C*            USAGE                                                    *
+C*               CALL SYMPDS (MAXN,N,A,NRHS,B,IOPT,IFAC,DETERM,ISCALE,P*
+C*                            ,IERR)                                   *
+C*                                                                     *
+C*            PARAMETERS                                               *
+C*               MAXN    - AN INPUT INTEGER SPECIFYING THE MAXIMUN     *
+C*                         FIRST DIMENSION OF THE COEFFICIENT MATRIX A *
+C*                         AS GIVEN IN THE DIMENSION STATEMENT OF      *
+C*                         CALLING PROGRAM                             *
+C*               N       - AN INPUT INTEGER SPECIFYING THE ORDER OF    *
+C*                         MATRIX A (THE ACTUAL FIRST DIMENSION OF A)  *
+C*                         N@MAXN                                      *
+C*               A       - A TWO DIMENSIONAL INPUT-OUTPUT ARRAY THAT   *
+C*                         MUST HAVE FIRST DIMENSION MAXN AND SECOND   *
+C*                         DIMENSION AT LEAST N IN THE CALLING PROGRAM.*
+C*                              AS AN INPUT ARRAY, A CONTAINS THE ELE- *
+C*                         MENTS OF THE COEFFICIENT MATRIX             *
+C*                              UPON RETURN FROM THE SUBROUTINE A      *
+C*                         CONTAINS THE UPPER TRIANGULAR ELEMENTS OF   *
+C*                         THE COEFFICIENT MATRIX AND THE UNIT LOWER   *
+C*                         TRIANGULAR MATRIX L.                        *
+C*               NRHS    - AN INPUT INTEGER CONTAINING THE NUMBER OF   *
+C*                         COLUMN VECTORS OF MATRIX B                  *
+C*               B       - A TWO DIMENSIONAL INPUT-OUTPUT ARRAY THAT   *
+C*                         MUST HAVE FIRST DIMENSION MAXN AND SECOND   *
+C*                         DIMENSION AT LEAST NRHS IN CALLING PROGRAM  *
+C*                              AS INPUT B CONTAINS THE ELEMENTS OF THE*
+C*                         CONSTANT VECTORS                            *
+C*                              UPON RETURN FROM THE SUBROUTINE, EACH  *
+C*                         SOLUTION VECTOR IS STORED OVER THE CORRES-  *
+C*                         PONDING CONSTANT COLUMN VECTOR OF MATRIX B  *
+C*               IOPT    - AN INPUT INTEGER CONTAINING THE DETERMINANT *
+C*                         EVALUATION CODE                             *
+C*                         = 0 DETERMINANT IS NOT EVALUATED            *
+C*                         = 1 DETERMINANT IS EVALUATED                *
+C*               IFAC    - INPUT INTEGER PARAMETER SPECIFYING WHETHER  *
+C*                         OR NOT CHOLESKY DECOMPOSITION OF THE COEF-  *
+C*                         FICIENT MATRIX IS TO BE COMPUTED            *
+C*                         = 0 CHOLESKY DECOMPOSITION FOR THE MATRIX A *
+C*                             IS TO BE COMPUTED. IFAC IS RESET TO 1 BY*
+C*                             THE ROUTINE.                            *
+C*                         = 1 THE CHOLESKY DECOMPOSED FORM OF MATRIX  *
+C*                             A IS INPUT SO NO DECOMPOSITION IS COM-  *
+C*                             PUTED.                                  *
+C*               DETERM  - DETERMINANT EVALUATION PARAMETERS RETURNED  *
+C*               ISCALE    BY THE ROUTINE TO EVALUTE THE DETERMINANT   *
+C*                         VALUE OF DETERMINANT                        *
+C*                              = DETERM*(10.**(100*ISCALE))           *
+C*                         (CALCULATION SHOULD BE DONE OUTSIDE CALLING *
+C*                         PROGRAM TO PREVENT MACHINE OVER(UNDER) FLOW)*
+C*               P       - A ONE DIMENSIONAL OUTPUT ARRAY CONTAINING   *
+C*                         THE RECIPROCALS OF THE ELEMENTS IN THE      *
+C*                         DIAGONAL MATRIX FORMED DURING THE DECOMPO-  *
+C*                         SITION OF THE COEFFICIENT MATRIX A.  P MUST *
+C*                         BE DIMENSIONED AT LEAST N IN THE CALLING    *
+C*                         PROGRAM                                     *
+C*               IERR    - AN INTEGER RETURNED BY THE SUBROUTINE AS AN *
+C*                         ERROR CODE                                  *
+C*                         = 0 NORMAL RETURN (SOLUTION VECTORS ARE     *
+C*                             COMPUTED)                               *
+C*                         = 1 COEFFICIENT MATRIX IS NOT SYMMETRIC     *
+C*                             POSITIVE DEFINITE                       *
+C*                                                                     *
+C*            REQUIRED ROUTINES                                        *
+C*               NONE                                                  *
+C*                                                                     *
+C*            AUTHOR / IMPLEMENTOR                                     *
+C*               COMPUTER SCIENCES CORPORATION / ACD PROGRAMMER SUPPORT*
+C*                                               GROUP EXT. 3548       *
+C*                                                                     *
+C*            LANGUAGE                  FORTRAN                        *
+C*                                                                     *
+C*            DATE RELEASED             AUGUST  1972                   *
+C*                                                                     *
+C*            LATEST REVISION           MAY 1985
+C*                                                                     *
+C***********************************************************************
+C
+C
+      DIMENSION A(MAXN,N),B(MAXN,NRHS),P(N)
+C
+      DATA R1,R2/1.0E+100,1.0E-100/
+C
+C             TEST FOR A SCALAR MATRIX (IF COEFFICIENT MATRIX IS A
+C             SCALAR MATRIX, SOLVE AND COMPUTE DETERMINANT IF DESIRED)
+      NM1 = N-1
+      IF (NM1 .GT. 0) GO TO 20
+C
+      IF (A(1,1) .LE. 0.0) GO TO 333
+      ISCALE = 0
+      DETERM = A(1,1)
+      P(1) = 1.0/A(1,1)
+      DO 10 J=1,NRHS
+      B(1,J) = B(1,J)/DETERM
+   10 CONTINUE
+      IERR = 0
+      RETURN
+C
+C             TEST TO DETERMINE IF CHOLESKY DECOMPOSITION OF COEFFICIENT
+C             MATRIX IS DESIRED
+   20 IF (IFAC .EQ. 1) GO TO 1050
+      IFAC = 1
+C
+C
+C              "LOOP" TO PERFORM CHOLESKY DECOMPOSTION ON THE COEF-
+C             FICIENT MATRIX A (I.E. MATRIX A WILL BE DECOMPOSED INTO
+C             THE PRODUCT OF A UNIT LOWER TRIANGULAR MATRIX (L), A
+C             DIAGONAL MATRIX (D), AND THE TRANSPOSE OF L (LTRANSPOSE).)
+C
+   30 DO 150 I=1,N
+      IM1 = I-1
+C
+      DO 150 J=1,I
+      X = A(J,I)
+C
+C             DETERMINE IF ELEMENTS ARE ABOVE OR BELOW THE DIAGONAL
+      IF (I .GT. J) GO TO 110
+C
+C             USING THE DIAGONAL ELEMENTS OF MATRIX A, THIS SECTION
+C             COMPUTES DIAGONAL MATRIX AND DETERMINES IF MATRIX A IS
+C             SYMMETRIC POSITIVE DEFINITE
+      IF (IM1 .EQ. 0) GO TO 50
+      DO 40 K=1,IM1
+      Y = A(I,K)
+      A(I,K) = Y*P(K)
+      X = X - Y*A(I,K)
+   40 CONTINUE
+C
+C             TEST IF COEFFICIENT MATRIX IS POSITIVE DEFINITE
+   50 IF (X .LE. 0) GO TO 333
+C
+C             COMPUTE INVERSE OF DIAGONAL MATRIX D**-1 = 1/P
+      P(I) = 1.0 / X
+C
+C             TEST TO SEE IF DETERMINANT IS TO BE EVALUATED
+      GO TO 150
+C
+C
+C             USING THE LOWER TRIANGULAR ELEMENTS OF MATRIX A, THIS
+C             SECTION COMPUTES THE UNIT LOWER TRIANGULAR MATRIX
+  110 JM1 = J-1
+      IF (JM1 .EQ. 0) GO TO 140
+      DO 120 K=1,JM1
+      X = X - A(I,K)*A(J,K)
+  120 CONTINUE
+C
+  140 A(I,J) = X
+C
+  150 CONTINUE
+1050  CONTINUE
+C
+C             SECTION TO APPLY BACK SUBSTITUTION TO SOLVE L*Y = B FOR
+C             UNIT LOWER TRIANGULAR MATRIX AND CONSTANT COLUMN VECTOR B
+C
+C      TEST TO SEE IF DETERMINANT IS TO BE EVALUATED
+      IF(IOPT.EQ.0)GO TO 160
+C     INITIALIZE DETERMINANT PARAMETERS
+      DETERM = 1.0
+      ISCALE = 0
+C     COMPUTE DETERMINANT SCALING AS NECESSARY
+      DO 1110 I=1,N
+      PIVOTI=1.0/P(I)
+ 1060 IF(ABS(DETERM).LT.R1) GO TO 1070
+      DETERM = DETERM*R2
+      ISCALE = ISCALE+1
+      GO TO 1060
+ 1070 IF(ABS(DETERM).GT.R2) GO TO 1080
+      DETERM = DETERM*R1
+      ISCALE = ISCALE-1
+      GO TO 1070
+ 1080 IF(ABS(PIVOTI).LT.R1) GO TO 1090
+      PIVOTI = PIVOTI*R2
+      ISCALE = ISCALE+1
+      GO TO 1080
+ 1090 IF(ABS(PIVOTI).GT.R2) GO TO 1100
+      PIVOTI = PIVOTI*R1
+      ISCALE = ISCALE-1
+      GO TO 1090
+ 1100 DETERM = DETERM*PIVOTI
+1110  CONTINUE
+  160 DO 180 I=2,N
+      IM1=I-1
+C
+      DO 180 J=1,NRHS
+      X = B(I,J)
+C
+      DO 170 K=1,IM1
+      X = X - A(I,K)*B(K,J)
+  170 CONTINUE
+C
+      B(I,J) = X
+  180 CONTINUE
+C
+C             SECTION TO SOLVE (LTRANSPOSE)*X = (D**-1)*Y FOR TRANSPOSE
+C             OF UNIT LOWER TRIANGULAR MATRIX AND INVERSE OF DIAGONAL
+C             MATRIX
+C
+      Y = P(N)
+      DO 190 J=1,NRHS
+      B(N,J) = B(N,J)*Y
+  190 CONTINUE
+C
+  200 I = NM1+1
+      Y = P(NM1)
+C
+      DO 220 J=1,NRHS
+      X = B(NM1,J)*Y
+C
+      DO 210 K=I,N
+      X = X - A(K,NM1)*B(K,J)
+  210 CONTINUE
+C
+      B(NM1,J) = X
+  220 CONTINUE
+C
+C
+C             TEST TO DETERMINE IF SOLUTIONS HAVE BEEN DETERMINED FOR
+C             ALL COLUMN VECTORS
+      NM1 = NM1-1
+      IF (NM1 .GT. 0) GO TO 200
+C
+      IERR = 0
+      RETURN
+C
+  333 IERR = 1
+      RETURN
+      END
+C --- SUBPROGRAM QXZ019 --- FORMERLY KNOWN AS ROUTINE  ZBRENTL ---
+       SUBROUTINE QXZ019(F,EPS,A,B,ITMAX,IERR)
+C
+C-ZBRENT--------S-------LIBRARY 3---------------------------------------
+C
+C   FUNCTION            - TO FIND A ZERO OF A FUNCTION WHICH CHANGES
+C                           SIGN IN A GIVEN INTERVAL
+C   USAGE                - CALL QXZ019(F,EPS,A,B,ITMAX,IERR)
+C   PARAMETERS   F      - AN EXTERNAL FUNCTION SUBPROGRAM F(X)
+C                           PROVIDED BY THE USER WHICH COMPUTES F FOR
+C                           ANY X IN THE INTERVAL (A,B).
+C                 EPS   - A ONE DIMENSIONAL ERROR ARRARY SUPPLIED BY THE
+C                          USER. THIS ARRAY MUST BE DIMENSIONED 3 IN THE
+C                          CALLING PROGRAM
+C                 EPS(1) - MAXIMUM RELATIVE ERROR
+C                 EPS(2) - MAXIMUM ABSOLUTE ERROR
+C                 EPS(3) - THRESHOLD ERROR
+C                          SEE SUBROUTINE SECBI WRITE-UP FOR A MORE
+C                          DETAILED DESCRIPTION
+C                A,B    - ON INPUT, THE USER MUST SUPPLY TWO POINTS, A
+C                           AND B, SUCH THAT F(A) AND F(B) ARE OPPOSITE
+C                           IN SIGN.
+C                           ON OUTPUT, BOTH A AND B ARE ALTERED.  B
+C                           WILL CONTAIN THE BEST APPROXIMATION TO THE
+C                           ROOT OF F.
+C                ITMAX  - ON INPUT, ITMAX SHOULD CONTAIN AN UPPER BOUND
+C                           ON THE NUMBER OF ITERATIONS REQUIRED FOR
+C                           CONVERGENCE. ON OUTPUT, ITMAX WILL CONTAIN
+C                           THE ACTUAL ITERATION COUNT.
+C               IERR   - ERROR PARAMETER
+C                        TERMINAL ERROR
+C                          3 - INDICATES THE ALGORITHM FAILED TO
+C                           CONVERGE IN ITMAX ITERATIONS.
+C                          8 - INDICATES F(A) AND F(B) HAVE
+C                           THE SAME SIGN
+C   PRECISION           - SINGLE
+C   REQD. ROUTINES       - NONE
+C   LANGUAGE            - FORTRAN
+C   LATEST REVISION      - AUGUST 4,1975
+C-----------------------------------------------------------------------
+C
+      DIMENSION EPS(3),V(2)
+      DATA               ZERO,HALF,ONE,THREE,TEN/0.0,.5,1.0,3.0,10.0/
+      IC = 0
+      IERR = 0
+      FA = F(A)
+      FB = F(B)
+      IF (FA*FB) 5,90,95
+    5 C = A
+      FC = FA
+      D = B - A
+      E = D
+   10 IF (ABS(FC) .GE. ABS(FB)) GO TO 15
+      A = B
+      B = C
+      C = A
+      FA = FB
+      FB = FC
+      FC = FA
+   15 TOL = EPS(1)*ABS(B)
+      IF (FB) 16,111,16
+ 111  IERR = 0
+      GO TO 80
+   16 RM = (C-B)*HALF
+C                       TEST FOR B AS A ROOT. A IS
+C                      PREVIOUS BEST APPROXIMATION.
+      V(1) = A
+      V(2) = B
+      CALL QXZ255(EPS,V,IERR)
+      IF (IERR) 20,80,20
+   20 IF (ABS(E) .LT. TOL .OR. ABS(FA) .LE. ABS(FB)) GO TO 60
+      S = FB/FA
+      IF (A-C) 30,25,30
+C                                  LINEAR INTERPOLATION
+   25 P = (RM+RM) * S
+      Q = ONE-S
+      GO TO 35
+C                                  INVERSE QUADRATIC INTERPOLATION
+   30 Q = FA/FC
+      R = FB/FC
+      RONE = R-ONE
+      P = S * ((RM+RM) * Q * (Q-R) - (B-A) * RONE)
+      Q = (Q-ONE) * RONE * (S-ONE)
+  35  IF (P) 40,40,45
+   40 P = -P
+      GO TO 50
+   45 Q = -Q
+   50 S = E
+      E = D
+      IF ((P+P).GE.THREE*RM*Q-ABS(TOL*Q).AND.P.GE.ABS(HALF*S*Q))GO TO 55
+      D = P/Q
+      GO TO 65
+   55 E = RM
+      D = E
+      GO TO 65
+   60 E = RM
+      D = E
+   65 A = B
+      FA = FB
+   70 TEMP = D
+C                                  INCREMENT ITERATION COUNTER
+   75 IC = IC + 1
+C                                  TERMINAL ERROR--MAXIMUM NUMBER OF
+C                                                  ITERATIONS EXCEDED
+      IF (IC .LE. ITMAX) GO TO 85
+      IERR = 3
+   80 ITMAX = IC
+      GO TO 9005
+   85 B = B + TEMP
+      FB = F(B)
+      FBC = FB*FC
+      IF (FBC) 10,10,5
+C                                  EITHER F(A) OR F(B) IS ZERO
+   90 IF (FA .EQ. ZERO) B = A
+      GO TO 80
+C                                  TERMINAL ERROR - F(A) AND F(B) HAVE
+C                                  THE SAME SIGN
+   95 IERR = 8
+      IC = 1
+      GO TO 80
+ 9005 RETURN
+      END
+C --- SUBPROGRAM QXZ063 --- FORMERLY KNOWN AS ROUTINE  QINTRVL ---
+      INTEGER FUNCTION QXZ063(T,X,N)
+C
+C***********************************************************************
+C*                                                                     *
+C*                                                                     *
+C*  PURPOSE             - DETERMINE THE INDEX OF THE INTERVAL          *
+C*                        (DETERMINED BY A GIVEN INCREASING SEQUENCE)  *
+C*                        IN WHICH A GIVEN VALUE LIES.                 *
+C*                                                                     *
+C*  USE                 - I = QXZ063(T,X,N)                           *
+C*                                                                     *
+C*  PARAMETERS   T      - AN INPUT REAL NUMBER SPECIFYING THE          *
+C*                        GIVEN VALUE.                                 *
+C*               X      - AN INPUT ONE-DIMENSIONAL REAL ARRAY OF LENGTH*
+C*                        N  SPECIFYING THE INCREASING SEQUENCE.  X    *
+C*                        MUST BE STRICTLY INCREASING.                 *
+C*               N      - AN INPUT INTEGER SPECIFYING THE LENGTH OF    *
+C*                        X .  N  > 1.                                 *
+C*                                                                     *
+C*  OUTPUT       I      - IF  T  .LE.  X(2) ,  I  = 1.                 *
+C*                        IF  T  .GE.  X(N-1) ,  I  =  N - 1 .         *
+C*                        OTHERWISE,  X(I)  .LE.  T  .LE.  X(I+1)      *
+C*                                                                     *
+C*  PRECISION           - SINGLE.                                      *
+C*                                                                     *
+C*  REQUIRED ROUTINES   - NONE.                                        *
+C*                                                                     *
+C*  DATE RELEASED       - MARCH 1, 1979.                               *
+C*                                                                     *
+C*  SOURCE              - A. K. CLINE AND R. J. RENKA                  *
+C*                        UNIVERSITY OF TEXAS AT AUSTIN                *
+C*                                                                     *
+C*  LATEST REVISION     - NONE.                                        *
+C*                                                                     *
+C*                                                                     *
+C***********************************************************************
+C
+C
+C             FORMAL PARAMETERS
+C
+      INTEGER N
+C
+      REAL T,X(N)
+C
+C             INTERNAL VARIABLES
+C
+      INTEGER IH,IL
+C
+      REAL TT
+C
+      TT = T
+      IF (TT .LE. X(2)) GO TO 4
+         IF (TT .GE. X(N-1)) GO TO 5
+            IL = 2
+            IH = N-1
+C
+C             INTERPOLATE LINEARLY FOR I
+C
+    1       I = IL+IFIX(FLOAT(IH-IL)*(TT-X(IL))/(X(IH)-X(IL)))
+            IF (I .EQ. IH) I = I - 1
+            IF (TT .LT. X(I)) GO TO 2
+               IF (TT .LE. X(I+1)) GO TO 3
+C
+C             I  IS TOO SMALL - ADJUST AND TRY AGAIN
+C
+                  IL = I+1
+                  GO TO 1
+C
+C             I  IS TOO LARGE - ADJUST AND TRY AGAIN
+C
+    2       IH = I
+            GO TO 1
+C
+    3          QXZ063 = I
+C             I  IS JUST RIGHT - RETURN
+C
+               RETURN
+C
+C             LEFT END
+C
+    4 QXZ063 = 1
+      RETURN
+C
+C             RIGHT END
+C
+    5    QXZ063 = N-1
+         RETURN
+C
+      END
+C --- SUBPROGRAM QXZ255 --- FORMERLY KNOWN AS ROUTINE  ERROR   ---
+      SUBROUTINE QXZ255 (EPSILON,VAL,IFLAG)
+C***********************************************************************
+C*
+C*            PURPOSE
+C*              TO TEST THE CONVERGENGE OF A COMPUTED RESULT BASED ON A
+C*              RELATIVE CONVERGENCE CRITERION OR AN ABSOLUTE
+C*              CONVERGENCE CRITERION
+C*
+C*            USAGE
+C*              CALL ERROR (EPSILON,VAL,IFLAG)
+C*            PARAMETERS
+C*               EPSILON - A ONE DIMENSION INPUT ARRAY DIMENSIONED 3 IN
+C*                         THE CALLING PROGRAM
+C*               EPSILON(1) - MAXIMUM RELATIVE ERROR
+C*               EPSILON(2) - MAXIMUM ABSOLUTE ERROR
+C*               EPSILON(3) - THRESHOLD ERROR
+C*                         SEE ACCURACY SECTION OF WRITE-UP FOR SUB-
+C*                         ROUTINES SECBI OR RMULL FOR A MORE DETAILED
+C*                         DESCRIPTION
+C*               VAL     - A ONE DIMENSIONAL INPUT ARRAY CONTAINING THE
+C*                         COMPUTED VALUES FROM SUCCEEDING ITERATIONS
+C*                         WHOSE CONVERGENGE IS TO BE DETERMINED
+C*                            VAL(1) - COMPUTED VALUE FROM ITH ITERATION
+C*                            VAL(2) - COMPUTED VALUE FROM I+1TH
+C*                                     ITERATION
+C*               IFLAG   - AN OUTPUT ERROR INTEGER
+C*                         = 0 CONVERGENGE
+C*                         = 1 NON CONVERGENCE
+C*
+C*            REQUIRED ROUTINES
+C*               NONE
+C*
+C***********************************************************************
+C
+      DIMENSION EPSILON (*),VAL(*)
+C
+C
+      IFLAG=1
+C
+C             SET THRESHOLD ERROR
+      TE=EPSILON(3)
+C
+C             SET THRESHOLD ERROR TO DEFAULT VALUE IF 0.0
+      IF(TE.EQ.0.)TE=EPSILON(1)
+C
+      TEMP=ABS(VAL(2)-VAL(1))
+C
+C             DETERMINE WHETHER RELATIVE ERROR OR ABSOLUTE ERROR WILL
+C             BE USED TO DETERMINE CONVERGENCE
+      IF(ABS(VAL(2)).LT.TE) GOTO 2
+      GOTO 3
+C
+C             ABSOLUTE CONVERGENCE CRITERION
+    2 IF(TEMP.LT.EPSILON(2))IFLAG=0
+      GO TO 999
+C
+C             RELATIVE CONVERGENCE CRITERION
+    3 IF(TEMP/ABS(VAL(2)).LT.EPSILON(1))IFLAG=0
+C
+  999 RETURN
+      END
+      SUBROUTINE QXZ275(X,Y,W,XK,PK,IPK,DEV,LM1,N,L,ITMAX,XR,R,NN,NN1,
+     1         C,ANS,L2,LM2,LL,E,D,GG,G,B,XLAM,TEMP3,IW,IERR,NKMAX)
+C***********************************************************************
+C*                                                                     *
+C*    PURPOSE:                                                         *
+C*                 SUBROUTINE QXZ275 (RASP) FITS A SMOOTH CUBIC SPLINE *
+C*                 TO A UNIVARIATE FUNCTION.  DATA MAY BE UNEQUALLY    *
+C*                 SPACED.                                             *
+C*                                                                     *
+C*                                                                     *
+C*        USE:                                                         *
+C*                 CALL QXZ275(X,Y,W,XK,PK,IPK,DEV,LM1,N,L,ITMAX,XR,R, *
+C*                             NN,NN1,C,ANS,L2,LM2,LL,E,D,GG,G,B,XLAM, *
+C*                             TEMP3,IW,IERR,NKMAX)                    *
+C*                                                                     *
+C*         X       AN INPUT ONE-DIMENSIONAL REAL ARRAY DIMENSIONED AT  *
+C*                 LEAST N IN THE CALLING PROGRAM.  X CONTAINS THE     *
+C*                 X-COORDINATES OF THE DATA POINTS.                   *
+C*                                                                     *
+C*         Y       AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH           *
+C*                 CONTAINS THE FUNCTION VALUES OF THE DATA POINTS.    *
+C*                 Y MUST BE DIMENSIONED AT LEAST N.                   *
+C*                                                                     *
+C*         W       AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS  *
+C*                 THE WEIGHTING VALUES.  W MUST BE DIMENSIONED AT     *
+C*                 LEAST N.                                            *
+C*                                                                     *
+C*         XK      AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH           *
+C*                 CONTAINS THE X-COORDINATES OF THE SELECTED KNOTS.   *
+C*                 XK MUST BE DIMENSIONED AT LEAST L.                  *
+C*                                                                     *
+C*         PK      AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS  *
+C*                 THE TENSION FACTORS APPLIED ON THE INTERVALS        *
+C*                 BETWEEN KNOTS.  PK MUST BE DIMENSIONED AT           *
+C*                 LEAST L-1.  PK(K) MUST BE GREATER THAN -1.          *
+C*                                                                     *
+C*         IPK     AN INPUT ONE-DIMENSIONAL INTEGER ARRAY WHICH        *
+C*                 CONTAINS THE TENSION FACTOR ADJUSTMENT FLAGS.       *
+C*                 IPK MUST BE DIMENSIONED AT LEAST L-1.               *
+C*                                                                     *
+C*                 IPK(K)=0  FACTOR K MAY BE ADJUSTED.                 *
+C*                                                                     *
+C*                 IPK(K)=1  FACTOR K IS HELD CONSTANT.                *
+C*                                                                     *
+C*         DEV     AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH           *
+C*                 CONTAINS THE ALLOWED PERCENTAGE OF DEVIATION OF     *
+C*                 THE APPROXIMATED SOLUTION FROM THE LINEAR SOLUTION. *
+C*                 DEV MUST BE DIMENSIONED AT LEAST L-1.               *
+C*                                                                     *
+C*         LM1     AN INPUT INTEGER WHICH IS L-1                       *
+C*                                                                     *
+C*         N       AN INPUT INTEGER SPECIFYING THE NUMBER OF DATA      *
+C*                 POINTS FOR THE INDEPENDENT VARIABLE.                *
+C*                                                                     *
+C*         L       AN INPUT INTEGER SPECIFYING THE NUMBER OF KNOTS.    *
+C*                 KNOTS MUST BE CHOSEN SO THAT THERE ARE AT LEAST     *
+C*                 THREE DATA POINTS IN EACH INTERVAL DEFINED BY       *
+C*                 CONSECUTIVE PAIRS OF KNOTS.                         *
+C*                                                                     *
+C*         ITMAX   AN INPUT INTEGER SPECIFYING THE MAXIMUM NUMBER      *
+C*                 OF ITERATIONS PERMITTED IN ACHIEVING THE ALLOWED    *
+C*                 DEVIATIONS.   ITMAX  35.                            *
+C*                                                                     *
+C*         XR      AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS  *
+C*                 THE X-COORDINATES OF THE POINTS AT WHICH INTER-     *
+C*                 POLATION IS DESIRED.  XR MUST BE DIMENSIONED AT     *
+C*                 LEAST ABS(NN).  IF NN IS POSITIVE, ALL ELEMENTS OF  *
+C*                 XR MUST CONTAIN VALUES.  IF NN IS NEGATIVE, ONLY    *
+C*                 XR(1) AND XR(ABS(NN)) NEED CONTAIN VALUES.          *
+C*                                                                     *
+C*         R       AN OUTPUT REAL ARRAY WHICH CONTAINS THE             *
+C*                 RATIONAL SPLINE APPROXIMATIONS TO THE DATA.         *
+C*                 R MUST BE DIMENSIONED AT LEAST N.                   *
+C*                                                                     *
+C*         NN      AN INPUT INTEGER. ABS(NN) IS  THE NUMBER            *
+C*                 OF INTERPOLATED VALUES TO BE CALCULATED.            *
+C*                                                                     *
+C*         NN1     AN INPUT INTEGER WHICH IS ABS(NN).                  *
+C*
+C*         C       AN OUTPUT TWO-DIMENSIONAL REAL ARRAY WHICH          *
+C*                 CONTAINS THE CORRELATION MATRIX.  C SHOULD HAVE     *
+C*                 A FIRST DIMENSION OF L2 AND A SECOND DIMENSION      *
+C*                 OF AT LEAST 2*L.                                    *
+C*                                                                     *
+C*         ANS     A ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS THE     *
+C*                 Y-COORDINATES AND SECOND DERIVATIVES OF THE KNOTS.  *
+C*                                                                     *
+C*         L2      AN INTEGER WHICH IS L*2                             *
+C*                                                                     *
+C*         LM2     AN INTEGER WHICH IS L-2                             *
+C*                                                                     *
+C*         LL      AN INTEGER WHICH IS 2*L +1                          *
+C*                                                                     *
+C*         E       AN OUTPUT TWO-DIMENSIONAL REAL ARRAY WHICH CONTAINS *
+C*                 ((ETWE)INVERSE)ETWY ON OUTPUT (ET=E TRANSPOSE)      *
+C*                                                                     *
+C*         D       AN OUTPUT TWO-DIMENSIONAL REAL ARRAY WHICH CONTAINS *
+C*                 (ETWE)INVERSE ON OUTPUT.                            *
+C*                                                                     *
+C*         GG      AN OUTPUT TWO-DIMENSIONAL REAL ARRAY WHICH CONTAINS *
+C*                 ((S(ETWE)INVERSE)ST)INVERSE ON OUTPUT.              *
+C*                                                                     *
+C*         G       AN OUTPUT TWO-DIMENSIONAL REAL ARRAY WHICH CONTAINS *
+C*                 (S(ETWE)INVERSE)ST ON OUTPUT                        *
+C*                                                                     *
+C*         B       ELEMENTS OF MATRIX S, COEFFICIENTS OF CONSTRAINT    *
+C*                 EQUATION 15, PAGE 2.                                *
+C*                                                                     *
+C*                                                                     *
+C*         XLAM    AN OUTPUT ONE-DIMENSIONAL ARRAY WHICH CONTAINS      *
+C*                 THE LAGRANGE MULTIPLIERS.                           *
+C*                                                                     *
+C*         TEMP3   A TWO-DIMENSIONAL REAL ARRAY USED AS TEMPORARY      *
+C*                 STORAGE IN COVARIANCE MATRIX CALCULATIONS.          *
+C*                 TEMP3= -B*BB*B(INVERSE)*E                           *
+C*                                                                     *
+C*         IW      AN INPUT/OUTPUT INTEGER.                            *
+C*                                                                     *
+C*                 INPUT   ON THE FIRST CALL TO RSUTDS ,               *
+C*                         IW SHOULD BE SET TO 0.  ON SUBSEQUENT CALLS,*
+C*                         SHOULD BE SET TO 1 TO PROVIDE ADDITIONAL    *
+C*                         INTERPOLATION OR DIFFERENTIATION ON THE SAME*
+C*                         FITTING CALCULATIONS.                       *
+C*                                                                     *
+C*                 OUTPUT  IW IS AUTOMATICALLY SET TO 1.               *
+C*                                                                     *
+C*         IERR    OUTPUT ERROR PARAMETER:                             *
+C*                                                                     *
+C*                 = 0  NORMAL RETURN.  NO ERROR DETECTED.             *
+C*                 =-2  DID NOT CONVERGE IN ALLOWED NUMBER OF ITERAT-  *
+C*                      IONS.                                          *
+C*                 =-3  NO SOLUTION DETERMINED BECAUSE THE MATRIX      *
+C*                      SENT TO SYMPDS WAS NOT SPD OR SECBI FAILED.    *
+C*                                                                     *
+C*                                                                     *
+C*         NKMAX   AN INPUT INTEGER WHICH AGREES EXACTLY WITH THE      *
+C*                 FIRST DIMENSION OF ARRAY C. NKMAX MUST BE GREATER   *
+C*                 THAN OR EQUAL TO 2*NK.                              *
+C*                                                                     *
+C*                                                                     *
+C*                                                                     *
+C*                                                                     *
+C*    REQUIRED ROUTINES                QXZ063,QXZ276,QXZ277,QXZ278,    *
+C*                                     QXZ279,QXZ280,SYMPDS(F4.3),     *
+C*                                     SECBI(C2.5)                     *
+C*                                                                     *
+C*    SOURCE                                                           *
+C*                                     PROGRAM RASPFIT BY JAMES R.     *
+C*                                     SCHIESS AND PATRICIA A. KERR    *
+C*                                     MODIFIED BY COMPUTER SCIENCES   *
+C*                                     CORPORATION                     *
+C*                                                                     *
+C*    LANGUAGE                         -FORTRAN                        *
+C*                                                                     *
+C*    DATE RELEASED                    FEBRUARY, 1986                  *
+C*                                                                     *
+C*    LATEST REVISION                  FEBRUARY, 1986                  *
+C***********************************************************************
+C
+C
+C
+C     PARAMETERS USED
+C
+C
+      DIMENSION X(N),Y(N),W(N),DEV(LM1),IPK(LM1),PK(LM1)
+      DIMENSION XK(L),R(NN1),XR(NN1)
+      DIMENSION C(NKMAX,L2),ANS(L2),E(L2,LL),B(LM2,L2),GG(LM2,LM2)
+C
+C     THE FIRST DIMENSION OF C WAS CHANGED FROM L2 TO NKMAX
+C
+      DIMENSION D(L2,L2),G(LM2,LM2),XLAM(LM2)
+      DIMENSION TEMP3(L2,L2)
+C
+      INTEGER QXZ063
+      IF(IW.EQ.1)GO TO 70
+C
+C
+      CALL QXZ278(X,N,XK,L,ISTOP)
+      IERR=-ISTOP
+      IF(IERR .NE. 0)  GO TO 120
+      IPKZERO=LM1
+C
+      DO 30 I=1,LM1
+   30 IPKZERO=IPKZERO-IPK(I)
+C
+      DO 50 J=1,ITMAX
+      CALL QXZ277(X,Y,W,N,XK,L,PK,LM1,ANS,L2,E,GG,B,LM2,LL,D,XLAM,G,
+     *IERR)
+      IF(IERR.NE.0)GO TO 120
+      CALL QXZ279(IPK,XK,PK,DEV,LM1,ANS,L,L2,IPKZERO,IERR)
+      IF(IERR.NE.0)GO TO 120
+      IF(IPKZERO .EQ. 0)GO TO 70
+   50 CONTINUE
+C
+C              CALCULATE STANDARD ERROR
+C
+      IERR=-2
+   70 STDERR=0.
+      FLGRP=0.
+      FLGRPP=0.
+      K = 1
+      IF(NN.GT.0)GO TO 960
+      I=QXZ063(XR(1),XK,L)
+      K=I
+      DXK = XK(K+1) - XK(K)
+      CALL QXZ276(DXK,PK(K),ANS(2*K-1),ANS(2*K),ANS(2*K+1),ANS(2*K+2),
+     1     XK(K),XR(1),R(1),FLGRP,FLGRPP)
+C
+      IF(XR(1).GT.XR(NN1))GO TO 900
+      DO 940 J=2,NN1
+40    IF(XR(J).GT.XK(I+1))GO TO 200
+      K=I
+      DXK = XK(K+1) - XK(K)
+      CALL QXZ276(DXK,PK(K),ANS(2*K-1),ANS(2*K),ANS(2*K+1),ANS(2*K+2),
+     1     XK(K),XR(J),R(J),FLGRP,FLGRPP)
+      GO TO 940
+200   I=I+1
+      GO TO 40
+940   CONTINUE
+      GO TO 980
+900   DO 920 J=2,NN1
+930   IF(XR(J).LT.XK(I))GO TO 910
+      K=I
+      DXK = XK(K+1) - XK(K)
+      CALL QXZ276(DXK,PK(K),ANS(2*K-1),ANS(2*K),ANS(2*K+1),ANS(2*K+2),
+     1     XK(K),XR(J),R(J),FLGRP,FLGRPP)
+      GO TO 920
+910   I=I-1
+      GO TO 930
+920   CONTINUE
+      GO TO 980
+960   DO 280 I=1,NN
+      K=QXZ063(XR(I),XK,L)
+      DXK = XK(K+1) - XK(K)
+      CALL QXZ276(DXK,PK(K),ANS(2*K-1),ANS(2*K),ANS(2*K+1),ANS(2*K+2),
+     1     XK(K),XR(I),R(I),FLGRP,FLGRPP)
+280    CONTINUE
+C
+980   IF(IW.EQ.1)GO TO 120
+      IW=1
+      K=1
+      DO 80 I=1,N
+      IF(X(I).GT.XK(K+1))K=K+1
+      DXK = XK(K+1) - XK(K)
+      CALL QXZ276(DXK,PK(K),ANS(2*K-1),ANS(2*K),ANS(2*K+1),ANS(2*K+2),
+     1     XK(K),X(I),F,FLGRP,FLGRPP)
+      STDERR= STDERR +(Y(I)-F)**2
+80    CONTINUE
+      STDERR= SQRT(STDERR/(N-2*L))
+C
+C
+C      CALCULATE COVARIANCE MATRIX
+C
+      DO 230 KK=1,L2
+      DO 230 II=1,L2
+      TEMP3(II,KK) = 0.0
+      DO 230 JJ=1,L2
+      DO 230  J=1,LM2
+      DO 230  M=1,LM2
+  230 TEMP3(II,KK)=TEMP3(II,KK)-B(M,II)*GG(M,J)*B(J,JJ)*E(JJ,KK+1)
+      DO 260 III=1,L2
+      DO 260 KKK=1,L2
+      C(III,KKK) = 0.0
+      IF(III .EQ. KKK)  C(III,KKK) = C(III,KKK)+E(III,III+1)
+      DO 260 JJJ=1,L2
+  260 C(III,KKK) = C(III,KKK) + E(III,JJJ+1)*TEMP3(JJJ,KKK)
+C
+C     CALCULATE CORRELATION MATRIX WITH STANDARD DEVIATIONS ON DIAGONAL
+C
+      DO 100 I=1,L2
+      TEMP = SQRT(STDERR*C(I,I))
+      DO 110 J=1,L2
+      C(I,J) = STDERR*C(I,J)/TEMP
+      C(J,I) = STDERR*C(J,I)/TEMP
+  110 CONTINUE
+      C(I,I) = TEMP
+  100 CONTINUE
+  120 RETURN
+      END
+      SUBROUTINE QXZ276(DX,PK,YBAR,YBARPP,YBAR1,YBAR1PP,XK,X,F,FP,FPP)
+C***********************************************************************
+C*                                                                     *
+C*    PURPOSE:                                                         *
+C*                 SUBROUTINE QXZ276 (FRATS) CALCULATES THE            *
+C                  RATIONAL SPLINE APPROXIMATIONS OF F,F',F'',         *
+C*                 BUT RETURNS ONLY F IN RSUTDS.                       *
+C*                                                                     *
+C*         DX      LENGTH OF SUBINTERVAL DEFINED BY TWO CONSECUTIVE    *
+C*                 KNOT ABSCISSAS (XK(K+1) - X(K))                     *
+C*                                                                     *
+C*         PK      A ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS THE     *
+C*                 TENSION FACTORS                                     *
+C*                                                                     *
+C*         YBAR    Y-COORDINATE OF KNOT XK(J)                          *
+C*                                                                     *
+C*         YBARPP  SECOND DERIVATIVE OF KNOT XK(J)                     *
+C*                                                                     *
+C*         YBAR1   Y-COORDINATE OF KNOT XK(J+1)                        *
+C*                                                                     *
+C*         YBAR1PP SECOND DERIVATIVE AT KNOT XK(J+1)                   *
+C*                                                                     *
+C*         XK      X-COORDINATE OF KNOT XK(J)                          *
+C*                                                                     *
+C*         X       X-COORDINATE OF DATA POINT                          *
+C*                                                                     *
+C*         F       RATIONAL SPLINE APPROXIMATION OF FUNCTION VALUE     *
+C*                                                                     *
+C*         FPP     RATIONAL SPLINE APPROXIMATION OF FIRST DERIVATIVE   *
+C*                                                                     *
+C*         FPP     RATIONAL SPLINE APPROXIMATION OF SECOND DERIVATIVE  *
+C                                                                      *
+C***********************************************************************
+      T=(X-XK)/DX
+      U=1.-T
+      PT=PK*T+1.
+      PU=PK*U+1.
+      HK = DX**2/(2.*(PK**2+3.*PK+3.))
+C
+      F=U*YBAR + HK*(U**3/PT-U)*YBARPP + T*YBAR1 +HK*(T**3/PU-T)*YBAR1PP
+      GO TO 30
+C
+   10 IF(FP .LT. 1.0)  GO TO 20
+      FP=(-YBAR-HK*(((3.*U**2*PT+U**3*PK)/PT**2)-1.)*YBARPP+YBAR1+HK*
+     1  (((3.*T**2*PU+T**3*PK)/PU**2)-1.)*YBAR1PP)/DX
+C
+   20 IF(FPP .LT. 1.0)  GO TO 30
+      FPP=HK*YBARPP*(2.*PK**2*U**3+6.*PK*PT*U**2+6.*PT**2*U)/PT**3
+     1   +HK*YBAR1PP*(2.*PK**2*T**3+6.*PK*PU*T**2+6.*PU**2*T)/PU**3
+      FPP=FPP/DX**2
+C
+   30 RETURN
+      END
+      SUBROUTINE QXZ277(X,Y,W,N,XK,L,PK,LM1,A,L2,E,GG,B,LM2,LLL,D,
+     1      XLAM,G,IERR)
+C***********************************************************************
+C*                                                                     *
+C*    PURPOSE:                                                         *
+C*                 SUBROUTINE QXZ277 (LSFIT) IS USED                   *
+C*                 TO FIND THE LEAST SQUARES FIT FOR RSUTDS            *
+C*                                                                     *
+C*                                                                     *
+C*        USE:                                                         *
+C*                 CALL QXZ277(X,Y,W,N,XK,L,PK,LM1,A,L2,E,GG,B,LM2,    *
+C*                            LLL,D,XLAM,G,IERR)                       *
+C*                                                                     *
+C*         X       AN INPUT ONE-DIMENSIONAL ARRAY DIMENSIONED AT LEAST *
+C*                 N IN THE CALLING PROGRAM.  X CONTAINS THE           *
+C*                 X-COORDINATES OF THE DATA POINTS.                   *
+C*                                                                     *
+C*         Y       AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH           *
+C*                 CONTAINS THE FUNCTION VALUES OF THE DATA POINTS.    *
+C*                 Y MUST BE DIMENSIONED AT LEAST N.                   *
+C*                                                                     *
+C*         W       AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS  *
+C*                 THE WEIGHTING VALUES.  W MUST BE DIMENSIONED AT     *
+C*                 LEAST N.                                            *
+C*                                                                     *
+C*         N       AN INPUT INTEGER SPECIFYING THE NUMBER OF DATA      *
+C*                 POINTS FOR THE INDEPENDENT VARIABLE.                *
+C*                                                                     *
+C*         XK      AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH           *
+C*                 CONTAINS THE X-COORDINATES OF THE SELECTED KNOTS.   *
+C*                 XK MUST BE DIMENSIONED AT LEAST L.                  *
+C*                                                                     *
+C*         L       AN INPUT INTEGER SPECIFYING THE NUMBER OF KNOTS.    *
+C*                 KNOTS MUST BE CHOSEN SO THAT THERE ARE AT LEAST     *
+C*                 THREE DATA POINTS IN EACH INTERVAL DEFINED BY       *
+C*                 CONSECUTIVE PAIRS OF KNOTS.                         *
+C*                                                                     *
+C*                                                                     *
+C*         PK      AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS  *
+C*                 THE TENSION FACTORS APPLIED ON THE INTERVALS        *
+C*                 BETWEEN KNOTS.  PK MUST BE DIMENSIONED AT           *
+C*                 LEAST L-1.  PK(K) MUST BE GREATER THAN -1.          *
+C*                 PK(K) MUST BE GREATER THAN -1.                      *
+C*                                                                     *
+C*         LM1     AN INTEGER WHICH IS L-1                             *
+C*                                                                     *
+C*         A       AN OUTPUT ONE-DIMENSIONAL ARRAY WHICH               *
+C*                 CONTAINS THE FUNCTION VALUES AND SECOND DERIVATIVES *
+C*                 OF THE DATA.                                        *
+C*                                                                     *
+C*         L2      AN INTEGER WHICH IS L*2                             *
+C*                                                                     *
+C*         E       AN OUTPUT TWO-DIMENSIONAL REAL ARRAY WHICH CONTAINS *
+C*                 ((ETWE)INVERSE)ETWY ON OUTPUT (ET=E TRANSPOSE)      *
+C*                                                                     *
+C*                                                                     *
+C*         GG      AN OUTPUT TWO-DIMENSIONAL REAL ARRAY WHICH CONTAINS *
+C*                 ((S(ETWE)INVERSE)ST)INVERSE ON OUTPUT.              *
+C*                                                                     *
+C*         B       ELEMENTS OF MATRIX S, COEFFICIENTS OF CONSTRAINT    *
+C*                 EQUATION 15, PAGE 2.                                *
+C*                                                                     *
+C*         LM2     AN INTEGER WHICH IS L-2                             *
+C*                                                                     *
+C*         LLL     AN INTEGER WHICH IS 2*L +1                          *
+C*                                                                     *
+C*         D       AN OUTPUT TWO-DIMENSIONAL REAL ARRAY WHICH CONTAINS *
+C*                 (ETWE)INVERSE ON OUTPUT.                            *
+C*                                                                     *
+C*                                                                     *
+C*         XLAM    AN OUTPUT ONE-DIMENSIONAL ARRAY WHICH CONTAINS      *
+C*                 THE LAGRANGE MULTIPLIERS.                           *
+C*                                                                     *
+C*         G       AN OUTPUT TWO-DIMENSIONAL REAL ARRAY WHICH CONTAINS *
+C*                 (S(ETWE)INVERSE)ST ON OUTPUT                        *
+C*                                                                     *
+C*         IERR    OUTPUT ERROR PARAMETER:                             *
+C*                                                                     *
+C*                 = 0  NORMAL RETURN.  NO ERROR DETECTED.             *
+C*                 =-2  DID NOT CONVERGE IN ALLOWED NUMBER OF ITERAT-  *
+C*                      IONS.                                          *
+C*                 =-3  NO SOLUTION DETERMINED BECAUSE THE MATRIX      *
+C*                      SENT TO SYMPDS WAS NOT SPD OR SECBI FAILED.    *
+C*                                                                     *
+C*                                                                     *
+C***********************************************************************
+C
+      DIMENSION GG(LM2,LM2),XLAM(LM2),B(LM2,L2)
+      DIMENSION X(N),Y(N),W(N),PK(LM1),XK(L)
+      DIMENSION  A(L2),D(L2,L2),G(LM2,LM2),E(L2,LLL)
+C
+C     ZERO  ARRAYS
+C
+      DO 5 I=1,L
+      A(I) = 0.0
+      A(L+I) = 0.0
+      DO 6 J=1,L
+      D(I,J) = 0.0
+      D(L+I,J) = 0.0
+      D(I,L+J) = 0.0
+      D(L+I,L+J) = 0.0
+      E(I,J) = 0.0
+      E(L+I,J) = 0.0
+      E(I,L+J) = 0.0
+      E(L+I,L+J) = 0.0
+    6 CONTINUE
+      E(I,2*L+1) = 0.0
+      E(L+I,2*L+1) = 0.0
+      E(I,I+1) = 1.
+      E(L+I,L+I+1) = 1.
+    5 CONTINUE
+C
+C     LEAST SQUARES SET-UP
+C
+      K = 1
+      DO 40 I=1,N
+      IF(X(I) .GT. XK(K+1)) K = K + 1
+      DXK = XK(K+1) - XK(K)
+      HK=(DXK**2)/(2.*(PK(K)**2 +3.*PK(K)+3.))
+      KU=2*(K+1)
+      KL=KU-3
+      T=(X(I)-XK(K))/DXK
+      U=1.-T
+      A(KL)=U
+      A(KL+1)= (U**3/(PK(K)*T+1.)-U)*HK
+      A(KL+2)= T
+      A(KU)= (T**3/(PK(K)*U+1.)-T)*HK
+      DO 30 KK=KL,KU
+      E(KK,1)= E(KK,1)+A(KK)*Y(I)*W(I)
+      DO 30 LL=KL,KU
+   30 D(KK,LL)=D(KK,LL) +A(KK)*W(I)*A(LL)
+   40 CONTINUE
+C
+C     LEAST SQUARES SOLUTION
+C
+      IOPT=1
+      IFAC=0
+      CALL SYMPDS(L2,L2,D,LLL,E,IOPT,IFAC,DET,ISC,A,IERR)
+      IF(IERR.NE.0)IERR=-5
+      IF(IERR.NE.0)GO TO 140
+C
+C
+C     SET UP CONSTRAINTS
+C
+      DO 60 I=1,L2
+      DO 60 K=1,LM2
+   60 B(K,I)=0.
+      HK=((XK(2)-XK(1))**2)*0.5/(PK(1)**2 +3.*PK(1)+3.)
+C
+      DO 70 K=1,LM2
+      DXK = XK(K+1) - XK(K)
+      DXK1 = XK(K+2) - XK(K+1)
+      KL=2*K-1
+      HK1=0.5*(DXK1**2)/(PK(K+1)**2 +3.*PK(K+1)+3.)
+      B(K,KL)=-1./DXK
+      B(K,KL+1)=HK/DXK
+      B(K,KL+2)=1./DXK +1./DXK1
+      B(K,KL+3)=(PK(K)+2.)*HK/DXK +(PK(K+1)+2.)*HK1/DXK1
+      B(K,KL+4)= -1./DXK1
+      B(K,KL+5)= HK1/DXK1
+      HK=HK1
+   70 CONTINUE
+C
+      DO 100 K=1,LM2
+      DO 90 I=1,LM2
+      G(K,I)=0.
+      GG(I,K)=0.
+      DO 80 KK=1,L2
+      DO 80 LL=1,L2
+   80 G(K,I) = G(K,I)+B(K,KK)*E(KK,LL+1)*B(I,LL)
+   90 CONTINUE
+      GG(K,K)=1.
+  100 CONTINUE
+C
+C     CONSTRAINED  SOLUTION
+C
+      IOPT=1
+      IFAC=0
+      CALL SYMPDS(LM2,LM2,G,LM2,GG,IOPT,IFAC,DET,ISC,A,IERR)
+      IF(IERR.NE.0)IERR=-5
+      IF(IERR .NE. 0) GO TO 140
+C
+C     CALCULATE XLAM FOR USE WITH LAGRANGE MULTIPLIER METHOD
+C
+      DO 120 I=1,LM2
+      XLAM(I)=0.
+      DO 120 J=1,LM2
+      DO 120 KK=1,L2
+  120 XLAM(I)= XLAM(I) +GG(I,J)*B(J,KK)*E(KK,1)
+C
+C     UPDATE SOLUTION WITH CONSTRAINTS
+C
+      DO 130 I=1,L2
+      A(I) = E(I,1)
+      DO 130 J=1,L2
+      DO 130 KK=1,LM2
+  130 A(I)=A(I)-E(I,J+1)*B(KK,J)*XLAM(KK)
+C
+140   RETURN
+      END
+      SUBROUTINE QXZ278(X,N,XK,L,ISTOP)
+C***********************************************************************
+C*                                                                     *
+C*    PURPOSE:                                                         *
+C*                 SUBROUTINE QXZ278 (INTERVL) IS USED                 *
+C*                 TO DETERMINE WHETHER THERE ARE AT LEAST 3 POINTS IN *
+C*                 EACH INTERVAL.                                      *
+C*                                                                     *
+C*                                                                     *
+C*        USE:                                                         *
+C*                 CALL QXZ278(X,N,XK,L,ISTOP)                         *
+C*                                                                     *
+C*         X       AN INPUT ONE-DIMENSIONAL ARRAY DIMENSIONED AT LEAST *
+C*                 N IN THE CALLING PROGRAM.  X CONTAINS THE           *
+C*                 X-COORDINATES OF THE DATA POINTS.                   *
+C*                                                                     *
+C*         N       AN INPUT INTEGER SPECIFYING THE NUMBER OF DATA      *
+C*                 POINTS FOR THE INDEPENDENT VARIABLE.                *
+C*                                                                     *
+C*         XK      AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH           *
+C*                 CONTAINS THE X-COORDINATES OF THE SELECTED KNOTS.   *
+C*                 XK MUST BE DIMENSIONED AT LEAST L.                  *
+C*                                                                     *
+C*         L       AN INPUT INTEGER SPECIFYING THE NUMBER OF KNOTS.    *
+C*                 KNOTS MUST BE CHOSEN SO THAT THERE ARE AT LEAST     *
+C*                 THREE DATA POINTS IN EACH INTERVAL DEFINED BY       *
+C*                 CONSECUTIVE PAIRS OF KNOTS.                         *
+C*                                                                     *
+C*         ISTOP   INTEGER FLAG SET TO 1 IF THERE ARE LESS THAN        *
+C*                 3 DATA POINTS IN ANY SUBINTERVAL.                   *
+C*                                                                     *
+C***********************************************************************
+C
+      DIMENSION X(N),XK(L)
+C
+      K=1
+      ICOUNT = 0
+      ISTOP = 0
+      DO 10 J=2,N-1
+      ICOUNT = ICOUNT + 1
+      IF(X(J) .LT. XK(K+1))  GO TO 10
+      IF(ICOUNT .LT. 3)  ISTOP=1
+      ICOUNT = 1
+      K=K+1
+   10 CONTINUE
+      IF(ICOUNT .LT.3)  ISTOP=1
+C
+      RETURN
+      END
+      SUBROUTINE QXZ279(IPK,XK,PK,DEV,LM1,ANS,L,L2,IPKZERO,IERR)
+C
+C***********************************************************************
+C*                                                                     *
+C*    PURPOSE:                                                         *
+C*                 SUBROUTINE QXZ279 (PKADJ) IS USED                   *
+C*                 TO INCREMENT EACH PK IF ERROR EXCEEDS               *
+C*                 DESIRED DEVIATION IN INTERVAL                       *
+C*                                                                     *
+C*                                                                     *
+C*        USE:                                                         *
+C*                 CALL QXZ279(IPK,XK,PK,DEV,LM1,ANS,L,L2,IPKZERO,IERR)*
+C*                                                                     *
+C*         IPK     AN INPUT ONE-DIMENSIONAL INTEGER ARRAY WHICH        *
+C*                 CONTAINS THE TENSION FACTOR ADJUSTMENT FLAGS.       *
+C*                                                                     *
+C*                 IPK(K)=0  FACTOR K MAY BE ADJUSTED.                 *
+C*                                                                     *
+C*                 IPK(K)=1  FACTOR K IS HELD CONSTANT.                *
+C*                                                                     *
+C*         XK      AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH           *
+C*                 CONTAINS THE X-COORDINATES OF THE SELECTED KNOTS.   *
+C*                 XK MUST BE DIMENSIONED AT LEAST L.                  *
+C*                                                                     *
+C*         PK      AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS  *
+C*                 THE TENSION FACTORS APPLIED ON THE INTERVALS        *
+C*                 BETWEEN KNOTS.  PK MUST BE DIMENSIONED AT           *
+C*                 LEAST L-1.  PK(K) MAY BE UNDEFINED IF IPK(K)=0.     *
+C*                 PK(K) MUST BE GREATER THAN -1.                      *
+C*                                                                     *
+C*         DEV     AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH           *
+C*                 CONTAINS THE ALLOWED PERCENTAGE OF DEVIATION OF     *
+C*                 THE APPROXIMATED SOLUTION FROM THE LINEAR SOLUTION. *
+C*                 DEV MUST BE DIMENSIONED AT LEAST L-1.               *
+C*                                                                     *
+C*         LM1     AN INTEGER WHICH IS L-1                             *
+C*                                                                     *
+C*         ANS     AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH HOLDS     *
+C*                 Y-COORDINATES AND SECOND DERIVATIVES AT THE KNOTS.  *
+C*                 ANS MUST BE DIMENSIONED L2.                         *
+C*                                                                     *
+C*         L       AN INPUT INTEGER SPECIFYING THE NUMBER OF KNOTS.    *
+C*                 KNOTS MUST BE CHOSEN SO THAT THERE ARE AT LEAST     *
+C*                 THREE DATA POINTS IN EACH INTERVAL DEFINED BY       *
+C*                 CONSECUTIVE PAIRS OF KNOTS.                         *
+C*                                                                     *
+C*         L2      AN INTEGER WHICH IS L*2                             *
+C*                                                                     *
+C*         IPKZERO NUMBER OF TENSION FACTORS TO BE ADJUSTED            *
+C*                                                                     *
+C*         IERR    OUTPUT ERROR PARAMETER:                             *
+C*                                                                     *
+C*                 = 0  NORMAL RETURN.  NO ERROR DETECTED.             *
+C*                 =-2  DID NOT CONVERGE IN ALLOWED NUMBER OF ITERAT-  *
+C*                      IONS.                                          *
+C*                 =-3  NO SOLUTION DETERMINED BECAUSE THE MATRIX      *
+C*                      SENT TO SYMPDS WAS NOT SPD OR SECBI FAILED.    *
+C*                                                                     *
+C***********************************************************************
+      COMMON /INTRVAL/KK,PKK,ANS1,ANS2,ANS3,ANS4,DXK,DYK
+C
+      DIMENSION EPS(3)
+      DIMENSION XK(L),IPK(LM1),PK(LM1),DEV(LM1),ANS(L2)
+C
+      EXTERNAL QXZ280
+C
+C     INCREMENTS EACH PK IF ERROR EXCEEDS DESIRED DEVIATION IN INTERVAL
+C
+      DATA T1,T2,DT/0.,1.,0.125/
+      DATA (EPS(J),J=1,3)/1.0E-8,1.0E-12,1.0E-8/
+C
+      FLGRP = 0.0
+      FLGRPP = 0.0
+      DO 100 K=1,LM1
+      IF(IPK(K) .EQ.1) GO TO 100
+      KK=K
+      PKK = PK(K)
+      DXK = XK(K+1) - XK(K)
+      DYK = ANS(2*K+1) - ANS(2*K-1)
+      ANS1 = ANS(2*K-1)
+      ANS2 = ANS(2*K)
+      ANS3 = ANS(2*K+1)
+      ANS4 = ANS(2*K+2)
+      IF(ANS2.EQ.0.0.AND.ANS4.EQ.0.0)GO TO 70
+      CALL SECBI(T1,T2,DT,QXZ280,EPS,T,IERR)
+      IF(IERR.NE.0.OR.T.EQ.0.0.OR.DXK.EQ.0.0)IERR=-3
+      IF(IERR .NE. 0) GO TO 100
+   10 XX = DXK*T + XK(K)
+      YY=2.
+      CALL QXZ276(DXK,PKK,ANS1,ANS2,ANS3,ANS4,XK(K),XX,YY,FLGRP,FLGRPP)
+      XM1=DYK/DXK
+      XM2=(YY-ANS(2*K-1))/(XX-XK(K))
+      THET= ATAN2( (XM2-XM1),1.+XM1*XM2)
+      EL2=SQRT((XX-XK(K))**2 +(YY-ANS(2*K-1))**2)
+      EL1=SQRT(DXK**2 +DYK**2)
+      DIS=EL2*100.*ABS(SIN(THET))/EL1
+C
+      IF(DIS .LE. DEV(K)) GO TO 70
+      PK(K) = PK(K)+1.0
+      GO TO 100
+   70 CONTINUE
+      IPK(K)=1
+      IPKZERO = IPKZERO -1
+  100 CONTINUE
+C
+      RETURN
+      END
+      FUNCTION QXZ280(T)
+C***********************************************************************
+C*                                                                     *
+C     FUNCTION (FUNC) WHICH MEASURES  DEVIATION OF SPLINE FROM LINE    *
+C*                                                                     *
+C***********************************************************************
+      COMMON /INTRVAL/K,PKK,YK,YKPP,YKP1,YKP1PP,DXK,DYK
+      U=1.-T
+      PT=PKK*T+1.
+      PU=PKK*U+1.
+      HK = DXK**2/(2.*(PKK**2+3.*PKK+3.))
+      QXZ280=(-YK-HK*((3.*U**2*PT+U**3*PKK)/PT**2-1.)*YKPP
+     1      +YKP1+HK*((3.*T**2*PU+T**3*PKK)/PU**2-1.)*YKP1PP)
+     2    -DYK
+C
+      RETURN
+      END
+      SUBROUTINE QXZ281(X,Y,W,XK,PK,IPK,DEV,LM1,N,L,ITMAX,XR,R,NN,NN1,
+     1 DER1,DER2,C,ANS,L2,LM2,LL,E,D,GG,G,B,XLAM,TEMP3,IW,IERR,NKMAX)
+C***********************************************************************
+C*                                                                     *
+C*    PURPOSE:                                                         *
+C*                 SUBROUTINE QXZ281 (RASP) FITS A SMOOTH CUBIC SPLINE *
+C*                 TO A UNIVARIATE FUNCTION.  DATA MAY BE UNEQUALLY    *
+C*                 SPACED.  FIRST AND SECOND DERIVATIVES ARE ALSO      *
+C*                 CALCULATED.                                         *
+C*                                                                     *
+C*                                                                     *
+C*        USE:                                                         *
+C*                 CALL QXZ281(X,Y,W,XK,PK,IPK,DEV,LM1,N,L,ITMAX,XR,R, *
+C*                             NN,NN1,DER1,DER2,C,ANS,L2,LM2,LL,E,D,GG,*
+C*                             G,B,XLAM,TEMP3,IW,IERR,NKMAX)           *
+C*                                                                     *
+C*         X       AN INPUT ONE-DIMENSIONAL REAL ARRAY DIMENSIONED AT  *
+C*                 LEAST N IN THE CALLING PROGRAM.  X CONTAINS THE     *
+C*                 X-COORDINATES OF THE DATA POINTS.                   *
+C*                                                                     *
+C*         Y       AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH           *
+C*                 CONTAINS THE FUNCTION VALUES OF THE DATA POINTS.    *
+C*                 Y MUST BE DIMENSIONED AT LEAST N.                   *
+C*                                                                     *
+C*         W       AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS  *
+C*                 THE WEIGHTING VALUES.  W MUST BE DIMENSIONED AT     *
+C*                 LEAST N.                                            *
+C*                                                                     *
+C*         XK      AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH           *
+C*                 CONTAINS THE X-COORDINATES OF THE SELECTED KNOTS.   *
+C*                 XK MUST BE DIMENSIONED AT LEAST L.                  *
+C*                                                                     *
+C*         PK      AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS  *
+C*                 THE TENSION FACTORS APPLIED ON THE INTERVALS        *
+C*                 BETWEEN KNOTS.  PK MUST BE DIMENSIONED AT           *
+C*                 LEAST L-1.  PK(K) MUST BE GREATER THAN -1.          *
+C*                                                                     *
+C*         IPK     AN INPUT ONE-DIMENSIONAL INTEGER ARRAY WHICH        *
+C*                 CONTAINS THE TENSION FACTOR ADJUSTMENT FLAGS.       *
+C*                 IPK MUST BE DIMENSIONED AT LEAST L-1.               *
+C*                                                                     *
+C*                 IPK(K)=0  FACTOR K MAY BE ADJUSTED.                 *
+C*                                                                     *
+C*                 IPK(K)=1  FACTOR K IS HELD CONSTANT.                *
+C*                                                                     *
+C*         DEV     AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH           *
+C*                 CONTAINS THE ALLOWED PERCENTAGE OF DEVIATION OF     *
+C*                 THE APPROXIMATED SOLUTION FROM THE LINEAR SOLUTION. *
+C*                 DEV MUST BE DIMENSIONED AT LEAST L-1.               *
+C*                                                                     *
+C*         LM1     AN INPUT INTEGER WHICH IS L-1                       *
+C*                                                                     *
+C*         N       AN INPUT INTEGER SPECIFYING THE NUMBER OF DATA      *
+C*                 POINTS FOR THE INDEPENDENT VARIABLE.                *
+C*                                                                     *
+C*         L       AN INPUT INTEGER SPECIFYING THE NUMBER OF KNOTS.    *
+C*                 KNOTS MUST BE CHOSEN SO THAT THERE ARE AT LEAST     *
+C*                 THREE DATA POINTS IN EACH INTERVAL DEFINED BY       *
+C*                 CONSECUTIVE PAIRS OF KNOTS.                         *
+C*                                                                     *
+C*         ITMAX   AN INPUT INTEGER SPECIFYING THE MAXIMUM NUMBER      *
+C*                 OF ITERATIONS PERMITTED IN ACHIEVING THE ALLOWED    *
+C*                 DEVIATIONS.   ITMAX  35.                            *
+C*                                                                     *
+C*         XR      AN INPUT ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS  *
+C*                 THE X-COORDINATES OF THE POINTS AT WHICH INTER-     *
+C*                 POLATION IS DESIRED.  XR MUST BE DIMENSIONED AT     *
+C*                 LEAST ABS(NN).  IF NN IS POSITIVE, ALL ELEMENTS OF  *
+C*                 XR MUST CONTAIN VALUES.  IF NN IS NEGATIVE, ONLY    *
+C*                 XR(1) AND XR(ABS(NN)) NEED CONTAIN VALUES.          *
+C*                                                                     *
+C*         R       AN OUTPUT REAL ARRAY WHICH CONTAINS THE             *
+C*                 RATIONAL SPLINE APPROXIMATIONS TO THE DATA.         *
+C*                 R MUST BE DIMENSIONED AT LEAST N.                   *
+C*                                                                     *
+C*         NN      AN INPUT INTEGER. ABS(NN) IS  THE NUMBER            *
+C*                 OF INTERPOLATED VALUES TO BE CALCULATED.            *
+C*                                                                     *
+C*         NN1     AN INPUT INTEGER WHICH IS ABS(NN).                  *
+C*
+C*         DER1     AN OUTPUT ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS*
+C*                 THE VALUES OF THE FIRST DERIVATIVE OF THE INTER-    *
+C*                 POLATED DEPENDENT VARIABLE CORRESPONDING TO XR.     *
+C*                 DER1 MUST BE DIMENSIONED AT LEAST ABS(NN).          *
+C*                                                                     *
+C*         DER2     AN OUTPUT ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS*
+C*                 THE VALUES OF THE SECOND DERIVATIVE OF THE INTER-   *
+C*                 POLATED DEPENDENT VARIABLE CORRESPONDING TO XR.     *
+C*                 DER1 MUST BE DIMENSIONED AT LEAST ABS(NN).          *
+C*                                                                     *
+C*         C       AN OUTPUT TWO-DIMENSIONAL REAL ARRAY WHICH          *
+C*                 CONTAINS THE CORRELATION MATRIX.  C SHOULD HAVE     *
+C*                 A FIRST DIMENSION OF L2 AND A SECOND DIMENSION      *
+C*                 OF AT LEAST 2*L.                                    *
+C*                                                                     *
+C*         ANS     A ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS THE     *
+C*                 Y-COORDINATES AND SECOND DERIVATIVES OF THE KNOTS.  *
+C*                                                                     *
+C*         L2      AN INTEGER WHICH IS L*2                             *
+C*                                                                     *
+C*         LM2     AN INTEGER WHICH IS L-2                             *
+C*                                                                     *
+C*         LL      AN INTEGER WHICH IS 2*L +1                          *
+C*                                                                     *
+C*         E       AN OUTPUT TWO-DIMENSIONAL REAL ARRAY WHICH CONTAINS *
+C*                 ((ETWE)INVERSE)ETWY ON OUTPUT (ET=E TRANSPOSE)      *
+C*                                                                     *
+C*         D       AN OUTPUT TWO-DIMENSIONAL REAL ARRAY WHICH CONTAINS *
+C*                 (ETWE)INVERSE ON OUTPUT.                            *
+C*                                                                     *
+C*         GG      AN OUTPUT TWO-DIMENSIONAL REAL ARRAY WHICH CONTAINS *
+C*                 ((S(ETWE)INVERSE)ST)INVERSE ON OUTPUT.              *
+C*                                                                     *
+C*         G       AN OUTPUT TWO-DIMENSIONAL REAL ARRAY WHICH CONTAINS *
+C*                 (S(ETWE)INVERSE)ST ON OUTPUT                        *
+C*                                                                     *
+C*         B       ELEMENTS OF MATRIX S, COEFFICIENTS OF CONSTRAINT    *
+C*                 EQUATION 15, PAGE 2.                                *
+C*                                                                     *
+C*                                                                     *
+C*         XLAM    AN OUTPUT ONE-DIMENSIONAL ARRAY WHICH CONTAINS      *
+C*                 THE LAGRANGE MULTIPLIERS.                           *
+C*                                                                     *
+C*         TEMP3   A TWO-DIMENSIONAL REAL ARRAY USED AS TEMPORARY      *
+C*                 STORAGE IN COVARIANCE MATRIX CALCULATIONS.          *
+C*                 TEMP3= -B*BB*B(INVERSE)*E                           *
+C*                                                                     *
+C*         IW      AN INPUT/OUTPUT INTEGER.                            *
+C*                                                                     *
+C*                 INPUT   ON THE FIRST CALL TO RSDSDR ,               *
+C*                         IW SHOULD BE SET TO 0.  ON SUBSEQUENT CALLS,*
+C*                         SHOULD BE SET TO 1 TO PROVIDE ADDITIONAL    *
+C*                         INTERPOLATION OR DIFFERENTIATION ON THE SAME*
+C*                         FITTING CALCULATIONS.                       *
+C*                                                                     *
+C*                 OUTPUT  IW IS AUTOMATICALLY SET TO 1.               *
+C*                                                                     *
+C*         IERR    OUTPUT ERROR PARAMETER:                             *
+C*                                                                     *
+C*                 = 0  NORMAL RETURN.  NO ERROR DETECTED.             *
+C*                 =-2  DID NOT CONVERGE IN ALLOWED NUMBER OF ITERAT-  *
+C*                      IONS.                                          *
+C*                 =-3  NO SOLUTION DETERMINED BECAUSE THE MATRIX      *
+C*                      SENT TO SYMPDS WAS NOT SPD OR SECBI FAILED.    *
+C*                                                                     *
+C*         NKMAX   AN INPUT INTEGER WHICH AGREES EXACTLY WITH THE      *
+C*                 FIRST DIMENSION OF ARRAY C. NKMAX MUST BE GREATER   *
+C*                 THAN OR EQUAL TO 2*NK.                              *
+C*                                                                     *
+C*                                                                     *
+C*                                                                     *
+C*                                                                     *
+C*                                                                     *
+C*    REQUIRED ROUTINES                QXZ063,QXZ277,QXZ278,QXZ279,    *
+C*                                     QXZ280,QXZ282,SYMPDS(F4.3),     *
+C*                                     SECBI(C2.5)                     *
+C*                                                                     *
+C*    SOURCE                                                           *
+C*                                     PROGRAM RASPFIT BY JAMES R.     *
+C*                                     SCHIESS AND PATRICIA A. KERR    *
+C*                                     MODIFIED BY COMPUTER SCIENCES   *
+C*                                     CORPORATION                     *
+C*                                                                     *
+C*    LANGUAGE                         -FORTRAN                        *
+C*                                                                     *
+C*    DATE RELEASED                    FEBRUARY, 1986                  *
+C*                                                                     *
+C*    LATEST REVISION                  FEBRUARY, 1986                  *
+C***********************************************************************
+C
+C
+C
+C     PARAMETERS USED
+C
+C
+      DIMENSION X(N),Y(N),W(N),DEV(LM1),IPK(LM1),PK(LM1)
+      DIMENSION XK(L),R(NN1),XR(NN1),DER1(NN1),DER2(NN1)
+      DIMENSION C(NKMAX,L2),ANS(L2),E(L2,LL),B(LM2,L2),GG(LM2,LM2)
+C
+C     THE FIRST DIMENSION OF C WAS CHANGED FROM L2 TO NKMAX
+C
+      DIMENSION D(L2,L2),G(LM2,LM2),XLAM(LM2)
+      DIMENSION TEMP3(L2,L2)
+C
+      INTEGER QXZ063
+      IF(IW.EQ.1)GO TO 70
+C
+C
+      CALL QXZ278(X,N,XK,L,ISTOP)
+      IERR=-ISTOP
+      IF(IERR .NE. 0)  GO TO 120
+      IPKZERO=LM1
+C
+      DO 30 I=1,LM1
+   30 IPKZERO=IPKZERO-IPK(I)
+C
+      DO 50 J=1,ITMAX
+      CALL QXZ277(X,Y,W,N,XK,L,PK,LM1,ANS,L2,E,GG,B,LM2,LL,D,XLAM,G,
+     *IERR)
+      IF(IERR.NE.0)GO TO 120
+      CALL QXZ279(IPK,XK,PK,DEV,LM1,ANS,L,L2,IPKZERO,IERR)
+      IF(IERR.NE.0)GO TO 120
+      IF(IPKZERO .EQ. 0)GO TO 70
+   50 CONTINUE
+C
+C              CALCULATE STANDARD ERROR
+C
+      IERR=-2
+   70 STDERR=0.
+      FLGRP=0.
+      FLGRPP=0.
+      K = 1
+      IF(NN.GT.0)GO TO 960
+      I=QXZ063(XR(1),XK,L)
+      K=I
+      DXK = XK(K+1) - XK(K)
+      CALL QXZ282(DXK,PK(K),ANS(2*K-1),ANS(2*K),ANS(2*K+1),ANS(2*K+2),
+     1     XK(K),XR(1),R(1),DER1(1),DER2(1))
+C
+      IF(XR(1).GT.XR(NN1))GO TO 900
+      DO 940 J=2,NN1
+40    IF(XR(J).GT.XK(I+1))GO TO 200
+      K=I
+      DXK = XK(K+1) - XK(K)
+      CALL QXZ282(DXK,PK(K),ANS(2*K-1),ANS(2*K),ANS(2*K+1),ANS(2*K+2),
+     1     XK(K),XR(J),R(J),DER1(J),DER2(J))
+      GO TO 940
+200   I=I+1
+      GO TO 40
+940   CONTINUE
+      GO TO 980
+900   DO 920 J=2,NN1
+930   IF(XR(J).LT.XK(I))GO TO 910
+      K=I
+      DXK = XK(K+1) - XK(K)
+      CALL QXZ282(DXK,PK(K),ANS(2*K-1),ANS(2*K),ANS(2*K+1),ANS(2*K+2),
+     1     XK(K),XR(J),R(J),DER1(J),DER2(J))
+      GO TO 920
+910   I=I-1
+      GO TO 930
+920   CONTINUE
+      GO TO 980
+960   DO 280 I=1,NN
+      K=QXZ063(XR(I),XK,L)
+      DXK = XK(K+1) - XK(K)
+      CALL QXZ282(DXK,PK(K),ANS(2*K-1),ANS(2*K),ANS(2*K+1),ANS(2*K+2),
+     1     XK(K),XR(I),R(I),DER1(I),DER2(I))
+280    CONTINUE
+C
+980   IF(IW.EQ.1)GO TO 120
+      IW=1
+      K=1
+      DO 80 I=1,N
+      IF(X(I).GT.XK(K+1))K=K+1
+      DXK = XK(K+1) - XK(K)
+      CALL QXZ282(DXK,PK(K),ANS(2*K-1),ANS(2*K),ANS(2*K+1),ANS(2*K+2),
+     1     XK(K),X(I),F,FLGRP,FLGRPP)
+      STDERR= STDERR +(Y(I)-F)**2
+80    CONTINUE
+      STDERR= SQRT(STDERR/(N-2*L))
+C
+C
+C      CALCULATE COVARIANCE MATRIX
+C
+      DO 230 KK=1,L2
+      DO 230 II=1,L2
+      TEMP3(II,KK) = 0.0
+      DO 230 JJ=1,L2
+      DO 230  J=1,LM2
+      DO 230  M=1,LM2
+  230 TEMP3(II,KK)=TEMP3(II,KK)-B(M,II)*GG(M,J)*B(J,JJ)*E(JJ,KK+1)
+      DO 260 III=1,L2
+      DO 260 KKK=1,L2
+      C(III,KKK) = 0.0
+      IF(III .EQ. KKK)  C(III,KKK) = C(III,KKK)+E(III,III+1)
+      DO 260 JJJ=1,L2
+  260 C(III,KKK) = C(III,KKK) + E(III,JJJ+1)*TEMP3(JJJ,KKK)
+C
+C     CALCULATE CORRELATION MATRIX WITH STANDARD DEVIATIONS ON DIAGONAL
+C
+      DO 100 I=1,L2
+      TEMP = SQRT(STDERR*C(I,I))
+      DO 110 J=1,L2
+      C(I,J) = STDERR*C(I,J)/TEMP
+      C(J,I) = STDERR*C(J,I)/TEMP
+  110 CONTINUE
+      C(I,I) = TEMP
+  100 CONTINUE
+  120 RETURN
+      END
+      SUBROUTINE QXZ282(DX,PK,YBAR,YBARPP,YBAR1,YBAR1PP,XK,X,F,FP,FPP)
+C***********************************************************************
+C*                                                                     *
+C*    PURPOSE:                                                         *
+C*                 SUBROUTINE QXZ282 (FRATS) CALCULATES THE            *
+C                  RATIONAL SPLINE APPROXIMATIONS OF F,F',F'',         *
+C*                                                                     *
+C*         DX      LENGTH OF SUBINTERVAL DEFINED BY TWO CONSECUTIVE    *
+C*                 KNOT ABSCISSAS (XK(K+1) - X(K))                     *
+C*                                                                     *
+C*         PK      A ONE-DIMENSIONAL REAL ARRAY WHICH CONTAINS THE     *
+C*                 TENSION FACTORS                                     *
+C*                                                                     *
+C*         YBAR    Y-COORDINATE OF KNOT XK(J)                          *
+C*                                                                     *
+C*         YBARPP  SECOND DERIVATIVE OF KNOT XK(J)                     *
+C*                                                                     *
+C*         YBAR1   Y-COORDINATE OF KNOT XK(J+1)                        *
+C*                                                                     *
+C*         YBAR1PP SECOND DERIVATIVE AT KNOT XK(J+1)                   *
+C*                                                                     *
+C*         XK      X-COORDINATE OF KNOT XK(J)                          *
+C*                                                                     *
+C*         X       X-COORDINATE OF DATA POINT                          *
+C*                                                                     *
+C*         F       RATIONAL SPLINE APPROXIMATION OF FUNCTION VALUE     *
+C*                                                                     *
+C*         FPP     RATIONAL SPLINE APPROXIMATION OF FIRST DERIVATIVE   *
+C*                                                                     *
+C*         FPP     RATIONAL SPLINE APPROXIMATION OF SECOND DERIVATIVE  *
+C                                                                      *
+C***********************************************************************
+      T=(X-XK)/DX
+      U=1.-T
+      PT=PK*T+1.
+      PU=PK*U+1.
+      HK = DX**2/(2.*(PK**2+3.*PK+3.))
+C
+      F=U*YBAR + HK*(U**3/PT-U)*YBARPP + T*YBAR1 +HK*(T**3/PU-T)*YBAR1PP
+C
+      FP=(-YBAR-HK*(((3.*U**2*PT+U**3*PK)/PT**2)-1.)*YBARPP+YBAR1+HK*
+     1  (((3.*T**2*PU+T**3*PK)/PU**2)-1.)*YBAR1PP)/DX
+C
+      FPP=HK*YBARPP*(2.*PK**2*U**3+6.*PK*PT*U**2+6.*PT**2*U)/PT**3
+     1   +HK*YBAR1PP*(2.*PK**2*T**3+6.*PK*PU*T**2+6.*PU**2*T)/PU**3
+      FPP=FPP/DX**2
+C
+   30 RETURN
+      END

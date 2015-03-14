@@ -1,0 +1,213 @@
+
+ READING CATALOGUE INFORMATION.   10-JUN-87 18:16:40
+
+
+ END READING CATALOGUE INFORMATION.   10-JUN-87 18:16:40
+
+
+
+
+
+ ********** START CASE  1 **********
+
+
+
+
+
+
+ ***************** USER GUIDE TABLE ZERO *****************
+
+
+
+$IS THIS AN INTERACTIVE RUN ?  ENTER (Y/N) > 
+
+
+ ***************** USER GUIDE TABLE 1 *****************
+
+
+ <<< FIRST TIME AND INCREMENT(DAYS) CONTROLS >>>
+
+   FIRST VALUE =   500101.000000    
+   INCREMENT =     5.00000000000    
+   NUM VALUES =           1
+
+$  ENTER NEW CONTROLS -----> 
+
+   ENTERED -->    890101.000000       15.0000000000         25
+
+
+
+ ***************** USER GUIDE TABLE 2 *****************
+
+
+
+ SPECIFY ORBIT ALTITUDE (EARTH RAD=6378.166)  DEFAULT= 300.000
+
+$ENTER > 
+
+
+ ***************** USER GUIDE TABLE 3 *****************
+
+
+
+ SPECIFY THE ORBIT INCLINATION. DEFAULT=  28.500
+
+$ENTER > 
+
+
+ ***************** USER GUIDE TABLE 4 *****************
+
+
+
+ SPECIFY THE METHOD OF ASSIGNING ORBIT RAAN'S.
+
+    1= NODE RANGE SPECIFIED DIRECTLY.
+    2= MEAN SOLAR TIME RANGE IS SPECIFIED. RAAN COMPUTED.
+
+    DEFAULT =  1
+
+$ENTER > 
+
+
+ ***************** USER GUIDE TABLE 5A *****************
+
+
+ <<< ORBIT RAAN CONTROLS >>>
+
+   FIRST VALUE =  0.000000000000E+00
+   INCREMENT =     7.50000000000    
+   NUM VALUES =          49
+
+$  ENTER NEW CONTROLS -----> 
+
+   ENTERED -->   0.000000000000E+00   10.0000000000         37
+
+
+
+ ***************** USER GUIDE TABLE 6 *****************
+
+
+
+ THIS RUN PROCESSES INDIVIDUAL TARGET LOCATIONS.
+
+   SET OUTPUT OPTIONS.  DEFAULTS ARE --
+
+     SUMMARY OUTPUT...................... T
+     DETAIL OUTPUT:
+       MEAN ANOMALY TABLE................  F
+       BARS: AVAIL(EACH REQMT)...........  F
+       BARS: AVAIL(COMPOSITE REQMT)......  F
+       DATA FILE GENERATION(UNIT 27).....  0
+          0 = OFF
+          1 = MIN DATA = GNTD AVAILABILITY FOR EACH DATE(COMPOSITE, ALL NODES)
+          2 = 1 + GNTD OK-NESS FOR EACH OBS REQMT(COMPOSITE, ALL NODES)
+          3 = 2 + AVAILABILITY FOR INDIVIDUAL RAANS
+          4 = MAX DATA = 3 + OK-NESS FOR EACH OBS REQMT FOR EACH NODE
+     GENERATE XYPLOT FILE:
+       DUR -VS- RAAN (UNIT 25)...........  F
+       MIN/MAX DUR -VS-DATE (UNIT 26)....  F
+     PUT RESULTS ON PRINT UNIT........... T
+     PUT RESULTS ON PROMPT UNIT.......... F
+
+$ENTER > 
+
+
+ ***************** USER GUIDE TABLE 7 *****************
+
+
+
+$DUMMY READ. ENTER SLASH(/).  > 
+
+
+ ***************** USER GUIDE TABLE 8 *****************
+
+
+
+ ORBIT EVENT INDICATOR FOR RELATIVE TIME USE =   2
+
+    ASSIGNMENTS: 1= CROSS ORBIT SUNSET                      
+                 2= CROSS ORBIT SUNRISE                     
+                 3= CROSS TRUE SUN MERIDIAN                 
+                 4= CROSS ASCENDING NODE                    
+                 5= CROSS THE DESCENDING NODE               
+                 6= CROSS TARGET MERIDIAN                   
+                 7= CROSS INERTIAL ZERO RIGHT ASCENSION     
+
+ MINIMUM AVAILABILITY(MINUTES) FOR SUMMARY TABLE ENTRY =  0.0000E+00
+
+$ENTER > 
+1          CASE  1 STARTED AT 10-JUN-87 18:16:41
+
+
+
+
+ FIRST AND LAST TIMES(YYMMDD.HHMMSS) =  890101.000000  891227.000000
+
+         INCREMENT(DAYS) =  15.0
+         NUMBER OF TIMES =    25
+         TIME SPAN(DAYS) = 360.0
+
+ ORBIT SEMI-MAJOR AXIS(KM) =  6678.166  (PERIOD(MIN)=  90.520)
+ ORBIT INCLINATION(DEG) =       28.500
+
+ RAAN RANGE WAS INPUT:
+
+         FIRST AND FINAL RAAN(DEG) =     0.000  360.000
+         INCREMENT(DEG) =   10.000
+         NUMBER OF RAANS =      37
+         SPAN(DEG) =       360.000
+
+ OBSERVATION CONSTRAINTS:
+
+         EARTH AVOIDANCE(DEG)........  17.0
+         VEL VEC AVOIDANCE(DEG)......   0.0
+         MAX TARGET/ZENITH SEP(DEG).. 180.0
+         ORBIT NIGHT................. REQUIRED  
+
+ PROCESSING INDIVIDUAL TARGETS:
+
+         SUMMARY OUTPUT............................ ON        
+             MINIMUM AVAILABILITY REPORTED(MINS)...   0.0
+         DETAIL OUTPUT............................. ON        
+             INFO LEVEL FOR DETAIL FILE............ 1
+         XYPLOT FILE GENERATION.................... ON        
+         ORBIT EVENT IDENTIFIER.................... 2
+
+         NUMBER OF TARGETS.........................   5
+
+         ID'S =    472  1708  1713  2326  7001
+
+
+
+ FOR YOUR INFO:    TIME= 10-JUN-87 18:16:41
+    (NUMBER OF DATES)*(NUMBER OF NODES)*(NUMBER OF TARGS) =    4625
+             25                37                   5
+ START PROCESSING TARG NUMBER   1 OF   5 AT 10-JUN-87 18:16:43
+ START PROCESSING TARG NUMBER   2 OF   5 AT 10-JUN-87 18:19:04
+ START PROCESSING TARG NUMBER   3 OF   5 AT 10-JUN-87 18:21:42
+ START PROCESSING TARG NUMBER   4 OF   5 AT 10-JUN-87 18:24:18
+ START PROCESSING TARG NUMBER   5 OF   5 AT 10-JUN-87 18:26:42
+
+ END PROCESSING CASE  1     10-JUN-87 18:29:16
+
+
+
+
+
+ ********** START CASE  2 **********
+
+
+
+
+
+
+ ***************** USER GUIDE TABLE 1 *****************
+
+
+ <<< FIRST TIME AND INCREMENT(DAYS) CONTROLS >>>
+
+   FIRST VALUE =   890101.000000    
+   INCREMENT =     15.0000000000    
+   NUM VALUES =          25
+
+$  ENTER NEW CONTROLS -----> 

@@ -1,0 +1,15 @@
+1 CHECK72
+
+ The CHECK72 command scans a text file to verify that there is no text
+ beyond column 72.  This is useful when debugging FORTRAN programs that
+ may have been typed beyond the 72 column limit.  The command is :
+
+     CHECK72 filespec
+
+ where 'filespec' is the full name of the FORTRAN source code.  If 
+ 'filespec' is not specified, you will be prompted for it.
+2 /80
+
+ The /80 option of the CHECK72 command tells the program to check that
+ there is no text beyond column 80.  No processing is done on columns
+ 73-80.

@@ -1,0 +1,160 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                      User's Manual for SNAMEIO Program
+
+
+
+                              September 4, 1985
+
+
+
+
+I. Creating the SNAMEIO Subprograms
+
+The SNAMEIO program creates the three subprograms (there are actually more than three
+subprograms generated, but only three user-callable entry points) automatically by
+reading the standard FORTRAN source code for the COMMON blocks to be processed and any
+applicable specification statements.  The following requirements apply to this file : 
+
+1. The specification statements for the variables in a COMMON block must appear below
+the COMMON statement in this file.  It is not necessary for the specification statements
+to appear after any COMMON statement which does not contain variables referenced by
+them. 
+
+2. Only full-word type specification and/or DIMENSION statements may be used for the
+first release.  The CHARACTER statement and word size specification statements (eg,
+INTEGER*2) are not permitted in this release.  Arrays are presently restricted to one
+dimension. 
+
+3. Parameter statements may not be used in the first release.
+
+4. It is anticipated that the following capabilities will be available in second release:
+CHARACTER statements, PARAMETER statements, and multiple array dimensions. 
+
+5. Although the FORTRAN 77 standard requires all variable and common names to be 6 
+characters or less in length, SNAMEIO provides for user-selectable name lengths.  
+
+6. By third release, all of the remaining requirements of the specification shall be
+fulfilled. 
+
+To use the SNAMEIO program, enter :
+
+   @MERLIN:SNAMEIO filespec
+
+where filespec is the name of the file containing the COMMON specifications. A file
+called OUTPUT.FOR will be created on your directory containing the source code for the
+READC, WRITEC, and INITC routines and their support routines. See appendix A.
+
+The default values for the attention character (default '&'), input logical file number
+(5 by default), and output logical file number (6 by default) can be changed by including
+a command line as the first line of the COMMON file. This line must begin with the
+characters '!!'.  The attention character can be changed by entering 'SIGNAL=c' where 'c'
+is the new signal character.  The input logical file number is changed by 'IN=nn' where
+'nn' is the new logical file number.  The output logical file number is changed by
+'OUT=nn'.  The number of characters permitted in a COMMON or variable name can be
+selected using 'NCHAR=nn'.  No spaces are permitted within these command strings, but may
+be included between them. 
+
+Example:
+
+!! IN=7  OUT=11 SIGNAL=$  NCHAR=6
+
+
+
+
+II. Using the SNAMEIO Subprograms
+
+The OUTPUT.FOR file mentioned above may be used in one of two ways.  It may be included
+in the source code of the program that will use the subprograms or it can be compiled
+seperately and linked with the calling program.  This latter approach has the advantage
+of reducing the time to compile the calling program. IT IS CRITICALLY IMPORTANT THAT 
+THE SNAMEIO PROGRAM BE USED TO RECREATE THESE SUBPROGRAMS IF ANY CHANGE IS 
+MADE TO THE COMMON BLOCKS BEING PROCESSED!  Both the SNAMEIO program and the 
+subprograms it generates require the MERLIB library.  Documentation on MERLIB is 
+available elsewhere on the system.
+
+READC has no arguments. The FORTRAN logical unit number from which to read is specified
+by the variable NIN in the source of OUTPUT.FOR and may be changed by changing the DATA
+statement in the BLOCK DATA subprogram in that file. Variables are read from NIN in the
+form 'variable=value'.  Multiple values can be included on a line or on several lines by
+seperating them with a comma.  The program will return from READC when '&END' is
+encountered in the input stream.  Note: all real input values MUST have a decimal point 
+in the value portion of the input.
+
+WRITEC has one argument, the name of the variable to write.  The FORTRAN logical unit
+number for output is specified by the variable NOUT in the source of OUTPUT.FOR and may
+be changed by changing the DATA statement in the BLOCK DATA subprogram in that file. 
+
+
+
+
+III. The Input Data Stream
+
+Data is read by the READC subprogram from a card-image file (80 column formatted).  This
+file may contain formatted input for other portions of the program both before and after
+the READC data (ie, before the first record read and after the record containing &END).
+More than one call to READC can be issued on a file as long as these requirements are met
+each time. 
+
+The format of the file or section of file being read is :
+
+1. VARIABLE_SPECIFICATION followed by '=' followed by a value; where
+VARIABLE_SPECIFICATION is either a variable name, array name, or an array name followed
+by an index. 
+
+2. Optionally, repeat step 1 for other variables, separated by a comma.
+
+3. The &END stream terminator.
+
+Spaces can be used as desired for readability with only one restricition: there must
+there may not be any spaces embedded in the variable names.  Comments may be included in
+the input stream on any line up to and including the line containing the &END terminator
+by preceding the text of the comment by an exclamation mark.  All text that appears 
+after the &END terminator, to the end of that record, will also be treated as comments.
+
+
+Example:
+
+   COMMON / ABC / A, C(10), I
+   COMMON / DEF / E, F
+   COMMON / GHI / G, J(4)
+   INTEGER F
+   .
+   .
+   A = 1.0, I=14,C(2)=10E2,
+   !This is a comment
+   E =-2.0, J=(100,101,102,-1) &END
+
+
+
+                                     Appendix A
+
+                       List of Subprograms and COMMON Blocks Created
+
+
+Subprograms :
+
+READC,  WRITEC,  GETOK0,  DOTOK0,  GETC0,  ERROR0,  ASSIGN0,  OUTP0,  FLUSH0
+
+
+COMMONs :
+
+NAMCM0,  READC0,  WRITE0

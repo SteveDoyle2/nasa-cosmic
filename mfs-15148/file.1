@@ -1,0 +1,298 @@
+C     THERMAL ANALYSIS OF FLUID FLOW IN A PIPE
+C      ******* PROGRAM NUMBER BHA-0332 *******
+C
+C
+C
+      REAL*4 MG
+      DIMENSION ULENG(4),UTIME(4),UMASS(4),UTEMP(4),UENER(4)
+      DIMENSION TW(500),TG(500), ANSW(500),ANSG(500),ANSX(500),TITLE(20)
+     1         ,XMG(30),YMG(30),XTAW(30),YTAW(30),XTA(30),YTA(30),XHO(30
+     2        ),YHO(30),HO(30,30),XR(30),YR(30),RR(30,30),XTGO(30),YTGO
+     3        (30)
+      REAL*8 DTLINE(16)
+      CALL DTBBX(DTLINE)
+      WRITE(6,1) DTLINE
+    1 FORMAT(16A8)
+  140 READ(5,30)(TITLE(I),I=1,20),ULENG,UTIME,UMASS,UTEMP,UENER,
+     1DO,DI,CHI,PW,CPG,CPW,FTW,TWO,TGO,DELTX,DELTT,SIGMA,XMAX,TMAX,IEX
+   30 FORMAT(20A4,/,4A4,4A4,4A4,4A4,4A4,/,5E15.8,/,3E15.8,/,4E15.8,/,
+     12E15.8,I5)
+C
+      LIMT= IFIX(TMAX/DELTT)
+      LIMX= IFIX(XMAX/DELTX) + 1
+C     READ IN TABLES MG,TAW,TA, HO,RR,TGO
+C     NMG = NO. OF ORDERED PAIRS IN MG ARRAY
+C     NTAW= NO. OF ORDERED PAIRS IN TAW ARRAY
+C     NTA = NO. OF ORDERED PAIRS IN TA ARRAY
+C     NHOR= NO. OF ROWS IN HO ARRAY
+C     NHOC= NO. OF COLUMNS IN HO ARRAY
+C     NRR = NO. OF ROWS IN R ARRAY
+C     NRC = NO. OF COLUMNS IN R ARRAY
+C     NTGO= NO. OF ORDERED PAIRS IN TGO ARRAY
+      READ(5,10)        NMG,NTAW,NTA,NHOR,NHOC,NRR,NRC,NTGO
+   10 FORMAT(10I5)
+      READ(5,20)(XMG(I),YMG(I),I=1,NMG)
+   20 FORMAT(6E12.5)
+      READ(5,20)(XTAW(I),YTAW(I),I=1,NTAW)
+      READ(5,20)(XTA(I),YTA(I),I=1,NTA)
+      READ(5,20)(XHO(I),I=1,NHOR)
+      READ(5,20)(YHO(I),I=1,NHOC)
+      READ(5,20)((HO(I,J),I=1,NHOR),J=1,NHOC)
+      READ(5,20)(XR(I),I=1,NRR)
+      READ(5,20)(YR(I),I=1,NRC)
+      READ(5,20)((RR(I,J),I=1,NRR),J=1,NRC)
+      READ(5,20)(XTGO(I),YTGO(I),I=1,NTGO)
+      IF(IEX-1)50,60,60
+   60 READ(5,70)(TW(J),TG(J),J=1,LIMX)
+   70 FORMAT(4E15.8)
+      GO TO 85
+   50 CONTINUE
+      DO 80 J=1 ,LIMX
+      TW(J) = TWO
+      TG(J) = TGO
+   80 CONTINUE
+   85 CONTINUE
+C
+C     CALCULATE OTHER CONSTANTS
+C
+      AKO =(3.14159 * DI)/CPG
+      AK2=(1.0/(((PW*CPW)/4.0)*(DO**2-DI**2)))
+C
+C     PRINTOUT INPUT DATA + CONSTANTS
+C
+      WRITE(6,40)(TITLE(I),I=1,20),ULENG,UTIME,UMASS,UTEMP,UENER,
+     1DO,DI,CHI,PW,CPG,CPW, FTW  ,TWO,TGO,DELTX,DELTT,SIGMA,XMAX,TMAX,
+     2IEX,AKO,AK2,LIMT,LIMX
+   40 FORMAT('1',15X,20A4,///,50X,'INPUT DATA',//,35X,'THE UNITS USED FO
+     1R THIS INPUT DATA ARE-',/,22X,'LENGTH = ',4A4,6X,'TIME = ',4A4,
+     28X,'MASS = ',4A4,/,17X,'TEMPERATURE = ',4A4,27X,'THERMAL ENERGY =
+     3',4A4,//,25X,'D(O) =',F15.8,39X,
+     4'D(I) =',F15.8,/,21X,'     CHI =',F15.8,39X,'P(W) =',F15.8,/,24X,
+     5'CP(G) =',F15.8,38X,'CP(W) =',F15.8,/,26X,    'FTW =',F15.8,20X,'I
+     6NITAL WALL TEMPERATURE =',F15.8,/,4X,'INITIAL FLUID TEMPERATURE ='
+     7,F15.8,
+     821X,'COMPUTE INTERVAL FOR X =',F15.8,/,7X,'COMPUTE INTERVAL FOR T
+     9=',F15.8,39X,'SIGMA='E15.8,/,10X,'MAXIMUM VALUE FOR X =',F15.8,24X
+     1'MAXIMUM VALUE FOR T =', F15.8,/,9X,'EXTRA INPUT INDICATOR=',I7,//
+     2,49X,'CALCULATED CONSTANTS',//,26X,'KO =',F15.8,41X,'K2 =',F15.8,
+     3/,16X,'T LOOP LIMIT =',I6,40X,'X LOOP LIMIT =',I6)
+      WRITE(6,400)(XMG(I),YMG(I),I=1,NMG)
+  400 FORMAT('0',10X,'TABLE MG',8X,'TIME',13X,'MG',/,(23X,E12.5,4X,E12.5
+     1      ))
+      WRITE(6,410)(XTAW(I),YTAW(I),I=1,NTAW)
+  410 FORMAT('0',10X,'TABLE TAW',8X,'TIME',11X,' TAW',/,(23X,E12.5,4X,
+     1      E12.5))
+      WRITE(6,420)(XTA(I),YTA(I),I=1,NTA)
+  420 FORMAT('0',10X,'TABLE TA',8X,'TIME',13X,'TA',/,(23X,E12.5,4X,E12.5
+     1      ))
+      WRITE(6,430)(XTGO(I),YTGO(I),I=1,NTGO)
+  430 FORMAT('0',10X,'TABLE TGO',7X,'TIME',12X,'TGO',/,(23X,E12.5,4X,E12
+     1.5))
+      WRITE(6,440)
+  440 FORMAT('0',10X,'TABLE R')
+      DO 450 I=1,NRC
+      WRITE(6,460)YR(I)
+  460 FORMAT('0',30X,'TIME=',F9.4)
+      WRITE(6,465)
+  465 FORMAT(24X,'DISTANCE',9X,'R')
+      DO 470 J=1,NRR
+      WRITE(6,480)XR(J),RR(J,I)
+  480 FORMAT(23X,E12.5,4X,E12.5)
+  470 CONTINUE
+  450 CONTINUE
+      WRITE(6,490)
+  490 FORMAT('0',10X,'TABLE HO')
+      DO 500 I=1,NHOC
+      WRITE(6,510)YHO(I)
+  510 FORMAT('0',30X,'TIME=',F9.4)
+      WRITE(6,495)
+  495 FORMAT(24X,'DISTANCE',9X,'HO')
+      DO 520 J=1,NHOR
+      WRITE(6,530)XHO(J),HO(J,I)
+  530 FORMAT(23X,E12.5,4X,E12.5)
+  520 CONTINUE
+  500 CONTINUE
+C
+C
+C     PRINTOUT OF INITIAL CONDITIONS
+C
+      GTIME = 0.0
+      TIME = 0.0
+      DIST = 0.0
+      DO 90 J=1,LIMX
+      ANSW(J)= TW(J)
+      ANSG(J)= TG(J)
+      ANSX(J)= DIST
+      DIST = DIST + DELTX
+   90 CONTINUE
+      WRITE(6,100)(TITLE(I),I=1,19), TIME,(ANSX(J),ANSW(J),ANSG(J),J=1,
+     1             LIMX)
+  100 FORMAT('1',29X,19A4,5X,//, 1X,'TIME=',F10.5,//,24X,'TUBE DISTANCE'
+     1      ,16X,'WALL TEMPERATURE',12X,'FLUID TEMPERATURE',/,(23X,F13.5
+     2      ,17X,F13.5,17X,F13.5))
+      WRITE(6,300)
+  300 FORMAT(//,1X,64('/*'))
+C
+C
+C
+      DO 200 I=1,LIMT
+      GTIME = GTIME + DELTT
+      CALL INTERP(TIME,XTAW,YTAW,NTAW,2,TAW,NERR)
+      CALL INTERP(TIME,XTA ,YTA ,NTA ,2,TA ,NERR)
+      CALL INTERP(GTIME,XMG ,YMG ,NMG ,2,MG ,NERR)
+      IF(MG)999,998,999
+  998 FTIME=GTIME + DELTT/10.
+      CALL INTERP(FTIME,XMG,YMG,NMG,2,MG,NERR)
+      WRITE(6,997)
+  997 FORMAT(5X,' *** WARNING ***   FLOWRATE INPUT AS ZERO, TIME INCREME
+     1NTED BY DELTT/10.0 TO AVOID DIVISION BY ZERO.')
+  999 AK1=AKO/MG
+      HI = CHI*(MG**0.8)
+      CALL INTERP(TIME,XMG ,YMG ,NMG ,2,MG ,NERR)
+      HIP=CHI*(MG**0.8)
+C
+      DO 190 J=1,LIMX
+      TGOLD = TG(J)
+      CALL ITERP2(ANSX(J),TIME,XHO,YHO,HO,NHOR,NHOC,2,2,HOO,NERR)
+      CALL ITERP2(ANSX(J),TIME,XR ,YR ,RR,NRR ,NRC ,2,2,R  ,NERR)
+      IF(ANSX(J).NE.0.0)GO TO 110
+      CALL INTERP(GTIME,XTGO,YTGO,NTGO,2,TGOO,NERR)
+      TG(J)= TGOO
+  110 CONTINUE
+      IF(ANSX(J).EQ.0.0)GO TO 120
+      TG(J)=AK1* HI*(TW(J-1)-TG(J-1))*DELTX + TG(J-1)
+  120 TW(J)=AK2*(DO*(HOO*(TAW- TW(J))+R - SIGMA *    FTW*(TW(J)**4 -
+     1      TA**4))- DI*HIP*(TW(J)-TGOLD))*DELTT+TW(J)
+      ANSG(J)= TG(J)
+      ANSW(J)= TW(J)
+  190 CONTINUE
+      TIME= TIME + DELTT
+      WRITE(6,130)TIME,(ANSX(K),ANSW(K),ANSG(K),K=1,LIMX)
+  130 FORMAT('0','TIME=',F10.5,//,24X,'TUBE DISTANCE'
+     1      ,16X,'WALL TEMPERATURE',12X,'FLUID TEMPERATURE',/,(23X,F13.5
+     2      ,17X,F13.5,17X,F13.5))
+      WRITE(6,310)
+  310 FORMAT(//,1X,64('/*'))
+  200 CONTINUE
+      GO TO 140
+  150 STOP
+      END
+      SUBROUTINE INTERP(ARG,XTAB,YTAB,NX,NP,ANS,NERR)                   INTE0010
+C
+C         1. ARG  THE INDEPENDENT VARIABLE FOR THE DESIRED UNKNOWN
+C         2. XTAB TABLE OF INDEPENDENT VALUES. MUST BE IN INCREASING ORDER
+C         3. YTAB TABLE OF DEPENDENT VALUES.
+C         4. NP   NUMBER OF POINTS USED IN THE INTERPOLATING FORMULA.
+C            (NP-1) IS THE DEGREE OF THE INTERPOLATING FORMULA USED.
+C         6. ANS  THE DEPENDENT VALUE CORRESPONDING TO THE VALUE OF ARG.
+C         7. NERR WILL BE SET UNEQUAL ZERO IF ARG IS NOT ON XTAB.
+C                  ROUTINE WILL EXTRAPOLATE.
+C
+C
+      DIMENSION XTAB(NX),YTAB(NX)
+      NERR = 0                                                          INTE0170
+      IH = NP/2                                                         INTE0180
+      I = 1                                                             INTE0190
+      IF (XTAB(I) - ARG)30,20,10                                        INTE0200
+   10 IH = 0                                                            INTE0210
+   12 NERR = 01                                                         INTE0220
+      GO TO 70                                                          INTE0230
+   20 ANS = YTAB(I)                                                     INTE0240
+      GO TO 999                                                         INTE0250
+   30 I = NX                                                            INTE0260
+      IF (XTAB(I) - ARG)12,20,50                                        INTE0270
+   50 L = IH + 1                                                        INTE0280
+      DO 60   I=L,NX                                                    INTE0290
+      IF (XTAB(I) - ARG)60,20,70                                        INTE0300
+   60 CONTINUE                                                          INTE0310
+   70 K = I - IH                                                        INTE0320
+      N = K + NP - 1                                                    INTE0330
+      ANS = 0.0                                                         INTE0340
+      IF (N - NX)90,90,80                                               INTE0350
+   80 N = NX                                                            INTE0360
+      K = NX-NP+1                                                       INTE0370
+   90 DO 120  J=K,N                                                     INTE0380
+      P = 1.0                                                           INTE0390
+      DO 110  I=K,N                                                     INTE0400
+      IF (I-J)100,110,100                                               INTE0410
+  100 P = P * (ARG - XTAB(I)) / (XTAB(J) - XTAB(I))                     INTE0420
+  110 CONTINUE                                                          INTE0430
+  120 ANS = ANS + YTAB(J) * P                                           INTE0440
+      IF(NERR.EQ.0) GO TO 999
+      WRITE(6,1000)
+ 1000 FORMAT('0',1X,24('*'),'ARGUMENT NOT IN RANGE(EXTRAPOLATION)')
+  999 RETURN                                                            INTE0450
+      END                                                               INTE0460
+      SUBROUTINE ITERP2(X,Y,XT,YT,ZT,NX,NY,NPX,NPY,Z,NERR)              ITER0010
+C                                                                       ITER0020
+C     GIVEN THE FUNCTION Z(I,J) = F(X(I),Y(J))                          ITER0030
+C                 Y(1)    Y(2)    Y(3)         Y(N)                     ITER0040
+C         X(1)   Z(1,1)  Z(1,2)  Z(1,3).......Z(1,N)                    ITER0050
+C         X(2)   Z(2,1)  Z(2,2)  Z(2,3).......Z(2,N)                    ITER0060
+C         X(3)   Z(3,1)  Z(3,2)  Z(3,3).......Z(3,N)                    ITER0070
+C          .        .       .       .            .                      ITER0080
+C          .        .       .       .            .                      ITER0090
+C          .        .       .       .            .                      ITER0100
+C         X(M)   Z(M,1)  Z(M,2)  Z(M,3).......Z(M,N)                    ITER0110
+C                                                                       ITER0120
+C                                                                       ITER0130
+C           1 X    THE INDEPENDENT VARIABLE X.                          ITER0140
+C           2 Y    THE INDEPENDENT VARIABLE Y.                          ITER0150
+C           3 XT   TABLE OF INDEPENDENT X VALUES.MUST BE IN INCREASING  ITER0160
+C                  ORDER.                                               ITER0170
+C           4 YT   TABLE OF INDEPENDENT Y VALUES.MUST BE IN INCREASING  ITER0180
+C                  ORDER.                                               ITER0190
+C           5 ZT   TABLE OF DEPENDENT Z VALUES.  Z(I,J) = F(X(I),Y(J))  ITER0200
+C           6 NX   NUMBER OF POINTS IN XT.                              ITER0210
+C           7 NY   NUMBER OF POINTS IN YT.                              ITER0220
+C           8 NPX  NUMBER OF POINTS USED IN THE INTERPOLATING FORMULA   ITER0230
+C                  WITH XTAB AS THE INDEPENDENT VARIABLE TABLE.         ITER0231
+C                  (NPX-1) IS THE DEGREE OF THE INTERPOLATION FORMULA   ITER0232
+C                  USED.                                                ITER0233
+C           9 NPY  NUMBER OF POINTS USED IN THE INTERPOLATING FORMULA   ITER0240
+C                  WITH YTAB AS THE INDEPENDENT VARIABLE TABLE.         ITER0241
+C                  (NPY-1) IS THE DEGREE OF THE INTERPOLATION FORMULA   ITER0242
+C                  USED.                                                ITER0243
+C          10 Z    THE DEPENDENT VALUE IE. Z=F(X,Y)                     ITER0250
+C          11 NERR WILL BE SET UNEQUAL ZERO IF X,Y ARE NOT IN TABLE.    ITER0260
+C                  ROUTINE WILL EXTRAPOLATE.                            ITER0270
+C                                                                       ITER0280
+C     SUBROUTINE INTERP IS INCLUDED IN THIS ROUTINE AND MAY BE USED     ITER0290
+C     INDEPENDENTLY.                                                    ITER0300
+      DIMENSION XT(NX),YT(NY),ZT(30,30),ZC(15)                          ITER0330
+      NERR1 = 0                                                         ITER0340
+      NERR2 = 0                                                         ITER0350
+      NERR3 = 0                                                         ITER0360
+      IH = NPY/2                                                        ITER0370
+      I = 1                                                             ITER0380
+      IF(YT(I) - Y)30,20,10                                             ITER0390
+   10 IH = 0                                                            ITER0400
+   12 NERR = 01                                                         ITER0410
+      GO TO 70                                                          ITER0420
+   20 CALL INTERP(X,XT,ZT(1,I),NX,NPX,Z,NERR1)                          ITER0430
+      GO TO 999                                                         ITER0440
+   30 I = NY                                                            ITER0450
+      IF(YT(I) - Y)12,20,40                                             ITER0460
+   40 DO 45   I=1,IH                                                    ITER0470
+      IF(YT(I) - Y)45,20,50                                             ITER0480
+   45 CONTINUE                                                          ITER0490
+   50 L = 1 + IH                                                        ITER0500
+      DO 60   I=L,NY                                                    ITER0510
+      IF(YT(I) - Y)60,20,70                                             ITER0520
+   60 CONTINUE                                                          ITER0530
+   70 K = I - IH                                                        ITER0540
+      N = K + NPY - 1                                                   ITER0550
+      IF(N - NY)90,90,80                                                ITER0560
+   80 N = NY                                                            ITER0570
+      K = NY - NPY + 1                                                  ITER0580
+   90 J = 0                                                             ITER0590
+      DO 100  I=K,N                                                     ITER0600
+      J = J+1                                                           ITER0610
+  100 CALL INTERP(X,XT,ZT(1,I),NX,NPX,ZC(J),NERR2)                      ITER0620
+      CALL INTERP(Y,YT(K),ZC,NPY,NPY,Z,NERR3)                           ITER0630
+  999 NERR = NERR1+NERR2+NERR3                                          ITER0640
+      IF(NERR.EQ.0) GO TO 1000
+      WRITE(6,1010)
+ 1010 FORMAT('0',1X,24('*'),'ARGUMENT NOT IN RANGE(EXTRAPOLATION)')
+ 1000 RETURN
+      END                                                               ITER0660

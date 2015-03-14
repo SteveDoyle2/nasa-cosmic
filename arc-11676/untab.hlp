@@ -1,0 +1,9 @@
+1 UNTAB
+
+UNTAB is a utility that replaces tab characters with spaces.  The tabs are
+expanded so that the next character will start in the next column that is a
+multiple of 8.
+
+Enter:   UNTAB filespec
+
+A new version of filespec will be created.

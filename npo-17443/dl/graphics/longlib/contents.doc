@@ -1,0 +1,77 @@
+
+Directory LONGLOC:[LONGLIB]
+
+ACLEAR.COM;        clear screen command file for TEK 4107/4109
+AUXLIB.FOR;        basic device indepdent plotting routines source for longlib
+BITCURSOR.FOR;     cursor routines for VT125 w/bit pad device
+CLEAR.COM;         command file to clear screen on VT100 with Selnar GR100
+CONTENTS.DOC;      this file
+CONTRLC.FOR;       control-c interrupt routines
+CURSORLIB.FOR;     cursor routines source code for longlib
+DOC.COM;           command file to create longlib.doc VMS 4.x
+DOCV3.COM;         command file to create longlib.doc VMS 3.x
+EARTH.DAT;         file containing earth land-edge map data
+EXAMP3D.FOR;       3-d plotting example no hidden line removal
+EXAMP3DH.FOR;      3-d plotting example with hidden line removal
+GCLEAR.COM;        clear screen command file for GRAPHON G0-235
+HIDE.DAT;          data file for EXAMP3DH
+HIDELIB.FOR;       hidden line removal source for longlib
+HPGL.FOR;          metafile to HPGL plotter conversion program (to terminal)
+HPGL2.FOR;         metafile to HPGL plotter conversion program (no stripping)
+HPGLS.FOR;         metafile to HPGL plotter conversion program (stripping)
+HLPLIB.COM;        command file to create longlib help library
+INSTALL.DOC;       installation notes
+LA50.FOR;          metafile conversion for LA50 printer
+LASER.FOR;         metafile to QUIC laser printer converter (no stripping)
+LASERS.FOR;        metafile to QUIC laser printer converter (stripping)
+LINESEQ.FOR;       spline line routines source code for longlib library
+LINETYPE.FOR;      program to plot sample line type/width/color
+LNDSEA1.DAT;       land/sea data file
+LONGLIB.COM;       command file to create longlib libraries
+LONGLIB.DOC;       documentation file for longlib library
+LONGLIB.FOR;       basic device dependent plotting routines source for longlib
+LONGLIB.HLB;       help library
+LONGLIB.HLP;       help library source
+LONGLIB.OPT;       linker option file for shareable image library linking
+LONGLIB.RNO;       documentation file source
+LONGLIB2.COM;      command file to create longlib library (no Ramtek)
+LONGLIB3D.FOR;     3-d source for longlib (no hidden line removal)
+LONGMISC.FOR;      misc. routines for longlib
+LONGSHR.COM;       command file to create shareable image library
+LONGSHR.MAR;       macro source for shareable image library
+NOTABS.FOR;        program to replace tabs in source code with spaces, etc.
+MAPLIB.FOR;        map routines source code
+METAFILE.COM;      command file to link metafile conversion programs
+MLIB.FOR;          master subroutine source for longlib
+MLIB2.FOR;         more master subroutine source for longlib
+MLIB3.FOR;         more master subroutine source for longlib
+NORAMLIB.FOR;      ramtek replacement routines for longlib2
+NPLOT183.COM;      raster scan converter command file printronix
+NPLOTHI.COM;       hi res raster scan converter com file trilog
+NPLOTLO.COM;       lo res raster scan converter com file trilog
+PLOAD.COM;         com file to compile, link, run graphics program
+PLOT183.COM;       raster scan converter command file printronix
+PLOTHI.COM;        hi res raster scan converter com file trilog
+PLOTLO.COM;        lo res raster scan converter com file trilog
+PLOTTESTS.FOR;     longlib master routine example/test program
+POSTSCRIPT.FOR;    metafile to PostScript conversion program
+PRNTRNX.FOR;       metafile conversion for printronics printer
+RAMLIB.FOR;        source for ramtek communication routines
+REPLOT.FOR;        replots a printer graphics data file to terminal screen
+REVISION.DOC;      library revision history
+REFLIB.FOR;        source for ramtek emulation file routines
+REFTERM.FOR;       source for ramtek emulation file display replot program
+REFTEST.FOR;       source for ramtek emulation file display test program
+REFIMG.FOR;        source for ramtek emulation file display image program
+REFLAS.FOR;        source for REF to laser output (fortran-77)
+REFLAS2.FOR;       source for REF to laser output (more efficient)
+RLASER.FOR;        metafile to QUIC laser printer converter (rotate and scale)
+RMCOLTAB.FOR;      source for ramtek color table manipulation program
+SUBPROC.FOR;       source for subprocess routines
+SYMBOLS.FOR;       source code for plotting symbols appendix
+SYMS.FOR;          source code for SYMS routine
+TCLEAR.COM;        clear screen command file for vt125
+TRILGLO.FOR;       metafile conversion for lo res trilog printer
+TRILGHI.FOR;       metafile conversion for hi res trilog printer
+VCLEAR.COM;        clear screen command file for vt220 with Selnar SG220
+WORLD.FOR;         example of 3d map plotting routine

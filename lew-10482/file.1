@@ -1,0 +1,353 @@
+C     ******************************************************************       2
+C                                                                              3
+C        SUBROUTINE PLOT3D                                                     4
+C                                                                              5
+C        PURPOSE                                                               6
+C          DRAW AND ROTATE THREE-DIMENSIONAL SURFACES WITH 360/67
+C          DD80 MICROFILM RECORDER
+C                                                                              9
+C        USAGE                                                                10
+C          CALL PLOT3D(XMIN,XMAX,YMIN,YMAX,S,NXPTS,NYPLS,NXPLS,NYPTS,
+C               F,CUBE)
+C          CALL ROTATE(ALPHA,BETA,GAMMA,DRAWME)
+C          COMMON /LABEL/ LAB(15)
+C                                                                             14
+C        DESCRIPTION OF PARAMETERS                                            15
+C          XMIN    -MINIMUM 'X' VALUE TO BE PLOTTED
+C          XMAX    -MAXIMUM 'X' VALUE TO BE PLOTTED
+C          YMIN    -MINIMUM 'Y' VALUE TO BE PLOTTED
+C          YMAX    -MAXIMUM 'Y' VALUE TO BE PLOTTED
+C          S       -ARRAY OF LENGTH 3*(NXPTS*NYPLS+NXPLS*NYPTS)
+C          NXPTS   -NUMBER OF POINTS DESCRIBING LINES IN PLANES PARALLEL
+C                   TO THE XZ PLANE                                           22
+C          NYPLS   -NUMBER OF PLANES PARALLEL TO THE XZ PLANE
+C          NXPLS   -NUMBER OF PLANES PARALLEL TO THE YZ PLANE
+C          NYPTS   -NUMBER OF POINTS DESCRIBING LINES IN PLANES PARALLEL
+C                   TO THE YZ PLANE                                           26
+C          F       -FUNCTION SUBPROGRAM SUPPLIED BY THE USER TO DESCRIBE      27
+C                   THE SURFACE TO BE DRAWN.  IT MUST BE OF THE FORM          28
+C                   FUNCTION F(X,Y).                                          29
+C          CUBE    -LOGICAL VARIABLE SET TO .TRUE. IF THE THREE               30
+C                   DIRECTIONS ARE TO BE SCALED INDEPENDENTLY OF EACH         31
+C                   OTHER, AND SET TO .FALSE. IF THE THREE DIRECTIONS         32
+C                   ARE TO BE SCALED DEPENDENTLY                              33
+C          ALPHA   -ANGLE OF ROTATION ABOUT THE X AXIS GIVEN IN DEGREES       34
+C          BETA    -ANGLE OF ROTATION ABOUT THE Y AXIS GIVEN IN DEGREES       35
+C          GAMMA   -ANGLE OF ROTATION ABOUT THE Z AXIS GIVEN IN DEGREES       36
+C          DRAWME  -LOGICAL VARIABLE SET TO .TRUE. IF THE ROTATED
+C                  VIEW IS TO BE DRAWN, AND SET TO .FALSE. IF THIS
+C                  VIEW IS NOT TO BE DRAWN.
+C          LAB     -ARRAY OF BCD CHARACTERS USED TO LABEL THE DRAWING.        37
+C                  IF LABEL IS DESIRED, SUPPLY 15 OR LESS FOUR-CHARACTER
+C                  WORDS IN COMMON/LABEL/ LAB(15)
+C                                                                             39
+C        REMARKS                                                              40
+C                  A CALL TO PLOT3D DEFINES AND SCALES THE SURFACE.
+C                  SUBSEQUENT CALLS TO ROTATE ROTATE IT TO NEW FRAME OF
+C          REFERENCE.  THE SURFACE IS NOT RETURNED TO THE ORIGINAL            44
+C          POSITION AFTER A ROTATION.  THE SURFACE IS ROTATED ABOUT           45
+C          THE STATIONARY XYZ AXES IN THIS ORDER; FIRST ABOUT THE 'X'         46
+C          AXIS THEN ABOUT 'Y' AND FINALLY ABOUT 'Z'.
+C                                                                             48
+C        SUBROUTINES AND FUNCTION SUBPROGRAMS REQUIRED                        49
+C          SCALE                                                              58
+C          DRAW                                                               53
+C          AXIS                                                               59
+C          TRNMAT                                                             55
+C          PHI                                                                56
+C          WRITE                                                              54
+C                  A FUNCTION SUBPROGRAM SUPPLIED BY THE USER TO              60
+C                  DESCRIBE THE SURFACE TO BE DRAWN.  THE NAME OF THIS        61
+C                  FUNCTION SUBPROGRAM MUST APPEAR IN AN EXTERNAL             62
+C                  STATEMENT OF THE USER'S CALLING PROGRAM.                   63
+C          IN ADDITION, PLOT3D CALLS ROUTINES DEVELOPED HERE AT
+C          LEWIS FOR MICROFILM PLOTTING. THEY ARE0
+C          LRCURV  THE BASIC ROUTINE, DRAWS AN ARRAY OF (X,Y) POINTS
+C                  AS A POINT PLOT, VECTOR PLOT, OR SPECIAL
+C                  CHARACTER PLOT. PLOT3D USES VECTOR PLOTS.
+C          LRGRID  SETS UP VERTICAL AND HORIZONTAL GRID LINES
+C                  ON THE PLOTTING SURFACE. A CALL TO THIS ROUTINE
+C                  IS PRESENTLY REQUIRED, BUT PLOT3D USES NO GRID.
+C          LRANGE  DEFINES THE RANGES OF X AND Y IN THE USER'S
+C                  DATA UNITS.
+C          LRMRGN  DESCRIBES WHAT FRACTIONS OF THE PLOTTING
+C                  SURFACE ARE TO BE USED AS MARGINS, LEFT,
+C                  RIGHT, BOTTOM, AND TOP.
+C          LRLEGN  PLOTS EBCDIC ARRAYS STARTING AT (X,Y) IN
+C                  PLOTTING UNITS.
+C          LRCNVT  CONVERTS NUMERICAL FIELDS TO EBCDIC ARRAYS
+C                  FOR USE BY LRLEGN.
+C          LRCHSZ  DEFINES THE SIZE OF CHARACTERS TO BE DRAWN.
+C          LRNON,LRNOFF  CONTROL THE INTENSITY OF PLOTS.
+C                                                                             64
+C     ******************************************************************      65
+      SUBROUTINE PLOT3D(XMIN,XMAX,YMIN,YMAX,S,NXPTS,NYPLS,
+     * NXPLS,NYPTS,F,CUBE)
+C                                                                             66
+      LOGICAL CUBE                                                            69
+      DIMENSION S(1), AX(1), BY(1)
+      DATA AX,BY /0.0,0.0/
+      FNX1 = NXPTS-1
+      FNY1 = NYPLS-1
+      FNX2 = NXPLS-1
+      FNY2 = NYPTS-1
+      L1 = NXPTS*NYPLS
+      L2 = NXPLS*NYPTS
+      N1 = L1                                                                 80
+      N2 = N1+L1                                                              81
+      N3 = N2+L1                                                              82
+      N4 = N3+L2                                                              83
+      N5 = N4+L2                                                              84
+      DX = XMAX-XMIN                                                          85
+      DY = YMAX-YMIN                                                          86
+      CALL LRGRID(1,1,0.0,0.0)
+      CALL LRANGE(-3.55,5.45,-3.55,5.45)
+      CALL LRMRGN(1.0,0.0,3.0,0.0)
+      CALL LRCHSZ(2)
+C                                                                             87
+C                                                                             88
+      DO 2 I=1,NXPTS
+      DO 2 J=1,NYPLS
+      II = NXPTS*(J-1) + I
+      I1 = II                                                                 92
+      I2 = N1+II                                                              93
+      I3 = N2+II                                                              94
+      S(I1) = XMIN+DX*FLOAT(I-1)/FNX1                                         95
+      S(I2) = YMIN+DY*FLOAT(J-1)/FNY1                                         96
+    2 S(I3) = F(S(I1),S(I2))                                                  97
+C                                                                             98
+C                                                                             99
+      DO 3 I=1,NXPLS
+      DO 3 J=1,NYPTS
+      II = NYPTS*(I-1) + J
+      I1 = N3+II                                                             103
+      I2 = N4+II                                                             104
+      I3 = N5+II                                                             105
+      S(I1) = XMIN+DX*FLOAT(I-1)/FNX2                                        106
+      S(I2) = YMIN+DY*FLOAT(J-1)/FNY2                                        107
+    3 S(I3) = F(S(I1),S(I2))                                                 108
+C                                                                            109
+C                                                                            110
+      N1 = N1+1                                                              111
+      N2 = N2+1                                                              112
+      N3 = N3+1                                                              113
+      N4 = N4+1                                                              114
+      N5 = N5+1                                                              115
+      CALL SCALE(XMIN,XMAX,YMIN,YMAX,S(1),S(N1),S(N2),NXPTS,NYPLS,
+     * S(N3),S(N4),S(N5),NXPLS,NYPTS,CUBE)
+C                                                                            118
+C                                                                            119
+      CALL AXIS(0,.FALSE.)
+C                                                                            123
+C                                                                            124
+      ASUM = 0.0                                                             125
+      BSUM = 0.0                                                             126
+      CSUM = 0.0                                                             127
+      CALL WRITE(ASUM,BSUM,CSUM)
+      RETURN                                                                 130
+C                                                                            131
+C                                                                            132
+      ENTRY ROTATE(ALPHA,BETA,GAMMA,DRAWME)
+      LOGICAL DRAWME
+      CALL TRNMAT(ALPHA,BETA,GAMMA)                                          134
+      CALL PHI  (S(1),S(N1),S(N2),NXPTS,NYPLS)
+      CALL PHI (S(N3),S(N4),S(N5),NYPTS,NXPLS)
+      CALL AXIS(1,DRAWME)
+      ASUM = ASUM+ALPHA                                                      142
+      BSUM = BSUM+BETA                                                       143
+      CSUM = CSUM+GAMMA                                                      144
+      IF(.NOT.DRAWME) RETURN
+      CALL DRAW(S(N1),S(N2),NXPTS,NYPLS)
+      CALL DRAW(S(N4),S(N5),NYPTS,NXPLS)
+C                                                                            140
+C                                                                            141
+      CALL WRITES(ASUM,BSUM,CSUM)
+      CALL LRCURV(AX,BY,1,1,1HX,1.0)
+      RETURN                                                                 147
+      END                                                                    148
+      BLOCK DATA
+      COMMON /LABEL/ LAB(15)
+      DATA LAB / 15*4H     /
+      END
+      SUBROUTINE DRAW(Y,Z,NPTS,NPLS)
+      DIMENSION Y(NPTS,NPLS),Z(NPTS,NPLS)
+      DO 1 I=1,NPLS
+      CALL LRCURV(Y(1,I) , Z(1,I) , NPTS,2,1HX,0.0)
+    1 CONTINUE
+      RETURN
+      END
+      SUBROUTINE WRITE(A1,B1,C1)
+      DIMENSION AXI(3),AXA(3),AYI(3),AYA(3),AZI(3),AZA(3),ALPH(3),BETA(3
+     *   ),GAM(3),ALINE(14),BLINE(14),CLINE(14)
+      DIMENSION BXI(2),BXA(2),BYI(2),BYA(2),BZI(2),BZA(2)
+      COMMON /MAXES/XMIN,XMAX,YMIN,YMAX,ZMIN,ZMAX                              2
+      COMMON /LABEL/ LAB(15)
+      EQUIVALENCE (BA,ALINE(1)),(ALPH(1),ALINE(2)),(BXI,ALINE(5)),
+     *   (AXI(1),ALINE(7)),(BXA,ALINE(10)),(AXA(1),ALINE(12)),(BB,
+     *   BLINE(1)),(BETA(1),BLINE(2)),(BYI,BLINE(5)),(AYI(1),BLINE(7)),
+     *   (BYA,BLINE(10)),(AYA(1),BLINE(12)),(BC,CLINE(1)),(GAM(1),
+     *   CLINE(2)),(BZI,CLINE(5)),(AZI(1),CLINE(7)),(BZA,CLINE(10)),
+     *   (AZA(1),CLINE(12))
+      EQUIVALENCE (FAKER,FAKIR)
+      DATA BA,BB,BC,BXI,BXA,BYI,BYA,BZI,BZA / 4H A =, 4H B =, 4H C =,
+     *   4H  XM, 4HIN =, 4H  XM, 4HAX =, 4H  YM, 4HIN =, 4H  YM, 4HAX =,
+     *   4H  ZM, 4HIN =, 4H  ZM, 4HAX =    /
+      SICK(XXX) = XXX - FLOAT(IFIX(XXX/360.0))*360.0
+      FAKER = FAKIR
+      CALL LRCNVT(XMIN,3,AXI,4,12,5)
+      CALL LRCNVT(XMAX,3,AXA,4,12,5)
+      CALL LRCNVT(YMIN,3,AYI,4,12,5)
+      CALL LRCNVT(YMAX,3,AYA,4,12,5)
+      CALL LRCNVT(ZMIN,3,AZI,4,12,5)
+      CALL LRCNVT(ZMAX,3,AZA,4,12,5)
+      RETURN
+      ENTRY WRITES(A1,B1,C1)
+      CALL LRNON
+      A = SICK(A1)
+      B = SICK(B1)
+      C = SICK(C1)
+      CALL LRCNVT(A,3,ALPH,3,12,5)
+      CALL LRCNVT(B,3,BETA,3,12,5)
+      CALL LRCNVT(C,3,GAM ,3,12,5)
+      CALL LRLEGN(LAB,60,0,2.0,2.66,0.)
+      CALL LRLEGN(ALINE,56,0,2.0,2.0,0.)
+      CALL LRLEGN(BLINE,56,0,2.0,1.33,0.)
+      CALL LRLEGN(CLINE,56,0,2.0,0.66,0.)
+      CALL LRNOFF
+      RETURN                                                                  47
+      END                                                                     49
+      SUBROUTINE SCALE(XMIN,XMAX,YMIN,YMAX,X1,Y1,Z1,NX1,NY1,X2,Y2,Z2,NX2       1
+     * ,NY2,CUBE)                                                              2
+      DIMENSION X1(NX1,NY1),Y1(NX1,NY1),Z1(NX1,NY1),                           3
+     *          X2(NY2,NX2),Y2(NY2,NX2),Z2(NY2,NX2)
+      COMMON /MAXES/ XMIN1,XMAX1,YMIN1,YMAX1,ZMIN,ZMAX
+      LOGICAL CUBE                                                             6
+      REAL MAXX,MAXY,MAXZ                                                      7
+      XMIN1 = XMIN
+      XMAX1 = XMAX
+      YMIN1 = YMIN
+      YMAX1 = YMAX
+      MAXX = (XMAX-XMIN)/3.5                                                  12
+      MAXY = (YMAX-YMIN)/3.5                                                  13
+      ZMAX = Z1(1,1)                                                          14
+      ZMIN = Z1(1,1)                                                          15
+      DO 1 I=1,NX1                                                            16
+      DO 1 J=1,NY1                                                            17
+      ZMAX = AMAX1(Z1(I,J),ZMAX)                                              18
+    1 ZMIN = AMIN1(Z1(I,J),ZMIN)                                              19
+      DO 2 I=1,NY2
+      DO 2 J=1,NX2
+      ZMAX = AMAX1(Z2(I,J),ZMAX)                                              22
+    2 ZMIN = AMIN1(Z2(I,J),ZMIN)                                              23
+      MAXZ = (ZMAX-ZMIN)/3.5                                                  24
+      IF(CUBE)  GO TO 21                                                      25
+      MAXX = AMAX1(MAXX,MAXY,MAXZ)                                            26
+      MAXY = MAXX                                                             27
+      MAXZ = MAXX                                                             28
+   21 DO 3 I=1,NX1                                                            29
+      DO 3 J=1,NY1                                                            30
+      X1(I,J) = (X1(I,J)-(XMAX+XMIN)/2.)/MAXX
+      Y1(I,J) = (Y1(I,J)-(YMAX+YMIN)/2.)/MAXY
+    3 Z1(I,J) = (Z1(I,J)-(ZMAX+ZMIN)/2.)/MAXZ
+      DO 4 I=1,NY2
+      DO 4 J=1,NX2
+      X2(I,J) = (X2(I,J)-(XMAX+XMIN)/2.)/MAXX
+      Y2(I,J) = (Y2(I,J)-(YMAX+YMIN)/2.)/MAXY
+    4 Z2(I,J) = (Z2(I,J)-(ZMAX+ZMIN)/2.)/MAXZ
+      RETURN                                                                  39
+      END                                                                     40
+      SUBROUTINE AXIS(I,DRAWME)
+      LOGICAL DRAWME
+      DIMENSION X(4,1),Y(4,1),Z(4,1)
+      DIMENSION XA(2),XB(2),XC(2),YA(2),YB(2),YC(2)
+      IF(I .NE. 0) GO TO 1
+      X(1,1) = 0.
+      X(2,1) = .4
+      X(3,1) = 0.
+      X(4,1) = 0.
+      Y(1,1) = 0.
+      Y(2,1) = 0.
+      Y(3,1) = .4
+      Y(4,1) = 0.
+      Z(1,1) = 0.
+      Z(2,1) = 0.
+      Z(3,1) = 0.
+      Z(4,1) = .4
+      RETURN
+    1 CALL PHI(X,Y,Z,4,1)
+      IF(DRAWME) GO TO 2
+      RETURN
+    2 XA(1) = Y(1,1) + 4.5
+      XB(1) = XA(1)
+      XC(1) = XA(1)
+      XA(2) = Y(2,1) + 4.5
+      XB(2) = Y(3,1) + 4.5
+      XC(2) = Y(4,1) + 4.5
+      YA(1) = Z(1,1) + 3.0
+      YB(1) = YA(1)
+      YC(1) = YA(1)
+      YA(2) = Z(2,1) + 3.0
+      YB(2) = Z(3,1) + 3.0
+      YC(2) = Z(4,1) + 3.0
+      CALL LRCURV(XA,YA,2,2,1HX,0.)
+      CALL LRLABL(1HX,1,0,XA(2) -.05,YA(2) -.05,0.)
+      CALL LRCURV(XB,YB,2,2,1HX,0.)
+      CALL LRLABL(1HY,1,0,XB(2) -.05,YB(2) -.05,0.)
+      CALL LRCURV(XC,YC,2,2,1HX,0.)
+      CALL LRLABL(1HZ,1,0,XC(2) -.05,YC(2) -.05,0.)
+      RETURN
+      END
+      SUBROUTINE TRNMAT(ALPHA,BETA,GAMMA)                                      1
+      COMMON /MATRIX/ TMAT(3,3)                                                2
+      A = ALPHA/57.2957795                                                     3
+      B = BETA/57.2957795                                                      4
+      C = GAMMA/57.2957795                                                     5
+      SINA = SIN(A)                                                            6
+      SINB = SIN(B)                                                            7
+      SINC = SIN(C)                                                            8
+      COSA = COS(A)                                                            9
+      COSB = COS(B)                                                           10
+      COSC = COS(C)                                                           11
+      TMAT(1,1) = COSC*COSB                                                   12
+      TMAT(1,2) = COSC*SINB*SINA-SINC*COSA                                    13
+      TMAT(1,3) = COSC*SINB*COSA+SINC*SINA                                    14
+      TMAT(2,1) = SINC*COSB                                                   15
+      TMAT(2,2) = SINC*SINB*SINA+COSC*COSA                                    16
+      TMAT(2,3) = SINC*SINB*COSA-COSC*SINA                                    17
+      TMAT(3,1) = -SINB                                                       18
+      TMAT(3,2) = COSB*SINA                                                   19
+      TMAT(3,3) = COSB*COSA                                                   20
+      RETURN                                                                  21
+      END                                                                     22
+      SUBROUTINE PHI(X,Y,Z,NX,NY)
+      DIMENSION X(NX,NY),Y(NX,NY),Z(NX,NY)                                     2
+      COMMON /MATRIX/ TMAT(3,3)                                                3
+C                                                                              4
+C                                                                              5
+      DO 1 I=1,NX                                                              6
+      DO 1 J=1,NY                                                              7
+C                                                                              8
+C                                                                              9
+      XP = TMAT(1,1)*X(I,J) + TMAT(1,2)*Y(I,J) + TMAT(1,3)*Z(I,J)             10
+      YP = TMAT(2,1)*X(I,J) + TMAT(2,2)*Y(I,J) + TMAT(2,3)*Z(I,J)             11
+      ZP = TMAT(3,1)*X(I,J) + TMAT(3,2)*Y(I,J) + TMAT(3,3)*Z(I,J)             12
+C                                                                             13
+C                                                                             14
+      X(I,J) = XP                                                             15
+      Y(I,J) = YP                                                             16
+    1 Z(I,J) = ZP                                                             17
+C                                                                             18
+C                                                                             19
+      RETURN                                                                  20
+      END                                                                     21
+      SUBROUTINE LRCURV
+      ENTRY LRGRID
+      ENTRY LRANGE
+      ENTRY LRMRGN
+      ENTRY LRLEGN
+      ENTRY LRCNVT
+      ENTRY LRCHSZ
+      ENTRY LRNON
+      ENTRY LRNOFF
+      ENTRY LRLABL
+      END

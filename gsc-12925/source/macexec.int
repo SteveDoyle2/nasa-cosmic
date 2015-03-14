@@ -1,0 +1,44 @@
+interface;
+  unit macexec (perform2,first_create,color1,clr,fill,
+            ndon,ndoff,symbol,bcplot,integer4,char4,start,total,
+            height,period,year,size,exit,enter,redraw,sldredraw);
+
+  USES getparam;
+ 
+  USES utility;
+
+  type
+          integer4   = array [1..4] of integer;
+          char4      = array [1..4] of char;
+
+  var
+          first_create : boolean;
+          color1       : integer;
+          clr          : integer4;
+          fill         : integer4;
+          ndon,ndoff   : integer4;
+          start        : byte;
+          total        : byte;
+          height       : integer;
+          period       : byte;
+          year         : lstring(2);
+          size         : byte;
+          symbol       : integer;
+          bcplot       : string(4);
+
+  procedure exit (var current, first    : entity);
+
+  procedure enter (var current,first    : entity);
+
+  procedure redraw (code : integer;var current,first   : entity);
+
+  procedure sldredraw ( var current, first : entity );
+
+  procedure perform2( var inkey         : byte;
+                      var first         : entity;
+                      var name          : lstring;
+                      var xy            : supinteger );
+
+  begin
+  end;
+

@@ -1,0 +1,1748 @@
+
+
+       MM     MM   EEEEEEEEE   RRRRRR      LL       IIIIIIII   BBBBBB
+       MMM   MMM   EEEEEEEEE   RRRRRRR     LL       IIIIIIII   BBBBBBB
+       MM M M MM   EE          RR    RR    LL          II      BB    BB
+       MM  M  MM   EE          RR    RR    LL          II      BB    BB
+       MM     MM   EEEEE       RRRRRRR     LL          II      BBBBBBB
+       MM     MM   EE          RR  RR      LL          II      BB   BB
+       MM     MM   EE          RR   RR     LL          II      BB    BB
+       MM     MM   EEEEEEEEE   RR    RR    LLLLLLL  IIIIIIII   BBBBBBBB
+       MM     MM   EEEEEEEEE   RR    RR    LLLLLLL  IIIIIIII   BBBBBBB
+
+
+
+
+MERLIB is a collection of FORTRAN-callable subprograms which is intended to 
+make powerful, general-purpose routines available without the need for each 
+user to recode the utility.  A variety of useful routines for manipulating 
+character data and doing I/O are available.  A few routines are available for 
+curve fitting and file manipulations.  It is not intended to replace libraries 
+such as IMSL with this library; there is little overlap in the functions 
+between them.
+
+The format of the entries in this document for each of the routines is :
+Subprogram name, type, purpose, arguments, and notes.  The subprogram name is
+the name by which the subprogram is called.  The type is either 'SUBROUTINE' or
+'type FUNCTION' (eg, LOGICAL FUNCTION).  The purpose is self explanatory.
+The arguments are listed in the order in which they appear in the argument 
+list.  Each argument is given a type and a mode; the mode refers to whether the
+argument is used as an input, produced as an output, or used as an input and 
+then modified (update).  Notes are generally self-explanatory and are not 
+included for all subprograms.
+
+The following routines are included in the object library from DECUS releases:
+     DELAY, NARGS, TRAP, and  UNTRAP.
+
+The following routines came from texts with the references in the source code:
+     GAUSS,  SORT,  ISORT,  KURV1,  KURV2,  and  INTRPL.
+
+MERLIB is available on the MERLIN system as logical symbol MERLIB.  To use a 
+routine from MERLIB in your program it must be linked with MERLIB in this 
+manner:
+     LINK progname,MERLIB/LIB
+
+Questions, suggestions, etc. regarding MERLIB should be addressed to the 
+system manager.
+
+
+                        List of Entry Points
+                        --------------------
+
+ASCII	- convert strings to ASCII characters
+BLANKS	- remove blanks from a string
+CAPS	- capitalize a string
+CATEG	- categorize a token
+CENTER	- center a text string
+CLEAR	- clear a CRT screen
+CTIME	- wall-clock time
+DASCII	- convert ASCII characters to strings
+DATE	- calendar date
+DECHEX	- convert a number to a string (hexadecimal)
+DECOCT	- convert a number to a string (octal)
+DELAY	- do nothing for a short period of time
+DELETE	- delete a file
+DIR	- list a directory
+EXISTS	- test to see if a file exists
+FIRST	- find the first non-blank character in a string
+GAUSS	- solve simultaneous, linear equations
+GETCHAR	- wait until a character is typed at the terminal
+GETFOR	- get the parameters and qualifiers from a foreign command
+GETIME	- retrieve CPU time
+GETLIN	- retrieve a line of text for parsing
+GETOKE	- parse the next token from a line
+GETCPRV	- return the current privileges of the calling process
+GETPRV	- return the authorized privileges of the calling process
+GETTERM	- return the terminal name of the controlling terminal
+GETUSER	- get the name of the user calling the routine
+GETXY	- get the present cursor location on a VT100
+GOTOXY	- position the cursor on a VT100
+GPALFA  - return a GP-29 terminal to alpha mode
+GRALFA	- return a Graphon terminal to alpha mode
+HELP	- access a VMS help file
+HEXDEC	- convert a string (hexadecimal) to a number
+INTRPL	- Akima spline fit
+ISORT	- sort an array and an index array
+KEYHIT	- check to see if a key was struck
+KURV1/2	- cubic spline curve fit
+LEFT	- left justify a string
+LENGTH	- return the length of a string to the last non-blank character
+MBELL	- ring the bell
+NAE	- edit one to three arrays in memory
+NARGS	- return the number of arguments passed to the calling routine
+OCTDEC	- convert a string (octal) to a number
+OPER    - send a message to an operator
+OPERW   - send a message to an operator and wait for a reply
+PEEK	- return the value of a byte in memory
+PEEKW	- return the value of a long word in memory
+POKE	- set the value of a byte in memory
+POKEW	- set the value of a long word in memory
+PROMPT	- produce a prompt string
+READT	- read a string with timeout
+REPLAC	- replace a character in a string with a different character
+REVLF	- do a reverse line feed
+RIGHT	- right justify a string
+SCROLL	- set the scroll region on a VT100
+SEARCH	- binary search an array of tokens
+SEARCH1 - binary search an array of tokens for exact match
+SEND	- send a message to a user or terminal
+SENDW	- send a message to a user or terminal and wait
+SETIME	- start the CPU time clock
+
+
+
+
+SORT	- sort an array
+SRESET	- reset the scroll region on a VT100
+STAT	- display a status message on a VT100
+STATUS	- display a status message and return to unknown location
+T$RAP	- trap an error condition or control-C
+UNTAB	- remove tabs from a string
+UNT$RAP	- undo the effects of T$RAP
+VERIFY	- verify existance of only specified characters in a string
+WAIT	- do nothing for up to 10 minutes
+WEKDAY	- return the day of the week from a system time
+YESNO	- get the answer to a yes/no question
+
+
+
+
+Subprogram : ASCII
+
+Type : SUBROUTINE
+
+Purpose : to replace ASCII mnemonic strings (such as those created by DASCII
+with the actual ASCII characters.  (See DASCII).
+
+Arguments : 
+      STRING - (character*(*),update) the string (of maximum length 255) which 
+                is to be converted.
+
+
+
+
+
+
+
+
+
+
+
+
+Subprogram : BLANKS
+
+Type : SUBROUTINE
+
+Purpose : Replace a string with the same string less all leading and embedded
+blanks.  Pad on the end with blanks to fill the string.
+
+Arguments :
+      STRING - (character*(*),update) the string which is replaced by the 
+               same string less blanks.
+      L      - (integer,output) the location of the last, non-blank character.
+
+Notes : L is 0 if the entire line is blank.
+
+
+
+
+
+
+
+
+
+
+
+Subprogram : CAPS
+
+Type : SUBROUTINE
+
+Purpose : Replace a string with the same string where all lower case letters
+have been capitalized.
+
+Arguments:
+      STRING - (character*(*),update) string to be capitalized.
+
+
+
+Subprogram : CATEG
+
+Type : SUBROUTINE
+
+Purpose : To look at a string and try to determine if the string represents
+an integer, logical, fixed point, floating point, or character string.
+
+Arguments :
+     STRING  - (character*(*),update) the character string to categorize
+                (the blanks are removed and it is capitalized).
+     TYPE    - (character*(1),output) the determined type :
+                 'A' - alphanumeric           'F' - fixed point real
+                 'D' - floating point double  'I' - integer
+                 'E' - floating point single  'L' - logical
+     FORM    - (character*(*),output) a FORTRAN FORMAT field for the variable
+
+Notes :
+   FORM contains a FORMAT-like field.  The actual field may vary some.
+
+Examples:
+          STRING(input)          TYPE(output)            FORM(output)
+          -------------          ------------            ------------
+           ' -123'                    I                       I4
+           '123.45'                   F                      F6.2
+           '.TRUE.'                   L                       L6
+           '1.234D-2'                 D                      D8.3
+
+The value can then be obtained from an internal file read; eg:
+      S = '   -123'
+      CALL CATEG(S,T,FORM)
+      IF (T .EQ. 'I') READ(S,FORM) IVALUE
+
+
+
+
+
+
+
+
+
+
+
+
+
+Subprogram : CENTER
+
+Type : SUBROUTINE
+
+Purpose : To center the text of a string within the field of the string (eg, a 
+string of length 79 would be centered around column 39).
+
+Arguments :
+       STRING - (character*(*),update) a string of maximum length 255 that is
+                replaced with the centered string.
+
+
+Subprogram : CLEAR 
+
+Type : SUBROUTINE
+
+Purpose : Clear a CRT screen or advance to the top of a new page on a 
+hardcopy terminal.
+
+Arguments : None
+
+Notes : the VAX version will retrieve the terminal type from the operating
+system tables (ie, as determined by the SET TERMINAL command).  The
+transportable version will send <FF> to all terminals. 
+
+
+
+
+
+
+
+
+
+
+Subprogram : CTIME
+
+Type : SUBROUTINE
+
+Purpose : to return the present wall clock time from the operating system.
+
+Arguments :
+      TIME - (character*8,output) the time in HH:MM AM/PM format
+              (eg, "11:23 AM" ).
+
+Notes : Not transportable.  This is NOT the VMS builtin TIME subroutine,
+which returns time in HH:MM:SS format for a 24 hour clock.
+
+
+
+
+
+
+
+
+
+
+Subprogram : DASCII
+
+Type : SUBROUTINE
+
+Purpose : this subprogram replaces a string with the same string except all 
+non-printable characters are replaced by a printable string.  If the character
+is one of the characters for which there is a standard mnemonic (eg, BEL) the 
+standard mnemonic is inserted surrounded by '<' and '>' (eg, <BEL>).  If the 
+ASCII value for the character is greater than 127 the value is inserted 
+surrounded by < and > (eg, <164>).
+
+Arguments :
+      STRING - (character*(*),update) the string to be converted/the converted
+                string.
+
+
+
+Subprogram : DATE
+
+Type : SUBROUTINE
+
+Purpose : to return the present calendar date from the operating system.
+
+Arguments :
+      DATE - (character*8,output) the date in DD-MMM-YY format.
+
+Notes : Not transportable.  This is the builtin DATE subroutine on VMS.
+
+
+
+
+
+
+
+
+
+
+
+Subprogram : DECHEX
+
+Type : SUBROUTINE
+
+Purpose : to convert a decimal integer to a hex string.
+
+Arguments :
+     I - (integer,input) the integer containing the value.
+     H - (character*8,output) the hex equivalent of I.
+
+Notes : not transportable.
+
+
+
+
+
+
+
+
+
+
+
+Subprogram : DECOCT
+
+Type : SUBROUTINE
+
+Purpose : to convert an decimal integer into the equivalent octal value.
+
+Arguments :
+      I - (integer,input) the decimal value.
+      O - (character*16,output) the octal string.
+
+Notes : not transportable.
+
+
+
+Subprogram : DELAY
+
+Type : SUBROUTINE
+
+Purpose : This subroutine delays the execution of a process a specified amount 
+of time.  This execution delay is computed as follows: if (TIME_DELAY <= 0) 
+then the passed parameter represents the number of 100-nanosecond units to 
+elapse before program execution is resumed.  If (TIME_DELAY > 0) then the 
+passed parameter represents the number of millisecond units to elapse before
+program execution is resumed.  
+
+Arguments :
+      DELAY - (integer,input) time to delay (see above).
+
+Notes : 
+1. This subroutine assumes that the system clock has unit increments 
+of 100-nanoseconds, which is consistent with the VAX-11/780 system time 
+quadword format standard.  
+2. Not transportable.
+
+
+
+
+
+
+
+
+
+
+
+
+Subprogram : DELETE
+
+Type : SUBROUTINE
+
+Purpose : delete the specified file from the user's directory.
+
+Arguments :  
+      FILESPEC - (character*(*),input) the file specification of the file 
+                     to be deleted (see notes for EXISTS).
+      ERROR    - (logical,output) FALSE if the deletion was performed without 
+                     problem, TRUE otherwise.
+
+Notes: 
+   1. Not transportable.  
+   2. FILESPEC must not contain wildcards.
+
+
+
+Subprogram : DIR
+
+Type : SUBROUTINE
+
+Purpose : to produce a listing of the user's directory on the terminal.
+
+Arguments :
+      DIRECTORY - (character*(*),input) the specification of the directory 
+                      to be produced ( space for the default directory).
+      ERROR     - (logical,output) FALSE if the operation was successful,
+                       TRUE otherwise.
+
+Notes : 
+1. On VMS, the error flag is unlikely to ever be set since VMS
+will produce a message instead of the directory listing if the
+directory doesn't exist or is read-protected; VMS doesn't consider this
+to be an error.  If 'directory' contains the string "/OUTPUT=filespec",
+the output will be produced to the file 'filespec'. 
+2. Not transportable.
+
+
+
+
+
+
+
+
+
+
+
+Subprogram : EXISTS
+
+Type : LOGICAL FUNCTION
+
+Purpose : check to see if a file exists on the user's directory.
+
+Arguments :
+      FILESPEC - (character*(*),input) the file specification of the file 
+                    to be checked.
+      EXISTS   - (logical,output(FUNCTION value)) TRUE if the file is found,
+                    FALSE otherwise.
+
+Notes : 
+1. The function value is set false if an error occurs in trying to open
+the file as an OLD (ie, existing) file.  This condition can be caused by
+problems other than a non-existent file (such as misspelled device names).  
+2. On the VAX, the file specification is the full VMS file specification
+(ie, node name, device name, directory name, file name). 
+
+
+
+Subprogram : FIRST
+
+Type : SUBROUTINE
+
+Purpose : to find the first, non-blank character in a string
+
+Arguments :
+     STRING - (character*(*),input) the string to search.
+     CHAR   - (character*1,output) the first, non-blank character.
+     I      - (integer,output) the location of 'CHAR' in 'STRING'.
+
+Notes : if STRING is completely blank, CHAR is returned as ' ' and I as 0.
+
+
+
+
+
+
+
+
+
+
+
+
+Subprogram : GAUSS
+
+Type : SUBROUTINE
+
+Purpose : Solve a set of simultaneous, linear equations by Gaussian 
+Elimination.  
+
+Arguments :
+     A     - (real,update) the matrix of coefficients (see notes).
+     Y     - (real,update) the vector of dependent values.
+     COEF  - (real,output) the solution vector.
+     N     - (integer,input) the number of equations.
+     ERROR - (logical,output) set TRUE if the matrix is singular.
+
+Notes :
+1.  'A' MUST be dimensioned EXACTLY (N,N).
+2.  'Y' and 'A' are filled as follows :
+        Y1  =  A1,1*X1  +  A1,2*X2  +  ...  A1,N*XN
+        Y2  =  A2,1*X1  ...
+        .
+        YN  =  AN,1*X1 ...
+3.  'A' and 'Y' are destroyed during solution.
+
+
+
+Subprogram : GETCHAR
+
+Type : SUBROUTINE
+
+Purpose : To retrieve a single character from the keyboard.  This routine will
+wait until a character is entered (up to 999 seconds) but does not require or
+read a carriage control after the character.
+
+Arguments :
+     CH  - (byte,output) the ASCII integer equivalent of the character that
+            was entered (0 in the event of an error or timeout).
+     ERR - (logical,output) set TRUE if an error occurs, FALSE otherwise.
+
+Notes : 
+1. Not transportable.
+2. The difference between this routine and KEYHIT is that this routine always
+waits for a character (up to 999 seconds) and KEYHIT always returns immediately
+whether a character has been entered or not.
+
+
+
+
+
+
+
+
+
+Subprogram : GETFOR
+
+Type : SUBROUTINE
+
+Purpose : To retrieve and parse the command line entered with a foreign
+command.  The line is parsed into qualifiers and parameters.  Blanks should
+only be used to seperate parameters(ie, /TIME = 2 will be returned as a
+qualifier and 2 parameters but /TIME=2 will be returned as a single qualifier).
+The slashes are not included in the entries in array QUALS.
+
+Arguments :
+      NQ     - (integer,output) the number of qualifiers found.
+      QUALS  - (character*(*),output) an array in which the strings of the
+                  qualifiers will be returned.
+      NP     - (integer,output) the number of parameters found.
+      PARAMS - (character*(*),output) an array in which the strings of the
+                  parameters will be returned.
+
+Notes : 
+1. Not transportable.  
+2. A foreign command is a program which has been identified to VMS by the line :
+    COMMAND :== $progname
+where progname is the file specification for an executable (.EXE) file.
+3. The slashes are not included in the entries in array QUALS.
+
+
+
+Subprogram : GETIME
+
+Type : SUBROUTINE
+
+Purpose : To retrieve the CPU time used since the last call to GETIME and
+since the initial call to SETIME.
+
+Arguments : 
+      TOTAL - (real,output) time in seconds since the last call to SETIME.
+      DELTA - (real,output) time interval since the last call to GETIME.
+
+Notes : SETIME must always be called before the first call to GETIME.
+
+
+
+
+
+
+
+
+
+
+
+
+Subprogram : GETLIN
+
+Type : SUBROUTINE
+
+Purpose : To retrieve a line of text from a file less comments; multiple
+lines of input will be accepted if the last (non-comment) symbol is '...'.
+Anything after an '!' on a line of input is considered comment.
+
+Arguments :
+      NREAD - (integer,input) FORTRAN unit number from which to read.
+      ERROR - (logical,output) an error occurred or the line was more than
+              500 characters long.
+      LINE  - (character*500,output) the line.
+      LEN   - (integer,output) the location of the last character read.
+
+Notes : compatible with GETOKE.
+
+
+
+Subprogram : GETOKE
+
+Type : SUBROUTINE
+
+Purpose : to return the next token from a string being parsed.  A token ends
+with a space, comma, semicolon, or slash.
+
+Arguments :
+      LINE   - (character*(*),input) the line to be parsed.
+      LEN    - (integer,input) the last location in LINE to look at.
+      IPTR   - (integer,update) the next character location to look at (set
+               to zero before first call).
+      TOKEN  - (character*20,output) the text of the token.
+      TYPE   - (character*1,output) the type of the token (see notes).
+      ERROR  - (logical,output) an error occurred if set true.
+
+Notes : The types returned are:
+      N - Null (two delimiters in a row).
+      E - End of line encountered.
+      A - Alphabetic.
+      I - Integer number.
+      R - Real number.
+      S - Special, a single character not recognized as belonging to any
+          of the other types.
+
+
+
+
+
+
+
+Subprogram : GETCPRV
+
+Type : SUBROUTINE
+
+Purpose : to retrieve the current privileges of the user who is running
+the program.
+
+Arguments :
+     N     - (integer,output) the number of authorized privileges found.
+     PRIV  - (character*(*),output) an array containing the ASCII names
+              of the privileges found.
+
+Notes:
+1. Not transportable.
+2. The names are the names given in the VMS system manager's guide.
+3. Example :
+      CALL GETCPRV (N, PRIV)
+      DO 10 I = 1,N
+         IF (PRIV(I) .EQ. 'OPER') GO TO 20
+10       CONTINUE
+      WRITE(6,*)' Insufficient privilege.'
+      STOP
+20    ...
+
+
+
+
+
+
+
+Subprogram : GETPRV
+
+Type : SUBROUTINE
+
+Purpose : to retrieve the authorized privileges of the user who is running
+the program.
+
+Arguments :
+     N     - (integer,output) the number of authorized privileges found.
+     PRIV  - (character*(*),output) an array containing the ASCII names
+              of the privileges found.
+
+Notes:
+1. Not transportable.
+2. The names are the names given in the VMS system manager's guide.
+3. Example :
+      CALL GETPRV (N, PRIV)
+      DO 10 I = 1,N
+         IF (PRIV(I) .EQ. 'OPER') GO TO 20
+10       CONTINUE
+      WRITE(6,*)' Insufficient privilege.'
+      STOP
+20    ...
+
+
+
+Subprogram : GETTERM
+
+Type : SUBROUTINE
+
+Purpose : to retrieve the terminal name on which a user is logged on.
+
+Arguments :
+     USER  - (character*(*),input) the name of the user.
+     TERM  - (character*(*),output) the name of the terminal (eg, TTA3: ).
+
+Notes : Not transportable.
+
+
+
+
+
+
+
+
+
+
+Subprogram : GETUSER
+
+Type : SUBROUTINE
+
+Purpose : to retrieve the user name of the user running the calling program.
+
+Arguments :
+     USER  - (character*(*),output) - the user name.
+
+Notes : 
+1. Not transportable.
+2. USER is returned as 'ERROR' in the event of an error.
+
+
+
+
+
+
+
+
+
+Subprogram : GETXY
+
+Type : SUBROUTINE
+
+Purpose : to retrieve the present location of the cursor from a VT-100 or
+compatible terminal.
+
+Arguments :
+     NWRITE - (integer,input) the logical unit number assigned to the screen
+               (normally 6).
+     IX     - (integer,output) the column in which the cursor resides(1-132).
+     IY     - (integer,output) the row in which the cursor resides(1-24).
+
+Notes : 
+1. The location (1,1) is the upper, left-hand corner.  This routine 
+produces a '$' on the screen and waits 2 seconds.  
+2. Not transportable.
+
+
+
+Subprogram : GOTOXY
+
+Type : SUBROUTINE
+
+Purpose : position the cursor on a VT-100 or compatible terminal.
+
+Arguments :
+      NWRITE - (integer,input) the logical unit number assigned to the screen
+                (normally 6).
+      IX     - (integer,input) column in which the cursor is to reside(1-132).
+      IY     - (integer,input) row in which the cursor is to reside(1-24).
+
+Notes : the location (1,1) is the upper, left-hand corner.
+
+
+
+
+
+
+
+
+
+
+Subprogram : GPALFA
+
+Type : SUBROUTINE
+
+Purpose : to return a Northwest Digital Systems GP-29 terminal to alphanumeric
+mode after using Tektronix graphics.
+
+Arguments :
+     NWRITE - (integer,input) logical unit number for the screen.
+
+
+
+
+
+
+
+
+
+
+Subprogram : GRALFA
+
+Type : SUBROUTINE
+
+Purpose : to return a Graphon 140 to alphanumeric (VT100) mode after being used
+for Tektronix graphics.
+
+Arguments :
+     NWRITE - (integer,input) the logical unit number for the screen.
+
+
+
+
+
+
+
+
+
+Subprogram : HELP
+
+Type : SUBROUTINE
+
+Purpose : to return a help message from a VMS-format help library.
+
+Arguments :
+      LIBRARY - (character*(*),input) the filespec of the help library.
+      STRING  - (character*(*),input) the item on which help is requested.
+      ERROR   - (logical,output) true if there was an error.
+
+Notes : Not transportable.  
+
+
+
+Subprogram : HEXDEC
+
+Type : SUBROUTINE
+
+Purpose : to convert a hexadecimal string to a decimal integer.
+
+Arguments :
+     H - (character*8,input) the hexadecimal string.
+     I - (integer,output) the integer output.
+
+Notes : not transportable.
+
+
+
+
+
+
+
+
+
+
+
+
+Subprogram : INTRPL
+
+Type : SUBROUTINE
+
+Purpose : cubic spline fit using the Akima multiple curve technique.  The
+output array contains a series of interpolated values.
+
+Arguments :
+      L  - (integer,input) the number of elements in X and Y.
+      X  - (real,input) an array of dimension L containing the X values of the
+            curve to be fit.
+      Y  - (real,input) an array of dimension L containing the Y values of the
+            curve to be fit.
+      N  - (integer,input) the number of elements to be output from the inter-
+            polation routine.
+      U  - (real,input) an array of dimension N containing the X locations for
+            which the Y value is desired.
+      V  - (real,output) an array of dimension N into which the interpolated
+            values are placed.
+      IERR - (integer,output) = 0 for no error
+                              = 1 for L too small
+                              = 2 for N too small
+                              = 3 if X is not monotonicaly increasing.
+
+Notes : X must be monotonicaly increasing.  If you want to fit a curve whose
+values are not monotonicaly increasing, use KURV1 and KURV2 in this library.
+If your output values are expected to be monotonicaly increasing, use INTRPL.
+
+
+
+Subprogram : ISORT
+
+Type : SUBROUTINE
+
+Purpose : sort an array of character*20 variables in ascending, alphabetic 
+order.  In addition, sort an array of indices so that arrays associated with
+the array to be sorted may be used in the sorted order.  See also SORT.
+
+Arguments : 
+      ARRAY  - (character*20,update) the array of elements to be sorted 
+                (inplace).
+      N      - (integer,input) the number of elements in ARRAY.
+      IND    - (integer,output) an array the same size as ARRAY which contains
+                the new order of the indices (see example).
+
+Example :
+     ARRAY = 'XYZ', 'ABC', 'LMN', 'DEF' and N = 4 before the call.  After the
+call, ARRAY = 'ABC', 'DEF', 'LMN', 'XYZ' and IND = 2, 4, 3, 1 (ie, the 
+original location of the entries).
+
+
+
+
+
+
+
+
+Subprogram : KEYHIT
+
+Type : SUBROUTINE
+
+Purpose : Check the keyboard to see if a key has been hit.  If so, return
+the ASCII value of that character; otherwise, return 0.
+
+Arguments :
+     CHAR  - (byte,output) the value of the key that was struck, or 0 if
+                no key was struck.
+     ERROR - (logical,output) will be set TRUE if an error occurs, FALSE
+                otherwise.
+
+Notes :
+1. Not transportable.
+2. Warning!!!! Never use keyhit as follows; it will eat CPU time constantly:
+       10  CALL KEYHIT ( C, ERR )
+           IF (C .EQ. CHAR(0)) GO TO 10
+3. The following is OK:
+       10  CALL KEYHIT ( C, ERR )
+           IF (C .EQ. CHAR(0)) THEN
+              CALL WAIT ( 2 )
+              GO TO 10
+           ENDIF
+4. The following is PREFERRED :
+           CALL GETCHAR (C, ERR)
+
+
+
+Subprogram : KURV1
+
+Type : SUBROUTINE
+
+Purpose : Set up the parameters used by KURV2 to interpolate a spline fitting
+the input data.
+
+Arguments :
+       N     - (integer,input) Number of points to be fit.
+       X     - (real,input) Array of X values.
+       Y     - (real,input) Array of Y values.
+       SLP1  - (real,input) Slope at first point (degrees, counter-clockwise 
+                  from positive X axis).
+       SLPN  - (real,input) Slope at last point (degrees, ...)
+       XP    - (real,output) Curvature parameters for KURV2.
+       YP    - (real,output) Curvature parameters for KURV2.
+       TEMP  - (real,update) Scratch work area (dimenion N+2).
+       S     - (real,output) Arc length of curve.
+       SIGMA - (real,input) Tension factor (if this value is negative, the end
+                 point slopes will be calculated, if positive, they should be 
+                 input in SLP1 and SLPN.  A typical value is 1. )
+
+
+
+
+
+
+
+
+
+
+
+Subprogram : KURV2
+
+Type : SUBROUTINE
+
+Purpose : Return an interpolated value for the function calculated by KURV1.
+
+Arguments :
+       T      - (real,input) Location on curve normalized from 0. to 1.
+       XS     - (real,output) Calculated Y value for T.
+       YS     - (real,output) Calculated Y value for T.
+       N      - (integer,input) Number of points in arrays.
+       X      - (real,input) Independent values array.
+       Y      - (real,input) Dependent values array.
+       XP     - (real,input) Information passed from KURV1.
+       YP     - (real,input) Information passed from KURV1.
+       S      - (real,input) the arc length passed from KURV1.
+       SIGMA  - (real,input) Tension factor.
+
+
+
+Subprogram : LEFT
+
+Type : SUBROUTINE
+
+Purpose : Left justify a string.
+
+Arguments : 
+      STRING - (character*(*),update) the string to be left justified.
+
+
+
+
+
+
+
+
+
+
+
+Subprogram : LENGTH
+
+Type : INTEGER FUNCTION
+
+Purpose : To return the length of a string, where length is defined as the 
+number of characters from the start of the string to the last non-blank 
+character.
+
+Arguments : 
+      STRING - (character*(*),input) the string whose length is to be measured.
+      LENGTH - (function value)the length, as described above.
+
+Note : The difference between this function and the builtin function, LEN, is 
+that LEN always returns the value for the length in the CHARACTER statement 
+regardless of whether or not the string is full.  If the entire string is blank
+the value returned will be 0.
+
+
+
+
+
+
+
+
+
+
+
+Subprogram : MBELL
+
+Type : SUBROUTINE
+
+Purpose : ring the terminal bell.
+
+Arguments: 
+      NUNIT  - (integer,input) the FORTRAN logical unit number of the terminal.
+
+Comments: although transportable, it may not work with all terminals; it
+sends an ASCII <BEL> character.
+
+
+
+Subprogram : NAE (NAE1, NAE2, NAE3, RNAE, RNAE1, RNAE2, RNAE3 )
+
+Type : SUBROUTINE
+
+Purpose : to provide a simple, screen-oriented editor for arrays.  There are a 
+total of six callable subprograms in this group.  Three (those whose names 
+begin with N) are used for editing integer arrays and three (those whose names 
+begin with R) are used for editing real arrays.  NAE1 and RNAE1 are synonyms 
+for NAE and RNAE respectively.  The digit appended to the name indicates how 
+many arrays are edited at once; eg, NAE3 edits three integer arrays.
+
+Arguments :
+     NREAD  - (integer,input) the FORTRAN logical unit number for the keyboard
+     NWRITE - (integer,input) the FORTRAN logical unit number for the screen
+     NUM    - (integer,update) the number of elements in the array(s) at the
+                time of calling. This number will change if additions or 
+                deletions are made.
+     MAX    - (integer,input) the maximum number of elements permitted in the
+                array(s) (ie, the dimension).
+     ARRAY  - (integer/real,update) the first data array.
+     ARRAY2 - (integer/real,update) the second data array (NAE2 and NAE3).
+     ARRAY3 - (integer/real,update) the third data array (NAE3).
+     ERROR  - (logical,output) set .TRUE. if an unrecoverable error was 
+                encountered, .FALSE. otherwise.
+
+Notes: 
+   1. For the versions with more than one array, all arrays must have the same 
+number of elements in them and have the same dimension.
+   2. There is no version with arrays of mixed types.
+   3. There is no exit-without-saving option; if this is desired it must be 
+provided by the user.
+   4. This subprogram only works on a VT100 compatible terminal and is not 
+even remotely transportable.
+   5. The commands are :
+       A - Add empty elements to the end of the array(s).
+       B - go to the Beginning of the array(s).
+       D - Delete the line the cursor is on.
+       E - go to the End of the array(s).
+       I - Insert an empty element before the line the cursor is on.
+       R - Repaint the screen.
+       S - toggle the Scroll direction (default is down).
+       ?/H - print a Help message.
+       ^Z/Q - exit the editor.
+   6. A carriage return with nothing else on the line advances the cursor one 
+line in the scroll direction.
+   7. A line with one or more numbers on it means replace the line the cursor 
+is on with the new values.  If fewer numbers are entered than arrays being 
+edited, the remaining entries will be unaffected.
+   8. It is not necessary to space out to the next field; as long as there is 
+one or more spaces between entries the editor will rewrite the line properly.
+   9. ARRAY, ARRAY2, and ARRAY3 are real for RNAE, RNAE2, and RNAE3; they are
+integer for NAE, NAE2, and NAE3.
+
+
+
+Subprogram : NARGS
+
+Type : SUBROUTINE
+
+Purpose : This subprogram will return the number of arguments passed
+to the subprogram which called it.
+
+Arguments : 
+      NUM - (integer,output) the number of arguments.
+
+Notes : Not transportable.
+
+
+
+
+
+
+
+
+
+
+Subprogram : OCTDEC
+
+Type : SUBROUTINE
+
+Purpose : to convert an octal string to a decimal integer.
+
+Arguments :
+     O - (character*16,input) the octal string.
+     I - (integer,output) the integer result.
+
+Notes : not transportable.
+
+
+
+
+
+
+
+
+
+Subprogram : OPER
+
+Type : SUBROUTINE
+
+Purpose : to send a message to an operator.
+
+Arguments :
+      MESSAGE - (character*(*),input) the text of the message to send.
+      WHO     - (character*(*),input) the name of the operator to whom the
+                  message should be sent (see notes).
+
+Notes :
+   1. Not transportable
+   2. The operator names recognized are : CENTRAL, PRINT, TAPES, DISKS,
+         DEVICE, CARDS, NTWORK, CLUSTER, SECURITY, REPLY, and NETWORK.
+   3. NTWORK and NETWORK are identical.
+   4. If WHO matches none of the above, CENTRAL is used.
+
+
+Subprogram : OPERW
+
+Type : SUBROUTINE
+
+Purpose : to send a message to an operator and wait for a reply.
+
+Arguments :
+      MESSAGE - (character*(*),input) the text of the message to send.
+      WHO     - (character*(*),input) the name of the operator to whom the
+                  message should be sent (see notes).
+      REPLY   - (character*(*),output) the text typed by the operator in
+                  reply to the message.
+
+Notes :
+   1. Not transportable
+   2. The operator names recognized are : CENTRAL, PRINT, TAPES, DISKS,
+         DEVICE, CARDS, NTWORK, CLUSTER, SECURITY, REPLY, and NETWORK.
+   3. NTWORK and NETWORK are identical.
+   4. If WHO matches none of the above, CENTRAL is used.
+   5. If an error occurs, REPLY will contain an error message of which the 
+         first word is always "ERROR".
+
+
+
+
+
+
+
+
+Subprogram : PEEK
+
+Type : INTEGER FUNCTION
+
+Purpose : to return the value in the specified address in memory.
+
+Arguments :
+      ADDR  - (integer,input) the address in memory to check.
+      PEEK  - (integer,function value) the integer value of the byte at
+                  ADDR (0 to 255).
+
+Notes : Not transportable
+
+
+
+Subprogram : PEEKW
+
+Type : INTEGER FUNCTION
+
+Purpose : to return the value in the specified address in memory.
+
+Arguments :
+      ADDR  - (integer,input) the address in memory to check.
+      PEEKW - (integer,function value) the integer value of the word at
+                  ADDR.
+
+Notes : Not transportable
+
+
+
+
+
+
+
+
+
+
+Subprogram : POKE
+
+Type : SUBROUTINE
+
+Purpose : to store a byte at a given address.
+
+Arguments :
+      IADDR  - (integer,input) the address where the byte will be stored.
+      IBYTE  - (byte,input) the byte.
+
+Notes : Not transportable.
+
+
+
+
+
+
+
+
+
+Subprogram : POKEW
+
+Type : SUBROUTINE
+
+Purpose : to store a word at a given address.
+
+Arguments :
+      IADDR  - (integer,input) the address where the word will be stored.
+      IWORD  - (integer,input) the word.
+
+Notes : Not transportable.
+
+
+
+Subprogram : PROMPT
+
+Type : SUBROUTINE
+
+Purpose : produce a prompt string to the terminal without a <CR>/<LF> at
+the end of the line(ie, a prompt).
+
+Arguments :
+      NUNIT  - (integer,input)FORTRAN unit number to write to.
+      STRING - (character*(*),input)string to be produced as the prompt.
+
+Notes : Not transportable.
+
+
+
+
+
+
+
+
+
+
+
+Subprogram : READT
+
+Type : SUBROUTINE
+
+Purpose : read an array of characters from the terminal; return if no response
+within a specified time limit.
+
+Arguments :
+     ITIME - (integer,input) the time (in seconds) before timing out.
+     BUFF  - (byte(*),input) an array which will contain the characters read.
+     NUM   - (integer,update) before the call, put the array dimension of BUFF
+                 in NUM.  After the call, NUM has the number of bytes read.
+     IRET  - (integer,output) the return status...
+                 =0 for normal return
+                 =1 for timeout period reached
+                 =-1 for errors
+
+Notes : 
+     1. Not transportable
+     2. BUFF contains bytes, not characters.  They can be converted using
+the CHAR function or appropriate equivalences.
+     3. Normal return occurs when the user terminates the input with a 
+carriage return or control/Z.
+
+
+
+Subprogram : REPLAC
+
+Type : SUBROUTINE
+
+Purpose : replace all of one character in a string with a new character.
+
+Arguments :
+      STRING - (character*(*),update) the string to be modified.
+      OLD    - (character*1,input) the character to replace.
+      NEW    - (character*1,input) the new character
+
+
+
+
+
+
+
+
+
+
+Subprogram : REVLF
+
+Type : SUBROUTINE
+
+Purpose : to send a reverse line feed (cursor up one line) to the terminal.
+
+Arguments :
+      NWRITE - (integer,input) the FORTRAN logical unit number of the terminal.
+
+Notes : the present version is for VT-100 and compatible terminals only, a more
+generally applicable version is commented out.  Some terminals recognize 
+CHAR(11) as a reverse line feed.
+
+
+
+
+
+
+
+
+
+
+
+Subprogram : RIGHT
+
+Type : SUBROUTINE
+
+Purpose : Right justify a string.
+
+Arguments : 
+      STRING - (character*(*),update) the string to be right justified.
+
+
+
+Subprogram : SCROLL
+
+Type : SUBROUTINE
+
+Purpose : to set the scroll region on a VT100-type terminal.
+
+Arguments :
+     NWRITE - (integer,input) the logical unit number for the screen.
+     ITOP   - (integer,input) the top line to be included in the scroll.
+     IBOT   - (integer,input) the bottom line to be included.
+
+Notes :
+     1. Not transportable.
+     2. ITOP must be <= IBOT.
+     3. ITOP and IBOT must be in the range 1-23.
+     4. Always call SRESET before exiting a program that uses SCROLL.
+
+
+
+
+
+
+
+
+
+
+
+Subprogram : SEARCH
+
+Type : SUBROUTINE
+
+Purpose : Search an array of character variables for the occurence of a 
+target character variable.  If no match is found, search for an entry for 
+which target is a non-ambiguous abreviation.
+
+Arguments :
+      STRING  - (character*(*),input) sorted array of potential keywords.
+      NSTRNG  - (integer,input) number of entries in STRING.
+      TARGET  - (character*(*),input) target variable with same length as the
+                 entries in STRING.
+      K       - (integer,output) the index of the matched keyword (if found).
+      MATCHD  - (logical,output) TRUE if a match was found.
+      AMBIG   - (logical,output) TRUE if no exact match was found and more 
+                 than one entry could be abreviated to TARGET. (MATCHD will
+                 be TRUE regardless).
+Notes:
+Example - for the STRING array 'ABC', 'DEF', 'DOGGY' with NSTRNG = 3; the
+following would result:
+
+       TARGET             K           MATCHD           AMBIG
+       ------            ---          ------           -----
+        DEF               2            TRUE            FALSE
+        XYZ               -            FALSE           FALSE
+        DE                2            TRUE            FALSE
+        D                 2            TRUE            TRUE
+
+Subprogram : SEARCH1
+
+Type : SUBROUTINE
+
+Purpose : Search an array of character variables for the occurence of a 
+target character variable.  
+
+Arguments :
+      STRING  - (character*(*),input) sorted array of potential keywords.
+      NSTRNG  - (integer,input) number of entries in STRING.
+      TARGET  - (character*(*),input) target variable with same length as the
+                 entries in STRING.
+      K       - (integer,output) the index of the matched keyword (if found).
+      MATCHD  - (logical,output) TRUE if a match was found.
+
+Notes:
+Example - for the STRING array 'ABC', 'DEF', 'DOGGY' with NSTRNG = 3; the
+following would result:
+
+       TARGET             K           MATCHD           
+       ------            ---          ------           
+        DEF               2            TRUE            
+        XYZ               -            FALSE           
+        DE                2            FALSE
+
+
+
+
+
+
+Subprogram : SEND
+
+Type : SUBROUTINE
+
+Purpose : Send a message to one or more users.
+
+Arguments :
+     USER  - (character*(*),input) the name of the user(s) or terminal to 
+              receive the message.
+     TEXT  - (character*(*),input) the message text.
+
+Notes :
+1. Not transportable.
+2. If 'USER' ends in a colon, the target is assumed to be a terminal(eg, TTA0:)
+3. If 'USER' is blank or an asterisk, the target is all users presently logged
+   on.
+4. If neither 2 or 3 is the case, the target is a single user.
+5. There is no BELL sounded by SEND, but it may be included in TEXT as ^G.
+
+
+
+
+
+
+Subprogram : SENDW
+
+Type : SUBROUTINE
+
+Purpose : Send a message to one or more users and wait for completion.
+
+Arguments :
+     USER  - (character*(*),input) the name of the user(s) or terminal to 
+              receive the message.
+     TEXT  - (character*(*),input) the message text.
+     NOK   - (integer,output) the number of terminals succesfully notified.
+     NFAIL - (integer,output) the number of terminals that should have been
+              notified, but failed due to a timeout or the terminal nobroad-
+              cast switch was set.
+
+Notes :
+1. Not transportable.
+2. If 'USER' ends in a colon, the target is assumed to be a terminal(eg, TTA0:)
+3. If 'USER' is blank or an asterisk, the target is all users presently logged
+   on.
+4. If neither 2 or 3 is the case, the target is a single user.
+5. There is no BELL sounded by SEND, but it may be included in TEXT as ^G.
+
+
+
+Subprogram : SETIME
+
+Type : SUBROUTINE
+
+Purpose : Start the CPU timer running for GETIME.
+
+Arguments : NONE
+
+
+
+
+
+
+
+
+
+
+
+Subprogram : SORT
+
+Type : SUBROUTINE
+
+Purpose : sort an array of character*20 variables in ascending, alphabetic 
+order.
+
+Arguments : 
+      ARRAY  - (character*20,update) the array of elements to be sorted 
+                (inplace).
+      N      - (integer,input) the number of elements in ARRAY.
+
+
+
+
+
+
+
+
+
+
+
+Subprogram : SRESET
+
+Type : SUBROUTINE
+
+Purpose : reset the VT-100 terminal after the use of STATUS (before exiting
+the program).
+
+Arguments :
+      NWRITE - (integer,input) the logical unit number assigned to the screen.
+
+Notes : not transportable.
+
+
+
+Subprogram : STAT
+
+Type : SUBROUTINE
+
+Purpose : to reserve the top line of a VT-100 terminal for status printout and 
+to print a status message in reverse video.
+
+Arguments :
+      IX     - (integer,input) the column in which the cursor should reside 
+                 after the status information is displayed.
+      IY     - (integer,input) the row in which the cursor should reside after
+                 the status information is displayed.
+      TEXT   - (character*(*),input) the message to be displayed (<=80 chars).
+
+Notes :
+   1. Always call SRESET before exiting the program to reset the scroll 
+region on the terminal.
+   2. The difference between this routine and STATUS is that this routine 
+assumes you know the location where you want the cursor to return to.  If you 
+don't know where the cursor is, use STATUS.
+   3. Not transportable.
+
+
+
+
+
+
+
+
+
+
+
+Subprogram : STATUS
+
+Type : SUBROUTINE
+
+Purpose : to reserve the top line of a VT-100 terminal for status printout
+and to print a status message in reverse video.
+
+Arguments :
+      NWRITE - (integer,input) the logical unit number assigned to the screen
+                (usually 6).
+      TEXT   - (character*(*),input) the message to be displayed (<=80 chars).
+
+Notes : 
+   1. Always call SRESET before exiting the program to reset the terminal's 
+scrolling region.
+   2. Because of a rough part I couldn't fix, a dollar sign (actually an ESC)
+is sent to the terminal to get the present cursor location.  There is then a
+1.5 second delay.  If you know the cursor location, STAT doesn't have these
+drawbacks.
+   3. Not transportable.
+
+
+
+Subprogram : T$RAP & UNT$RAP
+
+Type : SUBROUTINE
+
+Purpose : T$RAP is a FORTRAN-callable routine which will intercept ^C
+interrupts, and program exceptions.  The T$RAP is set up by the
+FORTRAN statement CALL T$RAP(&line #,IERR), and program flow continues
+normally until ^C is typed or a program exception occurs.  If a
+T$RAPpable condition occurs, program flow will be redirected to 'line
+#', the T$RAP will be removed, and the Error Code will be inserted in
+INTEGER*4 variable IERR. The T$RAP will be cancelled if: 
+		(1) Routine UNT$RAP is called
+		(2) Another T$RAP is inserted
+		(3) A T$RAP occurs to 'line #'
+		(4) The routine calling T$RAP issues a RETURN
+
+Arguments :
+      &LINE - (&integer,input) the line number to which control will transfer.
+      IERR  - (integer,output) the error code that caused the trap condition.
+
+Notes : 
+1. Not transportable.  
+2. UNT$RAP has no arguments.  
+3. T$RAP and UNT$RAP were provided by DECUS. 
+
+
+
+
+
+
+
+
+
+
+
+
+Subprogram : UNTAB
+
+Type : SUBROUTINE
+
+Purpose : To replace a string with an equivalent string where ASCII HT (tabs) 
+are replaced with an appropriate number of blanks.  Appropriate, on the Vax, is
+defined to be at 8 column intervals (Vax default).  The tab stop definitions 
+are in a data statement in the code.
+
+Arguments : 
+      STRING - (character*(*),update) a string, of maximum length 255, which
+               is replaced with the untabbed string.
+
+Note : If untabbing causes the string to exceed its defined length, the string 
+will be truncated on the right.
+
+
+
+Subprogram : VERIFY
+
+Type : LOGICAL FUNCTION
+
+Purpose : To verify that each character in the first string also appears in the
+second string.
+
+Arguments :
+      STR1   - (character*(*),input) the string to be verified.
+      STR2   - (character*(*),input) the string containing the valid
+                characters.
+      VERIFY - (logical,function value) TRUE if each character in STR1 also
+                appears in STR2, FALSE otherwise.
+
+
+
+
+
+
+
+
+
+Subprogram : WAIT
+
+Type : SUBROUTINE
+
+Purpose : wait for a short period of time.
+
+Arguments :
+      TIME - (integer,input) time in seconds (wall clock time) to pause.
+
+Notes :
+1. The time is limited to 10 minutes.  This routine is not very useful for
+periods of time less than 2 seconds (use DELAY).  
+2. Not transportable.
+
+
+
+
+
+
+
+
+
+Subprogram : WEKDAY
+
+Type : SUBROUTINE
+
+Purpose : To calculate the day of the week from a system date or time.
+
+Arguments :
+      DATE  - (character*30,input) the date (eg, '25-JAN-1985 12:10:00.00').
+      DAY   - (character*9,output) the weekday (eg, 'SUNDAY').
+
+Notes : 
+1. The day will be returned as 'ERROR' if the date was specified incorrectly.
+2. Not transportable.
+
+
+
+Subprogram : YESNO
+
+Type : SUBROUTINE
+
+Purpose : read the answer to a yes/no type of question in free format
+with appropriate error checking.
+
+Arguments :
+      NUNIT - (integer,input) the input unit number.
+      ISYES - (logical,update) should be set to the default value before the
+                 call.  If the answer is intelligible, the value will be set
+                 true if the first character of the response is Y, false if
+                 the first character is N.  All other responses, including <CR>
+                 will leave the value unchanged.
+      ERROR - (logical,output) will be false if the user answered Yes, No, or 
+                 <CR>; will be set true otherwise.
+
+Notes : Only the first non-blank character of the answer is tested; eg, YEP
+is considered a YES answer. 
+

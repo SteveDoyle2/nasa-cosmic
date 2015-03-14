@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+ 
+
+The Resources chart allows you to prepare a multivariate chart of up to four
+variables using combinations of bars and lines.  The labels which are given for
+each line will be written on the scale for that set of numbers.
+
+The fields which are to be entered are as follows:
+        Title       : Centered at top of chart
+        Subtitle    : Up to 9, 3 per line displayed under title
+        Data labels : 4 labels, one per line shown at left of numbers and on
+                      corresponding number scale
+        Data values : 4 lines of up to 12 values
+        Footnotes   : Up to 3, located at bottom of chart
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

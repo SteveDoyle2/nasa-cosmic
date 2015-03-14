@@ -1,0 +1,744 @@
+HARD_BITMAP                                                     23-Dec-1988 09:58:26    VAX Pascal V3.7-254                Page    1
+QPLOT                           Source Listing                  20-Oct-1988 16:03:53    DUA1:[QPLOT.QPLOT.SOURCE]BITMAP.HARD;4 (1)
+
+-LINE-IDC-PL-SL-
+
+00001      0  0 [ IDENT       ('QPLOT'),
+00002      0  0   INHERIT     ('QLIBHOME:STARLETQ',
+00003      0  0                'QLIBHOME:STANDARD',
+00004      0  0                'QLIBHOME:IO',
+00005      0  0                'QLIBHOME:COLOR',
+00006      0  0                'QLIBHOME:STRING',
+00007      0  0                'QLIBHOME:FIG',
+00008      0  0                'QLIBHOME:TERM_VAX'),
+00009      0  0   ENVIRONMENT ('QLIBHOME:BITMAP.TEN') ]
+00010      0  0 MODULE hard_BITMAP;
+00011   C  0  0 {=============================================================================}
+00012   C  0  0 {-- PROCEDURES FOR HARDCOPY TYPE BITMAP --------------------------------------}
+00013   C  0  0 {=============================================================================}
+00014      0  0 [ HIDDEN ] VAR
+00015      0  0    hardfig : RECORD
+00016      0  0              commandline : VARYING [30] OF char;
+00017      0  0              END 
+00018      0  0            := ('');
+00019   C  0  0 {=============================================================================}
+00020      0  0 [ GLOBAL ]
+00021      1  0 FUNCTION hardname_BITMAP (i : integer) : devname_type;
+00022      1  1 BEGIN
+00023      1  2 CASE i OF
+00024      1  2    0:  hardname_BITMAP := '1';
+00025      1  2    1:  hardname_BITMAP := 'BITMAP  ';
+00026      1  1    END;
+00027      0  0 END;
+00028   C  0  0 {-----------------------------------------------------------------------------}
+00029      0  0 [ GLOBAL ]
+00030      1  0 PROCEDURE hardmake_BITMAP;
+00031      1  0 VAR
+00032      1  0    plotdata       : RECORD
+00033      1  0                     CASE integer OF
+00034      1  0                        1:  (data     : anystring);
+00035      1  0                        2:  (ii       : shortunsigned;
+00036      1  0                             ins      : ins_type;
+00037      1  0                             ix       : shortunsigned;
+00038      1  0                             iy       : shortunsigned;
+00039      1  0                             hlsa     : hlsa_type);
+00040      1  0                     END;
+00041      1  1 BEGIN
+00042      1  1 close (textfile,ERROR:=CONTINUE);
+00043      1  1 open (textfile,'BITMAP.PLT',NEW,ERROR:=CONTINUE);
+00044      1  1 rewrite (textfile);
+00045      1  1 
+00046      1  1 reset (plotitemfile);
+00047   C  1  1 { SET CHARACTER SIZE }
+00048      1  1 plotdata.ins := I_siz;
+00049      1  1 plotdata.ix  := config.ch.width;
+00050      1  1 plotdata.iy  := config.ch.height;
+00051      1  1 plotdata.data.length := 5;
+00052      1  1 writeln (textfile,plotdata.data);
+00053      1  1 
+00054   C  1  1 { SET CHARACTER MARGINS }
+00055      1  1 plotdata.ins := I_mar;
+
+HARD_BITMAP                                                     23-Dec-1988 09:58:26    VAX Pascal V3.7-254                Page    2
+QPLOT                           Source Listing                  20-Oct-1988 16:03:53    DUA1:[QPLOT.QPLOT.SOURCE]BITMAP.HARD;4 (1)
+
+-LINE-IDC-PL-SL-
+
+00056      1  1 plotdata.ix  := config.ch.charspacing;
+00057      1  1 plotdata.iy  := config.ch.linespacing;
+00058      1  1 plotdata.data.length := 5;
+00059      1  1 writeln (textfile,plotdata.data);
+00060      1  1 
+00061      1  1 WHILE NOT eof (plotitemfile) DO
+00062      1  2    BEGIN
+00063      1  2    readplotitem;
+00064      1  2    plotdata.ins := plotitem.ins;
+00065      1  2    plotdata.ix  := plotitem.ix;
+00066      1  2    plotdata.iy  := plotitem.iy;
+00067      1  2    plotdata.data.length := 5;
+00068      1  3    CASE plotdata.ins OF
+00069      1  3       I_col,
+00070      1  4       I_pan:  BEGIN
+00071      1  4               plotdata.hlsa := hlsaofcolor (plotitem.st);
+00072      1  4               plotdata.data.length := 18;
+00073      1  3               END;
+00074      1  3       I_pri:  plotdata.data := plotdata.data + plotitem.st;
+00075      1  2       END;
+00076      1  2    writeln (textfile,plotdata.data);
+00077      1  1    END;
+00078      1  1 close (textfile);
+00079      1  1 truncate (plotitemfile);
+00080      1  1 
+00081      1  1 IF hardfig.commandline <> ''
+00082      1  1  THEN LIB$SPAWN ((hardfig.commandline));
+00083      0  0 END;
+00084   C  0  0 {-----------------------------------------------------------------------------}
+00085      0  0 [ GLOBAL ]
+00086      1  0 PROCEDURE hardconfig_BITMAP (configcontrol : configcontrol_type);
+00087      1  1 BEGIN
+00088      1  2 WITH hardfig DO CASE configcontrol OF
+00089      1  2    CON:  ;
+00090      1  2    QUE:  readvary ('ENTER COMMAND LINE : ',commandline,commandline);
+00091      1  2    REP:  writeline (out,'Command line is ' + commandline);
+00092      1  1    END;
+00093      0  0 END;
+00094   C  0  0 {-----------------------------------------------------------------------------}
+00095      0  0 END.
+
+HARD_BITMAP                                                     23-Dec-1988 09:58:26    VAX Pascal V3.7-254                Page    3
+QPLOT                           Pascal Compilation Statistics   20-Oct-1988 16:03:53    DUA1:[QPLOT.QPLOT.SOURCE]BITMAP.HARD;4 (1)
+
+PSECT SUMMARY
+
+        Name                     Bytes                         Attributes
+
+$CODE                                 929  NOVEC,NOWRT,  RD,  EXE,  SHR,  LCL,  REL,  CON,  PIC,ALIGN(2)
+$LOCAL                                 32  NOVEC,  WRT,  RD,NOEXE,NOSHR,  LCL,  REL,  CON,  PIC,ALIGN(2)
+
+
+ENVIRONMENT STATISTICS
+
+                                                       -------- Symbols --------
+        File                                           Total    Loaded   Percent
+
+DUA1:[QPLOT.QPLOT.SOURCE]STARLETQ.PEN;1                  260         4         2
+DUA1:[QPLOT.QPLOT.SOURCE]STANDARD.PEN;1                  124        29        23
+DUA1:[QPLOT.QPLOT.SOURCE]IO.PEN;1                        204        31        15
+DUA1:[QPLOT.QPLOT.SOURCE]COLOR.PEN;1                      93        13        14
+DUA1:[QPLOT.QPLOT.SOURCE]STRING.PEN;1                     72         0         0
+DUA1:[QPLOT.QPLOT.SOURCE]FIG.PEN;1                       213        51        24
+DUA1:[QPLOT.QPLOT.SOURCE]TERM_VAX.PEN;1                  101         0         0
+
+
+
+HARD_TEK4014H                                                   23-Dec-1988 09:59:08    VAX Pascal V3.7-254                Page    1
+QPLOT                           Source Listing                  20-Oct-1988 16:05:36    [QPLOT.QPLOT.SOURCE]TEK4014H.HARD;17 (1)
+
+-LINE-IDC-PL-SL-
+
+00001      0  0 [ IDENT       ('QPLOT'),
+00002      0  0   INHERIT     ('QLIBHOME:STANDARD',
+00003      0  0                'QLIBHOME:STARLETQ', 
+00004      0  0                'QLIBHOME:GENERAL',
+00005      0  0                'QLIBHOME:COLOR',
+00006      0  0                'QLIBHOME:IO',
+00007      0  0                'QLIBHOME:TERM_VAX',
+00008      0  0                'QLIBHOME:TERM_4010', 
+00009      0  0                'QLIBHOME:FIG'),
+00010      0  0   ENVIRONMENT ('QLIBHOME:TEK4014H.TEN') ]
+00011      0  0 MODULE hard_TEK4014H;
+00012   C  0  0 {=============================================================================}
+00013   C  0  0 {-- PROCEDURES FOR HARDCOPY TYPE TEK4014H ------------------------------------}
+00014   C  0  0 {=============================================================================}
+00015      0  0 [ HIDDEN ] VAR
+00016      0  0    panelopen     : boolean := false;
+00017      0  0    hardfig       : RECORD
+00018      0  0                    commandline   : VARYING [80] OF char;
+00019      0  0                    charsize      : char;                  
+00020      0  0                    END
+00021      0  0                  := ('',';');
+00022   C  0  0 {-----------------------------------------------------------------------------}
+00023      0  0 [ GLOBAL ]
+00024      1  0 FUNCTION hardname_TEK4014H (i : integer) : devname_type;
+00025      1  1 BEGIN
+00026      1  2 CASE i OF
+00027      1  2    0:  hardname_TEK4014H := '1';
+00028      1  2    1:  hardname_TEK4014H := 'TEK4014H';
+00029      1  1    END;
+00030      0  0 END;
+00031   C  0  0 {-----------------------------------------------------------------------------}
+00032      0  0 [ GLOBAL ]
+00033      1  0 PROCEDURE hardmake_TEK4014H;
+00034      1  0 VAR
+00035      1  0    hlsa : hlsa_type;
+00036   C  1  0 {-----------------------------}
+00037      2  0 PROCEDURE bufferempty;
+00038   C  2  0 { Purpose -- empty software plotting buffer }
+00039      2  1 BEGIN 
+00040      2  1 IF length(env.buffer) <> 0
+00041      2  1  THEN
+00042      2  2   BEGIN
+00043      2  2    IF terminal.hardname = 'LOCAL   '
+00044      2  2     THEN qiowwrite (env.buffer + CRLF)
+00045      2  2     ELSE writeln (textfile,env.buffer + CRLF);
+00046      2  2    env.buffer := '';
+00047      2  1   END;
+00048      1  0 END;
+00049   C  1  0 {-----------------------------}
+00050      1  1 BEGIN
+00051      1  1 IF terminal.hardname <> 'LOCAL   '
+00052      1  1  THEN 
+00053      1  2   BEGIN 
+00054      1  2   close (textfile,ERROR:=CONTINUE);
+00055      1  2   open (textfile,'TEK4014H.PLT',new);
+
+HARD_TEK4014H                                                   23-Dec-1988 09:59:08    VAX Pascal V3.7-254                Page    2
+QPLOT                           Source Listing                  20-Oct-1988 16:05:36    [QPLOT.QPLOT.SOURCE]TEK4014H.HARD;17 (1)
+
+-LINE-IDC-PL-SL-
+
+00056      1  2   rewrite (textfile);  
+00057      1  1   END;
+00058      1  1 
+00059      1  1 env.curch := config.ch;
+00060      1  1 bufferempty;
+00061      1  1 
+00062      1  1 reset (plotitemfile);
+00063      1  1 WHILE NOT eof (plotitemfile) DO 
+00064      1  2    BEGIN
+00065      1  2    readplotitem;
+00066      1  3    WITH plotitem DO CASE ins OF 
+00067      1  4       I_col:  BEGIN
+00068      1  4               bufferempty;
+00069      1  4               hlsa := hlsaofcolor (plotitem.st);
+00070      1  4               env.visible := (hlsa.attribute <> 'C') AND (hlsa.lightness > 0);
+00071      1  3               END;
+00072      1  3       I_pan:  ;
+00073      1  3       I_clo:  ;
+00074      1  4       I_pos:  BEGIN
+00075      1  4               bufferempty;
+00076      1  4               env.pos.ix := ix;
+00077      1  4               env.pos.iy := iy;
+00078      1  3               END;
+00079      1  3       I_dra:  draw_4010(ix,iy,false,bufferempty);
+00080      1  4       I_siz:  BEGIN
+00081      1  4               env.curch.width  := ix;
+00082      1  4               env.curch.height := iy;
+00083      1  3               END;
+00084      1  4       I_mar:  BEGIN
+00085      1  4               env.curch.charspacing := ix;
+00086      1  4               env.curch.linespacing := iy;
+00087      1  3               END;
+00088      1  3       I_pri:  IF env.visible AND (st <> '')
+00089      1  3                THEN
+00090      1  4                 BEGIN
+00091      1  4                 bufferempty;
+00092      1  4                 env.buffer := ESC + hardfig.charsize
+00093      1  4                               + chr(29) + strofpos_4010 (env.pos)
+00094      1  4                               + chr(31) + st;
+00095      1  4                 bufferempty;  
+00096      1  3                 END;
+00097      1  3       I_emp:  bufferempty;
+00098      1  2       END;
+00099      1  1    END;
+00100      1  1 reset (plotitemfile);
+00101      1  1 truncate (plotitemfile);
+00102      1  1 
+00103      1  1 IF terminal.hardname <> 'LOCAL   '
+00104      1  1  THEN
+00105      1  2   BEGIN
+00106      1  2   close (textfile);
+00107      1  2   IF hardfig.commandline <> ''
+00108      1  2    THEN LIB$SPAWN ((hardfig.commandline));
+00109      1  1   END;
+00110      0  0 END;
+
+HARD_TEK4014H                                                   23-Dec-1988 09:59:08    VAX Pascal V3.7-254                Page    3
+QPLOT                           Source Listing                  20-Oct-1988 16:05:36    [QPLOT.QPLOT.SOURCE]TEK4014H.HARD;17 (1)
+
+-LINE-IDC-PL-SL-
+
+00111   C  0  0 {----------------------------------------------------------------------------}
+00112      0  0 [ GLOBAL ]
+00113      1  0 PROCEDURE hardconfig_TEK4014H (configcontrol : configcontrol_type);
+00114      1  1 BEGIN
+00115      1  2 WITH hardfig DO CASE configcontrol OF
+00116      1  3    CON:  BEGIN
+00117      1  4          CASE hardfig.charsize OF
+00118      1  4             ';':  config.ch := ch_type (496,768,96,208);
+00119      1  4             ':':  config.ch := ch_type (544,848,64,176);
+00120      1  4             '9':  config.ch := ch_type (816,1312,96,304);
+00121      1  4             '8':  config.ch := ch_type (896,1408,96,288);
+00122      1  3             END;
+00123      1  3          config.resolution := 64;
+00124      1  3          config.dotsize    := 64;
+00125      1  3          config.starsize   := 320;
+00126      1  3          config.ansi364    := true;   
+00127      1  2          END;
+00128      1  3    QUE:  BEGIN
+00129      1  3          IF terminal.hardname <> 'LOCAL   '
+00130      1  3           THEN readvary ('ENTER COMMAND LINE : ',commandline,commandline);
+00131      1  3          readch ('ENTER TEK CHARACTER SIZE CODE : ',charsize,'89:;',charsize);
+00132      1  4          CASE hardfig.charsize OF
+00133      1  4             ';':  config.ch := ch_type (496,768,96,208);
+00134      1  4             ':':  config.ch := ch_type (544,848,64,176);
+00135      1  4             '9':  config.ch := ch_type (816,1312,96,304);
+00136      1  4             '8':  config.ch := ch_type (896,1408,96,288);
+00137      1  3             END; 
+00138      1  2          END;
+00139      1  3    REP:  BEGIN
+00140      1  3          IF terminal.hardname <> 'LOCAL   '
+00141      1  3           THEN writeline (out,'Command line is ' + commandline);
+00142      1  3          writeline (out,'Character size code is "' + charsize + '"');
+00143      1  2          END;
+00144      1  1    END;
+00145      0  0 END;
+00146   C  0  0 {-----------------------------------------------------------------------------}
+00147      0  0 END.
+
+HARD_TEK4014H                                                   23-Dec-1988 09:59:08    VAX Pascal V3.7-254                Page    4
+QPLOT                           Pascal Compilation Statistics   20-Oct-1988 16:05:36    [QPLOT.QPLOT.SOURCE]TEK4014H.HARD;17 (1)
+
+PSECT SUMMARY
+
+        Name                     Bytes                         Attributes
+
+$CODE                                2861  NOVEC,NOWRT,  RD,  EXE,  SHR,  LCL,  REL,  CON,  PIC,ALIGN(2)
+$LOCAL                                 87  NOVEC,  WRT,  RD,NOEXE,NOSHR,  LCL,  REL,  CON,  PIC,ALIGN(2)
+
+
+ENVIRONMENT STATISTICS
+
+                                                       -------- Symbols --------
+        File                                           Total    Loaded   Percent
+
+DUA1:[QPLOT.QPLOT.SOURCE]STANDARD.PEN;1                  124        27        22
+DUA1:[QPLOT.QPLOT.SOURCE]STARLETQ.PEN;1                  260         4         2
+DUA1:[QPLOT.QPLOT.SOURCE]GENERAL.PEN;1                    20         0         0
+DUA1:[QPLOT.QPLOT.SOURCE]COLOR.PEN;1                      93        23        25
+DUA1:[QPLOT.QPLOT.SOURCE]IO.PEN;1                        204        29        14
+DUA1:[QPLOT.QPLOT.SOURCE]TERM_VAX.PEN;1                  101        35        35
+DUA1:[QPLOT.QPLOT.SOURCE]TERM_4010.PEN;1                  84        16        19
+DUA1:[QPLOT.QPLOT.SOURCE]FIG.PEN;1                       213        60        28
+
+
+
+HARD_TEK4510                                                    23-Dec-1988 09:59:54    VAX Pascal V3.7-254                Page    1
+QPLOT                           Source Listing                  20-Oct-1988 16:04:53    [QPLOT.QPLOT.SOURCE]TEK4510.HARD;36 (1)
+
+-LINE-IDC-PL-SL-
+
+00001      0  0 [ IDENT       ('QPLOT'),
+00002      0  0   INHERIT     ('QLIBHOME:STARLETQ',
+00003      0  0                'QLIBHOME:STANDARD',
+00004      0  0                'QLIBHOME:IO',
+00005      0  0                'QLIBHOME:MATH',
+00006      0  0                'QLIBHOME:STRING',
+00007      0  0                'QLIBHOME:COLOR',
+00008      0  0                'QLIBHOME:FIG',
+00009      0  0                'QLIBHOME:FONT',
+00010      0  0                'QLIBHOME:TERM_VAX',
+00011      0  0                'QLIBHOME:TERM_4100'),
+00012      0  0   ENVIRONMENT ('QLIBHOME:TEK4510.TEN') ]
+00013      0  0 MODULE hard_TEK4510;
+00014   C  0  0 {=============================================================================}
+00015   C  0  0 {-- PROCEDURES FOR HARDCOPY TYPE TEK4510 -------------------------------------}
+00016   C  0  0 {=============================================================================}
+00017      0  0 [ HIDDEN ] VAR
+00018      0  0    bytefile      : FILE OF byte;
+00019      0  0    panelopen     : boolean := false;
+00020      0  0    hardfig       : RECORD
+00021      0  0                    commandline   : VARYING [80] OF char;
+00022      0  0                    primary       : boolean;
+00023      0  0                    width         : integer;
+00024      0  0                    count         : integer;
+00025      0  0                    format        : char;
+00026      0  0                    textstyle     : char;
+00027      0  0                    END 
+00028      0  0                  := ('QPLOTHOME:TEK4510.COM',false,1,1,'P','2');
+00029   C  0  0 {=============================================================================}
+00030      0  0 [ GLOBAL ]
+00031      1  0 FUNCTION hardname_TEK4510 (i : integer) : devname_type;
+00032      1  1 BEGIN
+00033      1  2 CASE i OF
+00034      1  2    0:  hardname_TEK4510 := '1';
+00035      1  2    1:  hardname_TEK4510 := 'TEK4510 ';
+00036      1  1    END;
+00037      0  0 END;
+00038   C  0  0 {-----------------------------------------------------------------------------}
+00039      0  0 [ GLOBAL ]
+00040      1  0 PROCEDURE hardmake_TEK4510;
+00041      1  0 VAR
+00042      1  0    j,k             : integer;
+00043   C  1  0 {------------------------------}
+00044      2  0 PROCEDURE bufferempty;
+00045   C  2  0 { Purpose -- empty software plotting buffer }
+00046      2  0 VAR
+00047      2  0    i : integer;
+00048      2  1 BEGIN
+00049      2  1 IF length(env.buffer) <> 0 
+00050      2  1  THEN 
+00051      2  2   BEGIN
+00052      2  2   IF terminal.hardname = 'LOCAL   '
+00053      2  2    THEN qiowwrite (env.buffer + CRLF)
+00054      2  2    ELSE 
+00055      2  3     BEGIN
+
+HARD_TEK4510                                                    23-Dec-1988 09:59:54    VAX Pascal V3.7-254                Page    2
+QPLOT                           Source Listing                  20-Oct-1988 16:04:53    [QPLOT.QPLOT.SOURCE]TEK4510.HARD;36 (1)
+
+-LINE-IDC-PL-SL-
+
+00056      2  3     FOR i := 1 TO length(env.buffer) DO
+00057      2  3        write (bytefile,ord(env.buffer[i]));
+00058      2  3     write (bytefile,ord(CR));
+00059      2  3     write (bytefile,ord(LF));
+00060      2  2     END;
+00061      2  2   env.buffer := '';
+00062      2  1   END;
+00063      1  0 END;
+00064   C  1  0 {------------------------------}
+00065      2  0 PROCEDURE generatestring (st : anystring);
+00066      2  0 VAR
+00067      2  0    j,k             : integer;
+00068      2  0    xfactor,yfactor : real;
+00069      2  0    wf,th           : real;
+00070      2  0    ip,p1,p2,p3     : ipoint;
+00071      2  1 BEGIN
+00072      2  1 xfactor := (config.ch.width  - config.ch.charspacing) /  70.0;
+00073      2  1 yfactor := (config.ch.height - config.ch.linespacing) / 100.0;
+00074      2  1 wf := (hardfig.width) * 16;
+00075      2  1 ip := env.pos;
+00076      2  1 FOR j := 1 TO length (st) DO 
+00077      2  2    BEGIN
+00078      2  2    FOR k := ord(st[j])*LIMSTROKES TO (ord(st[j])+1)*LIMSTROKES-1 DO
+00079      2  2       IF vectorsymbol[k][1] >= 0 
+00080      2  2        THEN 
+00081      2  3         BEGIN
+00082      2  3         p1.ix := ip.ix + round (vectorsymbol[k][1] * xfactor);
+00083      2  3         p1.iy := ip.iy + round (vectorsymbol[k][2] * yfactor);
+00084      2  3         p2.ix := ip.ix + round (vectorsymbol[k][3] * xfactor);
+00085      2  3         p2.iy := ip.iy + round (vectorsymbol[k][4] * yfactor);
+00086      2  3         IF (p1.ix = p2.ix) AND (p1.iy = p2.iy)
+00087      2  3          THEN th := 0
+00088      2  3          ELSE th := arctan2 (p2.iy-p1.iy,p2.ix-p1.ix) * 180 / PI;
+00089      2  3         IF (th > 135) OR (th < -45)
+00090      2  3          THEN BEGIN p3 := p1;  p1 := p2;  p2 := p3;  END;
+00091      2  3         IF (p1.ix = p2.ix) AND (p1.iy = p2.iy)
+00092      2  3          THEN th := 0
+00093      2  3          ELSE th := arctan2 (p2.iy-p1.iy,p2.ix-p1.ix);
+00094      2  3         p1.ix := imax (0,imin (65535,p1.ix + round (wf * cos (th + 2*PI/3))));
+00095      2  3         p1.iy := imax (0,imin (65535,p1.iy + round (wf * sin (th + 2*PI/3))));
+00096      2  3         p2.ix := imax (0,imin (65535,p2.ix + round (wf * cos (th + PI/3))));
+00097      2  3         p2.iy := imax (0,imin (65535,p2.iy + round (wf * sin (th + PI/3))));
+00098      2  3 
+00099      2  3         env.pos := p1;
+00100      2  3         draw_4100 (p2.ix,p2.iy,panelopen,bufferempty);
+00101      2  3         bufferempty;
+00102      2  2         END;
+00103      2  2    ip.ix := ip.ix + config.ch.width;
+00104      2  1    END;
+00105      1  0 END;
+00106   C  1  0 {------------------------------}
+00107      1  1 BEGIN
+00108      1  1 IF terminal.hardname <> 'LOCAL   '
+00109      1  1  THEN 
+00110      1  2   BEGIN  
+
+HARD_TEK4510                                                    23-Dec-1988 09:59:54    VAX Pascal V3.7-254                Page    3
+QPLOT                           Source Listing                  20-Oct-1988 16:04:53    [QPLOT.QPLOT.SOURCE]TEK4510.HARD;36 (1)
+
+-LINE-IDC-PL-SL-
+
+00111      1  2   close (bytefile,ERROR:=CONTINUE);
+00112      1  2   open (bytefile,'TEK4510.PLT',new,CARRIAGE_CONTROL:=NONE);
+00113      1  2   rewrite (bytefile);  
+00114      1  2   write (bytefile,ord(ESC));
+00115      1  2   write (bytefile,ord(FF));
+00116      1  1   END;
+00117      1  1 env.curch := config.ch;
+00118      1  1 
+00119      1  1 IF hardfig.primary
+00120      1  1  THEN initpalette (hardpalette,256,2,false)
+00121      1  1  ELSE initpalette (hardpalette,256,16,false);
+00122      1  1 j := getcolorindex_4100 (hardpalette,'PLOTBACK',bufferempty);
+00123      1  1 
+00124      1  1 bufferempty;
+00125      1  1 env.buffer := ESC + 'MW' + strofi_4100 (hardfig.width);
+00126      1  1 bufferempty;
+00127      1  1 env.buffer := ESC + 'QN' + strofi_4100 (hardfig.count);
+00128      1  1 bufferempty;
+00129      1  2 CASE hardfig.format OF
+00130      1  2    'L':  env.buffer := ESC + 'QO0';
+00131      1  2    'P':  env.buffer := ESC + 'QO3';
+00132      1  1    END;
+00133      1  1 bufferempty;
+00134      1  1 
+00135      1  1 reset (plotitemfile);
+00136      1  1 WHILE NOT eof (plotitemfile) DO 
+00137      1  2    BEGIN
+00138      1  2    readplotitem;
+00139      1  3    WITH plotitem DO CASE ins OF
+00140      1  4       I_col:  BEGIN
+00141      1  4               bufferempty;
+00142      1  4               env.visible := NOT clearcolor (st);
+00143      1  4               j := getcolorindex_4100 (hardpalette,st,bufferempty);
+00144      1  4               IF env.visible
+00145      1  4                THEN env.buffer := ESC + 'ML' + strofi_4100 (j-1)
+00146      1  4                                 + ESC + 'MT' + strofi_4100 (j-1);
+00147      1  4               bufferempty;
+00148      1  3               END;
+00149      1  4       I_pan:  BEGIN
+00150      1  4               bufferempty;
+00151      1  4               j := getcolorindex_4100 (hardpalette,st,bufferempty);
+00152      1  4               panelopen := j > 0;
+00153      1  4               IF env.visible
+00154      1  4                THEN env.buffer := ESC + 'MP' + strofi_4100 (1-j);
+00155      1  4               bufferempty;
+00156      1  3               END;
+00157      1  4       I_clo:  BEGIN
+00158      1  4               bufferempty;
+00159      1  4               env.buffer := ESC + 'LE';
+00160      1  4               bufferempty;
+00161      1  3               END;
+00162      1  4       I_pos:  BEGIN
+00163      1  4               bufferempty;
+00164      1  4               env.pos.ix := ix;
+00165      1  4               env.pos.iy := iy;
+
+HARD_TEK4510                                                    23-Dec-1988 09:59:54    VAX Pascal V3.7-254                Page    4
+QPLOT                           Source Listing                  20-Oct-1988 16:04:53    [QPLOT.QPLOT.SOURCE]TEK4510.HARD;36 (1)
+
+-LINE-IDC-PL-SL-
+
+00166      1  3               END;
+00167      1  3       I_dra:  draw_4100(ix,iy,panelopen,bufferempty);
+00168      1  4       I_siz:  BEGIN
+00169      1  4               env.curch.width  := ix;
+00170      1  4               env.curch.height := iy;
+00171      1  3               END;
+00172      1  4       I_mar:  BEGIN
+00173      1  4               env.curch.charspacing := ix;
+00174      1  4               env.curch.linespacing := iy;
+00175      1  3               END;
+00176      1  3       I_pri:  IF env.visible AND (st <> '') 
+00177      1  3                THEN 
+00178      1  4                 BEGIN
+00179      1  4                 bufferempty;
+00180      1  4                 env.buffer := ESC + ';' + ESC + 'MC' 
+00181      1  4                   + strofi_4100((env.curch.width-env.curch.charspacing) DIV 16)
+00182      1  4                   + strofi_4100((env.curch.height-env.curch.linespacing) DIV 16)
+00183      1  4                   + strofi_4100 (env.curch.charspacing DIV 16);
+00184      1  4                 bufferempty;
+00185      1  5                 CASE hardfig.textstyle OF
+00186      1  6                    'D':  BEGIN
+00187      1  6                          env.buffer := chr(29) + strofpos_4100 (env.pos) 
+00188      1  6                                      + ESC + 'MQ2' 
+00189      1  6                                      + ESC + 'LT' + strofi_4100 (length(st)) 
+00190      1  6                                      + st;
+00191      1  6                          bufferempty;
+00192      1  5                          END;
+00193      1  6                    'S':  BEGIN
+00194      1  6                          env.buffer := chr(29) + strofpos_4100 (env.pos) 
+00195      1  6                                      + ESC + 'MQ1' 
+00196      1  6                                      + ESC + 'LT' + strofi_4100 (length(st)) 
+00197      1  6                                      + st;
+00198      1  6                          bufferempty;
+00199      1  5                          END;
+00200      1  5                    'G':  generatestring (st);
+00201      1  4                    END;
+00202      1  3                 END;
+00203      1  3       I_emp:  bufferempty;
+00204      1  2       END;
+00205      1  1    END;
+00206      1  1 truncate (plotitemfile);
+00207      1  1 
+00208      1  1 IF terminal.hardname <> 'LOCAL   ' 
+00209      1  1  THEN 
+00210      1  2   BEGIN
+00211      1  2   write (bytefile,ord(ESC));
+00212      1  2   write (bytefile,ord('K'));
+00213      1  2   write (bytefile,ord('H'));
+00214      1  2   write (bytefile,ord('1'));
+00215      1  2   close (bytefile);
+00216      1  2   IF hardfig.commandline <> ''
+00217      1  2    THEN LIB$SPAWN ((hardfig.commandline));
+00218      1  1   END;
+00219      0  0 END;
+00220   C  0  0 {-----------------------------------------------------------------------------}
+
+HARD_TEK4510                                                    23-Dec-1988 09:59:54    VAX Pascal V3.7-254                Page    5
+QPLOT                           Source Listing                  20-Oct-1988 16:04:53    [QPLOT.QPLOT.SOURCE]TEK4510.HARD;36 (1)
+
+-LINE-IDC-PL-SL-
+
+00221      0  0 [ GLOBAL ]
+00222      1  0 PROCEDURE hardconfig_TEK4510 (configcontrol : configcontrol_type);
+00223      1  1 BEGIN
+00224      1  2 WITH hardfig DO CASE configcontrol OF
+00225      1  3    CON:  BEGIN
+00226      1  3          config.ch := ch_type (614,1024,198,400);
+00227      1  3          config.resolution := 104;
+00228      1  3          config.dotsize    := 0;
+00229      1  3          config.starsize   := 416;
+00230      1  2          END;
+00231      1  3    QUE:  BEGIN;
+00232      1  3          IF terminal.hardname <> 'LOCAL   ' 
+00233      1  3           THEN readvary ('ENTER COMMAND LINE : ',commandline,commandline);
+00234      1  3          readboo ('DO YOU WISH PRIMARY ONLY ? ',primary,primary);
+00235      1  3          readint ('ENTER WIDTH OF LINES     : ',width,1,4,width);
+00236      1  3          readint ('ENTER NUMBER OF COPIES   : ',count,1,9,count);
+00237      1  3          writeline (out,'L=LANDSCAPE, P=PORTRAIT, C=CURRENT');
+00238      1  3          readch  ('ENTER FORMAT             : ',format,'LPC',format);
+00239      1  3          writeline (out,'D=DEFAULT, S=STRING, G=GENERATED');
+00240      1  3          readch  ('ENTER TEXT STYLE         : ',textstyle,'DSG12',textstyle);
+00241      1  3          IF textstyle = '2' THEN textstyle := 'D';
+00242      1  3          IF textstyle = '1' THEN textstyle := 'S';
+00243      1  2          END;
+00244      1  3    REP:  BEGIN;
+00245      1  3          IF terminal.hardname <> 'LOCAL   ' 
+00246      1  3           THEN writeline (out,'Command line is ' + commandline);
+00247      1  4          CASE primary OF
+00248      1  4             true:  writeline (out,'Colors converted to the 7 primary colors');
+00249      1  4             false: writeline (out,'Colors not converted to the 7 primary colors');
+00250      1  3             END;
+00251      1  3          writeline (out,'Width of lines   is ' + strofi(width,1));
+00252      1  3          writeline (out,'Number of copies is ' + strofi(count,1));
+00253      1  4          CASE format OF
+00254      1  4             'L':  writeline (out,'Format is landscape');
+00255      1  4             'P':  writeline (out,'Format is portrait');
+00256      1  4             'C':  writeline (out,'Format is not changed');
+00257      1  3             END;
+00258      1  4          CASE textstyle OF
+00259      1  4             'D':  writeline (out,'Text style is default');
+00260      1  4             'S':  writeline (out,'Text style is string precision');
+00261      1  4             'G':  writeline (out,'Text style is generated');
+00262      1  3             END;
+00263      1  2          END;
+00264      1  1    END;
+00265      0  0 END;
+00266   C  0  0 {-----------------------------------------------------------------------------}
+00267      0  0 END.
+
+HARD_TEK4510                                                    23-Dec-1988 09:59:54    VAX Pascal V3.7-254                Page    6
+QPLOT                           Pascal Compilation Statistics   20-Oct-1988 16:04:53    [QPLOT.QPLOT.SOURCE]TEK4510.HARD;36 (1)
+
+PSECT SUMMARY
+
+        Name                     Bytes                         Attributes
+
+$CODE                                6118  NOVEC,NOWRT,  RD,  EXE,  SHR,  LCL,  REL,  CON,  PIC,ALIGN(2)
+$LOCAL                                117  NOVEC,  WRT,  RD,NOEXE,NOSHR,  LCL,  REL,  CON,  PIC,ALIGN(2)
+
+
+ENVIRONMENT STATISTICS
+
+                                                       -------- Symbols --------
+        File                                           Total    Loaded   Percent
+
+DUA1:[QPLOT.QPLOT.SOURCE]STARLETQ.PEN;1                  260         4         2
+DUA1:[QPLOT.QPLOT.SOURCE]STANDARD.PEN;1                  124        46        37
+DUA1:[QPLOT.QPLOT.SOURCE]IO.PEN;1                        204        55        27
+DUA1:[QPLOT.QPLOT.SOURCE]MATH.PEN;1                       59        10        17
+DUA1:[QPLOT.QPLOT.SOURCE]STRING.PEN;1                     72         8        11
+DUA1:[QPLOT.QPLOT.SOURCE]COLOR.PEN;1                      93        26        28
+DUA1:[QPLOT.QPLOT.SOURCE]FIG.PEN;1                       213        60        28
+DUA1:[QPLOT.QPLOT.SOURCE]FONT.PEN;1                        8         8       100
+DUA1:[QPLOT.QPLOT.SOURCE]TERM_VAX.PEN;1                  101        35        35
+DUA1:[QPLOT.QPLOT.SOURCE]TERM_4100.PEN;1                 112        42        38
+
+
+
+HARDIO                                                          23-Dec-1988 10:00:53    VAX Pascal V3.7-254                Page    1
+QPLOT                           Source Listing                  23-Dec-1988 10:00:50    DUA1:[QPLOT.QPLOT.SOURCE]HARDIO.PAS;65 (1)
+
+-LINE-IDC-PL-SL-
+
+00001      0  0 [ IDENT       ('QPLOT'),
+00002      0  0   INHERIT     ('QLIBHOME:STANDARD',
+00003      0  0                'QLIBHOME:FIG',
+00004      0  0                'QLIBHOME:TERM_VAX',
+00005      0  0                'QLIBHOME:BITMAP.TEN',
+00006      0  0                'QLIBHOME:TEK4014H.TEN',
+00007      0  0                'QLIBHOME:TEK4510.TEN'),
+00008      0  0   ENVIRONMENT ('QLIBHOME:HARDIO')]
+00009      0  0 MODULE hardio;
+00010      0  0 VAR
+00011      0  0    HARDIDLIM      : integer :=  3;
+00012   C  0  0 {=============================================================================}
+00013      0  0 [ GLOBAL ]
+00014      1  0 FUNCTION hardname (i,j : integer) : devname_type;
+00015      1  1 BEGIN
+00016      1  2 CASE i OF
+00017      1  2     1:  hardname := hardname_BITMAP    (j);
+00018      1  2     2:  hardname := hardname_TEK4014H  (j);
+00019      1  2     3:  hardname := hardname_TEK4510   (j);
+00020      1  1    END;
+00021      0  0 END;
+00022   C  0  0 {-----------------------------------------------------------------------------}
+00023      0  0 [ GLOBAL ]
+00024      1  0 PROCEDURE hardmake;
+00025      1  0 VAR
+00026      1  0    i,j,k : integer;
+00027      1  1 BEGIN
+00028      1  1 k := 0;
+00029      1  1 FOR i := 1 TO HARDIDLIM DO
+00030      1  1    FOR j := 1 TO length (hardname (i,0)) DO
+00031      1  1       IF terminal.hardname = hardname (i,j) THEN k := i;
+00032      1  2 CASE k OF
+00033      1  2     1:  hardmake_BITMAP   ;
+00034      1  2     2:  hardmake_TEK4014H ;
+00035      1  2     3:  hardmake_TEK4510  ;
+00036      1  1    END;
+00037      0  0 END;
+00038   C  0  0 {-----------------------------------------------------------------------------}
+00039      0  0 [ GLOBAL ]
+00040      1  0 PROCEDURE hardconfig (configcontrol : configcontrol_type);
+00041      1  0 VAR
+00042      1  0    i,j,k : integer;
+00043      1  1 BEGIN
+00044      1  1 k := 0;
+00045      1  1 FOR i := 1 TO HARDIDLIM DO
+00046      1  1    FOR j := 1 TO length (hardname (i,0)) DO
+00047      1  1       IF terminal.hardname = hardname (i,j) THEN k := i;
+00048      1  1 env.termclear := false;
+00049      1  2 CASE k OF
+00050      1  2     1:  hardconfig_BITMAP   (configcontrol);
+00051      1  2     2:  hardconfig_TEK4014H (configcontrol);
+00052      1  2     3:  hardconfig_TEK4510  (configcontrol);
+00053      1  1    END;
+00054      0  0 END;
+00055   C  0  0 {-----------------------------------------------------------------------------}
+
+HARDIO                                                          23-Dec-1988 10:00:53    VAX Pascal V3.7-254                Page    2
+QPLOT                           Source Listing                  23-Dec-1988 10:00:50    DUA1:[QPLOT.QPLOT.SOURCE]HARDIO.PAS;65 (1)
+
+-LINE-IDC-PL-SL-
+
+00056      0  0 END.
+
+HARDIO                                                          23-Dec-1988 10:00:53    VAX Pascal V3.7-254                Page    3
+QPLOT                           Pascal Compilation Statistics   23-Dec-1988 10:00:50    DUA1:[QPLOT.QPLOT.SOURCE]HARDIO.PAS;65 (1)
+
+PSECT SUMMARY
+
+        Name                     Bytes                         Attributes
+
+$CODE                                 479  NOVEC,NOWRT,  RD,  EXE,  SHR,  LCL,  REL,  CON,  PIC,ALIGN(2)
+$LOCAL                                  4  NOVEC,  WRT,  RD,NOEXE,NOSHR,  LCL,  REL,  CON,  PIC,ALIGN(2)
+
+
+ENVIRONMENT STATISTICS
+
+                                                       -------- Symbols --------
+        File                                           Total    Loaded   Percent
+
+DUA1:[QPLOT.QPLOT.SOURCE]STANDARD.PEN;1                  124        20        16
+DUA1:[QPLOT.QPLOT.SOURCE]FIG.PEN;1                       213        22        10
+DUA1:[QPLOT.QPLOT.SOURCE]TERM_VAX.PEN;1                  101        29        29
+DUA1:[QPLOT.QPLOT.SOURCE]BITMAP.TEN;1                     48        20        42
+DUA1:[QPLOT.QPLOT.SOURCE]TEK4014H.TEN;1                   56        10        18
+DUA1:[QPLOT.QPLOT.SOURCE]TEK4510.TEN;1                    56        10        18
+
+
+

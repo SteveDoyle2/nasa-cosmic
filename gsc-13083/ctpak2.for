@@ -1,0 +1,150 @@
+      SUBROUTINE CTPAK2(KFROMTO,KSPEC,KATT,ATT,
+     *     KTIME,TIME,KPOS,SCPOS,KVEL,SCVEL,KTOP,TOPCEN,
+     *     NPARMS,PARMS,FACTOR,LUERR,IERR)
+      IMPLICIT REAL*8 (A-H,O-Z)
+C
+C THIS ROUTINE IS PART OF THE COORDINATE TRANSFORMATION PACKAGE, CTPAK.
+C IT LOADS THE ARRAY PARMS WITH INFO NEEDED FOR THE TRANSFORMATIONS. 
+C ARRAYS ARE LOADED ONLY IF NEEDED. ERROR CHECKS ARE DONE TO BE SURE 
+C INFO NEEDED HAS BEEN SUPPLIED.
+C
+C
+      REAL*8 PARMS(NPARMS),SCPOS(3),SCVEL(3),TOPCEN(5),ATT(4)
+      INTEGER KSPEC(3)
+      REAL*8 RNINES/999.D0/
+
+      LOGICAL NEEDATT,NEEDTOP,NEEDPOS,NEEDVEL,NEEDTIME
+      CHARACTER*4 FROMTO
+C
+      IF(NPARMS.NE.16) STOP ' STOPPED IN CTPAK2. SOURCE CODE ERROR.'
+      IERR = 0
+C     AU, ERAD, EFLAT ARE SET ON EACH CALL IN CASE CONST HAS BEEN RESET.
+      AU = CONST(60)
+      ERAD = CONST(53)
+      EFLAT = CONST(59)
+      IF(KFROMTO.EQ.1) THEN
+        FROMTO = 'FROM'
+        NCHARS = 4
+      ELSE 
+        FROMTO = 'TO'
+        NCHARS = 2
+        END IF
+C
+C INITIALIZE PARMS. OVERRIDES OCCUR LATER AS NEEDED.
+C
+      CALL MTXSETR8(PARMS,RNINES,NPARMS,1)
+C
+C
+C SET FLAGS INDICATING WHETHER QUANTITIES ARE NEEDED FOR PROCESSING.
+C
+      KPLANE =  KSPEC(1)
+      KORIGIN = KSPEC(2)
+      KUNITS =  KSPEC(3)
+C
+C    THE NEEDATT, ETC., CODE PARALLELS THE DESCRIPTIONS FOR KATT, ETC, 
+C    IN CTPAK.
+C
+      NEEDATT = KPLANE.EQ.13
+      KATTFLG = -1
+      IF(NEEDATT .AND. KATT.NE.0) KATTFLG = JIDNNT(ATT(1))
+C
+      NEEDTOP = (KPLANE.EQ.11)   .OR. 
+     *          (KORIGIN.EQ.4)
+C
+      NEEDPOS = (KPLANE.EQ.12)                    .OR. 
+     *          (KPLANE.EQ.13 .AND. KATTFLG.EQ.1) .OR.
+     *          (KPLANE.EQ.14)                    .OR. 
+     *          (KORIGIN.EQ.3)
+C
+      NEEDVEL = (KPLANE.EQ.12) .OR. 
+     *          (KPLANE.EQ.13 .AND. KATTFLG.EQ.1) .OR.
+     *          (KPLANE.EQ.14)
+C
+      NEEDTIME = (KPLANE.EQ.2)  .OR. (KPLANE.EQ.3)   .OR. 
+     *           (KPLANE.EQ.6)  .OR. (KPLANE.EQ.7)   .OR. 
+     *           (KPLANE.EQ.10) .OR. (KPLANE.EQ.11)  .OR.
+     *           (KORIGIN.EQ.2) .OR. (KORIGIN.EQ.4)
+C
+C
+C LOAD PARMS ARRAY. CHECK FLAGS FOR 'NEED' AND 'SUPPLIED'.
+C
+      IF(NEEDATT) THEN
+        IF(KATT.NE.0) THEN      ! ATTITUDE HAS BEEN SUPPLIED
+          PARMS(1) = ATT(1)
+          PARMS(2) = ATT(2)
+          PARMS(3) = ATT(3)
+          PARMS(4) = ATT(4)
+        ELSE                    ! ATTITUDE HAS NOT BEEN SUPPLIED
+          IERR = 1
+          IF(LUERR.GT.0) WRITE(LUERR,2350) FROMTO(1:NCHARS),
+     *                     'ATTITUDE',KSPEC
+          END IF
+        END IF
+C
+      IF(NEEDTIME) THEN
+        IF(KTIME.NE.0) THEN     ! TIME HAS BEEN SUPPLIED
+          PARMS(5) = TIME
+        ELSE                    ! TIME HAS NOT BEEN SUPPLIED
+          IERR = 1
+          IF(LUERR.GT.0) WRITE(LUERR,2350) FROMTO(1:NCHARS),
+     *                     'TIME',KSPEC
+          END IF
+        END IF
+C
+      IF(NEEDPOS) THEN
+        IF(KPOS.NE.0) THEN      ! SCPOS HAS BEEN SUPPLIED
+          PARMS(6) = SCPOS(1)
+          PARMS(7) = SCPOS(2)
+          PARMS(8) = SCPOS(3)
+        ELSE                    ! SCPOS HAS NOT BEEN SUPPLIED
+          IERR = 1
+          IF(LUERR.GT.0) WRITE(LUERR,2350) FROMTO(1:NCHARS),
+     *                     'POSITION',KSPEC
+          END IF
+        END IF
+C
+      IF(NEEDVEL) THEN
+        IF(KVEL.NE.0) THEN      ! SCVEL HAS BEEN SUPPLIED
+          PARMS(9)  = SCVEL(1)
+          PARMS(10) = SCVEL(2)
+          PARMS(11) = SCVEL(3)
+        ELSE                    ! SCVEL HAS NOT BEEN SUPPLIED
+          IERR = 1
+          IF(LUERR.GT.0) WRITE(LUERR,2350) FROMTO(1:NCHARS),
+     *                     'VELOCITY',KSPEC
+          END IF
+        END IF
+C
+      IF(NEEDTOP) THEN
+        IF(KTOP.NE.0) THEN      ! TOPCEN HAS BEEN SUPPLIED
+          PARMS(12) = TOPCEN(1)
+          PARMS(13) = TOPCEN(2)
+          PARMS(14) = TOPCEN(3)
+          PARMS(15) = TOPCEN(4)
+          PARMS(16) = TOPCEN(5)
+          IF(PARMS(15).LT.0.D0) PARMS(15) = EFLAT
+          IF(PARMS(16).LE.0.D0) PARMS(16) = ERAD
+        ELSE                    ! TOPCEN HAS NOT BEEN SUPPLIED
+          IERR = 1
+          IF(LUERR.GT.0) WRITE(LUERR,2350) FROMTO(1:NCHARS),
+     *                     'TOPOCENTRIC',KSPEC
+          END IF
+        END IF
+C
+C
+C LENGTH UNITS CONVERSION FACTOR
+C
+      TEMP=1.D0
+      IF(KUNITS.EQ.2) TEMP=0.001D0
+      IF(KUNITS.EQ.3) TEMP=ERAD
+      IF(KUNITS.EQ.4) TEMP=AU
+      IF(KFROMTO.EQ.2) TEMP=1.D0/TEMP
+      FACTOR = TEMP
+C
+ 2350 FORMAT(' CTPAK2(CTPACK) ERROR. '/,
+     *       5X,'-',A,'- ',A,' DATA NEEDED BUT NOT SUPPLIED.'/,
+     *       5X,'KSPEC = ',3I5)
+C
+C
+      RETURN
+      END

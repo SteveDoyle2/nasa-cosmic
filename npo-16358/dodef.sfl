@@ -1,0 +1,160 @@
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        DODEF                 29-SEP-83      15:15:58      PAGE    1
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+    1              SUBROUTINE DODEF                                                                                                 
+    2       C                                       CDM   This routine processes the file open on unit 30 as a "symbol" file.       
+    3       C                                       CDM                                                                             
+    4       C                                       CDM   Programmer - Jon Vavrus  15 JUL 1982                                      
+    5       C                                       CDM   Revised    - Jon Vavrus   9 SEP 1982                                      
+    6       C                                       CDM   Revised    - Jon Vavrus  17 AUG 1983 (GETDEF changed)                     
+    7       C                                       CDM   Revised    - Jon Vavrus  21 SEP 1983                                      
+    8       C                                       CM                                                                              
+    9       C                                       CM         The routine reads unit 30.  Each line is tested for:                 
+   10       C                                       CM              s :=     which is taken as a symbol definition                  
+   11       C                                       CM              {    }   which is taken as a "command" level command line       
+   12       C                                       CM              or anything else which is taken as a command line.              
+   13       C                                       C                                                                               
+   14       C                                       C***   COMMON AREAS                                                             
+   15       C                                       C                                                                               
+   16       C                                       CS    INPUTC  Contains the input character buffer INLINE and the defined        
+   17       C                                       CS            symbols SYMS and the definition search buffers DEFBUF             
+   18       C                                       C                                                                               
+   19       C                                       CS    INPUTN  Contains the input character buffer length LENSAV, and the        
+   20       C                                       CS            symbol definitions DEFS, the number of such definitions           
+   21       C                                       CS            (NDEFS), the definition flags DEFFLG, and the definition          
+   22       C                                       CS            numbers NUMDEF                                                    
+   23       C                                       C                                                                               
+   24       C                                       C***   CALLED ROUTINES                                                          
+   25       C                                       C                                                                               
+   26       C                                       CC    DOIT    Executes a command.                                               
+   27       C                                       CC    GETDEF  Translates a line into a symbol definition                        
+   28       C                                       CC    PRSCOM  Parses a command line                                             
+   29       C                                       C                                                                               
+   30              CHARACTER*1024 LINE                                                                                              
+   31              CHARACTER*128 INLINE                                                                                             
+   32              CHARACTER*30 DEFBUF(10,10,60)                                                                                    
+   33              CHARACTER*1 SYMS(60)                                                                                             
+   34              REAL*4 NUMDEF(10,60)                                                                                             
+   35              INTEGER*2 DEFS(11,10,60),LENSAV                                                                                  
+   36              LOGICAL GETDEF                                                                                                   
+   37              LOGICAL*1 DEFFLG(3,10,60)                                                                                        
+   38                                                                                                                               
+   39              COMMON /INPUTC/INLINE,SYMS,DEFBUF                                                                                
+   40              COMMON /INPUTN/LENSAV,DEFS,NDEFS,DEFFLG,NUMDEF                                                                   
+   41                                                                                                                               
+                  +-----------------------------------------------------------------------------------------------------------------
+   42     * 600   |DO FOREVER                                                                                                       
+   43   1         |   READ (30,700,END=800)LINE                                                                                     
+   44   1   700   |   FORMAT (A)                                                                                                    
+                  |  +--------------------------------------------------------------------------------------------------------------
+   45   1 *       |  |DO LABEL                                                                                                      
+   46   2 *       |  |   LABEL 800                                                                                                  
+   47   3 *       |  |      UNDO 600                                                                                                
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        DODEF                 29-SEP-83      15:15:58      PAGE    2
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+                  <----------                                                                                                       
+   48   1 *       |  |END DO LABEL                                                                                                  
+                  |  +--------------------------------------------------------------------------------------------------------------
+   49   1         |   CALL STR$UPCASE(LINE,LINE)                                                                                    
+   50   1         |   CALL STR$TRANSLATE(LINE,LINE,' ','	')                                                                         
+   51   1         |   CALL STR$TRIM(LINE,LINE,LENBUF)                                                                               
+   52   1         |   I = INDEX(LINE(:LENBUF),':=') - 1                                                                             
+   53   1         |   J = INDEX(LINE(:LENBUF),'"') - 1                                                                              
+   54   1         |   K = INDEX(LINE(:LENBUF),'''') - 1                                                                             
+   55   1 *       |   IF (I .LT. 1 .OR. (J .LT. I .AND. J .GE. 0) .OR. (K .LT. I .AND.                                              
+   56            1|         K .GE. 0))                                                                                              
+   57       C     |                                 C                                                                               
+   58       C     |                                 C***   If no := then it must be a command line, or a " in front of :=           
+   59       C     |                                 C***   (this must mean a command line with a search, or the user screwed up)    
+   60       C     |                                 C                                                                               
+   61       C     |                                 C---   First test for { }                                                       
+   62       C     |                                 C                                                                               
+   63   2         |      I = INDEX(LINE(:LENBUF),'{') + 1                                                                           
+   64   2 *       |      IF (I .EQ. 1 .OR. (J .LT. I .AND. J .GE. 0))                                                               
+                  |        +--------------------------------------------------------------------------------------------------------
+   65   3 *       |        |DO FOREVER                                                                                              
+   66   4         |        |   CALL PRSCOM(LINE,LENBUF,ICOM,NUMFLG,ANUMB,MINFLG,0,0)                                                
+   67   4 *       |        |   UNDO IF (ICOM .EQ. 0)                                                                                
+                  |        <----                                                                                                    
+   68   4         |        |   CALL DOIT(ICOM,NUMFLG,ANUMB,MINFLG)                                                                  
+   69   3 *       |        |END DO FOREVER                                                                                          
+                  |        +--------------------------------------------------------------------------------------------------------
+   70   2 *       |      ELSE                                                                                                       
+                  |        +--------------------------------------------------------------------------------------------------------
+   71   3 *       |        |DO FOR J=LENBUF,I,-1                                                                                    
+   72   4 *       |        |   UNDO IF (LINE(J:J) .EQ. '}')                                                                         
+                  |        <----                                                                                                    
+   73   3 *       |        |END DO FOR                                                                                              
+                  |        +--------------------------------------------------------------------------------------------------------
+   74   3 *       |         IF (J .GT. I)                                                                                           
+   75   4         |            CALL COMLVL(LINE(I:J-1),I)                                                                           
+   76   4         |            CALL DOIT(-1,.TRUE.,0.,.FALSE.)                                                                      
+   77   4         |            CALL DOIT(-12,.FALSE.,0.,.FALSE.)                                                                    
+   78   3 *       |         ENDIF                                                                                                   
+   79   2 *       |      ENDIF                                                                                                      
+   80   1 *       |   ELSE                                                                                                          
+                  |     +-----------------------------------------------------------------------------------------------------------
+   81   2 *       |     |DO FOREVER                                                                                                 
+   82       C     |     |                           C                                                                               
+   83       C     |     |                           C***   Take care of continuations                                               
+   84       C     |     |                           C                                                                               
+   85   3 *       |     |   UNDO IF (LINE(LENBUF:LENBUF) .NE. '-')                                                                  
+                  |     <----                                                                                                       
+   86   3         |     |   READ (30,700,END=800)LINE(LENBUF:)                                                                      
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        DODEF                 29-SEP-83      15:15:58      PAGE    3
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+   87   3         |     |   CALL STR$UPCASE(LINE,LINE)                                                                              
+   88   3         |     |   CALL STR$TRANSLATE(LINE,LINE,' ','	')                                                                   
+   89   3         |     |   CALL STR$TRIM(LINE,LINE,LENBUF)                                                                         
+   90   2 *       |     |END DO FOREVER                                                                                             
+                  |     +-----------------------------------------------------------------------------------------------------------
+   91   2         |      J = LIB$SKPC(' ',LINE(:LENBUF))                                                                            
+   92       C     |                                 C                                                                               
+   93       C     |                                 C***   See if symbol is already defined                                         
+   94       C     |                                 C                                                                               
+                  |     +-----------------------------------------------------------------------------------------------------------
+   95   2 * 900   |     |DO                                                                                                         
+                  |     |  +--------------------------------------------------------------------------------------------------------
+   96   3 *       |     |  |DO FOR II=1,NDEFS                                                                                       
+   97   4 *       |     |  |   UNDO 900 IF (SYMS(II) .EQ. LINE(J:J))                                                                
+                  |     <-------                                                                                                    
+   98   3 *       |     |  |END DO FOR                                                                                              
+                  |     |  +--------------------------------------------------------------------------------------------------------
+   99   3         |     |   NDEFS = NDEFS + 1                                                                                       
+  100   3         |     |   II = NDEFS                                                                                              
+  101   3         |     |   SYMS(II) = LINE(J:J)                                                                                    
+  102   2 *       |     |END DO                                                                                                     
+                  |     +-----------------------------------------------------------------------------------------------------------
+  103   2         |      LINE = LINE(I+3:)                                                                                          
+  104   2         |      LENBUF = LENBUF - I - 2                                                                                    
+  105       C     |                                 C                                                                               
+  106       C     |                                 C***   Actually get definitions                                                 
+  107       C     |                                 C                                                                               
+  108   2 *       |      CYCLE IF (.NOT.GETDEF(LINE(:LENBUF),II))                                                                   
+                  |<------                                                                                                          
+  109   1 *       |   ENDIF                                                                                                         
+  110     *       |END DO FOREVER                                                                                                   
+                  +-----------------------------------------------------------------------------------------------------------------
+  111       C                                       C                                                                               
+  112       C                                       C***   Close the symbol file                                                    
+  113       C                                       C                                                                               
+  114              CLOSE (UNIT=30)                                                                                                  
+  115              RETURN                                                                                                           
+              <-----                                                                                                                
+  116              END                                                                                                              
+
+       0 DIAGNOSTICS GENERATED

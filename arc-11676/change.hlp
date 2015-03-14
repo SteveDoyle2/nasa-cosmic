@@ -1,0 +1,41 @@
+1 CHANGE
+The CHANGE command changes all occurences of a string in a text file to a
+different string.  It is a quick way of making a single change without
+using EDT.  The syntax is : 
+
+   CHANGE from_string to_string filespec
+                or
+   CHANGE
+
+where "from_string" is the string to be changed, "to_string" is the string
+to be changed to, and "filespec" is the VMS file specification.  If any of
+the parameters are left out, you will be prompted for them.  Note: in the
+present version, the "to_string" is always capitalized if it is included as
+a parameter (ie, if you want it to be lower case, enter CHANGE and wait for
+the prompt). 
+2 from_string
+This string is the string to be changed.  The string is not enclosed in
+quotes. If there are embedded spaces in "from_string", it must be entered
+by using CHANGE with no parameters and waiting for the prompt. 
+
+WARNING!!! "to_string" may not contain "from_string" or the program will
+blow up.  For example: 
+
+    CHANGE bear teddy_bear BEAR.DAT
+
+will not work!  This restriction may be removed in the next version.
+2 to_string
+This string is the string to be changed to.  It is not enclosed in quotes.
+If there are embedded spaces in "to_string" it must not be entered as a
+parameter (ie, enter CHANGE and wait for the prompt; the same is true if
+you want to use lower case letters in "to_string"). 
+
+WARNING!!! "to_string" may not contain "from_string" or the program will
+blow up.  For example: 
+
+    CHANGE bear teddy_bear BEAR.DAT
+
+will not work!  This restriction may be removed in the next version.
+2 filespec
+This is the full, VMS file specification for the file to be changed.  A new
+version of the file will be created with the changes. 

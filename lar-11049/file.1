@@ -1,0 +1,1679 @@
+LAR-11049                                                                       0000
+PROGRAM FOR THE TRANSIENT RESPONSE OF ABLATING AXISYMMETRIC BODIES INCLUDING THE0000
+EFFECTS OF SHAPE CHANGE                                                         0000
+JOB,1,0700,75000.           D2430      32736T                   BIN2040B        0000
+USER.HOWSER, LONA M                 000425325  11160                            0000
+RUN(S)                                                                          0000
+SETINDF.                                                                        0000
+LGO.                                                                            0000
+      PROGRAM D2430 (INPUT,OUTPUT,TAPE5=INPUT,TAPE6=OUTPUT,TAPE7=201,           0000
+     1TAPE8=201,TAPE9=201)                                                      0000
+C                                                                               0000
+C AXISYMMETRIC ABLATION PROGRAM                                                 0000
+C TWO-DIMENSIONAL ABLATION ANALYSIS FOR AXIALLY SYMMETRIC BODIES OF REVOLUTION  0000
+C AT HIGH HEATING RATES, CONSIDERING SHAPE CHANGE                               0000
+C                                                                               0000
+C THIS IS THE MAIN PROGRAM - IT CONTROLS THE GENERAL FLOW OF PROGRAM            0000
+C                                                                               0000
+      COMMON /PICK/ A(10,20),AA(20),AB(10,20),ALPHA(20),B(20),                  0000
+     2 BS1(10,20),BS1B(10,20),C(10,20),CB(10,20),CK(10),CKETA(10,20),           0000
+     4 CKXI(10,20),COST(20),CP(10,20),D(10,20),DC(20),                          0000
+     6 DELESQ,DELETA,DELTA(20),DELXI,DELXISQ,E(10,20),EIGHT3,                   0000
+     8 ELAM(20),ETA(10),EXPG,F(10,20),GG,GIMACH,H1(10,20),H2(10,20),            0000
+     A H3(10,20),HC(20),HCOMB(20),HE,HW(20),IFIRST,IROCOL,ITC,ITR,ITT,          0000
+     C ITTO,LM1,LM2,MCDOT(20),MDOT(22),MSDOT(20),PID2,PRELOC(20),QC(20),        0000
+     E QC1,QCNET(20),QCOMB(20),QR(20),QR1,QS(20),RNS,RODPC,ROPCPP,              0000
+     G RSS(22),RSTO2,SIG,SIGDP,SIGMA,SIGP,SINT(20),SM1,SM2,TAU,TB,              0000
+     I TT(10,20),TTF(10,20),TWDELXI,TWOGI,V(20),VB(10),X(22),XDXISQ,            0000
+     K XODXI,Y(10,20),Z(20),ZB(10)                                              0000
+      COMMON /INPUTS/ DUMMY(1),AEXP,ALCTAB(10),TTALC(10),MALPHC,NALPHC,         0000
+     2 ALPHAT(10),TALPHA(10),MALPHA,NALPHA,ALSTAB(10),TTALS(10),MALPHS,         0000
+     4 NALPHS,ASEXP,BETA,BEXP,BSEXP,CE,CKETATB(50),TTCKETA(10),                 0000
+     6 ETATAB(5),NCKETA,NETA,CKXITAB(50),TTCKXI(10),XITAB(5),NCKXI,             0000
+     8 NXI,CORDSY,CPDP,CPP,CPTAB(10),TTABCP(10),MCP,NCP,DELTAO(20),             0000
+     A DELTAU,DELTMIN,DTMAX,ELAMTB(28),TTELAM(7),PELAM(4),NELAM,                0000
+     C NPELAM,ENDTAU,EPSONE,EPSONEP,EPSONPP,ERRORT,GAMBAR,GAMINF,               0000
+     E HCOMBTB(28),TTHCOMB(7),PHCOMB(4),NHCOMB,NPHCOMB,HCTAB(28),               0000
+     G TTABHC(7),PHC(4),NHC,NPHC,HETAB(10),TTABHE(10),MHE,NHE,HWTAB(15),        0000
+     I TTABHW(15),MHW,NHW,IADJUST,IPLOT,L,MACHNO,MAXITT,MDMAX,                  0000
+     J MDOTO(20),                                                               0000
+     K MWO2,MWSTR,NTP(7),PLTIME(15),PRAT(20),PRFREQ,PSEXP,PSTAGTB(10),          0000
+     M TTPSTAG(10),MPSTAG,NPSTAG,PTMAX,PTMIN,QCTAB(10),TTABQC(10),MQC,          0000
+     N NQC,QRAT(20),                                                            0000
+     O QRRAT(20),QRTAB(10),TTABQR(10),MQR,NQR,R(20),RIEXP,RNSI,RO,RODP,         0000
+     Q ROP,RS(20),RSSMAX,S,STEBOL,T(10,20),TAUO,TBTAB(10),TTABTB(10),           0000
+     S MTB,NTB,TDPRIME,THETA(20),TPRIME,XO,XORDER,ZS(20),ZSMAX                  0000
+      DIMENSION DELT(10,20),ZZ(22),Y3L(2)                                       0000
+      REAL MDOTO,MDOT,MCDOT,MSDOT,MWSTR,MWO2,MACHNO,MDMAX                       0000
+      INTEGER S,SM1,SM2                                                         0000
+      DATA XLABEL,YLABEL,X2L,Y2L,Y3L/ 2HZB,3HRSS,1HX,4HMDOT,12HTEMPERATU        0000
+     1RES/                                                                      0000
+      NAMELIST /D2430/       AEXP,ALCTAB,TTALC,MALPHC,NALPHC,ALPHAT,            0000
+     2 TALPHA,MALPHA,NALPHA,ALSTAB,TTALS,MALPHS,NALPHS,ASEXP,                   0000
+     4 BETA,BEXP,BSEXP,CE,CKETATB,ETATAB,TTCKETA,NCKETA,NETA,                   0000
+     6 CKXITAB,XITAB,TTCKXI,NCKXI,NXI,CORDSY,CPDP,CPP,CPTAB,TTABCP,MCP,         0000
+     8 NCP,DELTAO,DELTAU,DELTMIN,DTMAX,ELAMTB,TTELAM,PELAM,NELAM,NPELAM,        0000
+     9 ENDTAU,EPSONE,EPSONEP,EPSONPP,ERRORT,GAMBAR,GAMINF,HCOMBTB,              0000
+     A TTHCOMB,PHCOMB,NHCOMB,NPHCOMB,HCTAB,TTABHC,PHC,NHC,NPHC,HETAB,           0000
+     C TTABHE,MHE,NHE,HWTAB,TTABHW,MHW,NHW,IADJUST,IPLOT,L,MACHNO,              0000
+     E MAXITT,MDMAX,MDOTO,MWO2,MWSTR,NTP,PLTIME,PRAT,PRFREQ,PSEXP,              0000
+     G PSTAGTB,TTPSTAG,MPSTAG,NPSTAG,PTMAX,PTMIN,QCTAB,TTABQC,MQC,              0000
+     I NQC,QRAT,QRRAT,QRTAB,TTABQR,MQR,NQR,R,RIEXP,RNSI,RO,RODP,ROP,RS,         0000
+     K RSSMAX,S,STEBOL,T,TAUO,TBTAB,TTABTB,MTB,NTB,TDPRIME,THETA,               0000
+     M TMIN,TPRIME,XO,XORDER,ZS,ZSMAX                                           0000
+      COMMON /HOLD/ TMIN                                                        0000
+      TMIN =0.                                                                  0000
+      DO 10 I=1,934                                                             0000
+   10 DUMMY(I)=0.0                                                              0000
+      DTMAX=2.                                                                  0000
+    1 READ (5,100)                                                              0000
+  100 FORMAT (80H                                                               0000
+     1                         )                                                0000
+      IF (EOF,5) 2,3                                                            0000
+    2 STOP                                                                      0000
+    3 READ (5,D2430)                                                            0000
+      WRITE (6,D2430)                                                           0000
+      WRITE (6,100)                                                             0000
+C                                                                               0000
+C SET INITIAL VALUES                                                            0000
+C                                                                               0000
+      NNTP= NTP(1)                                                              0000
+      PID2 = 1.5707963268                                                       0000
+      TWO GI  = 2.0 /((GAMINF - 1.0) * MACHNO **2)                              0000
+      EXPG =(GAMBAR - 1.0)/ GAMBAR                                              0000
+      GIMACH=    1./(GAMINF * MACHNO **2)                                       0000
+      GG= SQRT( EXPG * (1.0 + TWOGI) * (1.0- GIMACH))                           0000
+      GG= SQRT (GG) * 2.0                                                       0000
+      INOP=0                                                                    0000
+      IROW=0                                                                    0000
+      IDT=1                                                                     0000
+      DTAUO=1.0                                                                 0000
+      DTAU1=DELTAU                                                              0000
+      IROCOL =1                                                                 0000
+C WILL PRINT ONLY AFTER A COL. AND ROW COMPUTATION HAS BEEN MADE                0000
+      TAUOO= TAUO+ PRFREQ                                                       0000
+      ITTO=0                                                                    0000
+      DO 11 M=1,S                                                               0000
+      DO 11 N=1,L                                                               0000
+      DELT(M,N)=1000.                                                           0000
+   11 TT(M,N)= T(M,N)                                                           0000
+      DELTAU=DELTAU/2.                                                          0000
+      TAU=TAUO+DELTAU                                                           0000
+      IFIRST=0                                                                  0000
+      ITT=1                                                                     0000
+      LM1 = L- 1                                                                0000
+      ALM1 = L M1                                                               0000
+      LM2 = L- 2                                                                0000
+      SM1 = S- 1                                                                0000
+      SM2 = S- 2                                                                0000
+      DELXI =1./ALM1                                                            0000
+      DELX =XO/ALM1                                                             0000
+      RSTO2 = MWSTR/MWO2                                                        0000
+      X(1) =0.                                                                  0000
+      DO 12 N=2,L                                                               0000
+   12 X(N) = X(N-1) + DELX                                                      0000
+      DELETA = 1./SM1                                                           0000
+      DELXISQ = DELXI **2                                                       0000
+      DELESQ= DELETA **2                                                        0000
+      TWDELXI = 2.0* DELXI                                                      0000
+      EIGHT3=8.0/3.0                                                            0000
+      DO 18 M=1,S                                                               0000
+      AM=M-1                                                                    0000
+   18 ETA(M)=DELETA*AM                                                          0000
+      SIGMA=STEBOL                                                              0000
+      SIG = SIGMA* EPSONE                                                       0000
+      SIGP = SIGMA * EPSONEP                                                    0000
+      SIGDP= SIGMA * EPSONPP                                                    0000
+      XODXI = XO * DELXI                                                        0000
+      RODPC  = TDPRIME*RODP * CPDP / DELTAU                                     0000
+      ROPCPP = TPRIME * ROP * CPP/ DELTAU                                       0000
+      RODT= RO/DELTAU                                                           0000
+      XDXISQ = XO**2 * DELXISQ                                                  0000
+      DO 22 N=1,L                                                               0000
+      MDOT(N)=MDOTO(N)                                                          0000
+      MCDOT(N)=MDOTO(N)                                                         0000
+      MSDOT(N)=MDOTO(N)                                                         0000
+   20 DELTA(N)= DELTAO(N)                                                       0000
+      THETA(N)=.0174532925*THETA(N)                                             0000
+      SINT(N) = SIN(THETA(N))                                                   0000
+      ZZ(N)= ZS (N)+DELTAO(N)*SINT(N)                                           0000
+   22 COST(N)= COS(THETA(N))                                                    0000
+      IF (IPLOT.EQ.0) GO TO 23                                                  0000
+C PLOT BASE CURVE IF PLOTTING IS CALLED FOR                                     0000
+      REWIND 7                                                                  0000
+      REWIND 8                                                                  0000
+      REWIND 9                                                                  0000
+      CALL CALCOMP                                                              0000
+      IPLT=1                                                                    0000
+      IPLTK=0                                                                   0000
+      IF (CORDSY.NE.0) GO TO 2250                                               0000
+      WRITE   (7) (ZZ(N),RS(N),N=1,L)                                           0000
+      GO TO 23                                                                  0000
+ 2250 WRITE (7) (ZS(N),DELTA(N),N=1,L)                                          0000
+C                                                                               0000
+C COMPUTE  H-S                                                                  0000
+C                                                                               0000
+   23 DO 25 M=1,S                                                               0000
+      DO 25 N=1,L                                                               0000
+      Y(M,N)=ETA(M)*DELTA(N)                                                    0000
+      H1(M,N) = 1.0 + ETA(M)* DELTA(N)/R(N)                                     0000
+      H2(M,N)=1.                                                                0000
+   25 H3(M,N)= RS(N) + Y(M,N) *COST(N)                                          0000
+   95 DO 101 M=1,S                                                              0000
+      DO 101  N=1,L                                                             0000
+      CALL FTLUP (TT(M,N),CP(M,N),MCP,NCP,TTABCP,CPTAB)                         0000
+      CALL DISCOT (TT(M,N),X (N),TTCKXI  ,CKXITAB,XITAB,11,NCKXI,NXI,           0000
+     1CKXI(M,N))                                                                0000
+  101 CALL DISCOT(TT(M,N),Y(M,N),TTCKETA ,CKETATB,ETATAB,11,NCKETA,NETA,        0000
+     2CKETA(M,N))                                                               0000
+      AA(1)=0.0                                                                 0000
+      DO 109 N=2,LM1                                                            0000
+  109 AA(N)= (DELTA(N+1)-DELTA(N-1))/(TWDELXI*XO)                               0000
+      AA(L)=(3.0*DELTA(L)-4.0*DELTA(LM1)+DELTA(LM2))/(TWDELXI*XO)               0000
+      DO 110 N=1,L                                                              0000
+      DO 110 M=1,S                                                              0000
+      D(M,N)=   H2(M,N)*H3(M,N)* CKXI(M,N)/H1(M,N)                              0000
+      E(M,N)=   H1(M,N)* H3(M,N) * CKETA(M,N) / H2(M,N)                         0000
+  110 F(M,N)=D(M,N)*ETA(M)*AA(N)/DELTA(N)                                       0000
+      CALL SQAERO                                                               0000
+      GO TO (310,320), IROCOL                                                   0000
+  310 CALL COLUMN                                                               0000
+      ITC=ITT                                                                   0000
+      IFIRST=1                                                                  0000
+      GO TO 350                                                                 0000
+  320 CALL ROW                                                                  0000
+      ITR=ITT                                                                   0000
+      IF (IROW.EQ.0) IROW=2                                                     0000
+  350 CONTINUE                                                                  0000
+C IF ANY TEMPERATURES ARE NEGATIVE  STOP  CALCULATIONS                          0000
+      DO 360 N=1,L                                                              0000
+      DO 360 M=1,S                                                              0000
+      IF (TTF(M,N).LE.0) GO TO 411                                              0000
+  360 CONTINUE                                                                  0000
+C TEST TO SEE IF TEMPERATURES HAVE CONVERGED                                    0000
+C                                                                               0000
+      ITTO=ITTO+1                                                               0000
+      DO 400 N=1,L                                                              0000
+      DO 400 M=1,S                                                              0000
+      ABSTT=ABS(TT(M,N))                                                        0000
+      ABSTTF=ABS(TTF(M,N))                                                      0000
+      TEST=ABS(ABSTTF-ABSTT)/ABSTT                                              0000
+      IF (TEST - ERRORT) 400,400,700                                            0000
+  400 CONTINUE                                                                  0000
+C                                                                               0000
+C COMPUTE MDOT                                                                  0000
+C                                                                               0000
+      CALL SQAEROM                                                              0000
+C COMPUTE DELTA                                                                 0000
+      DO 410 N=1,L                                                              0000
+      DELTA(N)=DELTAO(N)-(MDOTO(N)+MDOT(N))*DELTAU/(2.0*RO)                     0000
+C RESET DELTAO AND MDOTO                                                        0000
+  410 MDOTO(N)=MDOT(N)                                                          0000
+C IF DELTA BECOMES LESS THAN DELTMIN (SOME MINIMUM DELTA INPUT) STOP            0000
+C THE CALCULATIONS                                                              0000
+      DO 412 N=1,L                                                              0000
+      IF (DELTA(N).GT. DELTMIN) GO TO 412                                       0000
+  411 CALL ZPRINT                                                               0000
+      STOP                                                                      0000
+  412 CONTINUE                                                                  0000
+      IF (INOP.EQ.1) GO T O 418                                                 0000
+      IF (TAU.LT.TAUOO) GO TO 420                                               0000
+      IF (IROCOL.EQ.1) GO TO 418                                                0000
+      INOP=1                                                                    0000
+      GO TO 420                                                                 0000
+  418 INOP =0                                                                   0000
+      TAUOO=TAUOO+ PRFREQ                                                       0000
+C                                                                               0000
+C                                                                               0000
+      CALL ZPRINT                                                               0000
+C                                                                               0000
+      IF (IPLOT.EQ.0) GO TO 420                                                 0000
+      IPLTK= IPLTK + 1                                                          0000
+      WRITE(8) (     MDOT(N), N=1,L)                                            0000
+      IF (NNTP.EQ.0) GO TO 420                                                  0000
+      DO 419 M=1,NNTP                                                           0000
+      I= NTP(M+1)                                                               0000
+  419 WRITE (9)  (TTF(I,N),N=1,L)                                               0000
+  420 IF (IROW-1) 540,490,484                                                   0000
+  484 DELTAU=DELTAU*2.0                                                         0000
+      IROW=1                                                                    0000
+      KFRE=KFRE+1                                                               0000
+C                                                                               0000
+C OBTAIN DELTAU AS A FUNCTION OF ITERATION OF PREVIOUS TIME STEP                0000
+  490 DTAU1 = DELTAU                                                            0000
+      IF (IROCOL.EQ.1) GO TO 540                                                0000
+      IF (ITT-2) 495,540,530                                                    0000
+  495 DELTAU=2.0*DTAU1                                                          0000
+      IF (DELTAU.GT.DTMAX) DELTAU=DTMAX                                         0000
+      GO TO 540                                                                 0000
+  530 DELTAU=DTAU1/2.                                                           0000
+      IF (DELTAU.LT.1.E-6) GO TO 900                                            0000
+  540 TAUO = TAU                                                                0000
+C CHECK TO SEE IF IT IS TIME TO PLOT                                            0000
+      IF (IPLOT.EQ.0) GO TO 543                                                 0000
+      IF (TAU.LT.PLTIME(IPLT)) GO TO 543                                        0000
+      IPLT=IPLT+1                                                               0000
+      IF (CORDSY.NE.0) GO TO 542                                                0000
+      WRITE (7) (ZS(N),RSS(N),N=1,L)                                            0000
+      GO TO 543                                                                 0000
+  542 WRITE (7) (ZS(N),DELTA(N),N=1,L)                                          0000
+C                                                                               0000
+C INCREMENT TIME AND REPEAT CYCLE ALTERNATING ROW AND COLUMN SOLUTION           0000
+  543 TAU=TAU+DELTAU                                                            0000
+      RODPC  = TDPRIME*RODP * CPDP / DELTAU                                     0000
+      ROPCPP = TPRIME * ROP * CPP/ DELTAU                                       0000
+      RODT= RO/DELTAU                                                           0000
+      IF (TAU.GT.ENDTAU)  GO TO 950                                             0000
+C                                                                               0000
+C EXTRAPOLATE TO GET NEW GUESS TEMP(TT)                                         0000
+C                                                                               0000
+      DO 446 M=1,S                                                              0000
+      DO 446 N=1,L                                                              0000
+      DELT(M,N)=1000.                                                           0000
+      DELTN=TTF(M,N)-T(M,N)                                                     0000
+      T(M,N)=TTF(M,N)                                                           0000
+  446 TT(M,N)=TTF(M,N)+(DELTAU/DTAU1)*DELTN                                     0000
+      GO TO (550,650),IROCOL                                                    0000
+  550 IROCOL = 2                                                                0000
+      ITT=1                                                                     0000
+      GO TO 23                                                                  0000
+  650 IROCOL = 1                                                                0000
+      ITT=1                                                                     0000
+      GO TO 23                                                                  0000
+C                                                                               0000
+C TEMP. DOES NOT MEET ERROR CRITERIA,  MUST ITERATE AGAIN                       0000
+C NEW GUESS IS TEMP. OF  PREVIOUS ITERATION   TT =TTF                           0000
+C                                                                               0000
+  700 ITT =ITT +1                                                               0000
+      IF (ITT - MAXITT) 705,705,800                                             0000
+  705 DO 720 N=1,L                                                              0000
+      DO 720 M=1,S                                                              0000
+      DELT1 = ABS(TTF(M,N)- TT(M,N))                                            0000
+      IF (DELT1.LT.10.) GO TO 718                                               0000
+      IF (DELT1 -DELT(M,N)) 718,750,750                                         0000
+  718 DELT(M,N)=DELT1                                                           0000
+  720 CONTINUE                                                                  0000
+      DO 730 M=1,S                                                              0000
+      DO 730 N=1,L                                                              0000
+  730 TT(M,N)= TTF(M,N)                                                         0000
+      GO TO 95                                                                  0000
+  750 IF (ITT.LT.3) GO TO 718                                                   0000
+C                                                                               0000
+C PROGRAMED STOPS                                                               0000
+C                                                                               0000
+      WRITE (6,752)                                                             0000
+  752 FORMAT (*0TEMPERATURE IS DIVERGING ----- WHY*)                            0000
+  758 WRITE (6,759)                                                             0000
+  759 FORMAT (*0TT(M,N)*)                                                       0000
+      DO 765 M=1,S                                                              0000
+      MM=S-(M-1)                                                                0000
+  765 WRITE (6,766) ETA(MM),(TT(MM,N),N=1,L)                                    0000
+  766 FORMAT (F6.3,6X15F8.1/(12X,15F8.1))                                       0000
+      WRITE (6,767) IROCOL                                                      0000
+  767 FORMAT (*0IROCOL=*I3)                                                     0000
+      CALL ZPRINT                                                               0000
+      STOP                                                                      0000
+  800 IF (IROCOL.EQ.1) GO TO 803                                                0000
+      WRITE (6,801)                                                             0000
+  801 FORMAT (*0THIS IS A ROW SOLUTION, DELTAU CANNOT CHANGE)                   0000
+      GO TO 758                                                                 0000
+C                                                                               0000
+  803 DTAU1= DELTAU                                                             0000
+      DELTAU = DELTAU/2.0                                                       0000
+      WRITE (6,805) DELTAU ,TAU                                                 0000
+  805 FORMAT (*0I DID IT--      DELTAU=*E14.5,*TAU=*E14.5)                      0000
+      IF (DELTAU. LT. 1.E-6)  GO TO 900                                         0000
+      TAU = TAU - DELTAU                                                        0000
+      DO 810 M=1,S                                                              0000
+      DO 810 N=1,L                                                              0000
+      DELT(M,N)=1000.                                                           0000
+  810 TT(M,N) = T(M,N)                                                          0000
+      ITT  = 1                                                                  0000
+      GO TO 95                                                                  0000
+  900 WRITE (6,901)                                                             0000
+  901 FORMAT  (*0TEMPERATURE ITERATION DOES NOT CONVERGE*)                      0000
+      GO TO 758                                                                 0000
+C                                                                               0000
+C PLOT  ZS  VS. RSS ,   X  VS MDOT ,  X  VS BACK SURFACE TEMPERATURE            0000
+C                                                                               0000
+  950 CALL ZPRINT                                                               0000
+      IF (IPLOT.EQ.0) GO TO 1                                                   0000
+      END FILE 7                                                                0000
+      END FILE 8                                                                0000
+      END FILE 9                                                                0000
+      REWIND   7                                                                0000
+      REWIND 8                                                                  0000
+      REWIND 9                                                                  0000
+      IEC = 0                                                                   0000
+      DO 960 M=1,IPLT                                                           0000
+      READ (7)  (ZZ(N), RSS(N),N=1,L)                                           0000
+      IF (M.EQ.IPLT )  IEC =1                                                   0000
+  960 CALL INFOPLT (IEC,L,ZZ,1,RSS,1,0.,ZSMAX,0.,RSSMAX,1.,10,XLABEL,10,        0000
+     1 YLABEL,0)                                                                0000
+      IEC =0                                                                    0000
+      DO 970 M=1,IPLTK                                                          0000
+      READ(8) (     MDOT(N),N=1,L)                                              0000
+      IF (M.EQ.IPLTK)  IEC= 1                                                   0000
+  970 CALL INFOPLT (IEC,L,X,1,MDOT,1,0.,0.,0.,MDMAX,1.,10,X2L,10,Y2L,0)         0000
+      IEC =0                                                                    0000
+      IF (NNTP.EQ.0) GO TO 1                                                    0000
+      DO 990 M=1,IPLTK                                                          0000
+      ISYM=10                                                                   0000
+      DO 980 I=1,NNTP                                                           0000
+      READ (9)   (ZZ(N),N=1,L)                                                  0000
+      IF (M.EQ.IPLTK .AND. I.EQ.NNTP)  IEC =1                                   0000
+      ISYM= ISYM + 1                                                            0000
+  980 CALL INFOPLT (IEC,L,X,1,ZZ,1,0.,0.,PTMIN,PTMAX,1.,10,X2L,20,Y3L,          0000
+     1 ISYM)                                                                    0000
+  990 CONTINUE                                                                  0000
+      GO TO 1                                                                   0000
+      END                                                                       0000
+      SUBROUTINE COLUMN                                                         0000
+C                                                                               0000
+C SOLVES THE MATRIX COLUMN BY COLUMN FOR ONE ITERATION                          0000
+C SOLVES  M (NO. OF ROWS)  SETS OF SIMULTANEOUS EQUATIONS  N (NO. OF COLUMNS)   0000
+C TIMES            THEN  RETURNS TO MAIN PROGRAM TO TEST FOR CONVERGENCE        0000
+C                                                                               0000
+      COMMON /PICK/ A(10,20),AA(20),AB(10,20),ALPHA(20),B(20),                  0000
+     2 BS1(10,20),BS1B(10,20),C(10,20),CB(10,20),CK(10),CKETA(10,20),           0000
+     4 CKXI(10,20),COST(20),CP(10,20),D(10,20),DC(20),                          0000
+     6 DELESQ,DELETA,DELTA(20),DELXI,DELXISQ,E(10,20),EIGHT3,                   0000
+     8 ELAM(20),ETA(10),EXPG,F(10,20),GG,GIMACH,H1(10,20),H2(10,20),            0000
+     A H3(10,20),HC(20),HCOMB(20),HE,HW(20),IFIRST,IROCOL,ITC,ITR,ITT,          0000
+     C ITTO,LM1,LM2,MCDOT(20),MDOT(22),MSDOT(20),PID2,PRELOC(20),QC(20),        0000
+     E QC1,QCNET(20),QCOMB(20),QR(20),QR1,QS(20),RNS,RODPC,ROPCPP,              0000
+     G RSS(22),RSTO2,SIG,SIGDP,SIGMA,SIGP,SINT(20),SM1,SM2,TAU,TB,              0000
+     I TT(10,20),TTF(10,20),TWDELXI,TWOGI,V(20),VB(10),X(22),XDXISQ,            0000
+     K XODXI,Y(10,20),Z(20),ZB(10)                                              0000
+      COMMON /INPUTS/ DUMMY(1),AEXP,ALCTAB(10),TTALC(10),MALPHC,NALPHC,         0000
+     2 ALPHAT(10),TALPHA(10),MALPHA,NALPHA,ALSTAB(10),TTALS(10),MALPHS,         0000
+     4 NALPHS,ASEXP,BETA,BEXP,BSEXP,CE,CKETATB(50),TTCKETA(10),                 0000
+     6 ETATAB(5),NCKETA,NETA,CKXITAB(50),TTCKXI(10),XITAB(5),NCKXI,             0000
+     8 NXI,CORDSY,CPDP,CPP,CPTAB(10),TTABCP(10),MCP,NCP,DELTAO(20),             0000
+     A DELTAU,DELTMIN,DTMAX,ELAMTB(28),TTELAM(7),PELAM(4),NELAM,                0000
+     C NPELAM,ENDTAU,EPSONE,EPSONEP,EPSONPP,ERRORT,GAMBAR,GAMINF,               0000
+     E HCOMBTB(28),TTHCOMB(7),PHCOMB(4),NHCOMB,NPHCOMB,HCTAB(28),               0000
+     G TTABHC(7),PHC(4),NHC,NPHC,HETAB(10),TTABHE(10),MHE,NHE,HWTAB(15),        0000
+     I TTABHW(15),MHW,NHW,IADJUST,IPLOT,L,MACHNO,MAXITT,MDMAX,                  0000
+     J MDOTO(20),                                                               0000
+     K MWO2,MWSTR,NTP(7),PLTIME(15),PRAT(20),PRFREQ,PSEXP,PSTAGTB(10),          0000
+     M TTPSTAG(10),MPSTAG,NPSTAG,PTMAX,PTMIN,QCTAB(10),TTABQC(10),MQC,          0000
+     N NQC,QRAT(20),                                                            0000
+     O QRRAT(20),QRTAB(10),TTABQR(10),MQR,NQR,R(20),RIEXP,RNSI,RO,RODP,         0000
+     Q ROP,RS(20),RSSMAX,S,STEBOL,T(10,20),TAUO,TBTAB(10),TTABTB(10),           0000
+     S MTB,NTB,TDPRIME,THETA(20),TPRIME,XO,XORDER,ZS(20),ZSMAX                  0000
+      REAL MDOTO,MDOT,MCDOT,MSDOT,MWSTR,MWO2,MACHNO,MDMAX                       0000
+      INTEGER S,SM1,SM2                                                         0000
+C COMPUTE  COLUMN 1                                                             0000
+      N1 =2                                                                     0000
+      N2 =SM1                                                                   0000
+      CALL COLXO (N1,N2)                                                        0000
+      CALL SOLMAT (A(1,1),B,C(1,1),Z(1),V(1),DC,TTF(1,1),S)                     0000
+C COMPUTE  COLUMN 2 THRU LM1                                                    0000
+      DO 300 N=2,LM1                                                            0000
+      CALL COLMN (N1,N2,N)                                                      0000
+      CALL SOLMAT (A(1,N),B,C(1,N),Z(N),V(N),DC,TTF(1,N),S)                     0000
+  300 CONTINUE                                                                  0000
+C COMPUTE  COLUMN  L                                                            0000
+      CALL COLXL(N1,N2)                                                         0000
+      CALL SOLMAT (A(1,L),B,C(1,L),Z(L),V(L),DC,TTF(1,L),S)                     0000
+  600 RETURN                                                                    0000
+      END                                                                       0000
+      SUBROUTINE ROW                                                            0000
+C                                                                               0000
+C SOLVES THE MATRIX ROW BY ROW FOR ONE ITERATION                                0000
+C SOLVES  N (NO. OF COLUMNS) SETS OF SIMULTANEOUS EQS. M(NO.OF ROWS) TIMES      0000
+C    THEN RETURNS TO MAIN PROGRAM TO CHECK FOR CONVERGENCE                      0000
+C                                                                               0000
+      COMMON /PICK/ A(10,20),AA(20),AB(10,20),ALPHA(20),B(20),                  0000
+     2 BS1(10,20),BS1B(10,20),C(10,20),CB(10,20),CK(10),CKETA(10,20),           0000
+     4 CKXI(10,20),COST(20),CP(10,20),D(10,20),DC(20),                          0000
+     6 DELESQ,DELETA,DELTA(20),DELXI,DELXISQ,E(10,20),EIGHT3,                   0000
+     8 ELAM(20),ETA(10),EXPG,F(10,20),GG,GIMACH,H1(10,20),H2(10,20),            0000
+     A H3(10,20),HC(20),HCOMB(20),HE,HW(20),IFIRST,IROCOL,ITC,ITR,ITT,          0000
+     C ITTO,LM1,LM2,MCDOT(20),MDOT(22),MSDOT(20),PID2,PRELOC(20),QC(20),        0000
+     E QC1,QCNET(20),QCOMB(20),QR(20),QR1,QS(20),RNS,RODPC,ROPCPP,              0000
+     G RSS(22),RSTO2,SIG,SIGDP,SIGMA,SIGP,SINT(20),SM1,SM2,TAU,TB,              0000
+     I TT(10,20),TTF(10,20),TWDELXI,TWOGI,V(20),VB(10),X(22),XDXISQ,            0000
+     K XODXI,Y(10,20),Z(20),ZB(10)                                              0000
+      COMMON /INPUTS/ DUMMY(1),AEXP,ALCTAB(10),TTALC(10),MALPHC,NALPHC,         0000
+     2 ALPHAT(10),TALPHA(10),MALPHA,NALPHA,ALSTAB(10),TTALS(10),MALPHS,         0000
+     4 NALPHS,ASEXP,BETA,BEXP,BSEXP,CE,CKETATB(50),TTCKETA(10),                 0000
+     6 ETATAB(5),NCKETA,NETA,CKXITAB(50),TTCKXI(10),XITAB(5),NCKXI,             0000
+     8 NXI,CORDSY,CPDP,CPP,CPTAB(10),TTABCP(10),MCP,NCP,DELTAO(20),             0000
+     A DELTAU,DELTMIN,DTMAX,ELAMTB(28),TTELAM(7),PELAM(4),NELAM,                0000
+     C NPELAM,ENDTAU,EPSONE,EPSONEP,EPSONPP,ERRORT,GAMBAR,GAMINF,               0000
+     E HCOMBTB(28),TTHCOMB(7),PHCOMB(4),NHCOMB,NPHCOMB,HCTAB(28),               0000
+     G TTABHC(7),PHC(4),NHC,NPHC,HETAB(10),TTABHE(10),MHE,NHE,HWTAB(15),        0000
+     I TTABHW(15),MHW,NHW,IADJUST,IPLOT,L,MACHNO,MAXITT,MDMAX,                  0000
+     J MDOTO(20),                                                               0000
+     K MWO2,MWSTR,NTP(7),PLTIME(15),PRAT(20),PRFREQ,PSEXP,PSTAGTB(10),          0000
+     M TTPSTAG(10),MPSTAG,NPSTAG,PTMAX,PTMIN,QCTAB(10),TTABQC(10),MQC,          0000
+     N NQC,QRAT(20),                                                            0000
+     O QRRAT(20),QRTAB(10),TTABQR(10),MQR,NQR,R(20),RIEXP,RNSI,RO,RODP,         0000
+     Q ROP,RS(20),RSSMAX,S,STEBOL,T(10,20),TAUO,TBTAB(10),TTABTB(10),           0000
+     S MTB,NTB,TDPRIME,THETA(20),TPRIME,XO,XORDER,ZS(20),ZSMAX                  0000
+      REAL MDOTO,MDOT,MCDOT,MSDOT,MWSTR,MWO2,MACHNO,MDMAX                       0000
+C COMPUTE  ROW 1                                                                0000
+      DIMENSION ANS(20), ATEMP(20), CTEMP(20)                                   0000
+      INTEGER SM1 ,S                                                            0000
+      N1 =2                                                                     0000
+      N2 =LM1                                                                   0000
+      CALL COLXO (N1,N2)                                                        0000
+      DO  300 N=2,LM1                                                           0000
+      CALL COLMN (N1,N2,N)                                                      0000
+  300 CONTINUE                                                                  0000
+      CALL COLXL(N1,N2)                                                         0000
+      DO 320 N =1,L                                                             0000
+      ATEMP(N) = AB(1,N)                                                        0000
+ 320  CTEMP(N) = CB(1,N)                                                        0000
+      CALL SOLMAT (ATEMP,B,CTEMP,ZB(1),VB(1),DC,ANS(1),L)                       0000
+      DO 400 N=1,L                                                              0000
+  400 TTF(1,N)=ANS(N)                                                           0000
+C COMPUTE  ROW  2  THRU SM1                                                     0000
+      DO  600  M=2,SM1                                                          0000
+      N1 =M                                                                     0000
+      N2 =M                                                                     0000
+      CALL COLXOM (N1,N2)                                                       0000
+      DO 500 N=2,LM1                                                            0000
+      CALL COLMNMN(N1,N2,N)                                                     0000
+  500 CONTINUE                                                                  0000
+      CALL COLXLM (N1,N2)                                                       0000
+      DO 510 N=1,L                                                              0000
+      ATEMP(N) = AB(M,N)                                                        0000
+  510 CTEMP(N) = CB(M,N)                                                        0000
+      CALL SOLMAT (ATEMP,B,CTEMP,ZB(M),VB(M),DC,ANS(1),L)                       0000
+      DO 590 N=1,L                                                              0000
+  590 TTF(M,N)=ANS(N)                                                           0000
+  600 CONTINUE                                                                  0000
+C COMPUTE ROW S                                                                 0000
+      CALL  COLXO1(N1,N2)                                                       0000
+      DO  800 N=2,LM1                                                           0000
+      CALL COLMN1 (N1,N2,N)                                                     0000
+  800 CONTINUE                                                                  0000
+      CALL COLXL1(N1,N2)                                                        0000
+      DO 810 N=1,L                                                              0000
+      ATEMP(N) = AB(S,N)                                                        0000
+  810 CTEMP(N) = CB(S,N)                                                        0000
+      CALL SOLMAT  (ATEMP,B,CTEMP,ZB(S),VB(S),DC,ANS(1),L)                      0000
+      DO 890 N=1,L                                                              0000
+  890 TTF(S,N)=ANS(N)                                                           0000
+  900 RETURN                                                                    0000
+      END                                                                       0000
+      SUBROUTINE COLXO(N1,N2)                                                   0000
+C                                                                               0000
+C COMPUTE COEF. FOR XI=0,   COLUMN IMPLICIT                                     0000
+C IROCOL = 1       COLUMN IMPLICIT                                              0000
+C IROCOL = 2       ROW  IMPLICIT                                                0000
+C                                                                               0000
+      COMMON /PICK/ A(10,20),AA(20),AB(10,20),ALPHA(20),B(20),                  0000
+     2 BS1(10,20),BS1B(10,20),C(10,20),CB(10,20),CK(10),CKETA(10,20),           0000
+     4 CKXI(10,20),COST(20),CP(10,20),D(10,20),DC(20),                          0000
+     6 DELESQ,DELETA,DELTA(20),DELXI,DELXISQ,E(10,20),EIGHT3,                   0000
+     8 ELAM(20),ETA(10),EXPG,F(10,20),GG,GIMACH,H1(10,20),H2(10,20),            0000
+     A H3(10,20),HC(20),HCOMB(20),HE,HW(20),IFIRST,IROCOL,ITC,ITR,ITT,          0000
+     C ITTO,LM1,LM2,MCDOT(20),MDOT(22),MSDOT(20),PID2,PRELOC(20),QC(20),        0000
+     E QC1,QCNET(20),QCOMB(20),QR(20),QR1,QS(20),RNS,RODPC,ROPCPP,              0000
+     G RSS(22),RSTO2,SIG,SIGDP,SIGMA,SIGP,SINT(20),SM1,SM2,TAU,TB,              0000
+     I TT(10,20),TTF(10,20),TWDELXI,TWOGI,V(20),VB(10),X(22),XDXISQ,            0000
+     K XODXI,Y(10,20),Z(20),ZB(10)                                              0000
+      COMMON /INPUTS/ DUMMY(1),AEXP,ALCTAB(10),TTALC(10),MALPHC,NALPHC,         0000
+     2 ALPHAT(10),TALPHA(10),MALPHA,NALPHA,ALSTAB(10),TTALS(10),MALPHS,         0000
+     4 NALPHS,ASEXP,BETA,BEXP,BSEXP,CE,CKETATB(50),TTCKETA(10),                 0000
+     6 ETATAB(5),NCKETA,NETA,CKXITAB(50),TTCKXI(10),XITAB(5),NCKXI,             0000
+     8 NXI,CORDSY,CPDP,CPP,CPTAB(10),TTABCP(10),MCP,NCP,DELTAO(20),             0000
+     A DELTAU,DELTMIN,DTMAX,ELAMTB(28),TTELAM(7),PELAM(4),NELAM,                0000
+     C NPELAM,ENDTAU,EPSONE,EPSONEP,EPSONPP,ERRORT,GAMBAR,GAMINF,               0000
+     E HCOMBTB(28),TTHCOMB(7),PHCOMB(4),NHCOMB,NPHCOMB,HCTAB(28),               0000
+     G TTABHC(7),PHC(4),NHC,NPHC,HETAB(10),TTABHE(10),MHE,NHE,HWTAB(15),        0000
+     I TTABHW(15),MHW,NHW,IADJUST,IPLOT,L,MACHNO,MAXITT,MDMAX,                  0000
+     J MDOTO(20),                                                               0000
+     K MWO2,MWSTR,NTP(7),PLTIME(15),PRAT(20),PRFREQ,PSEXP,PSTAGTB(10),          0000
+     M TTPSTAG(10),MPSTAG,NPSTAG,PTMAX,PTMIN,QCTAB(10),TTABQC(10),MQC,          0000
+     N NQC,QRAT(20),                                                            0000
+     O QRRAT(20),QRTAB(10),TTABQR(10),MQR,NQR,R(20),RIEXP,RNSI,RO,RODP,         0000
+     Q ROP,RS(20),RSSMAX,S,STEBOL,T(10,20),TAUO,TBTAB(10),TTABTB(10),           0000
+     S MTB,NTB,TDPRIME,THETA(20),TPRIME,XO,XORDER,ZS(20),ZSMAX                  0000
+      REAL MDOTO,MDOT,MCDOT,MSDOT,MWSTR,MWO2,MACHNO,MDMAX                       0000
+      INTEGER S,SM1,SM2                                                         0000
+C                                                                               0000
+C STATION (1,1)    XI=0  ,  ETA=0                                               0000
+C                                                                               0000
+      DO 60 I=1,SM1                                                             0000
+   60 CK(I)= (CKETA(I,1)+ CKETA(I+1,1))/2.0                                     0000
+      DELDE = DELTA(1)* DELETA                                                  0000
+      PART2= H1(1,1) **2  * XDXISQ                                              0000
+      PART1=RODPC                                                               0000
+      H1R = H1(1,1) * R(1)                                                      0000
+      FF=CKXI(1,1)*(2.0-CORDSY)/(2.0*PART2)                                     0000
+      G=RO*CP(1,1)/DELTAU-2.0*PART1/H1R+8.0*PART1/(3.0*DELDE)                   0000
+      H = 1.0/( H2(1,1)**2 * DELTA(1)**2)                                       0000
+      SC= H /(3.0* DELESQ)                                                      0000
+      EPT4=SIGDP* (2.0/(H1R*H2(1,1)**2) - EIGHT3/DELDE)                         0000
+      EPTB= EPT4 *TB                                                            0000
+      EPT4= EPT4 *T(1,1)**3                                                     0000
+      BSAVE  = G                                                                0000
+      GO TO  (70, 80), IROCOL                                                   0000
+   70 CONTINUE                                                                  0000
+      A(1,1) = 0.0                                                              0000
+      BS1(1,1) = -SC*9.0 *CK(1)                                                 0000
+      C(1,1)=  SC * (9.0 *CK(1) + CK(2) )                                       0000
+      Z(1) = -SC * CK(2)                                                        0000
+      B(1)= BS1(1,1) - BSAVE + EPT4                                             0000
+      IF (IFIRST.EQ.0 )  GO TO 80                                               0000
+   78 DC(1) =(-BSAVE-BS1B(1,1))*T(1,1) - CB(1,1)*T(1,2)- ZB(1)* T(1,3)          0000
+     1 + EPTB                                                                   0000
+      GO TO 99                                                                  0000
+   80 FP=FF                                                                     0000
+      BS1B(1,1)= -7.0* FP                                                       0000
+      CB(1,1)= 8.0 *FP                                                          0000
+      ZB(1) = -FP                                                               0000
+      IF (IFIRST.EQ.0 )  GO TO 78                                               0000
+   86 B(1) = BS1B(1,1)- BSAVE + EPT4                                            0000
+      DC(1) =(-BSAVE -BS1(1,1))*T(1,1) -C(1,1)*T(2,1) - Z(1)*T(3,1)             0000
+     1 + EPTB                                                                   0000
+  99  GO TO (101,600),IROCOL                                                    0000
+C                                                                               0000
+C STATION(M,1)   , XI=0   ,  ETA LESS THAN 1 , GREATER THAN 0                   0000
+C                                                                               0000
+      ENTRY COLXOM                                                              0000
+  101 DO 200 M=N1,N2                                                            0000
+      DELDE=DELTA(1)*DELETA                                                     0000
+      MP1=M+1                                                                   0000
+      MM1 =M-1                                                                  0000
+      P817  =  8.0* DELTA(2) - DELTA(3) - 7.0* DELTA(1)                         0000
+      PART2 = H1(M,1)**2  * XDXISQ                                              0000
+      CORD= (2.0-CORDSY)/2.0                                                    0000
+      FF= CKXI(M,1)*CORD/PART2                                                  0000
+      G = RO *CP(M,1)/DELTAU                                                    0000
+      SC = 1.0 /(H2(M,1)* DELDE **2)                                            0000
+      H = FF* P817/(2.0* DELDE)  *ETA(M)                                        0000
+      P =  CKETA(M,1)/(H2(M,1)**2 *H1(M,1)* R(1) * DELDE)                       0000
+      BSAVE =G                                                                  0000
+      GO TO (170,180), IROCOL                                                   0000
+  170 CONTINUE                                                                  0000
+      U= ETA(M)*MDOT(1) * CP(M,1)/(2.0*DELTA(1) * DELETA)                       0000
+      A(M,1)=  H -P + SC* CK(MM1) +U                                            0000
+      BS1(M,1) = SC * (-CK(MM1) - CK(M))                                        0000
+      C(M,1)= -H + P + SC* CK(M) -U                                             0000
+      B(M) = BS1(M,1) - BSAVE                                                   0000
+      IF (IFIRST.EQ.0 )  GO TO 180                                              0000
+ 178  DC(M)  =  (-BSAVE -BS1B(M,1))* T(M,1)-ZB(M)*T(M,3)-CB(M,1)*T(M,2)         0000
+      GO TO 200                                                                 0000
+  180 ZB(M) =  -FF                                                              0000
+      CB(M,1)= 8.0 * FF                                                         0000
+      BS1B(M,1)= -7.0*FF                                                        0000
+      IF (IFIRST.EQ.0 )  GO TO 178                                              0000
+  190 B(1) = BS1B(M,1) - BSAVE                                                  0000
+      DC(1)= (-BSAVE - BS1(M,1))*T(M,1)-A(M,1)*T(MM1,1)-C(M,1)*T(MP1,1)         0000
+  200 CONTINUE                                                                  0000
+      GO TO (202,600),IROCOL                                                    0000
+C                                                                               0000
+C STATION (S,1)   ,XI=0   ,  ETA=1                                              0000
+C                                                                               0000
+      ENTRY COLXO1                                                              0000
+  202 CORD=(2.0-CORDSY)/2.0                                                     0000
+      FF=CKXI(S,1)*CORD/H1(S,1)**2                                              0000
+      DELDE=DELTA(1)*DELETA                                                     0000
+      P =FF/XDXISQ                                                              0000
+      H = 1.0/(H2(S,1)**2 *3.0* DELDE**2)                                       0000
+      G = RO*  CP(S,1)/ DELTAU                                                  0000
+      SC = -9.0 * CK(SM1) * H                                                   0000
+      BSAVE = G                                                                 0000
+      GO TO (270,280) ,IROCOL                                                   0000
+  270 CONTINUE                                                                  0000
+      XX=CP(S,1)*MDOT(1)/(2.0*DELTA(1)*DELETA)                                  0000
+      V(1)= -CK(SM2)*H - XX                                                     0000
+      A(S,1) = -SC + CK(SM2)*H + 4.0*XX                                         0000
+      DR=P*P817/CKETA(S,1)     *H2(S,1)                                         0000
+      DD = DR - 2.0/(H1(S,1)*R(1)*H2(S,1))-EIGHT3/                              0000
+     1(H2(S,1) *DELDE)                                                          0000
+      DDQS=DD*QS(1)                                                             0000
+      BS1(S,1)=DD*SIG*T(S,1)**3 +SC-3.0*XX                                      0000
+      B(S) = BS1(S,1) -BSAVE                                                    0000
+      IF (IFIRST.EQ.0 )  GO TO 280                                              0000
+  278 DC(S) = DDQS     +(-BSAVE - BS1B(S,1))*T(S,1)- CB(S,1)*T(S,2)             0000
+     1 - ZB(S) *T(S,3)                                                          0000
+      GO TO 600                                                                 0000
+  280 CB(S,1)=8.0*P                                                             0000
+      ZB(S) = -P                                                                0000
+      BS1B(S,1) = -7.0*P                                                        0000
+      IF (IFIRST.EQ.0 )  GO TO 278                                              0000
+  290 B(1) = BS1B(S,1) - BSAVE                                                  0000
+      DC(1) =  (-BSAVE - BS1(S,1))*T(S,1)  - V(1)*                              0000
+     1  T(SM2,1) - A(S,1) *T(SM1,1)  +DDQS                                      0000
+  600 RETURN                                                                    0000
+  201 FORMAT    (7E18.7)                                                        0000
+      END                                                                       0000
+      SUBROUTINE COLMN (N1,N2,N)                                                0000
+C                                                                               0000
+C IROCOL = 1       COLUMN IMPLICIT                                              0000
+C IROCOL = 2       ROW  IMPLICIT                                                0000
+C                                                                               0000
+      COMMON /PICK/ A(10,20),AA(20),AB(10,20),ALPHA(20),B(20),                  0000
+     2 BS1(10,20),BS1B(10,20),C(10,20),CB(10,20),CK(10),CKETA(10,20),           0000
+     4 CKXI(10,20),COST(20),CP(10,20),D(10,20),DC(20),                          0000
+     6 DELESQ,DELETA,DELTA(20),DELXI,DELXISQ,E(10,20),EIGHT3,                   0000
+     8 ELAM(20),ETA(10),EXPG,F(10,20),GG,GIMACH,H1(10,20),H2(10,20),            0000
+     A H3(10,20),HC(20),HCOMB(20),HE,HW(20),IFIRST,IROCOL,ITC,ITR,ITT,          0000
+     C ITTO,LM1,LM2,MCDOT(20),MDOT(22),MSDOT(20),PID2,PRELOC(20),QC(20),        0000
+     E QC1,QCNET(20),QCOMB(20),QR(20),QR1,QS(20),RNS,RODPC,ROPCPP,              0000
+     G RSS(22),RSTO2,SIG,SIGDP,SIGMA,SIGP,SINT(20),SM1,SM2,TAU,TB,              0000
+     I TT(10,20),TTF(10,20),TWDELXI,TWOGI,V(20),VB(10),X(22),XDXISQ,            0000
+     K XODXI,Y(10,20),Z(20),ZB(10)                                              0000
+      COMMON /INPUTS/ DUMMY(1),AEXP,ALCTAB(10),TTALC(10),MALPHC,NALPHC,         0000
+     2 ALPHAT(10),TALPHA(10),MALPHA,NALPHA,ALSTAB(10),TTALS(10),MALPHS,         0000
+     4 NALPHS,ASEXP,BETA,BEXP,BSEXP,CE,CKETATB(50),TTCKETA(10),                 0000
+     6 ETATAB(5),NCKETA,NETA,CKXITAB(50),TTCKXI(10),XITAB(5),NCKXI,             0000
+     8 NXI,CORDSY,CPDP,CPP,CPTAB(10),TTABCP(10),MCP,NCP,DELTAO(20),             0000
+     A DELTAU,DELTMIN,DTMAX,ELAMTB(28),TTELAM(7),PELAM(4),NELAM,                0000
+     C NPELAM,ENDTAU,EPSONE,EPSONEP,EPSONPP,ERRORT,GAMBAR,GAMINF,               0000
+     E HCOMBTB(28),TTHCOMB(7),PHCOMB(4),NHCOMB,NPHCOMB,HCTAB(28),               0000
+     G TTABHC(7),PHC(4),NHC,NPHC,HETAB(10),TTABHE(10),MHE,NHE,HWTAB(15),        0000
+     I TTABHW(15),MHW,NHW,IADJUST,IPLOT,L,MACHNO,MAXITT,MDMAX,                  0000
+     J MDOTO(20),                                                               0000
+     K MWO2,MWSTR,NTP(7),PLTIME(15),PRAT(20),PRFREQ,PSEXP,PSTAGTB(10),          0000
+     M TTPSTAG(10),MPSTAG,NPSTAG,PTMAX,PTMIN,QCTAB(10),TTABQC(10),MQC,          0000
+     N NQC,QRAT(20),                                                            0000
+     O QRRAT(20),QRTAB(10),TTABQR(10),MQR,NQR,R(20),RIEXP,RNSI,RO,RODP,         0000
+     Q ROP,RS(20),RSSMAX,S,STEBOL,T(10,20),TAUO,TBTAB(10),TTABTB(10),           0000
+     S MTB,NTB,TDPRIME,THETA(20),TPRIME,XO,XORDER,ZS(20),ZSMAX                  0000
+      REAL MDOTO,MDOT,MCDOT,MSDOT,MWSTR,MWO2,MACHNO,MDMAX                       0000
+      DIMENSION DDQS(20),DDQSR(20)                                              0000
+      INTEGER S,SM1,SM2                                                         0000
+C                                                                               0000
+C STATION (1,N)    XI GREATER THAN 0,LESS THAN 1     ETA=0                      0000
+C                                                                               0000
+  201 FORMAT    (7E18.7)                                                        0000
+      NM1 = N-1                                                                 0000
+      NP1 = N+1                                                                 0000
+      E32N=(H1(2,N)+H1(1,N))*(H3(2,N)+H3(1,N))*(CKETA(2,N)+CKETA(1,N))/         0000
+     1(4.*(H2(2,N)+H2(1,N)))                                                    0000
+      E52N=(H1(3,N)+H1(2,N))*(H3(3,N)+H3(2,N))*(CKETA(3,N)+CKETA(2,N))/         0000
+     1(4.*(H2(3,N)+H2(2,N)))                                                    0000
+      VV=1.0/ (3.0* DELTA(N)**2  * DELESQ )                                     0000
+      P1NP1=(H3(1,NP1)+H3(1,N))/(H1(1,NP1)+H1(1,N))                             0000
+      P1NM1=(H3(1,NM1)+H3(1,N))/(H1(1,NM1)+H1(1,N))                             0000
+      W=  H1(1,N)*H3(1,N)* DELETA *DELTA(N) *8.0                                0000
+      G1N = H1(1,N)* H2(1,N) * H3(1,N) * RO *CP(1,N)                            0000
+      YY=(-VV*W*RODPC-G1N/DELTAU)                                               0000
+      EPT4= -VV *W *SIGDP                                                       0000
+      EPTB=  EPT4 * TB                                                          0000
+      EPT4 = EPT4 * T(1,N)**3                                                   0000
+      BSAVE = YY                                                                0000
+      GO TO (170,180),IROCOL                                                    0000
+  170 CONTINUE                                                                  0000
+      BS1(1,N) = -VV* 9.0* E32N                                                 0000
+      C(1,N)= VV *(9.0* E32N + E52N)                                            0000
+      Z(N) = -VV * E52N                                                         0000
+      B(1)= BS1(1,N) + BSAVE +  EPT4                                            0000
+      IF (IFIRST.EQ.0 )  GO TO 180                                              0000
+  178 DC(1) = (BSAVE - BS1B(1,N))*T(1,N) -AB(1,N)*T(1,NM1)-CB(1,N)*             0000
+     1 T(1,NP1) + EPTB                                                          0000
+      GO TO 200                                                                 0000
+  180 D1NP1=(H2(1,NP1)+H2(1,N))*(H3(1,NP1)+H3(1,N))*(CKXI(1,NP1)+CKXI(1,        0000
+     1N))/(4.*XDXISQ*(H1(1,NP1)+H1(1,N)))                                       0000
+      D1NM1=(H2(1,NM1)+H2(1,N))*(H3(1,NM1)+H3(1,N))*(CKXI(1,NM1)+CKXI(1,        0000
+     1N))/(4.*XDXISQ*(H1(1,NM1)+H1(1,N)))                                       0000
+      AB(1,N)=D1NM1                                                             0000
+      BS1B(1,N)=-D1NP1- D1NM1                                                   0000
+      CB(1,N)=D1NP1                                                             0000
+      IF (IFIRST.EQ.0 )  GO TO 178                                              0000
+  190 B(N)= BS1B(1,N) + BSAVE  + EPT4                                           0000
+      DC(N) = (BSAVE -BS1(1,N))*T(1,N) -C(1,N)*T(2,N) - Z(N)*T(3,N)             0000
+     1 + EPTB                                                                   0000
+  200 CONTINUE                                                                  0000
+      GO TO (202,800), IROCOL                                                   0000
+C                                                                               0000
+C STATION (M,N)   XI GREATER THAN 0, LESS THAN 1                                0000
+C                ETA GREATER THAN 0, LESS THAN 1                                0000
+C                                                                               0000
+      ENTRY COLMNMN                                                             0000
+      NP1=N+1                                                                   0000
+      NM1=N-1                                                                   0000
+  202 DO 400 M=N1,N2                                                            0000
+      MM1 = M-1                                                                 0000
+      MP1 = M+1                                                                 0000
+      VV= 1.0 /(DELTA(N)**2 * DELESQ)                                           0000
+      XX  =  ETA(M)*AA(N)/(DELTA(N)*  DELESQ)                                   0000
+      G   =  H1(M,N)* H2(M,N) * H3(M,N) *RO * CP(M,N)                           0000
+      EMM12N=(H1(MM1,N)+H1(M,N))*(H3(MM1,N)+H3(M,N))*(CKETA(MM1,N)+CKETA        0000
+     1(M,N))/(4.*(H2(MM1,N)+H2(M,N)))*VV                                        0000
+      EMP12N=(H1(MP1,N)+H1(M,N))*(H3(MP1,N)+H3(M,N))*(CKETA(MP1,N)+CKETA        0000
+     1(M,N))/(4.*(H2(MP1,N)+H2(M,N)))*VV                                        0000
+      DMM12N=(H2(MM1,N)+H2(M,N))*(H3(MM1,N)+H3(M,N))*(CKXI(MM1,N)+CKXI(M        0000
+     1M1,N))/(4.*(H1(MM1,N)+H1(M,N)))                                           0000
+      DMP12N=(H2(MP1,N)+H2(M,N))*(H3(MP1,N)+H3(M,N))*(CKXI(MP1,N)+CKXI(M        0000
+     1P1,N))/(4.*(H1(MP1,N)+H1(M,N)))                                           0000
+      FMM12N=XX*DMM12N*AA(N)*(ETA(MM1)+ETA(M))/(DELTA(N)*2.)                    0000
+      FMP12N=XX*DMP12N*AA(N)*(ETA(MP1)+ETA(M))/(DELTA(N)*2.)                    0000
+      W = 4.0 * XO * DELXI * DELETA                                             0000
+      DENOM= 4.0* (DELTA(  NM1) + DELTA (  N)) *( H1(M,NM1) + H1 (M,N))         0000
+      FMNM12= (H3(M,NM1)+H3(M,N)) *(H2(M,NM1)+H2(M,N))* (CKXI(M,NM1)            0000
+     1+ CKXI(M,N))* (AA(  NM1) + AA(  N))* ETA(M)/DENOM                         0000
+      DENOM= 4.0* (DELTA(  NP1)+DELTA(  N))*(H1(M,NP1)+H1(M,N))                 0000
+      FMNP12= (H3(M,NP1)+H3(M,N))*(H2(M,NP1) +H2(M,N))*(CKXI(M,NP1)             0000
+     1 +CKXI(M,N))*(AA(  NP1)+AA(  N))*ETA(M)/DENOM                             0000
+      D1 = (FMNP12*(T(MP1,NP1)-T(MM1,NP1)+T(MP1,N)-T(MM1,N))-FMNM12*            0000
+     1 (T(MP1,N)-T(MM1,N)+T(MP1,NM1)-T(MM1,NM1)))/W                             0000
+      D2 = ETA(M) *AA(N)* CKXI(M,N)* (H2(MP1,N)* H3(MP1,N)* (T(MP1,NP1)         0000
+     1 - T(MP1,NM1))/H1(MP1,N)   - H2(MM1,N) * H3(MM1,N)* (T(MM1,NP1)           0000
+     2 - T(MM1,NM1))/H1(MM1,N) ) /(DELTA(N) * W)                                0000
+      DS = D1  + D2  - G *T(M,N )/ DELTAU                                       0000
+      BSAVE = G/DELTAU                                                          0000
+      GO TO  (370,380),IROCOL                                                   0000
+  370 CONTINUE                                                                  0000
+      HMN = ETA(M) * MDOT(N)/(DELTA(N) * RO)                                    0000
+      YY=  G * HMN/(2.0* DELETA)                                                0000
+      A(M,N) = EMM12N + FMM12N + YY                                             0000
+      BS1(M,N) = -EMM12N - EMP12N -FMP12N - FMM12N                              0000
+      C(M,N) = EMP12N + FMP12N - YY                                             0000
+      B(M) = BS1(M,N) - BSAVE                                                   0000
+      IF (IFIRST.EQ.0 )  GO TO 380                                              0000
+  378 DC(M) = DS- BS1B(M,N)* T (M,N) -AB(M,N)*T(M,NM1)-CB(M,N)*T(M,NP1)         0000
+      GO TO 400                                                                 0000
+  380 DMNM12=(H2(M,NM1)+H2(M,N))*(H3(M,NM1)+H3(M,N))*(CKXI(M,NM1)+CKXI(M        0000
+     1,N))/(4.*(H1(M,NM1)+H1(M,N)))                                             0000
+      AB(M,N)=DMNM12/XDXISQ                                                     0000
+      DMNP12=(H2(M,NP1)+H2(M,N))*(H3(M,NP1)+H3(M,N))*(CKXI(M,NP1)+CKXI(M        0000
+     1,N))/(4.*(H1(M,NP1)+H1(M,N)))                                             0000
+      CB(M,N)=DMNP12/XDXISQ                                                     0000
+      BS1B(M,N)= -AB(M,N) - CB(M,N)                                             0000
+      IF (IFIRST.EQ.0 )  GO TO 378                                              0000
+  390 B(N) = BS1B(M,N) - BSAVE                                                  0000
+      DC(N) = DS - BS1(M,N)*T(M,N) - A(M,N)*T(MM1,N)- C(M,N)*T(MP1,N)           0000
+  400 CONTINUE                                                                  0000
+      GO TO  (401,800), IROCOL                                                  0000
+C                                                                               0000
+C STATION (S,N)   XI GREATER THAN 0, LESS THAN 1 ,     ETA =1                   0000
+C                                                                               0000
+      ENTRY  COLMN1                                                             0000
+      NP1=N+1                                                                   0000
+      NM1=N-1                                                                   0000
+  401 H1H3 = H1(S,N)* H3(S,N)                                                   0000
+      XX= 3.0 * DELTA(N)**2 * DELESQ                                            0000
+      U = AA(N)/ (3.0                            *DELESQ* DELTA(N)   )          0000
+      G =            H1H3  *H2(S,N) * RO *CP(S,N)                               0000
+      PART=AA(N)/(DELTA(N)*4.0*DELETA*DELXI*XO)                                 0000
+      SST=     H3(S,N)*CKXI(S,N)*3./H1(S,N)                                     0000
+      DS=PART*(SST*T(S,NP1)-SST*T(S,NM1)                                        0000
+     1    -4.0*H2(SM1,N)*H3(SM1,N)*CKXI(SM1,N)*(T(SM1,NP1)-T(SM1,NM1))/         0000
+     2H1(SM1,N)+H2(SM2,N)*H3(SM2,N)*CKXI(SM2,N)* (T(SM2,NP1)-T(SM2,NM1))        0000
+     3/H1(SM2,N))                                                               0000
+      ESM32N=(H1(SM1,N)+H1(SM2,N))*(H3(SM1,N)+H3(SM2,N))*(CKETA(SM1,N)+         0000
+     1CKETA(SM2,N))/(4.*(H2(SM1,N)+H2(SM2,N))*XX)                               0000
+      ESM12N=(H1(SM1,N)+H1(S,N))*(H3(SM1,N)+H3(S,N))*(CKETA(SM1,N)+CKETA        0000
+     1(S,N))/(4.*(H2(SM1,N)+H2(S,N))*XX)*9.                                     0000
+      DSM12N=(H2(SM1,N)+H2(S,N))*(H3(SM1,N)+H3(S,N))*(CKXI(SM1,N)+CKXI(S        0000
+     1 ,N))/ (4.0*(H1(SM1,N)+ H1(S,N)))                                         0000
+      FSM12N=DSM12N*AA(N)*(ETA(SM1)+ETA(S))/(DELTA(N)*2.)*9.*U                  0000
+      DSM32N=(H2(SM2,N)+H2(SM1,N))*(H3(SM2,N)+H3(SM1,N))*(CKXI(SM2,N)+          0000
+     1 CKXI(SM1,N))/(4.*(H1(SM2,N)+H1(SM1,N)))                                  0000
+      FSM32N=DSM32N*AA(N)*(ETA(SM2)+ETA(SM1))/(DELTA(N)*2.)*U                   0000
+      BSAVE = G/DELTAU                                                          0000
+      GO TO  (570,580),IROCOL                                                   0000
+  570 CONTINUE                                                                  0000
+      YY=G*MDOT(N)/ (RO*2.0*DELTA(N)*DELETA)                                    0000
+      V(N)= -ESM32N - FSM32N -YY                                                0000
+      A(S,N) = ESM12N + ESM32N + FSM12N + FSM32N + 4.0*YY                       0000
+      DD=8.*H1H3*DELTA(N)*DELETA/XX  + 8.*U*                                    0000
+     1H2(S,N)*DELTA(N)*F(S,N)*DELETA/CKETA(S,N)                                 0000
+      DDQS(N)=DD*QS(N)                                                          0000
+      BS1(S,N)=-DD*SIG*T(S,N)**3-ESM12N-FSM12N-3.0*YY                           0000
+      B(S) = BS1(S,N) - BSAVE                                                   0000
+      IF (IFIRST.EQ.0 )  GO TO 580                                              0000
+  578 DC(S) =-DD  QS(N)+ DS+(-BSAVE-BS1B(S,N))*T(S,N)-AB(S,N)*T(S,NM1)          0000
+     1 -CB(S,N)*T(S,NP1)+ DDQSR(N)                                              0000
+      GO TO 600                                                                 0000
+  580 DSNM12=(H2(S,NM1)+H2(S,N))*(H3(S,NM1)+H3(S,N))*(CKXI(S,NM1)+CKXI(S        0000
+     1,N))/(4.*(H1(S,NM1)+H1(S,N)) *XDXISQ)                                     0000
+      DSNP12=(H2(S,NP1)+H2(S,N))*(H3(S,NP1)+H3(S,N))*(CKXI(S,NP1)+CKXI(S        0000
+     1,N))/(4.*(H1(S,NP1)+H1(S,N)) *XDXISQ)                                     0000
+      DENOM=4.0*(DELTA(  NM1)+DELTA(  N))*(H2(S,NM1)+H1(S,N))                   0000
+      FSNM12= (H3(S,NM1)+H3(S,N))*(H2(S,NM1)+H2(S,N))* (CKXI(S,NM1)             0000
+     1 +CKXI(S,N))*(AA(  NM1)+AA(  N))/DENOM                                    0000
+      DENOM=4.0*(DELTA(  NP1)+DELTA(  N))*(H1(S,NP1)+H1(S,N))                   0000
+      FSNP12= (H3(S,NP1)+H3(S,N))*(H2(S,NP1)+H2(S,N))*(CKXI(S,NP1)              0000
+     1 +CKXI(S,N))*(AA(  NP1)+AA(  N))/DENOM                                    0000
+      DENOM=2.0*XO*DELXI                                                        0000
+      QSN= DELTA(N)*H2(S,N)/(CKETA(S,N)*DENOM)                                  0000
+      QSNP1= DELTA(NP1)* H2(S,NP1)/(CKETA(S,NP1)* DENOM)                        0000
+      QSNM1= DELTA(NM1)* H2(S,NM1)/(CKETA(S,NM1)* DENOM)                        0000
+      DDQSR(N)= FSNP12* (QSNP1*QS(NP1)+ QSN*QS(N))-FSNM12*                      0000
+     1(QSN*QS(N)+ QSNM1*QS(NM1))                                                0000
+      AB(S,N)=DSNM12-FSNM12*SIG*QSNM1*T(S,NM1)**3                               0000
+      CB(S,N)=DSNP12+FSNP12*QSNP1*SIG*T(S,NP1)**3                               0000
+      BS1B(S,N)=-DSNP12-DSNM12+SIG*T(S,N)**3*QSN *(FSNP12-FSNM12)               0000
+      IF (IFIRST.EQ.0 )  GO TO 578                                              0000
+  590 B(N)=BS1B(S,N)-BSAVE                                                      0000
+      DC(N) = -DD QS(N) +(-BSAVE-BS1(S,N))*T(S,N)+DS                            0000
+     1-A(S,N)*T(SM1,N)-V(N)*T(SM2,N)+ DDQSR(N)                                  0000
+  600 CONTINUE                                                                  0000
+  800 RETURN                                                                    0000
+      END                                                                       0000
+      SUBROUTINE COLXL(N1,N2)                                                   0000
+C                                                                               0000
+C COMPUTES COEF. FOR  XI=1 ( X=L)   COLUMN IMPLICIT                             0000
+C IROCOL = 1       COLUMN IMPLICIT                                              0000
+C IROCOL = 2       ROW  IMPLICIT                                                0000
+C                                                                               0000
+      COMMON /PICK/ A(10,20),AA(20),AB(10,20),ALPHA(20),B(20),                  0000
+     2 BS1(10,20),BS1B(10,20),C(10,20),CB(10,20),CK(10),CKETA(10,20),           0000
+     4 CKXI(10,20),COST(20),CP(10,20),D(10,20),DC(20),                          0000
+     6 DELESQ,DELETA,DELTA(20),DELXI,DELXISQ,E(10,20),EIGHT3,                   0000
+     8 ELAM(20),ETA(10),EXPG,F(10,20),GG,GIMACH,H1(10,20),H2(10,20),            0000
+     A H3(10,20),HC(20),HCOMB(20),HE,HW(20),IFIRST,IROCOL,ITC,ITR,ITT,          0000
+     C ITTO,LM1,LM2,MCDOT(20),MDOT(22),MSDOT(20),PID2,PRELOC(20),QC(20),        0000
+     E QC1,QCNET(20),QCOMB(20),QR(20),QR1,QS(20),RNS,RODPC,ROPCPP,              0000
+     G RSS(22),RSTO2,SIG,SIGDP,SIGMA,SIGP,SINT(20),SM1,SM2,TAU,TB,              0000
+     I TT(10,20),TTF(10,20),TWDELXI,TWOGI,V(20),VB(10),X(22),XDXISQ,            0000
+     K XODXI,Y(10,20),Z(20),ZB(10)                                              0000
+      COMMON /INPUTS/ DUMMY(1),AEXP,ALCTAB(10),TTALC(10),MALPHC,NALPHC,         0000
+     2 ALPHAT(10),TALPHA(10),MALPHA,NALPHA,ALSTAB(10),TTALS(10),MALPHS,         0000
+     4 NALPHS,ASEXP,BETA,BEXP,BSEXP,CE,CKETATB(50),TTCKETA(10),                 0000
+     6 ETATAB(5),NCKETA,NETA,CKXITAB(50),TTCKXI(10),XITAB(5),NCKXI,             0000
+     8 NXI,CORDSY,CPDP,CPP,CPTAB(10),TTABCP(10),MCP,NCP,DELTAO(20),             0000
+     A DELTAU,DELTMIN,DTMAX,ELAMTB(28),TTELAM(7),PELAM(4),NELAM,                0000
+     C NPELAM,ENDTAU,EPSONE,EPSONEP,EPSONPP,ERRORT,GAMBAR,GAMINF,               0000
+     E HCOMBTB(28),TTHCOMB(7),PHCOMB(4),NHCOMB,NPHCOMB,HCTAB(28),               0000
+     G TTABHC(7),PHC(4),NHC,NPHC,HETAB(10),TTABHE(10),MHE,NHE,HWTAB(15),        0000
+     I TTABHW(15),MHW,NHW,IADJUST,IPLOT,L,MACHNO,MAXITT,MDMAX,                  0000
+     J MDOTO(20),                                                               0000
+     K MWO2,MWSTR,NTP(7),PLTIME(15),PRAT(20),PRFREQ,PSEXP,PSTAGTB(10),          0000
+     M TTPSTAG(10),MPSTAG,NPSTAG,PTMAX,PTMIN,QCTAB(10),TTABQC(10),MQC,          0000
+     N NQC,QRAT(20),                                                            0000
+     O QRRAT(20),QRTAB(10),TTABQR(10),MQR,NQR,R(20),RIEXP,RNSI,RO,RODP,         0000
+     Q ROP,RS(20),RSSMAX,S,STEBOL,T(10,20),TAUO,TBTAB(10),TTABTB(10),           0000
+     S MTB,NTB,TDPRIME,THETA(20),TPRIME,XO,XORDER,ZS(20),ZSMAX                  0000
+      REAL MDOTO,MDOT,MCDOT,MSDOT,MWSTR,MWO2,MACHNO,MDMAX                       0000
+      DIMENSION AL(10)                                                          0000
+      INTEGER S,SM1,SM2                                                         0000
+  201 FORMAT    (7E18.7)                                                        0000
+C                                                                               0000
+C STATION  (1,L)     X= L  ,   ETA =0,                                          0000
+C                                                                               0000
+      W= 3.0* XO**2 * DELXI                                                     0000
+      U= 8.0*H2(1,L)*H3(1,L) *XO                                                0000
+      XX = 8.0 * H1(1,L) * H3(1,L)* DELTA(L)                                    0000
+      SC=  3.0*  DELTA(L)**2  * DELETA                                          0000
+      G= -U*ROPCPP/W-XX*RODPC/SC - H1(1,L)*H2(1,L)*H3(1,L)*RO*CP(1,L)           0000
+     1 /DELTAU                                                                  0000
+      PART1 =   SC * DELETA                                                     0000
+      E32L=(H1(2,L)+H1(1,L))*(H3(2,L)+H3(1,L))*(CKETA(2,L)+CKETA(1,L))/         0000
+     1(4.*(H2(2,L)+H2(1,L)))*9.                                                 0000
+      E52L=(H1(3,L)+H1(2,L))*(H3(3,L)+H3(2,L))*(CKETA(3,L)+CKETA(2,L))/         0000
+     1(4.*(H2(3,L)+H2(2,L)))                                                    0000
+      D1LM32=(H2(1,LM1)+H2(1,LM2))*(H3(1,LM1)+H3(1,LM2))*(CKXI(1,LM1)+          0000
+     1CKXI(1,LM2))/(4.*(H1(1,LM1)+H1(1,LM2)))                                   0000
+      D1LM12=(H2(1,LM1)+H2(1,L))*(H3(1,LM1)+H3(1,L))*(CKXI(1,LM1)+CKXI(1        0000
+     1,L))/(4.*(H1(1,LM1)+H1(1,L)))                                             0000
+      EPT4=  (-U*SIGP/W  -XX *SIGDP/SC)                                         0000
+      EPTB= EPT4* TB                                                            0000
+      EPT4= EPT4* T(1,L) **3                                                    0000
+      BSAVE = G                                                                 0000
+C                                                                               0000
+      GO TO ( 150,180),IROCOL                                                   0000
+ 150  CONTINUE                                                                  0000
+      BS1(1,L)= -E32L/PART1                                                     0000
+      C(1,L)= (E52L + E32L)/PART1                                               0000
+      Z(L)= -E52L/PART1                                                         0000
+      B(1)= BS1(1,L) + BSAVE  + EPT4                                            0000
+      IF (IFIRST.EQ.0 )  GO TO 180                                              0000
+  178 DC(1) = (BSAVE - BS1B(1,L))* T(1,L) -VB(1)*T(1,LM2)- AB(1,L)*             0000
+     1  T(1,LM1) + EPTB                                                         0000
+      GO TO 198                                                                 0000
+  180 CONTINUE                                                                  0000
+      VB(1)=- D1LM32/(W*DELXI)                                                  0000
+      AB(1,L)= (D1LM32+ 9.0*D1LM12)/(W*DELXI)                                   0000
+      BS1B(1,L)=-9.0*D1LM12/ (W*DELXI)                                          0000
+      IF (IFIRST.EQ.0 )  GO TO 178                                              0000
+  190 B(L) = BS1B(1,L) + BSAVE  + EPT4                                          0000
+      DC(L) = (BSAVE -BS1(1,L))*T(1,L)- C(1,L)*T(2,L) -Z(L)*T(3,L)              0000
+     1 +EPTB                                                                    0000
+  198 CONTINUE                                                                  0000
+      GO TO (202,800),IROCOL                                                    0000
+C                                                                               0000
+C STATION (M,L)    X=L      ETA GREATER THAN 0, LESS THAN 1                     0000
+C                                                                               0000
+      ENTRY  COLXLM                                                             0000
+  202 DO 210 M=1,S                                                              0000
+  210 AL(M) =  H2(M,L)*H3(M,L)/H1(M,L)                                          0000
+      W= 3.0 * XO * DELXI                                                       0000
+      YY = DELTA(L) **2  * DELESQ                                               0000
+      DO 300 M=N1,N2                                                            0000
+      MM1 = M-1                                                                 0000
+      MP1 = M+1                                                                 0000
+      XX = ETA(M) *(AA(L)+ AA(LM1))/(4.0* (DELTA(L)+ DELTA(LM1))*DELETA)        0000
+      XX1= ETA(M) * (AA(LM1)+AA(LM2))/(4.*(DELTA(LM1)+DELTA(LM2)) *             0000
+     1DELETA)                                                                   0000
+      XY = 8.0* D(M,L) * H1(M,L)/ CKXI(M,L)                                     0000
+      AN = ETA(M) *AA(L)* CKXI(M,L)/ DELTA(L)                                   0000
+      AM = AN/(DELTA(L) * DELESQ)                                               0000
+      G = H1(M,L)* H2(M,L)* H3(M,L) * RO * CP(M,L)                              0000
+      AJ =  AN /(4.0* DELETA * XO  * DELXI )                                    0000
+      U1= (H2(MP1,L)+H2(M,L))* (H3(MP1,L)+H3(M,L)) *(ETA(MP1)+ETA(M))           0000
+     1 /(4.0* (H1(MP1,L)+H1(M,L)))*AA(L)                                        0000
+      U2= (H2(MM1,L)+H2(M,L)) * (H3(MM1,L)+H3(M,L)) *(ETA(MM1)+ETA(M))          0000
+     1/ (4.0* (H1(MM1,L) +H1(M,L)))*AA(L)                                       0000
+      DMLM32=(H2(M,LM1)+H2(M,LM2))*(H3(M,LM1)+H3(M,LM2))*(CKXI(M,LM1)+          0000
+     1CKXI(M,LM2))/(4.*(H1(M,LM1)+H1(M,LM2)))                                   0000
+      DMLM12=(H2(M,LM1)+H2(M,L))*(H3(M,LM1)+H3(M,L))*(CKXI(M,LM1)+CKXI(M        0000
+     1,L))/(4.*(H1(M,LM1)+H1(M,L)))                                             0000
+      D1= -9.0*DMLM12* XX* (T(MP1,L)-T(MM1,L)+                                  0000
+     1 T(MP1,LM1) - T(MM1,LM1))                                                 0000
+      D2 = DMLM32 *(-XX1)* (T(MP1,LM1)-T(MM1,LM1)                               0000
+     1 + T(MP1,LM2)- T(MM1,LM2))                                                0000
+      DN =- (D1 +D2)/W                                                          0000
+      DN1 = AJ *( AL(MP1)* (3.0*T(MP1,L)-4.0*T(MP1,LM1)+T(MP1,LM2))             0000
+     1- AL(MM1  ) *(3.0*T(MM1,L)- 4.0*T(MM1,LM1) + T(MM1,LM2)) )                0000
+      BSAVE = -ROPCPP * XY/ W  - G/DELTAU                                       0000
+      EPT4=  -SIGP * XY /W                                                      0000
+      EPTB= EPT4 * TB                                                           0000
+      EPT4= EPT4 * T(M,L) **3                                                   0000
+C                                                                               0000
+      GO TO ( 240, 280),IROCOL                                                  0000
+  240 CONTINUE                                                                  0000
+      EMM12 = (H1(M,L)+H1(MM1,L)) *(H3(M,L)+H3(MM1,L)) *(CKETA(M,L)             0000
+     1 +CKETA(MM1,L))/ (4.0* (H2(M,L)+H2(MM1,L)))                               0000
+      EMP12= (H1(M,L)+H1(MP1,L)) *(H3(M,L)+H3(MP1,L)) *( CKETA(M,L)             0000
+     1+ CKETA(MP1,L))/ (4.0* (H2(M,L) +H2(MP1,L)))                              0000
+      GH =G * ETA(M)* MDOT(L)/(DELTA(L)*RO *2.0* DELETA)                        0000
+      A(M,L)= AM*U2 + EMM12/YY +GH                                              0000
+      C(M,L)= AM*U1 + EMP12/YY -GH                                              0000
+      BS1 (M,L)= AM* (-U1-U2) + (-EMM12 -EMP12)/YY                              0000
+      B(M) = BS1(M,L) + BSAVE  + EPT4                                           0000
+      IF (IFIRST.EQ.0 )  GO TO 280                                              0000
+  278 DC(M) = DN + DN1 + BSAVE*T(M,L) - VB(M  )*T(M,LM2) -AB(M,L)*              0000
+     1 T(M,LM1)- BS1B(M,L)* T(M,L) + EPTB                                       0000
+      GO TO 300                                                                 0000
+  280 CONTINUE                                                                  0000
+      PART =W * XO * DELXI                                                      0000
+      PART2=DMLM32/PART                                                         0000
+      PART1= 9.0 * DMLM12/PART                                                  0000
+      VB(M)    = - PART2                                                        0000
+      AB(M,L)  = PART1  + PART2                                                 0000
+      BS1B(M,L) =- PART1                                                        0000
+      IF (IFIRST.EQ.0 )  GO TO 278                                              0000
+  290 B(L)=  BS1B(M,L) + BSAVE + EPT4                                           0000
+      DC(L)=DN+DN1+(BSAVE-BS1(M,L))*  T(M,L)- A(M,L)*T(MM1,L)- C(M,L)           0000
+     1 * T(MP1,L) + EPTB                                                        0000
+  300 CONTINUE                                                                  0000
+      GO TO  (301,800),IROCOL                                                   0000
+C                                                                               0000
+C STATION (S,L)    XI =1, (X=L)  ,   ETA=1,                                     0000
+C                                                                               0000
+      ENTRY COLXL1                                                              0000
+  301 CONTINUE                                                                  0000
+      W = 3.0 * XODXI                                                           0000
+      WSQ = 3.0* XDXISQ                                                         0000
+      DEDETA =  DELTA(L) * DELETA                                               0000
+      TWDEL =  2.0* DELTA(L)                                                    0000
+      U1=(AA(L)+AA(LM1))/(2.*(DELTA(L)+DELTA(LM1)))                             0000
+      U2=(AA(LM1)+AA(LM2))/(2.*(DELTA(LM1)+DELTA(LM2)))                         0000
+      SP=(H1(S,L)* XODXI+ 2.0*TPRIME)/(H1(S,L)*XODXI)                           0000
+      DHK = DELTA(L) * H2(S,L)/ CKETA(S,L)   *SP                                0000
+      DHK1=  DELTA(LM1)* H2(S,LM1)/ CKETA(S,LM1)                                0000
+      DHK2=  DELTA(LM2)* H2(S,LM2)/ CKETA(S,LM2)                                0000
+      ZZ2 =8.0* DELETA * E(S,L)* DELTA(L) * H2(S,L)* SP/CKETA(S,L)              0000
+      FF=1.0/(3.0*DEDETA**2)                                                    0000
+      H = 8.0 * H1(S,L) * D(S,L)/CKXI(S,L)                                      0000
+      PART = AA(L) /DEDETA                                                      0000
+      ADD = PART/3.0                                                            0000
+      ADD1 = (1.0 + ETA(SM1)) * PART/2.0                                        0000
+      ADD2 =   (ETA(SM1) + ETA(SM2)) *PART/2.0                                  0000
+      PART =       3.0* T(SM1,L)-4.0*T(SM1,LM1)+ T(SM1,LM2)                     0000
+      DSM32L=(H2(SM2,L)+H2(SM1,L))*(H3(SM2,L)+H3(SM1,L))*(CKXI(SM2,L)+          0000
+     1 CKXI(SM1,L))/(4.*(H1(SM2,L)+H1(SM1,L)))                                  0000
+      PART2=DSM32L*(3.*T(SM2,L)-4.*T(SM2,LM1)+T(SM2,LM2)+PART)                  0000
+      DSM12L= (H2(SM1,L)+H2(S,L))* (H3(SM1,L)+H3(S,L))* (CKXI(SM1,L)            0000
+     1 +CKXI(S,L))/(4.0* (H1(SM1,L)+H1(S,L)))                                   0000
+      PART1= -9.0*DSM12L*(3.0*T(S,L)-4.0*T(S,LM1)+T(S,LM2)+PART)                0000
+      GSL =  H1(S,L)* H2(S,L)*H3(S,L)* RO *CP(S,L)                              0000
+      PARTW = -1.0/W + ADD                                                      0000
+      EPT4= SIGP * H*PARTW                                                      0000
+      EPTB = EPT4 * TB                                                          0000
+      EPT4 = EPT4 * T(S,L) **3                                                  0000
+      DN = ADD * (PART1 + PART2)/(4.0* XODXI)  + EPTB                           0000
+      BSAVE=H*ROPCPP*(PARTW)-GSL/DELTAU                                         0000
+      GO TO (550,650),IROCOL                                                    0000
+  550 CONTINUE                                                                  0000
+      AJ=GSL *MDOT(L)/ (RO*2.0*DELTA(L)*DELETA)                                 0000
+      DDSL= -FF*ZZ2                                                             0000
+      QSAVE= DDSL* QS(L)                                                        0000
+      ESM32L=(H1(SM2,L)+H1(SM1,L))* (H3(SM2,L)+H3(SM1,L))* (CKETA(SM2,L)        0000
+     1+ CKETA(SM1,L))/ (4.0*(H2(SM2,L)+H2(SM1,L)))                              0000
+      PARTE3=FF*ESM32L                                                          0000
+      PARTD3= ADD*ADD2*DSM32L                                                   0000
+      V(L)= -PARTD3- PARTE3- AJ                                                 0000
+      ESM12L= (H1(SM1,L)+H1(S,L))*(H3(SM1,L)+H3(S,L))*(CKETA(SM1,L)             0000
+     1 +CKETA(S,L))/(4.0* (H2(SM1,L)+H2(S,L)))                                  0000
+      PARTE1 = FF*9.0*ESM12L                                                    0000
+      PARTD1= ADD*ADD1*9.0*DSM12L                                               0000
+      A(S,L)= PARTD1 + PARTD3 + PARTE3 + PARTE1 + 4.0*AJ                        0000
+      BS1(S,L)= DDSL*SIG*T(S,L)**3 - PARTD1 - PARTE1 -3.0*AJ                    0000
+      B(S)=  BS1(S,L) +  BSAVE + EPT4                                           0000
+      IF (IFIRST.EQ.0 )  GO TO 650                                              0000
+  648 DC( S) =  DN - VB(S  ) *T(S,LM2) -AB(S,L)*T(S,LM1)- (BS1B(S,L)            0000
+     1 -BSAVE) * T(S,L)+ QSAVE + DDQSR                                          0000
+      GO TO 800                                                                 0000
+  650 CONTINUE                                                                  0000
+      WXODXI = W* XODXI                                                         0000
+      DSLM3=(H2(S,LM1)+H2(S,LM2))*(H3(S,LM1)+H3(S,LM2))* (CKXI(S,LM1)           0000
+     1+CKXI(S,LM2))/(4.0* (H1(S,LM1)+H1(S,LM2)))                                0000
+      DSLM1=9.0* (H2(S,L)+H2(S,LM1)) *(H3(S,L)+H3(S,LM1)) *(CKXI(S,L)+          0000
+     1 CKXI (S,LM1))/ (4.0*(H1(S,L)+H1(S,LM1)))                                 0000
+      QSLM1 = (-DSLM1 *U1 + DSLM3* U2) *DHK1/W                                  0000
+      QSLM2 = DSLM3*U2 *DHK2/W                                                  0000
+      QSL=-U1* DHK* DSLM1/W                                                     0000
+      DDQSR= QSLM1* QS(LM1) +QSLM2 *QS(LM2) + QSL*QS(L)                         0000
+      VB(S)=-DSLM3/WXODXI+QSLM2*SIG*T(S,LM2)**3                                 0000
+      AB(S,L)=(DSLM1+DSLM3)/WXODXI+QSLM1*SIG*T(S,LM1)**3                        0000
+      BS1B(S,L)=-DSLM1/WXODXI+QSL*SIG*T(S,L)**3                                 0000
+      IF (IFIRST.EQ.0 )  GO TO 648                                              0000
+  690 B(L) = BS1B(S,L) + BSAVE + EPT4                                           0000
+      DC(L)=DN+QSAVE + DDQSR                                                    0000
+     1 - V(  L) *T(SM2,L) - A(S,L) *T(SM1,L) - (BS1(S,L)-BSAVE)*T(S,L)          0000
+  800 RETURN                                                                    0000
+      END                                                                       0000
+      SUBROUTINE SQAERO                                                         0000
+C                                                                               0000
+C  THIS ROUTINE COMPUTES THE HEATING RATES AND THE MASS LOSS RATES              0000
+C                                                                               0000
+      COMMON /PICK/ A(10,20),AA(20),AB(10,20),ALPHA(20),B(20),                  0000
+     2 BS1(10,20),BS1B(10,20),C(10,20),CB(10,20),CK(10),CKETA(10,20),           0000
+     4 CKXI(10,20),COST(20),CP(10,20),D(10,20),DC(20),                          0000
+     6 DELESQ,DELETA,DELTA(20),DELXI,DELXISQ,E(10,20),EIGHT3,                   0000
+     8 ELAM(20),ETA(10),EXPG,F(10,20),GG,GIMACH,H1(10,20),H2(10,20),            0000
+     A H3(10,20),HC(20),HCOMB(20),HE,HW(20),IFIRST,IROCOL,ITC,ITR,ITT,          0000
+     C ITTO,LM1,LM2,MCDOT(20),MDOT(22),MSDOT(20),PID2,PRELOC(20),QC(20),        0000
+     E QC1,QCNET(20),QCOMB(20),QR(20),QR1,QS(20),RNS,RODPC,ROPCPP,              0000
+     G RSS(22),RSTO2,SIG,SIGDP,SIGMA,SIGP,SINT(20),SM1,SM2,TAU,TB,              0000
+     I TT(10,20),TTF(10,20),TWDELXI,TWOGI,V(20),VB(10),X(22),XDXISQ,            0000
+     K XODXI,Y(10,20),Z(20),ZB(10)                                              0000
+      COMMON /INPUTS/ DUMMY(1),AEXP,ALCTAB(10),TTALC(10),MALPHC,NALPHC,         0000
+     2 ALPHAT(10),TALPHA(10),MALPHA,NALPHA,ALSTAB(10),TTALS(10),MALPHS,         0000
+     4 NALPHS,ASEXP,BETA,BEXP,BSEXP,CE,CKETATB(50),TTCKETA(10),                 0000
+     6 ETATAB(5),NCKETA,NETA,CKXITAB(50),TTCKXI(10),XITAB(5),NCKXI,             0000
+     8 NXI,CORDSY,CPDP,CPP,CPTAB(10),TTABCP(10),MCP,NCP,DELTAO(20),             0000
+     A DELTAU,DELTMIN,DTMAX,ELAMTB(28),TTELAM(7),PELAM(4),NELAM,                0000
+     C NPELAM,ENDTAU,EPSONE,EPSONEP,EPSONPP,ERRORT,GAMBAR,GAMINF,               0000
+     E HCOMBTB(28),TTHCOMB(7),PHCOMB(4),NHCOMB,NPHCOMB,HCTAB(28),               0000
+     G TTABHC(7),PHC(4),NHC,NPHC,HETAB(10),TTABHE(10),MHE,NHE,HWTAB(15),        0000
+     I TTABHW(15),MHW,NHW,IADJUST,IPLOT,L,MACHNO,MAXITT,MDMAX,                  0000
+     J MDOTO(20),                                                               0000
+     K MWO2,MWSTR,NTP(7),PLTIME(15),PRAT(20),PRFREQ,PSEXP,PSTAGTB(10),          0000
+     M TTPSTAG(10),MPSTAG,NPSTAG,PTMAX,PTMIN,QCTAB(10),TTABQC(10),MQC,          0000
+     N NQC,QRAT(20),                                                            0000
+     O QRRAT(20),QRTAB(10),TTABQR(10),MQR,NQR,R(20),RIEXP,RNSI,RO,RODP,         0000
+     Q ROP,RS(20),RSSMAX,S,STEBOL,T(10,20),TAUO,TBTAB(10),TTABTB(10),           0000
+     S MTB,NTB,TDPRIME,THETA(20),TPRIME,XO,XORDER,ZS(20),ZSMAX                  0000
+      REAL MDOTO,MDOT,MCDOT,MSDOT,MWSTR,MWO2,MACHNO,MDMAX                       0000
+      INTEGER S,SM1,SM2                                                         0000
+C LOOK UP  CP,  CPBAR,  CKN  ,ETC.  AS  FUNCTIONS  OF  TEMPERATURE              0000
+      DO 11 N=1,L                                                               0000
+      CALL FTLUP (TT(S,N),ALPHA(N),MALPHA,NALPHA,TALPHA,ALPHAT)                 0000
+   11 CALL FTLUP (TT(S,N),HW(N),MHW,NHW,TTABHW,HWTAB)                           0000
+      IF (ITT.NE.1) GO TO 100                                                   0000
+C LOOK UP  FUNCTIONS  OF  TIME                                                  0000
+      CALL FTLUP (TAU,ALPHAC,MALPHC,NALPHC,TTALC,ALCTAB)                        0000
+      CALL FTLUP (TAU,ALPHAS,MALPHS,NALPHS,TTALS,ALSTAB)                        0000
+      CALL FTLUP (TAU,HE,MHE,NHE,TTABHE,HETAB)                                  0000
+      CALL FTLUP (TAU,PSTAG,MPSTAG,NPSTAG,TTPSTAG,PSTAGTB)                      0000
+      CALL FTLUP (TAU,QC1  ,MQC,NQC,TTABQC,QCTAB)                               0000
+      CALL FTLUP (TAU,QR1,MQR,NQR,TTABQR,QRTAB)                                 0000
+      CALL FTLUP (TAU,TB,MTB,NTB,TTABTB,TBTAB)                                  0000
+      TB =TB**4                                                                 0000
+C                                                                               0000
+C ADJUST CONVECTIVE AND RADIANT HEATING RATES AND THE PRESSURE AND              0000
+C HEATING DISTRIBUTION TO SHAPE CHANGE  (ADJUST  QC1,QR1,PRAT,QRAT )            0000
+C                                                                               0000
+      IF (CORDSY.NE.0) GO TO 20                                                 0000
+      CALL ADJUST                                                               0000
+   20 DO 30 N=1,L                                                               0000
+      DELTAO(N)=DELTA(N)                                                        0000
+      QR(N) = QR1 * QRRAT(N)                                                    0000
+      QC(N)= QC1 *QRAT(N)                                                       0000
+      PRELOC(N) = PSTAG * PRAT(N)                                               0000
+      CALL DISCOT( TT(S,N),PRELOC(N),TTABHC,HCTAB,PHC,11,28,4,HC(N))            0000
+      CALL DISCOT(TT(S,N),PRELOC(N),TTELAM,ELAMTB,PELAM,11,28,4,ELAM(N)         0000
+     1)                                                                         0000
+   30 CALL DISCOT (TT(S,N),PRELOC(N),TTHCOMB,HCOMBTB,PHCOMB,11,28,4,            0000
+     1 HCOMB(N))                                                                0000
+C COMPUTE QS ACROSS FRONT SURFACE                                               0000
+      BAT = 1.0 - BETA                                                          0000
+  100 DO 200 N=1,L                                                              0000
+      CELL =HE /QC(N)                                                           0000
+      CAT = QC(N) * (1.0 - HW(N)/HE)                                            0000
+      BLOCK=(ALPHAC *MCDOT(N) + ALPHAS *MSDOT(N))* CELL                         0000
+      QCNET(N) =  CAT *(1.0 - BAT *(0.6* BLOCK - 0.084 * BLOCK**2)              0000
+     1- BETA * BLOCK)                                                           0000
+      QCOMB(N)= MCDOT(N) * HCOMB(N)                                             0000
+      QS(N)= QCNET(N) + ALPHA* QR(N)- MSDOT(N)*HC(N)+ QCOMB(N)                  0000
+  200 CONTINUE                                                                  0000
+      RETURN                                                                    0000
+C                                                                               0000
+C THIS PART OF ROUTINE  COMPUTES  MDOTS                                         0000
+C                                                                               0000
+      ENTRY  SQAEROM                                                            0000
+      DO 1000 N=1,L                                                             0000
+C                                                                               0000
+C COMPUTE  MSDOT--- MASS LOSS RATE DUE TO SUBLIMATION                           0000
+C                                                                               0000
+      IF (ASEXP ) 310,305,310                                                   0000
+  305 MSDOT(N)=0.0                                                              0000
+      GO TO 330                                                                 0000
+  310 BLOCK =-BSEXP/TTF(S,N)                                                    0000
+      MSDOT(N)=   ASEXP *  PRELOC(N) **PSEXP * EXP(BLOCK)*R(1)**RIEXP           0000
+  330 COLL = (HE-HW(N))/(QCNET(N)*ELAM(N))                                      0000
+C                                                                               0000
+C COMPUTE  MCDOT--- MASS LOSS RATE DUE TO OXIDATION                             0000
+C                                                                               0000
+C HALF ORDER OXIDATION                                                          0000
+C                                                                               0000
+  380 IF (AEXP) 390,385,390                                                     0000
+  385 MCDOT(N) =0.0                                                             0000
+      GO TO 900                                                                 0000
+  390 MCDOT(N) = AEXP * EXP(-BEXP/TTF(S,N))                                     0000
+      IF (XORDER-0.5) 900,400,600                                               0000
+  400 ABC = 4.0* MCDOT(N)**2 * PRELOC(N) * CE * RSTO2                           0000
+      PART = COLL * MCDOT(N)**2 * PRELOC(N) * RSTO2                             0000
+      TEST = ABC/ PART**2                                                       0000
+      IF (TEST.LT.7.E-12)GO TO  420                                             0000
+      MCDOT(N) =.5*((-PART) + SQRT (PART**2 + ABC))                             0000
+      GO TO 900                                                                 0000
+  420 MCDOT(N) = CE /COLL                                                       0000
+      GO TO 900                                                                 0000
+C                                                                               0000
+C FIRST ORDER OXIDATION                                                         0000
+C                                                                               0000
+  600 MCDOT(N) = MCDOT(N)* PRELOC(N)* RSTO2 * CE/(1.0 + MCDOT(N)*PRELOC         0000
+     1 (N)* COLL*RSTO2)                                                         0000
+C                                                                               0000
+C MDOT IS EQUAL TO THE LARGER OF MSDOT AND MCDOT                                0000
+C                                                                               0000
+  900 IF (MCDOT(N).LT.MSDOT(N)) GO TO 950                                       0000
+      MDOT(N)= MCDOT(N)                                                         0000
+      MSDOT(N)= 0.0                                                             0000
+      GO TO 1000                                                                0000
+  950 MDOT(N)= MSDOT(N)                                                         0000
+      MCDOT(N)=0.0                                                              0000
+ 1000 CONTINUE                                                                  0000
+      RETURN                                                                    0000
+      END                                                                       0000
+      SUBROUTINE ADJUST                                                         0000
+C                                                                               0000
+C THIS ROUTINE ADJUSTS THE CONVECTIVE AND RADIANT HEATING RATES,THE PRESSURE    0000
+C AND HEATING DISTRIBUTION TO SHAPE CHANGE (ADJUST QC1,QR1,PRAT,QRAT )          0000
+C                                                                               0000
+      COMMON /PICK/ A(10,20),AA(20),AB(10,20),ALPHA(20),B(20),                  0000
+     2 BS1(10,20),BS1B(10,20),C(10,20),CB(10,20),CK(10),CKETA(10,20),           0000
+     4 CKXI(10,20),COST(20),CP(10,20),D(10,20),DC(20),                          0000
+     6 DELESQ,DELETA,DELTA(20),DELXI,DELXISQ,E(10,20),EIGHT3,                   0000
+     8 ELAM(20),ETA(10),EXPG,F(10,20),GG,GIMACH,H1(10,20),H2(10,20),            0000
+     A H3(10,20),HC(20),HCOMB(20),HE,HW(20),IFIRST,IROCOL,ITC,ITR,ITT,          0000
+     C ITTO,LM1,LM2,MCDOT(20),MDOT(22),MSDOT(20),PID2,PRELOC(20),QC(20),        0000
+     E QC1,QCNET(20),QCOMB(20),QR(20),QR1,QS(20),RNS,RODPC,ROPCPP,              0000
+     G RSS(22),RSTO2,SIG,SIGDP,SIGMA,SIGP,SINT(20),SM1,SM2,TAU,TB,              0000
+     I TT(10,20),TTF(10,20),TWDELXI,TWOGI,V(20),VB(10),X(22),XDXISQ,            0000
+     K XODXI,Y(10,20),Z(20),ZB(10)                                              0000
+      COMMON /INPUTS/ DUMMY(1),AEXP,ALCTAB(10),TTALC(10),MALPHC,NALPHC,         0000
+     2 ALPHAT(10),TALPHA(10),MALPHA,NALPHA,ALSTAB(10),TTALS(10),MALPHS,         0000
+     4 NALPHS,ASEXP,BETA,BEXP,BSEXP,CE,CKETATB(50),TTCKETA(10),                 0000
+     6 ETATAB(5),NCKETA,NETA,CKXITAB(50),TTCKXI(10),XITAB(5),NCKXI,             0000
+     8 NXI,CORDSY,CPDP,CPP,CPTAB(10),TTABCP(10),MCP,NCP,DELTAO(20),             0000
+     A DELTAU,DELTMIN,DTMAX,ELAMTB(28),TTELAM(7),PELAM(4),NELAM,                0000
+     C NPELAM,ENDTAU,EPSONE,EPSONEP,EPSONPP,ERRORT,GAMBAR,GAMINF,               0000
+     E HCOMBTB(28),TTHCOMB(7),PHCOMB(4),NHCOMB,NPHCOMB,HCTAB(28),               0000
+     G TTABHC(7),PHC(4),NHC,NPHC,HETAB(10),TTABHE(10),MHE,NHE,HWTAB(15),        0000
+     I TTABHW(15),MHW,NHW,IADJUST,IPLOT,L,MACHNO,MAXITT,MDMAX,                  0000
+     J MDOTO(20),                                                               0000
+     K MWO2,MWSTR,NTP(7),PLTIME(15),PRAT(20),PRFREQ,PSEXP,PSTAGTB(10),          0000
+     M TTPSTAG(10),MPSTAG,NPSTAG,PTMAX,PTMIN,QCTAB(10),TTABQC(10),MQC,          0000
+     N NQC,QRAT(20),                                                            0000
+     O QRRAT(20),QRTAB(10),TTABQR(10),MQR,NQR,R(20),RIEXP,RNSI,RO,RODP,         0000
+     Q ROP,RS(20),RSSMAX,S,STEBOL,T(10,20),TAUO,TBTAB(10),TTABTB(10),           0000
+     S MTB,NTB,TDPRIME,THETA(20),TPRIME,XO,XORDER,ZS(20),ZSMAX                  0000
+      REAL MDOTO,MDOT,MCDOT,MSDOT,MWSTR,MWO2,MACHNO,MDMAX                       0000
+      INTEGER S,SM1,SM2                                                         0000
+      DIMENSION PSI(20)                                                         0000
+      DIMENSION  UEUI(20), AL(20),AINT(20),YY(3)                                0000
+      NSP1 = NSTEP + 1                                                          0000
+      DO 50 N=1,L                                                               0000
+      RSS(N) =  RS(N) + DELTA(N)*COST(N)                                        0000
+   50 ZS(N) = ZS(N) + (DELTAO(N) - DELTA(N))* SINT(N)                           0000
+      IF (IADJUST.EQ.0) RETURN                                                  0000
+      RNS=(ZS(2)**2 + RSS(2)**2 -2.0*ZS(2)*ZS(1) + ZS(1)**2)/                   0000
+     1(2.0*(ZS(2)-ZS(1)))                                                       0000
+      SQRNS =  SQRT (RNS)                                                       0000
+C ADJUST RATE TO SHAPE CHANGE                                                   0000
+      QC1 = QC1 * SQRT ( RNSI/RNS )                                             0000
+      QR1 = QR1 * RNS/ RNSI                                                     0000
+      PSI(1)=0.                                                                 0000
+      M=1                                                                       0000
+  100 DO 200 N=2,L                                                              0000
+      NP1 = N+1                                                                 0000
+      NM1 = N-1                                                                 0000
+      IF (N.EQ. L) GO TO 130                                                    0000
+      TANPHI = (RSS(NP1) -RSS(NM1))/(ZS(NP1)- ZS(NM1))                          0000
+      GO TO 150                                                                 0000
+  130 TANPHI=  (RSS(L)-RSS(LM1))/(ZS(L)-ZS(LM1))                                0000
+  150 PHI = ATAN (TANPHI)                                                       0000
+      PSI(N)=PID2-PHI                                                           0000
+  200 CONTINUE                                                                  0000
+C NEW PRESSURE  DISTRIBUTION                                                    0000
+      DO 250 N=1,L                                                              0000
+      PRAT(N) =(1.0 - GIMACH) *COS(PSI(N))**2   + GIMACH                        0000
+      UEUI(N) = SQRT((1.0+ TWOGI) *(1.0-PRAT(N)**EXPG) )                        0000
+  250 CONTINUE                                                                  0000
+C OBTAIN  NEW  HEAT DISTRIBUTION                                                0000
+C                                                                               0000
+C EVALUATE INTEGRAL AT L =0                                                     0000
+      AL(1)=0.0                                                                 0000
+      AINTO=PRAT(1)*UEUI(1)* RSS(1)**2                                          0000
+  270 CONTINUE                                                                  0000
+      QRAT(1)=1.0                                                               0000
+      DO 600 N=2,L                                                              0000
+      NM1=N-1                                                                   0000
+      NM2 =N-2                                                                  0000
+      AINT=AINTO                                                                0000
+      SUMH1=0.                                                                  0000
+      IF (N.EQ.2) GO TO 310                                                     0000
+      DO 300 I=2,NM1                                                            0000
+  300 SUMH1=SUMH1+H1(S,I)                                                       0000
+  310 AL(N)= X(2) *(SUMH1 + (H1(S,1)+ H1(S,N))/2.0)                             0000
+C                                                                               0000
+C EVALUATE INTEGRAL                                                             0000
+C                                                                               0000
+      IF (N.EQ. 2)  GO TO 500                                                   0000
+C EVALUATE Y(0),Y(1),Y(3)                                                       0000
+      DO 400 K= 1,3                                                             0000
+      NMK = N- (3-K)                                                            0000
+  400 YY(K)= PRAT(NMK)*UEUI(NMK)*(RSS(NMK)**2)                                  0000
+      COEF2= AL(NM2)- AL(N)                                                     0000
+      P0X0= (AL(NM2)- AL(NM1))* COEF2                                           0000
+      P1X1=(AL(NM1)- AL(NM2))* (AL(NM1)- AL(N))                                 0000
+      P2X2= (AL(N)- AL(NM2)) *  (AL(N)-AL(NM1))                                 0000
+      COEF1= (3.0* AL(NM1)-2.0* AL(NM2) - AL(N))/P0X0                           0000
+      COEF3=(2.0*AL(N) + AL(NM2)- 3.0* AL(NM1))/ P2X2                           0000
+      AINT(N) =((AL(N)- AL(NM2))**2/6.0)* ( YY(1)*COEF1 + YY(2)*COEF2/          0000
+     1 P1X1 + YY(3)* COEF3 )                                                    0000
+      IF (N.GT.3)  AINT (N) = AINT (NM2) + AINT(N)                              0000
+      GO TO 590                                                                 0000
+C N= 2                                                                          0000
+  500 YY(2)= (PRAT(1)+ PRAT(2))*(UEUI(1)+ UEUI(2))*((RSS(1)+ RSS(2))/2.0        0000
+     1  )**2  /4.0                                                              0000
+      YY(3)=   PRAT(2)* UEUI(2) *(RSS(2)**2)                                    0000
+      AINT(N)=AL(2)*(4.0* YY(2) + YY(3))/6.0                                    0000
+  590 ANUM=PRAT(N)*UEUI(N)*RSS(N) *SQRNS                                        0000
+      QRAT(N) = ANUM / (SQRT(AINT(N))* GG)                                      0000
+  600 CONTINUE                                                                  0000
+      RETURN                                                                    0000
+      END                                                                       0000
+      SUBROUTINE ZPRINT                                                         0000
+C                                                                               0000
+      COMMON /PICK/ A(10,20),AA(20),AB(10,20),ALPHA(20),B(20),                  0000
+     2 BS1(10,20),BS1B(10,20),C(10,20),CB(10,20),CK(10),CKETA(10,20),           0000
+     4 CKXI(10,20),COST(20),CP(10,20),D(10,20),DC(20),                          0000
+     6 DELESQ,DELETA,DELTA(20),DELXI,DELXISQ,E(10,20),EIGHT3,                   0000
+     8 ELAM(20),ETA(10),EXPG,F(10,20),GG,GIMACH,H1(10,20),H2(10,20),            0000
+     A H3(10,20),HC(20),HCOMB(20),HE,HW(20),IFIRST,IROCOL,ITC,ITR,ITT,          0000
+     C ITTO,LM1,LM2,MCDOT(20),MDOT(22),MSDOT(20),PID2,PRELOC(20),QC(20),        0000
+     E QC1,QCNET(20),QCOMB(20),QR(20),QR1,QS(20),RNS,RODPC,ROPCPP,              0000
+     G RSS(22),RSTO2,SIG,SIGDP,SIGMA,SIGP,SINT(20),SM1,SM2,TAU,TB,              0000
+     I TT(10,20),TTF(10,20),TWDELXI,TWOGI,V(20),VB(10),X(22),XDXISQ,            0000
+     K XODXI,Y(10,20),Z(20),ZB(10)                                              0000
+      COMMON /INPUTS/ DUMMY(1),AEXP,ALCTAB(10),TTALC(10),MALPHC,NALPHC,         0000
+     2 ALPHAT(10),TALPHA(10),MALPHA,NALPHA,ALSTAB(10),TTALS(10),MALPHS,         0000
+     4 NALPHS,ASEXP,BETA,BEXP,BSEXP,CE,CKETATB(50),TTCKETA(10),                 0000
+     6 ETATAB(5),NCKETA,NETA,CKXITAB(50),TTCKXI(10),XITAB(5),NCKXI,             0000
+     8 NXI,CORDSY,CPDP,CPP,CPTAB(10),TTABCP(10),MCP,NCP,DELTAO(20),             0000
+     A DELTAU,DELTMIN,DTMAX,ELAMTB(28),TTELAM(7),PELAM(4),NELAM,                0000
+     C NPELAM,ENDTAU,EPSONE,EPSONEP,EPSONPP,ERRORT,GAMBAR,GAMINF,               0000
+     E HCOMBTB(28),TTHCOMB(7),PHCOMB(4),NHCOMB,NPHCOMB,HCTAB(28),               0000
+     G TTABHC(7),PHC(4),NHC,NPHC,HETAB(10),TTABHE(10),MHE,NHE,HWTAB(15),        0000
+     I TTABHW(15),MHW,NHW,IADJUST,IPLOT,L,MACHNO,MAXITT,MDMAX,                  0000
+     J MDOTO(20),                                                               0000
+     K MWO2,MWSTR,NTP(7),PLTIME(15),PRAT(20),PRFREQ,PSEXP,PSTAGTB(10),          0000
+     M TTPSTAG(10),MPSTAG,NPSTAG,PTMAX,PTMIN,QCTAB(10),TTABQC(10),MQC,          0000
+     N NQC,QRAT(20),                                                            0000
+     O QRRAT(20),QRTAB(10),TTABQR(10),MQR,NQR,R(20),RIEXP,RNSI,RO,RODP,         0000
+     Q ROP,RS(20),RSSMAX,S,STEBOL,T(10,20),TAUO,TBTAB(10),TTABTB(10),           0000
+     S MTB,NTB,TDPRIME,THETA(20),TPRIME,XO,XORDER,ZS(20),ZSMAX                  0000
+      REAL MDOTO,MDOT,MCDOT,MSDOT,MWSTR,MWO2,MACHNO,MDMAX                       0000
+      INTEGER S,SM1,SM2                                                         0000
+      DIMENSION QRR(20)                                                         0000
+      EQUIVALENCE  (QRR(1),H1(1,1))                                             0000
+      DO 10 N=1,L                                                               0000
+   10 QRR(N)= SIG * TTF(S,N)**4                                                 0000
+      WRITE (6, 98)                                                             0000
+   98 FORMAT ( *0*)                                                             0000
+      WRITE (6,100) TAU,DELTAU                                                  0000
+  100 FORMAT (*0TAU=*F10.4,14X*DELTAU=*F9.6)                                    0000
+      WRITE (6,101)  QC1, QR1, HE                                               0000
+  101 FORMAT (*0*14X*QC=*E11.4,5X,*QR=*E11.4,5X,*HE=*E11.4)                     0000
+C                                                                               0000
+      WRITE (6,102) T(S,1)                                                      0000
+  102 FORMAT (15X*T(S,1)=*E11.4)                                                0000
+      WRITE (6,105)                                                             0000
+  105 FORMAT (*0*14X*TEMPERATURE (M,N)*)                                        0000
+      WRITE (6,110)(X (N),N=1,L)                                                0000
+  110 FORMAT (* ETA*6X*X=*15F8.5/(12X,15F8.5))                                  0000
+      DO 115 M=1,S                                                              0000
+      MM= S- (M-1)                                                              0000
+  115 WRITE  (6,120) ETA(MM),(TTF(MM,N),N=1,L)                                  0000
+  120 FORMAT (F6.3,6X15F8.1/(12X,15F8.1))                                       0000
+  140 FORMAT (* ETA*6X*X=*10(F9.5,3X)/(12X,10(F9.5,3X)))                        0000
+  150 FORMAT (F6.3,6X10E12.4/(12X,10E12.4))                                     0000
+C                                                                               0000
+      WRITE (6,155)                                                             0000
+  155 FORMAT (*0*14X*MDOT(N)--SURFACE MASS LOSS RATE*)                          0000
+      WRITE (6,140) (X (N),N=1,L)                                               0000
+      WRITE (6,150) ETA(S),(MDOT(N),N=1,L)                                      0000
+C                                                                               0000
+      WRITE (6,165)                                                             0000
+  165 FORMAT (*0*14X*MCDOT(N)--SURFACE MASS LOSS RATE DUE TO OXIDATION*)        0000
+      WRITE (6,150)  ETA(S),(MCDOT(N),N=1,L)                                    0000
+C                                                                               0000
+      WRITE (6,170)                                                             0000
+  170 FORMAT (*0*14X*DELTA(N)--MATERIAL THICKNESS*)                             0000
+      WRITE (6,150)  ETA(S), (DELTA(N),N=1,L)                                   0000
+C                                                                               0000
+      WRITE (6,175)                                                             0000
+  175 FORMAT (*0*14X*QRAT(N)--RATIO OF LOCAL HEATING TO STAGNATION HEATI        0000
+     1NG*)                                                                      0000
+      WRITE (6,150) ETA(S),( QRAT(N),N=1,L)                                     0000
+C                                                                               0000
+      WRITE(6,176)                                                              0000
+  176 FORMAT(*0*14X*PRAT(N)--RATIO OF LOCAL PRESS TO STAG PRESS*)               0000
+      WRITE(6,150) ETA(S),(PRAT(N),N=1,L)                                       0000
+C                                                                               0000
+      WRITE (6,180)                                                             0000
+  180 FORMAT (*0*14X*QS(N)--NET HEAT INPUT*)                                    0000
+      WRITE (6,150) ETA(S), (QS    (N),N=1,L)                                   0000
+C                                                                               0000
+      WRITE (6,190)                                                             0000
+  190 FORMAT (*0*14X*QRR(N)--RERADIATION*)                                      0000
+      WRITE (6,150)  ETA(S), (QRR(N),N=1,L)                                     0000
+C                                                                               0000
+      WRITE (6,200)                                                             0000
+  200 FORMAT (*0*14X*QCOMB(N)--HEAT DUE TO COMBUSTION FOR OXIDATION*)           0000
+      WRITE (6,150) ETA(S), (QCOMB(N),N=1,L)                                    0000
+C                                                                               0000
+      WRITE (6,400) ITC,ITR,ITTO ,IROCOL                                        0000
+  400 FORMAT (*0     NO. ITER. COL.=*I4,5X,*NO. ITER. ROW=*I4,5X,*TOTAL         0000
+     1NO. ITER.=*I8,5X*IROCOL=*I3)                                              0000
+      RETURN                                                                    0000
+      END                                                                       0000
+      SUBROUTINE SOLMAT(A,B,C,Z,V,D,T  ,N)                                      0000
+      DIMENSION W(20),SV(20),G(20),T(20),A(20),B(20),C(20),D(20)                0000
+      COMMON /HOLD/ TMIN                                                        0000
+C                                                                               0000
+C THIS ROUTINE SOLVES THE TRIDIAGONAL (EXCEPT TWO ELEMENTS)   MATRIX            0000
+C                                                                               0000
+      W(1)=B(1)                                                                 0000
+      SV(1)= C(1) / B(1)                                                        0000
+      X= Z/B(1)                                                                 0000
+      G(1)= D(1)/W(1)                                                           0000
+      NM1=N-1                                                                   0000
+      NM2 = N-2                                                                 0000
+      DO 100 K=2,N                                                              0000
+      KM1 = K-1                                                                 0000
+      IF (K.EQ.N) GO TO 20                                                      0000
+      W(K) = B(K) - A(K)*SV(KM1)                                                0000
+      IF (K.EQ.2) GO TO 10                                                      0000
+    4 SV(K)= C(K)/W(K)                                                          0000
+    5 G(K) = (D(K)- A(K)*G(KM1))/W(K)                                           0000
+      GO TO 100                                                                 0000
+   10 SV(2) =(C(2)-X*A(2))/W(2)                                                 0000
+      GO TO 5                                                                   0000
+   20 W(N)= B(N)- (A(N)- V*SV(NM2))*SV(NM1)                                     0000
+   30 G(N)=(D(N)-A(N)*G(KM1)-V*G(NM2)+V*SV(NM2)*G(KM1))/W(N)                    0000
+  100 CONTINUE                                                                  0000
+      T(N)=G(N)                                                                 0000
+      DO 200 K=1,NM2                                                            0000
+      KK= N-K                                                                   0000
+      T(KK)= G(KK)- SV(KK)*T(KK+1)                                              0000
+  200 CONTINUE                                                                  0000
+      T(1)= G(1)- SV(1)*T(2)- X*T(3)                                            0000
+      IF (TMIN.EQ.0.) RETURN                                                    0000
+      DO 300 I=1,N                                                              0000
+      IF(T(I) .LT.TMIN)  T(I)=TMIN                                              0000
+  300 CONTINUE                                                                  0000
+      RETURN                                                                    0000
+      END                                                                       0000
+      SUBROUTINE FTLUP (X,Y,M,N,VARI,VARD)                                      0000
+*********DOCUMENT DATE  7/7/69     SUBROUTINE REVISED  7/7/69  *********        0000
+*        MODIFICATION OF LIBRARY INTERPOLATION SUBROUTINE  FTLUP                0000
+      DIMENSION VARI(1),VARD(1),V(3),YY(2)                                      0000
+      DIMENSION II(43)                                                          0000
+*                                                                               0000
+*      INITIALIZE ALL INTERVAL POINTERS TO -1.0   FOR MONOTONICITY CHECK        0000
+      DATA (II(J),J=1,43)/43*-1/                                                0000
+      MA=IABS(M)                                                                0000
+*                                                                               0000
+*            ASSIGN INTERVAL POINTER FOR GIVEN VARI TABLE                       0000
+*      THE SAME POINTER WILL BE USED ON A GIVEN VARI TABLE EVERY TIME           0000
+      LI=MOD(LOCF(VARI(1)),43)+1                                                0000
+      I=II(LI)                                                                  0000
+      IF (I.GE.0) GO TO 10                                                      0000
+      IF (N.LT.2) GO TO 10                                                      0000
+*                                                                               0000
+* MONOTONICITY CHECK                                                            0000
+      IF (VARI(2)-VARI(1)) 1,1,3                                                0000
+*  ERROR IN MONOTONICITY                                                        0000
+    2 K=LOCF (VARI(1))                                                          0000
+      PRINT 102,J,K,(VARI(J),J=1,N),(VARD(J),J=1,N)                             0000
+  102 FORMAT (1H1,* TABLE BELOW OUT OF ORDER FOR FTLUP  AT POSITION  *          0000
+     1,I5,/* X TABLE IS STORED IN LOCATION *,O6,//(8G15.8))                     0000
+      STOP                                                                      0000
+*  MONOTONIC DECREASING                                                         0000
+    1 DO 5 J=2,N                                                                0000
+      IF (VARI(J)-VARI(J-1))5,2,2                                               0000
+    5 CONTINUE                                                                  0000
+      GO TO 10                                                                  0000
+*  MONOTONIC INCREASING                                                         0000
+    3 DO 6 J=2,N                                                                0000
+      IF (VARI(J)-VARI(J-1))2,2,6                                               0000
+    6 CONTINUE                                                                  0000
+*                                                                               0000
+* INTERPOLATION                                                                 0000
+   10 IF (I.LE.0) I=1                                                           0000
+      IF (I.GE.N) I=N-1                                                         0000
+      IF (N.LE.1) GO TO 8                                                       0000
+      IF (MA.NE.0) GO TO 99                                                     0000
+*  ZERO ORDER                                                                   0000
+    8 Y=VARD(1)                                                                 0000
+      GO TO 800                                                                 0000
+*  LOCATE I INTERVAL (X(I).LE.X.LT.X(I+1))                                      0000
+   99 IF ((VARI(I)-X)*(VARI(I+1)-X)) 61,61,40                                   0000
+*  IN GIVES DIRECTION FOR SEARCH OF INTERVALS                                   0000
+   40 IN=SIGN(1.0,(VARI(I+1)-VARI(I))*(X-VARI(I)))                              0000
+*  IF X OUTSIDE ENDPOINTS, EXTRAPOLATE FROM END INTERVAL                        0000
+   41 IF ((I+IN).LE.0) GO TO 61                                                 0000
+      IF ((I+IN).GE.N) GO TO 61                                                 0000
+      I=I+IN                                                                    0000
+      IF ((VARI(I)-X)*(VARI(I+1)-X)) 61,61,41                                   0000
+   61 IF (MA.EQ.2) GO TO 200                                                    0000
+*                                                                               0000
+* FIRST ORDER                                                                   0000
+      Y=(VARD(I)*(VARI(I+1)-X)-VARD(I+1)*(VARI(I)-X))/(VARI(I+1)-VARI(I)        0000
+     1   )                                                                      0000
+      GO TO 800                                                                 0000
+*                                                                               0000
+* SECOND ORDER                                                                  0000
+  200 IF (N.EQ.2) GO TO 2                                                       0000
+      IF (I.EQ.(N-1)) GO TO 209                                                 0000
+      IF (I.EQ.1) GO TO 201                                                     0000
+*  PICK THIRD POINT                                                             0000
+      SK= VARI(I+1)-VARI(I)                                                     0000
+      IF ((SK*(X-VARI(I-1))).LT.(SK*(VARI(I+2)-X))) GO TO 209                   0000
+  201 L=I                                                                       0000
+      GO TO 702                                                                 0000
+  209 L=I-1                                                                     0000
+  702 V(1)=VARI(L)-X                                                            0000
+      V(2)=VARI(L+1)-X                                                          0000
+      V(3)=VARI(L+2)-X                                                          0000
+      YY(1)=(VARD(L)*V(2)-VARD(L+1)*V(1))/(VARI(L+1)-VARI(L))                   0000
+      YY(2)=(VARD(L+1)*V(3)-VARD(L+2)*V(2))/(VARI(L+2)-VARI(L+1))               0000
+      Y=(YY(1)*V(3)-YY(2)*V(1))/(VARI(L+2)-VARI(L))                             0000
+  800 II(LI)=I                                                                  0000
+      RETURN                                                                    0000
+      END                                                                       0000
+C   1E1.2   0                                         DISCOT                    0000
+      SUBROUTINE DISCOT (XA,ZA,TABX,TABY,TABZ,NC,NY,NZ,ANS)                     0000
+********* DOCUMENT DATE 08-01-68   SUBROUTINE REVISED 08-01-68 *********        0000
+C     THE DIMENSIONS IN THIS SUBROUTINE ARE ONLY DUMMY DIMENSIONS.              0000
+      DIMENSION TABX(2),TABY(2),TABZ(2),NPX(8),NPY(8),YY(8)                     0000
+C     DIMENSION TABX(2),TABY(2),TABZ(2),NPX(8),NPY(8),YY(8)                     0000
+      CALL UNS (NC,IA,IDX,IDZ,IMS)                                              0000
+      IF (NZ-1)   5,5,10                                                        0000
+    5 CALL DISSER (XA,TABX(1),1,NY,IDX,NN)                                      0000
+      NNN=IDX+1                                                                 0000
+      CALL LAGRAN (XA,TABX(NN),TABY(NN),NNN,ANS)                                0000
+      GOTO 70                                                                   0000
+   10 ZARG=ZA                                                                   0000
+      IP1X=IDX+1                                                                0000
+      IP1Z=IDZ+1                                                                0000
+      IF (IA)   15,25,15                                                        0000
+   15 IF (ZARG-TABZ(NZ))   25,25,20                                             0000
+   20 ZARG=TABZ(NZ)                                                             0000
+   25 CALL DISSER (ZARG,TABZ(1),1,NZ,IDZ,NPZ)                                   0000
+      NX=NY/NZ                                                                  0000
+      NPZL=NPZ+IDZ                                                              0000
+      I=1                                                                       0000
+      IF (IMS)   30,30,40                                                       0000
+   30 CALL DISSER (XA,TABX(1),1,NX,IDX,NPX(1))                                  0000
+      DO 35 JJ=NPZ,NPZL                                                         0000
+      NPY(I)=(JJ-1)*NX+NPX(1)                                                   0000
+      NPX(I)=NPX(1)                                                             0000
+   35 I=I+1                                                                     0000
+      GOTO 50                                                                   0000
+   40 DO 45 JJ=NPZ,NPZL                                                         0000
+      IS=(JJ-1)*NX+1                                                            0000
+      CALL DISSER (XA,TABX(1),IS,NX,IDX,NPX(I))                                 0000
+      NPY(I)=NPX(I)                                                             0000
+   45 I=I+1                                                                     0000
+   50 DO 55 LL=1,IP1Z                                                           0000
+      NLOC=NPX(LL)                                                              0000
+      NLOCY=NPY(LL)                                                             0000
+   55 CALL LAGRAN(XA,TABX(NLOC),TABY(NLOCY),IP1X,YY(LL))                        0000
+      CALL LAGRAN (ZARG,TABZ(NPZ),YY(1),IP1Z,ANS)                               0000
+   70 RETURN                                                                    0000
+      END                                                                       0000
+      SUBROUTINE UNS (IC,IA,IDX,IDZ,IMS)                                        0000
+      IF (IC)   5,5,10                                                          0000
+    5 IMS=1                                                                     0000
+      NC=-IC                                                                    0000
+      GOTO 15                                                                   0000
+   10 IMS=0                                                                     0000
+      NC=IC                                                                     0000
+   15 IF (NC-100)   20,25,25                                                    0000
+   20 IA=0                                                                      0000
+      GOTO 30                                                                   0000
+   25 IA=1                                                                      0000
+      NC=NC-100                                                                 0000
+   30 IDX=NC/10                                                                 0000
+      IDZ=NC-IDX*10                                                             0000
+      RETURN                                                                    0000
+      END                                                                       0000
+      SUBROUTINE DISSER (XA,TAB,I,NX,ID,NPX)                                    0000
+      DIMENSION TAB(2)                                                          0000
+C     DIMENSION TAB(2)                                                          0000
+      NPT=ID+1                                                                  0000
+      NPB=NPT/2                                                                 0000
+      NPU=NPT-NPB                                                               0000
+      IF (NX-NPT)   10,5,10                                                     0000
+    5 NPX=I                                                                     0000
+      RETURN                                                                    0000
+   10 NLOW=I+NPB                                                                0000
+      NUPP=I+NX-(NPU+1)                                                         0000
+      DO 15 II=NLOW,NUPP                                                        0000
+      NLOC=II                                                                   0000
+      IF (TAB(II)-XA)   15,20,20                                                0000
+   15 CONTINUE                                                                  0000
+      NPX=NUPP-NPB+1                                                            0000
+      RETURN                                                                    0000
+   20 NL=NLOC-NPB                                                               0000
+      NU=NL+ID                                                                  0000
+      DO 25 JJ=NL,NU                                                            0000
+      NDIS=JJ                                                                   0000
+      IF (TAB(JJ)-TAB(JJ+1))   25,30,25                                         0000
+   25 CONTINUE                                                                  0000
+      NPX=NL                                                                    0000
+      RETURN                                                                    0000
+   30 IF (TAB(NDIS)-XA)   40,35,35                                              0000
+   35 NPX=NDIS-ID                                                               0000
+      RETURN                                                                    0000
+   40 NPX=NDIS+1                                                                0000
+      RETURN                                                                    0000
+      END                                                                       0000
+      SUBROUTINE LAGRAN (XA,X,Y,N,ANS)                                          0000
+      DIMENSION X(2),Y(2)                                                       0000
+C     DIMENSION X(2),Y(2)                                                       0000
+      SUM=0.0                                                                   0000
+      DO 3 I=1,N                                                                0000
+      PROD=Y(I)                                                                 0000
+      DO 2 J=1,N                                                                0000
+      A=X(I)-X(J)                                                               0000
+      IF (A)   1,2,1                                                            0000
+    1 B=(XA-X(J))/A                                                             0000
+      PROD=PROD*B                                                               0000
+    2 CONTINUE                                                                  0000
+    3 SUM=SUM+PROD                                                              0000
+      ANS=SUM                                                                   0000
+      RETURN                                                                    0000
+      END                                                                       0000
+1 GRAPHITE HEMISPHERE - 30 DEG. CONE                                            0000
+ $D2430                                                                         0000
+  ALCTAB=1.,   ALPHAT=1.,       ALSTAB=1.,                                      0000
+  CE=.232,                                                                      0000
+  GAMBAR=1.4,   GAMINF=1.4,                                                     0000
+  MACHNO=20.,                                                                   0000
+  HETAB=.92976E+8,   TTABHE=100.,                                               0000
+  NHW=14, MHW=1, HWTAB=-.2324E+5,.258E+6,.5555E+6,.8717E+6,.12071E+7,.15457E+7, 0000
+  .1901E+7,.22779E+7,.27265E+7,.3217E+7,.3951E+7,.4788E+7,.5927E+7,.6973E+7,    0000
+  TTABHW=277.8,555.6,833.3,1111.1,1388.9,1666.7,1944.4,2222.2,2500.,2777.8,     0000
+  3055.6,3333.3,3611.1,3888.9,                                                  0000
+  MWO2=32.,    MWSTR=32.,                                                       0000
+  PSTAGTB=1.,                                                                   0000
+  NQC=3,  MQC=1, QCTAB=.408E+4,.28E+8,.28006E+8,  TTABQC=0,2,1000.,             0000
+  EPSONE=.98,    STEBOL=.56697E-7,                                              0000
+  QRRAT=1,.5,                                                                   0000
+  NQR=3,   MQR=1,  TTABQR=0,3,1000,    QRTAB=0,2*.1135E+8,                      0000
+  AEXP=.48825E+11,       BEXP=.425E+5,    ASEXP=273560.,   BSEXP=61670.,        0000
+  XORDER=1.,                                                                    0000
+  NCKETA=20,   CKETATB=168.4,103.5,85.4,74.8,62.35,54.87,52.38,51.1,50.51,      0000
+  49.26,168.4,103.5,85.4,74.8,62.35,54.87,52.38,51.1,50.51,49.26,               0000
+  NETA=2,   ETATAB=0,5,   TTCKETA=277.8,555.6,694.4,833.3,1111.1,1388.9,        0000
+  1666.7,1944.4,2222.2,3333.3,                                                  0000
+  NCKXI=20,   CKXITAB=168.4,103.5,85.4,74.8,62.35,54.87,52.38,51.1,50.51,49.26, 0000
+  168.4,103.5,85.4,74.8,62.35,54.87,52.38,51.1,50.51,49.26,                     0000
+  NXI=2,   XITAB=0,5.,   TTCKXI=277.8,555.6,694.4,833.3,1111.1,1388.9,1666.7,   0000
+  1944.4,2222.2,3333.3,                                                         0000
+  NCP=9,  MCP=1, CPTAB=669.4,1046.,1297.,1506.,1673.6,1841.,1966.,2092.,2218.,  0000
+  TTABCP= 277.8,416.7,555.6,694.4,833.3,1111.1,1388.9,1944.4,2777.8,            0000
+  NELAM=8,   ELAMTB=28*.75,   NPELAM=4,  PELAM=.01,.1,1.,10.,                   0000
+  TTELAM=277.8,555.6,833.3,1111.1,1388.9,1666.7,1944.4,                         0000
+  NHCOMB=28,   HCOMBTB=.9553E+7,.99158E+7,.10353E+8,.11322E+8,.14562E+8,        0000
+  .23755E+8,.31472E+8,.9553E+7,.99158E+7,.10353E+8,.11322E+8,.14562E+8,         0000
+  .23755E+8,.31472E+8,.9553E+7,.99158E+7,.10353E+8,.11322E+8,.14562E+8,         0000
+  .23755E+8,.31472E+8,.9553E+7,.99158E+7,.10353E+8,.11322E+8,.14562E+8,         0000
+  .23755E+8,.31472E+8,   NPHCOMB=4, PHCOMB=.1,1.,10.,100.,                      0000
+  TTHCOMB=1000.,1500.,2000.,2500.,3000.,3500.,4000.,                            0000
+  NHC=28, HCTAB=28*.27893E+8, NPHC=4, PHC=.01,.1,1.,10.,                        0000
+  TTABHC=277.8,555.6,833.3,1111.1,2222.2,3333.3,3888.9,                         0000
+  RO=1698.,                                                                     0000
+  T=200*300,                                                                    0000
+  DELTAO= 10*.01905,    DELTMIN=.1E-7,     XO=.4645,                            0000
+  L=10,   S=5,                                                                  0000
+  R=4*.5,6*.1E+49,                                                              0000
+  RS=0,.05063,.09488,.12951,.15542,.18123,.20705,.23284,.25865,.28447,          0000
+  THETA=90,70.6,51.2,31.8,6*30,                                                 0000
+  PSEXP=-.17,    RIEXP=.5,    RNSI=.17145,                                      0000
+  ZS=0,.009735,.037271,.0811,.12629,.171,.21568,.2603,.3048,.34973,             0000
+  DELTAU=.0078125,    DTMAX=.0625,    ENDTAU=60.,  PRFREQ=4.,                   0000
+  ERRORT=.001,   MAXITT=5,                                                      0000
+  IADJUST=1,                                                                    0000
+  IPLOT=1, MDMAX=.4, NTP=2,1,5,  PLTIME=0,15,30,45,60, PTMAX=5000, RSSMAX=.4,   0000
+  ZSMAX=.4,                                                                     0000
+ $                                                                              0000

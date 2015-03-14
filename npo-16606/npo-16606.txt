@@ -1,0 +1,54 @@
+ LMSS SERVICES FINANCIAL REPORT PROGRAM
+
+( Cal Tech/Jet Propulsion Lab. )
+
+     The objective of this Services Finance Report program is to provide a
+means for comparing alternative designs of LMSS systems or other services
+systems. This program is actually a Multiplan worksheet. The labels used
+in the worksheet were chosen for a satellite-based cellular communication
+service (LMSS - Land Mobile Satellite System) but the analysis is not re-
+stricted to such cases. A comprehensive financial model is used to calcu-
+late a 'figure of merit' which can be used to compare effects of equipment
+and operating costs, pricing strategy, and customer demand for different
+systems. The program also calculates the price that a company would have
+to charge customers to meet all its expenses and make a specified profit. A
+price estimate can be obtained for almost any service which is heavily de-
+pendent on capital investment and which has operating costs that depend on
+the amount of service sold.
+
+     The economic analysis has two main components: supplier finances and
+customer finances. Supplier finances include amortization, interest, in-
+surance, taxes, and operating and maintenance expenses. Customer finances
+include usage rate, subscription fees, equipment costs, and estimated
+traffic. Prices can defined as real or nominal to account for effects of es-
+calation and inflation, and the profits can be regulated or unrestricted
+
+     This program is written for interactive execution with Multiplan (ver-
+sion 1.2) and has been implemented on an IBM PC series computer operating
+under DOS (version 2.11). The LMSS worksheet has a space requirement of ap-
+proximately 38K of 8 bit bytes. This worksheet was developed in 1984.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: MULTIPLAN
+
+MACHINE REQUIREMENTS: IBM PC
+
+PROGRAM SIZE: APPROXIMATELY 1,000 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 5.25 Inch IBM PC DOS Format Diskette
+
+PROGRAM NUMBER: NPO-16606
+
+DOMESTIC - DOCUMENTATION PRICE: $22.00    PROGRAM PRICE: $100.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $44.00   PROGRAM PRICE: $200.00
+
+
+
+                                        1
+

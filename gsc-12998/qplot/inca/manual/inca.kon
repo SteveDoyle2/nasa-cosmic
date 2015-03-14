@@ -1,0 +1,15 @@
+@[qplot.inca.help]INTRO.HLP
+@QHELPLIBHOME:GINMODE.HLP
+@[qplot.inca.help]ANALYZE.HLP
+@[qplot.inca.help]CURVE.HLP
+@[qplot.inca.help]FUNCTION.HLP
+@[qplot.inca.help]PROJECT.HLP
+@[qplot.inca.help]MISC.HLP
+@[qplot.inca.help]PLOT.HLP
+@[qplot.inca.help]SET.HLP
+@QHELPLIBHOME:UTILITIES.HLP
+@[qplot.inca.help]COLORS.HLP
+@QHELPLIBHOME:UTILITIES.END
+@[qplot.inca.help]VIEW.HLP
+@[qplot.inca.help]XIT.HLP
+@[qplot.inca.help]BIBLIO.HLP

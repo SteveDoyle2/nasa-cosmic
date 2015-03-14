@@ -1,0 +1,528 @@
+   (* $INCLUDE : 'compile.inc' *)
+   (* $INCLUDE : 'getparam.int' *)
+   (* $INCLUDE : 'utility.int' *)
+   (* $INCLUDE : 'vbpas.int' *)
+   (* $INCLUDE : 'display.int' *)
+   (* $INCLUDE : 'dialog.int' *)
+   (* $INCLUDE : 'sfpas.int' *)
+   (* $INCLUDE : 'option.int' *)
+   (* $INCLUDE : 'execute.int' *)
+   (* $INCLUDE : 'macexec.int' *)
+   (* $INCLUDE : 'macpict.int' *)
+
+   implementation of macpict;
+
+      uses getparam;
+
+      uses utility;
+
+      uses vbpas;
+
+      uses display;
+
+      uses dialog;
+
+      uses sfpas;
+
+      uses option;
+
+      uses execute;
+
+      uses macexec;
+
+   procedure skelemac; extern;
+
+   procedure picture; extern;
+
+
+
+   procedure get_list;
+
+   var
+	 current  : entity;
+	 i,j,u	  : integer;
+	 newnode  : entity;
+	 numtype  : byte;
+	 numberx  : integer;
+	 numbery  : integer;
+	 numxtex  : integer;
+	 numytex  : integer;
+
+
+   begin
+   current := first^.up;
+   delete (current );
+   current := first^.down;
+   numberx := current^.x;
+   numbery := current^.y;
+   numxtex := current^.xtext;
+   numytex := current^.ytext;
+   for i := 1 to 8 do
+     begin
+       add_node ( current, current^.etype );
+       with current^ do
+	 begin
+	   x := numberx + (i mod 3) * 198;
+	   y := numbery + (i div 3) * 10;
+	   xtext := numxtex + (i mod 3) * 27;
+	   ytext := numytex + (i div 3) * 1 ;
+	 end;
+     end;
+   current := current^.down;
+   for i := 1 to 3 do
+     begin
+       add_node ( current, current^.etype );
+	   with current^ do
+	     begin
+	       x := up^.x;
+	       y := up^.y + 10;
+	       xtext := up^.xtext;
+	       ytext := up^.ytext + 1;
+	     end;
+     end;
+   current := current^.down;
+   numberx := current^.x;
+   numbery := current^.y;
+   numxtex := current^.xtext;
+   numytex := current^.ytext;
+   j := ord( total );
+   Case j of
+     7	: u := 1;
+     8	: u := 2;
+     9	: u := 3;
+    10	: u := 4;
+    11	: u := 5;
+    12	: u := 6;
+    end;
+   for i := 1 to j * 4 - 1 do
+     begin
+       add_node ( current, current^.etype );
+       with current^ do
+	 begin
+	   x := numberx + xy[9] * (i mod j);
+	   y := numbery + (i div j) * 10;
+	   if j <= 6  then
+	     begin
+	       xtext := numxtex + 10 *(i mod j);
+	       ytext := numytex + 1 *(i div j);
+	     end;
+	   if j > 6  then
+	     begin
+	       if (i+u) mod j = 0  then
+		 begin
+		 xtext := numxtex;
+		 ytext := up^.ytext + 6;
+		 end;
+	       if (i mod j) = 0  then
+		 begin
+		 xtext := numxtex;
+		 ytext := up^.ytext - 5;
+		 end;
+	       if ((i+u) mod j <> 0) and (i mod j <> 0)  then
+		 begin
+		 xtext := up^.xtext + 10;
+		 ytext := up^.ytext;
+		 end;
+	     end;
+	 end;
+   end;
+   current := current^.down;
+   for i := 1 to 2 do
+     begin
+       add_node ( current, current^.etype );
+       with current^ do
+	 begin
+	   x := up^.x;
+	   y := up^.y + 10;
+	   xtext := up^.xtext;
+	   ytext := up^.ytext + 1;
+	 end;
+     end;
+
+   end;
+
+
+ procedure format;
+
+ var
+   i,j,n	: integer;
+   def		: suplstring2(20);
+   x, y 	: supinteger(20);
+   range	: supset(40);
+   msg		: suplstring(25);
+   tot		: string(2);
+   month	: string(2);
+   old_total	: byte;
+   temp_total	: byte;
+   oldy 	: integer;
+   newnode	: entity;
+   buf		: lstring(10);
+   current_node : byte;
+   bad_total	: boolean;
+   bad_month	: boolean;
+   bad_period	: boolean;
+   size 	: integer;
+   inchar       : twobyte;
+
+ begin
+
+ msg[1] := '                        RESOURCE CHART FORMAT OPTIONS';
+ msg[2] := '                                                         ';
+ msg[3] := '                              DEFAULT                                 DEFAULT';
+ msg[4] := '                                     ';
+ msg[5] := 'Starting calender year (yy):         ';
+ msg[6] := '                                     ';
+ msg[7] := 'Starting month         (mm):         ';
+ msg[8] := '                                     ';
+ msg[9] := 'Period type:                         ';
+ msg[10]:= '                                     ';
+ msg[11]:= '  m =monthly                         ';
+ msg[12]:= '  q =quarterly                       ';
+ msg[13]:= '  y =yearly                          ';
+ msg[14]:= '                                     ';
+ msg[15]:= 'Number of periods  (1 - 12):         ';
+ msg[16]:= '                                     ';
+ msg[17]:= '                                     ';
+ msg[18]:= '                                     ';
+ msg[19]:= '                                     ';
+ msg[20]:= '                                     ';
+ msg[21]:= '                                     ';
+ msg[22]:= '  Modify default options as needed - press return key for next option.';
+ msg[23]:= '  Select F2 to begin creating chart';
+ msg[24]:= '                                     ';
+ msg[25] := null;
+ buf.len := 1;
+ for i := 1 to 10  do
+      if fctn_map^[1][i] <> 0	then
+	 begin
+	   if i < 10  then [buf[1] := chr( i+48 );
+			    concat( msg[25], buf ); ]
+		      else  concat( msg[25], '10');
+	   if fctn_map^[1][i] = 7 then concat(msg[25], 'End ');
+	   concat ( msg[25], fctn_tag^[fctn_map^[1][i]] );
+	   if i < 10 then concat (msg[25], ' ');
+	   if i = 2 then while msg[25].len < 21 do concat( msg[25], ' ' );
+	   if i = 7 then while msg[25].len < 60 do concat( msg[25], ' ' );
+	 end;(* for , if fctn *)
+
+ for i := 4 to 20 do concat (msg[i], chr(219));
+
+ concat (msg[5],  '  Plot type option (see below)');
+ concat (msg[6],  '    b =bar');
+ concat (msg[7],  '    c =curve');
+ concat (msg[9],  '    First row  (option b or c):   ');
+ concat (msg[10], '    Second row        (b or c):   ');
+ concat (msg[11], '    Third row         (b or c):   ');
+ concat (msg[12], '    Fourth row        (b or c):   ');
+ concat (msg[14], '  GSFC symbol (N = no, Y = yes):  ');
+ concat (msg[16], '  Background color:               ');
+ concat (msg[17], '    x =black    w =white          ');
+ concat (msg[18], '    r =red      m =magenta        ');
+ concat (msg[19], '    b =blue     c =cyan           ');
+ concat (msg[20], '    g =green    y =yellow         ');
+ def[1][1] := year[1];	def[1][2] := year[2];
+ if start > 9  then [ month[1] := '1'; month[2] := chr (start + 48 - 10)]
+	       else [ month[1] := ' '; month[2] := chr (start + 48)];
+ def[2][1] := month[1]; def[2][2] := month[2];
+ def[3][1] := ' ';
+ case period of
+   0   : def[3][2] := 'm';
+   1..4: def[3][2] := 'q';
+   5   : def[3][2] := 'y';
+   end;
+ if total > 9  then [ tot[1] := '1'; tot[2] := chr ( total + 48 - 10)]
+	       else [ tot[1] := ' '; tot[2] := chr ( total + 48 )];
+ copylst(tot,def[4]);
+ if update  then old_total := total;
+ if not update	then
+  begin
+  if first_create then
+   begin
+    current := first;
+    while current^.etype <> 4  do  current := current^.down;
+    repeat
+     size := current^.field^.len;
+     for i := 1 to size  do
+      [ if current^.field^[i] <> ' '  then  first_create := false ];
+     current := current^.down;
+    until (current^.etype<>4) or (not first_create);
+   end;
+   if first_create  then
+     [ old_total := 0; first_create := false;]
+   else old_total := total;
+  end; (* if not update *)
+ temp_total := total;
+ for i := 5 to 10 do def[i][1] := ' ';
+ for i := 1 to 4 do def[4+i][2] := bcplot[i];
+ if symbol = 0	then def[9][2] := 'n'
+		else def[9][2] := 'y';
+ case color of
+   0 : def[10][2] := 'x';
+   1 : def[10][2] := 'b';
+   2 : def[10][2] := 'g';
+   3 : def[10][2] := 'c';
+   4 : def[10][2] := 'r';
+   5 : def[10][2] := 'm';
+   6 : def[10][2] := 'y';
+   7 : def[10][2] := 'w';
+   end;
+ for i := 1 to 10 do def[i].len := 2;
+
+ y[1] := 4;
+ y[2] := 6;
+ y[3] := 8;
+ y[4] :=14;
+ for i := 1 to 4 do x[i] := 34;
+ y[5] := 8;
+ y[6] := 9;
+ y[7] :=10;
+ y[8] :=11;
+ y[9] :=13;
+ y[10]:=15;
+ for i := 5 to 10  do  x[i] := 73;
+ range[1] := ['0'..'9'];
+ range[2] := ['1'..chr(99+48)];
+ range[3] := ['0'..'9'];
+ range[4] := ['1'..chr(12+48)];
+ range[5] := [' '];
+ range[6] := ['m','M','q','Q','y','Y'];
+ range[7] := ['0'..'9'];
+ if old_total = 0 then	range[8] := ['1'..chr(12+48)] else
+ range[8] := [chr(old_total+48)..chr(12+48)];
+ range[9] := [' '];
+ range[11] := [' '];
+ range[13] := [' '];
+ range[15] := [' '];
+ range[17] := [' '];
+ range[19] := [' '];
+ range[10] := ['b','B','c','C'];
+ range[12] := ['b','B','c','C'];
+ range[14] := ['b','B','c','C'];
+ range[16] := ['b','B','c','C'];
+ range[18] := ['n','N','y','Y'];
+ range[20] := ['x','X','r','R','b','B','g','G','w','W','m','M','c','C','y','Y'];
+
+ multimenu (msg, 25, 0, 10, def, x, y, range, inkey, 2);
+
+ bad_month := false; bad_period := false; bad_total := false;
+ for n := 1 to 10  do
+   case n of
+     1	: begin
+	  year.len := 2;
+	  if def[1][1] = ' '  then def[1][1] := chr(48);
+	  year[1] := def[1][1]; year[2] := def[1][2];
+	  end;
+    2	: begin
+	  if def[2][1] = ' '  then def[2][1] := chr(48);
+	  copystr (def[2], month);
+	  start := (ord(month[1])-48)*10 + ord(month[2])-48;
+	  if not ( (1<=start) and (start<=12)) then
+	    bad_month := true;
+	  end;
+    3	: Case def[3][2] of
+	    'm','M' : period := 0;
+	    'q','Q' : period := 1;
+	    'y','Y' : period := 5;
+	    end;
+     4	: begin
+	  if def[4][1] = ' '  then def[4][1] := chr(48);
+	  copystr (def[4], tot);
+	  total := (ord(tot[1])-48)*10 + ord(tot[2])-48;
+	  if old_total > total	then
+	     begin
+	       bad_total := true;
+	       total := old_total;
+	     end; (* if old_total *)
+	  if not ((0<=total) and (total<=12))  then
+	   begin
+	    bad_period := true; total := temp_total;
+	    if old_total = 0  then  first_create := true;
+	   end;
+	  end;
+ 5,6,7,8: copystr (def[n][2], bcplot[n-4]);
+    9	: case def[9][2] of
+	    'n','N' : symbol := 0;
+	    'y','Y' : symbol := 1;
+	    end;
+   10	: case def[10][2] of
+	    'x','X' : color := 0;
+	    'b','B' : color := 1;
+	    'g','G' : color := 2;
+	    'c','C' : color := 3;
+	    'r','R' : color := 4;
+	    'm','M' : color := 5;
+	    'y','Y' : color := 6;
+	    'w','W' : color := 7;
+	    end;
+     end;
+ if (bad_total) or (bad_month) or (bad_period) then
+   begin
+     inkey := 0;
+     screen (2); colors (0,color);
+     there (10,6); write ( messages^[31] );
+     if (bad_total) or (bad_period)  then
+      begin
+       there (7,8);
+       if bad_total  then  write (messages^[32])
+		     else  write (messages^[40]);
+       there (10,9); write (messages^[33]);
+       if not bad_month  then
+	begin
+	 there (10,10); write (messages^[36]);
+	 there (10,11); write (messages^[37]);
+	 there (10,12); write (messages^[38]);
+	end;
+       if bad_month  then
+	 begin
+	  there (7,11);  write (messages^[34]);
+	  there (10,12); write (messages^[35]);
+	 end;
+      end;
+     if (bad_month) and ( not bad_total) and (not bad_period)  then
+       begin
+	 there (7,8);  write (messages^[34]);
+	 there (10,9); write (messages^[35]);
+       end;
+     repeat
+       get_input (inchar);
+       if (inchar[1] = 0)  then
+	 if ((inchar[2]>=59)and(inchar[2]<=68)) and (inchar[2]<>61)
+	   then  inkey := ord(inchar[2]);
+     until inkey <> 0;
+   end; (* if bad *)
+  if (period <> 0) and (period <> 5) then
+    case start of
+      1..3 : period := 1;
+      4..6 : period := 2;
+      7..9 : period := 3;
+     10..12: period := 4;
+     otherwise
+     end;
+  if (old_total=0) and (total<>12)  then
+    begin
+     current := first;
+     while current^.etype <> 4	do  current := current^.down;
+     n := 12 - ord(total);
+     for i := 1 to 4  do
+       begin
+	for j := 1 to total  do  current := current^.down;
+	for j := 1 to n  do  delete ( current );
+       end; (* for i *)
+    end;
+  current := first;
+  if total > old_total	then
+    begin
+      while current^.etype <> 4  do  current := current^.down;
+      for i := 1 to 4  do
+       begin
+	oldy := current^.y;
+	for j := 1 to total-1  do
+	 begin
+	  if oldy <> current^.down^.y  then
+	   with current^  do
+	    begin
+	     create ( newnode, 4 );
+	     newnode^.x := x + 38;
+	     newnode^.y := y;
+	     if ( total > 6 ) and ( j = 6 )  then
+	      [ newnode^.xtext := 21; newnode^.ytext := ytext + 6; ]
+	     else [ newnode^.xtext := xtext+10; newnode^.ytext := ytext;];
+	     link ( current, newnode );
+	     current := current^.up;
+	    end; (* if oldy *)
+	  current := current^.down;
+	 end; (* for j *)
+	current := current^.down;
+       end; (* for i *)
+     end; (* if total *)
+     screen (3); colors (0,color);
+     inkey := fctn_map^[1][inkey-58];
+     if inkey in [1,4,5] then current_node := 0
+			 else current_node := current^.etype;
+     if inkey = 7 then inkey := 3;
+     if not( inkey in [1,2,4,5,7,41] ) then redraw(1, current, first);
+     perform2 ( inkey, first, name, skeleton^ );
+     perform  ( inkey, current, current_node, first );
+     if inkey in [4,5] then redraw (1, current, first );
+
+ end;
+
+
+ procedure chartinfo;
+
+ var
+
+       current : entity;
+       newnode : entity;
+       i       : integer;
+       tot     : string(2);
+       month   : lstring(2);
+   begin
+
+      current := first^.up;
+      case code of
+       1 :  begin
+	      create ( newnode, 5 );
+	      with newnode^ do
+		begin
+		  field^.len := 13;
+		  x := 0;
+		  y := 0;
+		  xtext := 0;
+		  ytext := 0;
+		  field^[1] := year[1];
+		  field^[2] := year[2];
+		  field^[3] := chr ( period + 48 );
+		  field^[4] := chr ( color + 48 );
+		  if total > 9 then [ tot[1] := '1'; tot[2] := chr ( total + 48 - 10 ) ]
+			       else [ tot[1] := ' '; tot[2] := chr ( total + 48 ) ];
+		  if start > 9 then [ month[1] := '1'; month[2] := chr ( start + 48 - 10 ) ]
+			       else [ month[1] := ' '; month[2] := chr ( start + 48 ) ];
+		  field^[5] := tot[1];
+		  field^[6] := tot[2];
+		  field^[7] := month[1];
+		  field^[8] := month[2];
+		  field^[9] := chr ( symbol + 48 );
+		   for i := 1 to 4  do	field^[i+9] := bcplot[i];
+	       end;
+	     link ( current, newnode );
+	   end;
+
+      2   : begin
+	    with current^ do
+	       begin
+		  year.len := 2;
+		  year[1] := field^[1];
+		  year[2] := field^[2];
+		  period := ord ( field^[3] ) - 48;
+		  color := ord ( field^[4] ) - 48;
+		  tot[1] := field^[5];
+		  tot[2] := field^[6];
+		  month[1] := field^[7];
+		  month[2] := field^[8];
+		  symbol := ord ( field^[9] ) - 48;
+		  if month[1] = ' ' then start := ord ( month[2] ) - 48
+				    else start := (ord ( month[1] ) - 48)* 10 + ord ( month[2] ) -48;
+		  if tot[1] = ' ' then total := ord ( tot[2] ) - 48
+		    else total := (ord ( tot[1] ) - 48)* 10 + ord ( tot[2] ) -48;
+		  for i := 10 to 13  do  bcplot[i-9] := field^[i];
+	       end;
+	    delete(current);
+	    end;
+
+	 3  :	begin
+		    year[1] := '8'; year[2] := '5'; period := 0;
+			 tot[1] := '1'; tot[2] := '2';
+			 start := 1 ; month[1] := ' '; month[2] := '1';
+		   color := 1;
+		   total := 12; symbol := 0;
+		   for i := 1 to 4 do bcplot[i] := 'b';
+		   get_list (first, total, xy);
+		end;
+   otherwise begin end; end; (* case code *)
+   end; (* chartinfo *)
+   end.
+
+
+
+

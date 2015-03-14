@@ -1,0 +1,638 @@
+   { $INCLUDE : 'compile.inc' }
+   (* $INCLUDE : 'dspas.int' *)
+   { $INCLUDE : 'vdmgen.int' }
+   { $INCLUDE : 'dialog.int' }
+
+   implementation of dspas;
+   USES vdmgen ;
+   USES dialog ;
+
+
+      procedure dspoint1(x1,y1,color : integer);  extern;
+      procedure dsline1(x1,y1,x2,y2,color,ndon,ndoff : integer);extern;
+{     procedure dspmove;  extern;}
+      procedure dsymb0(x,y,color,id2,scale:integer);  extern;
+      procedure dsgseg(sdsseg,rdsseg : word); extern;
+      procedure dschar0(x,y,color : integer; textch : char); extern;
+      procedure dschar1(x,y,color : integer; textch : char); extern;
+      procedure dschar2(x,y,color : integer; textch : char); extern;
+      procedure dschar3(x,y,color : integer; textch : char); extern;
+      procedure dspaste(sbyte,nbyte : word; color : integer); extern;
+{     procedure dslmove(sbyte,dbyte : word; nbyte : integer); extern;}
+      procedure dsbrvs (x,y,width,height : integer); extern;
+
+   var  inchar : twobyte;
+  
+   procedure dsinit;
+
+      var p : ads of word;
+          sdsseg,rdsseg : word;
+
+      begin
+       plotchoice := 1;
+       p := ads dsseg;
+       sdsseg := p.s;
+       rdsseg := p.r;
+       dsgseg(sdsseg,rdsseg);
+       dspaste(wrd(0),wrd(64000),0);
+      end;
+
+   procedure dspoint;
+
+     begin
+       if plotchoice = 1 then dspoint1 (x1,y1,color);
+       if plotchoice = 2 then vdmline (x1,y1,x1,y1,color,1,0) ;
+
+       if plotchoice = 3 then 
+        if plfile.errs = 0 then
+         begin
+           writeln(plfile,'1 ',x1:1,' ',y1:1,' ',color:1);
+           if plfile.errs <> 0 then
+             begin
+               writeln;
+               writeln;
+               writeln ('Disk full error. File not created');
+               writeln ('Press any key to continue.');
+               get_input(inchar);
+             end;
+         end;
+     end;
+
+   procedure dsline;
+
+     begin
+       if plotchoice = 1 then dsline1 (x1,y1,x2,y2,color,ndon,ndoff);
+       if plotchoice = 2 then vdmline (x1,y1,x2,y2,color,ndon,ndoff);
+       if plotchoice = 3 then
+        if plfile.errs = 0 then
+         begin
+         writeln(plfile,'2 ',x1:1,' ',y1:1,' ',x2:1,' ',y2:1,' ',color:1,' ',ndon:1,' ',ndoff:1);
+         if plfile.errs <> 0 then
+           begin
+             writeln;
+             writeln;
+             writeln ('Disk full error. File not created');
+             writeln ('Press any key to continue.');
+             get_input(inchar);
+           end;
+         end;
+     end;
+
+{  procedure dsbmove;
+
+     var sbyte,dbyte:word;
+
+     begin
+       x1:=x1 div 4;
+       x2:=x2 div 4;
+       npix:=npix div 4;
+       if (nline<0) then
+         begin
+           nline := 0 - nline;
+           sbyte := wrd(y1+nline)*wrd(160) + wrd(x1);
+           dbyte := wrd(y2+nline)*wrd(160) + wrd(x2);
+           while nline > 0 do
+             begin
+             dslmove(sbyte,dbyte,npix);
+             nline:=nline-1;
+             sbyte:=sbyte-wrd(160);
+             dbyte:=dbyte-wrd(160);
+             end;
+         end
+       else
+         begin
+           sbyte := wrd(y1)*wrd(160) + wrd(x1);
+           dbyte := wrd(y2)*wrd(160) + wrd(x2);
+           while nline > 0 do
+             begin
+             dslmove(sbyte,dbyte,npix);
+             nline:=nline-1;
+             sbyte:=sbyte-wrd(160);
+             dbyte:=dbyte-wrd(160);
+             end;
+         end;
+     end;}
+
+
+   procedure dshline ( x1, x2, y, color : integer );
+
+      var
+            sbyte,ebyte,sbit,ebit,i : integer;
+            ibyte : word;
+
+    begin
+     if plotchoice = 1 then 
+      begin
+         sbyte := x1 div 4;
+         sbit := x1 - sbyte * 4;
+         if sbit > 0 then
+            begin
+               sbyte := sbyte + 1;
+               for i := 0 to (3-sbit) do
+                  dspoint(x1+i,y,color)
+            end;
+         ebyte := x2 div 4;
+         ebit := x2 - ebyte * 4;
+         if ebit < 3 then
+            begin
+               ebyte := ebyte - 1;
+               for i := 0 to ebit do
+                  dspoint(x2-i,y,color)
+            end;
+         if sbyte <= ebyte then
+            begin
+               ibyte := wrd(y) * wrd(160) + wrd(sbyte);
+               dspaste(ibyte,wrd(ebyte-sbyte+1),color);
+            end
+      end;
+     if plotchoice = 2 then vdmline (x1,y,x2,y,color,1,0) ;
+
+     if plotchoice = 3 then
+       if plfile.errs = 0 then
+         begin
+           writeln (plfile,'2 ',x1:1,' ',y:1,' ',x2:1,' ',y:1,' ',color:1,' 1 0');
+             if plfile.errs <> 0 then
+               begin
+                 writeln;
+                 writeln;
+                 writeln ('Disk full error. File not created');
+                 writeln ('Press any key to continue.');
+                 get_input(inchar);
+               end;
+         end;
+    end;
+
+
+
+
+   procedure dsbar;
+
+
+    var      i : integer;
+    label loop4,loop5,loop6,loop14,loop15,loop16,loop17,loop11,loop13;
+
+   begin
+    if plotchoice = 1 then
+      begin 
+
+       case fill of
+
+           0..7 :       (* single line bars *)
+             begin
+                dshline(x1,x2,y1,color);
+                dshline(x1,x2,y2,color);
+                dsline(x1,y1,x1,y2,color,1,0);
+                dsline(x2,y1,x2,y2,color,1,0);
+                x1 := x1+1;
+                y1 := y1+1;
+                x2 := x2-1;
+                y2 := y2-1;
+                case fill of
+                  1 :       (* vertical shade *)
+                     begin
+                       i := x1+1;
+                       while (i <= x2) do
+                       begin
+                         dsline(i,y1,i,y2,color,1,0);
+                         i := i+2;
+                       end;
+                     end;
+                  2 :       (* horizontal shade *)
+                     begin
+                       i := y1+1;
+                       while (i <= y2) do
+                       begin
+                         dshline(x1,x2,i,color);
+                         i := i+2;
+                       end;
+                     end;
+                  3 :        (* v/h grid shade *)
+                     begin
+                       i := y1;
+                       while (i <= y2) do
+                       begin
+                         dsline(x1,i,x2,i,color,1,1);
+                         i := i+1;
+                         dshline(x1,x2,i,color);
+                         i := i+1;
+                       end;
+                     end;
+                  4 :        (* right slant shade *)
+                     begin
+                       i := y1;
+loop4:                 while (i <= y2) do
+                       begin
+                         dsline(x1+1,i,x2,i,color,1,2);
+                         i := i+1;  if i > y2 then break loop4;
+                         dsline(x1+2,i,x2,i,color,1,2);
+                         i := i+1;  if i > y2 then break loop4;
+                         dsline(x1  ,i,x2,i,color,1,2);
+                         i := i+1;
+                       end;
+                     end;
+                  5 :        (* left slant shade *)
+                     begin
+                       i := y1;
+loop5:                 while (i <= y2) do
+                       begin
+                         dsline(x1+2,i,x2,i,color,1,2);
+                         i := i+1;  if i > y2 then break loop5;
+                         dsline(x1+1,i,x2,i,color,1,2);
+                         i := i+1;  if i > y2 then break loop5;
+                         dsline(x1  ,i,x2,i,color,1,2);
+                         i := i+1;
+                       end;
+                     end;
+                  6 :        (* slant grid shade *)
+                     begin
+                       i := y1;
+loop6:                 while (i <= y2) do
+                       begin
+                         dsline(x1+1,i,x2,i,color,1,1);
+                         i := i+1;  if i > y2 then break loop6;
+                         dsline(x1  ,i,x2,i,color,1,1);
+                         i := i+1;
+                       end;
+                     end;
+                  7 :       (* 1 dot hole shade *)
+                     begin
+                       i := x1+1;
+                       while (i <= x2) do
+                       begin
+                         dsline(i,y1,i,y2,color,1,1);
+                         i := i+2;
+                       end;
+                     end;
+                 otherwise begin end; end;
+             end;
+
+         9 :       (* filled bar *)
+             begin
+                for i := y1 to y2 do
+                   dshline(x1,x2,i,color)
+             end;
+
+         10..17 :      (* double line bars *)
+
+             begin
+                dshline(x1,x2,y1,color);
+                dshline(x1,x2,y1+1,color);
+                dshline(x1,x2,y2,color);
+                dshline(x1,x2,y2-1,color);
+                dsline(x1,y1,x1,y2,color,1,0);
+                dsline(x1+1,y1,x1+1,y2,color,1,0);
+                dsline(x2,y1,x2,y2,color,1,0);
+                dsline(x2-1,y1,x2-1,y2,color,1,0);
+                x1 := x1+2;
+                y1 := y1+2;
+                x2 := x2-2;
+                y2 := y2-2;
+                case fill of
+                  11 :        (* vertical shade *)
+                    begin
+                       i := x1+2;
+loop11:                while (i <= x2) do
+                       begin
+                         dsline(i,y1,i,y2,color,1,0);
+                         i := i+1;  if i > x2 then break loop11;
+                         dsline(i,y1,i,y2,color,1,0);
+                         i := i+3;
+                       end;
+                    end;
+                  12 :       (* horizontal shade *)
+                    begin
+                       i := y1+2;
+                       while (i <= y2) do
+                       begin
+                         dshline(x1,x2,i,color);
+                         i := i+1;
+                         dshline(x1,x2,i,color);
+                         i := i+3;
+                       end;
+                    end;
+                  13 :       (* v/h grid shade *)
+                    begin
+                       i := y1;
+loop13:                while (i <= y2) do
+                       begin
+                         dsline(x1,i,x2,i,color,2,2);
+                         i := i+1;  if i > y2 then break loop13;
+                         dsline(x1,i,x2,i,color,2,2);
+                         i := i+1;
+                         dshline(x1,x2,i,color);
+                         i := i+1;
+                         dshline(x1,x2,i,color);
+                         i := i+1;
+                       end;
+                    end;
+                  14 :       (* right slant shade *)
+                     begin
+                       i := y1;
+loop14:                while (i <= y2) do
+                       begin
+                         dsline(x1+2,i,x2,i,color,2,4);
+                         i := i+1;  if i > y2 then break loop14;
+                         dsline(x1+2,i,x2,i,color,2,4);
+                         i := i+1;  if i > y2 then break loop14;
+                         dsline(x1+4,i,x2,i,color,2,4);
+                         i := i+1;  if i > y2 then break loop14;
+                         dsline(x1+4,i,x2,i,color,2,4);
+                         i := i+1;  if i > y2 then break loop14;
+                         dsline(x1  ,i,x2,i,color,2,4);
+                         i := i+1;  if i > y2 then break loop14;
+                         dsline(x1  ,i,x2,i,color,2,4);
+                         i := i+1;
+                       end;
+                     end;
+                  15 :       (* right slant shade *)
+                     begin
+                       i := y1;
+loop15:                while (i <= y2) do
+                       begin
+                         dsline(x1+4,i,x2,i,color,2,4);
+                         i := i+1;  if i > y2 then break loop15;
+                         dsline(x1+4,i,x2,i,color,2,4);
+                         i := i+1;  if i > y2 then break loop15;
+                         dsline(x1+2,i,x2,i,color,2,4);
+                         i := i+1;  if i > y2 then break loop15;
+                         dsline(x1+2,i,x2,i,color,2,4);
+                         i := i+1;  if i > y2 then break loop15;
+                         dsline(x1  ,i,x2,i,color,2,4);
+                         i := i+1;  if i > y2 then break loop15;
+                         dsline(x1  ,i,x2,i,color,2,4);
+                         i := i+1;
+                       end;
+                     end;
+                  16 :       (* slant grid shade *)
+                     begin
+                       i := y1;
+loop16:                while (i <= y2) do
+                       begin
+                         dsline(x1+2,i,x2,i,color,2,2);
+                         i := i+1;  if i > y2 then break loop16;
+                         dsline(x1+2,i,x2,i,color,2,2);
+                         i := i+1;  if i > y2 then break loop16;
+                         dsline(x1  ,i,x2,i,color,2,2);
+                         i := i+1;  if i > y2 then break loop16;
+                         dsline(x1  ,i,x2,i,color,2,2);
+                         i := i+1;
+                       end;
+                     end;
+                  17 :        (* 4 dots net shade*)
+                    begin
+                       i := x1+2;
+loop17:                while (i <= x2) do
+                       begin
+                         dsline(i,y1,i,y2,color,2,2);
+                         i := i+1;  if i > x2 then break loop17;
+                         dsline(i,y1,i,y2,color,2,2);
+                         i := i+3;
+                       end;
+                    end;
+                 otherwise begin end;  end;
+             end;
+         otherwise begin end;  end;
+      end;
+
+     if plotchoice =2 then vdmbar (x1,y1,x2,y2,color,fill,0) ;
+
+     if plotchoice = 3 then
+       if plfile.errs = 0 then
+         begin
+           writeln(plfile,'3 ',x1:1,' ',y1:1,' ',x2:1,' ',y2:1,' ',color:1,' ',fill:1);
+           if plfile.errs <> 0 then
+             begin
+               writeln;
+               writeln;
+               writeln ('Disk full error. File not created.');
+               writeln ('Press any key to continue.');
+               get_input(inchar);
+             end;
+        end;
+    end;
+
+
+   procedure dstext;
+
+   var
+         width  : integer;
+         height : integer;
+         i      : integer;
+         rev    : boolean;
+
+ begin
+  if plotchoice = 1 then
+   begin
+      case size of
+         0 : [ width :=  8; height :=  8 ];
+         1 : [ width :=  6; height :=  8 ];
+         2 : [ width := 10; height := 12 ];
+         3 : [ width := 14; height := 16 ];
+         otherwise begin end; end;
+  
+     if color < 0 then [color := abs(color); rev := true;]
+                  else rev := false;
+      for i := 1 to length do
+          if ( x <= 640 - width ) and ( y <= 400 - height ) then
+             begin
+                case size of 
+                   0 : dschar0 ( x, y, color, text[i] );
+                   1 : dschar1 ( x, y, color, text[i] );
+                   2 : dschar2 ( x, y, color, text[i] );
+                   3 : dschar3 ( x, y, color, text[i] );
+                   otherwise begin end; end;
+ 
+                if rev then dsbrvs (x,y-1,width,height+1);
+                case dir of
+                   0   : begin
+                          x := x + width;
+                          if x >= 640 then [ x := 0; y := y + height ];
+                         end;
+                   45  : begin
+                           x := x + width;
+                           y := y - height;
+                         end;
+                   270 : begin
+                           y := y + height;
+                           if y >= 400 then [ x := x + width; y := 0 ];
+                         end;
+                   315 : begin
+                           x := x + width;
+                           y := y + height;
+                         end;
+                   otherwise begin end; end;
+ 
+             end;
+   end;
+
+  if plotchoice = 2 then vdmtext (x,y,size,color,dir,0,text) ;
+
+  if plotchoice = 3 then
+    if plfile.errs = 0 then
+      begin
+        for i := 1 to text.len do
+          if text[i] = chr(26) then text[i] := chr(255);
+        writeln(plfile,'4 ',x:1,' ',y:1,' ',size:1,' ',color:1,' ',dir:1,' ',text);
+        if plfile.errs <> 0 then
+          begin
+            writeln;
+            writeln;
+            writeln ('Disk full error. File not created.');
+            writeln ('Press any key to continue.');
+            get_input(inchar);
+          end;
+      end;
+ end;
+
+
+
+   procedure dsymbol;
+
+  begin
+   if plotchoice = 1 then 
+   begin
+       case id1 of
+         0 : dsymb0(x,y,color,id2,scale);
+         1 : begin
+             dschar1(x-2,y+1,color,chr(id2));
+             dsline(x-5,y  ,x+5,y  ,color,1,0);
+             dsline(x-5,y+1,x-4,y+2,color,1,0);
+             dsline(x+5,y+1,x+4,y+2,color,1,0);
+             dsline(x-4,y+3,x-3,y+4,color,1,0);
+             dsline(x+4,y+3,x+3,y+4,color,1,0);
+             dsline(x-3,y+5,x-2,y+6,color,1,0);
+             dsline(x+3,y+5,x+2,y+6,color,1,0);
+             dsline(x-2,y+7,x  ,y+9,color,1,0);
+             dsline(x+2,y+7,x  ,y+9,color,1,0);
+             end;
+         2 : begin
+             dschar1(x-2,y+1,color,chr(id2+11));
+             dsline(x-5,y  ,x+5,y  ,color,1,0);
+             dsline(x-5,y+1,x+5,y+1,color,1,0);
+             dsline(x-4,y+2,x-4,y+3,color,1,0);
+             dsline(x+4,y+2,x+4,y+3,color,1,0);
+             dsline(x-3,y+2,x-3,y+5,color,1,0);
+             dsline(x+3,y+2,x+3,y+5,color,1,0);
+             dsline(x-2,y+2,x-2,y+7,color,1,0);
+             dsline(x+2,y+2,x+2,y+7,color,1,0);
+             dsline(x-1,y+7,x+1,y+7,color,1,0);
+             dsline(x-1,y+8,x+1,y+8,color,1,0);
+             dspoint(x,y+9,color);
+             end;
+         otherwise begin end; end;
+   end;
+   if plotchoice = 2 then vdmsymbol ( x, y, color, id1, id2, scale ) ;
+
+   if plotchoice = 3 then
+     if plfile.errs = 0 then
+       begin
+       writeln(plfile,'5 ',x:1,' ',y:1,' ',color:1,' ',id1:1,' ',id2:1,' ',scale:1);
+       if plfile.errs <> 0 then
+         begin
+           writeln;
+           writeln;
+           writeln ('Disk full error. File not created.');
+           writeln ('Press any key to continue.');
+           get_input(inchar);
+         end;
+       end;
+  end;
+
+
+
+   procedure dscir;
+      const
+        aratio = 0.84;
+
+     var inc,pi,hpi,san,ean,an,rap : real;
+         x1,y1,mx,my,x,y,i : integer;
+
+   begin
+    if plotchoice <> 3 then
+     begin
+     pi:=4*arctan(1);
+     inc:=1/radius;
+     san:=pi*sangle/180;
+     ean:=pi*eangle/180;
+     if (eangle-sangle >= 360) then
+      begin
+       if plotchoice = 1 then
+        begin
+         an:=0;    hpi:=pi/2;
+         while (an <= hpi) do
+          begin
+          x:=trunc(cos(an)*radius);
+          y:=trunc(sin(an)*radius*aratio);
+          dspoint(cx+x,cy+y,color);
+          dspoint(cx-x,cy+y,color);
+          dspoint(cx-x,cy-y,color);
+          dspoint(cx+x,cy-y,color);
+          an:=an+inc;
+          end;
+        end
+         else vdmcir ( cx, cy, radius, color, fill, 0 ) ;
+      end                     else
+       if (eangle=sangle) then
+         begin
+         x:=trunc(cos(san)*radius+cx);
+         y:=trunc(sin(san)*radius*aratio+cy);
+         if plotchoice = 1 then dsline(cx,cy,x,y,color,1,0)
+           else vdmline(cx,cy,x,y,color,1,0);
+         end
+       else
+         if plotchoice = 1 then begin
+         x:=trunc(cos(san)*radius+cx);
+         y:=trunc(sin(san)*radius*aratio+cy);
+         dsline(cx,cy,x,y,color,1,0);
+         x:=trunc(cos(ean)*radius+cx);
+         y:=trunc(sin(ean)*radius*aratio+cy);
+         dsline(cx,cy,x,y,color,1,0);
+         an:=san;    i:=1;
+         while (an <= ean) do
+          begin
+          x:=trunc(cos(an)*radius+cx);
+          y:=trunc(sin(an)*radius*aratio+cy);
+          case fill of
+           1 : if i>4 then dsline(cx,cy,x,y,color,1,0);
+           2 :             dsline(cx,cy,x,y,color,1,4);
+           3 : if i>4 then dsline(cx,cy,x,y,color,1,0)
+                      else dsline(cx,cy,x,y,color,1,4);
+           9 :             dsline(cx,cy,x,y,color,1,0);
+           11: if i>2 then dsline(cx,cy,x,y,color,1,0);
+           12:             dsline(cx,cy,x,y,color,3,2);
+           13: if i>2 then dsline(cx,cy,x,y,color,1,0)
+                      else dsline(cx,cy,x,y,color,3,2);
+           otherwise begin end; end;
+          dspoint(x,y,color);
+          an:=an+inc;  i:=i+1;
+          if (i > 5) then i:=1;
+          end;
+         end;
+     end
+   else if plotchoice=2 then 
+         begin
+            x1:=trunc(cos(san)*radius+cx);
+            y1:=trunc(sin(san)*radius*aratio+cy);
+            mx:=trunc(cos((san+ean)/2)*radius+cx);
+            my:=trunc(sin((ean+san)/2)*radius*aratio+cy);
+            x:=trunc(cos(ean)*radius+cx);
+            y:=trunc(sin(ean)*radius*aratio+cy);
+            vdmarc ( x1, y1, mx, my, x, y, color ) ;
+         end ;
+
+   else
+     if plfile.errs = 0 then
+       begin
+       writeln(plfile,'9 ',cx:1,' ',cy:1,' ',radius:1,' ',sangle:1,' ',eangle:1,' ',color:1,' ',fill:1);
+       if plfile.errs <> 0 then
+         begin
+           writeln;
+           writeln;
+           writeln ('Disk full error. File not created.');
+           writeln ('Press any key to continue.');
+           get_input(inchar);
+         end;
+       end;
+  end;
+end.
+

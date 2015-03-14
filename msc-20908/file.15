@@ -1,0 +1,67 @@
+/*****************************************************************************/
+/*                                                                           */
+/*  The functions in this module produce the trace output for conditons      */
+/*                                                                           */
+/*  Programmer: G R Goodrum, MDTSCO, June 1984                               */
+/*                                                                           */
+/*****************************************************************************/
+
+#include "structures.inc"
+
+struct stack_elt
+{
+        int cause;              /* code indicating cause of change in value  */
+        int id;                 /* rule or condition number causing change   */
+};
+
+struct stack_elt stack[200];
+struct stack_elt *sp  =  &stack[0] - 1;
+
+/* push a cause code and id onto the stack */
+push ( c, i )
+int c, i;
+{
+    sp += 1;
+    if  ( sp <= &stack[199] )
+    {
+        sp -> cause  =  c;
+        sp -> id     =  i;
+    }
+}
+
+/* pop an element off the stack */
+pop()
+{
+    sp  -=  1;
+}
+
+/* print the new value of a condition and the reason it changed */
+trace ( cond, value )
+struct cond_info *cond;
+int value;
+{
+    extern struct cond_info condition[];
+
+    printf ( "\nSet to %s: (%d) %s\n",
+                        value==0? "false" : value>0? "true" : "undef",
+                        cond-&condition[0], cond -> ci_tag );
+
+    switch ( sp -> cause )
+    {
+        case 0:
+            printf ( "    Because rule %d fired\n", sp -> id );
+            break;
+
+        case 1:
+            printf ( "    Because condition %d is true\n", sp -> id );
+            break;
+
+        case 2:
+            printf ( "    Because condition %d is false\n", sp -> id );
+            break;
+
+        case 3:
+            printf ( "    Because is was evaluated for rule %d\n", sp->id );
+            break;
+    }
+}

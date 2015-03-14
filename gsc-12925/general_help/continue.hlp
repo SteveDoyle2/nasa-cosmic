@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+Continue is used to step from one slide to the next while viewing a slide show.
+When viewing the slide show and pressing F2(Continue) the next slide in the
+slide show will start drawing.  Any blanks in the show will be skipped and
+when the last slide in the show is displayed, pressing continue will return to
+the Print/View a Slide Show Menu.
+
+
+
+
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

@@ -1,0 +1,39 @@
+
+INSTALL.DOC
+12/18/85  S E F
+
+			Installing TAPECERT
+
+To install TAPECERT on your system, log into a system account and do the 
+following things:
+
+o Create a directory called TAPECERT on an appropriate disk. This directory 
+will contain the TAPECERT files. The total size will not exceed 200 blocks
+
+	$ CREATE/DIRECTORY Dxxx:[TAPECERT]
+	$ SET DEFAULT Dxxx:[TAPECERT]
+
+o Mount the distribution tape and copy the contents to the TAPECERT directory
+
+	$ MOUNT Mxxx: CERT
+	$ COPY/LOG/READ_CHECK  Mxxx:*.*   *
+	$ DISMOUNT Mxxx:
+ 
+o Compile and link TAPECERT.FOR
+
+	$ FORTRAN TAPECERT
+	$ LINK TAPECERT
+
+o Have your system manager insert the following line in the 
+SYS$MANAGER:SYSTARTUP.COM file and enter the same command interactively as well
+
+	$ DEFINE/SYSTEM  TU  Dxxx:[TAPECERT]
+
+o Set the protection so users can access the files. TAPECERT requires that
+the user have LOG_IO privilege to run or alternatively the TAPECERT.EXE image
+can be installed with LOG_IO privilege by your system manager and any user will
+be able to run it
+
+	$ SET PROTECTION=W:RE Dxxx:[TAPECERT]*.*/LOG
+
+

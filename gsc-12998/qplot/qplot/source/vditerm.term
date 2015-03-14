@@ -1,0 +1,205 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STANDARD',
+               'QLIBHOME:STRING',
+               'QLIBHOME:COLOR',
+               'QLIBHOME:FIG',
+               'QLIBHOME:TERM_VAX',
+               'QLIBHOME:TERM_4010',
+               'QLIBHOME:TERM_4100'),
+  ENVIRONMENT ('QLIBHOME:VDITERM.TEN') ]
+MODULE term_VDITERM;
+{=============================================================================}
+{-- PROCEDURES FOR TERMINAL TYPE VDITERM -------------------------------------}
+{=============================================================================}
+[ HIDDEN ] VAR
+   panelopen     : boolean := false;
+   modedualstring: anystring := '';
+{=============================================================================}
+[ GLOBAL ]
+FUNCTION termname_VDITERM (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0: termname_VDITERM := '1';
+   1: termname_VDITERM := 'VDITERM ';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE colorsetup_VDITERM;
+{------------------------------}
+PROCEDURE bufferempty;
+BEGIN
+qiowwrite (env.buffer + CRLF);
+env.buffer := '';
+END;
+{------------------------------}
+BEGIN
+initpalette (termpalette,8,4,false);
+IF env.mode = M_TEXT
+ THEN getcolorindex_4100 (termpalette,'TEXTBACK',bufferempty)
+ ELSE getcolorindex_4100 (termpalette,'PLOTBACK',bufferempty);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE executecom_VDITERM;
+VAR
+   ii,j          : integer;
+   oldpos        : ipoint;
+{------------------------------}
+PROCEDURE bufferempty;
+BEGIN
+CASE env.mode OF
+   M_TEXT:  BEGIN
+            qiowwrite (ESC + '%!0');    { CODE TEK               }
+            env.mode := M_PLOT;
+            colorsetup_VDITERM;
+            END;
+   M_DUAL:  ;
+   M_PLOT:  ;
+   END;
+env.mode := M_PLOT;
+IF length(env.buffer) <> 0 
+ THEN 
+  BEGIN
+  qiowwrite (env.buffer + CRLF);
+  env.buffer := '';
+  END;
+END;
+{------------------------------}
+BEGIN
+WITH plotitem DO CASE ins OF
+   I_col:  BEGIN
+           bufferempty;
+           j := getcolorindex_4100 (termpalette,st,bufferempty);
+           IF env.visible
+            THEN env.buffer := ESC + 'ML' + strofi_4100 (j-1)
+                             + ESC + 'MT' + strofi_4100 (j-1);
+           bufferempty;
+           END;
+   I_pan:  BEGIN
+           bufferempty;
+           j := getcolorindex_4100 (termpalette,st,bufferempty);
+           panelopen := j > 0;
+           IF panelopen
+            THEN env.buffer := ESC + 'MP' + strofi_4100 (1-j);
+           bufferempty;
+           END;
+   I_clo:  BEGIN
+           bufferempty;
+           env.buffer := ESC + 'LE';
+           bufferempty;
+           END;
+   I_pos:  BEGIN
+           bufferempty;
+           env.pos.ix := ix;
+           env.pos.iy := iy;
+           END;
+   I_dra:  draw_4100(ix,iy,panelopen,bufferempty);
+   I_siz:  ;
+   I_mar:  ;
+   I_pri:  IF env.visible AND (st <> '') 
+            THEN 
+             BEGIN
+             bufferempty;
+             env.buffer := chr(29) + strofpos_4100 (env.pos) 
+                         + ESC + 'LT' + strofi_4100 (length(st)) 
+                         + st;
+             bufferempty;
+             END;
+   I_emp:  bufferempty;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE writeterm_VDITERM (str : VARYING [l2] OF char);
+BEGIN
+IF env.mode = M_PLOT 
+ THEN 
+  BEGIN
+  qiowwrite (chr(29) + strofpos_4010 (ipoint(0,1000)) + chr(31) + CRLF);
+  qiowwritevirtual (strfix ('',length(modedualstring)));
+  qiowwrite (chr(29) + strofpos_4010 (ipoint(0,1000)) + chr(31) + CRLF);
+  qiowwritevirtual (str);
+  modedualstring := str;
+  env.mode := M_DUAL;
+  END
+ ELSE qiowwritevirtual (str);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE readterm_VDITERM (VAR outstr : VARYING [l2] OF char);  
+BEGIN
+readterm_vax (outstr);
+IF env.mode IN [M_PLOT,M_DUAL]
+ THEN modedualstring := modedualstring + outstr;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screenerase_VDITERM;
+BEGIN
+env.mode := M_TEXT;
+qiowwrite (ESC + '%!0');    { CODE TEK               }
+colorsetup_VDITERM;
+qiowwrite (ESC + FF);
+qiowwrite (ESC + '%!4' + ESC + chr(26));
+modedualstring := '';
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screencopy_VDITERM;
+BEGIN
+qiowwrite (ESC + 'KH1');
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE gin_VDITERM (VAR key : char;  VAR ipt : ipoint;  color : color_type);
+BEGIN
+IF env.mode = M_TEXT THEN qiowwrite (ESC + '%!0');
+gin_4010 (key,ipt);
+END;
+{-----------------------------------------------------------------------------}
+[GLOBAL]
+FUNCTION readmenu_VDITERM (default : char;  toplevel : boolean;
+   helpprefix : anystring) : command_type;
+{------------------------------}
+PROCEDURE bufferempty;
+BEGIN
+qiowwrite (env.buffer + CRLF);
+env.buffer := '';
+END;
+{------------------------------}
+PROCEDURE menuprep;
+BEGIN
+qiowwrite (ESC + '%!0');
+colorsetup_VDITERM;
+getcolorindex_4100 (termpalette,'TEXTCHAR',bufferempty);
+qiowwrite (ESC + 'ML1' + ESC + 'MT1' + CRLF);
+END;
+{------------------------------}
+BEGIN
+readmenu_VDITERM := readmenu_4010 (default,toplevel,helpprefix,menuprep);
+env.ginflag := true;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE termconfig_VDITERM (configcontrol : configcontrol_type);
+BEGIN
+CASE configcontrol OF
+   CON:  BEGIN
+         qiowwrite (ESC + '%!0'      { CODE TEK               }
+                  + ESC + 'TM3');    { SET COLOR DEFINE MODE  }
+         colorsetup_VDITERM;
+         qiowwrite (ESC + '%!4');    { CODE AMDEK }
+         config.ch := ch_type (820,1320,192,192);
+         config.resolution := 150;
+         config.dotsize    := 0;
+         config.starsize   := 512;
+         config.ansi364    := false;
+         config.drawblack  := true;
+         END;
+   QUE:  ;
+   REP:  ;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+END.

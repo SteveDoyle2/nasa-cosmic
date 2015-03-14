@@ -1,0 +1,56 @@
+ ANALYSIS OF AIRCRAFT MOTIONS
+
+( NASA Ames Research Center )
+
+     This program was developed by Ames Research Center, in cooperation
+with the National Transportation Safety Board, as a technique for deriv-
+ing time histories of an aircraft's motion from Air Traffic Control (ATC)
+radar records. This technique uses the radar range and azimuth data, along
+with the downlinked altitude data, to derive an expanded set of data which
+includes airspeed, lift, attitude angles (pitch, roll, and heading), etc.
+This technique should prove useful as a source of data in the investigation
+of commercial airline accidents and in the analysis of accidents involving
+aircraft which do not have onboard data recorders (e.g., military, short-
+haul, and general aviation).
+
+     The technique used to determine the aircraft motions involves smooth-
+ing of raw radar data. These smoothed results, in combination with other
+available information (wind profiles and aircraft performance data), are
+used to derive the expanded set of data. This program uses a cubic least-
+square fit to smooth the raw data. This moving-arc procedure provides a
+smoothed time history of the aircraft position, the inertial velocities,
+and accelerations. Using known winds, these inertial data are transformed
+to aircraft stability axes to provide true airspeed, thrust-drag, lift, and
+roll angle. Further derivation, based on aircraft dependent performance
+data, can determine the aircraft angle of attack, pitch, and heading angle.
+Results of experimental tests indicate that values derived from ATC radar
+records using this technique agree favorably with airborne measurements.
+
+     This program is written in FORTRAN IV to be executed in the batch mode,
+and has been implemented on a CDC 6000 series computer with a central memory
+requirement of 64k (octal) of 60 bit words.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC 6000 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 360 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: ARC-11132
+
+DOMESTIC - DOCUMENTATION PRICE: $13.00    PROGRAM PRICE: $300.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $26.00   PROGRAM PRICE: $600.00
+
+
+
+                                        1
+

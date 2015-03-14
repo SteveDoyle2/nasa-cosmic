@@ -1,0 +1,419 @@
+      SUBROUTINE PRSCOM(LINE,LENLIN,ICOM,NUMFLG,ANUMB,MINFLG,NDEF,NSYM)
+CDM   This routine parses a command line.
+CDM
+CDM   Programmer - Jon Vavrus  26 AUG 1981
+CDM   Revised    - Jon Vavrus   3 SEP 1981
+CDM   Revised    - Jon Vavrus  23 SEP 1981
+CDM   Revised    - Jon Vavrus  30 DEC 1981 (put LED #1 turn-on in DOIT)
+CDM   Revised    - Jon Vavrus   4 MAY 1982 (non-advanced video VT100's)
+CDM   Revised    - Jon Vavrus  18 AUG 1982 (bigger arrays)
+CDM   Revised    - Jon Vavrus   9 SEP 1982
+CDM   Revised    - Jon Vavrus  30 NOV 1982
+CDM   Revised    - Jon Vavrus  28 MAY 1983 (Allow real scroll speeds)
+CDM   Revised    - Jon Vavrus   7 SEP 1983
+CDM   Revised    - Jon Vavrus  21 SEP 1983
+CM
+CM         The routine parses a command line.  It is passed the command line
+CM    in LINE its length in LENLIN.  The command number is returned in
+CM    ICOM, if it is "minussed" the flag MINFLG is set, if there is a number
+CM    preceding it the number is stored in ANUMB and the flag NUMFLG is
+CM    set.  If ICOM = 0 then no command was found/legal (error "beep" +
+CM    LED 3 are taken care of).  If a defined symbol is found its commands
+CM    are executed and ICOM = -1.  After execution the procedure sets LINE
+CM    and LENLIN to the after parse values.  Note:  If a definition symbol
+CM    encountered, it's internal commands will be executed should NDEF or
+CM    NSYM be zero, otherwise its definition will be inserted into the
+CM    definition arrays  beginning at command NDEF of definition NSYM.
+C
+C***   CALLED ROUTINES
+C
+CC    DOIT    Executes commands
+C
+C***   COMMON AREAS
+C
+CS    CHARS   Used to pass character variables; contains LINES a character
+CS            array of the output lines, and SRCHBF the search buffer, and
+CS            CRLF which contains <CR><LF>, and REVVID + REGVID which are
+CS            the VT100 control sequences to set/unset reverse video
+C
+CS    DOITNM  Contains information transferred from the main program:
+CS                 INCHAN - input channel of the terminal
+CS                 TIME   - scrolling speed in -10000000*seconds/line
+CS                 SBFFLG - flag indicating whether there is a string
+CS                          in the search buffer
+CS                 DIRECT - flag for reverse (-1 for reverse, else 1)
+CS                 EBK    - EBK of input file
+CS                 SBFLEN - length of string(s) in search buffer(s)
+CS                 RECBLK - number of bytes used per block in FIX-BLK files
+CS                 RANGE  - beginning and ending block numbers and pointers
+CS                          of the print range
+CS                 VT100  - flag set .TRUE. if terminal is VT100.
+CS                 LRL    - length of the longest record in input file.
+CS                 LENLMT - maximum output length (if <0 then WRAP set)
+CS                 PAGEND - line number of last line output to screen
+CS                 PAGLEN - number of lines per page
+CS                 COMLIN - line number for command input (bottom of screen)
+CS                 VT100A - flag set .TRUE. if VT100 has advanced video option
+C
+CS    INPUTC  Contains the input character buffer INLINE and the defined
+CS            symbols SYMS and the definition search buffers DEFBUF
+C
+CS    INPUTN  Contains the input character buffer length LENSAV, and the
+CS            symbol definitions DEFS, the number of such definitions
+CS            (NDEFS), the definition flags DEFFLG, and the definition
+CS            numbers NUMDEF
+C
+CS    PRSCHR  Contains the current symbol's search buffers (CURBUF)
+C
+CS    PRSNUM  Contains the current symbol's definitions (CUR), flags
+CS            (CURFLG), and associated numbers (NUMCUR)
+C
+C***   OUTPUT UNITS
+C
+CW    9       Output to terminal.  Carriage-control LIST if file is either
+CW            CR, FTN, or PRN; otherwise no carriage-control.
+C
+      CHARACTER*(*) LINE
+      CHARACTER*132 LINES(600)
+      CHARACTER*128 INLINE
+      CHARACTER*30 SRCHBF(10),DEFBUF(10,10,60),CURBUF(10,10)
+      CHARACTER*11 SWIT
+      CHARACTER*8 NARROW
+      CHARACTER*4 REVVID,REGVID,WRAP
+      CHARACTER*3 BOX
+      CHARACTER*2 CRLF
+      CHARACTER*1 SYMS(60),COMAND(13),QUOTE
+      REAL*4 NUMDEF(10,60),NUMCUR(10)
+      INTEGER*4 INCHAN,TIME,EBK,RANGE(2,2),PAGEND
+      INTEGER*2 DIRECT,SBFLEN(10),RECBLK,DEFS(11,10,60),LENLMT,LENSAV,
+     1          PAGLEN,CUR(11,10),COMLIN
+      LOGICAL*1 SBFFLG,NUMFLG,MINFLG,ESC,VT100,BELL,DEFFLG(3,10,60),
+     1          CURFLG(3,10),VT100A
+
+      COMMON /DOITNM/INCHAN,TIME,SBFFLG,DIRECT,EBK,SBFLEN,RECBLK,RANGE,
+     1               VT100,LRL,LENLMT,PAGEND,PAGLEN,COMLIN,VT100A
+      COMMON /CHARS/LINES,SRCHBF,CRLF,REVVID,REGVID
+      COMMON /INPUTC/INLINE,SYMS,DEFBUF
+      COMMON /INPUTN/LENSAV,DEFS,NDEFS,DEFFLG,NUMDEF
+      COMMON /PRSNUM/CUR,NUMCUR,CURFLG
+      COMMON /PRSCHR/CURBUF
+
+      DATA NUMCOM,COMAND/13,'$','%','^','!','#','(',')','*',' ','&','@',
+     1                   '+','<'/
+      DATA BELL,ESC/7,27/
+C
+C***   Setup things
+C
+      NSRCH = 0
+      IF (SBFFLG)
+        DO FOR I=1,10
+         UNDO IF (SBFLEN(I) .EQ. 0)
+         NSRCH = NSRCH + 1
+        END DO FOR
+      ENDIF
+      NUMFLG = .FALSE.
+      MINFLG = .FALSE.
+
+100   DO FOREVER
+C
+C***   Trim leading blanks
+C
+       IF (LENLIN .GT. 0)
+         K = LIB$SKPC(' ',LINE(:LENLIN))
+         IF (K .EQ. 0)
+           LENLIN = 0
+         ELSE
+           LINE = LINE(K:LENLIN)
+           LENLIN = LENLIN - K + 1
+         ENDIF
+       ENDIF
+       IF (LENLIN .EQ. 0)
+         EXECUTE (NO_COMMAND)
+       ENDIF
+C
+C***   Check for " or '
+C
+       IF (LINE(1:1) .EQ. '"')
+         IF (LENLIN .EQ. 1)
+           EXECUTE (INVALID_COMMAND)
+         ENDIF
+         K = 1
+         DO FOREVER
+          J = INDEX(LINE(K+1:LENLIN),'"') + K
+          IF (K .EQ. J)
+            EXECUTE (INVALID_COMMAND)
+          ENDIF
+          IF (LINE(J+1:J+1) .NE. '"')
+            NSRCH = 1
+            EXECUTE (INSERT_SEARCH_STRING)
+            UNDO
+          ENDIF
+	  K = J + 1
+         END DO FOREVER
+       ELSE IF (LINE(1:1) .EQ. '''')
+         IF (LENLIN .EQ. 1)
+           EXECUTE (INVALID_COMMAND)
+         ENDIF
+         K = 1
+         DO FOREVER
+          J = INDEX(LINE(K+1:LENLIN),'''') + K
+          IF (K .EQ. J)
+            EXECUTE (INVALID_COMMAND)
+          ENDIF
+          IF (LINE(J+1:J+1) .NE. '''')
+            NSRCH = NSRCH + 1
+            EXECUTE (INSERT_SEARCH_STRING)
+            UNDO
+          ENDIF
+	  K = J + 1
+         END DO FOREVER
+C
+C***   Check for minus sign
+C
+       ELSE IF (LINE(1:1) .EQ. '-')
+         IF (LENLIN .EQ. 1)
+           EXECUTE (NO_COMMAND)
+         ENDIF
+         I = LIB$SKPC(' ',LINE(2:LENLIN)) + 1
+         IF (I .EQ. 1)
+           EXECUTE (NO_COMMAND)
+         ENDIF
+C
+C---   Check for --&
+C
+         IF (LINE(I:I) .EQ. '-')
+           IF (LENLIN .EQ. I)
+             EXECUTE (NO_COMMAND)
+           ENDIF
+           J = LIB$SKPC(' ',LINE(I+1:LENLIN)) + I
+           IF (I .EQ. J)
+             EXECUTE (NO_COMMAND)
+           ENDIF
+           IF (LINE(J:J) .EQ. '&')
+             ICOM = 9
+             LINE = LINE(J+1:LENLIN)
+             LENLIN = LENLIN - J
+             RETURN
+           ELSE
+             MINFLG = .NOT.MINFLG
+             LINE = LINE(I:LENLIN)
+             LENLIN = LENLIN - I + 1
+           ENDIF
+C
+C---   Check for number
+C
+         ELSE IF (ICHAR(LINE(I:I)) .GE. ICHAR('0') .AND.
+     1            ICHAR(LINE(I:I)) .LE. ICHAR('9'))
+           EXECUTE (GET_NUMBER)
+         ELSE
+C
+C---   Otherwise it is minus flag
+C
+           MINFLG = .NOT.MINFLG
+           LINE = LINE(I:LENLIN)
+           LENLIN = LENLIN - I + 1
+         ENDIF
+C
+C***   Check for number
+C
+       ELSE IF (ICHAR(LINE(1:1)) .GE. ICHAR('0') .AND.
+     1          ICHAR(LINE(1:1)) .LE. ICHAR('9'))
+         EXECUTE (GET_NUMBER)
+       ELSE IF (LINE(1:1) .EQ. '+')
+         IF (LENLIN .EQ. 1)
+           ICOM = 12
+           LENLIN = 0
+           RETURN
+         ENDIF
+         I = LIB$SKPC(' ',LINE(2:LENLIN)) + 1
+         IF (I .EQ. 1)
+           ICOM = 12
+           LENLIN = 0
+           RETURN
+         ENDIF
+         IF (ICHAR(LINE(I:I)) .LE. ICHAR('9') .AND.
+     1       ICHAR(LINE(I:I)) .GE. ICHAR('0'))
+           EXECUTE (GET_NUMBER)
+         ELSE
+           LINE = LINE(I:LENLIN)
+           LENLIN = LENLIN - I + 1
+           ICOM = 12
+           RETURN
+         ENDIF
+       ELSE
+C
+C***   Otherwise it must be a command
+C
+         DO FOR ICOM=1,NUMCOM
+          IF (LINE(1:1) .EQ. COMAND(ICOM))
+            LINE = LINE(2:)
+            LENLIN = LENLIN - 1
+            RETURN
+          ENDIF
+         END DO FOR
+C
+C***   Not a command symbol, check for definition
+C
+         DO FOR J=1,NDEFS
+          IF (SYMS(J) .EQ. LINE(1:1))
+            IF (NUMFLG)
+              NUMBER = ANUMB
+            ELSE
+              NUMBER = 1
+            ENDIF
+            LINE = LINE(2:LENLIN)
+            LENLIN = LENLIN - 1
+            IF (NDEF .EQ. 0 .OR. NSYM .EQ. 0)
+C
+C---   Executable definition
+C
+              DO FOR L=1,NUMBER
+               DO FOR K=1,10
+                UNDO IF (DEFS(1,K,J) .EQ. 0)
+                IF (DEFFLG(3,K,J))
+                  DO FOR JJ=1,10
+                   SRCHBF(JJ) = DEFBUF(JJ,K,J)
+                   SBFLEN(JJ) = DEFS(1+JJ,K,J)
+                   UNDO IF (SBFLEN(JJ) .EQ. 0)
+                  END DO FOR
+                  SBFFLG = .TRUE.
+                ENDIF
+                CALL DOIT(DEFS(1,K,J),DEFFLG(1,K,J),NUMDEF(K,J),
+     1                    DEFFLG(2,K,J))
+               END DO FOR
+              END DO FOR
+              ICOM = -1
+              RETURN
+            ELSE
+C
+C---   Definition insertion
+C
+              DO FOR L=1,NUMBER
+               IF (J .EQ. NSYM) THEN
+C
+C===   If symbol is the one being defined then use current stuff
+C
+                 DO FOR JJ=1,10
+                  IF (NDEF .GT. 10)
+                    ICOM = 0
+                    RETURN
+                  ENDIF
+                  DEFS(1,NDEF,NSYM) = CUR(1,JJ)
+                  UNDO IF (CUR(1,JJ) .EQ. 0)
+                  NUMDEF(NDEF,NSYM) = NUMCUR(JJ)
+                  DEFFLG(1,NDEF,NSYM) = CURFLG(1,JJ)
+                  DEFFLG(2,NDEF,NSYM) = CURFLG(2,JJ)
+                  DEFFLG(3,NDEF,NSYM) = CURFLG(3,JJ)
+                  DO FOR K=1,10
+                   DEFS(1+K,NDEF,NSYM) = CUR(1+K,JJ)
+                   UNDO IF (CUR(1+K,JJ) .EQ. 0)
+                   DEFBUF(K,NDEF,NSYM) = CURBUF(K,JJ)
+                  END DO FOR
+                  NDEF = NDEF + 1
+                 END DO FOR
+               ELSE
+                 DO FOR K=1,10
+                  IF (NDEF .GT. 10)
+                    ICOM = 0
+                    RETURN
+                  ENDIF
+                  UNDO IF (DEFS(1,K,J) .EQ. 0)
+                  DEFFLG(1,NDEF,NSYM) = DEFFLG(1,K,J)
+                  DEFFLG(2,NDEF,NSYM) = DEFFLG(2,K,J)
+                  DEFFLG(3,NDEF,NSYM) = DEFFLG(3,K,J)
+                  DO FOR JJ=1,10
+                   DEFBUF(JJ,NDEF,NSYM) = DEFBUF(JJ,K,J)
+                   DEFS(1+JJ,NDEF,NSYM) = DEFS(1+JJ,K,J)
+                   UNDO IF (DEFS(1+JJ,NDEF,NSYM) .EQ. 0)
+                  END DO FOR
+                  NUMDEF(NDEF,NSYM) = NUMDEF(K,J)
+                  DEFS(1,NDEF,NSYM) = DEFS(1,K,J)
+                  NDEF = NDEF + 1
+                 END DO FOR
+               ENDIF
+              END DO FOR
+              CYCLE 100
+            ENDIF
+          ENDIF
+         END DO FOR
+C
+C***   If it gets here it didn't match anything
+C
+         EXECUTE (INVALID_COMMAND)
+       ENDIF
+      END DO FOREVER
+C
+C************************************************************************
+C********************   HERE FOLLOW THE PROCEDURES   ********************
+C************************************************************************
+C
+      PROCEDURE (GET_NUMBER)
+CP    This procedure converts the number which starts the line into a
+CP    real (floating point) number in ANUMB.
+        IF (LENLIN .EQ. 1)
+          EXECUTE (NO_COMMAND)
+        ELSE
+          DO FOR I=2,LENLIN
+           UNDO IF (.NOT.(LINE(I:I) .EQ. ' ' .OR. (ICHAR(LINE(I:I))
+     1         .GE. ICHAR('0') .AND. ICHAR(LINE(I:I)) .LE. ICHAR('9'))
+     2         .OR. LINE(I:I) .EQ. '.'))
+          END DO FOR
+          READ (UNIT=LINE(:I-1),FMT=200,IOSTAT=J) ANUMB
+200       FORMAT (F<I-1>.0)
+          IF (J .EQ. 0)
+            LINE = LINE(I:LENLIN)
+            LENLIN = LENLIN - I + 1
+            NUMFLG = .TRUE.
+          ELSE
+            EXECUTE (INVALID_COMMAND)
+          ENDIF
+        ENDIF
+      END PROCEDURE
+      PROCEDURE (INSERT_SEARCH_STRING)
+CP    This procedure inserts a search string (LINE(2:J-1)) in the search
+CP    buffers as string NSRCH.
+C
+C***   Only ten strings
+C
+        IF (NSRCH .GT. 10)
+          DO FOR I=1,9
+           SRCHBF(I) = SRCHBF(I+1)
+           SBFLEN(I) = SBFLEN(I+1)
+          END DO FOR
+          NSRCH = 10
+        ENDIF
+        SRCHBF(NSRCH) = LINE(2:J-1)
+        SBFLEN(NSRCH) = J - 2
+        LENLIN = LENLIN - J
+        QUOTE = LINE(1:1)
+        IF (LENLIN .GT. 0) LINE = LINE(J+1:)
+C
+C***   Get rid of double quotes
+C
+        J = 1
+        DO FOREVER
+         I = INDEX(SRCHBF(NSRCH)(J:SBFLEN(NSRCH)),QUOTE) + J - 1
+         UNDO IF (I .EQ. (J - 1))
+         SRCHBF(NSRCH) = SRCHBF(NSRCH)(:I)//SRCHBF(NSRCH)(I+2:)
+         SBFLEN(NSRCH) = SBFLEN(NSRCH) - 1
+         J = I + 1
+        END DO FOREVER
+        SBFLEN(NSRCH+1) = 0
+        SBFFLG = .TRUE.
+      END PROCEDURE
+      PROCEDURE (INVALID_COMMAND)
+CP    This procedure takes care of invalid command syntax.
+        CALL LIB$PUT_SCREEN(CHAR(BELL))
+        IF (VT100)
+          CALL LIB$PUT_SCREEN(CHAR(ESC)//'[3q')
+        ENDIF
+        ICOM = 0
+        RETURN
+      END PROCEDURE
+      PROCEDURE (NO_COMMAND)
+CP    This procedure handles a "empty" line.
+        ICOM = 0
+        LENLIN = 0
+        RETURN
+      END PROCEDURE
+      END

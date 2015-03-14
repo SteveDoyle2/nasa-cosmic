@@ -1,0 +1,24 @@
+\def\initials#1{\def\viewinitials{#1}}
+\newcount\viewmaxpageno
+\def\title#1{\eject\centerline{\bf #1}\bigskip}
+\def\moveleftmargin#1{\advance\leftskip by#1}
+\def\moverightmargin#1{\advance\rightskip by#1}
+\def\resetleftmargin{\leftskip=1truein\gotoindent{0}}
+\def\resetrightmargin{\rightskip=1truein}
+\def\pagenoformat#1{\edef\pagenumformat{#1}}
+\def\maxpagenumber#1{\viewmaxpageno=#1}
+\newcount\myear
+\def\viewdate{\myear=\year\divide\myear by100%
+\multiply\myear by100\advance\myear by-\year\multiply\myear by-1
+\number\month \thinspace /\thinspace\number\day%
+\thinspace /\thinspace\number\myear}
+\newcount\hour\newcount\minute
+\def\viewtime{\minute=\time\relax\hour=\time%
+\divide\hour by60\multiply\hour by60\advance\minute by-\hour\divide\hour by60
+\number\hour\thinspace :\thinspace\ifnum\minute<10 0\fi%
+\number\minute}
+\resetleftmargin
+\resetrightmargin
+\pagenoformat{arabic}
+\initials{\TeX\ }
+\maxpagenumber{1000}

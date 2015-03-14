@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+Organization charts present a clear picture of the interrelationships among
+the positions of an organization.  Up to four organizational levels can be
+illustrated on one page.
+
+The fields which are to be entered are as follows:
+        Title        : Displayed at the top and centered
+        Top-level    : Displayed centered in top box on chart
+        Deputy       : Also known as assistants, below top-level in top box
+        Staff        : Shown in level under top-level with each in own box
+        Mid-level    : Up to 6, shown under staff with line to top box
+        Low-level    : Up to 5, shown under mid-level with line to mid-level
+        Date         : Any date desired, up to 20 characters
+        Author       : Any author desired, up to 20 characters
+        Organization : Any organization desired, up to 20 characters
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

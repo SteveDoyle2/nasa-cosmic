@@ -1,0 +1,1724 @@
+LAR-10658
+FAST MARS COMMUNICATION GEOMETRY PROGRAM
+      PROGRAM UD226 (INPUT,OUTPUT,TAPE5=INPUT,TAPE3=OUTPUT,TAPE1,TAPE2,
+     1FILMPL)
+      COMMON   AC(3)  ,ALPHA  ,AREA   ,AS     ,AT(4)  ,B(4)  ,BARB
+     1,CA     ,CAA    ,CAO    ,CG     ,CHT    ,CL     ,CNO   ,CNA
+     2,CNRD   ,CPH    ,CS     ,C1     ,C2     ,D(4)   ,DTC   ,DTP
+     3,DUM(7) ,DX(12) ,E(4)   ,F(3)   ,G(3,3) ,GJ2    ,GMU   ,GREF
+     4,HB(17) ,HO     ,ISV    ,IPZ    ,JDUM   ,JSW1   ,JSW2  ,KDUM
+     5,L      ,MARY   ,MB     ,NC(20) ,NE     ,NP     ,NPTS  ,N1(3)
+      COMMON   N2(3)  ,N3(3)  ,N4(3)  ,N5(3)  ,N6(3)  ,N7(3) ,N8(3)
+     1,OMEG   ,PB(17) ,PE     ,PR(3)  ,R      ,REO    ,RERP2
+     2,RHO    ,RL(17) ,RN     ,RO,RORB,RPO    ,SA     ,SG    ,SIGMA
+     3,SL     ,SP(6)  ,SPH    ,SREF   ,SS     ,SX(7)  ,T     ,TA(10)
+     4,TC1(10),TC2(10),TC3(10),TC4(10),TEM    ,TF     ,THUST ,TM1(10)
+     5,TM2(10),TM3(10),TM4(10),TM(50), TMB(17),TO ,TE ,TPRNT ,TS(10)
+      COMMON   TSV    ,TT(50) ,T2     ,VR(3)  ,X(12)  ,XA(10),XM(50)
+     1,XMAS   ,XMUJ   ,XQ     ,XS(10) ,XT(50) ,YM
+      COMMON /COMSOP/   STPPAR,ISTOP,IDONE,SAVE(7) ,SLOPE
+      COMMON /LANDER/ XSAV(12),XY(3),ALTF,LAND,LL
+      COMMON /QQ/  IQFLAG,QMAXS
+        COMMON /DBURN/ GOODY(12)
+      COMMON /XBURN/ XMORE(10)
+      EQUIVALENCE (TDM,XMORE)
+      DIMENSION THDEQ(1),XDEQ(1),XEQ(1)
+      EQUIVALENCE (THDEQ,GOODY),(XDEQ,GOODY(4)),(XEQ,GOODY(7))
+      EQUIVALENCE (RR,GOODY(10)),(RPL,GOODY(11))
+C-------------------------------------------------------------------------------
+C     DEFINITION OF COMMON VARIABLES=
+C     AC(1)  =  SUM OF THE AERODYNAMIC FORCES ON LANDER IN THE X(I) DIRECTION
+C     AC(2)  =  SUM OF THE AERODYNAMIC FORCES ON LANDER IN THE Y(I) DIRECTION
+C     AC(3)  =  SUM OF THE AERODYNAMIC FORCES ON LANDER IN THE Z(I) DIRECTION
+C     ALPHA  =  ANGLE OF ATTACK OF LANDER (LBS)
+C     AREA   =  REFERENCE AREA FOR AERODYNAMIC COEFFICIENTS (FT**2)
+C     AS     =  LOCAL ACONSTIC VELOCITY (FT/SEC)
+C     AT(1)  =  (SEA LEVEL GRAVITY) * (CONSTANT MOLECULAR WT.)/(UNIVERSAL GAS
+C               CONSTANT (USED IN PRESSURE EQUATION IN ATMDT)
+C     AT(2)  =  (CONSTANT MOLECULAR WT.)/(UNIVERSAL GAS CONSTANT)
+C               USED IN RHO EQUATION IN ATMDT.
+C     AT(3)  =  SQRT((SPECIFIC HEAT RATIO)*(UNIVERSAL GAS CONSTANT)/(CONSTANT
+C                    MOLECULAR WEIGHT)) USED IN ACOUSTIC VELOCITY EQU. IN ATMDT
+C     B(4)   =  IN   MOTON FOR COMPUTING EULER MATRIX.
+C     BARA   =  DUMMY VARIABLE NOT NEEDED
+C     CA     =  COSINE(.5+ALPHA)
+C     CAA    =  TABLE LOOK UP VALUE OF AXIAL OR DRAG AERO. COEF.AS FUNC. OF
+C               MACH NO. (C1 IN EQU 18 RE. MANUAL)
+C     CAO    =  TABLE LOOK UP VALUE OF AXIAL OR DRAG AERO. COEF. AS FUNC. OF
+C               (MACH)*ALPHA**2 (C2 IN EQU. 18 RE. MANUAL)
+C     CG     =  COSIN (.5*RELATIVE GAMMA)  USE IN MOTON EULER MATRIX
+C     CHT    =
+C     CL     =  COSINE (.5*RELATIVE AZIMUTA) USED IN MOTON EULER MATRIX
+C     CNO    =  TABLE LOOK UP VALUE OF NORMAL OR LIFT AREA. COEF. AS FUNC. OF
+C                MACH) (C3 IN EQU. 18 RE. MANUAL)
+C     CNA    =  TABLE LOOK UP VLLUE OF NORMAL OR LIFT AERO. COEF. AS FUNC. OF
+C               (MACH)*LPHA*ABS(ALPHA) (C4 IN EQU. 18 RE. MANUAL)
+C     CNRD   =  NO. OF RADIANS IN 1 (ONE) DEGREE.
+C     CPH    =  COSINE (PHI) PHI IS AEROCENTRIC LATITUDE
+C     CS     =  COSINE (.5*SIGMA)
+C     C1     =  EITHER CA (AXIAL AERO. FORCE COEF.) OR CD (DRAG FORCE COEF.)
+C               OPTIONAL ACCORDING TO TABLE IMPUT. (CAAND CD AS IN MANUAL)
+C     C2     =  EITHER CN (NORMAL AXIAL AERO. FORCE COEF.) OR CL (LIFT FORCE
+C               COEF.) OPTION ACCORCING TO TABLE INPUT. (CN AND LL AS IN MANUAL)
+C     D      =  D(1)-D(4) CORRESPOND TO D(0)-D(3) IN EOU.(10) IN THE MANUAL.
+C               USED IN MOTON TO COMPUTE THE EULER MATRIX.
+C     DTC    =  COMPUTING INTERVAL (SEC)
+C     DTP    =  PRINT INTERVAL (SEC)
+C     DUM    =  DUMMY VARIABLE ARRAY USED IN BLCK2 FOR INPUT.
+C     DX(1)  =
+C     DX(2)  =  DOT (DV/DT) OF THE INERTIAL VELOCITY VECTOR.OF THE LANDER.
+C     DX(3)  =
+C     DX(4)  =  DOT OF ALTITUDE OF THE LANDER
+C     DX(5)  =  DOT OF LATITUDE   OF THE LANDER
+C     DX(6)  =  DOT OF LONGITUDE  OF THE LANDER
+C     DX(7)  =  DOT OF AERO. HEAT OF THE LANDER
+C     DX(8)  =
+C     DX(9)  =  DOT (DV/DT) OF THE INERTIAL VELOCITY VECTOROF THE ORBITER
+C     DX(10) =
+C     DX(11) =  DOT OF ALTITUDE  OF THE ORBITER
+C     DX(12) =  DOT OF LATITUDE  OF THE ORBITER
+C     DX(13) =  DOT OF LONGITUDE OF THE ORBITER
+C     E      =  E(1)-E(4) CORRESPOND TO E(0)-E(3) IN EQUS (8) AND (9) IN THE
+C               MANUAL. EULER PARAMETERS
+C     F      =  TEMPERARY ARRAY USED IN MOTON FOR AERO. CALCULATIONS.
+C     G      =  TRANSFORMATION MATRIX BETWEEN BODY AND TOPOCENTRIC AXES.
+C     GJ2    =  COEFFICIENT OF SECOND GRAVITATIONAL HARMONIC.
+C     GMU    =  COEFFICIENT OF FIRST GRAVITATIONAL HARMONIC.
+C     GREF   =  REFERENCE GRAVITATIONAL ACCELERATION FOR CONVERTING WEIGHT TO
+C               MASS, (FT(SEC)
+C     HB     =  ARRAY OF GEOPOTENTIAL OR GEOMETRIC BASE ALTITUDE FOR ATMOSPHERIC
+C               TEMPERATURE PROFILE (FT).
+C     HO     =  ALTITUDE ABOVE OBLATE PLANET (FT)
+C     ISV    =  INTEGER SAVE USE FOR TEMPERARY STORAGE.OF NO. OF POINTS IN HB
+C               TABLE.
+C     JDUM   =  USE TO READ IN OPTION FLAGS IN BLCK2.
+C     KDUM   =  USE TO READ IN INPUT BLOCK NUMBER IN BLCK2.
+C     L      =  INTAGRATION FLAG SEE BELOW FOR DEFINITION.
+C     MB     =  THRUST OPTION FLAG DEFINED AS=
+C                 MB = 0  TRUST+AERO ZERO
+C                      1  AERO ZERO
+C                      2  THRUST ZERO
+C                      3  THRUST+AERO
+C     NC     =  OPTION ARRAY
+C     NC(1)  =  AVAILABLE
+C     NC(2)  =  0 NO THRUST
+C               1 INPUT ACTUAL THRUST
+C               2 INPUT VACUUM THRUST
+C               3 INPUT SEA LEVEL THRUST
+C     NC(3)  =  0 INPUT MASS, M(T)
+C               1 INPUT WGT., W(T) AND GREF
+C     NC(4)  =  0 NORMAL INTEGRATION
+C               1 VERTICAL FLIGHT
+C     NC(5)  =  0 NO AERO
+C               1 INPUT CA AND CN F(MACH)
+C               2 INPUT CD AND CL F(MACH)
+C               3 INPUT CD F(TIME)
+C     NC(6)  =  1 INPUT INITIAL CONDITION AS RELATIVE (I.E.VEL,GAM,LAM)
+C               2 INPUT INITIAL CONDITION AS INERTIAL
+C               3 INPUT A DELTA TO VR,GAMR,LAMR (USED FOR CHANGE OF PHASE)
+C               4 INPUT A DELTA TO VI,GAMI,LAMI (USED FOR CHANGE OF PHASE)
+C     NC(7)  =  0 NO AUXILARY TAPE WRITE
+C               1 OUTPUT ON TAPE1 (JPL TAPE)
+C               2 OUTPUT ON TAPE1 AND TAPE2 (TAPE2= PLOT PROFILE)
+C               3 OUTPUT ON TAPE2
+C     NC(8)  =  0 USE BUILT-IN 1962 US STD ATMOSHERE WITH MARS CONSTANTS.
+C               1 INPUT ATMOSHERE AS FUNCTION OF GEOPOTENTIAL ALTITUDE.
+C               2 INPUT ATMOSHERE AS FUNCTION OF GEOMETRIC
+C     NC(9)  =  0 USE BUILT-IN MARS CONSTANTS
+C               1 INPUT CONSTANTS ON CARD 9
+C     NC(10) =  0 NO OPTION
+C     NC(11) =  1 STOP ON TIME ON CARD 11
+C               2 STOP ON ALTITUDE
+C               3 STOP ON MACH NO.
+C               4 STOP ON RELATIVE FLIGHT PATH ANGLE
+C               5 STOP ON RELATIVE VELOCITY
+C     NC(12) =  NO OPTION
+C     NC(13)
+C     NC(19) =  AVAILABLE FOR FUTURE EXPANTION OF THE INPUT.
+C     NC(20) =  0 MORE PHASES FOLLOW.
+C               1 LAST PHASE OF THIS PROBLEM.
+C     NE     =  NUMBER OF INTAGRATION VABIABLES
+C     NPTS   =  DUMMY VARIABLE USE FOR TABLE INPUT.
+C-------------------------------------------------------------------------------
+C     BELOW ARE THE VARIABLE ARRAYS N1 THROUGH N8. THESE ARRAYS ARE USE IN
+C     CONJUNCTION WITH INPUT TABLES THAT USE THE LINEAR INTERPOLATION ROUTINE
+C     TAB. FOR THE GENERAL N ARRAY =
+C               N(1) = NUMBER OF POINTS ON THE Y(XI) TABLE.
+C                       (NOTE TWO NUMBERS FOR Y AND X CONSTITUTE ONE POINT)
+C               N(2) = ARGUMENT OF POINT USED TO COMMENCE THE TABLE SEARCH.
+C                      USUALLY N(2)=1
+C               N(3) = 0 THE TABULAR VALUE OF    Y(X) ARE ENTERED BY TWO ARRAYS
+C                      1 THE TABULAR VALUE OF Y(X) ARE ENTERED AS ONE ARRAY.
+C     N1     =  AERO COEF. (AXIAL OR DRAG) VS MACH NO. OR DRAG VS TIME
+C     N2     =  AERO COEF. (NORMAL OR LIFT) VS MACH.
+C     N3     =  AERO. COEF. (AXIAL OR DRAG) VS (MACH)*ALPHA**2
+C     N4     =  AERO  COEF. (NORMAL OR LIFT) VS (MACH)*ALPHA*ABS(ALPHA)
+C     N5     =  THRUST TABLE VS TIME
+C     N6     =  MASS OR WEIGHT VS TIME
+C     N7     =  ALPHA HISTORY VS TIME
+C     N8     =  SIGMA HISTORY VS TIME
+C     OMEG   =  PLANET ROTATION RATE (RAD/SEC)
+C     PB     =  PPRESSUR BASE ARRAY
+C     PE     =  ATMOSHERE PRESSURE AT CURRENT ALTITUDE OF TAE LANDER.
+C     PR     =
+C     R      =  RADIUS TO THE LANDER (FT)
+C     REO    =  RADIUS OF PLANET AT THE EQUATOR
+C     RERP2  =  SQUARE OF THE RATIO OF (REO/RPO)
+C     RL     =  LAPSE RATE ARRAY
+C     RN     =  NOSE RADIUS OF LANDER
+C     RO     =  RADIUS OF THE PLANET AT THE SUBVEHICAL POINT OF THE LANDER
+C     RORB   =  RADIUS TO THE ORBITER.
+C     RPO    =  RADIUS OF PLANET AT THE POLE.
+C     SA     =  SINE (ALPHA)
+C     SG     =  SINE (.5*GAMMA)
+C     SIGMA  =  ANGLE OF ROTATION ABOUT THE ROLL AXIS OF LANDER.
+C     SL     =  SINE (.5*LAMDA) LANDA=AZIMUTH.
+C     SP(1)  =  INERTIAL VELOCITY OF LANDER
+C     SP(2)  =  INTERIAL GAMMA
+C     SP(3)  =  INERTIAL AZIMUTH
+C     SP(4)  =  LATITUDE
+C     SP(5)  =  LONGITUDE
+C     SD(6)  =  TEMPERARY STORAGE VARIABLE.
+C     SPH    =  SINE (PHI) PHI = LATITUDE OF LANDER
+C     SREF   =  REFERENCE AREA FOR AERO. COEF. (SQ.FT.)
+C     SS     =  SINE (.5*SIGMA)                                P
+C     SX(7)  =  AVAIL.
+C     T      =  TIME FROM START OF THIS PROBLEM.
+C     TA     =  TABLE OF TIMES FOR PROFILE OF ALPHA
+C     TC1    =  1ST   TABLE OF AERO. COEF VS MACH OR TIME
+C     TC2    =  2ND   TABLE OF AERO. COEF VS MACH OR TIME
+C     TC3    =  3RD   TABLE OF AERO. COEF VS MACH OR TIME
+C     TC4    =  4TH   TABLE OF AERO. COEF VS MACH OR TIME
+C     TEM    =  STORAGE CELL FOR TIME USED BETWEEN PHASES.
+C     TF     =  FINAL TIME
+C     THUST  =  CURRENT VALUE OF THRUST
+C     TM1    =  TABLE OF INDEPENDENT VARIABLES (MACH OF TIME) FOR TC1
+C     TM2    =  TABLE OF INDEPENDENT VARIABLES(MACH) FOR TC2
+C     TM3    =  TABLE OF INDEPENDENT VARIABLES (MACH) FOR TC3
+C     TM4    =  TABLE OF INDEPENDENT VARIABLES(MACH) FOR TC4
+C     TM     =  TABLE OF INDEPENDENT VARIABLES(TIME) FOR XM
+C     TX     =  TABLE OF INDEPENDENT VARIABLES(TIME) FOR XS
+C     TA     =  TABLE OF INDEPENDENT VARIABLES(TIME) FOR XA
+C     TT     =  TABLE OF INDEPENDENT VARIABLES(TIME) FOR XT
+C     TO     =  INITIAL TIME AT THE BEGINNING OF EACH PHASE
+C     TPRNT  =  TIME TO PRINT
+C     T2     =  NEW VALUE OF TPRNT
+C     VR(1)  =  RELATIVE VELOCITY OF LANDER
+C     VR(2)  =  RELATIVE GAMMA    OF LANDER
+C     VR(3)  =  RELATIVE AZIMUTH  OF LANDER
+C     X(1)   = U COMPONENT OF VELOCITY (INERTIAL) VECOR OF LANDER
+C     X(2)   = V COMPONENT OF VELOCITY (INERTIAL) VECOR OF LANDER
+C     X(3)   = W COMPONENT OF VELOCITY (INERTIAL) VECOR OF LANDER
+C     X(4)   = ALTITUDE ABOVE OBLATE PLANET             OF LANDER
+C     X(5)   = LATITUDE                                 OF LANDER
+C     X(6)   = LONGITUDE                                OF LANDER
+C     X(7)   = HEAT                                     OF LANDER
+C     X(8)   = U COMPONENT OF VELOCITY (INERTIAL) VECTOR OF ORBITOR
+C     X(9)   = V COMPONENT OF VELOCITY (INERTIAL) VECTOR OF ORBITOR
+C     X(10)  = W COMPONENT OF VELOCITY (INERTIAL) VECTOR OF ORBITOR
+C     X(11)  = ALTITUDE ABOVE PLANET
+C     X(12)  = LATITUDE
+C     X(13)  = LONGITUDE
+C     XA     =  TABLE OF ALPHA VALUES FOR PROFILE VS TIME  (DEG)
+C     XM     =  TABLE OF MASS OF WEIGHT VALUE VS TIME  (SLUGS OR LB)
+C     XMAS   = MASS OF THE LANDER
+C     XMUJ   = OBLATENESS TERM (MU*J IN EOU 2 RE. MANUAL)
+C     XQ     = DYNAMIC PRESSUR OF LANDER
+C     XS     =  TABLE OF SIGMA VALUES FOR PROFILE VS TIME  (DEG)
+C     XT     =  TABLE OF THRUST VALUES VS TIME (LB)
+C     YM     = MACH NUMBER OF LANDER
+C------------------------------------------------------------------------------
+C
+      DATA XKMFT /3.28083E+3/
+C-----------------------------------------------------------------------
+C     START HERE OR COME HERE AT THE END OF A PROBLEM.
+C-----------------------------------------------------------------------
+ 10   CONTINUE
+      CALL BLCK1
+C-----------------------------------------------------------------------
+C     CALL BLCK2 TO READ IN DATA AT THE BEGINNING OF EACH PHASE.
+C-----------------------------------------------------------------------
+ 20   CONTINUE
+      CALL BLCK2
+      IDONE=0
+      L = 4
+C-----------------------------------------------------------------------
+C     COME HERE AFTER EACH PRINT OUT
+C-----------------------------------------------------------------------
+ 30   CONTINUE
+      T2= TPRNT
+C-----------------------------------------------------------------------
+C     RKUT IS A THREE PASS RUNGA-KUTTA INTAGRATION ROUTINE.
+C-----------------------------------------------------------------------
+ 40   CONTINUE
+      IF (NC(1).EQ.2) GO TO 41
+      CALL RKUT
+      GO TO 42
+C-----------------------------------------------------------------------
+C     QUADR IS AQUADATURE RULE INTAGRATION ROUTINE.
+C-----------------------------------------------------------------------
+ 41   CONTINUE
+      CALL QUADR
+ 42   CONTINUE
+C-----------------------------------------------------------------------
+C     DEFINITION OF L =
+C                       L = 1 CALCULATE AUX. QUATIONS AND DERIVATIVES.
+C                       L = 2 CONVERGENT POINT.
+C                       L = 3 TIME TO PRINT.
+C                       L = 4 INITIALIZE
+C-----------------------------------------------------------------------
+      GO TO (50,60,70),L
+C***********************************************************************
+C     DIFFERENCIAL EQUATION LOOP                                       *
+C***********************************************************************
+ 50   CONTINUE
+      IF (LAND.EQ.1974) GO TO 51
+C-----------------------------------------------------------------------
+C     CALL MOTON FOR EQUATIONS OF MOTION BEFORE LANDING.
+C-----------------------------------------------------------------------
+      CALL MOTON
+      GO TO 40
+C-----------------------------------------------------------------------
+C     CALL MOTON2 FOR EQUATIONS OF MOTION AFTER LANDING.
+C-----------------------------------------------------------------------
+ 51   CONTINUE
+      CALL MOTON2
+      GO TO 40
+C***********************************************************************
+C     INTAGRATION LOOP                                                 *
+C***********************************************************************
+ 60   CONTINUE
+C-----------------------------------------------------------------------
+C     CHECK FOR LANDING
+C-----------------------------------------------------------------------
+      IF (LAND.EQ.1974) GO TO 63
+      IF (HO.GT.ALTF) GO TO 61
+C-----------------------------------------------------------------------
+C     LANDER HAS REACHED FINAL ALTITUDE.
+C-----------------------------------------------------------------------
+      LAND=1974
+C-----------------------------------------------------------------------
+C     AFTER LANDING LINEAR INTERPALATE BACK TO EXACT POINT OF LANDING
+C-----------------------------------------------------------------------
+      XY(1)=HO
+      XY(2)=ALTF
+      XY(3)=XSAV(4)
+      SLOPE=(XY(3)-XY(2))/(XY(3)-XY(1))
+      TDUM=SAVE(1)+SLOPE*(T-SAVE(1))
+      TPRNT=TDUM
+      T=TDUM
+      DO 43 I=1,12
+      X(I)=XSAV(I)+SLOPE*(X(I)-XSAV(I))
+ 43   CONTINUE
+      MARY=7
+      LL=2
+      L=4
+C-----------------------------------------------------------------------
+C     CALL MOTON2 FOR STUFF AFTER LANDING.
+C-----------------------------------------------------------------------
+      CALL MOTON2
+      GO TO 30
+C-----------------------------------------------------------------------
+C     SAVE OLD POINT
+C-----------------------------------------------------------------------
+ 61   CONTINUE
+      DO 62 I=1,12
+      XSAV(I)=X(I)
+ 62   CONTINUE
+      XSAV(4)=HO
+C-----------------------------------------------------------------------
+C     TEST FOR PHASE STOPPING CONDITIONS
+C-----------------------------------------------------------------------
+C     RETURN TO INTAGRATION LOOP FOR EXACT POINT IF IDOE=1 AT THIS POINT
+C
+ 63   CONTINUE
+      IF (IDONE.EQ.1) GO TO 40
+      CALL STOPIN
+C-----------------------------------------------------------------------
+C     IF THIS STATEMENT TRUE REINITIALIZES L=4 TO RESTART INTAGRATION.
+C-----------------------------------------------------------------------
+      IF (IDONE.EQ.1.AND.DTC.NE.SAVE(6)) L=4
+C-----------------------------------------------------------------------
+C     CALL DYNPRS TO TEST FOR MAX. DYNAMIC PRESSURE (QMAX)
+C-----------------------------------------------------------------------
+      CALL DYNPRS (IQFLAG,QMAXS,XQ)
+      IF (IDONE.EQ.1) GO TO 30
+      GO TO 40
+C***********************************************************************
+C     PRINT LOOP                                                       *
+C***********************************************************************
+ 70   CONTINUE
+      IF (T-TPRNT+.001.LT.0.) GO TO 30
+C----------------------------------------------------------------------
+C     CALL RELINT TO GET SPHERICAL VECTORS OF THE LANDER AND ORBITER
+C----------------------------------------------------------------------
+      CALL RELINT
+      IF (NC(12).EQ.0) GO TO 71
+C-----------------------------------------------------------------------
+C     CALL COMGOM TO COMPUTE COMMUNICATION GEOMETRY BETWEEN ORBITOR AND
+C     LANDER.
+C-----------------------------------------------------------------------
+      CALL COMGOM
+C-----------------------------------------------------------------------
+C     IF THE LANDER HAS NOT LANDED CALL FADEX TO COMPUTE FADING
+C     PARAMETERS OF COMMUNICATION GEOMETRY.
+C-----------------------------------------------------------------------
+      IF (LAND.NE.1974) CALL FADEX
+C-----------------------------------------------------------------------
+C     CALL PRNT TO WRITE BLOCK OF OUTPUT
+C-----------------------------------------------------------------------
+ 71   CONTINUE
+      CALL PRNT
+C-----------------------------------------------------------------------
+C     CHECK FOR END OF PHASE
+C-----------------------------------------------------------------------
+      IF (LAND.EQ.1974.AND.NC(11).EQ.2.AND.STPPAR.EQ.ALTF) IDONE=1
+      IF (IDONE.EQ.1) GO TO 80
+C-----------------------------------------------------------------------
+C     INCREMENT TIME TO PRINT.
+C-----------------------------------------------------------------------
+      TPRNT=TPRNT+DTP
+      NC(12)=1
+      GO TO 40
+C-----------------------------------------------------------------------
+C     END OF PHASE
+C-----------------------------------------------------------------------
+ 80   CONTINUE
+      DTC=SAVE(6)
+      DTP=SAVE(7)
+C-----------------------------------------------------------------------
+C     CHECK FOR MORE PHASES IN THIS PROBLEM.
+C         IE=  NC(20) = 0  MORE PHASES FOLLOW
+C              NC(20) = 1  END OF THIS PROBLEM
+C----------------------------------------------------------------------
+      IF (NC(20).EQ.0) GO TO 20
+      GO TO 10
+      END
+      SUBROUTINE ATMDT
+      COMMON   AC(3)  ,ALPHA  ,AREA   ,AS     ,AT(4)  ,B(4)  ,BARB
+     1,CA     ,CAA    ,CAO    ,CG     ,CHT    ,CL     ,CNO   ,CNA
+     2,CNRD   ,CPH    ,CS     ,C1     ,C2     ,D(4)   ,DTC   ,DTP
+     3,DUM(7) ,DX(12) ,E(4)   ,F(3)   ,G(3,3) ,GJ2    ,GMU   ,GREF
+     4,HB(17) ,HO     ,ISV    ,IPZ    ,JDUM   ,JSW1   ,JSW2  ,KDUM
+     5,L      ,MARY   ,MB     ,NC(20) ,NE     ,NP     ,NPTS  ,N1(3)
+      COMMON   N2(3)  ,N3(3)  ,N4(3)  ,N5(3)  ,N6(3)  ,N7(3) ,N8(3)
+     1,OMEG   ,PB(17) ,PE     ,PR(3)  ,R      ,REO    ,RERP2
+     2,RHO    ,RL(17) ,RN     ,RO,RORB,RPO    ,SA     ,SG    ,SIGMA
+     3,SL     ,SP(6)  ,SPH    ,SREF   ,SS     ,SX(7)  ,T     ,TA(10)
+     4,TC1(10),TC2(10),TC3(10),TC4(10),TEM    ,TF     ,THUST ,TM1(10)
+     5,TM2(10),TM3(10),TM4(10),TM(50), TMB(17),TO ,TE ,TPRNT ,TS(10)
+      COMMON   TSV    ,TT(50) ,T2     ,VR(3)  ,X(12)  ,XA(10),XM(50)
+     1,XMAS   ,XMUJ   ,XQ     ,XS(10) ,XT(50) ,YM
+      DIMENSION NAME(5)
+      DATA NAME /10HH BASE 0  ,10HT BASE 0  ,10HP BASE 0  ,10HL RATE 0
+     1          ,10HAT ARRAY 0 /
+      DATA NUT /0/
+      IF (NUT.EQ.1) GO TO 100
+      NUT = 1
+      H = HB(1)
+      NPTS = ISV
+      DO 40 K=1,NPTS
+      IF (NC(8).EQ.2) H = AT(4)*H/(AT(4)+H)
+      IF (K.GT.1) GO TO 30
+      TE = TMB(K)
+      PE = PB(K)
+      GO TO 32
+ 30   CONTINUE
+      I = K-1
+      RL(I) = (TMB(K)-TMB(I))/(H-HB(I))
+      TE = TMB(I) + RL(I)*(H-HB(I))
+      IF (RL(I).EQ.0.) GO TO 31
+      PE = PB(I)*(TMB(I)/TE)**(AT(1)/RL(I))
+      GO TO 32
+ 31   CONTINUE
+      PE = PB(I)*EXP( -AT(1)*(H-HB(I))/TMB(I) )
+ 32   CONTINUE
+      PB(K) = PE
+      HB(K) = H
+      RL(K) =0.
+      H = HB(K+1)
+ 40   CONTINUE
+      PRINT 1000, NAME(1)
+      WRITE (3,1004) (HB(I),I=1,NPTS)
+      PRINT 1000, NAME(2)
+      WRITE (3,1004) (TMB(I),I=1,NPTS)
+      PRINT 1000, NAME(3)
+        WRITE (3,1004) (PB(I),I=1,NPTS)
+      PRINT 1000, NAME(4)
+      WRITE (3,1004) (RL(I),I=1,NPTS)
+      PRINT 1000, NAME(5)
+      WRITE(3,1004) (AT(I),I=1,4)
+      NC(8)=2
+      ISV=1
+ 100  CONTINUE
+      IF(NC(8)-1) 20,22,20
+   20 H=  AT(4)*HO/ (AT(4)+HO)
+      GO TO 24                                                          ATMD0060
+   22 H= HO
+   24 CONTINUE                                                          ATMD0080
+    3 I = ISV                                                           ATMD0090
+      IF (H.LT.0.) H=0.
+      IF(H-HB(I))4,5,6                                                  ATMD0100
+    4 IF(H-HB(I-1))7,8,9                                                ATMD0110
+    5 TE = TMB(I)                                                       ATMD0120
+      PE = PB(I)                                                        ATMD0130
+      GO TO 15                                                          ATMD0140
+    6 IF(H -HB(I+1))10,11,12                                            ATMD0150
+    7 I = I-1                                                           ATMD0160
+      GO TO 4                                                           ATMD0170
+    8 I = I - 1                                                         ATMD0180
+      GO TO 5                                                           ATMD0190
+    9 I = I - 1                                                         ATMD0200
+      GO TO 10                                                          ATMD0210
+   11 I = I + 1                                                         ATMD0220
+      GO TO 5                                                           ATMD0230
+   12 I = I + 1                                                         ATMD0240
+      GO TO 6                                                           ATMD0250
+   10 TE=TMB(I)+RL(I)*(H-HB(I))
+      IF(RL(I))13,14,13                                                 ATMD0270
+   13 PE=PB(I)*(TMB(I)/TE)**(AT(1)/RL(I))
+      GO TO 15                                                          ATMD0290
+   14 PE=PB(I)*EXP(-AT(1)*(H-HB(I))/TMB(I))
+   15 RHO=AT(2)*PE/TE
+   16 AS=AT(3)*SQRT(TE)
+      ISV = I                                                           ATMD0340
+   99 RETURN                                                            ATMD0350
+ 1000 FORMAT (8X,A10)
+ 1004 FORMAT(8X,6E15.8)
+      END                                                               COESA 62
+      SUBROUTINE BLCK1
+      COMMON   AC(3)  ,ALPHA  ,AREA   ,AS     ,AT(4)  ,B(4)  ,BARB
+     1,CA     ,CAA    ,CAO    ,CG     ,CHT    ,CL     ,CNO   ,CNA
+     2,CNRD   ,CPH    ,CS     ,C1     ,C2     ,D(4)   ,DTC   ,DTP
+     3,DUM(7) ,DX(12) ,E(4)   ,F(3)   ,G(3,3) ,GJ2    ,GMU   ,GREF
+     4,HB(17) ,HO     ,ISV    ,IPZ    ,JDUM   ,JSW1   ,JSW2  ,KDUM
+     5,L      ,MARY   ,MB     ,NC(20) ,NE     ,NP     ,NPTS  ,N1(3)
+      COMMON   N2(3)  ,N3(3)  ,N4(3)  ,N5(3)  ,N6(3)  ,N7(3) ,N8(3)
+     1,OMEG   ,PB(17) ,PE     ,PR(3)  ,R      ,REO    ,RERP2
+     2,RHO    ,RL(17) ,RN     ,RO,RORB,RPO    ,SA     ,SG    ,SIGMA
+     3,SL     ,SP(6)  ,SPH    ,SREF   ,SS     ,SX(7)  ,T     ,TA(10)
+     4,TC1(10),TC2(10),TC3(10),TC4(10),TEM    ,TF     ,THUST ,TM1(10)
+     5,TM2(10),TM3(10),TM4(10),TM(50), TMB(17),TO ,TE ,TPRNT ,TS(10)
+      COMMON   TSV    ,TT(50) ,T2     ,VR(3)  ,X(12)  ,XA(10),XM(50)
+     1,XMAS   ,XMUJ   ,XQ     ,XS(10) ,XT(50) ,YM
+      COMMON /LANDER/ XSAV(12),XY(3),ALTF,LAND,LL
+      COMMON /QQ/  IQFLAG,QMAXS
+      PRINT 1000
+      LAND=1
+      IQFLAG=1
+      IPZ=0
+      IDONE=0
+      MARY=1
+      T=0.
+      QMAXS=-20.
+    2 DO 10 I=1,3
+      I=I
+      IF(I-2) 4,5,4
+    4 KDUM=0
+      GO TO 8
+    5 KDUM=1
+    8 N1(I)=KDUM
+      N2(I)=KDUM
+      N3(I)=KDUM
+      N4(I)=KDUM
+      N5(I)=KDUM
+      N6(I)=KDUM
+      N7(I)=KDUM
+      N8(I)=KDUM
+   10 F(I)=0.
+      REO = 1.1133202E7
+      RPO = 1.1074804E7
+      GMU = 1.51247081E15
+      GJ2 = .00197
+      OMEG = 7.08821667E-5
+      CNRD=.017453292
+      DO 12 I=1,10
+   12 NC(I)=0.
+      AT(1)=1.8743295E-2
+      AT(2)=.58256340E-3
+      AT(3)=49.0221568
+      TA(1)=0.
+      TA(2)=0.
+      TEM=0.
+      ISV=1
+      RETURN
+ 1000 FORMAT (53H1     FAST MARS CDC/6500 TRAJECTORY PROGRAM MAY 1970 )
+      END
+      SUBROUTINE BLCK2
+      COMMON   AC(3)  ,ALPHA  ,AREA   ,AS     ,AT(4)  ,B(4)  ,BARB
+     1,CA     ,CAA    ,CAO    ,CG     ,CHT    ,CL     ,CNO   ,CNA
+     2,CNRD   ,CPH    ,CS     ,C1     ,C2     ,D(4)   ,DTC   ,DTP
+     3,DUM(7) ,DX(12) ,E(4)   ,F(3)   ,G(3,3) ,GJ2    ,GMU   ,GREF
+     4,HB(17) ,HO     ,ISV    ,IPZ    ,JDUM   ,JSW1   ,JSW2  ,KDUM
+     5,L      ,MARY   ,MB     ,NC(20) ,NE     ,NP     ,NPTS  ,N1(3)
+      COMMON   N2(3)  ,N3(3)  ,N4(3)  ,N5(3)  ,N6(3)  ,N7(3) ,N8(3)
+     1,OMEG   ,PB(17) ,PE     ,PR(3)  ,R      ,REO    ,RERP2
+     2,RHO    ,RL(17) ,RN     ,RO,RORB,RPO    ,SA     ,SG    ,SIGMA
+     3,SL     ,SP(6)  ,SPH    ,SREF   ,SS     ,SX(7)  ,T     ,TA(10)
+     4,TC1(10),TC2(10),TC3(10),TC4(10),TEM    ,TF     ,THUST ,TM1(10)
+     5,TM2(10),TM3(10),TM4(10),TM(50), TMB(17),TO ,TE ,TPRNT ,TS(10)
+      COMMON   TSV    ,TT(50) ,T2     ,VR(3)  ,X(12)  ,XA(10),XM(50)
+     1,XMAS   ,XMUJ   ,XQ     ,XS(10) ,XT(50) ,YM
+      COMMON/ANT/CACA,SACA,CACL,SACL,CANOP(3),RORS(3),CRUNT(3),CO,CLA
+      COMMON /COMSOP/   STPPAR,ISTOP,IDONE,SAVE(7),SLOPE
+      COMMON /LANDER/ XSAV(12),XY(3),ALTF,LAND,LL
+      DIMENSION TABX(3)
+      IPZ=IPZ+1
+      WRITE(3,1010) IPZ
+6     CONTINUE
+      IU=5
+      READ (5,1000) KDUM,JDUM,(DUM(I),I=1,6)
+      IF (EOF,5)  8,9
+    8 STOP
+    9 CONTINUE
+      WRITE(3,1006) KDUM,JDUM,(DUM(I),I=1,6)
+      NC(KDUM)=JDUM
+      GO TO (10,20,30,40,50,60,70,80,90,100,500,600,6,6,6,6,6,6,6,200),
+     1KDUM
+10    CONTINUE
+      GO TO 6
+   20 IF(JDUM) 6,6,22
+   22 AREA= DUM(1)
+      READ (5,1002) NPTS,(TT(I),XT(I),I=1,NPTS)
+      WRITE(3,1004)      (TT(I),XT(I),I=1,NPTS)
+      N5(1)=NPTS
+      IF (IDONE.NE.1) GO TO 6
+      DO 23 I=1,NPTS
+ 23   TT(I)=TT(I)+T
+      GO TO 6
+   30 READ (5,1002) NPTS,(TM(I),XM(I),I=1,NPTS)
+      WRITE(3,1004)      (TM(I),XM(I),I=1,NPTS)
+      N6(1)=NPTS
+      IF(JDUM) 32,6,32
+   32 GREF=DUM(1)
+      DO 34 I=1,NPTS
+   34 XM(I)=XM(I)/GREF
+      IF (IDONE.NE.1) GO TO 6
+      DO 35 I=1,NPTS
+ 35   TM(I)=TM(I)+T
+      GO TO 6
+   40 DTC=DUM(1)
+      DTP=DUM(2)
+      ALTF=DUM(3)
+      GO TO 6
+   50 IF(JDUM) 6,6,52
+   52 SREF=DUM(1)
+      READ (5,1002) NPTS,(TM1(I),TC1(I),I=1,NPTS)
+      WRITE(3,1004)      (TM1(I),TC1(I),I=1,NPTS)
+      N1(1)=NPTS
+      IF (NC(5).NE.3) GO TO 54
+      IF (IDONE.NE.1) GO TO 6
+      DO 53 I=1,NPTS
+ 53   TM1(I)=TM1(I)+T
+      GO TO 6
+ 54   CONTINUE
+      READ (5,1002) NPTS,(TM2(I),TC2(I),I=1,NPTS)
+      WRITE(3,1004)      (TM2(I),TC2(I),I=1,NPTS)
+      N2(1)=NPTS
+      READ (5,1002) NPTS,(TM3(I),TC3(I),I=1,NPTS)
+      WRITE(3,1004)      (TM3(I),TC3(I),I=1,NPTS)
+      N3(1)=NPTS
+      READ (5,1002) NPTS,(TM4(I),TC4(I),I=1,NPTS)
+      WRITE(3,1004)      (TM4(I),TC4(I),I=1,NPTS)
+      N4(1)=NPTS
+      GO TO 6
+ 60   CONTINUE
+      GO TO (61,61,63,64),JDUM
+C
+C     SET UP INITIAL CONDISIONS  V,GAM,LAM,H,PHI,THETA.
+C
+ 61   CONTINUE
+      READ (5,1002) NPTS,(DUM(I),I=5,7)
+      WRITE(3,1004)(DUM(I),I=5,7)
+      TO=DUM(1)
+  116 T=TO
+      TPRNT=TO
+      RERP2=(REO/RPO)**2
+      DO 62 I=1,6
+      X(I)=DUM(I+1)
+ 62   CONTINUE
+      X(2)=X(2)*CNRD
+      X(3)=X(3)*CNRD
+      X(5)=X(5)*CNRD
+      X(6)=X(6)*CNRD
+      SG=SIN(X(2))
+      CG=COS(X(2))
+      SL=SIN(X(3))
+      CL=COS(X(3))
+      X(3)=-X(1)*SG
+      X(2)= X(1)*CG*SL
+      X(1)= X(1)*CG*CL
+      SPH=SIN(X(5))
+      CPH=COS(X(5))
+      RO=REO/SQRT(1.+(RERP2-1.)*SPH**2)
+      R=REO+X(4)
+      IF (NC(6).EQ.1) X(2)=X(2)+R*OMEG*CPH
+      GO TO 6
+C
+C     CHANGE OF PHASE INCREMENT V(R), GAM(R), LAM(R).
+C
+ 63   CONTINUE
+      DUM(2)= VR(1)+DUM(2)
+      GO TO 65
+C
+C     CHANGE OF PHASE INCREMENT V(I), GAM(I), LAM(I).
+ 64   CONTINUE
+      DUM(2)=SP(1)+DUM(2)
+ 65   CONTINUE
+      DUM(3)=DUM(3)*CNRD
+      DUM(4)=DUM(4)*CNRD
+      SG=SIN(DUM(3))
+      CG=COS(DUM(3))
+      SL=SIN(DUM(4))
+      CL=COS(DUM(4))
+      X(1)=DUM(2)*CG*CL
+      X(2)=DUM(2)*CG*SL
+      X(3)=-DUM(2)*SG
+      GO TO 6
+ 70   CONTINUE
+      READ (5,1002) NPTS,(TA(I),XA(I),I=1,NPTS)
+      WRITE(3,1004)      (TA(I),XA(I),I=1,NPTS)
+      N7(1)=NPTS
+      READ (5,1002) NPTS,(TS(I),XS(I),I=1,NPTS)
+      WRITE(3,1004)      (TS(I),XS(I),I=1,NPTS)
+      N8(1)=NPTS
+      GO TO 6
+   80 IF(JDUM) 6,6,82
+   82 PB(1)=DUM(1)
+      AT(1)=DUM(5)*DUM(2)/DUM(3)
+      AT(2)=DUM(2)/DUM(3)
+      AT(3)=SQRT(DUM(4)*DUM(3)/DUM(2))
+      READ (5,1002) NPTS,(HB(I),TMB(I),I=1,NPTS)
+      WRITE(3,1004)      (HB(I),TMB(I),I=1,NPTS)
+      ISV=NPTS
+      GO TO 6
+   90 IF(JDUM) 6,6,92
+   92 GMU=DUM(1)
+      GJ2=DUM(2)
+      REO=DUM(3)
+      RPO=DUM(4)
+      OMEG=DUM(5)
+      GO TO 6
+  100 CONTINUE
+      TABX(1) = DUM(1)
+      TABX(2)=DUM(2)*CNRD
+      TABX(3)=DUM(3)*CNRD
+      X(10)=DUM(4)
+      X(11)=DUM(5)*CNRD
+      X(12)=DUM(6)*CNRD
+      CGO=COS(TABX(2))
+      SGO=SIN(TABX(2))
+      CPO=COS(TABX(3))
+      SPO=SIN(TABX(3))
+      X(7)=TABX(1)*CGO*CPO
+      X(8)=TABX(1)*CGO*SPO
+      X(9) =-TABX(1)*SGO
+      GO TO 6
+500   CONTINUE
+      STPPAR=DUM(1)
+      ISTOP=NC(11)
+      IF (ISTOP.NE.0) GO TO 6
+      ISTOP=1
+      STPPAR=STPPAR+T
+      GO TO 6
+C
+600   CONTINUE
+      DO 601 I=1,2
+      DUM(I)=DUM(I)*CNRD
+601   CONTINUE
+      CACA=COS(DUM(1))
+      SACA=SIN(DUM(1))
+      CACL=COS(DUM(2))
+      SACL=SIN(DUM(2))
+      GO TO 6
+  200 CONTINUE
+      IF (IPZ.GT.1) TPRNT=TPRNT+DTP
+      JSW1=NC(2)
+      JSW2=NC(5)
+      RERP2=(REO/RPO)**2
+      NE=12
+      XMUJ=1.5*GJ2*GMU*REO**2
+C-----------------------------------------------------------------------
+C     MB = 1  DEORBIT THRUST ONLY
+C     MB = 2  THRUST = AERO = 0.
+C     MB = 3  ACTUAL, SEA LEVEL, OR VACUUM THRUST.
+C     MB = 4  THRUST = 0. AERO ONLY
+C     MB = 5  ACTUAL, SEA LEVEL, OR VACUUM THRUST + AERO.
+C-----------------------------------------------------------------------
+      IF (NC(2).EQ.4) GO TO 137
+      MB =5
+      IF(NC(2)) 134,132,134
+  132 MB=MB-1
+      THUST=0.
+  134 IF(NC(5)) 138,136,138
+  136 MB=MB-2
+      C1=0.
+      C2=0.
+      GO TO 138
+ 137  CONTINUE
+      MB = 1
+  138 CONTINUE
+      AT(4)=REO/SQRT(1.+(RERP2-1.)*SIN(.79486646)**2)
+      NE=12
+ 128  CONTINUE
+      WRITE (3,1011)
+99    CONTINUE
+      RETURN
+ 1000 FORMAT(2I4,6F10.2)
+ 1006 FORMAT(2I4,6E15.8)
+ 1002 FORMAT(I8,6F10.3,/(8X,6F10.3,))
+ 1004 FORMAT(8X,6E15.8)
+ 1008 FORMAT(4X,8F10.2)
+ 1010 FORMAT (1X,119(1H-)* PHASE = *I2)
+ 1011 FORMAT (1X,129(1H-))
+      END
+      SUBROUTINE COMGOM
+C
+C     THIS ROUTINE COMPUTES THE COMMUNICATIONS GEOMETRY BETWEEN THE
+C     VIKING LANDERS AND OBITERS.
+C
+      COMMON   AC(3)  ,ALPHA  ,AREA   ,AS     ,AT(4)  ,B(4)  ,BARB
+     1,CA     ,CAA    ,CAO    ,CG     ,CHT    ,CL     ,CNO   ,CNA
+     2,CNRD   ,CPH    ,CS     ,C1     ,C2     ,D(4)   ,DTC   ,DTP
+     3,DUM(7) ,DX(12) ,E(4)   ,F(3)   ,G(3,3) ,GJ2    ,GMU   ,GREF
+     4,HB(17) ,HO     ,ISV    ,IPZ    ,JDUM   ,JSW1   ,JSW2  ,KDUM
+     5,L      ,MARY   ,MB     ,NC(20) ,NE     ,NP     ,NPTS  ,N1(3)
+      COMMON   N2(3)  ,N3(3)  ,N4(3)  ,N5(3)  ,N6(3)  ,N7(3) ,N8(3)
+     1,OMEG   ,PB(17) ,PE     ,PR(3)  ,R      ,REO    ,RERP2
+     2,RHO    ,RL(17) ,RN     ,RO,RORB,RPO    ,SA     ,SG    ,SIGMA
+     3,SL     ,SP(6)  ,SPH    ,SREF   ,SS     ,SX(7)  ,T     ,TA(10)
+     4,TC1(10),TC2(10),TC3(10),TC4(10),TEM    ,TF     ,THUST ,TM1(10)
+     5,TM2(10),TM3(10),TM4(10),TM(50), TMB(17),TO ,TE ,TPRNT ,TS(10)
+      COMMON   TSV    ,TT(50) ,T2     ,VR(3)  ,X(12)  ,XA(10),XM(50)
+     1,XMAS   ,XMUJ   ,XQ     ,XS(10) ,XT(50) ,YM
+      COMMON /ANTENA/ TAAN(13),TLAG(13),TLAAR(13),TFPPR(18),TFA(18),
+     1                TLALL(13),VECL(6),VECO(6),COMR(3),VDIF(3),TABX(6),
+     2                ALB,ALC,GL,GO,AARL,AARO,PL,S4,SM,FD,FDDOT,OAVEC(3)
+     3               ,ELV,TABI(3)
+      COMMON/ANT/CACA,SACA,CACL,SACL,CANOP(3),RORS(3),CRUNT(3),CO,CLA
+      COMMON /LANDER/ XSAV(12),XY(3),ALTF,LAND,LL
+      COMMON /FADCOM/  RPL,RLL,ROO,THAT,ACR,GFC,G2M,FM,XRVEC,URVL(3),
+     1                 URVO(3),CRMAG,RMAGL
+      COMMON /DBURN/ GOODY(12)
+      DIMENSION THDEQ(3)
+      EQUIVALENCE (GOODY,THDEQ)
+      DIMENSION N9(3),N10(3),N13(3),XNONE(3),TAAN2(13)
+      DATA N9 /13,1,0/,N10 /13,1,0/,N13 /13,1,0/
+C
+      DATA XKO /74.3/,CONS /2.998E+8/,FT /3.85E+8/
+      DATA FTTKM /3.048E-4/, FTTM /3.048E-1/
+C
+C     DATA IN LANDER ANTENNA ASPECT ANGLE VS LANDER ANTENNA GAIN
+C
+      DATA  TAAN /-1.E10,0.,1.74532919E-01,3.49065839E-01,5.23598759E-01
+     1           ,6.98131679E-01,8.72664600E-01,1.04719751,1.22173043,
+     2            1.39626335,1.57079627,1.57079630,1.E+10/
+      DATA  TAAN2/-1.E10,0.,1.74532919E-01,3.49065839E-01,5.23598759E-01
+     1           ,6.98131679E-01,8.72664600E-01,1.04719751,1.22173043,
+     2            1.39626335,1.40324456676,1.57079627,1.E10/
+      DATA TLALL /0.,0.,0.,0.,.1,.25,.35,.6,1.7,4.85,7.6,10.,10./
+      DATA TLAG  /4.5,4.5,4.4,4.3,4.0,3.2,2.8,1.9,1.2,0.2,-1.4,-10.,-10.
+     1           /
+      DATA TLAAR /1.189,1.189,1.216,1.230,1.288,1.349,1.445,1.549,1.698,
+     1            1.841,1.995,10.,10./
+      DATA TFPPR /1.,2.,3.,4.,5.,6.,7.,8.,9.,10.,12.,14.,16.,18.,20.,25.
+     1          ,30.,1.E+10/
+      DATA TFA   /15.,13.,10.8,8.57,7.0,5.8,4.9,4.2,3.8,3.3,2.7,2.4,2.0,
+     1            1.8,1.6,1.3,1.0,1.0/
+      DIMENSION DI     (3)
+C
+C     GET THE VECTORS OF LANDER AND OBITER.
+C
+      IF (LAND.EQ.1974.AND.LL.EQ.1) X(6)=XSAV(6)+OMEG*(T-XSAV(7))
+      CALL VECTOR (VR(2),VR(3),X(6),X(5),R,VECL)
+      CALL VECTOR (TABX(2),TABX(3),X(12),X(11),RORB,VECO)
+C
+C     COMPUTE  THE COMMUNICATION RANGE
+C
+      COMR(1)=VECL(1)-VECO(1)
+      COMR(2)=VECL(2)-VECO(2)
+      COMR(3)=VECL(3)-VECO(3)
+      CALL NORM (COMR,CRUNT,CRMAG,1)
+      CALL NORM (VECL,URVL,RMAGL,1)
+C
+C     COMPUTE ELAVATION ANGLE
+C
+      D90=90.*CNRD
+      ELV=D90-ACOS(-DOT(URVL,CRUNT))
+      IF (ELV.LE.0..AND.LAND.EQ.1974) RETURN
+ 10   CONTINUE
+C
+C     COMPUTE LANDER AND OBBITER ASPECT ANGLES
+      ALC=ACOS( DOT(VECL(4),CRUNT))
+      CALL GAIN1
+      IF (LAND.EQ.1974) ALC=D90-ELV
+C
+C     USE TAB FUNCTION TO FIND ANTENNA GAIN AND ANTENNA AXIAL RATIO
+C
+      GL=TAB(ALC,N9,TAAN,TLAG)
+      GO=TAB(ALB,N9,TAAN,TLAG)
+C
+      AARL=TAB(ALC,N10,TAAN,TLAAR)
+      AARO=TAB(ALB,N10,TAAN,TLAAR)
+C
+C     COMPUTE POLARIZATION LOSS AND SPACE LOSS
+C
+      FAKE=(1-GL**2)*(1-GO**2)
+      FAKE1=(1+GL**2)*(1+GO**2)
+      PL=10.*ALOG10(.5+(2.*GL*GO/FAKE1-FAKE/(2.*FAKE1)))
+C
+      CRMAG=CRMAG*FTTKM
+      S4=10.* ALOG10(CRMAG**2)
+C
+C     COMPUTE SYSTEM MARGIN
+C
+      IF (LAND.EQ.1974) XKO=74.2
+      SM= XKO+GL+GO-S4+PL
+C
+C     COMPUTE DOPPLER FREQUENCY AND RATE
+C
+      DO 12 I=1,3
+      VDIF(I) = X(I) - X(I+6)
+ 12   CONTINUE
+      FDSAV=FD
+      FD=4./3.*DOT(VDIF,CRUNT)
+      FDDOT = (FD - FDSAV)/DTP
+C
+C     COMPUTE ADVERSE TOLERANCE BY BRINGING IN TERRY GAMBER'S ROUTINE
+C
+      IF (LAND.NE.1974) RETURN
+ 99   FM=TAB(ALC,N13,TAAN2,TLALL)
+      RETURN
+      END
+      SUBROUTINE DYNPRS (IQFLAG,QMAXS,QBAR)
+100   CONTINUE
+      GO TO (1,10),IQFLAG
+1     CONTINUE
+      IF ((QBAR+1.).LT.QMAXS) GO TO 2
+C     BEFORE QMAX REACHED
+C
+      QMAXS=QBAR
+      QMAX=QBAR
+      GO TO 10
+C
+C     VALUE OF QMAX REACHED
+C
+2     IQFLAG=2
+      WRITE(3,200) QMAXS
+C
+C     CHECK FOR DISCONTINUITY  IN QMAX CURVE
+C
+10    CONTINUE
+      IF (IQFLAG.EQ.1) GO TO 12
+      IF (QBAR-QMAX) 12,12,11
+C
+C     DISCONTINUITY
+C
+11    IQFLAG=1
+      GO TO 100
+C
+12    CONTINUE
+      RETURN
+200   FORMAT (1X                  ,6HQMAX =,F10.3,90(1H*))
+      END
+      SUBROUTINE FADEX
+      COMMON   AC(3)  ,ALPHA  ,AREA   ,AS     ,AT(4)  ,B(4)  ,BARB
+     1,CA     ,CAA    ,CAO    ,CG     ,CHT    ,CL     ,CNO   ,CNA
+     2,CNRD   ,CPH    ,CS     ,C1     ,C2     ,D(4)   ,DTC   ,DTP
+     3,DUM(7) ,DX(12) ,E(4)   ,F(3)   ,G(3,3) ,GJ2    ,GMU   ,GREF
+     4,HB(17) ,HO     ,ISV    ,IPZ    ,JDUM   ,JSW1   ,JSW2  ,KDUM
+     5,L      ,MARY   ,MB     ,NC(20) ,NE     ,NP     ,NPTS  ,N1(3)
+      COMMON   N2(3)  ,N3(3)  ,N4(3)  ,N5(3)  ,N6(3)  ,N7(3) ,N8(3)
+     1,OMEG   ,PB(17) ,PE     ,PR(3)  ,R      ,REO    ,RERP2
+     2,RHO    ,RL(17) ,RN     ,RO,RORB,RPO    ,SA     ,SG    ,SIGMA
+     3,SL     ,SP(6)  ,SPH    ,SREF   ,SS     ,SX(7)  ,T     ,TA(10)
+     4,TC1(10),TC2(10),TC3(10),TC4(10),TEM    ,TF     ,THUST ,TM1(10)
+     5,TM2(10),TM3(10),TM4(10),TM(50), TMB(17),TO ,TE ,TPRNT ,TS(10)
+      COMMON   TSV    ,TT(50) ,T2     ,VR(3)  ,X(12)  ,XA(10),XM(50)
+     1,XMAS   ,XMUJ   ,XQ     ,XS(10) ,XT(50) ,YM
+      COMMON /LANDER/ XSAV(12),XY(3),ALTF,LAND,LL
+      COMMON /ANTENA/ TAAN(13),TLAG(13),TLAAR(13),TFPPR(18),TFA(18),
+     1                TLALL(13),VECL(6),VECO(6),COMR(3),VDIF(3),TABX(6),
+     2                ALB,ALC,G4,GO,AARL,AARO,PL,S4,SM,FD,FDDOT,OAVEC(3)
+     3               ,ELV,TABI(3)
+      COMMON /FADCOM/  RPL,RLL,ROO,THAT,ACR,GFC,G2M,FM,XRVEC,URVL(3),
+     1                 URVO(3),CRMAG,RMAGL
+      DIMENSION WV(3),XV(3),RS(3),TFMX(18),TFMY(18),WVUN(3)
+      DATA  TFMX /1.,2.,3.,4.,5.,6.,7.,8.,9.,10.,12.,14.,16.,18.,20.,
+     1        25.,30.,1.E10/,
+     2      TFMY /15.,13.,10.8,8.5,7.,5.8,4.9,4.2,3.8,3.3,2.7,2.4,2.,
+     3        1.8,1.6,1.3,1.,1./,NFM /18/
+C
+      DATA FTTKM /3.04801E-4/, FTTM /3.04801E-1/
+      DIMENSION N11(3),N12(3)
+      DATA N11 /13,1,0/,N12 /0,1,0/
+C
+C     DO SOME PRELIMINARY CALCULATION LIKE PI2 AND CHANGING DISTANCES TO
+C     METRIC.
+C
+      PI2=90.*CNRD
+      RPL=RO*FTTKM
+      RLL=R*FTTKM
+      ROO=RORB*FTTKM
+      CALL NORM (VECO,URVO,VOMAG,1)
+      CLAM=DOT(URVL,URVO)
+      SLAM=SQRT(1.-CLAM**2)
+      IF (CLAM) 10,10,20
+C
+C     IF COS LAMDA NEGATIVE REFLECTION OF PLANET NOT POSSIBLE.
+C
+ 10   THAT=PI2
+      G2M=0.
+      FM=0.
+      RETURN
+C     PROCEED TO CALCULATE RELECTION
+C
+ 20   CONTINUE
+C
+      XLAM=ATAN2(SLAM,CLAM)
+      IF (XLAM-1.E-7) 30,40,40
+ 30   CONTINUE
+      THAT=PI2
+C
+C     ALTITUDE OF LANDER AND ORBITER IN KM
+C
+      RAX=RLL-RPL
+      RBX=ROO-RPL
+      RS(1)=URVL(1)
+      RS(2)=URVL(2)
+      RS(3)=URVL(3)
+      GO TO 80
+C
+ 40   CONTINUE
+      RAX=RLL-RPL
+      IF (RAX-1.) 50,60,60
+C     LANDER DOWN
+ 50   CONTINUE
+      THAT=ELV
+      RBX=CRMAG
+      ANU1=PI2-THAT
+      GO TO 70
+C
+C     REFLECTION SECTION
+C
+ 60   CONTINUE
+      NCC=1
+      RLRM=RLL/RPL
+      RLRO=RLL/ROO
+      RMRL=RPL/RLL
+      RMRO=RPL/ROO
+      EATA=.5*(RLRO**3)
+      ELAM=EATA*XLAM
+    3 XALP=(2.*EATA-1.)*XLAM
+      SALP=SIN(XALP)
+      CALP=COS(XALP)
+      SELA=SIN(ELAM)
+      CELA=COS(ELAM)
+      AQ=SALP*RLRM
+      BQ=SELA*SLAM+CELA*CLAM+RLRO*CELA-2.*RLRM*CALP
+      CQ=SELA*CLAM-CELA*SLAM+RLRO*SELA-RLRM*SALP
+      DELL1=-(BQ+SQRT(BQ**2-4.*AQ*CQ))/(2.*AQ)
+      DELL2=-(BQ-SQRT(BQ**2-4.*AQ*CQ))/(2.*AQ)
+      DELL=DELL1
+      P1=ABS(DELL1)
+      P2=ABS(DELL2)
+      IF(P1-P2)5,4,4
+    4 DELL=DELL2
+    5 GO TO (1,2),NCC
+    1 NCC=2
+      DLAM=ELAM+DELL
+      ELAM=DLAM
+      EATA=ELAM/XLAM
+      GO TO 3
+    2 DLAM1=ELAM+DELL
+      DLAM2=XLAM-DLAM1
+      SDL1=SIN(DLAM1)
+      SDL2=SIN(DLAM2)
+      CDL1=COS(DLAM1)
+      CDL2=COS(DLAM2)
+      TH1=ATAN((CDL1      -RMRL)/SDL1      )
+      TH2=ATAN((CDL2      -RMRO)/SDL2      )
+      THAT=.5*(TH1+TH2)
+      ANU1=PI2-THAT-DLAM1
+      ANU2=PI2-THAT-DLAM2
+      RAX=RPL*SDL1/SIN(ANU1)
+      RBX=RPL*SDL2/SIN(ANU2)
+ 70   CONTINUE
+      CALL UXV(URVO,URVL,WV)
+      CALL NORM  (WV,WVUN,XMAG,1)
+      CALL UXV (WVUN,URVL,XV)
+      CS=COS(PI2+ANU1)
+      SN=SIN(PI2+ANU1)
+      DO 75 I=1,3
+ 75   RS(I)=SN*URVL(I)-CS*XV(I)
+C
+ 80   CONTINUE
+      CSA=DOT(VECL(4),RS)
+      ACR=ACOS(CSA)
+      THAT=PI2-THAT
+      CTH=COS(THAT)
+      P1=SQRT(3.-SIN(THAT)**2)
+      RH=(CTH-P1)/(CTH+P1)
+      RV=(3.*CTH-P1)/(3.*CTH+P1)
+      GAM2=2.*((RAX+RBX)/CRMAG)**2/(RH**2+RV**2)
+      XGFC=G4
+      IF (XGFC+6.) 90,100,100
+ 90   XGFC=-6.
+C
+ 100  CONTINUE
+      GFC=TAB (ACR,N11,TAAN,TLAG)
+      IF (GFC+6.)110,120,120
+ 110  GFC=-6.
+ 120  CONTINUE
+      G2M=10.**((XGFC-GFC)/10.)
+      GAM2=GAM2*G2M
+      FM=TAB (GAM2,N12,TFMX,TFMY)
+      RETURN
+      END
+      SUBROUTINE GAIN1
+      DIMENSION W1(3),W2(3),W3(3)
+      CALL UXV(RS,RC,W1)
+      CALL NORM (W1,W1,WM,1)
+      CALL UXV(RS,RV,W2)
+      CALL NORM (W2,W2,WM,1)
+      CALL UXV(RS,W1,W3)
+      CALL NORM (W3,W3,WM,1)
+      CVCL=DOT(W1,W2)
+      SVCL=DOT(W2,W3)
+      CLA=ATAN2(SVCL,CVCL)
+      CVCA=DOT(RS,RV)
+      SVCA=SQRT(1.-CVCA**2)
+      CA=ATAN2(SVCA,CVCA)
+      CDCLA=CVCL*CACL+SVCL*SACL
+      CS=CVCA*CACA+SVCA*CDCLA*SACA
+      ALB=ACOS(CS)
+      RETURN
+      END
+      SUBROUTINE MOTON
+      COMMON   AC(3)  ,ALPHA  ,AREA   ,AS     ,AT(4)  ,B(4)  ,BARB
+     1,CA     ,CAA    ,CAO    ,CG     ,CHT    ,CL     ,CNO   ,CNA
+     2,CNRD   ,CPH    ,CS     ,C1     ,C2     ,D(4)   ,DTC   ,DTP
+     3,DUM(7) ,DX(12) ,E(4)   ,F(3)   ,G(3,3) ,GJ2    ,GMU   ,GREF
+     4,HB(17) ,HO     ,ISV    ,IPZ    ,JDUM   ,JSW1   ,JSW2  ,KDUM
+     5,L      ,MARY   ,MB     ,NC(20) ,NE     ,NP     ,NPTS  ,N1(3)
+      COMMON   N2(3)  ,N3(3)  ,N4(3)  ,N5(3)  ,N6(3)  ,N7(3) ,N8(3)
+     1,OMEG   ,PB(17) ,PE     ,PR(3)  ,R      ,REO    ,RERP2
+     2,RHO    ,RL(17) ,RN     ,RO,RORB,RPO    ,SA     ,SG    ,SIGMA
+     3,SL     ,SP(6)  ,SPH    ,SREF   ,SS     ,SX(7)  ,T     ,TA(10)
+     4,TC1(10),TC2(10),TC3(10),TC4(10),TEM    ,TF     ,THUST ,TM1(10)
+     5,TM2(10),TM3(10),TM4(10),TM(50), TMB(17),TO ,TE ,TPRNT ,TS(10)
+      COMMON   TSV    ,TT(50) ,T2     ,VR(3)  ,X(12)  ,XA(10),XM(50)
+     1,XMAS   ,XMUJ   ,XQ     ,XS(10) ,XT(50) ,YM
+      R=REO+X(4)
+      SPH=SIN(X(5))
+      CPH=COS(X(5))
+      SP(3)=X(2)-R*OMEG*CPH
+      SP(4)=SQRT(X(1)**2+SP(3)**2)
+      VR(1)=SQRT(SP(4)**2+X(3)**2)
+      VR(2)=ATAN5(-X(3),SP(4))
+      VR(3)=ATAN5(SP(3),X(1))
+      RO=REO/SQRT(1.+(RERP2-1.)*SPH**2)
+      HO=R-RO
+      CALL ATMDT
+      IF(MB) 4,2,4
+    2 AC(1)=0.
+      AC(2)=0.
+      AC(3)=0.
+      GO TO 36
+    4 ALPHA=TAB(T,N7(1),TA(1),XA(1))
+      SIGMA=TAB(T,N8(1),TS(1),XS(1))
+      SP(1)=ALPHA*CNRD
+      SP(2)=SIGMA*CNRD
+      SA=SIN(.5*SP(1))
+      CA=COS(.5*SP(1))
+      SS=SIN(.5*SP(2))
+      CS=COS(.5*SP(2))
+      SG=SIN(.5*VR(2))
+      CG=COS(.5*VR(2))
+      SL=SIN(.5*VR(3))
+      CL=COS(.5*VR(3))
+      B(1)= CS*CA
+      B(2)= SS*CA
+      B(3)= CS*SA
+      B(4)= SS*SA
+      D(1)= CL*CG
+      D(2)=-SL*SG
+      D(3)= CL*SG
+      D(4)= SL*CG
+      E(1)= D(1)*B(1)-D(2)*B(2)-D(3)*B(3)-D(4)*B(4)
+      E(2)= D(1)*B(2)+D(2)*B(1)+D(3)*B(4)-D(4)*B(3)
+      E(3)= D(1)*B(3)-D(2)*B(4)+D(3)*B(1)+D(4)*B(2)
+      E(4)= D(1)*B(4)+D(2)*B(3)-D(3)*B(2)+D(4)*B(1)
+      G(1,1)= E(1)**2+E(2)**2-E(3)**2-E(4)**2
+      G(2,2)= E(1)**2-E(2)**2+E(3)**2-E(4)**2
+      G(3,3)= E(1)**2-E(2)**2-E(3)**2+E(4)**2
+      G(1,2)= 2.*(E(2)*E(3)+E(1)*E(4))
+      G(1,3)= 2.*(E(2)*E(4)-E(1)*E(3))
+      G(2,1)= 2.*(E(2)*E(3)-E(1)*E(4))
+      G(2,3)= 2.*(E(1)*E(2)+E(3)*E(4))
+      G(3,1)= 2.*(E(2)*E(4)+E(1)*E(3))
+      G(3,2)= 2.*(E(3)*E(4)-E(1)*E(2))
+      IF(NC(5)) 10,8,10
+    8 C1=0.
+      C2=0.
+      XQ=0.
+      GO TO 22
+   10 YM=VR(1)/AS
+      XQ=.5*RHO*VR(1)**2
+      CAO=TAB(YM,N1(1),TM1(1),TC1(1))
+      CAA=TAB(YM,N2(1),TM2(1),TC2(1))
+      CNO=TAB(YM,N3(1),TM3(1),TC3(1))
+      CNA=TAB(YM,N4(1),TM4(1),TC4(1))
+      C1=CAO + CAA*(ALPHA**2)
+      C2=(CNO+CNA*ABS(ALPHA))*ALPHA
+      IF(NC(5)-1) 22,22,20
+   20 CA=COS(SP(1))
+      SA=SIN(SP(1))
+      F(1)=C1*CA-C2*SA
+      F(3)=C1*SA+C2*CA
+      GO TO 23
+   22 F(1)=C1
+      F(3)=C2
+   23 IF(NC(2)) 26,24,26
+   24 THUST=0.
+      GO TO 32
+   26 THUST=TAB(T,N5(1),TT(1),XT(1))
+      IF(NC(2)-2) 32,30,28
+   28 THUST=THUST+AREA*(PB(1)-PE)
+      GO TO 32
+   30 THUST=THUST-AREA*PE
+   32 XMAS=TAB(T,N6(1),TM(1),XM(1))
+      SP(5)=-XQ*SREF
+      F(1)=F(1)*SP(5)+THUST
+      F(3)=F(3)*SP(5)
+      DO 34 I=1,3
+      AC(I)=0.
+      DO 33 K=1,3,2
+   33 AC(I)=AC(I)+G(K,I)*F(K)
+   34 AC(I)=AC(I)/XMAS
+   36 SP(6)=X(2)**2
+      DX(1)= AC(1)+(X(1)*X(3)-SP(6)*SPH/CPH)/R
+      DX(2)= AC(2)+(X(1)*SPH/CPH+X(3))*X(2)/R
+      DX(3)= AC(3)+(GMU/R -X(1)**2-SP(6))/R
+      DX(4)=-X(3)
+      DX(5)= X(1)/R
+      DX(6)= X(2)/(R*CPH)  - OMEG
+      IF(GJ2) 38,40,38
+   38 SP(6)=-XMUJ/R**4
+      DX(1)= DX(1)+ 2.*SP(6)*SPH*CPH
+      DX(3)= DX(3)+ SP(6)*(2.-3.*CPH*CPH)
+   40 IF(NC(4)-1) 44,42,44
+   42 DX(1)=0.
+      DX(2)=0.
+   44 IF(RN) 46,99,46
+   46 DX(7)= CHT*SQRT(RHO)*VR(1)**3.15
+   99 RETURN
+      END
+      SUBROUTINE MOTON2
+      COMMON   AC(3)  ,ALPHA  ,AREA   ,AS     ,AT(4)  ,B(4)  ,BARB
+     1,CA     ,CAA    ,CAO    ,CG     ,CHT    ,CL     ,CNO   ,CNA
+     2,CNRD   ,CPH    ,CS     ,C1     ,C2     ,D(4)   ,DTC   ,DTP
+     3,DUM(7) ,DX(12) ,E(4)   ,F(3)   ,G(3,3) ,GJ2    ,GMU   ,GREF
+     4,HB(17) ,HO     ,ISV    ,IPZ    ,JDUM   ,JSW1   ,JSW2  ,KDUM
+     5,L      ,MARY   ,MB     ,NC(20) ,NE     ,NP     ,NPTS  ,N1(3)
+      COMMON   N2(3)  ,N3(3)  ,N4(3)  ,N5(3)  ,N6(3)  ,N7(3) ,N8(3)
+     1,OMEG   ,PB(17) ,PE     ,PR(3)  ,R      ,REO    ,RERP2
+     2,RHO    ,RL(17) ,RN     ,RO,RORB,RPO    ,SA     ,SG    ,SIGMA
+     3,SL     ,SP(6)  ,SPH    ,SREF   ,SS     ,SX(7)  ,T     ,TA(10)
+     4,TC1(10),TC2(10),TC3(10),TC4(10),TEM    ,TF     ,THUST ,TM1(10)
+     5,TM2(10),TM3(10),TM4(10),TM(50), TMB(17),TO ,TE ,TPRNT ,TS(10)
+      COMMON   TSV    ,TT(50) ,T2     ,VR(3)  ,X(12)  ,XA(10),XM(50)
+     1,XMAS   ,XMUJ   ,XQ     ,XS(10) ,XT(50) ,YM
+      COMMON /LANDER/ XSAV(12),XY(3),ALTF,LAND,LL
+      COMMON /COMSOP/ STPPAR,ISTOP,IDONE,SAVE(7),SLOPE
+      IF (LL.EQ.1) GO TO 10
+      SPH=SIN(X(5))
+      CPH=COS(X(5))
+      RO=REO/SQRT(1.+(RERP2-1.)*SPH**2)
+      R=RO+ALTF
+      HO=ALTF
+      CALL ATMDT
+      VR(1)=R*OMEG*CPH
+      VR(2) = -90.*CNRD
+      VR(3)=90.*CNRD
+      XSAV(5)=X(5)
+      XSAV(6)=X(6)
+      XSAV(7)=T
+      R E T U R N
+ 10   CONTINUE
+      VR(2) = -90.*CNRD
+      VR(3)=90.*CNRD
+      SPHO=SIN(X(11))
+      CPHO=COS(X(11))
+      SP(6)=REO/SQRT(1.+(RERP2-1.)*SPHO**2)
+      RORB=SP(6)+X(10)
+      SP(6)=X(8)**2
+      DX(7)=(X(7)*X(9) -SP(6)*SPHO/CPHO)/RORB
+      DX(8)=(X(7)*SPHO/CPHO+X(9))*X(8)/RORB
+      DX(9) =(GMU/RORB-X(7)**2-SP(6))/RORB
+      DX(10)=-X(9)
+      DX(11)=X(7)/RORB
+      DX(12)=X(8)/(RORB*CPHO)
+      IF (GJ2) 20,30,20
+ 20   CONTINUE
+      SP(6)=-XMUJ/RORB**4
+      DX(7)=DX(7)+2.*SP(6)*SPHO*CPHO
+      DX(9) =DX(9) +SP(6)*(2.-3.*CPHO*CPHO)
+ 30   CONTINUE
+      RETURN
+      END
+      SUBROUTINE PRNT
+      COMMON   AC(3)  ,ALPHA  ,AREA   ,AS     ,AT(4)  ,B(4)  ,BARB
+     1,CA     ,CAA    ,CAO    ,CG     ,CHT    ,CL     ,CNO   ,CNA
+     2,CNRD   ,CPH    ,CS     ,C1     ,C2     ,D(4)   ,DTC   ,DTP
+     3,DUM(7) ,DX(12) ,E(4)   ,F(3)   ,G(3,3) ,GJ2    ,GMU   ,GREF
+     4,HB(17) ,HO     ,ISV    ,IPZ    ,JDUM   ,JSW1   ,JSW2  ,KDUM
+     5,L      ,MARY   ,MB     ,NC(20) ,NE     ,NP     ,NPTS  ,N1(3)
+      COMMON   N2(3)  ,N3(3)  ,N4(3)  ,N5(3)  ,N6(3)  ,N7(3) ,N8(3)
+     1,OMEG   ,PB(17) ,PE     ,PR(3)  ,R      ,REO    ,RERP2
+     2,RHO    ,RL(17) ,RN     ,RO,RORB,RPO    ,SA     ,SG    ,SIGMA
+     3,SL     ,SP(6)  ,SPH    ,SREF   ,SS     ,SX(7)  ,T     ,TA(10)
+     4,TC1(10),TC2(10),TC3(10),TC4(10),TEM    ,TF     ,THUST ,TM1(10)
+     5,TM2(10),TM3(10),TM4(10),TM(50), TMB(17),TO ,TE ,TPRNT ,TS(10)
+      COMMON   TSV    ,TT(50) ,T2     ,VR(3)  ,X(12)  ,XA(10),XM(50)
+     1,XMAS   ,XMUJ   ,XQ     ,XS(10) ,XT(50) ,YM
+      COMMON /LANDER/ XSAV(12),XY(3),ALTF,LAND,LL
+      COMMON /ANTENA/ TAAN(13),TLAG(13),TLAAR(13),TFPPR(18),TFA(18),
+     1                TLALL(13),VECL(6),VECO(6),COMR(3),VDIF(3),TABX(6),
+     2                ALB,ALC,GL,GO,AARL,AARO,PL,S4,SM,FD,FDDOT,OAVEC(3)
+     3               ,ELV,TABI(3)
+      COMMON/ANT/CACA,SACA,CACL,SACL,CANOP(3),RORS(3),CRUNT(3),CO,CLA
+      COMMON /FADCOM/  RPL,RLL,ROO,THAT,ACR,GFC,G2M,FM,XRVEC,URVL(3),
+     1                 URVO(3),CRMAG,RMAGL
+      COMMON /COMSOP/   STPPAR,ISTOP,IDONE,SAVE(7),SLOPE
+C
+      IF (LL.NE.2) GO TO 10
+      PRINT 1002
+      THAT=0.
+      G2M=0.
+      ACR=0.
+      GFC=0.
+      DTC=SAVE(6)
+ 10   CONTINUE
+      IF (LAND.EQ.1974) GO TO 20
+      VR(2)=VR(2)/CNRD
+      VR(3)=VR(3)/CNRD
+      PRINT 1000
+      RAL = X(6)/CNRD
+      WRITE(3,1006) T,(SP(I),I=1,3),HO,RAL,RO,(VR(I),I=1,3),SP(4),SP(5)
+      GO TO 30
+   20 CONTINUE
+      IF (ELV.LE.0.) GO TO 102
+      VR(2)=-90.
+      VR(3)=VR(3)/CNRD
+      SP(1)=0.
+      SP(2)=-90.
+      SP(3)=90.
+      SP(4)=XSAV(5)/CNRD
+      SP(5)=XSAV(6)/CNRD
+      YM=0.
+      PRINT 1000
+      RAL = X(6)/CNRD
+      WRITE (3,1006) T,(VR(I),I=1,3),HO,RAL,RO,(SP(I),I=1,5)
+   30 CONTINUE
+      IF (MB.EQ.2) GO TO 102
+  100 SP(1)=SQRT(F(1)**2+F(3)**2)/XMAS
+      WRITE(3,1008) C1,C2,ALPHA,SIGMA,XQ,RHO,YM,XMAS,THUST,SP(1)
+  102 CONTINUE
+C
+C**** ORBITOR OUTPUT SECTION
+C
+      TABX(2)=TABX(2)/CNRD
+      TABX(3)=TABX(3)/CNRD
+      PRINT 1001
+      RAO = X(12)/CNRD
+      WRITE (3,1010) (TABI(I),I=1,3),(TABX(J),J=4,6),(TABX(K),K=1,3)
+     1              ,RAO
+      IF (NC(12).EQ.0) RETURN
+      IF (ELV.LE.0..AND.LAND.EQ.1974) RETURN
+      ALC=ALC/CNRD
+      ALB=ALB/CNRD
+      ELV=ELV/CNRD
+      CO=CO/CNRD
+      CLA=CLA/CNRD
+      THAT=THAT/CNRD
+      ACR=ACR/CNRD
+      PRINT 1003 , CRMAG
+      WRITE (3,1012) ALC,ALB,GL,GO,AARL,AARO,PL,S4,SM,FD,FDDOT,ELV
+     1              ,THAT,ACR,G2M,FM,CO,CLA
+      IF (LL.EQ.2) MB=2
+   99 LL=1
+      RETURN
+1000  FORMAT (//8H LANDER-)
+1001  FORMAT (/9H ORBITOR-)
+ 1002 FORMAT (/1X,60(1H*),*LANDER DOWN*,60(1H*))
+1003  FORMAT (/* COMMUNICATION GEOMETRY AT RANGE  *,E15.8,* KM*)
+1006  FORMAT (  4H T  ,E15.8,4H VI ,E15.8,4H GI ,E15.8,4H LI ,E15.8,
+     1          4H HO ,E15.8,4H RA ,E15.8/4H R  ,E15.8,4H VR ,E15.8,
+     2          4H GR ,E15.8,4H LR ,E15.8,4H LT ,E15.8,4H LN ,E15.8)
+1008  FORMAT (  4H C1 ,E15.8,4H C2 ,E15.8,4H ALF,E15.8,4H SIG,E15.8,
+     1          4H Q  ,E15.8,4H RO ,E15.8/4H MAC,E15.8,4H MAS,E15.8,
+     2          4H TH ,E15.8,4H ACL,E15.8)
+1010  FORMAT (  4H VI ,E15.8,4H GI ,E15.8,4H LI ,E15.8,4H H  ,E15.8,
+     1          4H LT ,E15.8,4H LN ,E15.8/4H VR ,E15.8,4H GR ,E15.8,
+     2          4H LR ,E15.8,4H RA ,E15.8)
+1012  FORMAT (  4H ALC,E15.8,4H ALB,E15.8,4H GFC,E15.8,4H GFS,E15.8,
+     1          4H ARL,E15.8,4H ARO,E15.8/4H PL ,E15.8,4H SL ,E15.8,
+     2          4H SM ,E15.8,4H FD ,E15.8,4H FDR,E15.8,4H ELV,E15.8/
+     3          4H TH ,E15.8,4H ACR,E15.8,4H G2M,E15.8,4H FM ,E15.8,
+     4          4H CA ,E15.8,4H CLA,E15.8)
+      END
+      SUBROUTINE QUADR
+      COMMON   AC(3)  ,ALPHA  ,AREA   ,AS     ,AT(4)  ,B(4)  ,BARB
+     1,CA     ,CAA    ,CAO    ,CG     ,CHT    ,CL     ,CNO   ,CNA
+     2,CNRD   ,CPH    ,CS     ,C1     ,C2     ,D(4)   ,DTC   ,DTP
+     3,DUM(7) ,DX(12) ,E(4)   ,F(3)   ,G(3,3) ,GJ2    ,GMU   ,GREF
+     4,HB(17) ,HO     ,ISV    ,IPZ    ,JDUM   ,JSW1   ,JSW2  ,KDUM
+     5,L      ,MARY   ,MB     ,NC(20) ,NE     ,NP     ,NPTS  ,N1(3)
+      COMMON   N2(3)  ,N3(3)  ,N4(3)  ,N5(3)  ,N6(3)  ,N7(3) ,N8(3)
+     1,OMEG   ,PB(17) ,PE     ,PR(3)  ,R      ,REO    ,RERP2
+     2,RHO    ,RL(17) ,RN     ,RO,RORB,RPO    ,SA     ,SG    ,SIGMA
+     3,SL     ,SP(6)  ,SPH    ,SREF   ,SS     ,SX(7)  ,T     ,TA(10)
+     4,TC1(10),TC2(10),TC3(10),TC4(10),TEM    ,TF     ,THUST ,TM1(10)
+     5,TM2(10),TM3(10),TM4(10),TM(50), TMB(17),TO ,TE ,TPRNT ,TS(10)
+      COMMON   TSV    ,TT(50) ,T2     ,VR(3)  ,X(12)  ,XA(10),XM(50)
+     1,XMAS   ,XMUJ   ,XQ     ,XS(10) ,XT(50) ,YM
+C     -----------------------------------
+C.....QUADRATURE RULE INTAGRATION ROUTINE
+C     -----------------------------------
+      EQUIVALENCE  (X,Y),(DX,DY),(NE,N),(MARY,M)
+C
+      GO TO (10,15,15,40),L
+C
+ 10   CONTINUE
+      L = 2
+      RETURN
+C
+ 15   CONTINUE
+      DT = DTC
+      TP = T2 - T
+      RT2 = TP/DTC
+      IF (RT2 - .999) 22,26,27
+ 22   IF (RT2 - .001) 20,26,26
+ 20   CONTINUE
+ C
+C     -------------
+C.....TIME TO PRINT
+C     -------------
+      L = 3
+      RETURN
+ 26   CONTINUE
+      DT = TP
+ 27   CONTINUE
+      DO 30 I=N,M
+      Y(I) = Y(I) + DY(I)*DT
+ 30   CONTINUE
+      T = T + DT
+      L = 1
+      RETURN
+ 40   CONTINUE
+      DT = DTC
+      DO 50 I=N,M
+      DY(I) = 0.
+ 50   CONTINUE
+      L = 1
+      RETURN
+      END
+      SUBROUTINE RELINT
+C----------------------------------------------------------------------
+C     SPHERICAL VECTOR OF THE LANDER INITIAL
+C----------------------------------------------------------------------
+      SP(1) = SQRT (DOT(X,X))
+      SP(4)=SQRT(X(1)**2+X(2)**2)
+      SP(2)=ATAN2(-X(3),SP(4))/CNRD
+      SP(3)=ATAN2(X(2),X(1))/CNRD
+      SP(4)=ATAN2(RERP2*SPH,CPH)/CNRD
+C----------------------------------------------------------------------
+C     CALL GHAM TO GET GRENWITCH HOUR ANGLE
+C----------------------------------------------------------------------
+      CALL GHAM (DJDER+T/86400.,GHA)
+      SP(5) = X(6)/CNRD - GHA
+C----------------------------------------------------------------------
+C     SPHERICAL VECTOR OF THE ORBITER INITIAL AND RELATIVE
+C----------------------------------------------------------------------
+      RV=X(8)-RORB*OMEG*COS(X(11))
+      TABX(1)=SQRT(X(7)**2+RV**2+X(9) **2)
+      FACT=SQRT(X(7)**2+RV**2)
+      TABX(2)=ATAN2(-X(9) ,FACT)
+      TABX(3)=ATAN2(RV,X(7))
+      SPO=SIN(X(11))
+      CPO=COS(X(11))
+      TABX(4)=REO/SQRT(1.+(RERP2-1.)*SPO**2)
+      TABX(4)=RORB-TABX(4)
+      TABX(5) =ATAN2(RERP2*SPO,CPO)/CNRD
+      TABX(6) = X(12)/CNRD - GHA
+      TABI(1) = SQRT (DOT(X(7),X(7)))
+      FACTI=SQRT(X(7)**2+X(8)**2)
+      TABI(2)=ATAN2(-X(9) ,FACTI)/CNRD
+      TABI(3)=ATAN2(X(8),X(7))/CNRD
+      RETURN
+      END
+      SUBROUTINE RKUT
+C.....HIGH SPEED RKUTTA-3PASS
+      EQUIVALENCE (X(1),Y(1)),(DX(1),DY(1))
+      M=MARY
+      N=NE
+      GO TO (1,2,2,4),L
+    1 IF(IG-2) 50,30,50
+   50 DO 10 I=M,N
+   10 F3(I)=Y(I)
+      L=2
+      GO TO 41
+    2 DT=DTC
+      TP=T2-T
+      RT2=TP/DTC
+      IF (RT2 - .999) 22,26,27
+ 22   IF (RT2 - .001) 20,26,26
+   20 L=3
+      J=1
+      GO TO 41
+   26 DT=TP
+   27 J=1
+      IG=2
+   30 GO TO (31,32,33,34),J
+   31 DO 310 I=M,N
+  310 F1(I)=DY(I)*DT
+      T=T+.5*DT
+      IF(JJ)54,51,54
+   51 DO 311 I=M,N
+  311 Y(I)=F3(I)+.5*F1(I)
+      GO TO 35
+   54 J=J+1
+      GO TO 65
+   32 IF(JJ)65,60,65
+   60 DO 62 I=M,N
+      SL2(I)=DY(I)*DT
+      Y(I)=F3(I)+.25*(SL2(I)+F1(I))
+   62 SL1(I)=F1(I)
+      JJ=1
+      GO TO 35
+   65 DO 67 I=M,N
+      SL2(I)=.6*(6.*F1(I)-7.*(12.*SL3(I)+3.*SL4(I))/18.+1.5*SL1(I))
+      Y(I)=F3(I)+.25*(SL2(I)+F1(I))
+   67 SL1(I)=F1(I)
+   35 J=J+1
+      GO TO 38
+   33 DO 330 I=M,N
+      SL3(I)=DY(I)*DT
+      RM=4.*SL3(I)
+      F1(I)=F1(I)+RM
+  330 Y(I)=F3(I)+2.*SL3(I)-SL2(I)
+      T=T+.5*DT
+      GO TO 35
+   34 DO 340 I=M,N
+      SL4(I)=DY(I)*DT
+  340 F1(I)=F1(I)+SL4(I)
+      DO 39 I=M,N
+      DELY(I)=F1(I)/6.+DELY(I)
+   39 Y(I)=F2(I)+DELY(I)
+      IG=1
+      GO TO 38
+    4 DT=DTC
+      IG=1
+      JJ=0
+      J=1
+      DO 40 I=M,N
+      DELY(I)=0.
+   40 F2(I)=Y(I)
+   38 L=1
+   41 RETURN
+      END
+      SUBROUTINE STOPIN
+      COMMON   AC(3)  ,ALPHA  ,AREA   ,AS     ,AT(4)  ,B(4)  ,BARB
+     1,CA     ,CAA    ,CAO    ,CG     ,CHT    ,CL     ,CNO   ,CNA
+     2,CNRD   ,CPH    ,CS     ,C1     ,C2     ,D(4)   ,DTC   ,DTP
+     3,DUM(7) ,DX(12) ,E(4)   ,F(3)   ,G(3,3) ,GJ2    ,GMU   ,GREF
+     4,HB(17) ,HO     ,ISV    ,IPZ    ,JDUM   ,JSW1   ,JSW2  ,KDUM
+     5,L      ,MARY   ,MB     ,NC(20) ,NE     ,NP     ,NPTS  ,N1(3)
+      COMMON   N2(3)  ,N3(3)  ,N4(3)  ,N5(3)  ,N6(3)  ,N7(3) ,N8(3)
+     1,OMEG   ,PB(17) ,PE     ,PR(3)  ,R      ,REO    ,RERP2
+     2,RHO    ,RL(17) ,RN     ,RO,RORB,RPO    ,SA     ,SG    ,SIGMA
+     3,SL     ,SP(6)  ,SPH    ,SREF   ,SS     ,SX(7)  ,T     ,TA(10)
+     4,TC1(10),TC2(10),TC3(10),TC4(10),TEM    ,TF     ,THUST ,TM1(10)
+     5,TM2(10),TM3(10),TM4(10),TM(50), TMB(17),TO ,TE ,TPRNT ,TS(10)
+      COMMON   TSV    ,TT(50) ,T2     ,VR(3)  ,X(12)  ,XA(10),XM(50)
+     1,XMAS   ,XMUJ   ,XQ     ,XS(10) ,XT(50) ,YM
+      COMMON /COMSOP/   STPPAR,ISTOP,IDONE,SAVE(7),SLOPE
+      COMMON /LANDER/ XSAV(12),XY(3),ALTF,LAND,LL
+      DIMENSION XX(3)
+C
+      GO TO (10,20,30,40,50),ISTOP
+C
+C     STOP ON TIME
+C
+ 10   CONTINUE
+      IF (T-STPPAR) 100,11,11
+ 11   XX(1)=T
+      XX(2)=STPPAR
+      XX(3)=SAVE(1)
+      GO TO 200
+C
+C     STOP ON ALTITUDE
+C
+ 20   CONTINUE
+      IF (HO-STPPAR) 21,21,100
+ 21   XX(1)=HO
+      XX(2)=STPPAR
+      XX(3)=SAVE(2)
+      GO TO 200
+C
+C     STOP ON MACH NUMBER
+C
+ 30   CONTINUE
+      IF(YM-STPPAR) 31,31,100
+ 31   XX(1)=YM
+      XX(2)=STPPAR
+      XX(3)=SAVE(3)
+      GO TO 200
+C
+C     STOP ON RELATIVE FLIGHT PATH ANGLE
+C
+ 40   CONTINUE
+      IF (VR(2)-STPPAR*CNRD) 41,41,100
+ 41   XX(1)=VR(2)
+      XX(2)=STPPAR*CNRD
+      XX(3)=SAVE(4)
+      GO TO 200
+C
+C     STOP ON RELATIVE VELOCITY
+C
+ 50   CONTINUE
+      IF (VR(1)-STPPAR) 100,51,51
+ 51   XX(1)=VR(1)
+      XX(2)=STPPAR
+      XX(3)=SAVE(5)
+      GO TO 200
+C
+C     STOP NOT FOUND YET
+C
+ 100  CONTINUE
+      SAVE(1)=T
+      SAVE(2)=HO
+      SAVE(3)=YM
+      SAVE(4)=VR(2)
+      SAVE(5)=VR(1)
+      SAVE(6)=DTC
+      SAVE(7)=DTP
+      RETURN
+C
+ 200  CONTINUE
+      IDONE=1
+      SLOPE=(XX(3)-XX(2))/(XX(3)-XX(1))
+      TDUM=SAVE(1)+SLOPE*(T-SAVE(1))
+      IF (TDUM-T) 201,202,201
+ 201  CONTINUE
+      DTC = TDUM - T
+ 202  CONTINUE
+      TPRNT = TDUM
+      RETURN
+      END
+      FUNCTION DOT (X,Y)
+      DIMENSION X(3),Y(3)
+      DOT=X(1)*Y(1)+X(2)*Y(2)+X(3)*Y(3)
+      RETURN
+      END
+      SUBROUTINE NORM (A,B,ANORM,K)
+C
+C     K=0, GIVES MAGNITUDE OF A-VECTOR IN ANORM CELL,
+C     K=1, GIVES MAGNITUDE OF A-VECTOR IN ANORM CELL -PLUS- UNIT
+C          VECTOR OF A-VECTOR IN B-VECTOR CELL.
+C
+      DIMENSION A(3),B(3)
+C
+      ANORM=SQRT(DOT(A,A))
+      IF (K) 10,30,10
+   10 DO 20 I=1,3
+   20 B(I)=A(I)/ANORM
+   30 RETURN
+      END
+      SUBROUTINE UXV(U,V,UV)
+      DIMENSION U(3),V(3),UV(3)
+      UV(1)=U(2)*V(3)-U(3)*V(2)
+      UV(2)=U(3)*V(1)-U(1)*V(3)
+      UV(3)=U(1)*V(2)-U(2)*V(1)
+      RETURN
+      END
+      SUBROUTINE VECTOR (X1,X2,X3,X4,X5,Y)
+      DIMENSION X(6),Y(6),C(4),S(4)
+C
+C     THIS ROUTINE INPUTS  A VECTOR IN SPHERICAL COORDINATES IN THE
+C     RELATIVE FRAME  (I.E.RELATIVE FLIGHT PATH,AZMUTH,LATITUDE,
+C     LONGITUDE,AND RADIUS) AND OUTPUT A POSITION VECTOR AND UNIT
+C     VELOCITY VECTOR IN X,Y,Z COORDINATES.
+C
+C     X(1)- RELATIVE FLIGHT PATH ANGLE.
+C     X(2) - AZIMUTH OF RELATIVE VELOCITY
+C     X(3) LONGITUDE
+C     X(4) - LATITUDE
+C     X(5) - RADIUS
+C     X(1) -
+C     Y(2) - POSITION VECTOR
+C     Y(3) -
+C     Y(4) -
+C     Y(5) - UNIT VELOCITY VECTOR
+C     Y(6) -
+C
+      C(1)=COS(X1)
+      C(2)=COS(X2)
+      C(3)=COS(X3)
+      C(4)=COS(X4)
+      S(1)=SIN(X1)
+      S(2)=SIN(X2)
+      S(3)=SIN(X3)
+      S(4)=SIN(X4)
+C
+      Y(1)=X5*C(4)*C(3)
+      Y(2)=X5*C(4)*S(3)
+      Y(3)=X5*S(4)
+C
+      DUM=S(1)*C(4)-C(1)*C(2)*S(4)
+      Y(4)=C(3)*DUM-S(3)*C(1)*S(2)
+      Y(5)=S(3)*DUM+C(3)*C(1)*S(2)
+      Y(6)=S(1)*S(4)+C(1)*C(2)*C(4)
+C
+      RETURN
+      END
+      FUNCTION   TAB(TARG,N,T,Y)                                        TAB 0000
+      DIMENSION N(1),T(1),Y(1)                                          TABT0010
+      IF(N(1))111,14,111                                                TABT0020
+  111 CONTINUE                                                          TABT0030
+      I = N(2)                                                          TABT0040
+    6 IF(TARG - T(I))3,2,1                                              TABT0050
+    1 IF(N(3))9,5,9                                                     TABT0060
+    5 I = I + 1                                                         TABT0070
+      IF(I-N(1)) 6,4,4                                                  TABT0080
+    4 I = I - 1                                                         TABT0090
+    8 TAB = (Y(I+1)*(TARG - T(I)) - Y(I)*(TARG - T(I+1)))/(T(I+1)-T(I)) TABT0100
+    7 CONTINUE
+      GO TO 99
+   11 I = I - 1                                                         TABT0130
+    2 TAB = Y(I)                                                        TABT0140
+      GO TO 7                                                           TABT0150
+    9 IF(TARG - T(I-1)) 4,11,12                                         TABT0160
+    3 IF(N(3))5,10,5                                                    TABT0170
+   10 IF(TARG - T(I-1))12,11,4                                          TABT0180
+   12 I = I - 1                                                         TABT0190
+      IF(I-1)18,8,6                                                     TABT0200
+   18 I=1                                                               TABT0210
+      GO TO 8                                                           TABT0220
+   14 TAB = 0.                                                          TABT0230
+   16 TAB= Y(1)
+  99  N(2)=I
+      RETURN
+      END                                                               TABT0250
+      SUBROUTINE GHAM(DJA,GHA)
+       DGTR=.0174532925
+      GHA=350.891962*DGTR*(DJA-2418322.)
+      XMR=GHA/6.28318531
+      I=XMR
+      GHA=(XMR-I)*6.28318531
+      GHA=GHA/DGTR+149.475
+      IF(GHA-360.)10,10,11
+   11 GHA=GHA-360.
+   10 RETURN
+      END

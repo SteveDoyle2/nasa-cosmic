@@ -1,0 +1,35 @@
+cancel.hlp
+edit.hlp
+dirkey.hlp
+cngdrive.hlp
+
+update.hlp
+
+
+dir.hlp
+
+After pressing Save, the prompt asks for the filename of this chart you are
+saving.  If the chart has been saved before the filename is displayed.  To
+save the current version just press a return or F6.  If this chart has not been
+saved or a new file is desired, enter the filename and then the description.
+After the chart is saved, any file maintenance required can be made.  Pressing
+F1(Cancel) from the first prompt will allow maintenance without saving a chart.
+To recieve more help on this maintenance screen, use the F9 key from this menu.
+
+
+To obtain help for any of the following subjects,  press the function key next
+to the desired subject.
+
+        F1  Cancel
+        F2  Edit
+        F3  Directory
+        F4  Change Drive
+ 
+        F6  Update (if already saved)
+ 
+        F8  Return to Previous Menu
+        F9  More Help
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

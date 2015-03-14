@@ -1,0 +1,15 @@
+                  FORTRAN Programming Tools Abstract
+
+Version II.0
+
+Operating Environment : VAX VMS 4.0
+
+Languages : FORTRAN 77 (97.8%), DCL (1.9%), MACRO-32 (.3%)
+
+The FORTRAN Programming Tools are a series of tools used to support the
+development and maintenance of FORTRAN source codes.  Included are a debugging
+aid, source code maintenance aids, print utilities, a CPU time monitoring
+program, a NAMELIST-like package, and a library of useful, well-documented
+routines.  These tools assist in reducing development time and encouraging high
+quality programs. Although intended for FORTRAN users, some of the tools can be
+used on data files or other programming languages. 

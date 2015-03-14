@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+Cancel is used for stopping a process once it has begun.  This can be done
+anytime when printing or in a slide show when multiple charts are being 
+processed.  Also cancel is used to back up one step in case a key was
+accidentally pressed, such as with the exit key.  The cancel key is also used
+to skip the saving of a chart and allow for maintenance of the directory to
+be performed.
+
+The cancel key can not reverse something which has already been done, such as
+if something is deleted cancel cannot undelete it.
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

@@ -1,0 +1,29 @@
+  interface;
+  
+  unit mlsdraw ( draw_nowline, dbars,
+                 calcx, calcdate, drawbar, dtriangle );
+
+  USES utility;
+
+  procedure draw_nowline ( var first : entity; rtype, mode : integer );
+
+  procedure dbars ( var current : entity );
+
+  procedure calcx    ( var x           : integer;
+                           m,d,y,m0,y0 : integer;
+                           daysperx    : real;
+                       var error       : boolean );
+
+  procedure calcdate (     x            : integer;
+                       var m,d,y        : integer;
+                           m0,y0        : integer;
+                           daysperx     : real;
+                       var error        : boolean );
+
+  procedure drawbar  ( x1,x2,xf,y       : integer );
+
+  procedure dtriangle ( var current : entity );
+
+  begin
+  end;
+

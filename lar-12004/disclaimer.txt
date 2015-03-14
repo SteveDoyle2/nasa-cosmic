@@ -1,0 +1,5 @@
+
+This software package is distributed on an "as is" basis.  Accordingly, 
+no additional information or support is available.  However, documentation 
+may be obtained by contacting COSMIC at (706) 542-3265.
+

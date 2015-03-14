@@ -1,0 +1,61 @@
+      SUBROUTINE GPSOUT
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      COMMON/IPOOL1/ IGRAV,IDAMP,IK,K1,ITIM,IAB,IAPS,IBB,IBPS,
+     1               NK(10),LK(10),LLK(10)
+C
+      COMMON/SLANTN/ AP(10,3),APD(10,3),BP(10,3),BPD(10,3),
+     1               SAP(10),SAPD(10),SBP(10),SBPD(10)
+C
+      DATA U2P/'U2P     '/,UD2P/'UD2P    '/
+      DATA U3P/'U3P     '/,UD3P/'UD3P    '/
+      DATA I4/',A4,'/
+C
+C
+C     OUTPUT FOR TIP SLOPES , GIMBLE , AND PLATFORM CONTROL SYSTEM
+C
+C
+      DO 10 I=1,IK
+      M=NK(I)
+      IF(M.EQ.0) GO TO 10
+      IF(I.GT.K1) GO TO 5
+      CALL SET(UD2P,I,0,SAP(I),I4)
+      CALL SET(UD3P,I,0,SBP(I),I4)
+      GO TO 10
+C
+    5 CONTINUE
+C
+      I1=I-K1
+      CALL SET(U2P,I1,0,SAP(I),I4)
+      CALL SET(U3P,I1,0,SBP(I),I4)
+   10 CONTINUE
+C
+      CALL GMPRNT
+C
+      CALL DMPRNT
+C
+      CALL PCSPRN
+C
+      CALL DCSPRN
+C
+      CALL WHPRNT
+C
+      CALL AWPRNT
+C
+      CALL THPRNT
+C
+      CALL SAPRNT
+C
+      CALL SAPPRN
+C
+      CALL VDPRNT
+C
+      CALL ADMPRN
+C
+      CALL TRQPRN
+C
+C
+      RETURN
+C
+      END

@@ -1,0 +1,1053 @@
+CDK01                                                                   DK010020
+C           THERMAL ANALYZER PROGRAM  TAP2                              DK010030
+      DIMENSION I(4),N(50),CO(20),NT(100),NTJ(100),A(1),NM(10000)       DK010040
+      COMMON  I                                                         DK010050
+      COMMON  N      , CO     , NT     , NTJ    , A      , NM           DK010060
+      EQUIVALENCE(I(1),I1),(I(2),I2),(I(3),I3),(I(4),I4)                DK010080
+      KOUNT=0                                                           DK010100
+      ERFLAG=0.0                                                        DK010110
+                                                     N(10)=0            DK010115
+    1 CALL CLOCK(AA)                                                    DK010120
+      WRITE (6,576)                                                     DK010130
+C     READ CONTROL CARD                                                 DK010140
+      CALL READ1(I,FD,FD1)                                              DK010150
+C     MTYPE IS OPTION TYPE                                              DK010160
+      MTYPE=I1                                                          DK010170
+C     NTYPE IS CASE NUMBER                                              DK010180
+      NTYPE=I2                                                          DK010190
+      IF(MTYPE-1)                      3,10,3                           DK010200
+    3 IF(NTYPE-1)                      5,10,5                           DK010210
+    5 IF(ERFLAG-1.0)                   15,605,15                        DK010220
+C     CLEAR CORE STORAGE FOR FIRST CASE                                 DK010230
+   10 CALL ZEROUT                                                       DK010240
+      ASSIGN 615 TO NU8                                                 DK010250
+      PRTST=0.0                                                         DK010260
+      KOUNT=0                                                           DK010270
+      RCMIN=0.0                                                         DK010280
+      RCMIN2=0.0                                                        DK010290
+      TIMRCM=0.0                                                        DK010300
+      ERFLAG=0.0                                                        DK010310
+      MINND=0                                                           DK010320
+      A5FLAG=0.0                                                        DK010330
+C     READ IN CONDUCTOR,TEMPERATURE AND CAPACITOR DATA                  DK010340
+   15 CALL TRCIN                                                        DK010350
+      IF(N(37))                        600,20,600                       DK010360
+C     READ IN FUNCTION DATA                                             DK010370
+   20 CALL FIN                                                          DK010380
+      IF(N(38))                        600,25,600                       DK010390
+C     READ IN TABLE DATA                                                DK010400
+   25 CALL TABIN                                                        DK010410
+      IF(N(39))                        600,30,600                       DK010420
+C     SET UP INDEXS AND ORIGINS                                         DK010430
+   30 N13=N(13)                                                         DK010440
+      N16=N(16)                                                         DK010450
+      N18=N(18)                                                         DK010460
+      N5=3*N(5)                                                         DK010470
+      N11=2*N(11)+N(21)                                                 DK010480
+      N211=2+N(21)                                                      DK010490
+      N12=2*N(12)+N(22)                                                 DK010500
+      N14=5*N(14)+N(24)                                                 DK010510
+      N15=20*N(15)+N(25)                                                DK010520
+      N17=4*N(17)+N(27)                                                 DK010530
+      N19=N5+5                                                          DK010540
+      N21=5*N(2)+N5                                                     DK010550
+      N22=2+N(22)                                                       DK010560
+      N24=5+N(24)                                                       DK010570
+      N25=20+N(25)                                                      DK010580
+      N27=4+N(27)                                                       DK010590
+      AT=N5                                                             DK010600
+      IF(MTYPE-2)                      40,35,40                         DK010610
+C     READ DATA FROM CORE STORAGE ON TAPE UNIT A-5                      DK010620
+   35 CALL DATAPE                                                       DK010630
+      A5FLAG=1.0                                                        DK010640
+C     SET UP BRANCHES FOR FUNCTION CALCULATIONS                         DK010650
+   40 IF(N(17))                        44,44,42                         DK010660
+   42 ASSIGN 300 TO NU7                                                 DK010670
+C     COMPUTE ORIGNS FOR ARBITRARY FUNCTION DATA                        DK010680
+      CALL ORIGN(N27,N17)                                               DK010690
+      GO TO 46                                                          DK010700
+   44 ASSIGN 372 TO NU7                                                 DK010710
+   46 IF(N(12))                        50,50,48                         DK010720
+   48 ASSIGN 375 TO NU2                                                 DK010730
+      GO TO 52                                                          DK010740
+   50 ASSIGN 387 TO NU2                                                 DK010750
+   52 IF(N(14))                        56,56,54                         DK010760
+   54 ASSIGN 390 TO NU4                                                 DK010770
+      GO TO 58                                                          DK010780
+   56 ASSIGN 422 TO NU4                                                 DK010790
+   58 IF(N(15))                        62,62,60                         DK010800
+   60 ASSIGN 425 TO NU5                                                 DK010810
+      GO TO 64                                                          DK010820
+   62 ASSIGN 447 TO NU5                                                 DK010830
+   64 IF(N(16))                        66,66,68                         DK010840
+   66 ASSIGN 480 TO NU6                                                 DK010850
+      GO TO 74                                                          DK010860
+   68 J=N(26)                                                           DK010870
+      IF(A(J))                         70,70,72                         DK010880
+   70 ASSIGN 450 TO NU6                                                 DK010890
+      GO TO 74                                                          DK010900
+   72 ASSIGN 465 TO NU6                                                 DK010910
+   74 IF(N(11))                        76,76,78                         DK010920
+   76 ASSIGN 500 TO NU1                                                 DK010930
+      GO TO 80                                                          DK010940
+   78 ASSIGN 485 TO NU1                                                 DK010950
+   80 IF(N(13))                        82,82,84                         DK010960
+   82 ASSIGN 555 TO NU3                                                 DK010970
+      GO TO 81                                                          DK010980
+   84 ASSIGN 505 TO NU3                                                 DK010990
+      DO 86 NDX1=1,N13                                                  DK011000
+      J= N(23) + 8* NDX1                                                DK011010
+      M=NM(J-1)                                                         DK011020
+      IF(M)                            86,86,85                         DK011030
+   85 A(J-6)=A(M)                                                       DK011040
+      A(J-7)= A(M-1)                                                    DK011041
+      A(J-5)= 0.0                                                       DK011042
+   86 CONTINUE                                                          DK011050
+   81 IF(CO(11))                       87,87,88                         DK011060
+   87 ASSIGN 205 TO N1                                                  DK011070
+      GO TO 89                                                          DK011080
+   88 ASSIGN 193  TO N1                                                 DK011090
+   89 T2ME=CO(9)                                                        DK011100
+      CALL CLOCK(AD)                                                    DK011110
+      AE=AD-AA                                                          DK011120
+      WRITE (6,575)AE                                                   DK011130
+      IF(CO(2))                        107,107,105                      DK011140
+  105 ASSIGN 165 TO N2                                                  DK011150
+      GO TO 290                                                         DK011160
+  107 IF(CO(3))                        118,118,110                      DK011170
+  110 IF(CO(3)-1.0)                    112,115,115                      DK011180
+  112 ASSIGN 180 TO N2                                                  DK011190
+      GO TO 290                                                         DK011200
+  115 ASSIGN 175 TO N2                                                  DK011210
+      GO TO 290                                                         DK011220
+  118 ASSIGN 185 TO N2                                                  DK011230
+      GO TO 290                                                         DK011240
+C     MAKE K AND KT SUMMATION AT ALL NODES                              DK011250
+  120 CALL SUM(N19,N21)                                                 DK011260
+C     COMPUTE THE MINIMIUM RC PRODUCT AT ALL POSITIVE CAPACITANCE NODES DK011270
+      RCMIN=1.E36                                                       DK011280
+      DO 135 K=N19,N21,5                                                DK011290
+  122 IF(A(K-1))                       135,135,125                      DK011300
+  125 RCMIN1=A(K-1)/A(K-4)                                              DK011310
+      IF(RCMIN-RCMIN1)                 135,135,130                      DK011320
+  130 RCMIN=RCMIN1                                                      DK011330
+      MINND=K                                                           DK011340
+  135 CONTINUE                                                          DK011350
+      KOUNT=KOUNT+1                                                     DK011360
+      IF(RCMIN-RCMIN2)                 136,136,139                      DK011370
+  136 RCMIN2=RCMIN                                                      DK011380
+      TIMRCM=T2ME                                                       DK011390
+  139 IF(RCMIN)                        140,140,150                      DK011400
+  140 WRITE (6,145)                                                     DK011410
+  145 FORMAT(1H0,33HRCMIN ZERO, PROCEED TO NEXT CASE.)                  DK011420
+      GO TO 570                                                         DK011430
+  150 GO TO N2,(165,175,180,185)                                        DK011440
+C     DETERMINE DELTA THETA                                             DK011450
+  165 IF(RCMIN-CO(2))                  175,170,170                      DK011460
+  170 DELTAT=CO(2)                                                      DK011470
+      GO TO 190                                                         DK011480
+  175 DELTAT=RCMIN                                                      DK011490
+      GO TO 190                                                         DK011500
+  180 DELTAT=CO(3)*RCMIN                                                DK011510
+      GO TO 190                                                         DK011520
+  185 DELTAT=RCMIN/4.0                                                  DK011530
+  190 PRTST=PRTST+DELTAT                                                DK011540
+      GO TO N1,(205,193)                                                DK011550
+  193 IF(CO(11)-DELTAT)                205,205,195                      DK011560
+  195 J=(MINND-N(6))/5                                                  DK011570
+      WRITE (6,200)J                                                    DK011580
+  200 FORMAT(1H-,26HCOMPUTING INTERVAL AT NODE,I5,2X,55H IS SMALLER THANDK011590
+     1 MONITERING VALUE,PROCEED TO NEXT CASE.)                          DK011600
+      GO TO 570                                                         DK011610
+  205 IF(PRTST-CO(1))                  220,215,210                      DK011620
+  210 DELTAT=CO(1)-PRTST+DELTAT                                         DK011630
+  215 PRTST=0.0                                                         DK011640
+  220 TFLAG=1.0                                                         DK011650
+C     COMPUTE TEMPERATURES AT ALL POSITIVE CAPACITANCE NODES            DK011660
+      DO 245 K=N19,N21,5                                                DK011670
+  225 IF(A(K-1))                       245,230,235                      DK011680
+  230 TFLAG=0.0                                                         DK011690
+      GO TO 245                                                         DK011700
+  235 A(K)=DELTAT/A(K-1)*(A(K-2)+A(K-3)-A(K)*A(K-4))+A(K)               DK011710
+  245 CONTINUE                                                          DK011720
+      IF(TFLAG)                        250,250,280                      DK011730
+C     MAKE K AND KT SUMMATION IN ORDER TO RELAX ZERO CAPACITANCE NODES  DK011740
+  250 CALL SUM(N19,N21)                                                 DK011750
+C     COMPUTE TEMPERATURES AT ALL ZERO CAPACITANCE NODES                DK011760
+  255 DO 275 K=N19,N21,5                                                DK011770
+  260 IF(A(K-1))                       275,265,275                      DK011780
+  265 A(K)=(A(K-2)+A(K-3))/A(K-4)                                       DK011790
+  275 CONTINUE                                                          DK011800
+  280 T2ME=T2ME+DELTAT                                                  DK011810
+  290 GO TO NU7,(300,372)                                               DK011820
+C     MAKE ARBITRARY FUNCTION INTERPOLATIONS                            DK011830
+  300 DO 370 J=N27,N17,4                                                DK011840
+  303 IF(NM(J-2))                      370,370,305                      DK011850
+  305 K=NM(J-2)                                                         DK011860
+      MA=NM(J-4)                                                        DK011870
+      IF(NM(J-3))                      335,330,325                      DK011880
+  325 MB=NM(J-3)                                                        DK011890
+      ARGG = A(MB)                                                      DK011900
+      GO TO 340                                                         DK011910
+  330 ARGG = T2ME                                                       DK011920
+      GO TO 340                                                         DK011930
+  335 K4=N(6)+5*NM(MA-2)                                                DK011940
+      K5=N(6)+5*NM(MA-3)                                                DK011950
+      ARGG = (A(K4)+A(K5))/ 2.0                                         DK011960
+  340 A(MA)= ENTERP(ARGG,K)                                             DK011970
+      IF(N(40)-1)                      360,610,570                      DK011980
+  360 IF(A(J))                         365,370,365                      DK011990
+  365 A(MA)=A(J)*A(MA)                                                  DK012000
+  370 CONTINUE                                                          DK012010
+  372 GO TO NU2,(375,387)                                               DK012020
+C     COMPUTE RADIATION                                                 DK012030
+  375 DO 385 J=N22,N12,2                                                DK012040
+  378 IF(NM(J-1))                      385,385,380                      DK012050
+  380 K=NM(J-1)                                                         DK012060
+      K4=N(6)+5*NM(K-2)                                                 DK012070
+      K5=N(6)+5*NM(K-3)                                                 DK012080
+      A(K) =(A(J-1)*((A(K4)+459.69)**2+(A(K5)+459.69)**2)*((A(K4)+459.6 DK012090
+     19)+(A(K5)+459.69)))                                               DK012100
+  385 CONTINUE                                                          DK012110
+  387 GO TO NU4,(390,422)                                               DK012120
+C     COMPUTE CONVECTION                                                DK012130
+  390 DO 420 J=N24,N14,5                                                DK012140
+  393 IF(NM(J-2))                      420,420,395                      DK012150
+  395 K=NM(J-2)                                                         DK012160
+      K1=NM(J-4)                                                        DK012170
+      K2=NM(J-1)                                                        DK012180
+      K4=N(6)+5*NM(K-2)                                                 DK012190
+      K5=N(6)+5*NM(K-3)                                                 DK012200
+      G=ENTERP(T2ME,K1)                                                 DK012210
+      IF(N(40)-1)                      400,610,570                      DK012220
+  400 IF(A(J-2))                       410,405,410                      DK012230
+  405 A(K)=1.0                                                          DK012240
+      GO TO 415                                                         DK012250
+  410 A(K)=(ABS(A(K4)-A(K5)))**A(J-2)                                   DK012260
+  415 A(K)=G*ENTERP((A(K4)+A(K5))/2.0,K2)*A(J-4)*A(K)                   DK012270
+      IF(N(40)-1)                      420,610,570                      DK012280
+  420 CONTINUE                                                          DK012290
+  422 GO TO NU5,(425,447)                                               DK012300
+C     COMPUTE ARBITRARY HEAT INPUTS                                     DK012310
+  425 DO 445 J=N25,N15,20                                               DK012320
+      JJ=J-10                                                           DK012330
+  428 IF(NM(J-1))                      445,445,430                      DK012340
+  430 QA=QF(A(JJ),A(JJ-1),A(JJ-2),A(JJ-3),A(JJ-4),A(JJ-5),A(JJ-6),A(JJ-7DK012350
+     1),A(JJ-8),A(JJ-9),T2ME)                                           DK012360
+      DO 440 K=1,10                                                     DK012370
+      L=J-K                                                             DK012380
+      IF(NM(L))                        435,445,435                      DK012390
+  435 K4=NM(L)                                                          DK012400
+  440 A(K4)=QA                                                          DK012410
+  445 CONTINUE                                                          DK012420
+  447 GO TO NU6,(450,465,480)                                           DK012430
+C     COMPUTE AERODYNAMIC HEATING USING THE ECKERT METHOD               DK012440
+  450 FLAG=0.0                                                          DK012450
+      DO 460 NDX1=1,N16                                                 DK012460
+      J=N(26) + 1 + 4*NDX1                                              DK012470
+      K=A(J)                                                            DK012480
+      L=N(26)+1                                                         DK012490
+      IF(K)                            455,460,455                      DK012500
+  455 M=N5+5*K                                                          DK012510
+      A(M-2)=QECK(T2ME,FLAG,A(M),3,4,11,12,5,8,A(L),A(J-2),A(J-3),9,10,6DK012520
+     1,CO(5),CO(6),CO(7),CO(8),7,A(J-1))                                DK012530
+      IF(N(40)-1)                      460,610,570                      DK012540
+  460 CONTINUE                                                          DK012550
+      GO TO 480                                                         DK012560
+C     COMPUTE AERODYNAMIC HEATING USING THE RAMO-WOOLDRIDGE METHOD      DK012570
+  465 FLAG=0.0                                                          DK012580
+      DO 475 NDX1=1,N16                                                 DK012590
+      L=N(26)+1                                                         DK012600
+      J=N(26) + 1 + 4*NDX1                                              DK012610
+      K=A(J)                                                            DK012620
+      IF(K)                            470,475,470                      DK012630
+  470 M=N5+5*K                                                          DK012640
+      A(M-2)=QRW(T2ME,FLAG,A(L),A(M),3,4,11,CO(5),CO(6),CO(7),CO(8),A(J-DK012650
+     11),5,A(J-2),A(J-3),6,12)                                          DK012660
+      IF(N(40)-1)                      475,610,570                      DK012670
+  475 CONTINUE                                                          DK012680
+  480 GO TO NU1,(485,500)                                               DK012690
+C     PERFORM CATHODE FOLLOWER COMPUTATIONS                             DK012700
+  485 DO 495 J=N211,N11,2                                               DK012710
+      IF(NM(J-1))                      495,495,490                      DK012720
+  490 K4=NM(J-1)                                                        DK012730
+      K5=NM(J-2)                                                        DK012740
+      A(K4)=A(K5)                                                       DK012750
+  495 CONTINUE                                                          DK012760
+  500 GO TO NU3,(505,555)                                               DK012770
+C     COMPUTE LATENT HEAT EFFECTS                                       DK012780
+  505 DO 515 NDX1=1,N13                                                 DK012790
+      J = N(23) + 8* NDX1                                               DK012800
+      IF(NM(J-1))                      515,515,510                      DK012810
+  510 M=NM(J-1)                                                         DK012820
+      CALL LAT(A(J-1),A(J-2),A(J-3),A(J-4),A(J-5),A(M),A(J-6),A(M-2),A(MDK012830
+     1-3),A(M-4),DELTAT,T2ME,M)                                         DK012840
+      IF(N(41))                        610,515,610                      DK012850
+  515 CONTINUE                                                          DK012860
+  555 GO TO NU8,(615,557)                                               DK012870
+  557 IF(PRTST)                        565,560,565                      DK012880
+C     PRINT SPECIFIED OUTPUT                                            DK012890
+  560 CALL OUTPUT(T2ME,RCMIN,MINND,KOUNT,RCMIN2,TIMRCM)                 DK012900
+C     TEST FOR END OF JOB                                               DK012910
+  565 IF(T2ME-CO(4)+0.001)  120,570,570                                 DK012920
+  570 CALL CLOCK(AB)                                                    DK012930
+      AC=AB-AA                                                          DK012940
+      WRITE (6,575)AC                                                   DK012950
+  575 FORMAT(1H-,14HCOMPUTER TIME ,F9.3, 8H MINUTES)                    DK012960
+  576 FORMAT(1H0,10X,13HTAP 2   10/62,//)                               DK012970
+      WRITE (6,580)                                                     DK012980
+  580 FORMAT(1H1)                                                       DK012990
+C     PROCEED TO NEXT CASE                                              DK013000
+      IF(MTYPE-2)                        1,585,590                      DK013010
+C     READ TAPE ON UNIT A-5 INTO CORE STORAGE                           DK013020
+  585 IF(A5FLAG-1.0)                   1,587,1                          DK013030
+  587 CALL RETAPE                                                       DK013040
+      ASSIGN 615 TO NU8                                                 DK013050
+      PRTST=0.0                                                         DK013060
+      KOUNT=0                                                           DK013070
+      RCMIN=0.0                                                         DK013080
+      RCMIN2=0.0                                                        DK013090
+      TIMRCM=0.0                                                        DK013100
+      A5FLAG=0.0                                                        DK013110
+      GO TO 1                                                           DK013120
+  590 IF(MTYPE-3)                        1,595,1                        DK013130
+  595 T2ME=CO(4)                                                        DK013140
+      CO(9)=T2ME                                                        DK013141
+      PRTST= 1.0E-06                                                    DK013142
+      GO TO 1                                                           DK013150
+  600 ERFLAG=1.0                                                        DK013160
+C     READ OUT REMAINDER OF CASE IF AN INPUT ERROR HAS BEEN FOUND       DK013170
+  605 CALL READ1(I,FD,FD1)                                              DK013180
+      IF(I1-9999)                      605,570,605                      DK013190
+  610 ERFLAG=1.0                                                        DK013200
+      GO TO 570                                                         DK013210
+  615 CALL SUM(N19,N21)                                                 DK013220
+C     COMPUTE THE INITIAL TEMPERATURE AT ZERO CAPACITANCE NODES         DK013230
+      DO 100 K=N19,N21,5                                                DK013240
+   90 IF(A(K-1))                       100,95,100                       DK013250
+   95 A(K)=A(K-3)/A(K-4)                                                DK013260
+  100 CONTINUE                                                          DK013270
+      ASSIGN 557 TO NU8                                                 DK013280
+      GO TO 557                                                         DK013290
+      END                                                               DK013300
+CDK02                                                                   DK020020
+C     THIS SUBROUTINE READS IN ALL TABLE DATA                           DK020030
+      SUBROUTINE TABIN                                                  DK020040
+      DIMENSION I(4),N(50),CO(20),NT(100),NTJ(100),A(1),NM(10000)       DK020050
+      COMMON  I                                                         DK020060
+      COMMON  N      , CO     , NT     , NTJ    , A      , NM           DK020070
+      EQUIVALENCE(I(1),I1),(I(2),I2),(I(3),I3),(I(4),I4)                DK020090
+      J=N(9)+1                                                          DK020110
+      L=0                                                               DK020120
+   10 CALL READ1(I,FD,FD1)                                              DK020130
+      FDA=-1.E36                                                        DK020140
+      IF(I1)                           70,63,20                         DK020150
+   20 K1=I1                                                             DK020160
+      IF(NT(K1))                       26,26,24                         DK020170
+   24 J=NT(K1)                                                          DK020180
+   26 NM(J-1)=K1                                                        DK020190
+      NT(K1)=J                                                          DK020200
+      NM(J)=I2                                                          DK020210
+      NM(J+1)=I3                                                        DK020220
+      A(J+3)=FD                                                         DK020230
+      A(J+4)=FD1                                                        DK020240
+      NM(J+4)=I4                                                        DK020250
+      K=J+5                                                             DK020260
+   30 CALL READ1(I,FD,FD1)                                              DK020270
+      IF(I1) 50,40,60                                                   DK020280
+   40 K=K+2                                                             DK020290
+      IF(FD-FDA)                       60,60,45                         DK020300
+   45 A(K-1)=FD                                                         DK020310
+      FDA=FD                                                            DK020320
+      A(K)=FD1                                                          DK020330
+      L=L+1                                                             DK020340
+      GO TO 30                                                          DK020350
+   50 J=K+1                                                             DK020360
+      NTJ(K1)=L                                                         DK020370
+      L=0                                                               DK020380
+      GO TO 10                                                          DK020390
+   60 IF(A(J+3))                       45,63,45                         DK020400
+   63 WRITE (6,65)                                                      DK020410
+   65 FORMAT(1H0,10X,72HAN ERROR HAS BEEN MADE IN ENTERING THE TABLE DATDK020420
+     1A. PROCEED TO NEXT CASE.)                                         DK020430
+      N(39)=1.0                                                         DK020440
+      RETURN                                                            DK020450
+   70 IF(J-N(10))                      90,90,80                         DK020460
+   80 N(10)=J                                                           DK020470
+   90 CALL READ1(I,FD,FD1)                                              DK020480
+      RETURN                                                            DK020490
+      END                                                               DK020500
+CDK03                                                                   DK030020
+C     THIS SUBROUTINE READS IN ALL CONDUCTOR,TEMPERATURE,CAPACITOR DATA DK030030
+      SUBROUTINE TRCIN                                                  DK030040
+      DIMENSION I(4),N(50),CO(20),NT(100),NTJ(100),A(1),NM(10000)       DK030050
+      COMMON  I                                                         DK030060
+      COMMON  N      , CO     , NT     , NTJ    , A      , NM           DK030070
+      EQUIVALENCE(I(1),I1),(I(2),I2),(I(3),I3),(I(4),I4)                DK030090
+      NK=0                                                              DK030120
+      MAXNOR = 0                                                        DK030121
+      MAXNOT = 0                                                        DK030122
+    1 CALL READ1(I,RIN,DUM)                                             DK030130
+      IF(I1)                           3,3,2                            DK030140
+    2 MAXNOR=MAX0(MAXNOR,I1)                                            DK030150
+      NK=3*I1                                                           DK030160
+      A(NK)=RIN                                                         DK030170
+      NM(NK-2)=I2                                                       DK030180
+      NM(NK-3)=I3                                                       DK030190
+      GO TO 1                                                           DK030200
+    3 IF(MAXNOR-N(5))                  30,25,25                         DK030210
+   25 N(5)=MAXNOR                                                       DK030220
+   30 N(6)=3*N(5)                                                       DK030230
+C     READ IN TEMPERATURES AND CAPACITORS                               DK030240
+    4 CALL READ1(I,TIN,CIN)                                             DK030250
+      IF(I1)                           8,8,5                            DK030260
+    5 IF(TIN)                          7,6,7                            DK030270
+    6 TIN=.0001                                                         DK030280
+    7 MAXNOT=MAX0(MAXNOT,I1)                                            DK030290
+      NTT=5*I1+N(6)                                                     DK030300
+      A(NTT)=TIN                                                        DK030310
+      A(NTT-1)=CIN                                                      DK030320
+      GO TO 4                                                           DK030330
+C     COMPUTE ORIGINS AND INDEXS FOR K AND KT SUMMATIONS                DK030340
+    8 IF(MAXNOT-N(2))                  38,20,20                         DK030350
+   20 N(2)=MAXNOT                                                       DK030360
+   38 IF(NK)   986, 986 ,  45                                           DK030370
+   45 DO 60 K=1,MAXNOT                                                  DK030380
+      NTT=K*5+N(6)                                                      DK030390
+      IF(A(NTT)) 60,53,60                                               DK030400
+   53 IF(A(NTT-4))                     60,55,60                         DK030410
+   55 A(NTT-1)=-999.0                                                   DK030420
+   60 CONTINUE                                                          DK030430
+      N(8)=5*N(2)                                                       DK030440
+      NRT=N(6)+N(8)                                                     DK030450
+      NL=NRT-1                                                          DK030460
+      NN=4*N(5)+NL                                                      DK030470
+      N(3)=NN                                                           DK030480
+      N(4)=NL                                                           DK030490
+      N(7)=NL                                                           DK030500
+      DO 9 J1=1,MAXNOT                                                  DK030510
+      DO 10 J2=1,MAXNOR                                                 DK030520
+      J3=5*J1+N(6)                                                      DK030530
+      J4=3*J2                                                           DK030540
+      IF(A(J3))                        11,18,11                         DK030550
+   18 IF(A(J3-1)+999.0)                11,9,11                          DK030560
+   11 IF(NM(J4-2)-J1)                  12,13,12                         DK030570
+   13 NL=NL+2                                                           DK030580
+      NM(NL)=3*J2                                                       DK030590
+      NM(NL-1)=5*NM(J4-3)+N(6)                                          DK030600
+      GO TO 10                                                          DK030610
+   12 IF(NM(J4-3)-J1)                  10,14,10                         DK030620
+   14 NL=NL+2                                                           DK030630
+      NM(NL)=3*J2                                                       DK030640
+      NM(NL-1)=5*NM(J4-2)+N(6)                                          DK030650
+   10 CONTINUE                                                          DK030660
+      NN=NN+J1                                                          DK030670
+      NN1  =(NL-N(7))/2                                                 DK030680
+      NM(NN)=NN1                                                        DK030690
+      IF(NN1)                          16,16,15                         DK030700
+   15 N(7)=NL                                                           DK030710
+      NN=N(3)                                                           DK030720
+    9 CONTINUE                                                          DK030730
+  986 RETURN                                                            DK030740
+   16 WRITE (6,17)J1                                                    DK030750
+   17 FORMAT(1H-,4HNODE,I5,57H IS NOT CONNECTED TO ANY OTHER NODE,PROCEEDK030760
+     1D TO NEXT CASE.///)                                               DK030770
+      N(37)=1                                                           DK030780
+      RETURN                                                            DK030790
+      END                                                               DK030800
+CDK04                                                                   DK040010
+C     THIS SUBROUTINE READS IN ALL FUNCTION DATA                        DK040030
+      SUBROUTINE FIN                                                    DK040040
+      DIMENSION I(4),N(50),CO(20),NT(100),NTJ(100),A(1),NM(10000)       DK040050
+      COMMON  I                                                         DK040060
+      COMMON  N      , CO     , NT     , NTJ    , A      , NM           DK040070
+      EQUIVALENCE(I(1),I1),(I(2),I2),(I(3),I3),(I(4),I4)                DK040090
+      N(1)=7*N(5)+6*N(2)+1                                              DK040110
+      MJ=0                                                              DK040120
+    1 CALL READ1(I,FD,FD1)                                              DK040130
+    5 IF(I1)                           149,200,10                       DK040140
+C     READ IN CATHODE FOLLOWER DATA                                     DK040150
+   10 IF(I1-1)                         15,15,25                         DK040160
+   15 IF(N(21))                        18,18,16                         DK040170
+   16 N(1)=N(21)                                                        DK040180
+   18 J=N(1)+2*I4                                                       DK040190
+      NM(J-1)=N(6)+5*I2                                                 DK040200
+      NM(J-2)=N(6)+5*I3                                                 DK040210
+      MJ=MAX0(MJ,I4)                                                    DK040220
+      CALL READ1(I,FD,FD1)                                              DK040230
+      IF(I1)                           20,18,200                        DK040240
+   20 IF(N(21))                        21,21,22                         DK040250
+   21 N(21)=N(1)                                                        DK040260
+      N(11)=MJ                                                          DK040270
+      N(1)=N(1)+2*MJ+1                                                  DK040280
+   22 MJ=0                                                              DK040290
+      GO TO 1                                                           DK040300
+C     READ IN RADIATION DATA                                            DK040310
+   25 IF(I1-2)                         30,30,38                         DK040320
+   30 IF(N(22))                        33,33,31                         DK040330
+   31 N(1)=N(22)                                                        DK040340
+   33 J=N(1)+2*I4                                                       DK040350
+      NM(J-1)=3*I3                                                      DK040360
+      A(J-1)=FD                                                         DK040370
+      MJ=MAX0(MJ,I4)                                                    DK040380
+      CALL READ1(I,FD,FD1)                                              DK040390
+      IF(I1)                           35,33,200                        DK040400
+   35 IF(N(22))                        36,36,37                         DK040410
+   36 N(22)=N(1)                                                        DK040420
+      N(12)=MJ                                                          DK040430
+      N(1)=N(1)+2*MJ+1                                                  DK040440
+   37 MJ=0                                                              DK040450
+      GO TO 1                                                           DK040460
+C     READ IN LATENT HEATING DATA                                       DK040470
+   38 IF(I1-3)                         40,40,55                         DK040480
+   40 IF(N(23))                        43,43,41                         DK040490
+   41 N(1)=N(23)                                                        DK040500
+   43 J = N(1) + 8*I4                                                   DK040510
+      NM(J-1)=5*I3+N(6)                                                 DK040520
+      A(J-1)=FD                                                         DK040530
+      A(J-3)=FD1                                                        DK040540
+      MJ=MAX0(MJ,I4)                                                    DK040550
+      CALL READ1(I,FD,FD1)                                              DK040560
+      IF(I1)                           180,45,180                       DK040570
+   45 A(J-2)=FD                                                         DK040580
+      A(J-4)=FD1                                                        DK040590
+      CALL READ1(I,FD,FD1)                                              DK040600
+      IF(I1)                           50,43,200                        DK040610
+   50 IF(N(23))                        51,51,53                         DK040620
+   51 N(23)=N(1)                                                        DK040630
+      N(13)=MJ                                                          DK040640
+      N(1)= N(1) + 8 *MJ +1                                             DK040650
+   53 MJ=0                                                              DK040660
+      GO TO 1                                                           DK040670
+C     READ IN CONVECTION DATA                                           DK040680
+   55 IF(I1-4)                         58,58,70                         DK040690
+   58 IF(N(24))                        61,61,59                         DK040700
+   59 N(1)=N(24)                                                        DK040710
+   61 J=N(1)+5*I4                                                       DK040720
+      NM(J-1)=I2                                                        DK040730
+      NM(J-2)=3*I3                                                      DK040740
+      A(J-2)=FD                                                         DK040750
+      MJ=MAX0(MJ,I4)                                                    DK040760
+      CALL READ1(I,FD,FD1)                                              DK040770
+      IF(I1)                           170,60,170                       DK040780
+   60 NM(J-4)=I2                                                        DK040790
+      A(J-4)=FD                                                         DK040800
+      CALL READ1(I,FD,FD1)                                              DK040810
+      IF(I1)                           65,61,200                        DK040820
+   65 IF(N(24))                        66,66,68                         DK040830
+   66 N(24)=N(1)                                                        DK040840
+      N(14)=MJ                                                          DK040850
+      N(1)=N(1)+5*MJ+1                                                  DK040860
+   68 MJ=0                                                              DK040870
+      GO TO 1                                                           DK040880
+C     READ IN ARBITRARY HEATING DATA                                    DK040890
+   70 IF(I1-5)                         73,73,85                         DK040900
+   73 IF(N(25))                        76,76,74                         DK040910
+   74 N(1)=N(25)                                                        DK040920
+   76 J=N(1)+20*I4                                                      DK040930
+      JJ=J-10                                                           DK040940
+      J=J-1                                                             DK040950
+      MJ=MAX0(MJ,I4)                                                    DK040960
+      NM(J)=5*I3-2+N(6)                                                 DK040970
+      A(JJ)=FD                                                          DK040980
+      DO 75 K=1,9                                                       DK040990
+      CALL READ1(I,FD,FD1)                                              DK041000
+      L=J-K                                                             DK041010
+      LL=JJ-K                                                           DK041020
+      IF(I3)                           78,78,77                         DK041030
+   77 NM(L)=5*I3-2+N(6)                                                 DK041040
+   78 A(LL)=FD                                                          DK041050
+      A(LL)=FD                                                          DK041060
+      IF(I1)                           160,75,160                       DK041070
+   75 CONTINUE                                                          DK041080
+      CALL READ1(I,FD,FD1)                                              DK041090
+      IF(I1)                           80,76,200                        DK041100
+   80 IF(N(25))                        81,81,83                         DK041110
+   81 N(25)=N(1)                                                        DK041120
+      N(15)=MJ                                                          DK041130
+      N(1)=N(1)+20*MJ+1                                                 DK041140
+   83 MJ=0                                                              DK041150
+      GO TO 1                                                           DK041160
+C     READ IN AERODYNAMIC HEATING DATA                                  DK041170
+   85 IF(I1-6)                         90,90,120                        DK041180
+   90 IF(N(26))                        93,93,91                         DK041190
+   91 N(1)=N(26)                                                        DK041200
+   93 NQ = N(1)                                                         DK041210
+      A(NQ)=I2                                                          DK041215
+      A(NQ+1)=I3                                                        DK041220
+      IF(I3)     95,100,95                                              DK041230
+   95 KJ=2                                                              DK041240
+      GO TO 105                                                         DK041250
+  100 KJ=4                                                              DK041260
+  105 CALL READ1(I,FD,FD1)                                              DK041270
+      MJ=MAX0(MJ,I4)                                                    DK041280
+      IF(I1)                           117,106,200                      DK041290
+  106 J=N(1)+1+4*I4                                                     DK041300
+      A(J)=I3                                                           DK041310
+      A(J-1)=FD                                                         DK041320
+      NQ1 = N(1) + 1                                                    DK041325
+      IF(A(NQ1)) 105,110,105                                            DK041330
+  110 CALL READ1(I,FD,FD1)                                              DK041340
+      IF(I1)                           150,115,150                      DK041350
+  115 A(J-3)=I3                                                         DK041360
+      A(J-4)=FD                                                         DK041370
+      GO TO 105                                                         DK041380
+  117 IF(N(26))                        118,118,119                      DK041390
+  118 N(26)=N(1)                                                        DK041400
+      N(16)=MJ                                                          DK041410
+      N(1)=N(1)+KJ*MJ+1                                                 DK041420
+  119 MJ=0                                                              DK041430
+      GO TO 1                                                           DK041440
+C     READ IN ARBITRARY FUNCTION DATA                                   DK041450
+  120 IF(I1-7)                         125,125,135                      DK041460
+  125 IF(N(27))                        128,128,126                      DK041470
+  126 N(1)=N(27)                                                        DK041480
+  128 CALL READ1(I,FD,FD1)                                              DK041490
+      IF(I1)                           130,130,127                      DK041500
+  127 MJ=MAX0(MJ,I4)                                                    DK041510
+      J=N(1)+4*I4                                                       DK041520
+      A(J)=FD                                                           DK041530
+      NM(J-2)=(-1)*I3                                                   DK041540
+      NM(J-3)=I2                                                        DK041550
+      NM(J-4)=I1                                                        DK041560
+      GO TO 128                                                         DK041570
+  130 IF(N(27))                        131,131,134                      DK041580
+  131 N(27)=N(1)                                                        DK041590
+      N(17)=MJ                                                          DK041600
+      N(1)=N(1)+MJ*4+1                                                  DK041610
+  134 MJ=0                                                              DK041620
+      GO TO 1                                                           DK041630
+C     READ IN OUTPUT SPECIFICATIONS                                     DK041640
+  135 IF(I1-8)                         136,136,145                      DK041650
+  136 IF(N(28))                        140,140,137                      DK041660
+  137 N(1)=N(28)                                                        DK041670
+  140 MJ=MAX0(MJ,I4)                                                    DK041680
+      J=N(1)+3*I4                                                       DK041690
+      NM(J-2)=I3                                                        DK041700
+C     COMPUTE OUTPUT ORIGINS                                            DK041710
+      L=I2                                                              DK041720
+      GO TO (250,255,260,265),L                                         DK041730
+  250 CALL ALPHNM(J,3H K()                                              DK041740
+  141 M=3*I3                                                            DK041750
+      GO TO 144                                                         DK041760
+  255 CALL ALPHNM(J,3H T()                                              DK041770
+      GO TO 143                                                         DK041780
+  260 CALL ALPHNM(J,3H C()                                              DK041790
+      GO TO 143                                                         DK041800
+  265 CALL ALPHNM(J,3H Q()                                              DK041810
+  143 M=3*N(5)+5*I3-(I2-2)                                              DK041820
+  144 NM(J-3)=M                                                         DK041830
+      CALL READ1(I,FD,FD1)                                              DK041840
+      IF(I1)                           142,140,200                      DK041850
+  142 IF(N(28))                        138,138,139                      DK041860
+  138 N(28)=N(1)                                                        DK041870
+      N(18)=MJ                                                          DK041880
+      N(1)=N(1)+3*MJ+1                                                  DK041890
+      N(9)=N(1)                                                         DK041900
+  139 MJ=0                                                              DK041910
+      GO TO 1                                                           DK041920
+C     READ IN PROBLEM CONSTANTS                                         DK041930
+  145 IF(I1-9)                         200,147,200                      DK041940
+  147 M=I3                                                              DK041950
+      IF(M)                            200,200,146                      DK041960
+  146 IF(M-20)                         148,148,200                      DK041970
+  148 CO(M)=FD                                                          DK041980
+      CALL READ1(I,FD,FD1)                                              DK041990
+      IF(I1)                           1,147,200                        DK042000
+  149 IF(N(9)-N(1)) 151,151,152                                         DK042010
+  151 N(9)=N(1)                                                         DK042020
+  152 RETURN                                                            DK042030
+  150 WRITE (6,155)                                                     DK042040
+  155 FORMAT(1H0,77HAN ERROR HAS BEEN MADE IN ENTERING DATA FOR THE AERODK042050
+     1DYNAMIC HEATING FUNCTION.)                                        DK042060
+      GO TO 210                                                         DK042070
+  160 WRITE (6,165)                                                     DK042080
+  165 FORMAT(1H0,78HALL TEN COEFFICIENTS FOR THE ARBITRARY HEATING FUNCTDK042090
+     1ION HAVE NOT BEEN ENTERED.)                                       DK042100
+      GO TO 210                                                         DK042110
+  170 WRITE (6,175)                                                     DK042120
+  175 FORMAT(1H0,68HAN ERROR HAS BEEN MADE IN ENTERING DATA FOR THE CONVDK042130
+     1ECTION FUNCTION.)                                                 DK042140
+      GO TO 210                                                         DK042150
+  180 WRITE (6,185)                                                     DK042160
+  185 FORMAT(1H0,69HAN ERROR HAS BEEN MADE IN ENTERING DATA FOR THE LATEDK042170
+     1NT HEAT FUNCTION.)                                                DK042180
+      GO TO 210                                                         DK042190
+  200 WRITE (6,205)                                                     DK042200
+  205 FORMAT(1H0, 53HAN ERROR HAS BEEN MADE IN ENTERING THE FUNCTION DATDK042210
+     1A.)                                                               DK042220
+  210 N(38)=1                                                           DK042230
+      WRITE (6,215)                                                     DK042240
+  215 FORMAT(1H0,5X,21HPROCEED TO NEXT CASE.)                           DK042250
+      RETURN                                                            DK042260
+      END                                                               DK042270
+CDK05                                                                   DK050020
+C     THIS SUBROUTINE COMPUTES ORIGIN FOR THE ARBITRARY FUNCTIONS       DK050030
+      SUBROUTINE ORIGN(N27,N17)                                         DK050040
+      DIMENSION I(4),N(50),CO(20),NT(100),NTJ(100),A(1),NM(10000)       DK050050
+      COMMON  I                                                         DK050060
+      COMMON  N      , CO     , NT     , NTJ    , A      , NM           DK050070
+      EQUIVALENCE(I(1),I1),(I(2),I2),(I(3),I3),(I(4),I4)                DK050090
+      DO 100 J=N27,N17,4                                                DK050110
+      IF(NM(J-2))                      5,100,100                        DK050120
+    5 NM(J-2)=IABS(NM(J-2))                                             DK050130
+      K=NM(J-2)                                                         DK050140
+      LL=NT(K)                                                          DK050150
+      IF(NM(LL)-1)                     20,10,15                         DK050160
+   10 NM(J-3)=3*NM(J-3)                                                 DK050170
+      GO TO 20                                                          DK050180
+   15 NM(J-3)=N(6)+5*NM(J-3)+2-NM(LL)                                   DK050190
+   20 IF(NM(LL+1)-1)                   100,25,30                        DK050200
+   25 NM(J-4)=3*NM(J-4)                                                 DK050210
+      GO TO 100                                                         DK050220
+   30 NM(J-4)=N(6)+5*NM(J-4)+2-NM(LL+1)                                 DK050230
+  100 CONTINUE                                                          DK050240
+      RETURN                                                            DK050250
+      END                                                               DK050260
+CDK06                                                                   DK060020
+      SUBROUTINE READ1(I,X,XX)                                          DK060030
+      DIMENSION I(4)                                                    DK060040
+      READ (5,2)I,X,XX                                                  DK060060
+      WRITE (6,2)I,X,XX                                                 DK060070
+    2 FORMAT(4I5,2E15.5,22H                                            )DK060080
+      RETURN                                                            DK060090
+      END                                                               DK060100
+CDK07                                                                   DK070020
+      SUBROUTINE SUM(N19,N21)                                           DK070030
+      DIMENSION I(4),N(50),CO(20),NT(100),NTJ(100),A(1),NM(10000)       DK070040
+      COMMON  I                                                         DK070050
+      COMMON  N      , CO     , NT     , NTJ    , A      , NM           DK070060
+      EQUIVALENCE(I(1),I1),(I(2),I2),(I(3),I3),(I(4),I4)                DK070080
+      NK=N(4)                                                           DK070100
+      I(1)=0                                                            DK070110
+      DO 100 K=N19,N21,5                                                DK070120
+      I(1)=I(1)+1                                                       DK070130
+      N2=N(3)+I(1)                                                      DK070140
+      N2=NM(N2)                                                         DK070150
+      IF(A(K-1))                       95,10,10                         DK070160
+   10 L=K-3                                                             DK070170
+      A(L)=0.0                                                          DK070180
+      A(L-1)=0.0                                                        DK070190
+      DO 90 M=1,N2                                                      DK070200
+      JM=NK+2*M                                                         DK070210
+      JT=NM(JM-1)                                                       DK070220
+      J=NM(JM)                                                          DK070230
+      A(L)=A(J)*A(JT)+A(L)                                              DK070240
+      A(L-1)=A(J)+A(L-1)                                                DK070250
+   90 CONTINUE                                                          DK070260
+   95 NK=NK+2*N2                                                        DK070270
+  100 CONTINUE                                                          DK070280
+      RETURN                                                            DK070290
+      END                                                               DK070300
+CDK08                                                                   DK080020
+C     THIS SUBROUTINE PRINTS THE REQUIRED OUTPUT                        DK080030
+      SUBROUTINE OUTPUT(T2ME,RCMIN,MINND,KOUNT,RCMIN2,TIMRCM)           DK080040
+      DIMENSION I(4),N(50),CO(20),NT(100),NTJ(100),A(1),NM(10000)       DK080050
+      DIMENSION PRINT(7),NODE(7),ALPHA(7)                               DK080060
+      COMMON  I                                                         DK080070
+      COMMON  N      , CO     , NT     , NTJ    , A      , NM           DK080080
+      EQUIVALENCE(I(1),I1),(I(2),I2),(I(3),I3),(I(4),I4)                DK080100
+      IF(MINND)                        10,10,15                         DK080130
+   10 N18=3*N(18)+N(28)                                                 DK080140
+      N28=3+N(28)                                                       DK080150
+      GO TO 20                                                          DK080160
+   15 MINND=(MINND-N(6))/5                                              DK080170
+   20 WRITE (6,100)T2ME,RCMIN,MINND,KOUNT,RCMIN2,TIMRCM                 DK080180
+  100 FORMAT(1H-,F15.7,F15.7,I10,5X,I10,F15.7,F15.7)                    DK080190
+      KOUNT=0                                                           DK080200
+      J=1                                                               DK080210
+      DO 90 L=N28,N18,3                                                 DK080220
+      IF(NM(L-2))                      90,90,25                         DK080230
+   25 NODE(J)=NM(L-2)                                                   DK080240
+      ALPHA(J)=A(L)                                                     DK080250
+      K=NM(L-3)                                                         DK080260
+      PRINT(J)=A(K)                                                     DK080270
+      J=J+1                                                             DK080280
+      IF(J-8)                          30,40,40                         DK080290
+   30 IF(L-N18)                        90,40,40                         DK080300
+   40 J=J-1                                                             DK080310
+      WRITE(6,200) (ALPHA(IQ),NODE(IQ),IQ=1,J)                          DK080320
+  200 FORMAT(3H0  ,A3,I4,1H),7X,A3,I4,1H),7X,A3,I4,1H),7X,A3,I4,1H),7X,ADK080330
+     13,I4,1H),7X,A3,I4,1H),7X,A3,I4,1H))                               DK080340
+      WRITE(6,300) (PRINT(IQ),IQ=1,J)                                   DK080350
+  300 FORMAT(1H ,E13.5,6E15.5)                                          DK080360
+      J=1                                                               DK080370
+   90 CONTINUE                                                          DK080380
+      IF(RCMIN2)                       95,95,105                        DK080390
+   95 RCMIN2=1.E36                                                      DK080400
+  105 RETURN                                                            DK080410
+      END                                                               DK080420
+CDK09                                                                   DK090020
+C     THIS SUBROUTINE STORES ALPHANUMERIC DATE FOR PRINT OUT            DK090030
+      SUBROUTINE ALPHNM(K,B)                                            DK090040
+      DIMENSION  JUNK(274),A(2)                                         DK090050
+      COMMON  JUNK   , A                                                DK090060
+      A(K)=B                                                            DK090090
+      RETURN                                                            DK090100
+      END                                                               DK090110
+CDK10                                                                   DK100020
+      SUBROUTINE ZEROUT                                                 DK100030
+      DIMENSION I(4),N(50),CO(20),NT(100),NTJ(100),A(1),NM(10000)       DK100040
+      COMMON  I      , N      , CO     , NT     , NTJ    , A            DK100050
+      COMMON  NM                                                        DK100060
+      IF(N(10))                        10,10,20                         DK100090
+   10 K=4                                                               DK100100
+      GO TO 30                                                          DK100110
+   20 K=N(10)+50                                                        DK100120
+   30 DO 40 L=1,K                                                       DK100130
+   40 A(L)=0.0                                                          DK100140
+      DO 60 L=1,275                                                     DK100150
+   60 I(L)=0.0                                                          DK100160
+      DO 70 L=1,10001                                                   DK100162
+   70 A(L)= 0.0                                                         DK100164
+      RETURN                                                            DK100170
+      END                                                               DK100180
+CDK11                                                                   DK110020
+      SUBROUTINE DATAPE                                                 DK110030
+      DIMENSION I(4),N(50),CO(20),NT(100),NTJ(100),A(10000)             DK110040
+      COMMON  I                                                         DK110050
+      COMMON  N      , CO     , NT     , NTJ    , A                     DK110060
+      EQUIVALENCE(I(1),I1),(I(2),I2),(I(3),I3),(I(4),I4)                DK110080
+      REWIND 8                                                          DK110100
+      K=N(10)+1                                                         DK110110
+      WRITE (8)(I(J),J=1,4),(N(J),J=1,50),(CO(J),J=1,20),(NT(J),J=1,100)DK110120
+     1,(NTJ(J),J=1,100)                                                 DK110130
+      WRITE (8)(A(J),J=1,K)                                             DK110140
+      REWIND 8                                                          DK110150
+   10 RETURN                                                            DK110160
+      END                                                               DK110170
+CDK12                                                                   DK120020
+      SUBROUTINE RETAPE                                                 DK120030
+      DIMENSION I(4),N(50),CO(20),NT(100),NTJ(100),A(10000)             DK120040
+      COMMON  I                                                         DK120050
+      COMMON  N      , CO     , NT     , NTJ    , A                     DK120060
+      EQUIVALENCE(I(1),I1),(I(2),I2),(I(3),I3),(I(4),I4)                DK120080
+      REWIND 8                                                          DK120100
+      READ (8)(I(J),J=1,4),(N(J),J=1,50),(CO(J),J=1,20),(NT(J),J=1,100),DK120110
+     1(NTJ(J),J=1,100)                                                  DK120120
+      K=N(10)+1                                                         DK120130
+      READ (8)(A(J),J=1,K)                                              DK120140
+   10 RETURN                                                            DK120150
+      END                                                               DK120160
+CDK13                                                                   DK130020
+C     LINEAR INTERPOLATION ROUTINE                                      DK130030
+      FUNCTION ENTERP (ARGG,K)                                          DK130040
+      DIMENSION I(4),N(50),CO(20),NT(100),NTJ(100),A(1),NM(10000)       DK130050
+      COMMON  I                                                         DK130060
+      COMMON  N      , CO     , NT     , NTJ    , A      , NM           DK130070
+      EQUIVALENCE(I(1),I1),(I(2),I2),(I(3),I3),(I(4),I4)                DK130090
+      K1=K                                                              DK130110
+      J=NT(K1)                                                          DK130120
+      NP=NTJ(K1)                                                        DK130130
+      IF(A(J+4))                       5,10,5                           DK130140
+    5 ENTERP=A(J+4)                                                     DK130150
+      RETURN                                                            DK130160
+   10 ARGI= ARGG                                                        DK130170
+      L=J+5                                                             DK130180
+   15 DO 45 NDX1=1,NP                                                   DK130190
+      L1=L + 2*NDX1                                                     DK130200
+      IF(A(L1-1)-ARGI)                 35,30,20                         DK130210
+   20 IF(NDX1-1)60,60,25                                                DK130220
+   25 ENTERP= (ARGI-A(L1-3))/(A(L1-1)-A(L1-3))*(A(L1)-A(L1-2))+A(L1-2)  DK130230
+      RETURN                                                            DK130240
+   30 ENTERP=A(L1)                                                      DK130250
+      RETURN                                                            DK130260
+   35 IF(NDX1-1)45,45,40                                                DK130270
+   40 IF(A(L1-1)-A(L1-3))              50,45,45                         DK130280
+   45 CONTINUE                                                          DK130290
+   50 IF(A(J+3))                       60,60,55                         DK130300
+   55 ARGI=ARGI-A(J+3)                                                  DK130310
+      IF(ARGI-A(L1-3))                 15,15,55                         DK130320
+   60 IF(NM(J+4))                      65,65,75                         DK130330
+   65 WRITE (6,70) ARGG,  K1                                            DK130340
+   70 FORMAT(1H0,10X,12HTHE ARGUMENT,F12.4,24H EXCEEDS EXTENT OF TABLE,IDK130350
+     13,/1H0,10X,21HPROCEED TO NEXT CASE.)                              DK130360
+      N(40)=1                                                           DK130370
+      RETURN                                                            DK130380
+   75 N(40)=2                                                           DK130390
+      RETURN                                                            DK130400
+      END                                                               DK130410
+CDK14                                                                   DK140020
+      FUNCTION QF (CA,B,C,D,E,F,G,H,EK,W,TIME)                          DK140030
+      DIMENSION I(4),N(50),CO(20),NT(100),NT1(100),A(10000)             DK140040
+      COMMON  I                                                         DK140050
+      COMMON  N      , CO     , NT     , NT1    , A                     DK140060
+      EQUIVALENCE(I(1),I1),(I(2),I2),(I(3),I3),(I(4),I4)                DK140080
+      IF(A(1))1,2,1                                                     DK140100
+    2 T1=0.0                                                            DK140110
+      GO TO 5                                                           DK140120
+    1 IF(EK)3,4,3                                                       DK140130
+    3 T1=A(1)*SIN(W+EK*TIME/6.2832)                                     DK140140
+      GO TO 5                                                           DK140150
+    4 T1=A(1)*SIN(W)                                                    DK140160
+    5 IF(D)6,7,6                                                        DK140170
+    7 T4=0.0                                                            DK140180
+      GO TO 8                                                           DK140190
+    6 T4=D*TIME**2                                                      DK140200
+    8 IF(E)9,10,9                                                       DK140210
+   10 T5=0.0                                                            DK140220
+      GO TO 13                                                          DK140230
+    9 IF(F)11,12,11                                                     DK140240
+   12 T5=E                                                              DK140250
+      GO TO 13                                                          DK140260
+   11 T5=E*EXP(F*TIME)                                                  DK140270
+   13 IF(G)14,15,14                                                     DK140280
+   15 T6=0.0                                                            DK140290
+      GO TO 18                                                          DK140300
+   14 IF(H)16,17,16                                                     DK140310
+   17 T6=G*TIME                                                         DK140320
+      GO TO 18                                                          DK140330
+   16 T6=G*TIME*EXP(H*TIME**2)                                          DK140340
+   18 QF=T1+B+C*TIME+T4+T5+T6                                           DK140350
+      RETURN                                                            DK140360
+      END                                                               DK140370
+CDK15                                                                   DK150020
+C     ROUTINE FOR LATENT HEAT EFFECTS                                   DK150030
+      SUBROUTINE LAT (PHT1,PHH1,PHT2,PHH2,QDEL,T,TPREV,                 DK150040
+     1Q ,TR,RI,DELTAT,TIME,K)                                           DK150050
+      DIMENSION I(4),N(50),CO(20),NT(100),NTJ(100),A(1),NM(10000)       DK150060
+      COMMON  I                                                         DK150070
+      COMMON  N      , CO     , NT     , NTJ    , A      , NM           DK150080
+      EQUIVALENCE(I(1),I1),(I(2),I2),(I(3),I3),(I(4),I4)                DK150100
+      K=(K-N(6))/5                                                      DK150120
+      IF(QDEL)2,3,2                                                     DK150130
+    2 IF(TPREV-PHT2)16,4,16                                             DK150140
+    4 TLH=PHT2                                                          DK150150
+      IF(PHH2)30,30,31                                                  DK150160
+  30  WRITE (6,32)TIME,K                                                DK150170
+      N(41)=1                                                           DK150180
+      RETURN                                                            DK150190
+   32 FORMAT(1H0//40H PROBLEM CUT OFF BY LATENT HEAT ROUTINE.F12.2,I5)  DK150200
+   31 EMDLH=PHH2                                                        DK150210
+    6 QCH=(TR+Q-TLH*RI)*DELTAT+QDEL                                     DK150220
+      IF(ABS(QCH)-EMDLH)7,8,8                                           DK150230
+    8 WRITE (6,9)TIME,K,T                                               DK150240
+    9 FORMAT(1H0//24H LATENT HEAT INFORMATIONF12.2,I5,F10.2)            DK150250
+      QDEL=0.0                                                          DK150260
+    1 TPREV=T                                                           DK150270
+      RETURN                                                            DK150280
+    3 IF(T-PHT2)10,29,11                                                DK150290
+   10 IF(TPREV-PHT2)12,1,13                                             DK150300
+   12 IF(T-PHT1)14,20,15                                                DK150310
+   14 IF(TPREV-PHT1)1,1,26                                              DK150320
+   26 WRITE (6,9)TIME,K,T                                               DK150330
+   16 TLH=PHT1                                                          DK150340
+      EMDLH=PHH1                                                        DK150350
+      GO TO 6                                                           DK150360
+   15 IF(TPREV-PHT1)26,26,1                                             DK150370
+   13 WRITE (6,9)TIME,K,T                                               DK150380
+      GO TO 4                                                           DK150390
+   11 IF(TPREV-PHT2)13,13,1                                             DK150400
+    7 IF(QCH)17,19,18                                                   DK150410
+   17 IF(QDEL)19,19,8                                                   DK150420
+   19 QDEL=QCH                                                          DK150430
+      T=TLH                                                             DK150440
+      GO TO 1                                                           DK150450
+   18 IF(QDEL)8,19,19                                                   DK150460
+   29 IF(TPREV-PHT2)8,1,8                                               DK150470
+   20 IF(TPREV-PHT1)8,1,8                                               DK150480
+  300 RETURN                                                            DK150485
+      END                                                               DK150490
+CDK16                                                                   DK160020
+C     R-W EQUATION FOR AERODYNAMIC HEATING                              DK160030
+C                                                                       DK160040
+      FUNCTION QRW(TIME,FLAG,IBFLAG,T,TABH,TABM,TABA,CA,B,E,GAM,EK,TAKREDK160050
+     1X,I2AER,ALLOC,TABT,TABB)                                          DK160060
+      DIMENSION I(4),N(50),CO(20),NT(100),NT1(100),A(10000)             DK160070
+      COMMON  I                                                         DK160080
+      COMMON  N      , CO     , NT     , NT1    , A                     DK160090
+      EQUIVALENCE(I(1),I1),(I(2),I2),(I(3),I3),(I(4),I4)                DK160110
+      K=TABB                                                            DK160130
+      J=NT(K)                                                           DK160140
+      IF(FLAG)19,2,19                                                   DK160150
+    2 H=ENTERP(TIME,TABH)                                               DK160160
+      IF(N(40))                        99,50,99                         DK160170
+   50 EM=ENTERP(TIME,TABM)                                              DK160180
+      IF(N(40))                        99,55,99                         DK160190
+   55 IF(IBFLAG) 4,3,4                                                  DK160200
+    4 BETA=1.0                                                          DK160210
+      GO TO 5                                                           DK160220
+    3 ALPH=ENTERP(TIME,TABA)                                            DK160230
+      IF(N(40))                        99,5,99                          DK160240
+    5 REXM1=ENTERP(H,TABREX)                                            DK160250
+      IF(N(40))                        99,60,99                         DK160260
+   60 REXM=10.0**REXM1                                                  DK160270
+      TINF=ENTERP(H,TABT)                                               DK160280
+      IF(N(40))                        99,65,99                         DK160290
+   65 EN=0.71**E*(GAM-1.0)/2.0*EM**2                                    DK160300
+      TR=TINF*(1.0+EN)                                                  DK160310
+      FLAG=1.0                                                          DK160320
+   19 IF(IBFLAG)1,20,1                                                  DK160330
+  20  ALPHL=ALLOC-ALPH                                                  DK160340
+      IF(I2AER)12,14,12                                                 DK160350
+  12  ALPHL=-ALPHL                                                      DK160360
+   14 IF(A(J+7))                       15,16,15                         DK160370
+   15 BETA=ENTERP(ALPHL,TABB)                                           DK160380
+      IF(N(40))                        99,1,99                          DK160390
+   16 IF(ALPHL)17,18,18                                                 DK160400
+   17 BETA=A(J+6)*ALPHL+1.0                                             DK160410
+      GO TO1                                                            DK160420
+   18 BETA=A(J+8)*ALPHL+1.0                                             DK160430
+    1 QRW=BETA*EK*(REXM*EM)**A(1)*EM**B*(TR-T-459.69)/(TR-TINF)         DK160440
+   99 RETURN                                                            DK160450
+       END                                                              DK160460
+CDK17                                                                   DK170020
+C     ECKERT EQUATION FOR AERODYNAMIC HEATING                           DK170030
+      FUNCTION QECK (TIME,FLAG,T,TABH,TABM,TABA,TABB,TABREX,TABS        DK170040
+     1,IBFLAG,I2AER,ALLOC,TABTLT,TABMLM,TABT,CA,B,E,GAM,TABPR,EK)       DK170050
+      DIMENSION I(4),N(50),CO(20),NT(100),NT1(100),A(10000)             DK170060
+      COMMON  I                                                         DK170070
+      COMMON  N      , CO     , NT     , NT1    , A                     DK170080
+      EQUIVALENCE(I(1),I1),(I(2),I2),(I(3),I3),(I(4),I4)                DK170100
+      K=TABB                                                            DK170120
+      J=NT(K)                                                           DK170130
+      IF(FLAG)19,2,19                                                   DK170140
+    2 H=ENTERP(TIME,TABH)                                               DK170150
+      IF(N(40))                        99,50,99                         DK170160
+   50 EM=ENTERP(TIME,TABM)                                              DK170170
+      IF(N(40))                        99,55,99                         DK170180
+   55 IF(IBFLAG) 4,3,4                                                  DK170190
+    4 BETA=1.0                                                          DK170200
+      GO TO 5                                                           DK170210
+    3 ALPH=ENTERP(TIME,TABA)                                            DK170220
+      IF(N(40))                        99,5,99                          DK170230
+    5 REXM1=ENTERP(H,TABREX)                                            DK170240
+      IF(N(40))                        99,60,99                         DK170250
+   60 REXM=10.0**REXM1                                                  DK170260
+    6 S=ENTERP(EM,TABS)                                                 DK170270
+      IF(N(40))                        99,9,99                          DK170280
+    9 TLOTI=ENTERP(EM,TABTLT)                                           DK170290
+      IF(N(40))                        99,65,99                         DK170300
+   65 EMLOMI=ENTERP(EM,TABMLM)                                          DK170310
+      IF(N(40))                        99,11,99                         DK170320
+   11 TINF=ENTERP(H,TABT)                                               DK170330
+      IF(N(40))                        99,70,99                         DK170340
+   70 CONTINUE                                                          DK170350
+      EN=.71**E*(GAM-1.0)/2.0*(EMLOMI*EM)**2                            DK170360
+      TL=TLOTI*TINF                                                     DK170370
+      TR=TL*(1.0+EN)                                                    DK170380
+      FLAG=1.0                                                          DK170390
+   19 IF(IBFLAG)1,20,1                                                  DK170400
+  20  ALPHL=ALLOC-ALPH                                                  DK170410
+      IF(I2AER)12,14,12                                                 DK170420
+  12  ALPHL=-ALPHL                                                      DK170430
+   14 IF(A(J+7))                       15,16,15                         DK170440
+   15 BETA=ENTERP(ALPHL,TABB)                                           DK170450
+      IF(N(40))                        99,1,99                          DK170460
+   16 IF(ALPHL)17,18,18                                                 DK170470
+   17 BETA=A(J+6)*ALPHL+1.0                                             DK170480
+      GO TO1                                                            DK170490
+   18 BETA=A(J+8)*ALPHL+1.0                                             DK170500
+    1 TLPOTL =.5 *(1.0+(T+459.69)/TL)+.22*EN                            DK170510
+      PR3K1=ENTERP(TLPOTL*TL,TABPR)                                     DK170520
+      IF(N(40))                        99,75,99                         DK170530
+   75 PR3K=10.0**PR3K1                                                  DK170540
+      QECK=BETA*EK*(S*REXM*EM/TLPOTL**1.69)**A(1)*EM **B*PR3K*(TR-T-459.DK170550
+     169)                                                               DK170560
+   99 RETURN                                                            DK170570
+      END                                                               DK170580
+CDK18                                                                   DK180020
+      SUBROUTINE CLOCK(T)                                               DK180030
+      T=0.                                                              DK180040
+      RETURN                                                            DK180050
+      END                                                               DK180060

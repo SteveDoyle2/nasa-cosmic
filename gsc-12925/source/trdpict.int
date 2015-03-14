@@ -1,0 +1,32 @@
+   interface;
+      unit trdpict ( skeletrd, picture, chartinfo, get_list, format,
+                     bac, eac ) ;
+
+      uses getparam;
+
+      uses utility;
+
+  var
+	 bac   : lstring(6);
+	 eac   : lstring(6);
+
+   procedure skeletrd (     color  : integer; var xy : supinteger );
+
+   procedure picture  ( var first  : entity;  var xy : supinteger );
+
+   procedure chartinfo(     code    : byte;
+			var first   : entity;
+			var xy      : supinteger );
+
+   procedure get_list ( var first   : entity;
+			var total   : byte;
+			var xy	    : supinteger);
+
+   procedure format ( var inkey : byte; var current, first : entity );
+
+
+begin
+end;
+
+
+

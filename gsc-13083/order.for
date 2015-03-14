@@ -1,0 +1,60 @@
+      SUBROUTINE ORDER(VALUES,NUM,IORD)
+      IMPLICIT INTEGER*4(A-H,O-Z), INTEGER*2 (I-N)
+C
+C     ** FOR INTEGER*4 ARRAY **
+C
+C     ORDER VALUES FROM MIN TO MAX VALUES. DO NOT ALTER VALUES, BUT
+C     GENERATE ARRAY IORD SUCH THAT MIN TO MAX VALUES ARE
+C     VALUES(IORD(1)), VALUES(IORD(2)), ...., VALUES(IORD(NUM)).
+C
+C VARIABLE  DIM  TYPE  I/O  DESCRIPTION
+C --------  ---  ----  ---  -----------
+C
+C VALUES    NUM  I*4    I   THE VALUES FOR WHICH THE ORDER IS TO BE
+C                           DETERMINED.
+C
+C NUM       1    I*4    I   THE NUMBER OF VALUES TO BE ORDERED.
+C                           MAXIMUM = 32767  ( LARGEST I*2 VALUE )
+C
+C IORD      NUM  I*2    I   THE ORDER. LOWEST VALUE IN VALUES ARRAY IS
+C                           VALUES(IORD(1)), THE HIGHEST IS
+C                           VALUES(IORD(NUM)).
+C
+C
+C*********************************************************************
+C
+C  C PETRUZZO, 12/83. REPLACEMENT OF EARLIER VERSION. 
+C                     THIS IS A MODIFICATION OF THE ROUTINE NAMED
+C                     ORDER8(REORDERS R*8 ARRAYS) TO REORDER I*4 ARRAYS.
+C         MODIFIED....
+C
+C*********************************************************************
+C
+      DIMENSION VALUES(1)
+      INTEGER*4 NUM,I4BIG/2147483647/
+      INTEGER*2 IORD(1)
+      INTEGER*2 I2BIG/32767/
+C
+      DO 100 I=1,NUM
+ 100  IORD(I) = -I2BIG      !  I2BIG = LARGEST INTEGER*2 VALUE
+C
+      DO 200 II=1,NUM
+      TESTMIN = I4BIG       !  I4BIG = LARGEST INTEGER*4 VALUE
+C
+      DO 300 JJ=1,NUM
+      IF(IORD(JJ).LT.0) THEN     ! VALUES(JJ) HAS NOT BEEN USED YET
+        TESTVAL = VALUES(JJ)
+        IF(TESTVAL.LT.TESTMIN) THEN
+          IMIN = JJ
+          TESTMIN = TESTVAL
+          END IF
+        END IF
+  300 CONTINUE
+C
+      IORD(II) = IISIGN(IMIN,IORD(II)) ! SEE NEXT NOTE ABOUT THE SIGN
+      IORD(IMIN) = IIABS(IORD(IMIN))  ! POSITIVE MEANS VALUES(IMIN) USED
+C
+  200 CONTINUE
+C
+      RETURN
+      END

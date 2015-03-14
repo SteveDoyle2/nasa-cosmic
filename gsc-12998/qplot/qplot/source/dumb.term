@@ -1,0 +1,275 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STARLETQ',
+               'QLIBHOME:STANDARD',
+               'QLIBHOME:IO',
+               'QLIBHOME:FIG',
+               'QLIBHOME:TERM_VAX',
+               'QLIBHOME:TERM_CHAR',
+               'QLIBHOME:STRING'),
+  ENVIRONMENT ('QLIBHOME:DUMB.TEN') ]
+MODULE term_DUMB;
+[ HIDDEN ] CONST
+   MAXROW          = 255;
+   MAXCOL          = 255;
+[ HIDDEN ] TYPE
+   iposition       = RECORD
+                     irow,icol : integer;
+                     END;
+   memscreen_array = ARRAY [0..MAXROW] OF ARRAY [0..MAXCOL] OF CHAR; 
+[ HIDDEN ] VAR
+   memscreen       : ^memscreen_array := NIL;
+   colorchar       : char             := '#';
+   termfig         : RECORD
+                     rowsize : integer;
+                     colsize : integer;
+                     END 
+                  := (60,128);
+{=============================================================================}
+{-- PROCEDURES FOR TERMINAL TYPE DUMB ----------------------------------------}
+{=============================================================================}
+[ GLOBAL ]
+FUNCTION termname_DUMB (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0: termname_DUMB := '1';
+   1: termname_DUMB := 'DUMB    ';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE colorsetup_DUMB;
+BEGIN
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE executecom_DUMB;
+VAR
+   i                 : integer;
+   oldpos80,newpos80 : iposition;
+   tstr              : anystring;
+{----------------------------------}
+FUNCTION vposofqpos : iposition;
+VAR
+   tpos : iposition;
+BEGIN
+tpos.irow := termfig.rowsize - env.pos.iy DIV (48000 DIV termfig.rowsize); 
+tpos.icol := env.pos.ix DIV (65535 DIV termfig.colsize); 
+IF tpos.irow < 0 THEN tpos.irow := 0;
+IF tpos.icol < 0 THEN tpos.icol := 0;
+IF tpos.irow > termfig.rowsize THEN tpos.irow := termfig.rowsize;
+IF tpos.icol > termfig.colsize THEN tpos.icol := termfig.colsize;
+vposofqpos := tpos;
+END;
+{----------------------------------}
+PROCEDURE gentheline(pos1,pos2 : iposition;
+                VAR tmemscreen : memscreen_array;
+                      plotchar : CHAR);
+VAR
+   error,delta_x,delta_y : DOUBLE;
+   m,n,tcolsize          : INTEGER;
+   temp_pos,temp_pos1    : iposition;
+BEGIN
+tcolsize := termfig.colsize;
+error := 0;
+m := 1;
+n := 1;
+delta_x := pos2.icol - pos1.icol;
+IF delta_x < 0 
+ THEN
+  BEGIN
+  m := -1; {x to left}
+  delta_x := - delta_x;
+  END
+ELSE IF delta_x = 0 
+ THEN error := -1; { assure vertical movement }
+delta_y := pos2.irow - pos1.irow;
+IF delta_y < 0 
+ THEN
+  BEGIN
+  n := -1; { y moves down }
+  delta_y := - delta_y;
+  END;
+WHILE NOT((pos2.icol = pos1.icol) AND
+          (pos2.irow = pos1.irow)) DO
+   BEGIN
+   temp_pos := pos1;
+   IF pos1.irow < 0 THEN temp_pos.irow := 0;
+   IF pos1.icol < 0 THEN temp_pos.icol := 0;
+   IF pos1.irow > termfig.rowsize THEN temp_pos.irow := termfig.rowsize;
+   IF pos1.icol > tcolsize THEN temp_pos.icol := tcolsize;
+   tmemscreen[temp_pos.irow,temp_pos.icol] := plotchar; 
+   IF error < 0 
+    THEN
+     BEGIN
+     pos1.irow := pos1.irow + n;
+     error := error + delta_x;
+     END
+    ELSE
+     BEGIN
+     pos1.icol := pos1.icol + m;
+     error := error - delta_y;
+     END;
+   END;      
+END;
+{----------------------------------}
+BEGIN
+WITH plotitem DO CASE ins OF
+   I_col:  colorchar := chofcolor (st);
+   I_pan:  ;
+   I_clo:  ;
+   I_pos : BEGIN
+           env.pos.ix := ix;
+           env.pos.iy := iy;
+           END;
+   I_dra : IF colorchar = '?'
+            THEN
+             BEGIN
+             env.pos.ix := ix;
+             env.pos.iy := iy;
+             END
+            ELSE
+             BEGIN
+             oldpos80 := vposofqpos;
+             env.pos.ix := ix;
+             env.pos.iy := iy;
+             newpos80 := vposofqpos;
+             gentheline(oldpos80,newpos80,memscreen^,colorchar);
+             END;
+   I_siz:  ;
+   I_mar:  ;
+   I_pri:  IF (colorchar <> '?') AND (ix <= iy) 
+            THEN 
+             BEGIN
+             tstr := st;
+             newpos80 := vposofqpos;
+             FOR i := 1 TO length (tstr) DO
+                BEGIN
+                IF (newpos80.icol + 1 < termfig.colsize) 
+                 THEN newpos80.icol := newpos80.icol + 1; 
+                memscreen^[newpos80.irow,newpos80.icol] := tstr[i];
+                END;
+             END;
+   I_emp:  ;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE writeterm_DUMB (str : VARYING [l2] OF char);
+BEGIN
+qiowwrite (str);
+END;
+{-----------------------------------------------------------------------------}
+[GLOBAL]
+PROCEDURE readterm_DUMB (VAR outstr : VARYING [l2] OF char);
+BEGIN
+readterm_vax (outstr);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screenerase_DUMB;
+VAR
+  a,b : INTEGER;
+BEGIN
+FOR a := 1 TO termfig.rowsize DO 
+   FOR b := 1 TO termfig.colsize DO 
+      memscreen^[a,b] := ' ';
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screencopy_DUMB;
+VAR
+  tempstr : VARYING [255] OF char;
+  i,j     : integer;
+BEGIN
+FOR j := 1 TO 3 DO
+   BEGIN
+   tempstr := '    ';
+   FOR i := 1 TO termfig.colsize DO 
+      tempstr := tempstr + substr (strofi (i,3),j,1);
+   qiowwrite (tempstr + CRLF);
+   END;
+qiowwrite (CRLF);
+FOR j := 1 TO termfig.rowsize DO
+   BEGIN
+   tempstr := strofi(j,3) + ' ';
+   FOR i := 1 TO termfig.colsize DO
+      tempstr := tempstr + memscreen^[j,i];
+   qiowwrite (tempstr + CRLF);
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE gin_DUMB (VAR key : char;  VAR ipt : ipoint;  color : color_type);
+VAR
+  ch50,str1,str2,str3 : VARYING [50] OF char;
+  curpos              : iposition;  
+  p                   : parse_type;
+BEGIN
+qiowwrite ('ENTER KEY, ROW, COLUMN : ');
+readterm_vax (ch50);
+
+startparse (p,ch50);
+str1 := parse (p,' ');
+str2 := parse (p,' ');
+str3 := parse (p,' ');
+
+key := ' ';
+curpos.irow := 1;
+curpos.icol := 1;
+IF str1 <> '' THEN key := str1[1];
+IF str2 <> '' THEN curpos.irow := iofstr (str2);
+IF str3 <> '' THEN curpos.icol := iofstr (str3);
+curpos.irow := (curpos.irow-1) MOD termfig.rowsize + 1;
+curpos.icol := (curpos.icol-1) MOD termfig.colsize + 1;
+ipt.ix := curpos.icol * (65535 DIV termfig.colsize); 
+ipt.iy := 48000 - curpos.irow * (48000 DIV termfig.rowsize); 
+END;
+{-----------------------------------------------------------------------------}
+[GLOBAL]
+FUNCTION readmenu_DUMB (default : char;  toplevel : boolean;
+   helpprefix : anystring) : command_type;
+BEGIN
+raise ('Attempted menu read from dumb terminal');
+readmenu_DUMB := '';
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE termconfig_DUMB (configcontrol : configcontrol_type);
+TYPE 
+   shortinteger = [WORD] 0..65535;
+VAR
+   flags : integer;
+   w,p   : shortinteger;
+   ch    : char;
+BEGIN
+WITH termfig DO CASE configcontrol OF
+   CON:  BEGIN
+         config.menu := false;
+         IF memscreen = NIL THEN new (memscreen);
+         LIB$SCREEN_INFO (flags,ch,w,p);
+         IF w > 255 THEN w := 255;
+         IF p > 255 THEN p := 255;
+         colsize := w-4;
+         rowsize := p-4;
+         config.ch.width       := 65536 DIV termfig.colsize;
+         config.ch.height      := 48000 DIV termfig.rowsize;
+         config.ch.linespacing := 65536 DIV (termfig.colsize*4);
+         config.ch.charspacing := 48000 DIV (termfig.rowsize*3);
+         config.resolution := 2000;
+         config.dotsize    := 0;
+         config.starsize   := 64;
+         config.ansi364    := false;
+         config.drawblack  := false;
+         END;
+   QUE:  BEGIN
+         readint ('ENTER NUMBER OF COLUMNS : ',colsize,1,251,colsize);
+         readint ('ENTER NUMBER OF ROWS    : ',rowsize,1,251,rowsize);
+         END;
+   REP:  BEGIN
+         writeline (out,'Number of columns is ' + strofi(colsize,3));
+         writeline (out,'Number of rows    is ' + strofi(rowsize,3));
+         END;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+END.

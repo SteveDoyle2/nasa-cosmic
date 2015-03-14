@@ -1,0 +1,62 @@
+ TAP- THERMAL ANALYZER PROGRAM
+
+( ROCKETDYNE )
+
+     This program solves N-dimensional transient heat transfer problems by
+the analysis of an analogous network of nodes joined by conductors. A ca-
+pacitance, C, a heat generation rate, Q, and a temperature, T, are associ-
+ated with each node. A conductance, K, is associated with each conductor.
+
+     The object under study is divided into convenient volumes, called
+nodes. Each node is assigned an identification number. The conductors rep-
+resent resistance to heat transfer by the various heat flow paths; i.e.,
+conduction, convection, and radiation. The temperatures at all nodes are
+computed at successive time intervals.
+
+     The network parameters, K and C, may be either constant or functions
+of temperature and/or time. The heat generation, Q, may also be a function
+of temperature and/or time. If variable, K, C, and Q are evaluated at the
+beginning of each time interval. In addition, the temperature, T, may be
+specified at any node as a function of time.
+
+     The conductors may represent conduction, convection, or radiation
+paths.
+
+     Convection and radiation are evaluated at the beginning of each time
+interval. Conduction, if variable, may be made a function of the average
+temperature of the two connecting nodes. Such conduction is evaluated at
+the beginning of each time interval.
+
+     The program is unable to handle pure steady-state problems; however,
+any node may be made a steady-state node (so long as it is not connected to
+any other steady-state node) by assigning to its capacitance the value
+zero. Temperatures computed for linked zero-capacitance nodes can be in
+error.
+
+     This program has been implemented on the IBM 360 with H compiler. It is
+written in FORTRAN IV and was developed in 1964.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: IBM 360 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 1,062 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: MFS-18410
+
+DOMESTIC - DOCUMENTATION PRICE: $21.00    PROGRAM PRICE: $300.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $42.00   PROGRAM PRICE: $600.00
+
+
+
+                                        1
+

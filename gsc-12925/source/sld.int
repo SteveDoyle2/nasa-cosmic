@@ -1,0 +1,17 @@
+interface;
+
+  unit sld ( sldperform , pagenum);
+
+  USES utility;
+
+  var  pagenum : integer;
+
+  procedure sldperform ( var inkey         : byte;
+                         var sldname       : lstring;
+                         var current       : entity;
+                         var current_node  : byte;
+                         var firstsld      : entity );
+
+  begin
+  end;
+

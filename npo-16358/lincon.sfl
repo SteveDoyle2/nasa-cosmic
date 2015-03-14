@@ -1,0 +1,546 @@
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        LINCON                29-SEP-83      15:30:46      PAGE    1
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+    1              SUBROUTINE LINCON(START)                                                                                         
+    2       C                                       CDM   This subroutine converts a buffer full of data into output lines in       
+    3       C                                       CDM   the output arrays.                                                        
+    4       C                                       CDM                                                                             
+    5       C                                       CDM   Programmer - Jon Vavrus  12 NOV 1980                                      
+    6       C                                       CDM   Revised    - Jon Vavrus  13 MAY 1981                                      
+    7       C                                       CDM   Revised    - Jon Vavrus  30 JUL 1981 (change CCLINE usage)                
+    8       C                                       CDM   Revised    - Jon Vavrus  26 AUG 1981                                      
+    9       C                                       CDM   Revised    - Jon Vavrus   4 MAY 1982 (non-advanced video VT100's)         
+   10       C                                       CDM   Revised    - Jon Vavrus  18 AUG 1982 (bigger arrays)                      
+   11       C                                       CDM   Revised    - Jon Vavrus  12 JAN 1983                                      
+   12       C                                       CM                                                                              
+   13       C                                       CM         The conversion is done one line per record with blank lines          
+   14       C                                       CM    being inserted to take care of FORTRAN carriage-control (which is         
+   15       C                                       CM    then stripped off the record)(+ carriage control is ignored), and         
+   16       C                                       CM    printer form-feeds (other printer control sequences are ignored).         
+   17       C                                       CM                                                                              
+   18       C                                       CM         If START is set to .TRUE. in the call, then it is assumed that       
+   19       C                                       CM    the buffer is completely new, and bears no relationship to the current    
+   20       C                                       CM    contents of the output arrays, thus the current contents of the arrays    
+   21       C                                       CM    are disregarded and written over.  If START is set to .FALSE. in the      
+   22       C                                       CM    call, the buffer is assumed to be full of data which should immediately   
+   23       C                                       CM    follows the information currently in the output arrays.  It is also       
+   24       C                                       CM    assumed (if START is .FALSE.) that the buffer pointer (PBUF) is           
+   25       C                                       CM    pointing at the correct byte.                                             
+   26       C                                       C                                                                               
+   27       C                                       C***   CALLED ROUTINES                                                          
+   28       C                                       C                                                                               
+   29       C                                       CC    INTASC  Converts a string of bytes into a character variable.             
+   30       C                                       CC    SFTLIN  Shifts the lines in the output arrays to free up space for        
+   31       C                                       CC            more lines to be converted.                                       
+   32       C                                       C                                                                               
+   33       C                                       C***   COMMON AREAS                                                             
+   34       C                                       C                                                                               
+   35       C                                       CS    CHARS   Contains the character array containing the actual output lines.  
+   36       C                                       C                                                                               
+   37       C                                       CS    DOITNM  Contains information transferred from the main program:           
+   38       C                                       CS                 INCHAN - input channel of the terminal                       
+   39       C                                       CS                 TIME   - scrolling speed in -10000000*seconds/line           
+   40       C                                       CS                 SBFFLG - flag indicating whether there is a string           
+   41       C                                       CS                          in the search buffer                                
+   42       C                                       CS                 DIRECT - flag for reverse (-1 for reverse, else 1)           
+   43       C                                       CS                 EBK    - EBK of input file                                   
+   44       C                                       CS                 SBFLEN - length(s) of string(s) in search buffer(s)          
+   45       C                                       CS                 RECBLK - number of bytes used per block in FIX-BLK files     
+   46       C                                       CS                 RANGE  - beginning and ending block numbers and pointers     
+   47       C                                       CS                          of the print range                                  
+   48       C                                       CS                 VT100  - flag set .TRUE. if terminal is VT100.               
+   49       C                                       CS                 LRL    - length of the longest record in input file.         
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        LINCON                29-SEP-83      15:30:46      PAGE    2
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+   50       C                                       CS                 LENLMT - maximum output length (if <0 then WRAP set)         
+   51       C                                       CS                 PAGEND - line number of last line output to screen           
+   52       C                                       CS                 PAGLEN - number of lines per page                            
+   53       C                                       CS                 COMLIN - line number for command input (bottom of screen)    
+   54       C                                       CS                 VT100A - flag set .TRUE. if VT100 has advanced video option  
+   55       C                                       C                                                                               
+   56       C                                       CS    LNCN    Contains output arrays, and file pointers and information:        
+   57       C                                       CS                 LINLEN - array of output line lengths                        
+   58       C                                       CS                 LINEP  - top of screen line (or last line output by          
+   59       C                                       CS                          backward scroll)                                    
+   60       C                                       CS                 NLINES - number of lines in arrays                           
+   61       C                                       CS                 BUFFER - array of unconverted data                           
+   62       C                                       CS                 PBUF   - current position in BUFFER                          
+   63       C                                       CS                 NBUF   - number of bytes in BUFFER                           
+   64       C                                       CS                 BLK    - next block in file                                  
+   65       C                                       CS                 FSZ    - record length for FIX files, or FSZ for VFC files   
+   66       C                                       CS                 IFSZ   - word extended record length for FIX files           
+   67       C                                       CS                 RFM    - files RFM                                           
+   68       C                                       CS                 RAT    - files RAT (1=CR,2=FTN,3=PRN,4=none,<0=BLK set)      
+   69       C                                       CS                 SBLK   - starting block of current batch of output lines     
+   70       C                                       CS                 CCLINE - array containing pointer to where the line's        
+   71       C                                       CS                          record starts in the file (CCLINE(1,x) = block      
+   72       C                                       CS                          #, CCLINE(2,x) = byte number in block).  If         
+   73       C                                       CS                          CCLINE(1,x) = 0 then it is a carriage control       
+   74       C                                       CS                          line.                                               
+   75       C                                       CS                 LBLK   - last block processed by LINCON                      
+   76       C                                       CS                 LPBUF  - last PBUF value processed by LINCON                 
+   77       C                                       C                                                                               
+   78              CHARACTER*132 LINES(600)                                                                                         
+   79              INTEGER*4 RFM,RAT,FSZ,BLK,PBUF,PBSAVE,SBLK,CCLINE(2,600),                                                        
+   80            1       INCHAN,TIME,RANGE(2,2),EBK,PAGEND,BUFDSC(2)                                                                
+   81              INTEGER*2 LINLEN(600),DIRECT,SBFLEN(10),RECBLK,PAGLEN,LENLMT,                                                    
+   82            1       COMLIN                                                                                                     
+   83              LOGICAL*1 BUFFER(3750),START,SBFFLG,VT100,VT100A                                                                 
+   84              COMMON /DOITNM/INCHAN,TIME,SBFFLG,DIRECT,EBK,SBFLEN,RECBLK,RANGE,                                                
+   85            1       VT100,LRL,LENLMT,PAGEND,PAGLEN,COMLIN,VT100A                                                               
+   86              COMMON /LNCN/LINLEN,LINEP,NLINES,BUFFER,PBUF,NBUF,BLK,FSZ,IFSZ,                                                  
+   87            1       RFM,RAT,SBLK,CCLINE,LBLK,LPBUF                                                                             
+   88              COMMON /CHARS/LINES                                                                                              
+   89       C                                       C                                                                               
+   90       C                                       C***   Calculate start position if this is a new block                          
+   91       C                                       C                                                                               
+   92     *        IF (START)                                                                                                       
+   93   1             NLINES = 0                                                                                                    
+   94   1             LINEP = 1                                                                                                     
+   95   1             LPBUF = 0                                                                                                     
+   96   1             LBLK = SBLK                                                                                                   
+   97   1 *           IF (RAT .GT. 0)                                                                                               
+   98   2 *              IF (RFM .EQ. 1)                                                                                            
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        LINCON                29-SEP-83      15:30:46      PAGE    3
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+   99   3                   PBUF = IFSZ*(512*(SBLK - 1)/IFSZ + 1)                                                                   
+  100   3                   PBUF = LIB$EXTZV(0,9,PBUF) + 1                                                                          
+  101   3                   IF (PBUF .EQ. (IFSZ + 1)) PBUF = 1                                                                      
+  102   2 *              ELSE                                                                                                       
+  103   3                   PBUF = 1                                                                                                
+                           +--------------------------------------------------------------------------------------------------------
+  104   3 *                |DO FOREVER                                                                                              
+  105   4                  |   PBUF = PBUF + 1                                                                                      
+  106   4 *                |   CYCLE IF (BUFFER(PBUF) .NE. 0)                                                                       
+                           |<---                                                                                                    
+  107   4                  |   I = PBUF + LIB$EXTZV(0,8,BUFFER(PBUF-1)) + 2                                                         
+  108   4                  |   IF (BUFFER(PBUF-1)) I = I + 1                                                                        
+  109   4 *                |   UNDO IF (BUFFER(I) .EQ. 0)                                                                           
+                           <----                                                                                                    
+  110   3 *                |END DO FOREVER                                                                                          
+                           +--------------------------------------------------------------------------------------------------------
+  111   3                   PBUF = PBUF - 1                                                                                         
+  112   2 *              ENDIF                                                                                                      
+  113   1 *           ELSE                                                                                                          
+  114   2                PBUF = 1                                                                                                   
+  115   1 *           ENDIF                                                                                                         
+  116     *        ENDIF                                                                                                            
+  117       C                                       C                                                                               
+  118       C                                       C***   Check for either FORTRAN or printer carriage control                     
+  119       C                                       C                                                                               
+  120       C                                       C***   FORTRAN                                                                  
+  121       C                                       C                                                                               
+                  +-----------------------------------------------------------------------------------------------------------------
+  122     * 20    |DO FOREVER                                                                                                       
+  123   1 *       |   EXECUTE (NEW_LINE)                                                                                            
+  124   1 *       |   IF (RAT .EQ. 2 .OR. RAT .EQ. -2)                                                                              
+  125   2 *       |      IF (RFM .EQ. 1)                                                                                            
+  126   3         |         I = BUFFER(PBUF)                                                                                        
+  127   2 *       |      ELSE                                                                                                       
+  128   3 *       |         IF (BUFFER(PBUF) .EQ. FSZ)                                                                              
+  129   4         |            I = 0                                                                                                
+  130   3 *       |         ELSE                                                                                                    
+  131   4         |            I = BUFFER(PBUF+FSZ+2)                                                                               
+  132   3 *       |         ENDIF                                                                                                   
+  133   2 *       |      ENDIF                                                                                                      
+  134   2 *       |      IF (I .EQ. '30'X)                                                                                          
+  135       C     |                                 C                                                                               
+  136       C     |                                 C***   30 octal is an ASCII 0                                                   
+  137       C     |                                 C                                                                               
+  138   3 *       |         EXECUTE (INSERT_BLANK_LINE)                                                                             
+  139   2 *       |      ELSE                                                                                                       
+  140   3 *       |         IF (I .EQ. '31'X)                                                                                       
+  141       C     |                                 C                                                                               
+  142       C     |                                 C***   31 octal is an ASCII 1                                                   
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        LINCON                29-SEP-83      15:30:46      PAGE    4
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  143       C     |                                 C                                                                               
+  144   4 *       |            EXECUTE (INSERT_BLANK_LINE)                                                                          
+  145   4 *       |            EXECUTE (INSERT_BLANK_LINE)                                                                          
+  146   3 *       |         ENDIF                                                                                                   
+  147   2 *       |      ENDIF                                                                                                      
+  148   1 *       |   ELSE                                                                                                          
+  149   2 *       |      IF (RAT .EQ. 3 .OR. RAT .EQ. -3)                                                                           
+  150       C     |                                 C                                                                               
+  151       C     |                                 C***   Printer pre-line line feeds                                              
+  152       C     |                                 C                                                                               
+  153   3 *       |         IF (LIB$EXTZV(7,1,BUFFER(PBUF+2)) .EQ. 0)                                                               
+  154   4         |            I = LIB$EXTZV(0,7,BUFFER(PBUF+2)) - 1                                                                
+  155   4 *       |            IF (I .NE. 0)                                                                                        
+                  |              +--------------------------------------------------------------------------------------------------
+  156   5 *       |              |DO FOR J=1,I                                                                                      
+  157   6 *       |              |   EXECUTE (INSERT_BLANK_LINE)                                                                    
+  158   5 *       |              |END DO FOR                                                                                        
+                  |              +--------------------------------------------------------------------------------------------------
+  159   4 *       |            ENDIF                                                                                                
+  160   4         |            PBSAVE = PBUF + 3                                                                                    
+  161   3 *       |         ENDIF                                                                                                   
+  162   2 *       |      ENDIF                                                                                                      
+  163   1 *       |   ENDIF                                                                                                         
+  164       C     |                                 C                                                                               
+  165       C     |                                 C***   Extract records into lines                                               
+  166       C     |                                 C                                                                               
+  167   1 *       |   IF (RFM .EQ. 1)                                                                                               
+  168       C     |                                 C                                                                               
+  169       C     |                                 C***   Fixed length records                                                     
+  170       C     |                                 C                                                                               
+  171   2 *       |      EXECUTE (SET_CCLINE)                                                                                       
+  172   2 *       |      IF (RAT .EQ. 2 .OR. RAT .EQ. -2)                                                                           
+  173   3         |         LENGTH = FSZ - 1                                                                                        
+  174   3         |         PBUF = PBUF + 1                                                                                         
+  175   2 *       |      ELSE                                                                                                       
+  176   3         |         LENGTH = FSZ                                                                                            
+  177   2 *       |      ENDIF                                                                                                      
+  178   2         |      I = PBUF                                                                                                   
+  179   2 *       |      EXECUTE (CONVERT_TO_LINES)                                                                                 
+  180   2         |      PBUF = PBUF + LENGTH                                                                                       
+  181   2         |      IF (FSZ) PBUF = PBUF + 1                                                                                   
+  182   2 *       |      IF ((PBUF + IFSZ - 1) .GT. NBUF)                                                                           
+  183   3 *       |         EXECUTE (STORE_REMAINDER)                                                                               
+  184   2 *       |      ENDIF                                                                                                      
+  185   1 *       |   ELSE                                                                                                          
+  186       C     |                                 C                                                                               
+  187       C     |                                 C***   Variable length records                                                  
+  188       C     |                                 C                                                                               
+  189   2 *       |      EXECUTE (SET_CCLINE)                                                                                       
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        LINCON                29-SEP-83      15:30:46      PAGE    5
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  190   2 *       |      IF (RAT .EQ. 2 .OR. RAT .EQ. -2)                                                                           
+  191   3         |         LENGTH = LIB$EXTZV(0,8,BUFFER(PBUF)) - 1 - FSZ                                                          
+  192   3         |         I = PBUF + 3 + FSZ                                                                                      
+  193   2 *       |      ELSE                                                                                                       
+  194   3         |         LENGTH = LIB$EXTZV(0,8,BUFFER(PBUF)) - FSZ                                                              
+  195   3         |         I = PBUF + 2 + FSZ                                                                                      
+  196   2 *       |      ENDIF                                                                                                      
+  197   2 *       |      IF (LENGTH .GT. 0)                                                                                         
+  198   3 *       |         EXECUTE (CONVERT_TO_LINES)                                                                              
+  199   3 *       |         IF (BUFFER(PBUF))                                                                                       
+  200   4         |            PBUF = I + LENGTH + 1                                                                                
+  201   3 *       |         ELSE                                                                                                    
+  202   4         |            PBUF = I + LENGTH                                                                                    
+  203   3 *       |         ENDIF                                                                                                   
+  204   2 *       |      ELSE                                                                                                       
+  205   3         |         IF (LENGTH .EQ. 0 .AND. (RAT .EQ. 2 .OR. RAT .EQ. -2))                                                  
+  206            1|               PBUF = PBUF + 2                                                                                   
+  207   3         |         PBUF = PBUF + 2 + FSZ                                                                                   
+  208   3         |         IF (FSZ) PBUF = PBUF + 1                                                                                
+  209   3         |         LINLEN(NLINES) = 1                                                                                      
+  210   3         |         LINES(NLINES) = ' '                                                                                     
+  211   2 *       |      ENDIF                                                                                                      
+  212       C     |                                 C                                                                               
+  213       C     |                                 C***   Printer post-line line feeds                                             
+  214       C     |                                 C                                                                               
+  215   2 *       |      IF (RAT .EQ. 3 .OR. RAT .EQ. -3)                                                                           
+  216   3 *       |         IF (LIB$EXTZV(7,1,BUFFER(PBSAVE)) .EQ. 0)                                                               
+  217   4         |            I = LIB$EXTZV(0,7,BUFFER(PBSAVE)) - 1                                                                
+  218   4 *       |            IF (I .GT. 0)                                                                                        
+  219   5 *       |               EXECUTE (NEW_LINE)                                                                                
+                  |              +--------------------------------------------------------------------------------------------------
+  220   5 *       |              |DO FOR J=1,I                                                                                      
+  221   6 *       |              |   EXECUTE (INSERT_BLANK_LINE)                                                                    
+  222   5 *       |              |END DO FOR                                                                                        
+                  |              +--------------------------------------------------------------------------------------------------
+  223   5         |               NLINES = NLINES - 1                                                                               
+  224   4 *       |            ENDIF                                                                                                
+  225   3 *       |         ENDIF                                                                                                   
+  226   2 *       |      ENDIF                                                                                                      
+  227   2 *       |      IF ((LIB$EXTZV(0,8,BUFFER(PBUF)) + PBUF + 1) .GT. NBUF)                                                    
+  228   3 *       |         EXECUTE (STORE_REMAINDER)                                                                               
+  229   2 *       |      ENDIF                                                                                                      
+  230   1 *       |   ENDIF                                                                                                         
+  231     *       |END DO FOREVER                                                                                                   
+                  +-----------------------------------------------------------------------------------------------------------------
+  232       C                                       C                                                                               
+  233       C                                       C****************************************************************************** 
+  234       C                                       C***********************   HERE FOLLOW THE PROCEDURES   *********************** 
+  235       C                                       C****************************************************************************** 
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        LINCON                29-SEP-83      15:30:46      PAGE    6
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  236       C                                       C                                                                               
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        LINCON                29-SEP-83      15:30:46      PAGE    7
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  237     *        PROCEDURE (CONVERT_TO_LINES)                                                                                     
+  238       C                                       CP    This procedure converts the LENGTH bytes in BUFFER into lines in LINES    
+  239       C                                       CP    (starting at NLINES).  It takes into account form feeds (generate 2       
+  240       C                                       CP    blank lines) and line feeds.                                              
+  241       C                                       C                                                                               
+  242       C                                       C***   Construct descriptor                                                     
+  243       C                                       C                                                                               
+  244   1             BUFDSC(1) = LENGTH                                                                                            
+  245   1             BUFDSC(2) = %LOC(BUFFER(I))                                                                                   
+  246   1             J = I                                                                                                         
+  247       C                                       C                                                                               
+  248       C                                       C***   Split string                                                             
+  249       C                                       C                                                                               
+                     +--------------------------------------------------------------------------------------------------------------
+  250   1 *          |DO FOREVER                                                                                                    
+  251   2            |   IFF = LIB$LOCC(CHAR(12),BUFDSC)                                                                            
+  252   2            |   ILF = LIB$LOCC(CHAR(10),BUFDSC)                                                                            
+  253   2 *          |   IF (ILF .EQ. 0 .AND. IFF .EQ. 0)                                                                           
+  254   3            |      ILEN = BUFDSC(1)                                                                                        
+  255   3            |      IICHAR = ILEN                                                                                           
+  256   2 *          |   ELSE                                                                                                       
+  257   3 *          |      IF ((ILF .LT. IFF .AND. ILF .NE. 0) .OR. IFF .EQ. 0)                                                    
+  258       C        |                              C                                                                               
+  259       C        |                              C===   Line feed first                                                          
+  260       C        |                              C                                                                               
+  261   4            |         ILEN = ILF - 1                                                                                       
+  262   4            |         IICHAR = ILF                                                                                         
+  263       C        |                              C                                                                               
+  264       C        |                              C---   Get rid of <CR>                                                          
+  265       C        |                              C                                                                               
+  266   4            |         IF (BUFFER(J+ILEN-1) .EQ. 13) ILEN = ILEN - 1                                                        
+  267   3 *          |      ELSE                                                                                                    
+  268       C        |                              C                                                                               
+  269       C        |                              C===   FF first                                                                 
+  270       C        |                              C                                                                               
+  271   4            |         CCLINE(1,NLINES+1) = CCLINE(1,NLINES)                                                                
+  272   4            |         CCLINE(2,NLINES+1) = CCLINE(2,NLINES)                                                                
+  273   4 *          |         EXECUTE (INSERT_BLANK_LINE)                                                                          
+  274   4            |         CCLINE(1,NLINES+1) = CCLINE(1,NLINES)                                                                
+  275   4            |         CCLINE(2,NLINES+1) = CCLINE(2,NLINES)                                                                
+  276   4 *          |         EXECUTE (INSERT_BLANK_LINE)                                                                          
+  277   4            |         ILEN = IFF - 1                                                                                       
+  278   4            |         IICHAR = IFF                                                                                         
+  279   3 *          |      ENDIF                                                                                                   
+  280   2 *          |   ENDIF                                                                                                      
+  281   2            |   IF (ILEN .GT. 132) ILEN = 132                                                                              
+  282   2            |   BUFDSC(1) = BUFDSC(1) - IICHAR                                                                             
+  283   2            |   BUFDSC(2) = BUFDSC(2) + IICHAR                                                                             
+  284   2 *          |   IF ((J + IICHAR + 1) .LT. (I + LENGTH))                                                                    
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        LINCON                29-SEP-83      15:30:46      PAGE    8
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  285       C        |                              C                                                                               
+  286       C        |                              C===   Not end of record                                                        
+  287       C        |                              C                                                                               
+  288   3            |      CCLINE(1,NLINES+1) = CCLINE(1,NLINES)                                                                   
+  289   3            |      CCLINE(2,NLINES+1) = CCLINE(2,NLINES)                                                                   
+  290   3            |      CCLINE(1,NLINES) = 0                                                                                    
+  291   3 *          |      EXECUTE (NEW_LINE)                                                                                      
+  292   3 *          |      IF (ILEN .EQ. 0)                                                                                        
+  293   4            |         LINES(NLINES-1) = ' '                                                                                
+  294   4            |         LINLEN(NLINES-1) = 1                                                                                 
+  295   3 *          |      ELSE                                                                                                    
+  296   4            |         CALL INTASC(ILEN,BUFFER(J),LINES(NLINES-1))                                                          
+  297   4            |         LINLEN(NLINES-1) = ILEN                                                                              
+  298   3 *          |      ENDIF                                                                                                   
+  299   2 *          |   ELSE                                                                                                       
+  300       C        |                              C                                                                               
+  301       C        |                              C===   End of record                                                            
+  302       C        |                              C                                                                               
+  303   3 *          |      IF (ILEN .EQ. 0)                                                                                        
+  304   4            |         LINES(NLINES) = ' '                                                                                  
+  305   4            |         LINLEN(NLINES) = 1                                                                                   
+  306   3 *          |      ELSE                                                                                                    
+  307   4            |         CALL INTASC(ILEN,BUFFER(J),LINES(NLINES))                                                            
+  308   4            |         LINLEN(NLINES) = ILEN                                                                                
+  309   3 *          |      ENDIF                                                                                                   
+  310   3 *          |      IF (ABS(RAT) .NE. 4 .AND. ILF .NE. 0 .AND. IFF .EQ. 0)                                                  
+  311   4            |         CCLINE(1,NLINES+1) = CCLINE(1,NLINES)                                                                
+  312   4            |         CCLINE(2,NLINES+1) = CCLINE(2,NLINES)                                                                
+  313   4            |         CCLINE(1,NLINES) = 0                                                                                 
+  314   4 *          |         EXECUTE (NEW_LINE)                                                                                   
+  315   4            |         LINES(NLINES) = ' '                                                                                  
+  316   4            |         LINLEN(NLINES) = 1                                                                                   
+  317   3 *          |      ENDIF                                                                                                   
+  318   2 *          |   ENDIF                                                                                                      
+  319   2            |   J = J + IICHAR                                                                                             
+  320   2 *          |   UNDO IF ((J + 1) .GE. (I + LENGTH))                                                                        
+                     <----                                                                                                          
+  321   1 *          |END DO FOREVER                                                                                                
+                     +--------------------------------------------------------------------------------------------------------------
+  322     *        END PROCEDURE                                                                                                    
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        LINCON                29-SEP-83      15:30:46      PAGE    9
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  323     *        PROCEDURE (INSERT_BLANK_LINE)                                                                                    
+  324       C                                       CP    This procedure inserts a blank line of length one character into the      
+  325       C                                       CP    proper arrays.                                                            
+  326   1             LINLEN(NLINES) = 1                                                                                            
+  327   1             LINES(NLINES) = ' '                                                                                           
+  328   1             CCLINE(1,NLINES) = 0                                                                                          
+  329   1 *           EXECUTE (NEW_LINE)                                                                                            
+  330     *        END PROCEDURE                                                                                                    
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        LINCON                29-SEP-83      15:30:46      PAGE   10
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  331     *        PROCEDURE (NEW_LINE)                                                                                             
+  332       C                                       CP    This procedure takes care of shifting the translated lines in the         
+  333       C                                       CP    arrays to make more room.                                                 
+  334   1             NLINES = NLINES + 1                                                                                           
+  335   1 *           IF (NLINES .EQ. 600)                                                                                          
+  336   2 *              IF (START)                                                                                                 
+  337       C                                       C                                                                               
+  338       C                                       C***   START = .TRUE., therefore we should throw away the rest of the blocks    
+  339       C                                       C***   instead of trying to shift.                                              
+  340       C                                       C                                                                               
+                           +--------------------------------------------------------------------------------------------------------
+  341   3 *                |DO FOR II=600,1,-1                                                                                      
+  342       C              |                        C                                                                               
+  343       C              |                        C===   Find out which block we are in                                           
+  344       C              |                        C                                                                               
+  345   4 *                |   IF (CCLINE(1,II) .NE. 0)                                                                             
+  346   5                  |      IIBLK = CCLINE(1,II) - 1                                                                          
+  347       C              |                        C                                                                               
+  348       C              |                        C===   Move to previous block                                                   
+  349       C              |                        C                                                                               
+                           |     +--------------------------------------------------------------------------------------------------
+  350   5 *                |     |DO FOR JJ=II,1,-1                                                                                 
+  351   6 *                |     |   IF (CCLINE(1,JJ) .EQ. IIBLK)                                                                   
+  352       C              |     |                  C                                                                               
+  353       C              |     |                  C===   Throw away rest of blocks                                                
+  354       C              |     |                  C                                                                               
+  355   7                  |     |      NLINES = JJ - 1                                                                             
+  356   7                  |     |      NBUF = RECBLK*IIBLK                                                                         
+  357   7                  |     |      PBUF = RECBLK*(IIBLK - 1) + CCLINE(2,JJ)                                                    
+  358       C              |     |                  C                                                                               
+  359       C              |     |                  C===   Done so return                                                           
+  360       C              |     |                  C                                                                               
+  361   7 *                |     |      EXECUTE (STORE_REMAINDER)                                                                   
+  362   6 *                |     |   ENDIF                                                                                          
+  363   5 *                |     |END DO FOR                                                                                        
+                           |     +--------------------------------------------------------------------------------------------------
+  364   4 *                |   ENDIF                                                                                                
+  365   3 *                |END DO FOR                                                                                              
+                           +--------------------------------------------------------------------------------------------------------
+  366   2 *              ELSE                                                                                                       
+  367   3                   CALL SFTLIN(LINES)                                                                                      
+  368   2 *              ENDIF                                                                                                      
+  369   1 *           ENDIF                                                                                                         
+  370     *        END PROCEDURE                                                                                                    
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        LINCON                29-SEP-83      15:30:46      PAGE   11
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  371     *        PROCEDURE (SET_CCLINE)                                                                                           
+  372       C                                       CP    This procedure sets the block and pointer values in the array CCLINE.     
+  373       C                                       C                                                                               
+  374       C                                       C***   First set up proper block number and byte count                          
+  375       C                                       C                                                                               
+  376   1             J = PBUF + LPBUF                                                                                              
+  377   1             CCLINE(1,NLINES) = LBLK + J/RECBLK                                                                            
+  378       C                                       C                                                                               
+  379       C                                       C***   Get byte offset                                                          
+  380       C                                       C                                                                               
+  381   1 *           IF (RECBLK .EQ. 512) THEN                                                                                     
+  382   2                CCLINE(2,NLINES) = LIB$EXTZV(0,9,J)                                                                        
+  383   1 *           ELSE                                                                                                          
+  384   2                CCLINE(2,NLINES) = J - RECBLK*(J/RECBLK)                                                                   
+  385   1 *           ENDIF                                                                                                         
+  386   1             IF (J .NE. 0 .AND. CCLINE(2,NLINES) .EQ. 0)                                                                   
+  387            1          CCLINE(1,NLINES) = CCLINE(1,NLINES) - 1                                                                 
+  388   1             IF (CCLINE(2,NLINES) .EQ. 0) CCLINE(2,NLINES) = RECBLK                                                        
+  389     *        END PROCEDURE                                                                                                    
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        LINCON                29-SEP-83      15:30:46      PAGE   12
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  390     *        PROCEDURE (STORE_REMAINDER)                                                                                      
+  391       C                                       CP    This procedure moves the partial record at the end of BUFFER to           
+  392       C                                       CP    the beginning of BUFFER and sets NBUF, and PBUF accordingly.              
+                     +--------------------------------------------------------------------------------------------------------------
+  393   1 *          |DO FOR I=PBUF,NBUF                                                                                            
+  394   2            |   BUFFER(I-PBUF+1) = BUFFER(I)                                                                               
+  395   1 *          |END DO FOR                                                                                                    
+                     +--------------------------------------------------------------------------------------------------------------
+  396   1             NBUF = NBUF - PBUF + 1                                                                                        
+  397   1             I = PBUF + LPBUF                                                                                              
+  398   1 *           IF (RECBLK .EQ. 512)                                                                                          
+  399   2                LPBUF = LIB$EXTZV(0,9,I)                                                                                   
+  400   1 *           ELSE                                                                                                          
+  401   2                LPBUF = PBUF - RECBLK*(I/RECBLK)                                                                           
+  402   1 *           ENDIF                                                                                                         
+  403   1             IF (LPBUF .EQ. 0) LPBUF = RECBLK                                                                              
+  404   1             LPBUF = LPBUF - 1                                                                                             
+  405   1             PBUF = 1                                                                                                      
+                     +--------------------------------------------------------------------------------------------------------------
+  406   1 *          |DO FOR I=NLINES,1,-1                                                                                          
+  407   2 *          |   IF (CCLINE(1,I) .NE. 0)                                                                                    
+  408   3            |      LBLK = CCLINE(1,I)                                                                                      
+  409   3            |      IF (LPBUF .EQ. 0) LBLK = LBLK + 1                                                                       
+  410   3 *          |      UNDO                                                                                                    
+                     <-------                                                                                                       
+  411   2 *          |   ENDIF                                                                                                      
+  412   1 *          |END DO FOR                                                                                                    
+                     +--------------------------------------------------------------------------------------------------------------
+  413   1             RETURN                                                                                                        
+              <--------                                                                                                             
+  414     *        END PROCEDURE                                                                                                    
+  415              END                                                                                                              
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        LINCON                29-SEP-83      15:30:46      PAGE   13
+
+
+                                        PROCEDURE CROSS-REFERENCE TABLE
+
+ LINE   PROCEDURE NAME                              REFERENCE LINES
+
+  237  CONVERT_TO_LINES               
+                                179   198 
+
+  323  INSERT_BLANK_LINE              
+                                138   144   145   157   221   273   276 
+
+  331  NEW_LINE                       
+                                123   219   291   314   329 
+
+  371  SET_CCLINE                     
+                                171   189 
+
+  390  STORE_REMAINDER                
+                                183   228   361 
+
+       0 DIAGNOSTICS GENERATED

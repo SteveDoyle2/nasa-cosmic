@@ -1,0 +1,75 @@
+ NASDS- NASTRAN/DISCOS/SAMSAN DMAP BRIDGING PROGRAM
+
+( NASA Goddard Space Flight Center )
+
+     The design of a controller for a flexible structure requires an ability
+to obtain flexible body data in a format compatible with design and perfor-
+mance evaluation methods. The control designer may have to work with sev-
+eral different programs to obtain all the data and capabilities he needs.
+The NASTRAN/DISCOS/SAMSAN bridging program and its associated data file
+processor provide the flexible structure control designer with a means of
+tying together the following programs: 1) the NASA Structural Analysis
+(NASTRAN) system which provides general finite element and matrix manipu-
+lation capabilities for the analysis of structures, 2) the Dynamic Interac-
+tion Simulation of Controls and Structure (DISCOS) program which provides
+for the time and frequency domain analysis of any dynamic system that can
+be modeled as a system of interconnected rigid and flexible bodies, and 3)
+the SAMSAN library which provides a self-consistent set of algorithms for
+the support of large-order controls system design and evaluation studies
+with an emphasis on sampled system analysis. The NASTRAN/DISCOS/SAMSAN
+bridging program allows the engineer to integrate these three programs into
+a complete package for the design and analysis of flexible structure con-
+trollers.
+
+     The NASTRAN/DISCOS/SAMSAN bridging program and its associated data
+file processor may be used to obtain all of the data necessary for defining
+a flexible body to DISCOS or to any program developed using the SAMSAN li-
+brary. The bridging program consists of a NASTRAN DMAP sequence which may
+be used to obtain a variety of different types of modal data including stan-
+dard, Craig-Bampton, augmented body, and boundary compliance. The user may
+also request the generation of the following: mass, stiffness, damping,
+and constraint matrices; data for fine to coarse mesh mass distribution in-
+terpolation programs; modal damping, modal observability/ controllabil-
+ity matrices; coarse or fine mesh modal data; and an assortment of matrices
+useful for non-DISCOS applications and diagnostic analysis. All data is
+output from NASTRAN via the functional module OUTPUT2. The associated data
+file processor can reformat an OUTPUT2 data file into a format compatible
+with the sparse matrix read routines in the SAMSAN library.
+
+     The NASTRAN/DISCOS/SAMSAN bridging program is written in the NASTRAN
+DMAP language and the associated OUTPUT2 data file processor is written in
+FORTRAN IV. Both programs are intended for batch execution and have been
+implemented on a DEC VAX series computer operating under VMS. The bridging
+program and associated data file processor were developed in 1983. The NAS-
+TRAN, DISCOS, and SAMSAN software packages are available separately from
+COSMIC.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: NASTRAN DMAP ( 35 %); FORTRAN IV ( 65 %);
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 1,130 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX FILES-11 Format Magnetic Tape
+
+PROGRAM NUMBER: GSC-12902
+
+DOMESTIC - DOCUMENTATION PRICE: $96.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $192.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

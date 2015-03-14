@@ -1,0 +1,60 @@
+ ARIES- AIRCRAFT ROLL-OUT ITERATIVE ENERGY SIMULATION PROGRAM
+
+( ROCKWELL INTERNATIONAL CORP. )
+
+     The ARIES program analyzes aircraft brake performance during rollout.
+The program simulates a three degree of freedom rollout after nose gear
+touchdown. The amount of brake energy dissipated during landing determines
+the life expectancy of brake pads. ARIES incorporates brake pressure, ac-
+tual flight data, crosswinds, and runway characteristics to calculate the
+following: 1) brake energy used during rollout for up to four independent
+brake systems, 2) time profiles of rollout distance, velocity, decelera-
+tion, and lateral runway position, and 3) all aerodynamic moments on the ve-
+hicle. ARIES can be adapted for modelling most landing aircraft during un-
+powered rollout. Optimum braking procedures can be developed with ARIES
+to minimize brake deterioration while staying within specified lengths of
+runway. ARIES has been used to evaluate several Shuttle Orbiter brake pad
+failures.
+
+     After the input of initial runway and landing conditions, ARIES uti-
+lizes three simulation models to evaluate the rollout at given time in-
+tervals. The brake force simulation requires tire and brake information
+along with actual flight data. The equations of motion allow force and mo-
+ment balances to be calculated. The aerodynamic effects are computed, in-
+cluding lift, drag, axial and normal forces, and roll, pitch, and yaw mo-
+ments. The various aerosurface effects are obtained from interpolation of
+the Rockwell Aero Sciences Group Design Data Book tables. The output is in
+both printed and plotted form. ARIES iterates the calculations until the
+computed forward velocity is below three knots.
+
+     ARIES is written in FORTRAN 77 for batch execution (interactive usage
+is possible, but high external core memory requirements may limit its prac-
+tice) and has been implemented on a CDC CYBER 170 series computer with a cen-
+tral memory requirement of 64K of 60 bit words, with up to an additional 460K
+of 60 bit words for storing the aerodynamic coefficient table interpolation
+subroutines. ARIES was developed in 1984.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN 77
+
+MACHINE REQUIREMENTS: CDC CYBER 170 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 2,291 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: MSC-20816
+
+DOMESTIC - DOCUMENTATION PRICE: $15.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $30.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

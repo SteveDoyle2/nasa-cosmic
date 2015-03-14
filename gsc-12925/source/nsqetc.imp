@@ -1,0 +1,498 @@
+  { $INCLUDE : 'compile.inc' }
+  { $INCLUDE : 'getparam.int' }
+  { $INCLUDE : 'sfpas.int' }
+  { $INCLUDE : 'utility.int' }
+  { $INCLUDE : 'display.int' }
+  { $INCLUDE : 'ldb.int' }
+  { $INCLUDE : 'execute.int' }
+  { $INCLUDE : 'nsqdraw.int' }
+  { $INCLUDE : 'nsqalts.int' }
+  { $INCLUDE : 'nsqetc.int' }
+  { $INCLUDE : 'nsqexec.int' }
+
+implementation of nsqetc;
+
+     USES getparam;
+
+     USES sfpas;
+
+     USES utility;
+
+     USES display;
+
+     USES execute;
+
+     USES nsqdraw;
+
+     USES nsqalts;
+
+     USES nsqexec;
+
+  var
+    msg : suplstring(25);
+
+  procedure format;
+
+    var
+      i, j, k, n: integer;
+      reply	: supinteger(7);
+      def	: suplstring2(7);
+      x,y	: supinteger(7);
+      range	: supset(14);
+      width	: integer;
+      form1	: integer;
+      numperiod : integer;
+      error	: boolean;
+      buf	: lstring(1);
+      inkey1	: byte;
+      current_node:byte;
+      temp,first1 : entity;
+
+    begin
+	 msg[1] := '                           N-Square Chart Format Options';
+	 msg[2] := ' ';
+	 msg[3] := '                                Default                                 Default';
+	 msg[4] := '                                       ';
+	 msg[5] := 'Number of functions ( 3 - 10 ):        ';
+	 msg[6] := '                                       ';
+	 msg[7] := '  Truncation may occur if              ';
+	 msg[8] := '  Functions are increased.             ';
+	 msg[9] := '  Press Help for more information.     ';
+	 msg[10]:= '                                       ';
+	 msg[11]:= '                                       ';
+	 msg[12]:= '                                       ';
+	 msg[13]:= '                                       ';
+	 msg[14]:= '                                       ';
+	 msg[15]:= '                                       ';
+	 msg[16]:= '                                       ';
+	 msg[17]:= '                                       ';
+	 msg[18]:= '                                       ';
+	 msg[19]:= '                                       ';
+	 msg[20]:= '                                       ';
+	 for i := 4 to 20 do concat ( msg[i], chr(219) );
+	 concat (msg[4],' Connector options:');
+	 concat (msg[5],'   ( b = box, c = circle )');
+	 concat (msg[7],'   Note : The box option allows');
+	 concat (msg[8],'          text descriptions in' );
+	 concat (msg[9],'          the connector. Also,');
+	 concat (msg[10],'          changing from box to');
+	 concat (msg[11],'          circle will erase text');
+	 concat (msg[12],'          descriptions.');
+	 concat (msg[14],' GSFC symbol ( n = no, y = yes ):');
+	 concat (msg[16],' Background Color');
+	 concat (msg[17],'      x = black     w = white');
+	 concat (msg[18],'      r = red       m = magenta');
+	 concat (msg[19],'      b = blue      c = cyan');
+	 concat (msg[20],'      g = green     y = yellow');
+	 msg[21]:= ' ';
+	 msg[22]:= 'Modify default options as needed - press return key for next option.';
+	 msg[23]:= 'Select F2 to begin creating chart.';
+	 msg[24] := ' ';
+	 msg[25] := null;
+	 buf.len := 1;
+	 for i := 1 to 10 do
+	  begin
+	   if fctn_map^[1][i] <> 0 then
+            begin
+	     if i < 10 then [buf[1]:=chr(i+48);concat(msg[25],buf);]
+		 else concat ( msg[25], '10' );
+	     if fctn_map^[1][i] = 7 then concat(msg[25], 'End ');
+	     concat ( msg[25], fctn_tag^[fctn_map^[1][i]] );
+            end;
+	     if i < 10 then concat ( msg[25], ' ' );
+	     if i = 7 then while msg[25].len<60 do concat(msg[25],' ');
+	     if i = 2 then while msg[25].len<21 do concat(msg[25],' ');
+	  end;
+	 numperiod := funcnum;
+	 form1 := form;
+	 def[1][1] := chr ( ( funcnum div 10 ) + 48 );
+	 if def[1][1] = '0' then def[1][1] := ' ';
+	 def[1][2] := chr ( ( funcnum mod 10 ) + 48 );
+	 def[2][1] := ' ';
+	 if form = 1 then def[2][2] := 'c'
+	   else def[2][2] := 'b';
+	 def[3][1] := ' ';
+	 if symbol = 1 then def[3][2] := 'y'
+	   else def[3][2] := 'n';
+	 def[4][1] := ' ';
+	 case color of
+	   0 : def[4][2] := 'x';
+	   1 : def[4][2] := 'b';
+	   2 : def[4][2] := 'g';
+	   3 : def[4][2] := 'c';
+	   4 : def[4][2] := 'r';
+	   5 : def[4][2] := 'm';
+	   6 : def[4][2] := 'y';
+	   7 : def[4][2] := 'w';
+	   otherwise
+	  end;
+	 for i := 1 to 4 do
+	   def[i].len := 2;
+	 y[1] := 4;
+	 y[2] :=  4;
+	 y[3] := 13;
+	 y[4] := 15;
+	 x[1] := 36;
+	 x[2] := 76;
+	 x[3] := 76;
+	 x[4] := 76;
+	 range[1] := ['0'..'9'];
+	 if funcnum > 0 then range[2] := [chr(48+funcnum)..chr(10+48)]
+	  else range[2] := ['1'..chr(10+48)];
+	 range[3] := [' '];
+	 range[4] := ['b','B','c','C'];
+	 range[5] := [' '];
+	 range[6] := ['y','Y','n','N'];
+	 range[7] := [' '];
+	 range[8] := ['x','X','r','R','b','B','g','G','w','W','m','M','c','C','y','Y'];
+       repeat
+	 multimenu ( msg, 25, 0, 4, def, x, y, range, inkey, 2 );
+	 error := false;
+	for n := 1 to 4 do
+	  case n of
+	    1 : if def[1][1] = ' ' then
+		  funcnum := ord ( def[1][2] ) - 48
+		 else
+		  funcnum:=ord(def[1][2])-48+(ord(def[1][1])-48)*10;
+	    2 : case def[2][2] of
+		  'b','B' : form := 2;
+		  'c','C' : form := 1;
+		  otherwise
+		 end;
+	    3 : case def[3][2] of
+		  'y','Y' : symbol := 1;
+		  'n','N' : symbol := 2;
+		  otherwise
+		 end;
+	    4 : case def[4][2] of
+		  'x','X' : color := 0;
+		  'b','B' : color := 1;
+		  'g','G' : color := 2;
+		  'c','C' : color := 3;
+		  'r','R' : color := 4;
+		  'm','M' : color := 5;
+		  'y','Y' : color := 6;
+		  'w','W' : color := 7;
+		  otherwise
+		 end;
+	    otherwise
+	   end;
+	until not error;
+	 boxsizes ;
+	 if (numperiod <> funcnum)or(form1 <> form) then
+	   begin
+	     initialize ( first1 );
+	     elist ( first1 );
+	     current := first;
+	     temp := first1;
+	     delkey := false;
+	     i := 0;
+	     repeat
+	       if current^.field^.len>node_data^[temp^.etype].input_length then
+		 current^.field^.len:=node_data^[temp^.etype].input_length;
+	       copylst(current^.field^, temp^.field^);
+	       temp := temp^.down;
+
+	       if current^.etype in [9,10] then delete (current)
+	       else
+		  if current^.etype in [5,8,14,16] then
+		     [ while node_data^[current^.etype].nfields = 0 do
+			     current := current^.up ;
+		       delete ( current ); ]
+		  else
+		       current := current^.down;
+
+	       if (form1 = 1)and(temp^.etype in [12..14,16]) then
+		 while temp^.etype in [12..14,16] do
+		   temp := temp^.down;
+	       if form = 1 then
+		while current^.etype in [12..14,16] do
+		  [ current := current^.up; delete (current); ] ;
+	       if (current^.etype > 8)and(temp^.etype<9) then
+		 while temp^.etype<9 do temp:=temp^.down;
+	       if temp^.etype = 9 then i := i + 1;
+	       if i >= numperiod then
+		 begin
+		  if i < funcnum then
+		   for j := i+1 to funcnum do
+		     temp := temp^.down;
+		   i := 1;
+		 end;
+	       if temp^.etype <> current^.etype then
+		begin
+		 if temp^.etype in [6,9,10] then
+		   while current^.etype in [5,12..14,16] do
+		     [ while node_data^[current^.etype].nfields = 0 do
+			     current := current^.up ;
+		       delete ( current ) ;  ] ;
+		 if (current^.etype > 8)and(temp^.etype<9) then
+		   [while temp^.etype<9 do temp:=temp^.down;
+		    if i=0 then i:=1;];
+		 if current^.etype = 10 then
+		   while temp^.etype<>10 do temp:=temp^.down;
+		 if current^.etype in [11,15,17] then
+		  begin
+		   inkey1 := 43;
+		   current_node := temp^.etype;
+		   perform2 (first1,temp,current_node,inkey1);
+		   if form=1 then temp:=temp^.up;
+		  end;
+		end;
+	     until (temp^.etype in [1,18])or(current^.etype in [1,18]);
+	     if current^.etype = 18 then
+	       begin
+		 current^.up^.down := first;
+		 first^.up := current^.up;
+		 first1^.up^.down := current;
+		 while current^.down^.etype = 18 do current:=current^.down;
+		 current^.down := first1;
+		 first1^.up := current;
+	       end;
+	     while first <> nil do delete ( first );
+	     first := first1;
+	     delkey := true;
+	   end;
+	 nmids := 81 div (node_data^[2].input_length + 1);
+	 if nmids>funcnum then nmids := funcnum;
+	 current := first^.down;
+	 inkey := fctn_map^[1][inkey-58];
+	 if inkey in [1,4,5] then current_node:=0
+	   else current_node := current^.etype;
+	 if inkey = 7 then inkey := 3;
+	 if not (inkey in [1,2,4,5,7,41]) then redraw(1,current,first);
+	 perform2 (first,current,current_node,inkey);
+	 perform  ( inkey,  current, current_node, first );
+	 if inkey in [4,5] then redraw(1,current,first);
+    end;  (* format *)
+
+
+  procedure boxsizes;
+
+    var
+      ch : char;
+      temp : byte;
+      i : byte;
+
+    begin
+
+      if funcnum = 10 then ch := '0'
+		      else ch := chr (funcnum + 48);
+      fletheight := 8; cletheight := 8;
+      flin_lin := 2; t_first := 40;
+      temp := (10-funcnum)*4 + 57;
+      node_data^[15].input_length := skeleton^[temp];
+      temp := temp + 1;
+      node_data^[2].character_size := skeleton^[temp];
+      temp := temp + 1;
+      node_data^[11].character_size := skeleton^[temp];
+      temp := temp + 1;
+      node_data^[10].character_size := skeleton^[temp];
+      node_data^[3].character_size := node_data^[2].character_size;
+      node_data^[4].character_size := node_data^[2].character_size;
+      node_data^[5].character_size := node_data^[2].character_size;
+      node_data^[12].character_size := node_data^[11].character_size;
+      node_data^[13].character_size := node_data^[11].character_size;
+      node_data^[14].character_size := node_data^[11].character_size;
+      node_data^[16].input_length := node_data^[15].input_length;
+      node_data^[17].character_size := node_data^[11].character_size;
+      node_data^[9].character_size := node_data^[11].character_size;
+      case ch of
+	'0': begin
+	     fbwidth := 64;
+	     fbheight := 32;
+	     cbheight := 20;
+	     cbwidth := 52;
+	   end;
+	'9': begin
+	     fbwidth := 68;
+	     fbheight := 36;
+	     node_data^[15].input_length := 8;
+	     node_data^[16].input_length := 8;
+	   end;
+	'8': begin
+	     fbwidth := 80;
+	     fbheight := 40;
+	   end;
+	'7': begin
+	     fbwidth := 88;
+	     fbheight := 48;
+	     t_first := 34;
+	   end;
+	'6': begin
+	     fbwidth := 104;
+	     fbheight := 56;
+	     t_first := 34;
+	     flin_lin := 4;
+	   end;
+	'5': begin
+	     fbwidth := 128;
+	     fbheight := 64;
+	     fletheight := 12;
+	     flin_lin := 4;
+	   end;
+	'4': begin
+	     fbwidth := 160;
+	     fbheight := 80;
+	     fletheight := 12;
+	     cletheight := 12;
+	     flin_lin := 4;
+	   end;
+	'3': begin
+	     fbwidth := 212;
+	     fbheight := 108;
+	     cletheight := 16;
+	     fletheight := 16;
+	     flin_lin := 8;
+	     t_first := 36;
+	   end;
+	 otherwise
+	end;
+      if funcnum < 10 then [cbheight:=fbheight-16;cbwidth:=fbwidth-16];
+    end;
+
+
+  procedure elist;
+
+    var
+      current	: entity;
+      offset	: integer;
+      connectx	: integer;
+      i,j,k	: byte;
+      last	: entity;
+
+    begin
+	  if funcnum > 8 then
+	    begin
+	      current := first^.down;
+	      delete (current);
+	      numlines := 3;
+	    end
+	   else
+	    begin
+	      current := first^.down^.down^.down^.down^.down;
+	      delete (current);
+	      numlines := 4;
+	      current := current^.up^.up^.up^.up;
+	    end;
+      with current^ do
+	begin
+	  offset := (10-funcnum)*4+26;
+	  x := skeleton^[offset];
+	  y := skeleton^[offset+1] + t_first;
+	end;
+      current := current^.down;
+      for i := 1 to numlines - 1 do
+	begin
+	  with current^ do
+	    begin
+	      x := up^.x;
+	      y := up^.y + flin_lin + fletheight;
+	      xtext := up^.xtext;
+	      ytext := up^.ytext+1;
+	    end;
+	  current := current^.down;
+	end;
+      current := current^.up;
+      last := current;
+      for i := 1 to numlines - 1 do
+	last := last^.up;
+      for i := 1 to funcnum - 1 do
+	begin
+	  add_node ( current, last^.etype );
+	  for j := 1 to numlines do
+	    begin
+	      current^.xtext:=last^.xtext+node_data^[2].input_length+1;
+	      current^.ytext := last^.ytext+5;
+	      current^.x := last^.x + fbwidth;
+	      current^.y := last^.y + fbheight;
+	      last := last^.down; current := current^.down;
+	    end;
+	  current := current^.up;
+	end;
+      current := current^.down;
+      with current^ do
+	begin
+	  x := skeleton^[(10-funcnum)*3+1] + 4 + (cbwidth div 2);
+	  y := t_first + 4 + (cbheight div 2);
+	end;
+      connectx := current^.x;
+      for j := 1 to funcnum do
+	for i := 1 to funcnum do
+	  if i <> j then
+	    begin
+	      add_node ( current, current^.etype );
+	      with current^ do
+		if i <> 1 then
+		  begin
+		    xtext:=up^.xtext+node_data^[2].input_length+1+k;
+		    ytext := up^.ytext;
+		    x := up^.x + fbwidth + offset;
+		    y := up^.y;
+		    field^[1] := '-';
+		    offset := 0;
+		    k := 0;
+		    if ( i = 2 ) and ( j = 1 ) then
+		      begin
+			last := current^.up;
+			delete ( last );
+		      end;
+		  end
+		 else
+		  begin
+		    xtext := node_data^[2].xtext;
+		    ytext := up^.ytext+2;
+		    x := connectx;
+		    y := up^.y + fbheight;
+		    field^[1] := '-';
+		  end;
+	    end
+	   else if i = 1 then [offset := 0;k := 0;]
+	     else [offset := fbwidth;k:=node_data^[2].input_length+1;];
+      current := first^.up^.up^.up^.up^.up^.up^.up^.up;
+      for i := 1 to 4 do
+	delete (current);
+      current := first^.up;
+      for i := 1 to 2 do
+       begin
+	 add_node ( current, current^.etype );
+	  with current^ do
+	    begin
+	      x := up^.x;
+	      y := up^.y + 10;
+	      xtext := up^.xtext;
+	      ytext := up^.ytext+1;
+	    end;
+       end;
+    end;
+
+  procedure saveinfo;
+
+  var
+    current    : entity;
+
+  begin
+    current := first^.up;
+    add_node (current, 1);
+    with current^ do
+      begin
+	field^.len := 5;
+	field^[3] := chr (form + 48);
+	field^[4] := chr (color + 48);
+	field^[5] := chr (symbol + 48);
+	if funcnum < 10 then
+	  begin
+	    field^[1] := '0';
+	    field^[2] := chr (funcnum + 48);
+	  end
+	 else
+	  begin
+	    field^[1] := '1';
+	    field^[2] := '0';
+	  end;
+	x := 0;
+	y := 0;
+      end;
+  end;
+
+end.
+

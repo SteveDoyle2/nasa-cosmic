@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+The delete key found in the Text Mode of the bullet chart is used to delete
+bullets or sub-bullets.  It will not delete any other field.  To delete a
+bullet or sub-bullet, place the cursor on the field to be deleted and press
+F1.  The field will be deleted.  Remember deleting a bullet will also delete
+all the sub-bullets associated with it.
+
+
+
+
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

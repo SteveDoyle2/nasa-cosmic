@@ -1,0 +1,1399 @@
+  { $INCLUDE : 'compile.inc' }
+  { $INCLUDE : 'vbpas.int' }
+  { $INCLUDE : 'getparam.int' }
+  { $INCLUDE : 'dialog.int' }
+  { $INCLUDE : 'utility.int' }
+  { $INCLUDE : 'display.int' }
+  { $INCLUDE : 'sfpas.int' }
+  { $INCLUDE : 'dspas.int' }
+  { $INCLUDE : 'alterl.int' }
+  { $INCLUDE : 'mlsaltd.int' }
+  { $INCLUDE : 'ldb.int' }
+  { $INCLUDE : 'execute.int' }
+  { $INCLUDE : 'mlsdraw.int' }
+  { $INCLUDE : 'mlsexec.int' }
+
+  implementation of mlsexec;
+
+  USES vbpas;
+
+  USES getparam;
+
+  USES dialog;
+
+  USES utility;
+
+  USES display;
+
+  USES sfpas;
+
+  USES dspas;
+
+  USES alterl;
+
+  USES ldb;
+
+  USES execute;
+
+  USES mlsaltd;
+
+  USES mlsdraw;
+
+  const
+      prompt_line = 22;
+
+  var
+      temp  : entity;
+      xleft : integer;
+      xright: integer;
+      upd1  : boolean;
+
+  value
+      xleft	  = 1;
+      xright	  = 8;
+
+  procedure exit;
+
+  begin
+    current := first^.up;
+    add_node ( current, 20 );
+    with current^ do
+      begin
+	field^[1] := chr ( skeleton^[1] + 48 );
+	field^[2] := chr ( skeleton^[2] + 48 );
+	field^[3] := chr ((skeleton^[3] div 10)+ 48 );
+	field^[4] := chr ((skeleton^[3] mod 10)+ 48 );
+	field^[5] := chr ((skeleton^[4])+ 48 );
+	field^[6] := chr ((skeleton^[5] div 10)+ 48 );
+	field^[7] := chr ((skeleton^[5] mod 10)+ 48 );
+	field^[8] := chr ((skeleton^[6] div 10)+ 48 );
+	field^[9] := chr ((skeleton^[6] mod 10)+ 48 );
+	field^[10]:= chr ((skeleton^[7])+ 48 );
+        if add2 then field^[11]:='0' else field^[11]:='1';
+        if weekdiv then field^[12]:='0' else field^[12]:='1';
+	field^.len := 12;
+      end;
+  end;
+
+(*******************************************************************)
+
+  procedure enter;
+
+    begin
+      current := first^.up;
+      delete ( current );
+    end;
+
+(*******************************************************************)
+
+  procedure redraw;
+
+  begin
+    if code <> 2 then dsinit;
+    rtype := 0;
+    draw_skeleton ( first );
+    picture ( current, first );
+    rtype := 2;
+    if code <> 2 then
+	reduce ( rtype, color );
+  end;
+
+  (*********************************************************)
+
+   procedure sldredraw;
+   
+   begin
+      bar_location := 1;
+      color := 1;
+      rtype := 2;
+      promptupd := 2;
+      current := first^.up;
+      with current^ do begin
+         skeleton^[1] :=   ord ( field^[1] ) - 48 ;
+         skeleton^[2] :=   ord ( field^[2] ) - 48 ;
+         skeleton^[3] :=  (ord (field^[3])-48)*10 + ord(field^[4])-48;
+         skeleton^[4] :=  (ord ( field^[5] ) - 48);
+         skeleton^[5] :=  (ord (field^[6])-48)*10 + ord(field^[7])- 48;
+         skeleton^[6] :=  (ord (field^[8])-48)*10 + ord(field^[9])-48;
+         skeleton^[7] :=  (ord (field^[10])-48);
+         add2 := (field^[11] = '0');
+         weekdiv := (field^[12] = '0');
+         enter ( current, first );
+      end; (* with *)
+      redraw ( 1, current, first );
+   end; (* sldredraw *)
+  (********************************************************)
+
+  procedure perform2;
+
+  var
+       x1,y1,x2,x3 : integer;
+       m1,m2,d1,d2 : integer;
+       yr1,yr2	   : integer;
+       id1, id2    : integer;
+       msg1,msg2   : lstring(80);
+       status	   : mode;
+       length	   : byte;
+       buffer	   : lstring(127);
+       buf	   : lstring(120);
+       header1	    : array[1..15] of lstring(30);
+       error	   : boolean;
+
+  procedure mls_upd;
+
+  var
+
+     max    : integer;
+     i, j, n: integer;
+     buffer2: lstring(127);
+     inkey2 : byte;
+     valid  : boolean;
+
+  begin
+	 if length > 0 then
+	    begin
+	      with current^ do begin
+		 if buffer.len <> field^.len then
+		    saved := false
+		 else begin
+		    for i := 1 to buffer.len do
+			if buffer[i] <> field^[i] then saved := false;
+		 end;
+	      end; (* with *)
+	      max := node_data^[current_node].input_length;
+	      if current_node = 2 then skeleton^[7] := 3;
+	      if current_node in [5..15] then j := 3 else j := 0;
+	      alter_entity_list ( current, buffer, length, j );
+	      with current^ do
+		begin
+		  j := field^.len;
+		  buffer2.len := max;
+		  for i := 1 to max do buffer2[i] := ' ';
+		  there ( xtext, ytext );
+		       for i := 1 to j do
+			   buffer2[i] := field^[i];
+		   if buffer2.len > 80-xtext then
+		     begin
+			 write ( buffer2:80-xtext );
+		       there ( xtext, ytext+1 );
+		       for i := 80-xtext+1 to buffer2.len do
+			 write ( buffer2[i] );
+		     end
+		    else
+		   write ( buffer2 );
+		  if etype in [10..12] then
+		     begin
+		       valid := decode ( field^, j );
+		       case etype of
+			 10: if valid then month := j else month := 0;
+			 11: if valid then day := j else day := 0;
+			 12: if valid then year := j else year := 0;
+		       end;
+		     end;
+		end;
+	    end;
+	 if status=txt then inkey := 36;
+	 if inkey = 1 then current_node := 0;
+  end;
+
+  procedure inloop;
+
+    var
+      i,j : integer;
+      last_node : byte;
+      rangeok : boolean;
+      range : supset(3);
+
+    begin
+        range[1] := ['1'..chr(48+12)];
+        range[2] := ['1'..chr(48+31)];
+        range[3] := ['0'..chr(48+99)];
+	last_node  := 0;
+	current_node  := current^.etype;
+	  while not ( inkey in [1,3..5,42,45] ) do
+	    begin
+	      if (node_data^[current_node].valid_key_set_id =
+	          node_data^[last_node].valid_key_set_id ) and
+	         (node_data^[last_node].prtmsg =
+	          node_data^[current_node].prtmsg)and
+		 (promptupd=2)and(inkey in [22..28,36]) then
+		promptupd := 3 else last_node := current_node;
+              repeat
+              rangeok := true;
+	      inkey := 0;
+	      with current^ do
+		begin
+		  length := field^.len;
+		  buffer.len := length;
+		  for i := 1 to length do buffer[i] := field^[i];
+		end;
+	      with node_data^[current_node] do
+		incom(prompt_line,prtmsg,buf,-1,rtype,character_size,
+		      current^.xtext,current^.ytext,data_type,
+		      input_length,valid_key_set_id,esc,backspace,
+		      cursor_left,cursor_right,ins,del,status,buffer,
+		      length,inkey);
+              if current_node in [5..13] then
+               begin
+                if (length>0) and ((buffer[2]=' ') or (buffer[1]=' ') or (length=1)) then
+                begin
+                  if (length=1) or (buffer[2]=' ') then
+                     rangeok := (buffer[1]<>'0') and (buffer[1]<>' ')
+                  else if buffer[1]=' ' then
+                     rangeok := (buffer[2]<>'0') and (buffer[2]<>' ');
+                end
+                else if length=2 then
+                 begin
+                  case current_node of
+                   5,8,11: j :=1;
+                   6,9,12: j :=2;
+                   7,10,13: j :=3;
+                  end;
+                  rangeok:=chr((ord(buffer[1])-48)*10+ord(buffer[2])) in range[j];
+                 end;
+                if not rangeok then
+                 begin
+                  there(current^.xtext,current^.ytext);
+                  write(chr(7));
+                  there(current^.xtext,current^.ytext);
+                  if (current^.field^[1]<>' ') and (current^.field^[2]<>' ') then
+                  write(current^.field^[1],current^.field^[2])
+                 else write ('  ');
+                 end;
+                end;
+              until rangeok;
+	      mls_upd;
+
+	      perform2 ( inkey,current,current_node,first );
+	      perform  ( inkey, current, current_node, first )
+	    end;
+    end;
+  (********************************************************)
+
+  procedure cursorright ( var xx : integer );
+    begin
+      xx := xx + xright;
+      if xx > node_data^[17].x+ncolumns*column_width then xx := node_data^[17].x+ncolumns*column_width;
+    end;
+
+  procedure cursorleft ( var xx : integer );
+    begin
+      xx := xx - xleft;
+      if xx < node_data^[17].x then xx := node_data^[17].x;
+    end;
+
+  procedure cursorup ( var yy : integer );
+    begin
+      if yy >= node_data^[17].y + 16 then
+	yy := yy - 16;
+    end;
+
+  procedure cursordown ( var yy : integer );
+    begin
+      yy := yy + 16;
+      if yy > node_data^[17].y + 16 * 19 then
+	yy := node_data^[17].y;
+    end;
+
+  procedure cursorhome ( var xx, yy : integer );
+    begin
+      xx := node_data^[17].x;
+      yy := node_data^[17].y;
+    end;
+
+  procedure cursorend ( var xx, yy : integer );
+    begin
+      xx := node_data^[17].x;
+      yy := node_data^[17].y + 19 * 16;
+    end;
+
+  (*******************************************************)
+
+  procedure insmls;
+
+    var
+      i,j	: integer;
+      temp	: entity;
+
+    begin
+      msg1 := null;
+      repeat
+      inkey := 0; length := 0;
+      incom(prompt_line,messages^[34],msg1,-1,rtype,0,
+	    messages^[34].len+1,prompt_line,3,2,24,1,1,1,1,1,1,status,
+	    buffer,length,inkey);
+      if inkey in [22,23,25..28] then
+	  perform ( inkey,  current, current_node, first );
+      until not (inkey in [22,23,25..28,2]);
+      if (length = 2) and (buffer[2]=' ') then length:=1;
+      if not (inkey in [1,3,42,48]) then
+	begin
+	  if length > 0 then
+	    begin
+	      if length=1 then i := ord(buffer[1])-48
+		else i := ord(buffer[2])-48+(ord(buffer[1])-48)*10;
+	      if (i>=1)and(i<=20) then
+		begin
+	      current := first;
+	      while current^.etype <> 16 do current := current^.down;
+	      for j := 1 to i-1 do
+		current := current^.down;
+		end
+              else begin
+                    there(messages^[34].len+3,prompt_line);
+                    write(chr(7));
+                   end;
+	    end;
+	  if (length = 0) or ((i>=1)and(i<=20)) then
+	    begin
+	  if current^.etype = 16 then current := current^.up;
+	  add_node ( current, 16 );
+	  temp := current;
+	  while current^.etype < 17 do current := current^.down;
+	  while current^.etype in [17,18] do
+	      if current^.y >= node_data^[17].y+19*16 then
+		delete ( current )
+	       else
+		begin
+		  if current^.y >= temp^.down^.y-3 then
+		    current^.y := current^.y + 16;
+		  current := current^.down;
+		end;
+	  current := temp;
+	  while current^.down^.etype = 16 do
+	    begin
+	      with current^ do
+		begin
+		  y := down^.y;
+		  ytext := down^.ytext;
+		  xtext := down^.xtext;
+		  there ( xtext, ytext );
+		  for i := 1 to field^.len do
+		    buf[i] := field^[i];
+		  for i := field^.len+1 to node_data^[etype].input_length do
+		    buf[i] := ' ';
+		  buf.len := node_data^[etype].input_length;
+		  write ( buf );
+		end;
+	      current := current^.down;
+	    end;
+	  delete ( current );
+	  current := temp;
+	    end;
+	end;
+      if inkey = 3 then inkey := 0;
+    end;
+
+procedure delmls;
+
+    var
+      i,j	: integer;
+      temp     : entity;
+
+    begin
+      msg1 := null;
+      repeat
+      inkey := 0; length := 0;
+      incom(prompt_line,messages^[35],msg1,-1,rtype,0,
+	    messages^[35].len+1,prompt_line,3,2,24,1,1,1,1,1,1,status,
+	    buffer,length,inkey);
+      if inkey in [22,23,25..28] then
+	  perform ( inkey, current, current_node, first );
+      until not (inkey in [22,23,25..28,2]);
+      if (length=2) and (buffer[2]=' ') then length:=1;
+      if not (inkey in [1,3,42,48]) then
+	begin
+	  if length > 0 then
+	    begin
+	      if length=1 then i := ord(buffer[1])-48
+		else i := ord(buffer[2])-48+(ord(buffer[1])-48)*10;
+	      if (i>=1)and(i<=20) then
+		begin
+	      current := first;
+	      while current^.etype <> 16 do current := current^.down;
+	      for j := 1 to i-1 do
+		current := current^.down;
+		end
+               else begin
+                     there(messages^[35].len+3,prompt_line)
+                     write(chr(7));
+                    end;
+	    end;
+	  if (length=0)or((i>=1)and(i<=20)) then
+	    begin
+	  temp := current;
+	  while current^.etype < 17 do current := current^.down;
+	  while current^.etype in [17,18] do
+	      if current^.y = temp^.y-3 then
+		delete ( current )
+	       else
+		begin
+		  if current^.y > temp^.y then
+		    current^.y := current^.y - 16;
+		  current := current^.down;
+		end;
+	  current := temp;
+	   while current^.down^.etype = 16 do current := current^.down;
+	   add_node ( current, 16 );
+	   current := current^.down;
+	   while current^.up <> temp do
+	     begin
+	       current := current^.up;
+	       with current^ do
+		 begin
+		   y := up^.y;
+		   ytext := up^.ytext;
+		   xtext := up^.xtext;
+		   there ( xtext, ytext );
+		  for i := 1 to field^.len do
+		    buf[i] := field^[i];
+		  for i := field^.len+1 to node_data^[etype].input_length do
+		    buf[i] := ' ';
+		  buf.len := node_data^[etype].input_length;
+		  write ( buf );
+		 end;
+	     end;
+	   current := current^.up;
+	   delete ( current );
+	    end;
+	end;
+      if inkey = 3 then inkey := 0;
+    end;
+
+  procedure movemls;
+
+    var
+      i,j,k,l,n     : integer;
+      newnum,oldnum : integer;
+      newptr,oldptr : entity;
+
+    begin
+      msg1 := null;
+      oldnum := 0;
+      newnum := 0;
+      repeat
+      inkey := 0; length := 0;
+      incom(prompt_line,messages^[36],msg1,-1,rtype,0,
+	    messages^[36].len+1,prompt_line,3,2,24,1,1,1,1,1,1,status,
+	    buffer,length,inkey);
+      if inkey in [22,23,25..28] then
+	  perform ( inkey, current, current_node, first );
+      until not (inkey in [22,23,25..28,2]);
+      if (length=2) and (buffer[2]=' ') then length:=1;
+      if not (inkey in [1,3,42,48]) then
+	begin
+	  if length > 0 then
+	    begin
+	      if length=1 then oldnum := ord(buffer[1])-48
+		else oldnum := ord(buffer[2])-48+(ord(buffer[1])-48)*10;
+                if (oldnum<1) or (oldnum>20) then
+                 begin
+                  there(messages^[36].len+3,prompt_line);
+                  write(chr(7));
+                 end;
+	    end
+	   else oldnum := current^.ytext-node_data^[16].ytext+ord(current^.xtext<>node_data^[16].xtext)*10+1;
+	  if length = 0 then
+	    begin
+	      oldnum := 1;
+	      oldptr := first;
+	      while oldptr^.etype <> 16 do oldptr := oldptr^.down;
+	      while (oldptr <> current) and (oldptr^.etype = 16 ) do
+		begin
+		  oldnum := oldnum + 1;
+		  oldptr := oldptr^.down;
+		end;
+	      if oldptr^.etype <> 16 then oldnum := 0;
+	    end;
+	  if ((oldnum>=1)and(oldnum<=20)) then
+	    begin
+	  promptupd := 0;
+	  repeat
+	  inkey := 0; length := 0;
+	  incom(prompt_line,msg1,messages^[37],-1,rtype,0,
+		messages^[37].len+1,prompt_line+1,3,2,24,1,1,1,1,1,1,
+		status,buffer,length,inkey);
+	  if inkey in [22,23,25..28] then
+	    perform ( inkey, current, current_node, first );
+	  until not (inkey in [22,23,25..28,2]);
+          if (length=2) and (buffer[2]=' ') then length:=1;
+	  if not (inkey in [1,3,42,48]) then
+	    begin
+	      if length > 0 then
+		begin
+		  if length=1 then newnum := ord(buffer[1])-48
+		   else newnum := ord(buffer[2])-48+(ord(buffer[1])-48)*10;
+                   if (newnum<1) or (newnum>20) then
+                    begin
+                     there(messages^[37].len+3,prompt_line);
+                     write(chr(7));
+                    end;
+		end
+	       else newnum := current^.ytext-node_data^[16].ytext+ord(current^.xtext<>node_data^[16].xtext)*10+1;
+	  if length = 0 then
+	    begin
+	      newnum := 1;
+	      newptr := first;
+	      while newptr^.etype <> 16 do newptr := newptr^.down;
+	      while (newptr <> current) and (newptr^.etype = 16 ) do
+		begin
+		  newnum := newnum + 1;
+		  newptr := newptr^.down;
+		end;
+	      if newptr^.etype <> 16 then newnum := 0;
+	    end;
+	      if (newnum<>oldnum)and((newnum>=1)and(newnum<=20)) then
+		begin
+	      current := first;
+	      while current^.etype <> 16 do current := current^.down;
+	      oldptr := current;
+	      newptr := current;
+	      for i := 1 to oldnum-1 do oldptr := oldptr^.down;
+	      for i := 1 to newnum-1 do newptr := newptr^.down;
+	      if oldnum<newnum then newptr:=newptr^.down;
+	      current := oldptr^.up;
+	      current^.down := oldptr^.down;
+	      oldptr^.down^.up := current;
+	      oldptr^.down := newptr;
+	      oldptr^.up := newptr^.up;
+	      newptr^.up^.down := oldptr;
+	      newptr^.up := oldptr;
+	      if oldnum < newnum then
+		begin
+		  j := oldptr^.ytext;
+		  k := oldptr^.y;
+		  l := oldptr^.xtext;
+		  while current^.etype<17 do current := current^.down;
+		  while current^.etype in [17,18] do
+		    begin
+		      if current^.y = oldptr^.y-3 then
+			current^.y := oldptr^.up^.y-3
+		       else if ( current^.y > oldptr^.y ) and
+			       ( current^.y < newptr^.y-3) then
+				 current^.y := current^.y - 16;
+		      current := current^.down;
+		    end;
+		  current := oldptr;
+		  for i := newnum downto oldnum+1 do
+		    begin
+		      with current^ do
+			begin
+			  y := up^.y;
+			  ytext := up^.ytext;
+			  xtext := up^.xtext;
+			  there ( xtext, ytext );
+			  for n := 1 to field^.len do
+			    buf[n] := field^[n];
+			  for n := field^.len+1 to node_data^[etype].input_length do
+			    buf[n] := ' ';
+			  buf.len := node_data^[etype].input_length;
+			  write ( buf );
+			end;
+		      current := current^.up;
+		    end;
+		  with current^ do
+		    begin
+		      y := k;
+		      ytext := j;
+		      xtext := l;
+		      there ( xtext, ytext );
+		      for n := 1 to field^.len do
+			buf[n] := field^[n];
+		      for n := field^.len+1 to node_data^[etype].input_length do
+			buf[n] := ' ';
+		      buf.len := node_data^[etype].input_length;
+		      write ( buf );
+		    end;
+		  current := oldptr;
+		end
+	       else
+		begin
+		  j := oldptr^.ytext;
+		  l := oldptr^.xtext;
+		  k := oldptr^.y;
+		  while current^.etype<17 do current := current^.down;
+		  while current^.etype in [17,18] do
+		    begin
+		      if current^.y = oldptr^.y-3 then
+			current^.y := newptr^.y-3
+		       else if ( current^.y < oldptr^.y-3 ) and
+			       ( current^.y >= newptr^.y-3) then
+				 current^.y := current^.y + 16;
+		      current := current^.down;
+		    end;
+		  current := oldptr;
+		  for i := newnum to oldnum-1 do
+		    begin
+		      with current^ do
+			begin
+			  y := down^.y;
+			  ytext := down^.ytext;
+			  xtext := down^.xtext;
+			  there ( xtext, ytext );
+			  for n := 1 to field^.len do
+			    buf[n] := field^[n];
+			  for n := field^.len+1 to node_data^[etype].input_length do
+			    buf[n] := ' ';
+			  buf.len := node_data^[etype].input_length;
+			  write ( buf );
+			end;
+		      current := current^.down;
+		    end;
+		  with current^ do
+		    begin
+		      ytext := j;
+		      y := k;
+		      xtext := l;
+		      there ( xtext, ytext );
+		      for n := 1 to field^.len do
+			buf[n] := field^[n];
+		      for n := field^.len+1 to node_data^[etype].input_length do
+			buf[n] := ' ';
+		      buf.len := node_data^[etype].input_length;
+		      write ( buf );
+		    end;
+		  current := oldptr;
+		end;
+	       end;
+	    end;
+	   end;
+	end;
+      if inkey = 3 then inkey := 0;
+    end;
+
+  procedure parsedate(var buf:lstring;var m,d,y:integer;var error:boolean);
+
+    var
+      i,j : integer;
+      a   : array[1..3] of integer;
+
+    begin
+      for i := 1 to 3 do a[i] := 0;
+      i := 1; j := 1;
+      if buf.len > 0 then
+      repeat
+	error := true;
+	while (not(buf[i] in ['0'..'9']))and(i<=buf.len) do i:=i+1;
+	while (buf[i] in ['0'..'9']) and (i<=buf.len) do
+	  begin
+	    a[j] := a[j] * 10 + ord(buf[i]) - 48;
+	    i := i + 1;
+	    error := false;
+	  end;
+	i := i + 1;
+	j := j + 1;
+      until (error) or (j > 3);
+      if not error then
+	begin
+	  m := a[1];
+	  d := a[2];
+	  y := a[3];
+	end
+         else
+            if j = 3 then
+              begin
+                calcdate(x1,m,d,y,skeleton^[6],skeleton^[5],daysperx,error);
+                d := a[1];
+                m := a[2];
+              end;
+    end;
+
+
+  procedure instriangle;
+
+    begin
+      msg1 := null;
+      repeat
+	inkey := 0; length := 0;
+	incom ( prompt_line,messages^[33],msg1,-3,rtype,0,x1,y1+10,0,8,
+		27,1,1,1,1,1,1,status,buffer,length,inkey );
+        if inkey=2 then perform(inkey, current,current_node,first);
+	if inkey in [22,23,25..28] then
+	  begin
+	    case inkey of
+	      25 : cursorleft ( x1 );
+	      26 : cursorright ( x1 );
+	      23 : cursorup(y1);
+	      28 : cursordown(y1);
+	      22 : cursorhome ( x1, y1 );
+	      27 : cursorend ( x1, y1 );
+	    otherwise
+	    end;
+	    promptupd := 3;
+	  end;
+      until not ( inkey in [2,22,23,25..28]);
+
+      if not ( inkey in [1,3] ) then
+	begin
+	  if length > 0 then
+	    begin
+	      there ( messages^[33].len, prompt_line );
+	      write ( buffer );
+	      parsedate ( buffer, m1, d1, yr1, error );
+	      if not error then
+		calcx(x2,m1,d1,yr1,skeleton^[6],skeleton^[5],daysperx,error);
+	      if (x2<node_data^[17].x)or(x2>node_data^[17].x+ncolumns*column_width) then error := true;
+	    end
+	   else
+	    begin
+	      calcdate(x1,m1,d1,yr1,skeleton^[6],skeleton^[5],daysperx,error);
+	      calcx(x2,m1,d1,yr1,skeleton^[6],skeleton^[5],daysperx,error);
+	      there ( messages^[33].len, prompt_line );
+	      write ( m1:1, '/', d1:1, '/', yr1:1 );
+	    end; (* if length *)
+	  if not error then
+	    begin
+	      promptupd := 0;
+	      length := 0;
+	      inkey := 0;
+	      incom(prompt_line,msg1,messages^[38],-3,rtype,0,x2,y1+10,
+		    3,1,27,1,1,1,1,1,1,status,buffer,length,inkey);
+              if inkey=2 then perform(inkey,current,current_node,first);
+	      if not (inkey in [1,3]) then begin
+		 if (length=0)or(buffer[1]=' ') then id2 := 10
+			     else id2 := ord ( buffer[1] ) - 48;
+		 id1 := 1;
+		 current := first;
+		 while current^.down^.etype<18 do current:=current^.down;
+		 while (current^.down^.etype=18)and((current^.down^.y<y1)
+		     or((current^.down^.y=y1)and(current^.down^.x<x2)))do
+		   current := current^.down;
+
+		 if (current^.down^.y = y1)and(current^.down^.x=x2) then
+		   begin
+		     current := current^.down;
+		     current^.field^[7] := chr ( id1 + 48 );
+		     current^.field^[8] := chr ( id2 + 48 );
+		   end
+		 else
+		   begin
+		     add_node ( current, 18 );
+		     with current^ do
+		       begin
+			 x := x2;
+			 y := y1;
+			 field^.len := 8;
+			 field^[7] := chr ( id1 + 48 );
+			 field^[8] := chr ( id2 + 48 );
+			 field^[1] := chr ( (m1 div 10) + 48 );
+			 field^[2] := chr ( (m1 mod 10) + 48 );
+			 field^[3] := chr ( (d1 div 10) + 48 );
+			 field^[4] := chr ( (d1 mod 10) + 48 );
+			 field^[5] := chr ( (yr1 div 10) + 48 );
+			 field^[6] := chr ( (yr1 mod 10) + 48 );
+		       end; (* with *)
+		   end;     (* if current^.down^.y *)
+		 dtriangle ( current );
+	      end; (* if inkey not in [1,3] *)
+	    end; (* if not error *)
+	end; (* if inkey not in [1,3] *)
+    end; (* instriangle *)
+
+  procedure fillbar;
+
+  begin
+      msg1 := null;
+      repeat
+	inkey := 0; length := 0;
+	incom ( prompt_line,messages^[39],msg1,-3,rtype,0,x1,y1+10,0,8,
+		27,1,1,1,1,1,1,status,buffer,length,inkey );
+        if inkey=2 then perform(inkey,current,current_node,first);
+	if inkey in [22,23,25..28] then
+	  begin
+	    case inkey of
+	      25 : cursorleft ( x1 );
+	      26 : cursorright ( x1 );
+	      23 : cursorup(y1);
+	      28 : cursordown(y1);
+	      22 : cursorhome ( x1, y1 );
+	      27 : cursorend ( x1, y1 );
+	    otherwise
+	    end;
+	    promptupd := 3;
+	  end;
+      until not ( inkey in [2,22,23,25..28]);
+      if not ( inkey in [1,3] ) then
+	begin
+	  if length > 0 then
+	    begin
+	      there ( messages^[39].len, prompt_line );
+	      write ( buffer );
+	      parsedate ( buffer, m1, d1, yr1, error );
+	      if not error then
+		calcx(x2,m1,d1,yr1,skeleton^[6],skeleton^[5],daysperx,error);
+	      if (x2<node_data^[17].x)or(x2>node_data^[17].x+ncolumns*column_width) then error := true;
+	    end
+	   else
+	    begin
+	      calcdate(x1,m1,d1,yr1,skeleton^[6],skeleton^[5],daysperx,error);
+	      calcx(x2,m1,d1,yr1,skeleton^[6],skeleton^[5],daysperx,error);
+	      there ( messages^[39].len, prompt_line );
+	      write ( m1:1, '/', d1:1, '/', yr1:1 );
+	    end;
+	  if not error then
+	    begin
+	      current := first;
+	      while current^.etype < 17 do current := current^.down;
+	      while (current^.etype = 17) and (current^.y<y1) do
+		current := current^.down;
+	      while (current^.down^.x<=x2)and(current^.down^.y=y1)and
+		    (current^.down^.etype=17) do
+		current := current^.down;
+	      if (current^.x<=x2)and(current^.y=y1)and(current^.etype=17) then
+		begin
+		  with current^ do
+		    begin
+		      field^[13] := chr ( (m1 div 10) + 48 );
+		      field^[14] := chr ( (m1 mod 10) + 48 );
+		      field^[15] := chr ( (d1 div 10) + 48 );
+		      field^[16] := chr ( (d1 mod 10) + 48 );
+		      field^[17] := chr ( (yr1 div 10) + 48 );
+		      field^[18] := chr ( (yr1 mod 10) + 48 );
+		      dbars ( current );
+		    end;
+		end;
+	    end;
+	end;
+  end;
+
+  procedure filltriangle;
+
+  begin
+      msg1 := null;
+      repeat
+	inkey := 0; length := 0;
+	incom ( prompt_line,messages^[39],msg1,-3,rtype,0,x1,y1+10,0,8,
+		27,1,1,1,1,1,1,status,buffer,length,inkey );
+        if inkey=2 then perform(inkey,current,current_node,first);
+	if inkey in [22,23,25..28] then
+	  begin
+	    case inkey of
+	      25 : cursorleft ( x1 );
+	      26 : cursorright ( x1 );
+	      23 : cursorup(y1);
+	      28 : cursordown(y1);
+	      22 : cursorhome ( x1, y1 );
+	      27 : cursorend ( x1, y1 );
+	    otherwise
+	    end;
+	    promptupd := 3;
+	  end;
+      until not ( inkey in [2,22,23,25..28]);
+      if not ( inkey in [1,3] ) then
+	begin
+	  if length > 0 then
+	    begin
+	      there ( messages^[39].len, prompt_line );
+	      write ( buffer );
+	      parsedate ( buffer, m1, d1, yr1, error );
+	      if not error then
+		calcx(x2,m1,d1,yr1,skeleton^[6],skeleton^[5],daysperx,error);
+	      if (x2<node_data^[17].x)or(x2>node_data^[17].x+ncolumns*column_width) then error := true;
+	    end
+	   else
+	    begin
+	      calcdate(x1,m1,d1,yr1,skeleton^[6],skeleton^[5],daysperx,error);
+	      calcx(x2,m1,d1,yr1,skeleton^[6],skeleton^[5],daysperx,error);
+	      there ( messages^[39].len, prompt_line );
+	      write ( m1:1, '/', d1:1, '/', yr1:1 );
+	    end;
+	  if not error then
+	    begin
+	      current := first;
+	      while current^.etype < 18 do current := current^.down;
+	      while (current^.etype = 18) and (current^.y<y1) do
+		current := current^.down;
+	      while (current^.down^.x<=x2)and(current^.down^.y=y1)and
+		    (current^.down^.etype=18) do
+		current := current^.down;
+	      if (current^.x<=x2)and(current^.y=y1)and(current^.etype=18) then
+		begin
+		  with current^ do
+		    begin
+		      field^[7] := '2';
+		      id1 := ord (field^[7]) - 48;
+		      id2 := ord (field^[8]) - 48;
+		      dtriangle ( current );
+		    end;
+		end;
+	    end;
+	end;
+    end;
+
+  procedure insbar;
+
+  var
+    i,x0,y0,m0,d0,yr0 : integer;
+    oldbar	      : boolean;
+    temp	      : entity;
+
+  begin
+      msg1 := null;
+      current := first;
+      while current^.down^.etype < 17 do
+	current := current^.down;
+      calcdate(x1,m0,d0,yr0,skeleton^[6],skeleton^[5],daysperx,error);
+      calcx(x1,m0,d0,yr0,skeleton^[6],skeleton^[5],daysperx,error);
+      repeat
+	current := current^.down;
+      until (current^.etype<>17)or(current^.y>y1)or((current^.y=y1)and(current^.x<=x1)and(current^.xtext>=x1));
+      with current^ do
+       if(etype=17)and((y=y1)and(x<=x1)and(xtext>=x1)) then
+	begin
+	  buffer[1] := field^[1];
+	  buffer[2] := field^[2];
+	  buffer[3] := '/';
+	  buffer[4] := field^[3];
+	  buffer[5] := field^[4];
+	  buffer[6] := '/';
+	  buffer[7] := field^[5];
+	  buffer[8] := field^[6];
+	  buffer.len := 8;
+	  length := 8;
+	  oldbar := true;
+	  x1 := current^.x;
+	end
+       else
+	begin
+	  oldbar := false;
+	  length := 0;
+	  buffer := null;
+	end;
+      repeat
+	inkey := 0;
+	incom ( prompt_line,messages^[31],msg1,-3,rtype,0,x1,y1+10,0,8,
+		27,1,1,1,1,1,1,status,buffer,length,inkey );
+        if inkey=2 then perform(inkey,current,current_node,first);
+	if inkey in [22,23,25..28] then
+	  begin
+	    case inkey of
+	      25 : cursorleft ( x1 );
+	      26 : cursorright ( x1 );
+	      23 : [cursorup(y1);oldbar:=false;];
+	      28 : [cursordown(y1);oldbar:=false;];
+	      22 : [cursorhome ( x1, y1 );oldbar:=false;];
+	      27 : [cursorend ( x1, y1 );oldbar:=false;];
+	    otherwise
+	    end;
+	    promptupd := 3;
+	    length := 0;
+	  end;
+      until not ( inkey in [2,22,23,25..28]);
+      if not ( inkey in [1,3] ) then
+	begin
+	  if length > 0 then
+	    begin
+	      there ( messages^[31].len, prompt_line );
+	      write ( buffer );
+	      parsedate ( buffer, m1, d1, yr1, error );
+	      if not error then
+		calcx(x2,m1,d1,yr1,skeleton^[6],skeleton^[5],daysperx,error);
+	      if (x2<node_data^[17].x)or(x2>node_data^[17].x+ncolumns*column_width) then error := true;
+	    end
+	   else
+	    begin
+	      calcdate(x1,m1,d1,yr1,skeleton^[6],skeleton^[5],daysperx,error);
+	      calcx(x2,m1,d1,yr1,skeleton^[6],skeleton^[5],daysperx,error);
+	      there ( messages^[31].len, prompt_line );
+	      write ( m1:1, '/', d1:1, '/', yr1:1 );
+	    end;
+	  if not error then
+	    begin
+	      with current^ do
+	       if oldbar then
+		begin
+		  buffer[1] := field^[7];
+		  buffer[2] := field^[8];
+		  buffer[3] := '/';
+		  buffer[4] := field^[9];
+		  buffer[5] := field^[10];
+		  buffer[6] := '/';
+		  buffer[7] := field^[11];
+		  buffer[8] := field^[12];
+		  buffer.len := 8;
+		  length := 8;
+		  x1 := current^.xtext;
+		end
+	       else
+		begin
+		  length := 0;
+		  buffer := null;
+		end;
+	      repeat
+		inkey := 0;
+		if promptupd < 3 then promptupd := 0;
+		incom(prompt_line,msg1,messages^[32],-3,rtype,0,x1,
+		     y1+10,0,8,26,1,1,1,1,1,1,status,buffer,length,inkey);
+		if inkey = 25 then [cursorleft(x1); promptupd := 3;];
+		if inkey = 26 then [cursorright(x1); promptupd := 3;];
+                if inkey=2 then perform(inkey,current,current_node,first);
+		if inkey=53 then
+		  begin
+		    x0 := x2;
+		    y0 := y1;
+		    m0 := m1;
+		    d0 := d1;
+		    yr0 := yr1;
+		    temp := current;
+		    instriangle;
+		    current := temp;
+		    inkey := 53;
+		    promptupd := 1;
+		    x2 := x0;
+		    y1 := y0;
+		    m1 := m0;
+		    d1 := d0;
+		    yr1 := yr0;
+		  end;
+		if inkey in [25,26,53] then length := 0;
+	      until not ( inkey in [25,26,53,23,28,2] );
+	      if not ( inkey in [1,3] ) then
+		begin
+		  if length > 0 then
+		    begin
+		      parsedate(buffer,m2,d2,yr2,error);
+		      if not error then
+			calcx(x3,m2,d2,yr2,skeleton^[6],skeleton^[5],
+			      daysperx,error);
+	      if (x2<node_data^[17].x)or(x2>node_data^[17].x+ncolumns*column_width) then error := true;
+		    end
+		   else
+		    begin
+		      calcdate(x1,m2,d2,yr2,skeleton^[6],skeleton^[5],
+			       daysperx,error);
+		      calcx(x3,m2,d2,yr2,skeleton^[6],skeleton^[5],daysperx,error);
+		      there ( messages^[32].len, prompt_line + 1 );
+		      write ( m2:1, '/', d2:1, '/', yr2:1 );
+		    end;
+		  if (x2<x3)and(x3<=node_data^[17].x+ncolumns*column_width) then
+		    begin
+		      if oldbar then
+			begin
+			with current^ do
+			  begin
+			    dsbar (x-1,y+11,xtext+1,y+14,0,9);
+			    rdbupd ( rtype, x-1, y1+11, xtext-x+2, 4 );
+			    upd1 := true;
+			  end;
+			temp := current;
+			end;
+		      current := first;
+		      while current^.down^.etype < 17 do
+			current := current^.down;
+		      while(current^.down^.etype=17)and((current^.down^.y<y1)or((current^.down^.y=y1)and(current^.down^.x<x2))) do
+			current := current^.down;
+		      add_node ( current, 17 );
+		      with current^ do
+			begin
+			  y := y1;
+			  x := x2;
+			  xtext := x3;
+			  field^.len := 18;
+			  field^[1] := chr ( (m1 div 10) + 48 );
+			  field^[2] := chr ( (m1 mod 10) + 48 );
+			  field^[3] := chr ( (d1 div 10) + 48 );
+			  field^[4] := chr ( (d1 mod 10) + 48 );
+			  field^[5] := chr ( (yr1 div 10) + 48 );
+			  field^[6] := chr ( (yr1 mod 10) + 48 );
+			  field^[7] := chr ( (m2 div 10) + 48 );
+			  field^[8] := chr ( (m2 mod 10) + 48 );
+			  field^[9] := chr ( (d2 div 10) + 48 );
+			  field^[10] := chr ( (d2 mod 10) + 48 );
+			  field^[11] := chr ( (yr2 div 10) + 48 );
+			  field^[12] := chr ( (yr2 mod 10) + 48 );
+			  if not oldbar then
+			    for i := 1 to 6 do
+			      field^[i+12] := '0'
+			   else
+			    begin
+			     for i := 1 to 6 do
+			       field^[i+12]:=temp^.field^[i+12];
+			     delete ( temp );
+			    end;
+			end;
+		      dbars ( current );
+		    end;
+		end;
+	    end;
+	end;
+    end;
+
+  procedure delbar ( x1,x2,y1 : integer; var current : entity );
+
+    begin
+      dsbar ( x1-1,y1+11,x2+1,y1+14,0,9 );
+      {update lines}
+      delete ( current );
+      rdbupd ( rtype, x1-1, y1+11, x2-x1+2, 4 );
+      upd1 := true;
+    end;
+
+  procedure deltriangle ( x1, y1 : integer; var current : entity );
+
+    begin
+      dsymbol ( x1, y1+1, 0, 2, 10, 1 );
+      dsymbol ( x1+1, y1+1, 0, 2, 10, 1 );
+      rdbupd ( rtype, x1-5, y1+1, 12, 11 );
+      delete ( current );
+      upd1 := true;
+    end;
+
+  procedure del;
+
+    var
+      x4	 : integer;
+      delete	 : boolean;
+
+    begin
+      repeat
+	inkey := 0; length := 0;
+	incom ( prompt_line,messages^[40],messages^[41],-3,rtype,0,x1,
+		y1+10,0,8,27,1,1,1,1,1,1,status,buffer,length,inkey );
+        if inkey=2 then perform(inkey,current,current_node,first);
+	if inkey in [22,23,25..28] then
+	  begin
+	    case inkey of
+	      25 : cursorleft ( x1 );
+	      26 : cursorright ( x1 );
+	      23 : cursorup(y1);
+	      28 : cursordown(y1);
+	      22 : cursorhome ( x1, y1 );
+	      27 : cursorend ( x1, y1 );
+	    otherwise
+	    end;
+	    promptupd := 3;
+	  end;
+      until not ( inkey in [2,22,23,25..28] );
+      if not ( inkey in [1,3] ) then
+	begin
+	  if length > 0 then
+	    begin
+	      parsedate ( buffer, m1, d1, yr1, error );
+	      if not error then
+		calcx(x2,m1,d1,yr1,skeleton^[6],skeleton^[5],daysperx,error);
+	      if (x2<node_data^[17].x)or(x2>node_data^[17].x+ncolumns*column_width) then error := true;
+	    end
+	   else
+	    begin
+	      calcdate(x1,m1,d1,yr1,skeleton^[6],skeleton^[5],daysperx,error);
+	      calcx(x2,m1,d1,yr1,skeleton^[6],skeleton^[5],daysperx,error);
+	      there ( messages^[41].len, prompt_line + 1 );
+	      write ( m1:1, '/', d1:1, '/', yr1:1 );
+	    end;
+	  if not error then
+	           begin
+	      current := first^.up;
+	      while current^.etype > 18 do current := current^.up;
+	      while (current^.etype=18)and(current^.y<>y1)do
+		current := current^.up;
+	      delete := false;
+	      while (current^.etype=18)and(current^.y=y1)and(not delete) do
+		begin
+		  with current^ do
+		    begin
+		      m1 := (ord(field^[1])-48)*10 + ord(field^[2])-48;
+		      d1 := (ord(field^[3])-48)*10 + ord(field^[4])-48;
+		      yr1:= (ord(field^[5])-48)*10 + ord(field^[6])-48;
+		      calcx (x3,m1,d1,yr1,skeleton^[6],skeleton^[5],daysperx,error);
+		      if ( x3 >= x2-5 ) and ( x3 <= x2+6 ) then
+			begin
+			  delete := true;
+			  deltriangle ( x3,y1,current );
+			end;
+		    end;
+		  current := current^.up;
+		end;
+	      if not delete then
+		begin
+		  while current^.etype > 17 do current := current^.up;
+		  while (current^.etype=17)and(current^.y<>y1)do
+		    current := current^.up;
+		  while (current^.etype=17)and(current^.y=y1) do
+		    begin
+		      with current^ do
+			begin
+			  m1:=(ord(field^[1])-48)*10+ord(field^[2])-48;
+			  d1:=(ord(field^[3])-48)*10+ord(field^[4])-48;
+			  yr1:=(ord(field^[5])-48)*10+ord(field^[6])-48;
+			  m2:=(ord(field^[7])-48)*10+ord(field^[8])-48;
+			  d2:=(ord(field^[9])-48)*10+ord(field^[10])-48;
+			  yr2:=(ord(field^[11])-48)*10+ord(field^[12])-48;
+			  calcx(x3,m1,d1,yr1,skeleton^[6],skeleton^[5],daysperx,error);
+			  calcx(x4,m2,d2,yr2,skeleton^[6],skeleton^[5],daysperx,error);
+			  if (x3 <= x2) and (x4 >= x2) then
+			    delbar ( x3,x4,y1,current );
+			end;
+		      current := current^.up;
+		    end;
+		end;
+	    end;
+	end;
+    end;
+
+  (********************************************************)
+
+  procedure header;
+
+    var
+      i, j   : integer;
+
+    begin
+	      header1[1] := 'Title: ';
+	      header1[2] := 'Organization: ';
+	      header1[3] := 'Approval: ';
+	      header1[4] := 'Accomplished by: ';
+	      header1[5] := 'Original approval date: ';
+	      header1[6] := '/';
+	      header1[7] := '/';
+	      header1[8] := 'Last Change           : ';
+	      header1[9] := '/';
+	      header1[10] := '/';
+	      header1[11] := 'Status as of          : ';
+	      header1[12] := '/';
+	      header1[13] := '/';
+	      header1[14] := 'Page ';
+	      header1[15] := ' of ';
+	      screen ( 2 );
+	      colors ( 0, color );
+	      there ( ord(80-cname.len-6) div 2, 0 );
+	      write ( cname,' Chart' );
+	      current := first;
+	      skipfield := [16..21];
+	      for i := 1 to 15 do
+		begin
+		  with current^ do
+		    begin
+		      there ( xtext-header1[i].len, ytext );
+		      write ( header1[i], field^ );
+		    end;
+		  current := current^.down;
+		end;
+	      buf := messages^[42];
+	      current := first;
+	      current_node := current^.etype;
+    end;
+
+  procedure mile_foot;
+
+    var
+      i,j    : integer;
+
+	    begin
+	      screen ( 2 );
+	      colors ( 0, color );
+	      current := first;
+	      while current^.etype <> 16 do current := current^.down;
+	      skipfield := [1..15,17,18,20,21];
+	      there ( 0, 1 );
+	      writeln ( 'Enter Milestone Text:' );
+	      for i := 1 to 20 do
+		begin
+		  there(current^.xtext-3-((i-1)div 10),current^.ytext);
+		  if i = 10 then write ( i:1,'.',current^.field^ )
+		   else write ( i:1,'. ',current^.field^ );
+		  current := current^.down;
+		end;
+	      while current^.etype <> 19 do current := current^.down;
+	      there ( 0, 14 );
+	      writeln ( 'Enter Footnote Text:' );
+	      for i := 1 to 3 do
+		begin
+		  with current^ do
+		    begin
+		      there ( xtext-3, ytext );
+		      for j := 1 to field^.len do
+			buf[j] := field^[j];
+		      for j := field^.len+1 to node_data^[etype].input_length do
+			buf[j] := ' ';
+		      buf.len := node_data^[etype].input_length;
+		      if buf.len > 77 then
+			begin
+			  write ( i:1, '. ' );
+			  for j := 1 to 77 do
+			    write ( buf[j] );
+			  there ( xtext, ytext+1 );
+			  for j := 78 to buf.len do
+			    write ( buf[j] );
+			end
+		       else write ( i:1, buf );
+		    end;
+		  current := current^.down;
+		end;
+	      buf := messages^[43];
+	      current := first;
+	      while current^.etype <> 16 do current := current^.down;
+	      current_node := current^.etype;
+	      inloop;
+	      if inkey in [4,5] then inkey := 42;
+	      if inkey = 45 then [ header; inkey := 0; ];
+	    end;
+
+  begin
+
+     case inkey of
+
+	41: begin
+	      header;  inloop;
+              if inkey in [4,5] then inkey := 42;
+              skipfield := [ 17,18,20,21 ];
+	      if not ( inkey in [1,3,0] ) then
+		  redraw ( 1, current, first );
+		if inkey in [4,5] then inkey := 0;
+	    end;
+	47: mile_foot;
+	43: begin
+	      xleft := trunc ( 1/ daysperx );
+	      if xleft < 1 then xleft := 1;
+	      xright := xleft*8;
+	      x1 := node_data^[17].x;
+	      y1 := node_data^[17].y;
+	      msg1 := null;
+	      msg2 := null;
+	      upd1 := false;
+	      repeat
+		inkey := 0; length := 0;
+		incom(prompt_line,msg1,msg2,-3,rtype,0,x1,y1+10,4,0,
+		      25,1,1,1,1,1,1,status,buffer,length,inkey);
+		case inkey of
+		 1,2,8: perform(inkey,current,current_node,first);
+		  10 : begin
+			 create ( temp, upper(node_data^) );
+			 temp^.x := x1;
+			 temp^.y := ((y1 * 2) div 2) + 1;
+			 perform(inkey,temp,current_node,first);
+		       end;
+	22,23,25..28 : begin
+		       case inkey of
+			 22 : cursorhome ( x1, y1 );
+			 23 : cursorup ( y1 );
+			 25 : cursorleft ( x1 );
+			 26 : cursorright ( x1 );
+			 27 : cursorend ( x1, y1 );
+			 28 : cursordown ( y1 );
+		       end;
+		       if promptupd = 2 then promptupd := 3;
+		       end;
+		  50,52..55 : begin
+			      case inkey of
+			      52 : insbar;
+			      53 : instriangle;
+			      54 : fillbar;
+			      55 : filltriangle;
+			      50 : del;
+			      end;
+			      saved := false;
+			      promptupd := 0;
+			      end;
+	       otherwise
+		end;
+	      until inkey in [1,44];
+	      if (upd1)and(inkey<>1) then redraw ( 1, current, first );
+	    end;
+	49: if current^.etype = 16 then insmls;
+	50: if current^.etype = 16 then delmls;
+	51: if current^.etype = 16 then movemls;
+     otherwise
+     end; {case}
+  end;
+  end.
+

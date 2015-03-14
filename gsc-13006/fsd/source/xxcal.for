@@ -1,0 +1,139 @@
+      SUBROUTINE XXCAL(XX,ZLK,K,M)
+C
+C     'XXCAL' CALCULATES THE MOMENT OF INERTIA OF AN ELEMENT IN
+C     THE ELEMENT FRAME.
+C
+      IMPLICIT REAL*8 (A-H,O-Z)
+C
+C
+      COMMON/COMALP/ SZ02(10),SZ03(10),SZ04(10),SZ12(3,10),SZ13(3,10),
+     .               SZ14(3,10),SZ15(3,10),SZ16(3,10),SZ21(9,10),
+     .               SZ22(9,10),SZ23(9,10),SZ25(9,10),
+     .               SZ26(9,10),SZ27(9,10),SZ28(9,10),SZ31(27,10),
+     .               SZ32(27,10),SZ33(27,10),SZ34(27,10),SZ35(27,10),
+     .               SZ41(81,10),SZ42(81,10),SZ43(81,10)
+C
+      COMMON/DEBUG3/ISWTCH
+C
+      COMMON/IPOOL1/ IGRAV,IDAMP,IK,K1,ITIM,IAB,IAPS,IBB,IBPS,NK(10),
+     .               LK(10),LLK(10)
+C
+      DIMENSION XX(3,3),ZLK(10)
+C
+      IF(ISWTCH.EQ.0) WRITE(6,20002) K,M
+      SUM3=0.0D0
+      SUM4=0.0D0
+      SUM10=0.0D0
+      SUM12=0.0D0
+C
+      DO 40 I=1,M
+      SUM1=0.0D0
+      SUM2=0.0D0
+      SUM9=0.0D0
+      SUM11=0.0D0
+C
+      DO 30 J=1,M
+      SUM7=0.0D0
+      SUM8=0.0D0
+C
+      DO 20 L=1,M
+      SUM5=0.0D0
+      SUM6=0.0D0
+C
+      DO 10 N=1,M
+      A1=FUNA(K,K1,N)
+      B1=FUNB(K,K1,N)
+      IN=27*(I-1)+9*(J-1)+3*(L-1)+N
+      SUM5=SUM5+A1*SZ41(IN,K)
+      SUM6=SUM6+B1*SZ41(IN,K)
+   10 CONTINUE
+C
+      A1=FUNA(K,K1,L)
+      B1=FUNB(K,K1,L)
+      SUM7=SUM7 + A1*SUM5
+      SUM8=SUM8 + B1*SUM6
+   20 CONTINUE
+C
+      A1=FUNA(K,K1,J)
+      B1=FUNB(K,K1,J)
+      IJ=3*(I-1)+J
+      SUM1=SUM1+B1*SZ27(IJ,K)
+      SUM2=SUM2+A1*SZ27(IJ,K)
+      SUM9 =SUM9 + A1*(SUM7 + SUM8)
+      SUM11=SUM11+ B1*(SUM7 + SUM8)
+   30 CONTINUE
+C
+      A1=FUNA(K,K1,I)
+      B1=FUNB(K,K1,I)
+      SUM3 =SUM3  + B1*SUM1
+      SUM4 =SUM4  + A1*SUM2
+      SUM10=SUM10 + A1*SUM9
+      SUM12=SUM12 + B1*SUM11
+   40 CONTINUE
+C
+      XX(1,1)=ZLK(K)*ZLK(K)*SZ03(K)-SUM3-SUM4+
+     .         ((SUM10 + SUM12)/(4.D0*ZLK(K)*ZLK(K)))
+C
+      SUM5=0.0D0
+      SUM6=0.0D0
+      SUM7=0.0D0
+      SUM8=0.0D0
+      SUM10=0.0D0
+      SUM12=0.0D0
+      SUM13=0.0D0
+C
+      DO 70 I=1,M
+      SUM3=0.0D0
+      SUM4=0.0D0
+      SUM9=0.0D0
+      SUM11=0.0D0
+C
+      DO 60 J=1,M
+      SUM1=0.0D0
+      SUM2=0.0D0
+C
+      DO 50 L=1,M
+      A1=FUNA(K,K1,L)
+      B1=FUNB(K,K1,L)
+      IN=9*(I-1)+3*(J-1)+L
+      SUM1=SUM1+A1*SZ31(IN,K)
+      SUM2=SUM2+B1*SZ31(IN,K)
+   50 CONTINUE
+C
+      A1=FUNA(K,K1,J)
+      B1=FUNB(K,K1,J)
+      IJ=3*(I-1)+J
+      SUM3 =SUM3  + B1*SUM2
+      SUM4 =SUM4  + A1*SUM1
+      SUM9=SUM9+A1*SZ21(IJ,K)
+      SUM11=SUM11+B1*SZ21(IJ,K)
+   60 CONTINUE
+C
+      A1=FUNA(K,K1,I)
+      B1=FUNB(K,K1,I)
+      SUM5 =SUM5  + A1*(SUM3 + SUM4)
+      SUM6=SUM6+A1*SZ14(I,K)
+      SUM7 =SUM7  + B1*(SUM3 + SUM4)
+      SUM8=SUM8+B1*SZ14(I,K)
+      SUM10=SUM10 + A1*SUM9
+      SUM12=SUM12 + A1*SUM11
+      SUM13=SUM13 + B1*SUM11
+   70 CONTINUE
+C
+      XX(1,2)=ZLK(K)*SUM6 - SUM5/(2.D0*ZLK(K))
+      XX(2,1)=XX(1,2)
+      XX(1,3)=ZLK(K)*SUM8 - SUM7/(2.D0*ZLK(K))
+      XX(3,1)=XX(1,3)
+      XX(2,2)=SUM10
+      XX(2,3)=SUM12
+      XX(3,2)=SUM12
+      XX(3,3)=SUM13
+C
+      IF(ISWTCH.EQ.0) WRITE(6,10000) ((XX(I,J),I=1,3),J=1,3)
+C
+      RETURN
+C
+10000 FORMAT('0XX(K,I,J)',//3G15.5)
+20002 FORMAT('0',5X,'XXCAL  ',2I4)
+C
+      END

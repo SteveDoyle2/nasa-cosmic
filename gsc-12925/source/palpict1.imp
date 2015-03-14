@@ -1,0 +1,186 @@
+   (* $INCLUDE : 'compile.inc' *)
+   (* $INCLUDE : 'getparam.int' *)
+   (* $INCLUDE : 'utility.int' *)
+   (* $INCLUDE : 'vbpas.int' *)
+   (* $INCLUDE : 'dspas.int' *)
+   (* $INCLUDE : 'palexec.int' *)
+   (* $INCLUDE : 'palpict.int' *)
+
+   implementation of palpict;
+
+      uses vbpas;
+
+      uses dspas;
+
+      uses palexec;
+
+
+   procedure picture; extern;
+   procedure chartinfo; extern;
+   procedure get_list; extern;
+   procedure format;   extern;
+
+   procedure skelepal;
+
+   var
+	 color1  : integer;
+	 i,j,k,l : integer;
+	 texts	 : lstring(26);
+	 month	 : array [0..12] of lstring(4);
+	 header  : array [1..8] of lstring(15);
+	 years,n : integer;
+	 x,y	 : array [1..8] of integer;
+	 yr	 : lstring(2);
+
+
+   begin
+   color1 := 3;
+   if plotchoice <> 2 then [THERE(0,24); WRITE('Skeleton Drawing...          ');];
+   if symbol = 1 then dsymbol(xy[33],xy[34],3,0,0,1);
+   (* the big box *)
+   dsline(xy[1],xy[2],xy[3],xy[2],color1,1,0);
+   dsline(xy[1],xy[2],xy[1],xy[4],color1,1,0);
+   dsline(xy[1],xy[4],xy[3],xy[4],color1,1,0);
+   dsline(xy[3],xy[2],xy[3],xy[4],color1,1,0);
+   dsline(xy[5],xy[6],xy[7],xy[8],color1,1,0);	  (* below date *)
+   dsline(xy[1],xy[14],xy[15],xy[16],color1,1,0);   (* above month label *)
+   for i := 1 to 2 do	(* data values (horizontal) *)
+      begin
+	 j := xy[18] * (2 * i - 1);
+	 k := xy[18] * (2 * i);
+	 dsline(0,xy[14]+j,xy[15],xy[14]+j,color1,1,0);
+	 dsline(xy[12],xy[16]+k,xy[15],xy[16]+k,color1,1,0)
+      end;
+
+   (* Vertical lines *)
+
+   dsline(xy[19],xy[20],xy[21],xy[22],color1,1,0);   (* y axis *)
+   dsline(xy[23],xy[24],xy[23],xy[26],color1,1,0);   (* y axis *)
+   dsline(xy[17],xy[16]+xy[18],xy[17],xy[4],color1,1,0); (* last qtr *)
+   dsline(xy[12],xy[16]+xy[18],xy[12],xy[4],color1,1,0);
+
+
+      for i := 0 to 10 do
+	 begin
+	    j := xy[11] * i;
+	    dsline(xy[27]+j,xy[28],xy[29]+j,xy[30],color1,1,0)
+	 end;
+   (***** subtitle *****)
+
+   if form = 1 then
+	 texts := 'PROGRESS REPORT'
+    else
+	  texts := 'LEVEL OF EFFORT REPORT';
+   i := ( xy[3] - 8 * texts.len ) div 2;
+   dstext(i,xy[1]+4,0,color1,texts,texts.len,0);
+
+   (***** allocation *****)
+
+   texts.len := 22;
+   texts := 'Budget at Completion: ';
+   dstext(xy[13]+4,xy[6]+4,0,color1,texts,texts.len,0);
+
+   (***** unit labels *****)
+
+   if form = 1 then
+      case period of
+	0    : texts := '     MONTHLY PROGRESS';
+	1..4 : texts := '    QUARTERLY PROGRESS';
+	5    : texts := '     YEARLY PROGRESS';
+      end
+   else
+      case period of
+	0    : texts := ' MONTHLY LEVEL OF EFFORT';
+	1..4 : texts := 'QUARTERLY LEVEL OF EFFORT';
+	5    : texts := ' YEARLY LEVEL OF EFFORT';
+      end;
+   dstext(xy[19]+4,xy[20]+8,0,color1,texts,texts.len,270);
+   if form = 1 then
+      texts := '    CUMULATIVE PROGRESS'
+   else
+      texts := 'CUMULATIVE LEVEL OF EFFORT';
+   dstext(xy[1]+4,xy[20],0,color1,texts,texts.len,270);
+
+   (***** variable labels *****)
+   texts.len := 6;
+   for i := 0 to 1 do
+     begin
+       texts := 'BUDGET';
+       dstext(xy[1]+16,xy[4]-xy[18]*4+2+i*2*xy[18],0,color1,texts,texts.len,0);
+       texts := 'ACTUAL';
+       dstext(xy[1]+16,xy[4]-xy[18]*3+2+i*2*xy[18],0,color1,texts,texts.len,0);
+     end;
+   texts.len := 1;
+   texts := 'I';
+   dstext(xy[1]+2,xy[4]-32,0,color1,texts,1,0);
+   texts := 'C';
+   dstext(xy[1]+2,xy[4]-12,0,color1,texts,1,0);
+
+   (***** header information *****)
+
+   header[1] := 'CONTRACT NO.: ';   x[1] := xy[1]+4;  y[1] := xy[1]+24;
+   header[2] := 'TYPE: ';           x[2] := x[1]+232; y[2] := y[1];
+   header[3] := 'CONTRACTOR: ';     x[3] := x[2]+152; y[3] := y[1];
+   header[4] := 'CATEGORY:' ;       x[4] := x[1];     y[4] := y[1]+10;
+   header[5] := 'UNIT: ';           x[5] := x[1]+136; y[5] := y[4];
+   header[6] := 'BY: ';             x[6] := x[2]+16;  y[6] := y[4];
+   header[7] := 'SCOPE OF WORK: ';  x[7] := x[1];     y[7] := y[4]+10;
+   header[8] := 'DATE: ';           x[8] := x[3]+48;  y[8] := y[4];
+   for i := 1 to 8 do
+      dstext (x[i],y[i],0,color1,header[i],header[i].len,0);
+
+
+   (***** year and period labels *****)
+
+   month[1] := '1/';  month[2] := '2/';  month[3] := '3/';
+   month[4] := '4/';  month[5] := '5/';  month[6] := '6/';
+   month[7] := '7/';  month[8] := '8/';  month[9] := '9/';
+   month[10] :='10/'; month[11] :='11/'; month[12] :='12/';
+   month[0] :='19';
+
+   case period of
+     0	  : texts := 'MONTH';
+     1..4 : texts := 'QUARTER';
+     5	  : texts := 'YEAR';
+     end;
+   dstext (xy[10],xy[14]+2,0,color1,texts,texts.len,0);
+   l := xy[14] + 2; n := 0;
+
+   years := ( ord(year[1])-48 )*10 + ord(year[2]) - 48;
+   yr.len := 2;
+   if (fiscal_year <> 0) and (start > (fiscal_year*3)) then years := years + 1;
+
+   for i := 1 to total do
+      begin
+	 case period of
+	   0   : begin
+		   j := ( (i + start - 2) mod 12 ) + 1;
+		   if ( (fiscal_year * 3 + 1) = j) and (i <> 1) then
+			years := years + 1;
+		 end;
+	1..4   : begin
+		   j := ((i+period-2) mod 4) + 1;
+		   if (j = 1) and (i <> 1) then years := years + 1;
+		 end;
+	   5   : begin
+		   j := 0;  if i <> 1 then years := years + 1;
+		 end;
+	   end;  (* case *)
+
+	 if years = 100 then [month[0] := '20';years := 0;];
+	 yr[2] := chr((years-10*(years div 10))+48);
+	 yr[1] := chr((years div 10) + 48);
+
+	 k := xy[13] + 8 + xy[11] * (i-1);
+	 if j >= 10 then [ k := k - 4; n := 8 ] else n := 0;
+	 dstext(k,l,0,color1,month[j],month[j].len,0);
+	 dstext(k+16+n,l,0,color1,yr,2,0);
+      end; (* for 1 to total *)
+
+   end;  (* skelpal *)
+   end.
+
+
+
+
+

@@ -1,0 +1,267 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STARLETQ',
+               'QLIBHOME:STANDARD',
+               'QLIBHOME:IO',
+               'QLIBHOME:MATH',
+               'QLIBHOME:STRING',
+               'QLIBHOME:COLOR',
+               'QLIBHOME:FIG',
+               'QLIBHOME:FONT',
+               'QLIBHOME:TERM_VAX',
+               'QLIBHOME:TERM_4100'),
+  ENVIRONMENT ('QLIBHOME:TEK4510.TEN') ]
+MODULE hard_TEK4510;
+{=============================================================================}
+{-- PROCEDURES FOR HARDCOPY TYPE TEK4510 -------------------------------------}
+{=============================================================================}
+[ HIDDEN ] VAR
+   bytefile      : FILE OF byte;
+   panelopen     : boolean := false;
+   hardfig       : RECORD
+                   commandline   : VARYING [80] OF char;
+                   primary       : boolean;
+                   width         : integer;
+                   count         : integer;
+                   format        : char;
+                   textstyle     : char;
+                   END 
+                 := ('QPLOTHOME:TEK4510.COM',false,1,1,'P','2');
+{=============================================================================}
+[ GLOBAL ]
+FUNCTION hardname_TEK4510 (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0:  hardname_TEK4510 := '1';
+   1:  hardname_TEK4510 := 'TEK4510 ';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE hardmake_TEK4510;
+VAR
+   j,k             : integer;
+{------------------------------}
+PROCEDURE bufferempty;
+{ Purpose -- empty software plotting buffer }
+VAR
+   i : integer;
+BEGIN
+IF length(env.buffer) <> 0 
+ THEN 
+  BEGIN
+  IF terminal.hardname = 'LOCAL   '
+   THEN qiowwrite (env.buffer + CRLF)
+   ELSE 
+    BEGIN
+    FOR i := 1 TO length(env.buffer) DO
+       write (bytefile,ord(env.buffer[i]));
+    write (bytefile,ord(CR));
+    write (bytefile,ord(LF));
+    END;
+  env.buffer := '';
+  END;
+END;
+{------------------------------}
+PROCEDURE generatestring (st : anystring);
+VAR
+   j,k             : integer;
+   xfactor,yfactor : real;
+   wf,th           : real;
+   ip,p1,p2,p3     : ipoint;
+BEGIN
+xfactor := (config.ch.width  - config.ch.charspacing) /  70.0;
+yfactor := (config.ch.height - config.ch.linespacing) / 100.0;
+wf := (hardfig.width) * 16;
+ip := env.pos;
+FOR j := 1 TO length (st) DO 
+   BEGIN
+   FOR k := ord(st[j])*LIMSTROKES TO (ord(st[j])+1)*LIMSTROKES-1 DO
+      IF vectorsymbol[k][1] >= 0 
+       THEN 
+        BEGIN
+        p1.ix := ip.ix + round (vectorsymbol[k][1] * xfactor);
+        p1.iy := ip.iy + round (vectorsymbol[k][2] * yfactor);
+        p2.ix := ip.ix + round (vectorsymbol[k][3] * xfactor);
+        p2.iy := ip.iy + round (vectorsymbol[k][4] * yfactor);
+        IF (p1.ix = p2.ix) AND (p1.iy = p2.iy)
+         THEN th := 0
+         ELSE th := arctan2 (p2.iy-p1.iy,p2.ix-p1.ix) * 180 / PI;
+        IF (th > 135) OR (th < -45)
+         THEN BEGIN p3 := p1;  p1 := p2;  p2 := p3;  END;
+        IF (p1.ix = p2.ix) AND (p1.iy = p2.iy)
+         THEN th := 0
+         ELSE th := arctan2 (p2.iy-p1.iy,p2.ix-p1.ix);
+        p1.ix := imax (0,imin (65535,p1.ix + round (wf * cos (th + 2*PI/3))));
+        p1.iy := imax (0,imin (65535,p1.iy + round (wf * sin (th + 2*PI/3))));
+        p2.ix := imax (0,imin (65535,p2.ix + round (wf * cos (th + PI/3))));
+        p2.iy := imax (0,imin (65535,p2.iy + round (wf * sin (th + PI/3))));
+
+        env.pos := p1;
+        draw_4100 (p2.ix,p2.iy,panelopen,bufferempty);
+        bufferempty;
+        END;
+   ip.ix := ip.ix + config.ch.width;
+   END;
+END;
+{------------------------------}
+BEGIN
+IF terminal.hardname <> 'LOCAL   '
+ THEN 
+  BEGIN  
+  close (bytefile,ERROR:=CONTINUE);
+  open (bytefile,'TEK4510.PLT',new,CARRIAGE_CONTROL:=NONE);
+  rewrite (bytefile);  
+  write (bytefile,ord(ESC));
+  write (bytefile,ord(FF));
+  END;
+env.curch := config.ch;
+
+IF hardfig.primary
+ THEN initpalette (hardpalette,256,2,false)
+ ELSE initpalette (hardpalette,256,16,false);
+j := getcolorindex_4100 (hardpalette,'PLOTBACK',bufferempty);
+
+bufferempty;
+env.buffer := ESC + 'MW' + strofi_4100 (hardfig.width);
+bufferempty;
+env.buffer := ESC + 'QN' + strofi_4100 (hardfig.count);
+bufferempty;
+CASE hardfig.format OF
+   'L':  env.buffer := ESC + 'QO0';
+   'P':  env.buffer := ESC + 'QO3';
+   END;
+bufferempty;
+
+reset (plotitemfile);
+WHILE NOT eof (plotitemfile) DO 
+   BEGIN
+   readplotitem;
+   WITH plotitem DO CASE ins OF
+      I_col:  BEGIN
+              bufferempty;
+              env.visible := NOT clearcolor (st);
+              j := getcolorindex_4100 (hardpalette,st,bufferempty);
+              IF env.visible
+               THEN env.buffer := ESC + 'ML' + strofi_4100 (j-1)
+                                + ESC + 'MT' + strofi_4100 (j-1);
+              bufferempty;
+              END;
+      I_pan:  BEGIN
+              bufferempty;
+              j := getcolorindex_4100 (hardpalette,st,bufferempty);
+              panelopen := j > 0;
+              IF env.visible
+               THEN env.buffer := ESC + 'MP' + strofi_4100 (1-j);
+              bufferempty;
+              END;
+      I_clo:  BEGIN
+              bufferempty;
+              env.buffer := ESC + 'LE';
+              bufferempty;
+              END;
+      I_pos:  BEGIN
+              bufferempty;
+              env.pos.ix := ix;
+              env.pos.iy := iy;
+              END;
+      I_dra:  draw_4100(ix,iy,panelopen,bufferempty);
+      I_siz:  BEGIN
+              env.curch.width  := ix;
+              env.curch.height := iy;
+              END;
+      I_mar:  BEGIN
+              env.curch.charspacing := ix;
+              env.curch.linespacing := iy;
+              END;
+      I_pri:  IF env.visible AND (st <> '') 
+               THEN 
+                BEGIN
+                bufferempty;
+                env.buffer := ESC + ';' + ESC + 'MC' 
+                  + strofi_4100((env.curch.width-env.curch.charspacing) DIV 16)
+                  + strofi_4100((env.curch.height-env.curch.linespacing) DIV 16)
+                  + strofi_4100 (env.curch.charspacing DIV 16);
+                bufferempty;
+                CASE hardfig.textstyle OF
+                   'D':  BEGIN
+                         env.buffer := chr(29) + strofpos_4100 (env.pos) 
+                                     + ESC + 'MQ2' 
+                                     + ESC + 'LT' + strofi_4100 (length(st)) 
+                                     + st;
+                         bufferempty;
+                         END;
+                   'S':  BEGIN
+                         env.buffer := chr(29) + strofpos_4100 (env.pos) 
+                                     + ESC + 'MQ1' 
+                                     + ESC + 'LT' + strofi_4100 (length(st)) 
+                                     + st;
+                         bufferempty;
+                         END;
+                   'G':  generatestring (st);
+                   END;
+                END;
+      I_emp:  bufferempty;
+      END;
+   END;
+truncate (plotitemfile);
+
+IF terminal.hardname <> 'LOCAL   ' 
+ THEN 
+  BEGIN
+  write (bytefile,ord(ESC));
+  write (bytefile,ord('K'));
+  write (bytefile,ord('H'));
+  write (bytefile,ord('1'));
+  close (bytefile);
+  IF hardfig.commandline <> ''
+   THEN LIB$SPAWN ((hardfig.commandline));
+  END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE hardconfig_TEK4510 (configcontrol : configcontrol_type);
+BEGIN
+WITH hardfig DO CASE configcontrol OF
+   CON:  BEGIN
+         config.ch := ch_type (614,1024,198,400);
+         config.resolution := 104;
+         config.dotsize    := 0;
+         config.starsize   := 416;
+         END;
+   QUE:  BEGIN;
+         IF terminal.hardname <> 'LOCAL   ' 
+          THEN readvary ('ENTER COMMAND LINE : ',commandline,commandline);
+         readboo ('DO YOU WISH PRIMARY ONLY ? ',primary,primary);
+         readint ('ENTER WIDTH OF LINES     : ',width,1,4,width);
+         readint ('ENTER NUMBER OF COPIES   : ',count,1,9,count);
+         writeline (out,'L=LANDSCAPE, P=PORTRAIT, C=CURRENT');
+         readch  ('ENTER FORMAT             : ',format,'LPC',format);
+         writeline (out,'D=DEFAULT, S=STRING, G=GENERATED');
+         readch  ('ENTER TEXT STYLE         : ',textstyle,'DSG12',textstyle);
+         IF textstyle = '2' THEN textstyle := 'D';
+         IF textstyle = '1' THEN textstyle := 'S';
+         END;
+   REP:  BEGIN;
+         IF terminal.hardname <> 'LOCAL   ' 
+          THEN writeline (out,'Command line is ' + commandline);
+         CASE primary OF
+            true:  writeline (out,'Colors converted to the 7 primary colors');
+            false: writeline (out,'Colors not converted to the 7 primary colors');
+            END;
+         writeline (out,'Width of lines   is ' + strofi(width,1));
+         writeline (out,'Number of copies is ' + strofi(count,1));
+         CASE format OF
+            'L':  writeline (out,'Format is landscape');
+            'P':  writeline (out,'Format is portrait');
+            'C':  writeline (out,'Format is not changed');
+            END;
+         CASE textstyle OF
+            'D':  writeline (out,'Text style is default');
+            'S':  writeline (out,'Text style is string precision');
+            'G':  writeline (out,'Text style is generated');
+            END;
+         END;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+END.

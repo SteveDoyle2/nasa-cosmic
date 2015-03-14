@@ -1,0 +1,6 @@
+      BLOCK DATA
+C     BVERS
+      IMPLICIT REAL*8(A-H,O-Z)
+      COMMON/VERS/VNO
+      DATA VNO/8HDEC 1984/
+      END

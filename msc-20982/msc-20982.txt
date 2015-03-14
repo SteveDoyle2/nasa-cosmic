@@ -1,0 +1,55 @@
+ DIGITAL FILTER DESIGN
+
+( McDonnell Douglas Corp. )
+
+     The Digital Filter Design program presents a method to compare desired
+and designed digital filters by minimizing the sum-square-error of the dif-
+ferences in magnitude and phase angles. Most filter design techniques em-
+phasize magnitude characteristics. Such techniques are adequate for con-
+trol systems where the phase angle of a filter imposes minor effects on sys-
+tem stability. However, for closed loop feedback control systems, an ex-
+cessive phase angle of a designed filter may create signal distortion or
+push the system to instability. This Digital Filter Design program has been
+applied to the Space Shuttle pitch body bending filter, where the filter was
+reshaped to provide more attenuation to flexible vehicle resonance modes
+without sacrificing the rigid vehicle performance.
+
+     This program uses the Fletcher-Powell unconstrained minimization
+method to calculate a performance index from the magnitude and phase er-
+rors. This index can then be used to measure the goodness of various fil-
+ter designs. Input includes the number of second order cascade sections in
+the designed filter, available frequency data points with desired phase and
+magnitude, weighting factors for phase and magnitude, initial estimates of
+filter coefficients and gain, and system sampling time. Subroutines are
+provided for printing and simple plotting of the frequency response of the
+designed filter.
+
+     This program is written in FORTRAN IV for batch execution and has been
+implemented on a CDC Cyber 830 computer operating under NOS with a central
+memory requirement of approximately 76K (octal) of 60 bit words. This pro-
+gram was developed in 1983.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC CYBER 180 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 1,336 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI CDC System Internal Format Magnetic Tape
+
+PROGRAM NUMBER: MSC-20982
+
+DOMESTIC - DOCUMENTATION PRICE: $13.00    PROGRAM PRICE: $400.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $26.00   PROGRAM PRICE: $800.00
+
+
+
+                                        1
+

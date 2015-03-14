@@ -1,0 +1,56 @@
+/*****************************************************************************/
+/*                                                                           */
+/*  Evaluate                                                                 */
+/*                                                                           */
+/*  This function evaluates one condition and calls either set_true or       */
+/*  set_false depending on the value of the condition.                       */
+/*                                                                           */
+/*  Input:  cond - pointer to a condition.                                   */
+/*  Output: the value of the condition.                                      */
+/*                                                                           */
+/*  Method: Call the evaluation function of the condition indirectly.        */
+/*          If the value is true                                             */
+/*              call set_true                                                */
+/*          else call set_false                                              */
+/*                                                                           */
+/*  Programmer: G R Goodrum, MDTSCO, June 1984                               */
+/*                                                                           */
+/*****************************************************************************/
+
+#include "structures.inc"
+
+evaluate ( cond )
+struct cond_info *cond;
+{
+    extern struct cond_info condition[];
+    int value;
+
+    if  ( value = (*cond->evaluate)() )
+    {
+        count ( 1, 0 );                                         /* debug */
+        set_true ( cond );
+#ifdef TRACE
+        push ( 1, cond-&condition[0] );
+#endif
+        true_set_list ( cond -> tt_list );
+        false_set_list ( cond -> tf_list );
+#ifdef TRACE
+        pop ();
+#endif
+    }
+    else
+    {
+        count ( 1, 1 );                                         /* debug */
+        set_false ( cond );
+#ifdef TRACE
+        push ( 2, cond-&condition[0] );
+#endif
+        true_set_list ( cond -> ft_list );
+        false_set_list ( cond -> ff_list );
+#ifdef TRACE
+        pop ();
+#endif
+    }
+
+    return ( value );
+}

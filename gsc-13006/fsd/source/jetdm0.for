@@ -1,0 +1,147 @@
+      SUBROUTINE JETDM0(LDPLY)
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+C
+      COMMON/CSTVAL/ TSTART,DUM05(40)
+C
+      COMMON/DEBUG2/ IOUT,JOUT,KLUGE
+C
+      COMMON/ITCNTL/ IPULSE,ISPLSE,KPULSE,ITSW,IOTSW,IPLPRP
+C
+      COMMON/JETDMP/ ZMS0,TANKCG(3),FUELPP(2),FUELM,DMDT(2)
+     1              ,RGYFL(3),IJTDMP
+C
+      COMMON/RPOOL1/ DUM01(10),TIME,DUM02(28),OMEG(3),DUM03(38)
+     1              ,YBCM(3),DUM04(42)
+C
+      COMMON/RPOOL3/ ZMS,YIZM(3,2)
+C
+      COMMON/THRUST/ TV(3,2),TL(3,2),TT(4,2),TPAR(4,2),REF(2)
+C
+      COMMON/TIMPLS/ TMEAN(2),TPULSE(2),TOPLSE(2),TTSTOP(2),DELV(2)
+C
+C
+      DIMENSION YYF(3,3),CIY(3,3),VECF(3),VECM(3),FD(3,2)
+      DIMENSION V1(3),V2(3)
+      DIMENSION DFINT(3,3)
+C
+      IF(LDPLY.NE.0) RETURN
+C
+      ZMS=ZMS0
+C
+      IF(IJTDMP.EQ.0) RETURN
+      IF(KPULSE.EQ.IPULSE) RETURN
+C
+      TRACE=0.0D0
+      DO 5 I=1,3
+      DO 4 J=1,3
+      YYF(I,J)=TANKCG(I)*TANKCG(J)
+    4 CONTINUE
+    5 CONTINUE
+C
+      YYF(1,1)=YYF(1,1)+(RGYFL(2)+RGYFL(3)-RGYFL(1))/2.0D0
+      YYF(2,2)=YYF(2,2)+(RGYFL(3)+RGYFL(1)-RGYFL(2))/2.0D0
+      YYF(3,3)=YYF(3,3)+(RGYFL(1)+RGYFL(2)-RGYFL(3))/2.0D0
+      TRACE=YYF(1,1)+YYF(2,2)+YYF(3,3)
+C
+      DO 10 I=1,3
+      DO 9 J=1,3
+      DFINT(I,J)=-YYF(I,J)
+    9 CONTINUE
+      DFINT(I,I)=DFINT(I,I)+TRACE
+   10 CONTINUE
+C
+      DO 15 I=1,IPLPRP
+      DEN=TT(4,I)-TT(1,I)
+      DMDT(I)=FUELPP(I)/DEN
+   15 CONTINUE
+      FUELEX=0.0D0
+      FUELT=FUELM
+      ZMS=ZMS0+FUELT
+C
+      RETURN
+C
+C   *************************************************************
+      ENTRY JETDM1(SY1,SY2,SY3,CIY)
+C   *************************************************************
+C
+C     CALLED FROM FNDALP TO UPDATE MASS PROPERTIES
+C
+      IF(IJTDMP.EQ.0) RETURN
+      IF(TIME.EQ.TSTART) GO TO 40
+      IF(KPULSE.EQ.IPULSE) GO TO 32
+      IF(ISPLSE.EQ.0) GO TO 20
+      IF(ITSW.NE.0) GO TO 32
+C
+   20 CONTINUE
+C
+      DFUEL=0.0D0
+      DO 30 IT=1,IPLPRP
+      IF(TIME.LT.TPULSE(IT)) GO TO 30
+      IF(TIME.GT.TTSTOP(IT)) GO TO 30
+      RATIO=TIME-TPULSE(IT)
+      DEN=TT(4,IT)-TT(1,IT)
+      RATIO=RATIO/DEN
+      DFUEL=DFUEL+RATIO*FUELPP(IT)
+   30 CONTINUE
+C
+   32 CONTINUE
+C
+      IW=KPULSE
+      IW1=0
+      IF(IPLPRP.EQ.1) GO TO 35
+      IW=KPULSE/2
+      IW1=IW
+      IF(MOD(KPULSE,2).EQ.1) IW=IW+1
+   35 CONTINUE
+C
+      FUELEX=IW*FUELPP(1)+IW1*FUELPP(2)+DFUEL
+C
+C
+   40 CONTINUE
+C
+C
+      FUELT=FUELM-FUELEX
+      ZMS=ZMS0+FUELT
+C
+      SY1=SY1+FUELT*TANKCG(1)
+      SY2=SY2+FUELT*TANKCG(2)
+      SY3=SY3+FUELT*TANKCG(3)
+C
+      DO 45 I=1,3
+      YBCM(I)=YBCM(I)+FUELT*TANKCG(I)
+      DO 45 J=1,3
+      CIY(I,J)=CIY(I,J)+FUELT*YYF(I,J)
+   45 CONTINUE
+C
+C
+      RETURN
+C
+C   *************************************************************
+      ENTRY JETDM2(IPL,VECF,VECM)
+C   *************************************************************
+C
+C     CALLED FROM PULSER TO INCLUDE DAMPING FORCES AND TORQUES
+C
+      CALL MATV(1,DFINT,OMEG,V1)
+C
+      FD(1,IPL)=-DMDT(IPL)*(TL(3,IPL)*OMEG(2)-TL(2,IPL)*OMEG(3))
+      FD(2,IPL)=-DMDT(IPL)*(TL(1,IPL)*OMEG(3)-TL(3,IPL)*OMEG(1))
+      FD(3,IPL)=-DMDT(IPL)*(TL(2,IPL)*OMEG(1)-TL(1,IPL)*OMEG(2))
+C
+      VECF(1)=VECF(1)+FD(1,IPL)
+      VECF(2)=VECF(2)+FD(2,IPL)
+      VECF(3)=VECF(3)+FD(3,IPL)
+C
+      VECM(1)=VECM(1)+DMDT(IPL)*V1(1)
+     1               +FD(3,IPL)*TL(2,IPL)-FD(2,IPL)*TL(3,IPL)
+      VECM(2)=VECM(2)+DMDT(IPL)*V1(2)
+     1               +FD(1,IPL)*TL(3,IPL)-FD(3,IPL)*TL(1,IPL)
+      VECM(3)=VECM(3)+DMDT(IPL)*V1(3)
+     1               +FD(2,IPL)*TL(1,IPL)-FD(1,IPL)*TL(2,IPL)
+C
+C
+      RETURN
+C
+      END

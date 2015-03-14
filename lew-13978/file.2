@@ -1,0 +1,1001 @@
+      PROGRAM DRIVER(INPUT,OUTPUT,TAPE5=INPUT,TAPE6=OUTPUT)              DRIVER
+C                                                                        DRIVER
+C     THIS IS THE MAIN PROGRAM FOR THE SOLUTION OF A TWO POINT BOUNDARY  DRIVER
+C     VALUE PROBLEM. SIMULTANEOUS NONLINEAR EQUATIONS ARE SOLVED BY      DRIVER
+C     THE NEWTON-RAPHSON METHOD.                                         DRIVER
+C                                                                        DRIVER
+      COMMON /TN/ TT1(400),TT2(400),TT3(400),TT4(400),TT5(400),TT6(400)  DRIVER
+C                                                                        DRIVER
+      COMMON /STORE/ S1(400),S2(400),S3(400),XM(400,3)                   DRIVER
+C                                                                        DRIVER
+      COMMON / INPT / XL,T0,TL,X(50),XK(50),C(50),A(50),                 DRIVER
+     * Q(50),TE(50),SF(50),N(50),LTAB,E,IUFLAG,IPLOT                     DRIVER
+C                                                                        DRIVER
+      COMMON /STO/ Z(400),T(400),C1(400),C2(400),C3(400),C4(400),        DRIVER
+     *             C5(400),IFL(400),XKA(400),S(400),INO,IS,ISM2          DRIVER
+C                                                                        DRIVER
+      COMMON / LGT / PRNUM, TSTART                                       DRIVER
+C                                                                        DRIVER
+      COMMON /CHECK/ TABCHK(10),ALPHA(4,50),BETA(4,50),XZONE(50),NXV,    DRIVER
+     *PCHK(2),CHECK(2),CALPHA(50),AALPHA(50),PHA(4,50),TT(10,10),        DRIVER
+     *VV(10,10),NTV(10),TS(10),VS(10)                                    DRIVER
+C                                                                        DRIVER
+      COMMON /NAME/ T1(10),V1(10),T2(10),V2(10),T3(10),V3(10),           DRIVER
+     *T4(10),V4(10),T5(10),V5(10),T6(10),V6(10),T7(10),V7(10),           DRIVER
+     *T8(10),V8(10),T9(10),V9(10),T10(10),V10(10),                       DRIVER
+     *P1(3),P2(3)                                                        DRIVER
+C                                                                        DRIVER
+      COMMON /PLOT/ PPY(400), PY(10,400), IC, ICC, YMIN,YMAX,XMIN,XMAX   DRIVER
+C                                                                        DRIVER
+C     IFL IS A VECTOR OF FLAGS FOR CONTROLLING THE RAMP CONSTRUCTION.    DRIVER
+C     IFL=1  MEANS AN ORDINARY POINT                                     DRIVER
+C     IFL=2  MEANS A RAMP POINT                                          DRIVER
+C     IFL=3  MEANS THE MIDDLE OF THE RAMP                                DRIVER
+C                                                                        DRIVER
+      DIMENSION B(400), SSAV(3,400)                                      DRIVER
+      DIMENSION PRNAME(3),  DVSN(4),     ENGGRP(4),     PRDOC(2)         DRIVER
+      EXTERNAL EVAL                                                      DRIVER
+C                                                                        DRIVER
+      DATA PCT/.1/,SIG/.1714E-08/                                        DRIVER
+      DATA PRNUM/6HP5399B/,NCHAR/27/,NLINES/0/,CMPDT/8H09/20/80/         DRIVER
+     *, PRNAME /10HRADIATION ,10HFIN HEAT T,10HRANSFER   /               DRIVER
+     *, PRDOC  /10H   GDCA-BT,10HD71-001B  /                             DRIVER
+     *, ENGGRP /10H          ,10H   THERMOD,10HYNAMICS   ,10H          / DRIVER
+     *, DVSN   /10H  GENERAL ,10HDYNAMICS /,10H CONVAIR D,10HIVISION   / DRIVER
+      DATA TABCHK/10HV1        ,10HV2        ,10HV3        ,             DRIVER
+     *10HV4        ,10HV5        ,10HV6        ,                         DRIVER
+     *10HV7        ,10HV8        ,10HV9        ,10HV10       /           DRIVER
+      DATA PCHK/10HP1        ,10HP2        /                             DRIVER
+      DATA CHECK/10HV         ,10HP         /                            DRIVER
+      DATA ALPHA,BETA,XZONE,CALPHA,AALPHA,PHA,TT,VV,SSAV,TS,VS/2570*0./  DRIVER
+      DATA NTV,IENTR/11*0/                                               DRIVER
+      DATA T1,V1,T2,V2,T3,V3,T4,V4,T5,V5,T6,V6,T7,V7,T8,V8,T9,V9,T10,V10 DRIVER
+     *,P1,P2/206*99999./                                                 DRIVER
+      DATA IUFLAG,IPLOT,IC/3*0/,PX,PY,YMIN,YMAX,XMIN,XMAX/8004*0./       DRIVER
+C                                                                        DRIVER
+C        BEGIN MAIN PROGRAM                                              DRIVER
+C                                                                        DRIVER
+      CALL LOGO(PRNUM,PRNAME,NCHAR,VSPECS,NWORDS,NLINES,CMPDT,DVSN,      DRIVER
+     *ENGGRP,PRDOC,IDATE,NCORE,TSTART)                                   DRIVER
+C                                                                        DRIVER
+C        DATA INPUT                                                      DRIVER
+C                                                                        DRIVER
+  100 CALL IN                                                            DRIVER
+C                                                                        DRIVER
+C        P1 AND P2 LOOPS INCREMENTED                                     DRIVER
+C                                                                        DRIVER
+      DO 998 IP2=2,11                                                    DRIVER
+         XXN=FLOAT(IP2-1)                                                DRIVER
+         P2SUM=P2(1)+P2(3)*(XXN)-P2(3)                                   DRIVER
+         ABSP2S=ABS(P2SUM)                                               DRIVER
+         ABSP22=ABS(P2(2))                                               DRIVER
+         IF(ABSP2S.GT.ABSP22) GO TO 999                                  DRIVER
+      DO 11 K=1,LTAB                                                     DRIVER
+         IF(ALPHA(1,K).EQ.PCHK(2)) XK(K)=P2SUM                           DRIVER
+         IF(ALPHA(2,K).EQ.PCHK(2)) Q(K)=P2SUM                            DRIVER
+         IF(ALPHA(3,K).EQ.PCHK(2)) TE(K)=P2SUM                           DRIVER
+         IF(ALPHA(4,K).EQ.PCHK(2)) SF(K)=P2SUM                           DRIVER
+         IF(CALPHA(K).EQ.PCHK(2)) C(K)=P2SUM                             DRIVER
+         IF(AALPHA(K).EQ.PCHK(2)) A(K)=P2SUM                             DRIVER
+   11 CONTINUE                                                           DRIVER
+         IC=0                                                            DRIVER
+      DO 996 IP1=2,11                                                    DRIVER
+         XXN=FLOAT(IP1-1)                                                DRIVER
+      P1STAR=P1(1)                                                       DRIVER
+      P1SAS=P1(3)                                                        DRIVER
+         P1SUM=P1(1)+P1(3)*(XXN)-P1(3)                                   DRIVER
+         ABSP1S=ABS(P1SUM)                                               DRIVER
+         ABSP12=ABS(P1(2))                                               DRIVER
+         IF(ABSP1S.GT.ABSP12) GO TO 997                                  DRIVER
+      DO 10 K=1,LTAB                                                     DRIVER
+         IF(ALPHA(1,K).EQ.PCHK(1)) XK(K)=P1SUM                           DRIVER
+         IF(ALPHA(2,K).EQ.PCHK(1)) Q(K)=P1SUM                            DRIVER
+         IF(ALPHA(3,K).EQ.PCHK(1)) TE(K)=P1SUM                           DRIVER
+         IF(ALPHA(4,K).EQ.PCHK(1)) SF(K)=P1SUM                           DRIVER
+         IF(CALPHA(K).EQ.PCHK(1))  C(K)=P1SUM                            DRIVER
+         IF(AALPHA(K).EQ.PCHK(1))  A(K)=P1SUM                            DRIVER
+   10 CONTINUE                                                           DRIVER
+C                                                                        DRIVER
+C        PRIMARY INNER LOOP STARTING POINT                               DRIVER
+C                                                                        DRIVER
+      ISET=0                                                             DRIVER
+      ITERA = 0                                                          DRIVER
+   12 ITERA = ITERA + 1                                                  DRIVER
+      IF(ITERA.GT.1)GO TO 305                                            DRIVER
+C                                                                        DRIVER
+C        CONSTRUCT Z VECTOR                                              DRIVER
+C                                                                        DRIVER
+      Z(1)=X(1)                                                          DRIVER
+      IS=2                                                               DRIVER
+      DO 300 I=2,LTAB                                                    DRIVER
+      IF (N(I).EQ.0) GO TO 250                                           DRIVER
+      IU=N(I)                                                            DRIVER
+      D=(X(I)-X(I-1))/FLOAT(IU)                                          DRIVER
+      IF (D.EQ.0.0)  GO TO 2000                                          DRIVER
+      SUM=X(I-1)                                                         DRIVER
+      DO 200 J=1,IU                                                      DRIVER
+      SUM=SUM+D                                                          DRIVER
+      Z(IS)=SUM                                                          DRIVER
+      IFL(IS)=1                                                          DRIVER
+      IS=IS+1                                                            DRIVER
+  200 CONTINUE                                                           DRIVER
+      GO TO 300                                                          DRIVER
+  250 IF (X(I)-X(I-1).NE.0.) GO TO 300                                   DRIVER
+C                                                                        DRIVER
+C        CHECK FOR DISCONTINUITY IN K*A                                  DRIVER
+C                                                                        DRIVER
+      S1(IS)=XK(I-1)*A(I-1)                                              DRIVER
+      S2(IS)=XK(I)*A(I)                                                  DRIVER
+      IF (ABS(S1(IS)-S2(IS)).LT.1.E-08) GO TO 300                        DRIVER
+C                                                                        DRIVER
+C        ADD A POINT ON EACH SIDE OF THE POINT OF DISCONTINUITY          DRIVER
+C                                                                        DRIVER
+      Z(IS)=X(I)                                                         DRIVER
+      D= (X(I-1)-X(I-2))/FLOAT(N(I-1))  *PCT                             DRIVER
+      Z(IS-1)=X(I)-D                                                     DRIVER
+      D= (X(I+1)-X(I))/FLOAT(N(I+1))*PCT                                 DRIVER
+      Z(IS+1)=X(I)+D                                                     DRIVER
+      IFL(IS)=3                                                          DRIVER
+      IFL(IS-1)=2                                                        DRIVER
+      IFL(IS+1)=2                                                        DRIVER
+      IS=IS+2                                                            DRIVER
+  300 CONTINUE                                                           DRIVER
+      IS=IS-1                                                            DRIVER
+C     IS IS THE NUMBER OF GRID POINTS.                                   DRIVER
+      IF(IS.GT.399) GO TO 3000                                           DRIVER
+      IF(ISET.GT.0)GO TO 305                                             DRIVER
+      NDIG = 6                                                           DRIVER
+      XL2 = XL*XL/12.                                                    DRIVER
+C          INITIAL LINEAR GUESS AT SOLUTION                              DRIVER
+      UP = TL                                                            DRIVER
+      IF(TL.EQ.E)UP =T0                                                  DRIVER
+      D = (UP-T0)/FLOAT(IS-1)                                            DRIVER
+      SUM = T0                                                           DRIVER
+      DO 303 I = 2,IS                                                    DRIVER
+      SUM = SUM + D                                                      DRIVER
+      T(I) = SUM                                                         DRIVER
+      S(I) = T(I)                                                        DRIVER
+  303 CONTINUE                                                           DRIVER
+      S(1) = T0                                                          DRIVER
+      S(IS) = TL                                                         DRIVER
+      T(1)= T0                                                           DRIVER
+      INO = IS - 2                                                       DRIVER
+      IF(TL.EQ.E)INO = IS - 1                                            DRIVER
+      IF(ISET.EQ.0)GO TO 310                                             DRIVER
+  305 DO 306 I =1,IS                                                     DRIVER
+  306 T(I) = S(I)                                                        DRIVER
+C                                                                        DRIVER
+C        CONSTRUCT VECTORS OF CONSTANTS                                  DRIVER
+C                                                                        DRIVER
+  310 DO 600 I=1,IS                                                      DRIVER
+      IF (IFL(I).EQ.3) GO TO 600                                         DRIVER
+      H=0.0                                                              DRIVER
+      IF(ITERA.GT.1)GO TO 350                                            DRIVER
+      TT1(I)=SLI(Z(I),LTAB,X,XK)                                         DRIVER
+      TT2(I)=SLI(Z(I),LTAB,X,C)                                          DRIVER
+      TT3(I)=SLI(Z(I),LTAB,X,A)                                          DRIVER
+      TT4(I)=SLI(Z(I),LTAB,X,Q)                                          DRIVER
+      TT5(I)=SLI(Z(I),LTAB,X,TE)                                         DRIVER
+      TT6(I)=SLI(Z(I),LTAB,X,SF)                                         DRIVER
+  350 CONTINUE                                                           DRIVER
+      IF(NXV.LE.1) GO TO 380                                             DRIVER
+C                                                                        DRIVER
+C        CONSTANTS RECOMPUTED IF TEMPERATURE DEPENDENT                   DRIVER
+C                                                                        DRIVER
+      DO 5000 L = 1,LTAB                                                 DRIVER
+      IF(Z(I).GE.X(L).AND.Z(I).LE.X(L+1))GO TO 5020                      DRIVER
+ 5000 CONTINUE                                                           DRIVER
+ 5020 DECODE(10,407,ALPHA(1,L+1))ACHECK                                  DRIVER
+  407 FORMAT(A1)                                                         DRIVER
+      IF(ACHECK.NE.CHECK(1))GO TO 5140                                   DRIVER
+      DO 5130 JJ = 1,10                                                  DRIVER
+      IF(ALPHA(1,L+1).NE.TABCHK(JJ))GO TO 5130                           DRIVER
+      DO 5120 K = 1,10                                                   DRIVER
+      TS(K) = TT(JJ,K)                                                   DRIVER
+      VS(K) = VV(JJ,K)                                                   DRIVER
+ 5120 CONTINUE                                                           DRIVER
+      TT1(I) = SLI(S(I),NTV(JJ),TS,VS)                                   DRIVER
+      GO TO 5140                                                         DRIVER
+ 5130 CONTINUE                                                           DRIVER
+ 5140 DECODE(10,407,ALPHA(2,L+1))ACHECK                                  DRIVER
+      IF(ACHECK.NE.CHECK(1))GO TO 5160                                   DRIVER
+      DO 5150 JJ=1,10                                                    DRIVER
+      IF(ALPHA(2,L+1).NE.TABCHK(JJ))GO TO 5150                           DRIVER
+      DO 353 K=1,10                                                      DRIVER
+         TS(K)=TT(JJ,K)                                                  DRIVER
+  353    VS(K)=VV(JJ,K)                                                  DRIVER
+         TT4(I)=SLI(S(I),NTV(JJ),TS,VS)                                  DRIVER
+      GO TO 5160                                                         DRIVER
+ 5150 CONTINUE                                                           DRIVER
+ 5160 DECODE(10,407,ALPHA(4,L+1))ACHECK                                  DRIVER
+      IF(ACHECK.NE.CHECK(1))GO TO 360                                    DRIVER
+      DO 355 JJ=1,10                                                     DRIVER
+      IF(ALPHA(4,L+1).NE.TABCHK(JJ))GO TO 355                            DRIVER
+      DO 356 K=1,10                                                      DRIVER
+         TS(K)=TT(JJ,K)                                                  DRIVER
+         AVS=VV(JJ,K)                                                    DRIVER
+  356    VS(K)=ABS(AVS)                                                  DRIVER
+         TT6(I)=SLI(S(I),NTV(JJ),TS,VS)                                  DRIVER
+         NJ=NTV(JJ)                                                      DRIVER
+         IF(VV(JJ,NJ).LT.0.0) TT6(I)=-TT6(I)                             DRIVER
+      GO TO 360                                                          DRIVER
+  355 CONTINUE                                                           DRIVER
+  360 CONTINUE                                                           DRIVER
+      ISET=2                                                             DRIVER
+  380 IF(ISET.EQ.0.AND.I.EQ.IS) ISET=1                                   DRIVER
+      T6TEMP=TT6(I)                                                      DRIVER
+      IF(TT6(I).GE.0.0) GO TO 400                                        DRIVER
+      H=-TT6(I)                                                          DRIVER
+      T6TEMP=0.0                                                         DRIVER
+  400 CONTINUE                                                           DRIVER
+      TEM1=TT2(I)*XL2/(TT1(I)*TT3(I))                                    DRIVER
+      TEM2=SIG*T6TEMP                                                    DRIVER
+      C1(I)=-TEM2*TEM1                                                   DRIVER
+      C2(I)=TEM1*(TT4(I)+TEM2*TT5(I)**4+H*TT5(I))                        DRIVER
+      C5(I)= -H*TEM1                                                     DRIVER
+      XKA(I)=TT1(I)*TT3(I)                                               DRIVER
+C     WRITE(6,610) TT1(I),TT2(I),TT3(I),TT4(I),TT5(I),TT6(I)             DRIVER
+  610 FORMAT(1X,6(E12.4,2X))                                             DRIVER
+  611 FORMAT(1X,2(E12.4,2X),5HXZONE)                                     DRIVER
+  612 FORMAT(1X,2A10)                                                    DRIVER
+  613 FORMAT(1X,2(E12.4,2X),5HTS-VS)                                     DRIVER
+  600 CONTINUE                                                           DRIVER
+      IF(ISET.EQ.1)GO TO 5300                                            DRIVER
+      DO 5250 I=1,IS                                                     DRIVER
+      IF(IFL(I).NE.3)GO TO 5250                                          DRIVER
+      S1(I)=XKA(I-1) + (XKA(I-1)-XKA(I-2))*(Z(I)-Z(I-1))/(Z(I-1)-Z(I-2)) DRIVER
+      S2(I)=XKA(I+1) - (XKA(I+2)-XKA(I+1))*(Z(I+1)-Z(I))/(Z(I+2)-Z(I+1)) DRIVER
+ 5250 CONTINUE                                                           DRIVER
+ 5300 CONTINUE                                                           DRIVER
+      IS1=IS-1                                                           DRIVER
+      DO 620 I=2,IS1                                                     DRIVER
+      IF (IFL(I).EQ.3) GO TO 620                                         DRIVER
+      QL1=Z(I)-Z(I-1)                                                    DRIVER
+      QL2=Z(I+1)-Z(I)                                                    DRIVER
+      QL3=QL2+QL1                                                        DRIVER
+      QL4=QL1/QL2                                                        DRIVER
+      IF (IFL(I+1).EQ.3) XKA(I+1)=S1(I+1)                                DRIVER
+      IF (IFL(I-1).EQ.3) XKA(I-1)=S2(I-1)                                DRIVER
+      B(I)=((XKA(I+1)*QL4-XKA(I-1)/QL4)/QL3+XKA(I)*(QL2-QL1)/(QL2*QL1))/ DRIVER
+     *XKA(I)                                                             DRIVER
+  620 CONTINUE                                                           DRIVER
+      ISM2=IS-2                                                          DRIVER
+      DO 640 I=1,ISM2                                                    DRIVER
+      IF (IFL(I+1).EQ.3) GO TO 630                                       DRIVER
+      QL1=Z(I+1)-Z(I)                                                    DRIVER
+      QL2=Z(I+2)-Z(I+1)                                                  DRIVER
+      QL3=QL1+QL2                                                        DRIVER
+      QL4=QL1/QL2                                                        DRIVER
+      C3(I+1)=(2.0/ QL2 +B(I+1)*QL4)/QL3                                 DRIVER
+      C4(I+1)= ( 2.0/QL1- B(I+1)/QL4)/QL3                                DRIVER
+      C5(I+1)= ( -2.0+B(I+1)*(QL2-QL1))/(QL1*QL2) +C5(I+1)               DRIVER
+      GO TO 640                                                          DRIVER
+  630 XKA(I)=2.*(Z(I+2)-Z(I+1))*(XKA(I)+S1(I+1))                         DRIVER
+      XKA(I+2)=2.*(Z(I+1)-Z(I))*(XKA(I+2)+S2(I+1))                       DRIVER
+      XKA(I+1)=XKA(I)+XKA(I+2)                                           DRIVER
+      XM(I,1)=-XKA(I+2)/XKA(I+1)                                         DRIVER
+      XM(I,3)=-XKA(I)/XKA(I+1)                                           DRIVER
+      XM(I,2)=1.                                                         DRIVER
+  640 CONTINUE                                                           DRIVER
+      ICON=50                                                            DRIVER
+C                                                                        DRIVER
+C        NONLIN CALLED FOR SOLUTION                                      DRIVER
+C                                                                        DRIVER
+      CALL NONLIN(INO,T(2),S(2),S1,S2,S3,XM,NDIG,ICON,EVAL)              DRIVER
+C                                                                        DRIVER
+C        SOLUTION CHECKED AGAINST PREVIOUS SOLUTION IF CONSTANTS ARE     DRIVER
+C        TEMPERATURE DEPENDENT. ITERATION PROCEEDS IF THE SOLUTION IS    DRIVER
+C        NOT WITHIN TOLERANCE.                                           DRIVER
+C                                                                        DRIVER
+      NADD=0                                                             DRIVER
+      DO 701 I=1,10                                                      DRIVER
+  701 NADD=NADD+NTV(I)                                                   DRIVER
+      IF(ISET.EQ.1.AND.NADD.LT.1) GO TO 740                              DRIVER
+      IF(ITERA.GE.4)GO TO 770                                            DRIVER
+      IF(ITERA.EQ.3)GO TO 760                                            DRIVER
+      IF(ITERA.EQ.2)GO TO 747                                            DRIVER
+  745 DO 746 I=1,IS                                                      DRIVER
+  746 SSAV(3,I)=S(I)                                                     DRIVER
+      GO TO 731                                                          DRIVER
+  747 DO 755 I=1,IS                                                      DRIVER
+      SSAV(2,I)=S(I)                                                     DRIVER
+  755 S(I)= (SSAV(3,I)+SSAV(2,I))/2.                                     DRIVER
+      GO TO 731                                                          DRIVER
+  760 DO 765 I= 1,IS                                                     DRIVER
+      SSAV(1,I)=S(I)                                                     DRIVER
+  765 S(I) = (SSAV(3,I)+SSAV(2,I)+SSAV(1,I))/3.                          DRIVER
+      GO TO 710                                                          DRIVER
+  770 DO 775 I=1,IS                                                      DRIVER
+      T(I)= S(I)                                                         DRIVER
+      S(I)=(SSAV(3,I)+SSAV(2,I)+SSAV(1,I)+S(I))/4.                       DRIVER
+      SSAV(3,I)=SSAV(2,I)                                                DRIVER
+      SSAV(2,I)=SSAV(1,I)                                                DRIVER
+  775 SSAV(1,I) = T(I)                                                   DRIVER
+  710 DO 720 I=1,IS                                                      DRIVER
+      DELS = SSAV(2,I)-SSAV(1,I)                                         DRIVER
+         ADELS=ABS(DELS)                                                 DRIVER
+      IF(ADELS.GT..001) GO TO 731                                        DRIVER
+  720 CONTINUE                                                           DRIVER
+      GO TO 740                                                          DRIVER
+  731 IGO = 0                                                            DRIVER
+      GO TO 735                                                          DRIVER
+  740 CONTINUE                                                           DRIVER
+      IGO=1                                                              DRIVER
+      IF(IUFLAG.EQ.0) WRITE(6,800)                                       DRIVER
+      IF(IUFLAG.EQ.1) WRITE(6,801)                                       DRIVER
+  800 FORMAT(1H1//5X,6HX (IN),14X,8HT (DEGR))                            DRIVER
+  801 FORMAT(1H1//5X,6HX (CM),14X,8HT (DEGK))                            DRIVER
+      IC=IC+1                                                            DRIVER
+      ICC=0                                                              DRIVER
+      DO 900 I=1,IS                                                      DRIVER
+      IF (IFL(I).EQ.2)  GO TO 900                                        DRIVER
+      IF(IUFLAG.EQ.1) Z(I)=Z(I)*2.54                                     DRIVER
+      Z(I) = Z(I)*XL                                                     DRIVER
+      IF(IUFLAG.EQ.1) S(I)=S(I)/1.8                                      DRIVER
+      IF (S(I).LT.YMIN) YMIN=S(I)                                        DRIVER
+      IF (S(I).GT.YMAX) YMAX=S(I)                                        DRIVER
+      IF(Z(I).LT.XMIN) XMIN=Z(I)                                         DRIVER
+      IF(Z(I).GT.XMAX) XMAX = Z(I)                                       DRIVER
+      ICC=ICC+1                                                          DRIVER
+      Z(ICC) = Z(I)                                                      DRIVER
+      PY(IC,ICC)=S(I)                                                    DRIVER
+      WRITE(6,850) Z(I),S(I)                                             DRIVER
+  850 FORMAT (1PE15.6,5X,E15.6)                                          DRIVER
+  900 CONTINUE                                                           DRIVER
+      IF(P1SUM.EQ.99999..AND.P2SUM.EQ.99999.) GO TO 1003                 DRIVER
+      IF(P2SUM.EQ.99999.)WRITE(6,1004)P1SUM                              DRIVER
+ 1004 FORMAT(////1X,*P1=*,F10.4)                                         DRIVER
+      IF(P1SUM.NE.99999..AND.P2SUM.NE.99999.) WRITE(6,1002)P1SUM,P2SUM   DRIVER
+ 1003 CONTINUE                                                           DRIVER
+ 1002 FORMAT(////1X,*P1=*,F10.4,5X,*P2=*,F10.4)                          DRIVER
+      ANS = (TT1(1)+TT1(2))/2.*A(1)*(S(2)-S(1))/((Z(2)-Z(1))*12.)        DRIVER
+      ANS1 = (TT1(IS)+TT1(IS-1))/2.*A(LTAB)*(S(IS)-S(IS-1))/             DRIVER
+     1     ((Z(IS)-Z(IS-1))*12.)                                         DRIVER
+      IF(ISET.GT.1)ICON=ITERA                                            DRIVER
+      IF(IUFLAG.EQ.1) ANS = ANS/3.413*2.54*1.8                           DRIVER
+      IF(IUFLAG.EQ.1) ANS1 = ANS1/3.413*2.54*1.8                         DRIVER
+      IF(IUFLAG.EQ.0) WRITE(6,1000) ANS,ANS1,ICON                        DRIVER
+      IF(IUFLAG.EQ.1) WRITE(6,1001) ANS,ANS1,ICON                        DRIVER
+ 1000 FORMAT(//14H HEAT TRANSFER,4X,*BTU/HR*/6H AT X1,1PE15.6/           DRIVER
+     *6H AT X2,E15.6/11H ITERATIONS,I15)                                 DRIVER
+ 1001 FORMAT(//14H HEAT TRANSFER,4X,*WATTS*/6H AT X1,1PE15.6/            DRIVER
+     *6H AT X2,E15.6/11H ITERATIONS,I15)                                 DRIVER
+  735 IF(IGO.EQ.1) GO TO 750                                             DRIVER
+C                                                                        DRIVER
+C        PRIMARY INNER LOOP TERMINATION                                  DRIVER
+C                                                                        DRIVER
+      GO TO 12                                                           DRIVER
+C                                                                        DRIVER
+C        P1 AND P2 LOOP TERMINATIONS                                     DRIVER
+C                                                                        DRIVER
+  750 CONTINUE                                                           DRIVER
+  996 CONTINUE                                                           DRIVER
+  997 CONTINUE                                                           DRIVER
+      IF(IPLOT.NE.0) CALL PLOTCV(IENTR,P1STAR,P2SUM,P1SAS,IPLOT)         DRIVER
+      IENTR=1                                                            DRIVER
+  998 CONTINUE                                                           DRIVER
+  999 CONTINUE                                                           DRIVER
+      GO TO 100                                                          DRIVER
+ 2000 PRINT 2010                                                         DRIVER
+ 2010 FORMAT(* INCORRECT GRID SPECIFIED IN DATA*)                        DRIVER
+      GO TO 100                                                          DRIVER
+ 3000 PRINT 3010                                                         DRIVER
+ 3010 FORMAT(* NUMBER OF GRID POINTS EXCEEDS PROGRAM DIMENSIONS*)        DRIVER
+      GO TO 100                                                          DRIVER
+      END                                                                DRIVER
+      SUBROUTINE IN                                                      IN
+C                                                                        IN
+      COMMON / INPT / XL,T0,TL,X(50),XK(50),C(50),A(50),                 IN
+     * Q(50),TE(50),SF(50),N(50),LTAB,E,IUFLAG,IPLOT                     IN
+C                                                                        IN
+      COMMON / LGT / PRNUM, TSTART                                       IN
+C                                                                        IN
+      COMMON /CHECK/ TABCHK(10),ALPHA(4,50),BETA(4,50),XZONE(50),NXV,    IN
+     *PCHK(2),CHECK(2),CALPHA(50),AALPHA(50),PHA(4,50),TT(10,10),        IN
+     *VV(10,10),NTV(10),TS(10),VS(10)                                    IN
+C                                                                        IN
+      COMMON /NAME/ T1(10),V1(10),T2(10),V2(10),T3(10),V3(10),           IN
+     *T4(10),V4(10),T5(10),V5(10),T6(10),V6(10),T7(10),V7(10),           IN
+     *T8(10),V8(10),T9(10),V9(10),T10(10),V10(10),                       IN
+     *P1(3),P2(3)                                                        IN
+C                                                                        IN
+      COMMON /PLOT/ PPY(400), PY(10,400), IC, ICC, YMIN,YMAX,XMIN,XMAX   IN
+C                                                                        IN
+      NAMELIST /TVP/ T1,V1,T2,V2,T3,V3,T4,V4,T5,V5,T6,V6,T7,V7,T8,V8,    IN
+     *T9,V9,T10,V10,P1,P2                                                IN
+C                                                                        IN
+C        DATA FIELD READ AND PRINTED                                     IN
+C                                                                        IN
+   50 READ(5,100) XLTEM,T0TEM,TLTEM,LTAB,IUFLAG,IPLOT                    IN
+  100 FORMAT(3A10,I10,2(9X,I1))                                          IN
+      DECODE(10,403,XLTEM)XL                                             IN
+      DECODE(10,403,T0TEM)T0                                             IN
+      DECODE(10,403,TLTEM)TL                                             IN
+      IF (EOF(5)) 150, 175                                               IN
+  150 CALL LOGOUT(PRNUM,TSTART)                                          IN
+  175 CONTINUE                                                           IN
+      WRITE(6,200)                                                       IN
+  200 FORMAT(1H1/11H INPUT DATA/1X,3X,1HL,9X,2HT0,8X,2HTL,13X,2HNC)      IN
+      WRITE(6,201)XLTEM,T0TEM,TLTEM,LTAB,IUFLAG,IPLOT                    IN
+  201 FORMAT(1X,3A10,I10,2(9X,I1))                                       IN
+      IF (LTAB.GT.50) GO TO 450                                          IN
+      READ (5,275) (X(I),XK(I),C(I),A(I),Q(I),TE(I),SF(I),N(I),I=1,LTAB) IN
+  275 FORMAT(7A10,I10)                                                   IN
+  300 FORMAT(1X,7A10,I10)                                                IN
+      WRITE (6,400)                                                      IN
+  400 FORMAT(4X,1HX,9X,1HK,9X,1HC,9X,1HA,9X,1HQ,8X,2HTE,8X,2HSF,15X,1HN) IN
+      WRITE (6,300) (X(I),XK(I),C(I),A(I),Q(I),TE(I),SF(I),N(I),I=1,LTAB IN
+     *)                                                                  IN
+C                                                                        IN
+C        NAMELIST READ,ARRAYS RESTRUCTURED, AND VALUES PRINTED.          IN
+C                                                                        IN
+      READ(5,TVP)                                                        IN
+      IF(EOF(5)) 505,510                                                 IN
+  510 DO 520 I2=1,10                                                     IN
+         TT(1,I2)=T1(I2)                                                 IN
+         TT(2,I2)=T2(I2)                                                 IN
+         TT(3,I2)=T3(I2)                                                 IN
+         TT(4,I2)=T4(I2)                                                 IN
+         TT(5,I2)=T5(I2)                                                 IN
+         TT(6,I2)=T6(I2)                                                 IN
+         TT(7,I2)=T7(I2)                                                 IN
+         TT(8,I2)=T8(I2)                                                 IN
+         TT(9,I2)=T9(I2)                                                 IN
+         TT(10,I2)=T10(I2)                                               IN
+         VV(1,I2)=V1(I2)                                                 IN
+         VV(2,I2)=V2(I2)                                                 IN
+         VV(3,I2)=V3(I2)                                                 IN
+         VV(4,I2)=V4(I2)                                                 IN
+         VV(5,I2)=V5(I2)                                                 IN
+         VV(6,I2)=V6(I2)                                                 IN
+         VV(7,I2)=V7(I2)                                                 IN
+         VV(8,I2)=V8(I2)                                                 IN
+         VV(9,I2)=V9(I2)                                                 IN
+         VV(10,I2)=V10(I2)                                               IN
+  520 CONTINUE                                                           IN
+      DO 516 J=1,10                                                      IN
+      DO 515 I=1,10                                                      IN
+  515 IF(VV(J,I).NE.99999.) NTV(J)=NTV(J)+1                              IN
+  516 CONTINUE                                                           IN
+      I1=1                                                               IN
+      DO 102 I=2,10                                                      IN
+      IF(TT(I,1).EQ.99999..AND.VV(I,1).NE.99999.) 98,103                 IN
+   98 K1=NTV(I)                                                          IN
+      DO 101 K=1,K1                                                      IN
+  101 TT(I,K)=TT(I1,K)                                                   IN
+      GO TO 102                                                          IN
+  103 I1=I                                                               IN
+  102 CONTINUE                                                           IN
+      WRITE(6,309)                                                       IN
+  309 FORMAT(///)                                                        IN
+      DO 310 I=1,9                                                       IN
+      IF(VV(I,1).EQ.99999.) GO TO 310                                    IN
+      NIT=NTV(I)                                                         IN
+      WRITE(6,311) I,(TT(I,IT),IT=1,NIT)                                 IN
+      WRITE(6,312) I,(VV(I,IT),IT=1,NIT)                                 IN
+C     WRITE(6,311) I,TT(I,1),TT(I,2),TT(I,3),TT(I,4),TT(I,5),            IN
+C    *               TT(I,6),TT(I,7),TT(I,8),TT(I,9),TT(I,10)            IN
+C     WRITE(6,312) I,VV(I,1),VV(I,2),VV(I,3),VV(I,4),VV(I,5),            IN
+C    *               VV(I,6),VV(I,7),VV(I,8),VV(I,9),VV(I,10)            IN
+  310 CONTINUE                                                           IN
+  311 FORMAT(1X,*T*,I1,* =*,10(F12.4))                                   IN
+  312 FORMAT(1X,*V*,I1,* =*,10(F12.4))                                   IN
+  315 IF(VV(10,1).EQ.99999.) GO TO 316                                   IN
+      NIT=NTV(10)                                                        IN
+      WRITE(6,313) (TT(10,IT),IT=1,NIT)                                  IN
+      WRITE(6,314) (VV(10,IT),IT=1,NIT)                                  IN
+C     WRITE(6,313)   TT(10,1),TT(10,2),TT(10,3),TT(10,4),TT(10,5),       IN
+C    *               TT(10,6),TT(10,7),TT(10,8),TT(10,9),TT(10,10)       IN
+C     WRITE(6,314)   VV(10,1),VV(10,2),VV(10,3),VV(10,4),VV(10,5),       IN
+C    *               VV(10,6),VV(10,7),VV(10,8),VV(10,9),VV(10,10)       IN
+  313 FORMAT(1X,*T10=*,10(F12.4))                                        IN
+  314 FORMAT(1X,*V10=*,10(F12.4))                                        IN
+  316 IF(P1(1).EQ.99999.) GO TO 317                                      IN
+      WRITE(6,318)(P1(I),I=1,3)                                          IN
+  318 FORMAT(1X,*P1 =*,3(F12.4))                                         IN
+  317 IF(P2(1).EQ.99999.) GO TO 504                                      IN
+      WRITE(6,319)(P2(I),I=1,3)                                          IN
+  319 FORMAT(1X,*P2 =*,3(F12.4))                                         IN
+  504 CONTINUE                                                           IN
+C     WRITE(6,TVP)                                                       IN
+C                                                                        IN
+C        DATA FIELD DECODED AND INTERPOLATION ZONES ESTABLISHED          IN
+C                                                                        IN
+  505 NXV=0                                                              IN
+      DO 499 I=1,LTAB                                                    IN
+      IOFF=0                                                             IN
+      DECODE(10,413,X(I)) XTEM                                           IN
+      DECODE(10,403,XTEM) X(I)                                           IN
+      DECODE(10,407,C(I)) ACHECK                                         IN
+      IF(ACHECK.NE.CHECK(2)) GO TO 408                                   IN
+      DECODE(10,401,C(I)) CALPHA(I)                                      IN
+      IF(CALPHA(I).EQ.PCHK(1)) C(I)=P1(I)                                IN
+      IF(CALPHA(I).EQ.PCHK(2)) C(I)=P2(1)                                IN
+      GO TO 409                                                          IN
+  408 DECODE(10,413,C(I)) CTEM                                           IN
+      DECODE(10,403,CTEM) C(I)                                           IN
+  409 CONTINUE                                                           IN
+      DECODE(10,407,A(I)) ACHECK                                         IN
+      IF(ACHECK.NE.CHECK(2)) GO TO 410                                   IN
+      DECODE(10,401,A(I)) AALPHA(I)                                      IN
+      IF(AALPHA(I).EQ.PCHK(1)) A(I)=P1(1)                                IN
+      IF(AALPHA(I).EQ.PCHK(2)) A(I)=P2(1)                                IN
+      GO TO 411                                                          IN
+  410 DECODE(10,413,A(I)) ATEM                                           IN
+      DECODE(10,403,ATEM) A(I)                                           IN
+  411 CONTINUE                                                           IN
+      DECODE(10,407,XK(I))ACHECK                                         IN
+  407 FORMAT(A1)                                                         IN
+      IF(ACHECK.NE.CHECK(1).AND.ACHECK.NE.CHECK(2)) GO TO 414            IN
+      DECODE(10,401,XK(I))ALPHA(1,I)                                     IN
+  401 FORMAT(A3)                                                         IN
+  402 FORMAT(3X,A7)                                                      IN
+      DO 110 JJ=1,10                                                     IN
+      IF(ALPHA(1,I).NE.TABCHK(JJ)) GO TO 110                             IN
+      NTK=NTV(JJ)                                                        IN
+      XKSUM=0                                                            IN
+      DO 111 KK=1,NTK                                                    IN
+      XKSUM=VV(JJ,KK)+XKSUM                                              IN
+  111 CONTINUE                                                           IN
+      XK(I)=XKSUM/NTK                                                    IN
+  110 CONTINUE                                                           IN
+  403 FORMAT(E10.0)                                                      IN
+      IF(ACHECK.EQ.CHECK(1)) GO TO 423                                   IN
+      IF(ALPHA(1,I).EQ.PCHK(1)) XK(I)=P1(1)                              IN
+      IF(ALPHA(1,I).EQ.PCHK(2)) XK(I)=P2(1)                              IN
+      GO TO 404                                                          IN
+  423 IOFF=1                                                             IN
+      NXV=NXV+1                                                          IN
+      XZONE(NXV)=X(I)/XL                                                 IN
+      DECODE(10,401,ALPHA(1,I)) PHA(1,NXV)                               IN
+      GO TO 404                                                          IN
+  414 DECODE(10,413,XK(I)) BETA(1,I)                                     IN
+  413 FORMAT(A10)                                                        IN
+      DECODE(10,403,BETA(1,I)) XK(I)                                     IN
+  404 CONTINUE                                                           IN
+      DECODE(10,407,Q(I))ACHECK                                          IN
+      IF(ACHECK.NE.CHECK(1).AND.ACHECK.NE.CHECK(2)) GO TO 415            IN
+      DECODE(10,401,Q(I))ALPHA(2,I)                                      IN
+      DO 120 JJ=1,10                                                     IN
+      IF(ALPHA(2,I).NE.TABCHK(JJ)) GO TO 120                             IN
+      NTK=NTV(JJ)                                                        IN
+      QSUM=0                                                             IN
+      DO 121 KK=1,NTK                                                    IN
+      QSUM=VV(JJ,KK)+ QSUM                                               IN
+  121 CONTINUE                                                           IN
+      Q(I)=QSUM/NTK                                                      IN
+  120 CONTINUE                                                           IN
+      IF(ACHECK.EQ.CHECK(1)) GO TO 421                                   IN
+      IF(ALPHA(2,I).EQ.PCHK(1)) Q(I)=P1(1)                               IN
+      IF(ALPHA(2,I).EQ.PCHK(2)) Q(I)=P2(1)                               IN
+      GO TO 405                                                          IN
+  421 IF(IOFF.EQ.1) GO TO 430                                            IN
+      IOFF=1                                                             IN
+      NXV=NXV+1                                                          IN
+      XZONE(NXV)=X(I)/XL                                                 IN
+  430 DECODE(10,401,ALPHA(2,I)) PHA(2,NXV)                               IN
+      GO TO 405                                                          IN
+  415 DECODE(10,413,Q(I))BETA(2,I)                                       IN
+      DECODE(10,403,BETA(2,I))Q(I)                                       IN
+  405 CONTINUE                                                           IN
+      DECODE(10,407,TE(I))ACHECK                                         IN
+      IF(ACHECK.NE.CHECK(2)) GO TO 416                                   IN
+      DECODE(10,401,TE(I))ALPHA(3,I)                                     IN
+      IF(ALPHA(3,I).EQ.PCHK(1)) TE(I)=P1(1)                              IN
+      IF(ALPHA(3,I).EQ.PCHK(2)) TE(I)=P2(1)                              IN
+      GO TO 406                                                          IN
+  416 DECODE(10,413,TE(I))BETA(3,I)                                      IN
+      DECODE(10,403,BETA(3,I))TE(I)                                      IN
+  406 CONTINUE                                                           IN
+      DECODE(10,407,SF(I))ACHECK                                         IN
+      IF(ACHECK.NE.CHECK(1).AND.ACHECK.NE.CHECK(2)) GO TO 419            IN
+      DECODE(10,401,SF(I))ALPHA(4,I)                                     IN
+      DO 130 JJ=1,10                                                     IN
+      IF(ALPHA(4,I).NE.TABCHK(JJ)) GO TO 130                             IN
+      NTK=NTV(JJ)                                                        IN
+      SFSUM=0                                                            IN
+      DO 131 KK=1,NTK                                                    IN
+      SFSUM=VV(JJ,KK)+SFSUM                                              IN
+  131 CONTINUE                                                           IN
+      SF(I)=SFSUM/NTK                                                    IN
+  130 CONTINUE                                                           IN
+      IF(ACHECK.EQ.CHECK(1)) GO TO 422                                   IN
+      IF(ALPHA(4,I).EQ.PCHK(1)) SF(I)=P1(1)                              IN
+      IF(ALPHA(4,I).EQ.PCHK(2)) SF(I)=P2(1)                              IN
+      GO TO 499                                                          IN
+  422 IF(IOFF.EQ.1) GO TO 431                                            IN
+      IOFF=1                                                             IN
+      NXV=NXV+1                                                          IN
+      XZONE(NXV)=X(I)/XL                                                 IN
+  431 DECODE(10,401,ALPHA(4,I)) PHA(4,NXV)                               IN
+      GO TO 499                                                          IN
+  419 DECODE(10,413,SF(I))BETA(4,I)                                      IN
+      DECODE(10,403,BETA(4,I))SF(I)                                      IN
+  499 CONTINUE                                                           IN
+C                                                                        IN
+C     WRITE(6,302)(X(I),XK(I),C(I),A(I),Q(I),TE(I),SF(I),N(I),I=1,LTAB)  IN
+  302 FORMAT(//,1X,7E15.6,5X,I10)                                        IN
+C                                                                        IN
+C        X(I) RESCALED                                                   IN
+C                                                                        IN
+      DO 420 I=1,LTAB                                                    IN
+  420 X(I)=X(I)/XL                                                       IN
+      ONE=1.                                                             IN
+      ONE=SIGN(ONE,TL)                                                   IN
+      E=-1.E+10                                                          IN
+      IF (ONE.LT.0.) TL=E                                                IN
+C                                                                        IN
+      RETURN                                                             IN
+C                                                                        IN
+  450 WRITE (6,500)                                                      IN
+  500 FORMAT(49H0NUMBER OF INPUT CARDS EXCEEDS PROGRAM DIMENSIONS)       IN
+      DO 600 I=1,LTAB                                                    IN
+      READ (5,550) DTL                                                   IN
+  550 FORMAT(A10)                                                        IN
+  600 CONTINUE                                                           IN
+      GO TO 50                                                           IN
+      END                                                                IN
+      SUBROUTINE EVAL(X,F)                                               EVAL
+      DIMENSION X(1),F(1)                                                EVAL
+      COMMON / INPT / XL,T0,TL,G(50),XK(50),C(50),A(50),                 EVAL
+     * Q(50),TE(50),SF(50),N(50),LTAB,E                                  EVAL
+C                                                                        EVAL
+      COMMON /STO/ Z(400),T(400),C1(400),C2(400),C3(400),C4(400),        EVAL
+     *             C5(400),IFL(400),XKA(400),S(400),INO,IS,ISM2          EVAL
+      DO 100 I=1,ISM2                                                    EVAL
+      IF (IFL(I+1).EQ.3) GO TO 50                                        EVAL
+      F(I)=C3(I+1)*X(I+1) + C4(I+1)*X(I-1) + C5(I+1)*X(I) +C1(I+1)*      EVAL
+     * X(I)**4 +C2(I+1)                                                  EVAL
+      GO TO 100                                                          EVAL
+   50 F(I)=X(I)-((X(I+1)*XKA(I+2)+X(I-1)*XKA(I))/XKA(I+1))               EVAL
+  100 CONTINUE                                                           EVAL
+      IF (TL.NE.E) GO TO 400                                             EVAL
+C     WE HAVE A DERIVATIVE BOUNDARY CONDITION.                           EVAL
+      F(INO)=(X(INO)-X(INO-1))/(Z(IS)-Z(IS-1))                           EVAL
+  400 RETURN                                                             EVAL
+      END                                                                EVAL
+      FUNCTION SLI(ARG,NX,X,Y)                                           SLI
+      DIMENSION X(100),Y(100)                                            SLI
+C                                                                        SLI
+      XA=ARG                                                             SLI
+      I=I-1                                                              SLI
+      N3=NX                                                              SLI
+    5 IF (XA-X(1))217,217,10                                             SLI
+   10 IF (I-1) 20,20,40                                                  SLI
+   20 I=2                                                                SLI
+   40 IF (I-N3) 80,60,60                                                 SLI
+   60 I=MAX0(2,N3/2)                                                     SLI
+   80 N2=I                                                               SLI
+      IF (X(I)) 100,100,90                                               SLI
+   90 IF (X(I)-XA) 140,250,100                                           SLI
+  100 DO 120 I=2,N2                                                      SLI
+      IF (X(I)-XA) 120,250,260                                           SLI
+  120 CONTINUE                                                           SLI
+  140 DO 160 I=N2,N3                                                     SLI
+      IF (X(I)-XA) 160,250,260                                           SLI
+  160 CONTINUE                                                           SLI
+  180 IF (XA-X(N3)) 230,240,240                                          SLI
+  200 WRITE (6,210) XA                                                   SLI
+  210 FORMAT(14H0THE ARGUMENT 1P1E12.4,28HIS OUT OF RANGE OF THE TABLE)  SLI
+      IF (XA-X(I)) 212,212,213                                           SLI
+  212 IF (ABS((XA-X(1))/(.0000001+X(1)))-.05) 217,217,219                SLI
+  213 XMAX=X(1)                                                          SLI
+      DO 215 J=2,NX                                                      SLI
+      IF (XMAX-X(J)) 214,214,215                                         SLI
+  214 XMAX=X(J)                                                          SLI
+      K=J                                                                SLI
+  215 CONTINUE                                                           SLI
+      IF (ABS((XA-XMAX)/(.0000001+XMAX))-.05) 216,216,219                SLI
+  216 SLI=Y(K)                                                           SLI
+      RETURN                                                             SLI
+  217 SLI=Y(1)                                                           SLI
+      RETURN                                                             SLI
+  219 CALL PDUMP(X(1),X(NX),1)                                           SLI
+      CALL EXIT                                                          SLI
+  230 I=1                                                                SLI
+      GO TO 250                                                          SLI
+  240 I=N3                                                               SLI
+  250 SLI=Y(I)                                                           SLI
+      RETURN                                                             SLI
+  260 SLI=Y(I-1)+(XA-X(I-1))*(Y(I)-Y(I-1))/(X(I)-X(I-1))                 SLI
+      RETURN                                                             SLI
+      END                                                                SLI
+      SUBROUTINE NONLIN(N,GUES,ANS,X1,X2,X3,A,ITO ,ICON ,EVAL)           NONLIN
+C                                                                        NONLIN
+C     THIS IS THE NEWTON RAPHSON METHOD FOR A SYSTEM OF NONLINEAR EQUATI NONLIN
+C                                                                        NONLIN
+C     ARGUMENT LIST                                                      NONLIN
+C                                                                        NONLIN
+C     N    = NUMBER OF EQUATIONS AND UNKNOWNS. ALL OF THE FOLLOWING VECT NONLIN
+C            MUST BE AT LEAST N CELLS LONG.                              NONLIN
+C     GUES = VECTOR OF INITIAL GUESSES                                   NONLIN
+C     ANS  = VECTOR WHERE FINAL ANSWERS ARE STORED                       NONLIN
+C     X1   = STORAGE VECTOR                                              NONLIN
+C     X2   = STORAGE VECTOR                                              NONLIN
+C     X3   = STORAGE VECTOR                                              NONLIN
+C     A    = STORAGE MATRIX - MUST BE AT LEAST N*N CELLS LONG.           NONLIN
+C     ITO  = THE NUMBER OF SIGNIFICANT DECIMAL DIGITS ACCURACY DESIRED I NONLIN
+C     ICON  = THE NUMBER OF ITERATIONS DESIRED ON INPUT.  ON OUTPUT, IT  NONLIN
+C            IS THE ACTUAL NUMBER OF ITERATIONS NEEDED FOR CONVERGENCE.  NONLIN
+C            AN ABORT HAS OCCURRED IF THE VALUE IS 0 ON OUTPUT.          NONLIN
+C            IF THE VALUE IS NEGATIVE ON INPUT A HIGHER ORDER DERIVATIVE NONLIN
+C            IS CALCULATED.                                              NONLIN
+C     EVAL = EXTERNAL NAME OF THE USERS FUNCTIONAL EVALUATION SUBROUTINE NONLIN
+      EXTERNAL EVAL                                                      NONLIN
+      DIMENSION GUES(1),ANS(1),X1(1),X2(1),X3(1),A(400,3)                NONLIN
+      ICONV=IABS(ICON)                                                   NONLIN
+      ISTOP=ICONV                                                        NONLIN
+      IF (ICONV.EQ.0.OR.ICONV.GT.1000)  ISTOP=100                        NONLIN
+      ICONV=1                                                            NONLIN
+      IFLAG=0                                                            NONLIN
+      IF (ICON.LT.0)  IFLAG=1                                            NONLIN
+      ITOL=ITO                                                           NONLIN
+      IF (ITOL.LT.1.OR.ITOL.GT.14) ITOL=14                               NONLIN
+      TOL= 10.0**(-2*ITOL)                                               NONLIN
+      NN=N                                                               NONLIN
+      IF(NN.LT.1.OR.NN.GT.1000)GO TO 9000                                NONLIN
+  100 DO 200 I=1,NN                                                      NONLIN
+  200 ANS(I)=GUES(I)                                                     NONLIN
+C     X2=F(X)                                                            NONLIN
+  250 CALL EVAL(GUES,X2)                                                 NONLIN
+      CALL GRAD(GUES,A,N)                                                NONLIN
+      DO 300 I=1,NN                                                      NONLIN
+  300 X2(I)=-X2(I)                                                       NONLIN
+C     INVERT THE JACOBIAN OF THE SYSTEM                                  NONLIN
+      CALL TRIDAG(NN,A(1,3),A(1,2),A(1,1),X2,GUES,X1,X3)                 NONLIN
+      SF=1.0                                                             NONLIN
+      CALL EVAL(ANS,X2)                                                  NONLIN
+C     TEST FOR CONVERGENCE                                               NONLIN
+  750 CONTINUE                                                           NONLIN
+      SUM=0.0                                                            NONLIN
+      SUM1=0.0                                                           NONLIN
+      SUM2=0.0                                                           NONLIN
+      DO 800 I=1,NN                                                      NONLIN
+      SUM=SUM+GUES(I)**2                                                 NONLIN
+      ANS(I)=ANS(I)+GUES(I)*SF                                           NONLIN
+      SUM2=SUM2+X2(I)**2                                                 NONLIN
+  800 SUM1=SUM1+ ANS(I)**2                                               NONLIN
+      CALL EVAL(ANS,X1)                                                  NONLIN
+      SUM3=0.0                                                           NONLIN
+      DO 850 I=1,NN                                                      NONLIN
+  850 SUM3=SUM3+X1(I)**2                                                 NONLIN
+      IF (SUM3.LT.SUM2)  GO TO 870                                       NONLIN
+      SF=-ABS(SF/2.0)                                                    NONLIN
+      IF (ABS(SF).LT.1.0E-10)  GO TO 9300                                NONLIN
+      GO TO 750                                                          NONLIN
+  870 CONTINUE                                                           NONLIN
+      IF (SUM.EQ.0.0.AND.SUM1.EQ.0.0)   GO TO 10000                      NONLIN
+      IF (SUM/SUM1.LT.TOL) GO TO 10000                                   NONLIN
+      ICONV=ICONV+1                                                      NONLIN
+      IF (ICONV.GT.ISTOP) GO TO 9100                                     NONLIN
+      DO 900 I=1,NN                                                      NONLIN
+  900 GUES(I)=ANS(I)                                                     NONLIN
+      GO TO 250                                                          NONLIN
+C     ERROR MESSAGES                                                     NONLIN
+ 9000 PRINT 9010                                                         NONLIN
+ 9010 FORMAT(52H THE NUMBER N OF EQUATIONS IS 0, NEGATIVE OR GT 1000 )   NONLIN
+      GO TO 10000                                                        NONLIN
+ 9100 PRINT 9110,ISTOP                                                   NONLIN
+ 9110 FORMAT(38H THE NUMBER OF ITERATIONS HAS EXCEEDED , I6 )            NONLIN
+      GO TO 9900                                                         NONLIN
+ 9300 PRINT 9310                                                         NONLIN
+ 9310 FORMAT( 34H RESIDUAL VECTOR DOES NOT DECREASE  )                   NONLIN
+      GO TO 10000                                                        NONLIN
+ 9900 ICONV=0                                                            NONLIN
+10000 ICON=ICONV                                                         NONLIN
+      RETURN                                                             NONLIN
+      END                                                                NONLIN
+      SUBROUTINE TRIDAG(N,A,B,C,D,Z,W,G)                                 TRIDAG
+C  SIMULTANEOUS LINEAR EQUATIONS SOLUTION OF TRIDIAGONAL COEFFICIENT     TRIDAG
+C        MATRIX                                                          TRIDAG
+C  N    ...MINIMUM LENGTH OF ARRAYS A,B,C,D,Z,W,G                        TRIDAG
+C  A    ...LOWER DIAGONAL OF COEFFICIENT MATRIX IN A(2) TO A(N)          TRIDAG
+C  B    ...DIAGONAL OF COEFFICIENT MATRIX IN B(1) GO B(N)                TRIDAG
+C  C    ...UPPER DIAGONAL OF COEFFICIENT MATRIX IN C(1) TO C(N-1)        TRIDAG
+C  D    ...RIGHT HAND SIDE                                               TRIDAG
+C  Z    ...ANSWER                                                        TRIDAG
+C  W,G  ...TEMPORARY STORAGE ARRAYS                                      TRIDAG
+C  REF. SHARE PROGRAM SDA3382                                            TRIDAG
+C     SOLUTION OF THE FOLLOWING SYSTEM OF EQUATIONS                      TRIDAG
+C     A(K)*Z(K-1) + B(K)*Z(K) + C(K)*Z(K + 1) = D(K)        K = 1,...N   TRIDAG
+C                      A(1) = 0.   C(N) = 0.                             TRIDAG
+      DIMENSION A(1),B(1),C(1),D(1),Z(1),W(1),G(1)                       TRIDAG
+                                                  W(1) = C(1)/B(1)       TRIDAG
+                                                  G(1) = D(1)/B(1)       TRIDAG
+      DO 1      I=2,N                                                    TRIDAG
+        BAW = B(I) - A(I)*W(I-1)                                         TRIDAG
+       W(I) =            C(I) / BAW                                      TRIDAG
+    1  G(I) =(D(I) - A(I)*G(I-1))/ BAW                                   TRIDAG
+                                                  Z(N) = G(N)            TRIDAG
+                                                    N1 = N-1             TRIDAG
+      DO 2      I=1,N1                                                   TRIDAG
+          J = N-I                                                        TRIDAG
+    2  Z(J) = G(J) - W(J)* Z(J+1)                                        TRIDAG
+      RETURN                                                             TRIDAG
+       END                                                               TRIDAG
+      SUBROUTINE GRAD(GUES,A,N)                                          GRAD
+      DIMENSION GUES(1),A(400,3)                                         GRAD
+      COMMON / INPT / XL,T0,TL,G(50),XK(50),C(50),P(50),                 GRAD
+     * Q(50),TE(50),SF(50),H(50),LTAB,E                                  GRAD
+C                                                                        GRAD
+      COMMON /STO/ Z(400),T(400),C1(400),C2(400),C3(400),C4(400),        GRAD
+     *             C5(400),IFL(400),XKA(400),S(400),INO,IS,ISM2          GRAD
+      DO 100 I=1,ISM2                                                    GRAD
+      IF (IFL(I+1).EQ.3) GO TO 100                                       GRAD
+      A(I,1)= C3(I+1)                                                    GRAD
+      A(I,2)= C5(I+1)+4.0*C1(I+1)*GUES(I)**3                             GRAD
+      A(I,3)= C4(I+1)                                                    GRAD
+  100 CONTINUE                                                           GRAD
+      A(1,3)=0.0                                                         GRAD
+      IF (TL.NE.E) GO TO 400                                             GRAD
+      A(INO,1)=0.0                                                       GRAD
+      A(INO,2)= 1.0/(Z(IS)-Z(IS-1))                                      GRAD
+      A(INO,3)= -A(INO,2)                                                GRAD
+      GOTO 500                                                           GRAD
+  400 A(ISM2,1)=0.0                                                      GRAD
+  500 CONTINUE                                                           GRAD
+      RETURN                                                             GRAD
+      END                                                                GRAD
+      SUBROUTINE LOGO (PRNUM,PRNAME,NCHAR,VSPECS,NWORDS,NLINES,CMPDT     LOGO
+     *,DVSN,ENGGRP,PRDOC,IDATE,NCORE,TSTART)                             LOGO
+C                                                                        LOGO
+C     LOGO DETERMINES CURRENT DATE AND CORE SIZE, PRINTS DAYFILE PROGRAM LOGO
+C     START MESSAGE, AND PRINTS FANFARE.                                 LOGO
+C     PRNUM IS LEFT JUSTIFIED, 5- OR 6-CHARACTER HOLLERITH PROGRAM NO.   LOGO
+C     PRNAME IS HOLLERITH PROGRAM NAME OF NCHAR CHARACTERS IN LENGTH.    LOGO
+C     NCHAR SHOULD NOT BE GREATER THAN 130.                              LOGO
+C     VSPECS IS AN OPTIONAL HOLLERITH PROGRAM SPECIFICATION MATRIX OF    LOGO
+C     NLINES LINES OF NWORDS WORDS EACH.                                 LOGO
+C     NLINES SHOULD NOT BE GREATER THAN 5 AND NWORDS SHOULD BE 6 OR LESS LOGO
+C     CMPDT IS AN 8-CHARACTER HOLLERITH DATE OF THE MOST RECENT PROGRAM  LOGO
+C     COMPILATION OF THE FORM MM/DD/YY.                                  LOGO
+C     DVSN IS A 40-CHARACTER HOLLERITH DIVISION OF GENERAL DYNAMICS,     LOGO
+C     CENTERED WITHIN THE 40 CHARACTERS.                                 LOGO
+C     ENGGRP IS A 40-CHARACTER HOLLERITH ENGINEERING GROUP NAME,         LOGO
+C     CENTERED WITHIN THE 40 CHARACTERS.                                 LOGO
+C     PRDOC IS A 20-CHARACTER PROGRAM DOCUMENTATION NUMBER, CENTERED     LOGO
+C     WITHIN THE 20 CHARACTERS.                                          LOGO
+C     THE CURRENT DATE WILL BE RETURNED IN IDATE.                        LOGO
+C     THE FIELD LENGTH OF THE PROGRAM WILL BE RETURNED IN NCORE.         LOGO
+C     THE START TIME FOR PROGRAM EXECUTION WILL BE RETURNED IN TSTART.   LOGO
+C                                                                        LOGO
+      DIMENSION PRNAME(1), VSPECS(NWORDS,NLINES), DVSN(4), ENGGRP(4)     LOGO
+     *, PRDOC(2), MESS(3), IFORM(5), ICHAR(6)                            LOGO
+      DATA MESS(3) /0/                                                   LOGO
+C                                                                        LOGO
+C     GET STARTING CP TIME                                               LOGO
+      CALL SECOND(TSTART)                                                LOGO
+      ENCODE (20,5,MESS) PRNUM                                           LOGO
+    5 FORMAT (1X,A6,11H ENTERED.::)                                      LOGO
+C     WRITE DAYFILE MESSAGE                                              LOGO
+      CALL REMARK (MESS)                                                 LOGO
+      IF (NLINES.EQ.0) PRINT 8                                           LOGO
+    8 FORMAT (1H1,6(/))                                                  LOGO
+      IF (NLINES.GT.0) PRINT 9                                           LOGO
+    9 FORMAT (1H1)                                                       LOGO
+C     PRINT DSS/WDSC HEADER                                              LOGO
+      PRINT 10                                                           LOGO
+   10 FORMAT (1H+,46X,38HGENERAL DYNAMICS DATA SYSTEMS SERVICES//        LOGO
+     *52X,27HWESTERN DATA SYSTEMS CENTER//59X,14HDESIGN SUPPORT,10(/))   LOGO
+C     DETERMINE SPACING FOR PROGRAM NAME.                                LOGO
+      IF (NCHAR.GT.130) NCHAR=130                                        LOGO
+      NSPACE=(131-NCHAR)/2                                               LOGO
+      NWORD=(NCHAR+9)/10                                                 LOGO
+      ENCODE (50,15,IFORM) NSPACE,NWORD                                  LOGO
+   15 FORMAT (1H(,I2,1HX,I2,40HA10//52X,A2,3A1,2A2,2X5HDATED,3XA8,5(/))) LOGO
+      DECODE (6,20,PRNUM) ICHAR                                          LOGO
+   20 FORMAT (6A1)                                                       LOGO
+C     PRINT PROGRAM NAME, NUMBER, AND DATE OF COMPILATION.               LOGO
+      PRINT IFORM, (PRNAME(I),I=1,NWORD), ICHAR, CMPDT                   LOGO
+      NSKIP=4                                                            LOGO
+      IF (NLINES.EQ.0) GO TO 40                                          LOGO
+C     PRINT PROGRAM VERSION SPECS.                                       LOGO
+      IF (NLINES.GT.5) NLINES=5                                          LOGO
+      NWORD=NWORDS                                                       LOGO
+      IF (NWORD.GT.6) NWORD=6                                            LOGO
+      NSPACE=1+5*(6-NWORD)                                               LOGO
+      ENCODE (30,25,IFORM) NSPACE,NWORD,NSPACE                           LOGO
+   25 FORMAT (7H(34X1H*,I2,1HX,I1,4HA10,I2,6HX1H*/))                     LOGO
+      PRINT 30                                                           LOGO
+   30 FORMAT (32X,22(2X,1H*)/)                                           LOGO
+      DO 35 J=1,NLINES                                                   LOGO
+   35 PRINT IFORM, (VSPECS(I,J),I=1,NWORDS)                              LOGO
+      PRINT 30                                                           LOGO
+      NSKIP=2*(5-NLINES)+3                                               LOGO
+   40 ENCODE (10,45,IFORM) NSKIP                                         LOGO
+   45 FORMAT (1H(,I2,4H(/)))                                             LOGO
+      PRINT IFORM                                                        LOGO
+C     GET CORE SIZE REQUESTED.                                           LOGO
+      CALL RDCMR (1,24B,ICP,1)                                           LOGO
+      NCORE=(ICP.AND.7777B)*100B                                         LOGO
+C     GET CURRENT DATE.                                                  LOGO
+      CALL DATE (IDATE)                                                  LOGO
+      PRINT 50, DVSN, ENGGRP, PRDOC, NCORE, IDATE                        LOGO
+   50 FORMAT (46X,4A10//46X,4A10,6(/),                                   LOGO
+     *43X,45HCURRENT APPLICABLE ENGINEERING/USERS DOCUMENT//56X,2A10,    LOGO
+     *6(/)44X,29HFIELD LENGTH FOR EXECUTION = ,O6,8H (OCTAL)//           LOGO
+     *53X,16HDATE OF ANALYSIS,A9)                                        LOGO
+      RETURN                                                             LOGO
+      END                                                                LOGO
+      SUBROUTINE LOGOUT (PRNUM,TSTART)                                   LOGOUT
+C                                                                        LOGOUT
+C     LOGOUT PRINTS DAYFILE PROGRAM STOP MESSAGE.                        LOGOUT
+C     PRNUM IS LEFT JUSTIFIED, 5- OR 6-CHARACTER HOLLERITH PROGRAM NO.   LOGOUT
+C     TSTART IS THE PROGRAM START TIME DEFINED IN LOGO.                  LOGOUT
+C                                                                        LOGOUT
+      DIMENSION MESS(5)                                                  LOGOUT
+C                                                                        LOGOUT
+      PRINT 55, PRNUM                                                    LOGOUT
+   55 FORMAT (9H1PROGRAM ,A6,16H IS TERMINATING.)                        LOGOUT
+C     GET ENDING CP TIME                                                 LOGOUT
+      CALL SECOND(TSTOP)                                                 LOGOUT
+      CPTIME = TSTOP-TSTART                                              LOGOUT
+      ENCODE (50,60,MESS) PRNUM,CPTIME                                   LOGOUT
+   60 FORMAT (1X,A6,23H TERMINATED.  CP TIME =,F10.3,10H SECONDS::)      LOGOUT
+      CALL REMARK (MESS)                                                 LOGOUT
+      STOP                                                               LOGOUT
+      END                                                                LOGOUT
+      SUBROUTINE PLOTCV(IENTR,P1STAR,P2SUM,P1SAS,IPLOT)                  PLOTCV
+C                                                                        PLOTCV
+C        SUBROUTINE PLOTCV PLOTS CURVES OF TEMPERATURE VERSUS DISTANCE   PLOTCV
+C                                                                        PLOTCV
+C                                                                        PLOTCV
+      COMMON /PLOT/ PPY(400), PY(10,400), IC, ICC, YMIN,YMAX,XMIN,XMAX   PLOTCV
+C                                                                        PLOTCV
+      COMMON /STO/  Z(400),T(400),C1(400),C2(400),C3(400),C4(400),       PLOTCV
+     *              C5(400),IFL(400),XKA(400),S(400),INO,IS,ISM2         PLOTCV
+C                                                                        PLOTCV
+C     WRITE(6,600) IC                                                    PLOTCV
+  600 FORMAT(1H1,*IC=*,I5)                                               PLOTCV
+      IF (IENTR.EQ.0.AND.IPLOT.EQ.2) CALL COMP80(4H3491,1,1,1,12,0,2,1)  PLOTCV
+      IF (IENTR.EQ.0.AND.IPLOT.EQ.1) CALL TEKTRNQ                        PLOTCV
+      CALL HEIGHT(.30)                                                   PLOTCV
+      CALL BGNPL(-1)                                                     PLOTCV
+      CALL OPNPLT                                                        PLOTCV
+      CALL BANGLE(270.)                                                  PLOTCV
+      IPIS=ICC                                                           PLOTCV
+      DO 170 I=1,IC                                                      PLOTCV
+         KOUNT=0                                                         PLOTCV
+         ICHECK=0                                                        PLOTCV
+      DO 100 J=1,ICC                                                     PLOTCV
+         PPY(J)=PY(I,J)                                                  PLOTCV
+C        WRITE(6,601) PPX(J),PPY(J)                                      PLOTCV
+  601    FORMAT(1X,2(F10.4,5X))                                          PLOTCV
+  100 CONTINUE                                                           PLOTCV
+         IF (I.NE.1) GO TO 110                                           PLOTCV
+         CALL AXSPLT(YMIN,YMAX,11.,YOR,YSTEP,YAXIS)                      PLOTCV
+         CALL AXSPLT(XMIN,XMAX,9.,XOR,XSTEP,XAXIS)                       PLOTCV
+         CALL PAGE(11.,14.)                                              PLOTCV
+         CALL PHYSOR(3.5,9.5)                                            PLOTCV
+         CALL YAXANG(0.)                                                 PLOTCV
+         CALL TITLE(1H ,-1,1HX,1,1HY,1,XAXIS,YAXIS)                      PLOTCV
+         CALL GRAPH(XOR,XSTEP,YOR,YSTEP)                                 PLOTCV
+         CALL GRID(1,1)                                                  PLOTCV
+  110 CALL CURVE(Z,PPY,IPIS)                                             PLOTCV
+      DO 120 J=1,ICC                                                     PLOTCV
+         KOUNT=J/5                                                       PLOTCV
+         IF (KOUNT.NE.ICHECK+1) GO TO 120                                PLOTCV
+         ICHECK=KOUNT                                                    PLOTCV
+      PXS = Z(J)                                                         PLOTCV
+         PYS=PPY(J)                                                      PLOTCV
+         CALL RLINT(I,PXS,PYS)                                           PLOTCV
+  120 CONTINUE                                                           PLOTCV
+         AI=FLOAT(I)                                                     PLOTCV
+         PSTAR=P1STAR+P1SAS*AI-P1SAS                                     PLOTCV
+         IF (I.GT.1) GO TO 150                                           PLOTCV
+         AY=-.8                                                          PLOTCV
+         IF (P2SUM.NE.99999.) GO TO 130                                  PLOTCV
+         CALL MESSAG(5HP1 = ,5,.5,AY)                                    PLOTCV
+         GO TO 140                                                       PLOTCV
+  130    CALL MESSAG(30HP1 =                     P2 = ,30,.5,AY)         PLOTCV
+         CALL REALNO(P2SUM,-3,4.0,AY)                                    PLOTCV
+  140    CALL REALNO(PSTAR,-3,1.,AY)                                     PLOTCV
+         GO TO 160                                                       PLOTCV
+  150    CALL MESSAG(5HP1 = ,5,.5,AY)                                    PLOTCV
+         CALL REALNO(PSTAR,-3,1.,AY)                                     PLOTCV
+  160    CALL INTNO(I,0.,AY)                                             PLOTCV
+         AY=AY-.2                                                        PLOTCV
+  170 CONTINUE                                                           PLOTCV
+      CALL ENDPL(0)                                                      PLOTCV
+      RETURN                                                             PLOTCV
+      END                                                                PLOTCV

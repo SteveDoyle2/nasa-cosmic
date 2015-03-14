@@ -1,0 +1,70 @@
+ COREL/W12SC3- PROGRAMS FOR SUPERSONIC WING DESIGN AND ANALYSIS
+
+( GRUMMAN AEROSPACE CORP. )
+
+     COREL and W12SC3 are two computer programs useful in the aerodynamic
+design and analysis of wings for supersonic maneuvering. Both programs
+use the Super Critical Conical Camber (SC3) concept, in which high super-
+sonic lift coefficients are obtained by controlling cross flow develop-
+ment. COREL (Conical Relaxation) solves the nonlinear full potential equa-
+tion for a spanwise section of a wing in the crossflow plane and corrects
+the result for any nonconical geometry. W12SC3 applies linear theory panel
+methods to compute solutions for a wing-body configuration. The programs
+are not restricted to supersonic maneuvering cases, but are useful for many
+design, analysis, and optimization applications.
+
+     COREL computes the mixed subsonic/supersonic crossflow that devel-
+ops on supersonic wings with high lift coefficients at Mach numbers nor-
+mal to shock waves of 1.3 or less. The bow and crossflow shocks are captured
+as part of the solution. The initial aerodynamic solution is produced on
+a crude grid and is then reiterated. A finer mesh is then mapped, keeping
+the bow shock within the boundary of the new computed crossflow. The input
+geometry can be specifically defined or calculated in COREL using Craidon
+bicubic spline patches.
+
+     W12SC3 combines source and vortex panel singularity distributions for
+calculating the linear theory estimate of the configuration aerodynamics.
+The user can specify Woodward II calculations for arbitrary body models or
+Woodward I calculations for an interference shell that approximates actual
+body shape. The Carlson correction for supersonic linear theory wing cal-
+culations is applied at wing control points. If desired, COREL will produce
+conical panel pressure data for further processing by W12SC3. W12SC3 can
+perform the following aerodynamic functions: 1) full analysis, 2) full de-
+sign, 3) full optimization, 4) mixed design-analysis, and 5) mixed design-
+optimization. Results from W12SC3 include wing camber distribution, sur-
+face velocities, pressure coefficients and drag.
+
+     COREL and W12SC3 are written in FORTRAN IV for batch execution and have
+been implemented on a CDC CYBER 170 series computer with a central memory
+requirement of 252K (octal) of 60 bit words. These programs were developed
+in 1983.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC CYBER 170 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 20,150 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI CDC System Internal Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-13239
+
+DOMESTIC - DOCUMENTATION PRICE: $38.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $76.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

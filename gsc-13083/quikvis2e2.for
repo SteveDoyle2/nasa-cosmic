@@ -1,0 +1,81 @@
+      SUBROUTINE QUIKVIS2E2(IERR,IEND)
+      IMPLICIT REAL*8 (A-H,O-Z)
+C
+C THIS ROUTINE IS PART OF THE QUIKVIS PROGRAM.  IT IS THE ROUTINE BY
+C WHICH THE USER SETS THE RANGE OF THE MEAN SOLAR TIME OF THE ASCENDING
+C NODE WHEN NODEOPT=2.
+C
+C VARIABLE DIM TYPE I/O DESCRIPTION
+C -------- --- ---- --- -----------
+C
+C IERR      1   I*4  O  ERROR RETURN FLAG
+C                       =0, NO ERRORS.
+C                       = OTHERWISE, ERROR PRESENT.
+C
+C IEND      1   I*4  O  END-FILE FLAG
+C                       =0, NO END-FILE ENCOUNTERED DURING USER INPUT.
+C                       =1, END-FILE ENCOUNTERED.
+C
+C***********************************************************************
+C
+C BY C PETRUZZO/GFSC/742.   2/86.
+C       MODIFIED....
+C
+C***********************************************************************
+C
+      INCLUDE 'QUIKVIS.INC'
+C
+      LOGICAL OK
+      CHARACTER*12 ERRMSG(2)/ 'REPROMPTING.', 'STOPPING.' /
+C
+      IERR = 0
+      IEND = 1  ! WILL BE RESET TO ZERO IF READ IS DONE OK
+C
+C
+      CALL QUIKVIS999(-1,R8DATA,I4DATA,L4DATA)
+C
+C
+      WRITE(LUPROMPT,6756) '5B'
+ 6756 FORMAT(//,
+     *   ' ***************** USER GUIDE TABLE ',A,' *****************'/)
+C
+C
+      OK = .FALSE.
+      NUMSAV = NUMSOLT
+      SOLTIM1 = SOLTIM1/3600.D0
+      DELSOLT = DELSOLT/60.D0
+      DO WHILE (.NOT.OK)
+        NUMSOLT = NUMSAV
+        CALL SET3SCAN('MEAN SOLAR TIME(HR) AND INCREMENT(MINS)',
+     *        LUPROMPT,LUINPUT,SOLTIM1,DELSOLT,NUMSOLT,1.D0,IEND1)
+        IF(IEND1.NE.0) THEN
+          IEND = 1
+          GO TO 9999
+          END IF
+        NUMSOLT = MAX(1,NUMSOLT)
+        OK = NUMSOLT.LE.MAXNODES
+        IF(.NOT.OK) THEN
+          INDEXERR = 1
+          IF(.NOT.INTERACTIVE) INDEXERR = 2
+          WRITE(LUPROMPT,5001) MAXNODES,ERRMSG(INDEXERR)
+ 5001     FORMAT(/,'   >>> USER INPUT ERROR. TOO MANY NODES. MAX=',I4,
+     *         3X,A/)
+          IF(.NOT.INTERACTIVE) THEN
+            IERR = 1
+            GO TO 9999
+            END IF
+          END IF
+        END DO
+      SOLTIM1 = SOLTIM1*3600.D0
+      DELSOLT = DELSOLT*60.D0
+C
+      IEND = 0
+C
+ 9999 CONTINUE
+C
+C WRAP UP. STORE DATA IN QUIKVIS999 ARRAYS FOR RETRIEVAL ELSEWHERE.
+C
+      CALL QUIKVIS999(1,R8DATA,I4DATA,L4DATA)
+C
+      RETURN
+      END

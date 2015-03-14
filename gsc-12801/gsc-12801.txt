@@ -1,0 +1,52 @@
+ PILOT- PARAMETERIZED INVESTIGATION OF LAUNCH OPPORTUNITIES AND TRAJECTO-
+RIES
+
+( COMPUTER SCIENCES CORP. )
+
+     The launch window for an earth satellite mission defines the dates and
+the times of day that a satellite can be launched and satisfy the mission
+constraints. The Parameterized Investigation of Launch Opportunities and
+Trajectories (PILOT) program was developed to perform mission simulation
+computations that yield data for use in delimiting optimum launch windows.
+The PILOT program performs parametric scans of a user specified trajectory
+over launch date and initital right ascension of the ascending node. Dur-
+ing each scan various mission parameters are generated and output to a data
+file.
+
+     The CoPILOT utility program is used to read and format the PILOT gen-
+erated data file. The user specifies acceptable limits on the various PI-
+LOT generated parameters, CoPILOT checks the data, and generates an output
+table with notations of any constraint violations. Any time that no con-
+traints are violated, an acceptable launch time exists. For each date, the
+acceptable launch times are printed. A printer plot may also be generated
+to visually display the launch window.
+
+     The PILOT and CoPILOT programs are written in FORTRAN IV for batch ex-
+ecution and have been implemented on an IBM 360 series computer with a cen-
+tral memory requirement of approximately 338K of 8 bit bytes. The PILOT and
+CoPILOT programs were developed in 1979.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: IBM 360 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 9,199 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: GSC-12801
+
+DOMESTIC - DOCUMENTATION PRICE: $56.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $112.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

@@ -1,0 +1,172 @@
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+C
+C   OUTPUTO - Definitions for the Output Options Menu of CARE3MENU
+C
+C   VERSION:  1.1
+C   AUTHOR:  A. Roberts; Tesseract Systems, Inc.
+C   CREATION DATE:  05/29/83
+C   LAST REVISION DATE:  07/23/83
+C   LAST REVISED BY:  A. Roberts
+C
+C FUNCTION: Defintions and declarations for CARE3MENU command level
+C		menu.
+C
+C USEAGE:  included in CARE3MENU
+C
+C ARGUMENTS:  NA
+C
+C ERRORS:   NA
+C
+C NOTES:  Written in VAX/VMS FORTRAN.  This menu has default values,
+C		so it uses a duplicate set of tables to contain
+C		defaults.  Thus DEF tables should be copied to
+C		the active tables on subsequent inputs.  This
+C		file also contains range checking constants for
+C		menu items.
+C
+C PROCESS:  NA
+C
+C REVISION HISTORY:  0.0 - Created on 05/29/83 by A. Roberts;
+C				Tesseract Systems, Inc.
+C					------
+C		     1.0 - First release version.  06/08/83;
+C				A. Roberts
+C					------
+C		     1.1 - Modified to use new logical input
+C				type, 07/23/83, A. Roberts
+C					______
+C		     1.2 - Moved first menu item to last. 
+C				02/14/84, J.Pierce
+C
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
+C
+C Menu parameters
+C
+	parameter OUT_MITEMS = 7		! Items in menu
+	parameter OUT_H_LOGNAME = 'out'		! Help logical name
+
+	parameter OUT_SDT1 = NO_DAT .or. BOLD	! Special datatype for 
+						! Title
+
+	parameter OUT_CFP_PNTR = 7		! Data pointers
+	parameter OUT_RLP_PNTR = 2
+	parameter OUT_CFD_PNTR = 3
+	parameter OUT_CFA_PNTR = 4
+	parameter OUT_RLD_PNTR = 5
+	parameter OUT_RLA_PNTR = 6
+
+	parameter OUT_CFP_DEF = 'F'
+
+	parameter OUT_RLP_MIN = 1
+	parameter OUT_RLP_MAX = 4	
+	parameter OUT_RLP_DEF = 1
+
+	parameter OUT_CFD_DEF = 'F'
+
+	parameter OUT_CFA_DEF = 'Y-LOG'
+
+	parameter OUT_RLD_DEF = 'F'
+
+	parameter OUT_RLA_DEF = 'Y-LOG'
+
+	parameter OUT_BAD_RLP = ' *** Bad Reliability Print Code, Reenter *** '
+	parameter OUT_BAD_CFA = ' *** Bad Coverage Plot Axis Code *** '
+	parameter OUT_BAD_RLA = ' *** Bad Reliability Plot Axis Code *** '
+						! Bad response lines
+
+	parameter OUT_PCODE1 = 1		! Keyword lookup types
+	parameter OUT_PCODE2 = 2
+	parameter OUT_PCODE3 = 3
+	parameter OUT_PCODE4 = 4
+
+
+C
+C Menu tables
+C
+	character*(MAX_STRING) out_labs(OUT_MITEMS)	! Item labels
+	integer*4 out_lpos(2,OUT_MITEMS)		! Item Positions
+	integer*4 out_dtype(OUT_MITEMS)			! Item Datatypes
+	integer*4 out_idat(OUT_MITEMS)			! INTEGER Data
+	real*4 out_rdat(OUT_MITEMS)			! REAL Data
+	character*(MAX_STRING) out_sdat(OUT_MITEMS)	! STRING Data
+
+C
+C Default restore tables
+C
+	integer*4 out_idat_def(OUT_MITEMS)		! INTEGER Data
+	real*4 out_rdat_def(OUT_MITEMS)			! REAL Data
+	character*(MAX_STRING) out_sdat_def(OUT_MITEMS)	! STRING Data
+
+C
+C Anything in the menu that is hardwired
+C
+	data out_labs /'Output Control Options Input',
+	2	'Reliability Print Selection (1 - 4):',
+	3	'Coverage Functions Plot (T or F):',
+	4	'Coverage Y-Axis Selection (Y-LInear, Y-LOg, Both, Log-log):',
+	5	'Reliability Functions Plot (T or F):',
+	6	'Reliability Y-Axis Selection (Y-LInear, Y-LOg, Both, Log-log):',
+	1	'Coverage Moment Functions Print (T or F):'/
+
+	data out_lpos /1,26,
+	1		5,5,
+	2		7,5,
+	3		10,5,11,5,
+	4		13,5,14,5/
+
+	data out_dtype /OUT_SDT1,
+	2			INT_DAT,
+	3			LOGS_DAT,
+	4			STR_DAT,
+	5			LOGS_DAT,
+	6			STR_DAT,
+	1			LOGS_DAT/
+
+C
+C Default values.  Coded in the active tables for the first call, and
+C the default follower tables for reload on secondary calls
+C
+	data out_sdat /' ', ' ', OUT_CFD_DEF, OUT_CFA_DEF,
+	1		OUT_RLD_DEF, OUT_RLA_DEF, OUT_CFP_DEF /
+	data out_sdat_def /' ', ' ', OUT_CFD_DEF, OUT_CFA_DEF,
+	1		OUT_RLD_DEF, OUT_RLA_DEF, OUT_CFP_DEF /
+
+	data out_idat /0, OUT_RLP_DEF, 0, 0, 0, 0, 0/
+	data out_idat_def /0, OUT_RLP_DEF, 0, 0, 0, 0, 0/
+
+C
+C Plot Code Lookup Table Defintions
+C
+C LIB$LOOKUP_KEY is used to determine what plot code has been entered,
+C and return a numeric code which is used in the model.
+C
+C NOTE:  The keyword lookup table CANNOT be built entirely at
+C		compile time, since the keyword pointer table
+C		must be built with %LOC to point to the 
+C		keywords.  If you add keywords, be sure and
+C		modify the code just before the command menu
+C		call in CARE3MENU !!!
+C
+	parameter OUT_MAX_COMMANDS = 4		! Current maximum commands
+	parameter OUT_MAX_CMDSIZE = 8		! Current keyword max size
+
+	byte out_keywords(OUT_MAX_CMDSIZE + 1, OUT_MAX_COMMANDS)
+						! Keyword storage
+	integer*4 out_keytable(0:OUT_MAX_COMMANDS * 2)
+						! Keyword pointer table
+
+	integer*4 out_clen			! Command string length
+	integer*4 out_status			! Keyword Lookup Return
+	integer*4 out_ccode			! Command code
+
+	data out_keywords /
+	1	8,'Y','-','L','I','N','E','A','R',
+	2	5,'Y','-','L','O','G',' ',' ',' ',
+	3	4,'B','O','T','H',' ',' ',' ',' ',
+	4	7,'L','O','G','-','L','O','G',' '/
+						! Keywords in storage
+
+C
+C End of Menu Definition
+C

@@ -1,0 +1,323 @@
+      SUBROUTINE GIMBL2(ITEST,ZML,ETA,NALP)
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      COMMON/CGIMBL/ AZIN(3,3),AZAX(3),AZCG(3),AZMS,AZYY(3,3),AZIAX(3,3)
+     1              ,ELIN(3,3),ELAX(3),ELCG(3),ELMS,ELYY(3,3),ELIAX(3,3)
+     2              ,ZZAZ(3,3)
+C
+      COMMON/DEBUG2/ IOUT,JOUT,KLUGE
+C
+      COMMON/GMBLWK/ DELT(2,2),GAMGM(2,6),GMRHS(2),DI(2,2),DIGAM(2,6)
+     1              ,DZML(6,6),YAZB(3),YELC(3)
+C
+      COMMON/GMBOUT/ AZ,AZD,EL,ELD,B(3,3),B0(3,3),B0B(3,3),C(3,3)
+     1              ,B0BC(3,3),ZEL(3),YEL(3),YAZ(3),ZAZM(3),ZELM(3)
+C
+      COMMON/GMRSOT/ AZDD,ELDD,RSRHST(3),RSRHSR(3)
+C
+      COMMON/HGIMBL/ HGMB(3)
+C
+      COMMON/IGIMBL/ IGMBL,NAZIM,NELEV,NA1,NE1
+C
+      COMMON/IRSTGM/ IGMRST,IARST(3),IRSCY(3)
+C
+      COMMON/RPOOL1/ DUMV1(39),OMEG(3),DUMV2(38),YBCM(3),DUMV3(42)
+C
+      COMMON/RPOOL3/ ZMS,YIZM(3,2)
+C
+      COMMON/TRQOUT/ OUTTRQ(150)
+C
+      COMMON/VARBLS/ DEP(150),DER(150)
+C
+C
+      DIMENSION ZML(7,7),ETA(7),OMB(3),OMC(3)
+      DIMENSION DM1(3,3),DM2(3,3),DM3(3,3),DM4(3,3)
+      DIMENSION V1(3),V2(3),V3(3),V4(3),V5(3),V6(3)
+      DIMENSION RHST(3),RHSR(3)
+      DIMENSION DRHST(3),DRHSR(3),DIR(2)
+      DIMENSION ZELBM(3)
+      DIMENSION OMCPG(3)
+      DIMENSION ZELC(3)
+C
+C
+      IF(IGMBL.EQ.0) RETURN
+C
+      IF(ITEST.EQ.2) GO TO 100
+C
+C     SYSTEM TRANSLATION EQUATION
+C
+      AZD2=AZD*AZD
+      V1(1)=-AZD2*ZAZM(1)
+      V1(2)=-AZD2*ZAZM(2)
+      V1(3)=0.0D0
+      CALL MATV(1,B0B,V1,RHST)
+C
+      ELD2=ELD*ELD
+      V1(1)=-ELD2*ZELM(1)
+      V1(2)=0.0D0
+      V1(3)=-ELD2*ZELM(3)
+      CALL MATV(1,B0BC,V1,V2)
+      CALL ADDV(V2,RHST,RHST)
+C
+      V1(1)=-AZD*ZAZM(2)
+      V1(2)=AZD*ZAZM(1)
+      V1(3)=0.0D0
+      CALL MATV(1,B0B,V1,V2)
+      V1(1)=ELD*ZELM(3)
+      V1(2)=0.0D0
+      V1(3)=-ELD*ZELM(1)
+      CALL MATV(1,B0BC,V1,V3)
+      CALL ADDV(V2,V3,V4)
+      RHST(1)=RHST(1)+2.0D0*(OMEG(2)*V4(3)-OMEG(3)*V4(2))
+      RHST(2)=RHST(2)+2.0D0*(OMEG(3)*V4(1)-OMEG(1)*V4(3))
+      RHST(3)=RHST(3)+2.0D0*(OMEG(1)*V4(2)-OMEG(2)*V4(1))
+C
+      CALL MATV(1,C,V1,V2)
+      V1(1)=-V2(2)
+      V1(2)=V2(1)
+      V1(3)=0.0D0
+      CALL MATV(1,B0B,V1,V2)
+      TWOAZD=2.0D0*AZD
+      RHST(1)=RHST(1)+TWOAZD*V2(1)
+      RHST(2)=RHST(2)+TWOAZD*V2(2)
+      RHST(3)=RHST(3)+TWOAZD*V2(3)
+C
+C     SYSTEM ROTATION EQUATION
+C
+      V1(1)=ZZAZ(2,3)+ZAZM(2)*YAZB(3)
+      V1(2)=-ZZAZ(1,3)-ZAZM(1)*YAZB(3)
+      V1(3)=ZAZM(1)*YAZB(2)-ZAZM(2)*YAZB(1)
+      CALL MATV(1,B0B,V1,V2)
+      RHSR(1)=AZD2*V2(1)
+      RHSR(2)=AZD2*V2(2)
+      RHSR(3)=AZD2*V2(3)
+C
+      V1(1)=-ELIAX(3,2)-ZELM(3)*YELC(2)
+      V1(2)=ZELM(3)*YELC(1)-ZELM(1)*YELC(3)
+      V1(3)=ELIAX(1,2)+ZELM(1)*YELC(2)
+      CALL MATV(1,B0BC,V1,V2)
+      RHSR(1)=RHSR(1)+ELD2*V2(1)
+      RHSR(2)=RHSR(2)+ELD2*V2(2)
+      RHSR(3)=RHSR(3)+ELD2*V2(3)
+C
+      CALL MATV(2,B0B,OMEG,OMB)
+      CALL MATV(2,C,OMB,OMC)
+C
+      OMCPG(1)=OMC(1)+AZD*C(3,1)
+      OMCPG(2)=OMC(2)+AZD*C(3,2)
+      OMCPG(3)=OMC(3)+AZD*C(3,3)
+C
+      TWOELD=2.0D0*ELD
+C
+      V1(1)=OMB(1)*(ZZAZ(1,2)+ZAZM(1)*YAZB(2))
+     1     +OMB(2)*(ZZAZ(2,2)+ZAZM(2)*YAZB(2))
+     2     +OMB(3)*(ZZAZ(2,3)+ZAZM(2)*YAZB(3))
+C
+      V1(2)=-OMB(1)*(ZZAZ(1,1)+ZAZM(1)*YAZB(1))
+     1      -OMB(2)*(ZZAZ(2,1)+ZAZM(2)*YAZB(1))
+     2      -OMB(3)*(ZZAZ(1,3)+ZAZM(1)*YAZB(3))
+C
+      V1(3)=OMB(3)*(ZAZM(1)*YAZB(2)-ZAZM(2)*YAZB(1))
+C
+      CALL MATV(1,B0B,V1,V2)
+C
+      RHSR(1)=RHSR(1)+TWOAZD*V2(1)
+      RHSR(2)=RHSR(2)+TWOAZD*V2(2)
+      RHSR(3)=RHSR(3)+TWOAZD*V2(3)
+C
+      V1(1)=-OMCPG(1)*(ELIAX(1,3)+ZELM(1)*YELC(3))
+     1      -OMCPG(2)*(ELIAX(3,2)+ZELM(3)*YELC(2))
+     2      -OMCPG(3)*(ELIAX(3,3)+ZELM(3)*YELC(3))
+C
+      V1(2)=OMCPG(2)*(ZELM(3)*YELC(1)-ZELM(1)*YELC(3))
+C
+      V1(3)=OMCPG(1)*(ELIAX(1,1)+ZELM(1)*YELC(1))
+     1     +OMCPG(2)*(ELIAX(1,2)+ZELM(1)*YELC(2))
+     2     +OMCPG(3)*(ELIAX(3,1)+ZELM(3)*YELC(1))
+C
+      CALL MATV(1,B0BC,V1,V2)
+C
+      RHSR(1)=RHSR(1)+TWOELD*V2(1)
+      RHSR(2)=RHSR(2)+TWOELD*V2(2)
+      RHSR(3)=RHSR(3)+TWOELD*V2(3)
+C
+      IF(IGMRST.EQ.0) GO TO 2
+C
+      DO 1 I=1,3
+      RHST(I)=RHST(I)-RSRHST(I)
+      RHSR(I)=RHSR(I)-RSRHSR(I)
+      DRHSR(I)=0.0D0
+      I3=I+3
+      ETA(I)=ETA(I)-RHST(I)
+      ETA(I3)=ETA(I3)-RHSR(I)
+    1 CONTINUE
+C
+      GO TO 35
+C
+C
+    2 CONTINUE
+C
+C     RELATIVE ROTATION EQUATIONS  AZIMUTH AND ELEVATION
+C
+      RHAZ=-OMB(1)*OMB(1)*(ZZAZ(1,2)+ZAZM(1)*YAZB(2))
+     1     +OMB(1)*OMB(2)*(ZZAZ(1,1)+ZAZM(1)*YAZB(1)
+     2                    -ZZAZ(2,2)-ZAZM(2)*YAZB(2))
+     3     -OMB(1)*OMB(3)*(ZZAZ(2,3)+ZAZM(2)*YAZB(3))
+     4     +OMB(2)*OMB(2)*(ZZAZ(2,1)+ZAZM(2)*YAZB(1))
+     5     +OMB(2)*OMB(3)*(ZZAZ(1,3)+ZAZM(1)*YAZB(3))
+     6     +OMB(3)*OMB(3)*(ZAZM(2)*YAZB(1)-ZAZM(1)*YAZB(2))
+C
+      RHEL= OMC(1)*OMC(1)*(ELIAX(1,3)+ZELM(1)*YELC(3))
+     1     +OMC(1)*OMC(2)*(ELIAX(3,2)+ZELM(3)*YELC(2))
+     2     +OMC(1)*OMC(3)*(ELIAX(3,3)+ZELM(3)*YELC(3)
+     3                    -ELIAX(1,1)-ZELM(1)*YELC(1))
+     4     +OMC(2)*OMC(2)*(ZELM(1)*YELC(3)-ZELM(3)*YELC(1))
+     5     -OMC(2)*OMC(3)*(ELIAX(1,2)+ZELM(1)*YELC(2))
+     6     -OMC(3)*OMC(3)*(ELIAX(3,1)+ZELM(3)*YELC(1))
+C
+      CALL MATV(2,C,ELAX,ZELC)
+      RHEL=RHEL+
+     1     AZD2*(C(3,1)*C(3,1)*(ELIAX(1,3)+ZELM(1)*ZELC(3))
+     2          +C(3,1)*C(3,2)*(ELIAX(3,2)+ZELM(3)*ZELC(2))
+     3          +C(3,1)*C(3,3)*(ELIAX(3,3)+ZELM(3)*ZELC(3)
+     4                        -ELIAX(1,1)-ZELM(1)*ZELC(1))
+     5          +C(3,2)*C(3,2)*(ZELM(1)*ZELC(3)-ZELM(3)*ZELC(1))
+     6          -C(3,2)*C(3,3)*(ELIAX(1,2)+ZELM(1)*ZELC(2))
+     7          -C(3,3)*C(3,3)*(ELIAX(3,1)+ZELM(3)*ZELC(1)))
+C
+      CALL MATV(1,C,ZELM,ZELBM)
+      CALL MPYMAT(C,ELIAX,C,2,2,DM2,DM1)
+C
+      RHAZ=RHAZ+
+     1     ELD2*(-C(1,2)*C(1,2)*(DM1(2,1)+ZELBM(2)*ELAX(1))
+     2           +C(1,2)*C(2,2)*(DM1(1,1)+ZELBM(1)*ELAX(1)
+     3                          -DM1(2,2)-ZELBM(2)*ELAX(2))
+     4           -C(1,2)*C(3,2)*(DM1(3,2)+ZELBM(3)*ELAX(2))
+     5           +C(2,2)*C(2,2)*(DM1(1,2)+ZELBM(1)*ELAX(2))
+     6           +C(2,2)*C(3,2)*(DM1(3,1)+ZELBM(3)*ELAX(1))
+     7           +C(3,2)*C(3,2)*(ZELBM(1)*ELAX(2)-ZELBM(2)*ELAX(1)))
+C
+      V1(1)=OMB(1)
+      V1(2)=OMB(2)
+      V1(3)=OMB(3)+AZD
+C
+      RHAZ=RHAZ+TWOELD*
+     1    ((C(2,2)*V1(2)+C(3,2)*V1(3))*(DM1(1,2)+ZELBM(1)*ELAX(2))
+     2     -C(1,2)*V1(2)*(DM1(2,2)+ZELBM(2)*ELAX(2))
+     3     -C(1,2)*V1(3)*(DM1(3,2)+ZELBM(3)*ELAX(2))
+     4     +C(2,2)*V1(1)*(DM1(1,1)+ZELBM(1)*ELAX(1))
+     5     -(C(3,2)*V1(3)+C(1,2)*V1(1))*(DM1(2,1)+ZELBM(2)*ELAX(1))
+     6     +C(2,2)*V1(3)*(DM1(3,1)+ZELBM(3)*ELAX(1)))
+C
+      RHEL=RHEL+TWOAZD*
+     1    (C(3,1)*(OMC(1)*(ELIAX(1,3)+ZELM(1)*ZELC(3))
+     2            +OMC(2)*(ELIAX(3,2)+ZELM(3)*ZELC(2))
+     3            +OMC(3)*(ELIAX(3,3)+ZELM(3)*ZELC(3)))
+     4    +C(3,2)*OMC(2)*(ZELM(1)*ZELC(3)-ZELM(3)*ZELC(1))
+     5    -C(3,3)*(OMC(1)*(ELIAX(1,1)+ZELM(1)*ZELC(1))
+     6            +OMC(2)*(ELIAX(1,2)+ZELM(1)*ZELC(2))
+     7            +OMC(3)*(ELIAX(3,1)+ZELM(3)*ZELC(1))))
+C
+      CALL GMBINF(AZIF,ELIF)
+C
+      CALL GMBCNT(AZCNT,ELCNT)
+C
+      OUTTRQ(31)=AZCNT
+      OUTTRQ(32)=ELCNT
+C
+      GMRHS(1)=-RHAZ-AZIF+AZCNT
+      GMRHS(2)=-RHEL-ELIF+ELCNT
+C
+      DIR(1)=DI(1,1)*GMRHS(1)+DI(1,2)*GMRHS(2)
+      DIR(2)=DI(2,1)*GMRHS(1)+DI(2,2)*GMRHS(2)
+C
+      DO 10 I=1,3
+      I3=I+3
+      DRHST(I)=GAMGM(1,I)*DIR(1)+GAMGM(2,I)*DIR(2)
+      DRHSR(I)=GAMGM(1,I3)*DIR(1)+GAMGM(2,I3)*DIR(2)
+      ETA(I)=ETA(I)-RHST(I)-DRHST(I)
+      ETA(I3)=ETA(I3)-RHSR(I)-DRHSR(I)
+   10 CONTINUE
+C
+      DO 20 I=1,6
+      DO 20 J=1,6
+      ZML(I,J)=ZML(I,J)-DZML(I,J)
+   20 CONTINUE
+C
+      IF(IOUT.EQ.1) GO TO 30
+      WRITE(6,1000)
+ 1000 FORMAT('0',10X,'DEBUG OUTPUT FROM GIMBL2')
+      WRITE(6,1001) DELT,DI
+ 1001 FORMAT('0',1P12E11.4)
+      WRITE(6,1001) GAMGM
+      WRITE(6,1001) DIGAM
+      WRITE(6,1001) RHAZ,RHEL,AZIF,ELIF,AZCNT,ELCNT,RHST,RHSR
+      WRITE(6,1001) DRHST,DRHSR
+      WRITE(6,1002) ZML
+      WRITE(6,1003) ETA
+ 1002 FORMAT('0',2X,'ZML',6X,1P7E13.5)
+ 1003 FORMAT('0',2X,'ETA',6X,1P7E13.5)
+   30 CONTINUE
+C
+   35 CONTINUE
+C
+      DO 40 I=1,3
+      I1=I+20
+      OUTTRQ(I1)=RHSR(I)+DRHSR(I)
+   40 CONTINUE
+C
+C
+      RETURN
+C
+C
+  100 CONTINUE
+C
+      IF(IGMRST.NE.0) GO TO 112
+C
+C     CONSTRUCT DERIVATIVES FOR AZIMUTH AND ELEVATION
+C
+      DAZD=0.0D0
+      DELD=0.0D0
+      DO 110 I=1,6
+      DAZD=DAZD-DIGAM(1,I)*ETA(I)
+      DELD=DELD-DIGAM(2,I)*ETA(I)
+  110 CONTINUE
+C
+C
+      DER(NAZIM)=DEP(NA1)
+      DER(NA1)=DIR(1)+DAZD
+      DER(NELEV)=DEP(NE1)
+      DER(NE1)=DIR(2)+DELD
+C
+  112 CONTINUE
+C
+C     CALCULATE MOMENTUM FOR OUTPUT
+C
+      DO 115 I=1,3
+      V1(I)=YBCM(I)/ZMS
+  115 CONTINUE
+      CALL MATV(2,B0B,V1,V2)
+      CALL MATV(2,B0BC,V1,V3)
+C
+      V4(1)=AZD*(-ZZAZ(3,1)-(YAZB(3)-V2(3))*ZAZM(1))
+      V4(2)=AZD*(-ZZAZ(3,2)-(YAZB(3)-V2(3))*ZAZM(2))
+      V4(3)=AZD*(ZZAZ(1,1)+ZZAZ(2,2)+(YAZB(1)-V2(1))*ZAZM(1)
+     1                              +(YAZB(2)-V2(2))*ZAZM(2))
+      V5(1)=ELD*(-ELIAX(1,2)-(YELC(1)-V3(1))*ZELM(2))
+      V5(2)=ELD*(ELIAX(3,3)+ELIAX(1,1)+(YELC(3)-V3(3))*ZELM(3)
+     1                                +(YELC(1)-V3(1))*ZELM(1))
+      V5(3)=ELD*(-ELIAX(3,2)-(YELC(3)-V3(3))*ZELM(2))
+C
+      CALL MATV(1,B0B,V4,V1)
+      CALL MATV(1,B0BC,V5,V2)
+C
+      DO 120 I=1,3
+      HGMB(I)=V1(I)+V2(I)
+  120 CONTINUE
+C
+C
+C
+      RETURN
+C
+      END

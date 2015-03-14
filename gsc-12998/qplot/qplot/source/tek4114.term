@@ -1,0 +1,166 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STANDARD',
+               'QLIBHOME:IO',
+               'QLIBHOME:GENERAL',
+               'QLIBHOME:STRING',
+               'QLIBHOME:FIG',
+               'QLIBHOME:TERM_VAX',
+               'QLIBHOME:TERM_4010',
+               'QLIBHOME:TERM_4100'),
+  ENVIRONMENT ('QLIBHOME:TEK4114.TEN') ]
+MODULE term_TEK4114;
+[ HIDDEN ] VAR
+   termfig       : RECORD;
+                   dialoglines   : integer;
+                   END := (30);
+{=============================================================================}
+{-- PROCEDURES FOR TERMINAL TYPE TEK4114 -------------------------------------}
+{=============================================================================}
+[ GLOBAL ]
+FUNCTION termname_TEK4114 (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0: termname_TEK4114 := '1';
+   1: termname_TEK4114 := 'TEK4114 ';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE colorsetup_TEK4114;
+BEGIN
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE executecom_TEK4114;
+VAR
+   h,l,s         : integer;
+   a             : char;
+   oldpos        : ipoint;
+   oldstr,newstr : VARYING [80] OF char;
+{------------------------------}
+PROCEDURE bufferempty;
+{ Purpose -- empty software plotting buffer }
+BEGIN
+CASE env.mode OF
+   M_TEXT,
+   M_DUAL:  IF config.overlaykill 
+             THEN qiowwrite (ESC + 'LV0');     { DIALOG AREA INVISIBLE  }
+   M_PLOT:  ;
+   END;
+env.mode := M_PLOT;
+IF length(env.buffer) <> 0 
+ THEN 
+  BEGIN
+  qiowwrite (env.buffer + CRLF);
+  env.buffer := '';
+  END;
+END;
+{------------------------------}
+BEGIN
+WITH plotitem DO CASE ins OF
+   I_col:  IF env.visible THEN qiowwrite (ESC + chofcolor_4010 (st));
+   I_pan:  ;
+   I_clo:  ;
+   I_pos:  BEGIN
+           bufferempty;
+           env.pos.ix := ix;
+           env.pos.iy := iy;
+           END;
+   I_dra:  BEGIN
+           IF NOT env.visible
+            THEN 
+             BEGIN
+             bufferempty;
+             env.pos.ix := ix;
+             env.pos.iy := iy;
+             END
+            ELSE 
+             BEGIN
+             IF length (env.buffer) > BUFFERSIZE-12 THEN bufferempty;
+             oldstr := strofpos_4100 (env.pos);
+             IF length (env.buffer) = 0 THEN env.buffer := chr(29) + oldstr;
+             env.pos.ix := ix;
+             env.pos.iy := iy;
+             newstr := strofpos_4100 (env.pos);
+             env.buffer := env.buffer + newstr;
+             END;
+           END;
+   I_siz:  ;
+   I_mar:  ;
+   I_pri:  IF env.visible AND (st <> '') 
+            THEN 
+             BEGIN
+             bufferempty;
+             env.buffer := ESC + ';' + ESC + 'MC' 
+                + strofi_4100((env.curch.width -env.curch.charspacing) DIV 16)
+                + strofi_4100((env.curch.height-env.curch.linespacing) DIV 16)
+                + strofi_4100 (env.curch.charspacing DIV 16);
+             bufferempty;
+             env.buffer := chr(29) + strofpos_4100 (env.pos) 
+                + ESC + 'LT' + strofi_4100 (length(st)) + st;
+             bufferempty;
+             END;
+   I_emp:  bufferempty;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE writeterm_TEK4114 (str : VARYING [l2] OF char);
+BEGIN
+writeterm_4100 (str,termfig.dialoglines);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE readterm_TEK4114 (VAR outstr : VARYING [l2] OF char);  
+BEGIN
+readterm_vax (outstr);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screenerase_TEK4114;
+BEGIN
+qiowwrite (ESC + 'KA0'      { DIALOG AREA DISABLE    }
+         + ESC + 'LZ'       { DIALOG AREA CLEAR      }
+         + ESC + chr(12)
+         + ESC + ';');
+wait (1.0);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screencopy_TEK4114;
+BEGIN
+qiowwrite (ESC + 'KH1');
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE gin_TEK4114 (VAR key : char;  VAR ipt : ipoint;  color : color_type);
+BEGIN
+gin_4100 (key,ipt,'');
+END;
+{-----------------------------------------------------------------------------}
+[GLOBAL]
+FUNCTION readmenu_TEK4114 (default : char;  toplevel : boolean;
+   helpprefix : anystring) : command_type;
+BEGIN
+readmenu_TEK4114 := readmenu_4010 (default,toplevel,helpprefix,menuprep_4010);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE termconfig_TEK4114 (configcontrol : configcontrol_type);
+BEGIN
+WITH termfig DO CASE configcontrol OF
+   CON:  BEGIN
+         config.ch := ch_type (512,768,192,192);
+         config.resolution := 16;
+         config.dotsize    := 0;
+         config.starsize   := 320;
+         config.ansi364    := false;
+         config.drawblack  := false;
+         END;
+   QUE:  readint ('ENTER NUMBER OF DIALOG AREA LINES : ',
+                   dialoglines,3,100,dialoglines);
+   REP:  writeline (out,'NUMBER OF DIALOG LINES IS ' + strofi(dialoglines,3));
+   END;
+END;
+{-----------------------------------------------------------------------------}
+END.

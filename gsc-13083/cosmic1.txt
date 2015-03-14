@@ -1,0 +1,569 @@
+[NQCJP.COSMIC.TAPE8706]COSMIC1.TXT              JULY 29, 1986
+                                        revised JUNE 11, 1987
+                                       
+
+
+
+
+
+
+
+
+
+
+
+   SUBMITTAL PACKAGE DOCUMENTATION FOR THE QUIKVIS PROGRAM
+   -------------------------------------------------------
+
+
+
+
+
+
+
+
+                 Charles J Petruzzo
+                 Code 742.1
+                 Goddard Space Flight Center
+                 Greenbelt, MD  20771
+
+                 Telephone: 301-286-4969
+
+
+
+PROBLEM/FUNCTION DEFINITION
+---------------------------
+
+
+Instruments on some earth orbiting satellites observe
+celestial bodies such as the sun, planets, comets, and
+stars.  Typical questions are: 
+
+  - how long may specific celestial objects be observed
+    during each satellite revolution about the earth ?
+
+  - if one covered the sky with a grid, how long could
+    individual grid points be observed during each satellite
+    revolution about the earth ?
+
+
+The first is asked by one who wants to know the effects of
+launch times and dates, the second by one who wants to select
+objects to observe.  The QUIKVIS program answers both
+questions. 
+
+
+During an observaton, certain requirements must be satisfied.
+Requirements that QUIKVIS can consider are:
+
+  - the line of sight to the object must not be blocked
+    by the earth;
+
+  - the angle between the earth horizon and the line of
+    sight to the target must exceed a specified minimum
+    value;
+
+  - the angle between the velocity vector and the line of
+    sight to the target must exceed a specified minimum
+    value
+
+  - the angle between the zenith direction and the line of
+    sight to the target must be within a specified maximum
+    value
+
+  - the satellite must be in the earth's shadow during the
+    observation.
+
+
+Primary output is the time per orbit that the requirements
+are satisfied.  The same information is stored on a file
+in a format suitable for use by an XY plotter program. 
+
+Secondary output shows the effects of individual
+requirements.  The QUIKVIS user guide contains examples of
+the output.
+ 
+
+
+METHOD OF SOLUTION
+------------------
+
+
+The program handles a multitude of dates and orbit right
+ascensions of the ascending node(RAANs).  Only one semimajor
+axis and one inclination are used.  The orbit is assumed
+circular, but the coding allows easy modification for
+eccentric orbits. 
+
+
+The program analyzes one circuit about the earth for each
+date and RAAN combination.  Within the circuit, individual
+requirements are applied to find the true anomaly ranges
+within which they are satisfied.  The ranges are overlayed
+to get a common range from which is derived the duration of
+the potential observation time for that circuit.  When all
+combinations have been analyzed, the collected results are
+presented in a convenient form. 
+
+
+Specific information on the basic algorithms is:
+
+  - orbit motion is Keplerian
+
+  - the algorithm for computing earth shadow is similar to
+    the one described in the book 'Methods of Orbit
+    Determination' by P. R. Escobal, 1976 reprint, pages
+    155-159;  the subroutine is an old one and original
+    documentation on it is not available
+
+  - the algorithm used for the minumum angle to the earth
+    horizon is described in the memorandum dated
+    October 23, 1985 from H. Swartwood to Mission Analysis
+    Section Files titled Star Occultation Analysis; the
+    memorandum is enclosure 1
+
+  - the algorithm used for the minumum angle to the velocity
+    vector is described in the memorandum dated
+    October 24, 1985 from H. Swartwood to Mission Analysis
+    Section Files titled Ram Vector Analysis; the memorandum
+    is enclosure 2
+
+  - the algorithm used for the maximum angle to the zenith
+    direction is described in the memorandum dated
+    November 7, 1985 from H. Swartwood to Mission Analysis
+    Section Files titled Zenith Vector Analysis; the
+    memorandum is enclosure 3
+
+  - analytical expressions are used for the sun and planet
+    ephemerides and the rotation matrices relating the Mean
+    Equator and Equinox of 1950.0 and Mean Equator and
+    Equinox of Date coordinate systems;  the equations are
+    from the Explanatory Supplement to the Astronomical
+    Ephereris and the American Ephemeris and Nautical
+    Almanac, 1974 reprint of the 1961 edition
+
+  - a spherical earth is assumed
+
+  - atmospheric refraction effects are ignored
+
+
+
+USER INSTRUCTIONS
+-----------------
+
+
+The user guide is contained on the submittal tape.  The file
+name is QUIKVIS.TXT.  It has about 60 pages.
+
+
+The user guide refers to document files TARGCATLG.TXT and
+OBSREQMT.TXT, both of which are on the submittal tape.  They
+have been included for completeness, but the user guide is
+sufficient. 
+
+
+
+INSTRUCTIONS FOR INSTALLING AND TESTING
+---------------------------------------
+
+
+The program was developed on VAX-11/780 and VAX-11/785
+computers;  it has not been tried on any others.
+
+
+The program tape contains several types of files.  The file
+name suffix describes the kind of file involved: 
+
+  TXT - text files that comprise the program's documentation;
+        all can be read by a text editor
+
+  COM - DCL command files for compiling, linking, and
+        executing the program;  all can be read by a text
+        editor
+                  
+  FOR - FORTRAN source code(all code is FORTRAN);  all can
+        be read by a text editor;  there are 187 such files;
+
+  INC - FORTRAN 'include' files referenced by one or more
+        source files during compilation;  all can be read
+        by a text editor;  there are 3 such files;
+
+  EXE - an executable image;  this file cannot be read by a
+        text editor
+
+  Uxx - data files used as input to the program or output
+        by the program;  Uxx values on the tape are U05, U06,
+        U08, U19, U25, U26, U27, and U30;  the user guide
+        describes the files;  all can be read by a text
+        editor
+
+
+
+
+
+
+               ( CONTINUED ON THE NEXT PAGE )
+
+
+
+         ( INSTALLING AND TESTING,  CONTINUATION )
+
+
+The following can be done to install and test the program on 
+a VAX:
+
+
+   1. create a new subdirectory and set the current default
+      to that subdirectory;  all tape files will be written
+      into that subdirectory;
+
+      comment: the subdirectory has no files yet
+
+
+   2. create a command file to copy all tape files to disk; 
+      name the file TODISK.COM to assure uniqueness;  the
+      following DCL may be used:
+
+      $!         FILE NAME = TODISK.COM
+      $! 
+      $ SET DEFAULT [subdirectory name from step 1 goes here]
+      $!
+      $ DRIVE = "MTA0:"
+      $ ALLOCATE 'DRIVE:'  TAPE
+      $ MOUNT    'DRIVE'   QVTAPE  TAPE    ! tape label is QVTAPE
+      $!
+      $ COPY/LOG  'DRIVE'*.*   *
+      $!
+      $ DISMOUNT/UNLOAD 'DRIVE'
+      $ DEALLOC 'DRIVE'
+
+
+   3. execute TODISK.COM to copy the tape files to disk;
+
+      after all tape files have been copied to the default
+      subdirectory, you will be finished with the tape
+
+
+   4. using a text editor, modify each command file(.COM);
+      change the "DIREC =" statement so that the DIREC value
+      is the subdirectory name from step 1;
+
+      the default subdirectory is set in each command file
+      to make batch submittal easy in case your subdirectory
+      is not the top directory
+
+
+
+
+
+
+
+
+
+               ( CONTINUED ON THE NEXT PAGE )
+
+
+
+         ( INSTALLING AND TESTING,  CONTINUATION )
+
+
+
+   5.  The following tests should be done:
+
+
+
+       5a. recreate the tape's sample output using the input
+           data files and executable image that were read
+           from the tape in step 4 of the installation
+           instructions;  to do this, execute command files
+           EXAMPLE1.COM and EXAMPLE2.COM;  batch submittal is
+           recommended;  batch submittal can be done by
+           entering
+
+                   $ SUBMIT EXAMPLE1  and
+                   $ SUBMIT EXAMPLE2
+
+
+           compare the newly created output with the sample
+           output that was read from the tape;  the output
+           files should be identical except for information
+           about the date and time the job was executed;
+           corresponding file names are:
+
+               newly created output      example from tape
+               --------------------      -----------------
+
+                      EX1.U06              EXAMPLE1.U06
+                      EX1.U19              EXAMPLE1.U19
+                      EX1.U25              EXAMPLE1.U25
+                      EX1.U26              EXAMPLE1.U26
+                      EX1.U27              EXAMPLE1.U27
+      
+                      EX2.U06              EXAMPLE2.U06
+                      EX2.U19              EXAMPLE2.U19
+
+
+       5b. execute the command file BIGTEST.COM to compile
+           and link the program and run two examples;
+
+           BIGTEST.COM executes
+
+              -  MAKEOBJ.COM to compile all of the source
+                   code
+              -  QVLINK.COM to create a new executable
+                   image(the file name suffix is LDM)
+              -  EXAMPLE1.COM  (unit 19 is printed)
+              -  EXAMPLE2.COM  (unit 19 is printed)
+
+           batch submittal is recommended:   $ SUBMIT BIGTEST
+
+           BIGTEST.COM repeats step 5a's test runs using the
+           newly created image;  the same output file
+           comparisons as were done in step 5a.
+
+
+
+
+SAMPLE INPUT/OUTPUT
+------------------
+
+
+The user guide, QUIKVIS.TXT, contains examples of the
+program input and output.  The guide should be sufficient
+for a browser to determine the usefulness of the program. 
+
+
+There are two complete examples of program output given on
+the submittal tape.  The first is for specific targets, the
+second for a grid of targets.  The first example was created
+by executing the command procedure EXAMPLE1.COM, the second
+by EXAMPLE2.COM.  At that time the procedures named the
+output files EX1.U06, EX1.U19, EX1.U25, EX1.U26, EX1.U27,
+EX2.U06, and EX2.U19.  Before the submittal tape was created,
+the files were renamed EXAMPLE1.U06, ...., EXAMPLE2.U19. 
+The user guide discusses the files.  The file names on the
+tape are: 
+
+          EXAMPLE1.U05       EXAMPLE2.U05 
+          EXAMPLE1.U06       EXAMPLE2.U06
+          EXAMPLE1.U08           n/a
+          EXAMPLE1.U19       EXAMPLE2.U19
+          EXAMPLE1.U25           n/a
+          EXAMPLE1.U26           n/a
+          EXAMPLE1.U27           n/a
+          EXAMPLE1.U30       EXAMPLE2.U30
+
+
+
+
+ENVIRONMENTAL CHARACTERISTICS
+-----------------------------
+
+
+All coding is in the VAX-11 FORTRAN extension to the
+FORTRAN-77 standard.  VAX/VMS Version 4.2 was used
+throughout, but the version number is insignigficant for
+source code considerations.  Most coding was developed
+using the VAX EDT's full screen editor.  Some features that
+may affect transferring the program to other environments
+are:
+
+     - this program's liberal use of the VAX-11 extension is
+       the most significant factor in deciding whether to
+       implement QUIKVIS on another system because source
+       code modifications may be required
+
+     - many routines contain variable names with seven or
+       more characters
+
+     - inverse trig functions may have different names than
+       in other environments; for example, DACOS(arc cosine)
+       may be named DARCOS on other systems
+
+     - some in-line functions(for example, JIDNNT, the
+       nearest integer function for real*8 arguments) may
+       have a different name on other systems
+
+     - character strings may appear as constants in calls
+       to some subroutines; for example, the form
+       CALL SUB('DEMO') may be a problem
+
+     - there are many DO WHILE loops and many DO...END DO
+       loops in the code
+
+
+Storage requirements in 512-byte blocks are:
+
+     executable image ....................  853
+       (see note 4, next section)
+
+     source code (187 FOR's, 3 INC's) .... 1858
+       (see note 4, next section)
+
+     major print file ....................   56 (example 1)
+       (unit 19)                            338 (example 2)
+
+     object library ...................... 1141
+       (a temporary file)
+
+
+
+
+
+
+OTHER APPROPRIATE INFORMATION
+-----------------------------
+
+
+1) No copyrighted code is present.
+
+
+2) The QUIKVIS program is one of a set of programs used for
+   preflight mission planning involving remote observations.
+   The set is under development and will be submitted to COSMIC
+   when complete.  The set is called TOSS(for Target and Orbit
+   Selection System). 
+
+
+3) QUIKVIS handles only celestial objects, but program coding
+   and file formats are somewhat general in anticipation of
+   expansion to other objects of interest. 
+
+
+4) QUIKVIS uses routines that serve several other programs in
+   the library from which it was drawn.  As a result, some
+   routines contain calls to lower level ones that are never
+   executed during a QUIKVIS run.  All routines are present
+   on the tape, whether actually executed or not, to satisfy
+   all references during the link operation.  Therefore, the
+   program is larger and, perhaps, slower than it would be
+   if the routines were written for QUIKVIS alone.
+
+
+5) The user guide was created with a text editor on the VAX. 
+   All but six pages fit onto 8.5 by 11 inch paper.  The
+   other six are 14 inches wide, so reproduction may involve
+   reducing those pages.
+
+
+
+
+
+
+
+
+
+            ***************************************
+            *                                     *
+            *           >>> END <<<               *
+            *                                     *
+            *             of  the                 *
+            *                                     *
+            *              COSMIC                 *
+            *                                     *
+            *  Submittal  Package  Documentation  *
+            *                                     *
+            *            for  the                 *
+            *                                     *
+            *          QUIKVIS  Program           *
+            *                                     *
+            ***************************************
+
+
+
+
+                        ENCLOSURE 1
+                        ***********
+
+                          of the
+
+                          COSMIC
+
+              Submittal Package Documentation
+
+                         for the
+
+                     QUIKVIS Program
+
+
+
+
+
+
+    THE ENCLOSURE IS A COPY OF A GODDARD SPACE FLIGHT CENTER
+    INTERNAL MEMORANDUM
+
+
+    Memorandum date:   October 23, 1985
+
+    From:              742.1/Hobart P. Swartwood
+
+    To:                742.1/Mission Analysis Section Files
+
+    Subject:           Star Occultation Analysis
+
+
+
+
+                        ENCLOSURE 2
+                        ***********
+
+                          of the
+
+                          COSMIC
+
+              Submittal Package Documentation
+
+                         for the
+
+                     QUIKVIS Program
+
+
+
+
+
+
+    THE ENCLOSURE IS A COPY OF A GODDARD SPACE FLIGHT CENTER
+    INTERNAL MEMORANDUM
+
+
+    Memorandum date:   October 24, 1985
+
+    From:              742.1/Hobart P. Swartwood
+
+    To:                742.1/Mission Analysis Section Files
+
+    Subject:           Ram Vector Analysis
+
+
+
+
+                        ENCLOSURE 3
+                        ***********
+
+                          of the
+
+                          COSMIC
+
+              Submittal Package Documentation
+
+                         for the
+
+                     QUIKVIS Program
+
+
+
+
+
+
+    THE ENCLOSURE IS A COPY OF A GODDARD SPACE FLIGHT CENTER
+    INTERNAL MEMORANDUM
+
+
+    Memorandum date:   November 7, 1985
+
+    From:              742.1/Hobart P. Swartwood
+
+    To:                742.1/Mission Analysis Section Files
+
+    Subject:           Zenith Vector Analysis

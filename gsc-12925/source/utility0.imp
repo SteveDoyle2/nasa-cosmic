@@ -1,0 +1,145 @@
+  { $INCLUDE : 'compile.inc' }
+  { $INCLUDE : 'getparam.int' }
+  { $INCLUDE : 'utility.int' }
+
+  implementation of utility;
+
+  USES getparam;
+
+  var
+      b : char;
+         f       : text;
+      first,current,newnode : entity;
+
+  value
+        b := ' ';
+
+
+  (**************************************************************)
+
+  procedure create;
+
+  var
+    size    : integer;
+    i       : integer;
+
+  begin
+    size := ord ( node_data^[current_node].input_length );
+    new (current);
+    new ( current^.field, size );
+    with current^ do
+      begin
+        etype := current_node;
+        field^.len := 0;
+        up     := current;
+        down   := current;
+        x      := node_data^[current_node].x;
+        y      := node_data^[current_node].y;
+        xtext  := node_data^[current_node].xtext;
+        ytext  := node_data^[current_node].ytext;
+      end;
+  end;
+
+  (**************************************************************)
+
+  procedure link;
+
+  begin
+     newnode^.up := current;
+     newnode^.down := current^.down;
+     current^.down^.up := newnode;
+     current^.down := newnode;
+     current := newnode;
+  end;
+
+  (**************************************************************)
+
+  procedure add_node;
+
+  var
+      i        : integer;
+
+  begin
+    first := current;
+    for i := 1 to ord ( node_data^[node].nfields ) do
+        begin
+          create ( newnode, ord ( node ) + i - 1 );
+          link ( current, newnode );
+          if i=1 then first := current;
+        end;
+    current := first;
+  end;
+
+  (**************************************************************)
+
+  procedure delete;
+
+   var
+       i    : integer;
+
+   begin
+     for i := 1 to ord ( node_data^[current^.etype].nfields ) do
+       begin
+          current^.up^.down := current^.down;
+          current^.down^.up := current^.up;
+          newnode := current^.down;
+          if newnode = current then newnode := nil;
+          dispose ( current^.field );
+          dispose( current );
+          current := newnode;
+       end;
+   end;
+
+
+  (**************************************************************)
+
+  procedure initialize;
+
+   var
+         nnodes  : byte;
+         i       : byte;
+
+   begin
+      nnodes := upper ( node_data^ );
+      create ( current, 1 );
+      i := 2;
+      while i <= nnodes do
+         begin
+            create ( newnode, i );
+            link ( current, newnode);
+            i := i + 1;
+         end;
+      first := current^.down;
+   end;
+
+
+  (**************************************************************)
+
+  procedure load_chart;
+
+   var
+         i       : byte;
+         length  : byte;
+
+   begin
+      assign ( f, name );
+      reset ( f );
+      read ( f, i );
+      create ( newnode, i );
+      with newnode^ do
+        readln ( f, x, y, xtext, ytext, b, field^ );
+      current := newnode;
+      first := current;
+      while not eof ( f ) do
+         begin
+            read ( f, i );
+            create ( newnode, i );
+            with newnode^ do
+              readln ( f, x, y, xtext, ytext, b, field^ );
+            link ( current, newnode);
+        end;
+      close ( f );
+   end;
+
+  end.
+

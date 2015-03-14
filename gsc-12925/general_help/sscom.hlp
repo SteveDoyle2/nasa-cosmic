@@ -1,0 +1,35 @@
+revss.hlp
+pnt_view.hlp
+view.hlp
+
+
+
+
+
+
+
+This is the help for the slide show for each individual chart.  Only charts of
+the same kind can be run with this slide show.  Use the disk marked Slide Show
+to run charts of all kinds.  F1 and F2 of this screen explain the menus
+associated with the Slide Show and F3 explains the screen which is seen while
+viewing the slide.
+
+
+
+
+To obtain help for any of the following subjects,  press the function key next
+to the desired subject.
+
+        F1  CREATE/REVISE a Slide Show
+        F2  PRINT/VIEW a Slide Show
+        F3  Viewing a Slide
+
+
+
+
+        F8  Return to Previous Menu
+
+        F10 Exit from Help
+
+Press F8 to return to the last help screen or F10 to leave the help mode
+

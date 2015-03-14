@@ -1,0 +1,5170 @@
+      PROGRAM EMVC(INPUT,OUTPUT,TAPE7,TAPE5=INPUT,TAPE6=OUTPUT)
+C     MAIN PROGRAM FOR CHARACTERISTICS WITH SHEAR
+      COMMON/AB/EPP,EPQ,EPT
+      COMMON/AC/IBOD,PIN
+      COMMON/AL/GAR,GEW
+      COMMON/AX/JSUBL,JSUBU
+      COMMON/BA/ALP(7,55),EMINF,WINF
+      COMMON/BC/IOCHEM
+      COMMON/BD/XMASS(55)
+      COMMON/CG/AUP,BUP,CUP,DTSPRI(55),DUP,EUP,JCONV,THPRI(55),YPRI(55)
+      COMMON/CK/WTMOLE(7)
+      COMMON/CJ/CP(7,55),CP1(7),CPX(55)
+      COMMON/RC/R(55)
+      COMMON/TW/TIN
+      COMMON/DB/BETB(20),IS(20),IDD,IJENK,JENKI
+      COMMON/DE/MM
+      COMMON/DP/YN(55)
+      COMMON/ED/CPIN,RO
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/EG/EIN,PR,XLE
+      COMMON/EP/GAMINF,H1(7),RINF
+      COMMON/FE/DEL
+      COMMON/GE/RAD,ROO,UIN,VISINF
+      COMMON/GF/DELY,IFS,KOUNTO,MMM
+      COMMON/GK/DELX
+      COMMON/HJ/KOUNT,LL,NPT
+      COMMON/HL/ALPHA,BETA
+      COMMON/HM/ALPN(7,55),CPN(7,55),CPXN(55),EMN(55),GAMN(55),HN(7,55),
+     IL,PN(55),QN(55),RHON(55),RN(55),THN(55),TN(55),WN(55),XMUN(55)
+      COMMON/HP/BETAN(20),IEMBED
+      COMMON/OP/ALPB(7),PHI(55)
+      COMMON/PD/W(55),X(55)
+      COMMON/PO/ALPHN(7),IFUEL,PRES
+      COMMON/PQ/JCHEM,NSP,T(55),PTZERO,IDIVERG,TH1,XE,YE,RCR,PTOJ,TOJ
+     1,EM1,XMU1,Q1
+      COMMON/QA/H(7,55),Q(55),RHO(55),XMU(55)
+      COMMON/QS/RHOP(2),WDOT(7,55),WDOTC(7),WP(2),XMUP(2)
+      COMMON/RO/AP0,AP1,AP2
+      COMMON/RS/GPMS,PS,THS,THSL,THSU
+      COMMON/ST/I13,IREGI,K ,KFIRST,KKKQ,PSTAR
+      COMMON/TS/DVIS(55),DVISN(55),DVISP(2),VIS(55),VISN(55),VISP(2)
+      COMMON/WAVE/XBOD(5),XWALL(5),AABOD(5),BBBOD(5),CCBOD(5),EEBOD(5),
+     ZFFBOD(5),GGBOD(5),LWALL,LBOD,III,JJJ
+      COMMON/UV/II11,IERR,IPRESS,IPRESU,ISUB
+      COMMON/VT/DACH(7,55),DTCH(55)
+      COMMON/VW/ICONT,IEND,KT,THBPN,XBPN
+      COMMON/WV/NPTS,RE,XBP,XJ
+      COMMON/X0/X00
+      COMMON/YX/ABODS,BPRESS,CPRESS
+      COMMON/YZ/BPRESU,CHEMFC,CPRESU,EMSUB,RTH,XSTEP
+      COMMON/ZY/ABOD,BBOD,CBOD,EBOD,FBOD,GBOD,IAVE,IPUNCH,JBOD,KKKKK
+      DIMENSION XS(7),PITOT(55),VIA(55)
+      DATA II11/0/
+C     ********************************   BEGIN INPUTTING PARAMETERS
+      WRITE(6,400)
+  112 FORMAT(I5,5X,9E13.5)
+  400 FORMAT(1H1)
+C     J=0 TWO DIMENSIONAL
+C     J=1 AXISYMMETRIC
+C     SPECIES 1 IS H
+C     SPECIES 2 IS O
+C     SPECIES 3 IS H2O
+C     SPECIES 4 IS H2
+C     SPECIES 5 IS O2
+C     SPECIES 6 IS OH
+C     SPECIES 7 IS N2
+      WTMOLE(1)=1.008
+      WTMOLE(2)=16.
+      WTMOLE(3)=18.016
+      WTMOLE(4)=2.016
+      WTMOLE(5)=32.0
+      WTMOLE(6)=17.008
+      WTMOLE(7)=28.014
+      FAS=WTMOLE(4)/16.
+      J22=0
+      X00=0.
+      IDG=0
+      DEL=0.
+      XBOD(1)= 10000.
+      XWALL(1)=10000.
+      DO 8220 I=1,20
+      BETAN(I)=0.
+      BETB(I)=0.
+      IS(I)=0
+ 8220 CONTINUE
+      IFS=0
+      NSP=7
+      RO=1.987
+      ROO=RO*3.087*32.2/2.205*1000.
+      EPP=1.E-10
+      EPQ=1.E-10
+      EPT=1.E-10
+      IOCHEM=1
+      MM=6
+      EXXX=1.E-06
+      I13=0
+      KFIRST=-1
+      KKKQ=10000
+      JCONV=0
+      INPTSH=0
+  363 CONTINUE
+      CALL INDATA
+C     ***********************************    MAKE INITIAL SHEAR
+      IVV=1
+      IDD=IDD+1
+      DO 7  IV=1,IDD
+      IDUM=NPTS
+      IF(IS(IV).EQ.0) GO TO   6
+      IF((IV/2)*2.EQ.IV) GO TO   1
+      IDUM=IS(IV)-1
+      GO TO   2
+    1 IDUM=IS(IV)
+    2 VISD= XVIS(XBP,IVV,IDUM)
+      VISD=VISD*RE
+      DO  3I=IVV,IDUM
+    3 VIS (I)=  VISD*RHO(I)
+       IVV=IDUM+1
+      GO TO 7
+    6 IF(IV.EQ.IDD) GO TO   2
+    7 CONTINUE
+      IDD=IDD-1
+      VISD=VIS (1)
+      CFF=0.
+      CALL SHEAR1(CFF,VISD)
+ 6789 CONTINUE
+      CALL EMBED
+      DO 99999 JSJ=1,NPTS
+99999 IF(ABS(TH(JSJ)).LT.1.E-8) TH(JSJ)=0.0
+      IF(IDIVERG.NE.1) GO TO 1313
+      JENK=IS(4)
+      DO 1300 I=1,JENK
+      RJ=SQRT(Y(I)*Y(I)+(XE+X(I))**2)
+      TH(I)=ATAN(Y(I)/(XE+X(I)))
+      ZJ=RJ/RCR
+      G1=GAM(I)-1.
+      G2=GAM(I)+1.
+    5 EJ=1.+G1/2.*EM(I)*EM(I)
+      ZJ1=((2./G2*EJ)**(G2/(2.*G1)))/EM(I)
+      ZJ2=SQRT(ZJ1)
+      IF(XJ.NE.1.) ZJ2=ZJ1
+      IF(ABS(ZJ2-ZJ).LE..001) GO TO 12
+      IF(ZJ2-ZJ) 14,12,13
+   14 EM(I)=EM(I)+.01
+      GO TO 5
+   13 EM(I)=EM(I)-.0011
+      GO TO 5
+   12 T(I)=TOJ/EJ
+      P(I)=PTOJ*EJ**(-GAM(I)/G1)
+      T(I)=T(I)/TIN
+      Q(I)=EM(I)/EMINF/SQRT(GAR/GAM(I)/R(I)/T(I))
+      P(I)=P(I)/PRES *PIN
+      RHO(I)=GEW*W(I)*P(I)/T(I)
+      CPX(I)=0.
+      W(I)=0.
+      CALL THERMO(T(I),H1,CP1)
+      DO 55 J=1,NSP
+      H(J,I)=H1(J)
+      CP(J,I)=CP1(J)
+      W(I)=W(I)+ALP(J,I)/WTMOLE(J)
+      CPX(I)=CPX(I)+ALP(J,I)*CP(J,I)
+   55 CONTINUE
+      W(I)=1./W(I)
+      R(I)=RO/W(I)
+      GAM(I)=CPX(I)/(CPX(I)-R(I)/CPIN)
+ 1307 VIS(I)=0.
+ 1300 CONTINUE
+ 1313 CONTINUE
+      DO 1200 I=1,NPTS
+ 1200 VIA(I)=VIS(I)*VISINF
+      DO 7188 K=1,NPTS
+      DO 7199 J=1,NSP
+ 7199 XS(J)=W(K)*ALP(J,K)/WTMOLE(J)
+      FUAIR=1.008*(XS(1)+2.*XS(4)+2.*XS(3)+XS(6))/(16.*(XS(2)+XS(3)
+     1+2.*XS(5)+XS(6))+28.014*XS(7))
+      PHI(K)=FUAIR/.029161
+ 7188 CONTINUE
+      IF(KOUNT.EQ.KKKKK) GO TO 407
+      IF(II11.EQ.1) GO TO 407
+      IF(KOUNT.EQ.KOUNTO) GO TO 407
+      IF(((KOUNT/LL)*LL).NE.KOUNT)GO TO 179
+  407 WRITE(6,408)KOUNT
+  408 FORMAT(7H1KOUNT=I5)
+      WRITE(6,5206) X(1)
+ 5206 FORMAT(/5H X = E13.5)
+      DO 8485 I23=1,IDD
+      IF(BETB(I23).EQ.0.) GO TO 8485
+      IF(I23.LT.3)
+     1WRITE(6,8484) I23,BETB(I23)
+ 8484 FORMAT(/5X,20HEMBEDDED SHOCK TYPE  ,I1,10X,7HBETA = ,E11.3)
+      IF(I23.GE.3)
+     1WRITE(6,2331) I23,BETB(I23)
+ 2331 FORMAT(/14X,11HSHOCK TYPE  ,I1,10X,7HBETA = ,E11.3)
+ 8485 CONTINUE
+      WRITE(6,7222)(VIA(I),I=1,NPTS)
+ 7222 FORMAT(5X24HVISCOSITY(LB*SEC/FT**2)=(7E13.5))
+      WRITE(6,5207)
+ 5207 FORMAT(/3X,3HPT.,11X,1HY,12X,1HQ,12X,1HT,12X,1HP,11X,2HTH,11X,
+     12HEM11X3HRHO10X3HGAM9X5HPITOT)
+      DO 70 I=1,NPTS
+      P(I)=P(I)/PIN
+      TM=EM(I)*COS(TH(I))
+   70 PITOT(I)=P(I)*PRES*((GAM(I)+1.)*.5*TM**2)**(GAM(I)/(GAM(I)-1.))*(2
+     A.*GAM(I)/(GAM(I)+1.)*TM**2-((GAM(I)-1.)/(GAM(I)+1.)))**(1./(1.-GAM
+     B(I)))
+      PTO=1./PTZERO
+      DO 7070 I=1,NPTS
+ 7070 PITOT(I)=PTO*PITOT(I)
+      WRITE(6,112)(I,Y(I),Q(I),T(I),P(I),TH(I),EM(I),RHO(I),GAM(I),PITOT
+     1(I),I=1,NPTS)
+      DO 71 I=1,NPTS
+   71 P(I)=P(I)*PIN
+      WRITE(6,160)
+  160 FORMAT(/////3X,3HPT.,8X,             6HALP(1),7X,6HALP(2),7X,
+     26HALP(3),7X,6HALP(4),7X,6HALP(5),7X,6HALP(6),7X,6HALP(7),9X,3HPHI
+     2,11X,1HW)
+      WRITE(6,112)(I,(ALP(J,I),J=1,7),PHI(I),W(I),I=1,NPTS)
+  179 CONTINUE
+      IF(KOUNT.GE.KKKKK)GO TO 1572
+      IF(II11.EQ.1) GO TO 1572
+      ALPHA=1.0
+      BETA=0.0
+      CALL STEP
+      IF(II11.EQ.1) GO TO 407
+      IF(KOUNT.NE.KFIRST.OR.I13.NE.1) GO TO 300
+      CALL PUNCH
+      DO 301 I=JSUBL,JSUBU
+      Y PRI(I)=Y (I)
+      THPRI(I)=TH(I)
+  301 CONTINUE
+  300 CONTINUE
+      CALL CHEM(FAS)
+ 8282 CONTINUE
+      ICONT=0
+      IEND=0
+      K=1
+      L=2
+  887 IF(L.GE.JSUBL.AND.L.LE.JSUBU) GO TO 900
+  888 K=L
+      KT=L-1
+      IF(IJENK.EQ.1) GO TO 67676
+      IF(L.EQ.NPTS)GOTO 612
+      IF(L.EQ.JSUBU.AND.ICONT.EQ.1) GO TO 1622
+      DO 776 JSHOCK=1,IDD
+      JJSHOCK= (JSHOCK/2)*2
+      IF( JJSHOCK.EQ.JSHOCK) GO TO 11
+      IF( K.NE.(IS(JSHOCK)-1)) GO TO 776
+      MMM=JSHOCK
+      K= IS(JSHOCK)
+      KT= K
+      GO TO 8232
+   11 IF(  K.NE.IS(JSHOCK))                           GO TO 22
+      MMM=JSHOCK
+      GO TO 8232
+   22 IF( K.EQ.(IS(JSHOCK)+1))                          GO TO 88888
+  776 CONTINUE
+      GO TO 8234
+88888 K=K+1
+      L=K
+      KT=L-1
+      IF(L.EQ.NPTS)GO TO 612
+      GO TO 8234
+ 8232 L=K
+ 8230 IFS=1
+      IPOI=1
+      ALSV=ALPHA
+      BESV=BETA
+      KTSAV=KT
+  772 CALL CPOINT
+      THDE=THN(K)
+      ALPHA=.5
+      BETA=.5
+      KT=KTSAV
+ 2194 CALL CPOINT
+      IPOI=IPOI+1
+      IF(IPOI.LT.20)GO TO 2195
+      WRITE(6,9191)
+      WRITE(6,2196)
+ 2196 FORMAT(44H ERROR IN CPOINT ITERATION FOR SHOCK IN CHAR)
+      STOP
+ 2195 ERTHD=ABS(THDE-THN(K))
+      THDE=THN(K)
+      KT=KTSAV
+  771 IF(ERTHD.GT.EXXX)GO TO 2194
+      ALPHA=ALSV
+      BETA=BESV
+      IFS=2
+      CALL HSHOCK(MMM)
+      IFS=0
+      K=K+1
+      L=L+1
+      GO TO 887
+ 8234 CONTINUE
+      IPOI=1
+      ALSV=ALPHA
+      BESV=BETA
+      CALL CPOINT
+      KT=L-1
+      THDE=THN(K)
+      ALPHA=.5
+      BETA=.5
+ 2601 CALL CPOINT
+      KT=L-1
+      IPOI=IPOI+1
+      IF(IPOI.LT.20)GO TO 2602
+      WRITE(6,9191)
+ 9191 FORMAT(1H1)
+      WRITE(6,2197) K
+ 2197 FORMAT(53H ERROR IN STANDARD CPOINT ITERATION IN CHAR AT POINT I2)
+      STOP
+ 2602 ERTHD=ABS(THDE-THN(K))
+      THDE=THN(K)
+      IF(ERTHD.GT.EXXX) GO TO 2601
+      ALPHA=ALSV
+      BETA=BESV
+C     ************************  INCREMENT COUNTERS  DO NEXT C POINT
+  900 CONTINUE
+      K=K+1
+      IF(L.EQ.NPTS) GO TO 7676
+      L=L+1
+      IF(ICONT.EQ.1) GO TO 888
+      GO TO 887
+C   NOZZLE WALL CALCULATION
+  612 CONTINUE
+      IPOI=1
+      ALSV=ALPHA
+      BESV=BETA
+      CALL LPOINT(NPTS,1.)
+      K=NPTS
+      THDE=THN(K)
+      IF(               IPRESU.EQ.0) THDE=PN(K)
+      ALPHA=.5
+      BETA=.5
+ 2607 CALL LPOINT(NPTS,1.)
+      K=NPTS
+      IPOI=IPOI+1
+      IF(IPOI.LT.20)GO TO 2608
+      WRITE(6,9191)
+      WRITE(6,2198)
+ 2198 FORMAT(51H ERROR IN NOZZLE WALL CALCULATION ITERATION IN CHAR)
+      STOP
+ 2608 ERTHD=ABS(THDE-THN(K))
+      IF(               IPRESU.EQ.0) ERTHD=ABS(1.-THDE/PN(K))
+      THDE=THN(K)
+      IF(               IPRESU.EQ.0) THDE=PN(K)
+      IF(ERTHD.GT.EXXX) GO TO 2607
+      ALPHA=ALSV
+      BETA=BESV
+C     COMPLETE FIRST POINT
+      IF (JENKI.EQ.1) GO TO 1818
+67676 IJENK=0
+ 7676 CONTINUE
+      IF(JSUBL.EQ.1) GO TO 1800
+      CALL LPOINT(1,0.)
+      K=1
+      IPOI=1
+      ALSV=ALPHA
+      BESV=BETA
+      THDE=THN(K)
+      IF(IPRESS.EQ.0               ) THDE=PN(K)
+      ALPHA=.5
+      BETA=.5
+ 2609 CALL LPOINT(1,0.)
+      K=1
+      IPOI=IPOI+1
+      IF(IPOI.LT.20)GO TO 2610
+      WRITE(6,9191)
+      WRITE(6,2199)
+ 2199 FORMAT(39H ERROR IN FIRST POINT ITERATION IN CHAR)
+      STOP
+ 2610 ERTHD=ABS(THDE-THN(K))
+      IF(IPRESS.EQ.0               ) ERTHD=ABS(1.-THDE/PN(K))
+      THDE=THN(K)
+      IF(IPRESS.EQ.0               ) THDE=PN(K)
+      IF(ERTHD.GT.EXXX) GO TO 2609
+      ALPHA=ALSV
+      BETA=BESV
+ 1818 JENKI=0
+C     SUBSONIC PRESSURE ITERATION
+ 1800 CONTINUE
+      IF(ISUB.EQ.0) GO TO 1622
+      IF(ICONT.EQ.1) GO TO 1622
+      IF(I13.NE.1.OR.KOUNT.NE.KFIRST) GO TO 1777
+      CALL DPDTH(THS,JSUBU)
+      CALL DPDTH(THSU,JSUBU+1)
+      CALL DPDTH(THSL,JSUBU-1)
+      CALL THSSS(THSS)
+      AUP=Y(JSUBU)
+      BUP=TAN(TH(JSUBU))
+      IF(IREGI.NE.0.AND.JSUBU.EQ.J22) GO TO 8375
+      CUP=THS/COS(TH(JSUBU))**3
+      DUP=(THSS+3.*TAN(TH(JSUBU))*THS*THS)/COS(TH(JSUBU))**4
+      EUP=-4.095
+      GO TO 8376
+ 8375 CONTINUE
+      CUP=0.
+      DUP=-1.
+      EUP=0.
+ 8376 CONTINUE
+      DO 381 I=JSUBL,JSUBU
+  381 CALL DPDTH(DTSPRI(I),I)
+ 1777 CONTINUE
+      CALL SSONIC(IDG)
+      IF(IDG.EQ.0) GO TO 1622
+      II11=1
+      IPUNCH=1
+      GO TO 407
+ 1622 CONTINUE
+      IF(ISUB.EQ.0) GO TO 359
+      IF(JCONV.EQ.1) GO TO 360
+      IF(KOUNT.NE.KKKQ-1) GO TO 361
+      IF(INPTSH.EQ.0) NPTSH=NPTS
+      INPTSH=1
+      REWIND 7
+      GO TO 363
+  360 NPTS=NPTSH
+      INPTSH=0
+  359 DO 357 I=1,NPTS
+      II=NPTS-I+1
+      IF(EMN(II).GT.EMSUB) GO TO 357
+      IF(ISUB.EQ.1) GO TO 355
+      ISUB=1
+      WRITE(6,354)
+  354 FORMAT(37H1         SUBSONIC REGION ENCOUNTERED)
+      EMST=EMSUB
+      EMSUB=1.15
+      AP1=0.
+      IREGI=0
+      GO TO 359
+  355 K=II+1
+      IF(IREGI.EQ.1) K=JSUBU
+      GO TO 358
+  357 CONTINUE
+      IREGI=2
+      GO TO 361
+  358 CONTINUE
+      IF(JCONV.EQ.0) GO TO 1417
+      JCONV=0
+      DO 1418 I=1,NPTS
+      II=NPTS-I+1
+      IF(EMN(II).GT.EMST) GO TO 1418
+      GO TO 1417
+ 1418 CONTINUE
+      IREGI=2
+      I13=0
+      EMSUB=EMST
+      X00=XBPN
+      ABOD=YN(1)
+      ABODS=YN(1)
+      BBOD=TAN(THN(1))
+      CBOD=0.
+      GO TO 361
+ 1417 CONTINUE
+      AP0=PN(1)
+      AP2=(PN(K)-PN(1)-AP1*(YN(K)-YN(1)))/(YN(K)-YN(1))**2
+      DO 356 I=1,K
+      PN(I)=AP0+AP1*(YN(I)-YN(1))+AP2*(YN(I)-YN(1))**2
+      RHON(I)=GEW*WN(I)*PN(I)/TN(I)
+      IF(I.EQ.1) GO TO 356
+      XJ1=1.+XJ
+      I1=I-1
+      YFUN=(YN(I)**XJ1-YN(I1)**XJ1)/XJ1
+      TERM=(RHON(I)*QN(I)*COS(THN(I))+RHON(I1)*QN(I1)*COS(THN(I1)))/2.
+      XMASS(I)=XMASS(I1)+TERM*YFUN
+  356 CONTINUE
+      DS=2.*DELX/(COS(TH(K))+COS(THN(K)))
+      PS=(PN(K)-P(K))/DS
+      GPMS=(GAMN(K)*PN(K)*EMN(K)**2-GAM(K)*P(K)*EM(K)**2)/DS
+      DS=2.*DELX/(COS(THN(1))+COS(TH(1)))
+  361 CONTINUE
+C     COMPUTE SHEAR
+      IVV=1
+      IDD=IDD+1
+      DO 77 IV=1,IDD
+      IDUM=NPTS
+      IF(IS(IV).EQ.0) GO TO  76
+      IF((IV/2)*2.EQ.IV) GO TO 701
+      IDUM=IS(IV)-1
+      GO TO 702
+  701 IDUM=IS(IV)
+  702 VISE= XVIS(XBP,IVV,IDUM)
+      VISE=VISE*RE
+      DO773I=IVV,IDUM
+  773 VISN(I)=  VISE*RHO(I)
+       IVV=IDUM+1
+      GO TO 77
+   76 IF(IV.EQ.IDD) GO TO 702
+   77 CONTINUE
+      IDD=IDD-1
+      VISE=VISN(1)
+      CFF=0.
+      CALL SHEAR2(CFF,VISE)
+C     ***********************************   RESET ALPHA AND BETA
+      IF(IAVE.EQ.0) GO TO 8396
+      IF(BETA.GT.0.0)GO TO 8396
+      ALPHA=0.5
+      BETA=0.5
+      GO TO 8282
+ 8396 CONTINUE
+C     ******************************************* STEP TAKEN   OUTPUT
+      J22=JSUBU
+      CALL RSET
+      DO 1431 I=1,IDD
+ 1431 BETB(I)=BETAN(I)
+      KOUNT=KOUNT+1
+      CALL WAVES
+      GO TO 6789
+ 1572 IF(IPUNCH.EQ.0) STOP
+      CALL PUNCH
+      STOP
+      END
+      SUBROUTINE WAVES
+      COMMON/AC/IBOD,PIN
+      COMMON/RC/R(55)
+      COMMON/ZY/ABOD,BBOD,CBOD,EBOD,FBOD,GBOD,IAVE,IPUNCH,JBOD,KKKKK
+      COMMON/WAVE/XBOD(5),XWALL(5),AABOD(5),BBBOD(5),CCBOD(5),EEBOD(5),
+     ZFFBOD(5),GGBOD(5),LWALL,LBOD
+      COMMON/PD/W(55),X(55)
+      COMMON/AL/GAR,GEW
+      COMMON/BA/ALP(7,55),EMINF,WINF
+      COMMON/CJ/CP(7,55),CP1(7),CPX(55)
+      COMMON/CK/WTMOLE(7)
+      COMMON/DB/BETB(20),IS(20),IDD,IJENK,JENKI
+      COMMON/ED/CPIN,RO
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/EP/GAMINF,H1(7),RINF
+      COMMON/PQ/JCHEM,NSP,T(55),PTZERO,IDIVERG,TH1,XE,YE,RCR,PTOJ,TOJ
+     1,EM1,XMU1,Q1
+      COMMON/QA/H(7,55),Q(55),RHO(55),XMU(55)
+      COMMON/WV/NPTS,RE,XBP,XJ
+      COMMON/TS/DVIS(55),DVISN(55),DVISP(2),VIS(55)
+      REAL NUBEGIN,NUFINAL
+    1 IF( X(1)      .NE.XBOD(LBOD)) GO TO 2
+      IF(BBBOD(LBOD).LT.BBOD) GO TO 3
+      DELTA= ATAN(BBBOD(LBOD))-ATAN(BBOD)
+      IF((IDD/2)*2.NE.IDD) GO TO 4
+      IDD= IDD +1
+      GO TO 5
+    4 IDD= IDD +2
+    5 IS(IDD)= 1
+      EMSQ  = EM(      1)**2
+      BB=-(EMSQ+2.)/EMSQ-GAM(      1)*SIN(DELTA)**2
+      CC=(2.*EMSQ+1.)/(EMSQ**2)+((GAM(      1)+1.)**2/4.+(GAM(      1)-1
+     Z.)/EMSQ)*SIN(DELTA)**2
+      DD=-COS(DELTA)**2/(EMSQ**2)
+      EX=(4.5*BB*CC-BB**3-13.5*DD)/SQRT((BB**2-3*CC)**3)
+      EE=ACOS(EX)
+      NN=4
+      FF=COS((EE+NN*4.*ATAN(1.))/3.)
+      GG=SQRT(-BB/3.+(2.*SQRT(BB**2-3.*CC)/3.)*FF)
+      EPS=ASIN(GG)
+   12 SE =(SIN(EPS)) **2
+      GM =.5*(GAM(      1)-1.)
+      SED =  (SIN(EPS-DELTA))**2
+      EM2= SQRT((1.+GM*EMSQ*SE)/(SED*(GAM(      1)*EMSQ*SE-GM)))
+      TOP =2.*GAM(      1)*EMSQ*SE-(GAM(      1)-1.)
+      PP2= TOP /(GAM(      1)+1.)*P(      1)
+      TT2= (TOP*((GAM(      1)-1.)*EMSQ*SE+2.)/((GAM(      1)+1.)**2*EMS
+     1Q*SE))*T(1)
+      BETB(IDD) = EPS + ATAN(BBOD)
+      DO 333 K3=1,NPTS
+      K3K= NPTS +1 -K3
+      J3= K3K +2
+      CALL SWITCH(J3,K3K)
+  333 CONTINUE
+      NPTS = NPTS +2
+      DO 3333 I=1,IDD
+      IF(IS(I).GT.0) IS(I) = IS(I) + 2
+ 3333 CONTINUE
+      EM(1)=EM(2)=EM2
+      XMU(1     )=XMU(2     )=ZMU(EM2)
+      P(1)=P(2)=PP2
+      T(1)=T(2)=TT2
+      TH(1)=TH(2)=ATAN( BBBOD(LBOD) )
+      W(1)=0.
+      CPX(1)=0.
+      CALL THERMO(T(       1),H1,CP1)
+      DO 66 J=1,NSP
+      H (J,      1)=H1(J)
+      H (J,    2)  =H (J,      1)
+      CP (J,      2)=CP (J,    1)=CP1(J)
+      W(1)=W(1) + ALP(J,1)/WTMOLE(J)
+      CPX(1)=CPX(1) + ALP(J,1)*CP(J,1)
+      CPX(2)=CPX(1)
+   66 CONTINUE
+      W(2)=W(1)=1./W(1)
+      R(2)=R(1)=RO/W(1)
+      GAM(2)=GAM(1)=CPX(1)/(CPX(1)-R(1)/CPIN)
+      RHO(2)=RHO(1)=GEW*W(1)*P(1)/T(1)
+      Q(2)=Q(1)=EM(1)/EMINF/SQRT(GAR/GAM(1)/R(1)/T(1))
+      ABOD= AABOD(LBOD)
+      BBOD= BBBOD(LBOD)
+      CBOD= CCBOD(LBOD)
+      LBOD= LBOD + 1
+      Y(2)=Y(3)=ABOD+ 3.E-2* TAN(BETB(IDD))
+      Y(1)=  ABOD + 3.E-2*BBOD
+      WRITE(6,1313) BETB(IDD),X(1),DELTA
+ 1313 FORMAT(1H,10H *********,//* A SHOCK WAVE BETB=*,E10.3,*HAS BEEN  I
+     ZNSERTED AT X=*,E10.3,*WITH A TURNING ANGLE=*,E10.3)
+      IF(XWALL(LWALL).EQ.XBOD(LBOD-1)) GO TO 9
+      DO 1977 II=1,NPTS
+ 1977 X(II)=X(II)+3.E-2
+    9 XBP=X(1)
+      IDDD =IDD -1
+      DO 1776 JR=1,IDDD
+      L=1
+      IF((JR/2)*2.NE.JR) L=-1
+      IF(IS(JR).EQ.0) GO TO 1776
+      Y(IS(JR)+L)=Y(IS(JR))=Y(IS(JR))+3.E-2*TAN(BETB(JR))
+ 1776 CONTINUE
+      GO TO 2
+    3 DNU   =ATAN(BBOD)-ATAN(BBBOD(LBOD))
+      WRITE(6,7713) DNU,X(1)
+ 7713 FORMAT(1H,10H *********,// *A DISCRET EXPANSION OF DNU=*,E10.3,*HA
+     ZS BEEN INSERTED AT*,E10.3)
+      SQEM=SQRT(EM(1)*EM(1)-1.)
+      G=SQRT((GAM(1)+1.)/(GAM(1)-1.))
+      GN=SQRT((GAM(1)-1.)/(GAM(1)+1.))
+      NUBEGIN=G*ATAN(GN*SQEM)-ATAN(SQEM)
+      UMU= ASIN(1./EM(1))
+      NUFINAL=NUBEGIN +DNU
+      EMF=EM(1) + .001
+    7 SQEMF= SQRT(EMF*EMF-1.)
+      FINAL= G*ATAN(GN*SQEMF)-ATAN(SQEMF)
+      IF(ABS(NUFINAL-FINAL).LE..0001) GO TO 16
+      IF(FINAL-NUFINAL) 14,16,15
+   14 EMF= EMF +.001
+      GO TO 7
+   15 EMF= EMF - .0001333
+      GO TO 7
+   16 UMUF=ASIN(1./EMF)
+      FAN= DNU +UMU -UMUF
+      FIRST=  UMU + ATAN(BBOD)
+      FLINE= FIRST -FAN
+      GR=2./(GAM(1)-1.)
+      PF=P(1)*((EM(1)**2+GR)/(EMF**2+GR))**(GAM(1)/(GAM(1)-1.))
+      RHOF=RHO(1)*(PF/P(1))**(1./GAM(1))
+      QQ=-(2.*GAM(1)/(GAM(1)-1.))*(PF/RHOF-P(1)/RHO(1))
+      QF= SQRT(Q(1)**2 +QQ)
+      TF = T(1)*(PF/P(1))**((GAM(1)-1.)/GAM(1))
+      IF(LBOD.LE.1) GO TO 77777
+      IF((Y(2)-Y(1)).GE.(Y(4)-Y(3))*.2) GO TO 77777
+      DO 71313 LR=2,NPTS
+      KR3=1+LR
+71313 CALL SWITCH(LR,KR3)
+      NPTS=NPTS-1
+      DO 19799 I=1,IDD
+19799 IF(IS(I).GT.0) IS(I) = IS(I) - 1
+77777 CONTINUE
+      DO 1978 K3=1,NPTS
+      K3K= NPTS +1 -K3
+      J3= K3K +2
+      CALL SWITCH(J3,K3K)
+ 1978 CONTINUE
+      NPTS =  NPTS + 2
+      DO 1979 I=1,IDD
+      IF(IS(I).GT.0) IS(I) = IS(I) + 2
+ 1979 CONTINUE
+      EM(1)=EM(2)=EMF
+      XMU(1)=XMU(2)=UMUF
+      P(1)=P(2)=PF
+      TH(1)=TH(2)=ATAN(BBBOD(LBOD))
+      T(1)=T(2)=TF
+      RHO(1)=RHO(2)=RHOF
+      Q(1)=Q(2)=QF
+      ABOD= AABOD(LBOD)
+      BBOD= BBBOD(LBOD)
+      CBOD= CCBOD(LBOD)
+      LBOD= LBOD + 1
+      Y(3)=ABOD + 3.E-2*TAN(FIRST)
+      Y(2)=ABOD + 3.E-2*TAN(FLINE)
+      Y(1)=ABOD + 3.E-2*BBOD
+      IF(XWALL(LWALL).EQ.XBOD(LBOD-1)) GO TO 11
+      DO 1778 II=1,NPTS
+ 1778 X(II)=X(II)+3.E-2
+   11 XBP=X(1)
+      DO 1779 JR=1,IDD
+      L=1
+      IF((JR/2)*2.NE.JR) L=-1
+      IF(IS(JR).EQ.0) GO TO 1779
+      Y(IS(JR)+L)=Y(IS(JR))=Y(IS(JR))+3.E-2*TAN(BETB(JR))
+ 1779 CONTINUE
+    2 IF(X(1).NE.XWALL(LWALL)) GO TO 901
+      IF(FFBOD(LWALL).GT.FBOD) GO TO 33
+      DELTA= ABS(ATAN(FBOD)-ATAN(FFBOD(LWALL)))
+      IF((IDD/2)*2.EQ.IDD) GO TO 44
+      IDD= IDD +1
+      GO TO 555
+   44 IDD= IDD +2
+  555 IS(IDD)= NPTS
+      EMSQ  = EM(   NPTS)**2
+      BB=-(EMSQ+2.)/EMSQ-GAM(   NPTS)*SIN(DELTA)**2
+      CC=(2.*EMSQ+1.)/(EMSQ**2)+((GAM(   NPTS)+1.)**2/4.+(GAM(   NPTS)-1
+     Z.)/EMSQ)*SIN(DELTA)**2
+      DD=-COS(DELTA)**2/(EMSQ**2)
+      EX=(4.5*BB*CC-BB**3-13.5*DD)/SQRT((BB**2-3*CC)**3)
+      EE=ACOS(EX)
+      NN=4
+      FF=COS((EE+NN*4.*ATAN(1.))/3.)
+      GG=SQRT(-BB/3.+(2.*SQRT(BB**2-3.*CC)/3.)*FF)
+      EPS=ASIN(GG)
+ 1112 SE =(SIN(EPS)) **2
+      GM =.5*(GAM(   NPTS)-1.)
+      SED =  (SIN(EPS-DELTA))**2
+      EM2= SQRT((1.+GM*EMSQ*SE)/(SED*(GAM(   NPTS)*EMSQ*SE-GM)))
+      TOP =2.*GAM(   NPTS)*EMSQ*SE-(GAM(   NPTS)-1.)
+      PP2= TOP /(GAM(   NPTS)+1.)*P(   NPTS)
+      TT2= (TOP*((GAM(   NPTS)-1.)*EMSQ*SE+2.)/((GAM(   NPTS)+1.)**2*EMS
+     1Q*SE))*T(NPTS)
+      BETB(IDD)= -(EPS-ATAN(FBOD))
+      EM(1+NPTS)=EM(2+NPTS)=EM2
+      XMU(1+NPTS)=XMU(2+NPTS)=ZMU(EM2)
+      P(1+NPTS)=P(2+NPTS)=PP2
+      T(1+NPTS)=T(2+NPTS)=TT2
+      TH(1+NPTS)=TH(2+NPTS)=ATAN(FFBOD(LWALL))
+      DO 90000 J=1,NSP
+      ALP(J,1+NPTS)=ALP(J,NPTS)
+90000 ALP(J,2+NPTS)=ALP(J,NPTS)
+      W(1+NPTS)=0.
+      CPX(1+NPTS)=0.
+      CALL THERMO(T( NPTS+ 1),H1,CP1)
+      DO 6666 J=1,NSP
+      H (J, NPTS+1)=H1(J)
+      H (J,NPTS+2) =H (J,NPTS+ 1)
+      CP (J,NPTS+ 2)=CP (J,NPTS+1)=CP1(J)
+      W(1+NPTS)=W(1+NPTS)+ ALP(J,1+NPTS)/WTMOLE(J)
+      CPX(1+NPTS)=CPX(1+NPTS) + ALP(J,1+NPTS)*CP(J,1+NPTS)
+      CPX(2+NPTS)=CPX(1+NPTS)
+ 6666 CONTINUE
+      VIS(1+NPTS)=VIS(2+NPTS)=VIS(NPTS)
+      W(1+NPTS)=W(2+NPTS)=1./W(1+NPTS)
+      R(2+NPTS)=R(1+NPTS)=RO/W(1+NPTS)
+      GAM(1+NPTS)=GAM(2+NPTS)=CPX(1+NPTS)/(CPX(1+NPTS)-R(1+NPTS)/CPIN)
+      RHO(2+NPTS)=RHO(1+NPTS)=GEW*W(1+NPTS)*P(1+NPTS)/T(1+NPTS)
+      Q(2+NPTS)=Q(1+NPTS)=EM(1+NPTS)/EMINF/SQRT(GAR/GAM(1+NPTS)/R(1+NPT
+     ZS)/T(1+NPTS))
+      EBOD=EEBOD(LWALL)
+      FBOD=FFBOD(LWALL)
+      GBOD=GGBOD(LWALL)
+      LWALL=LWALL+ 1
+      Y(1+NPTS)=Y(NPTS)=EBOD   +3.E-2* TAN(BETB(IDD))
+      Y(2+NPTS)=EBOD   +3.E-2*FBOD
+      NPTS = NPTS +2
+      WRITE(6,1313) BETB(IDD),X(1),DELTA
+      DO 1987 II=1,NPTS
+ 1987 X(II)=X(1)+3.E-2
+      XBP=X(1)
+      IDDD=IDD-1
+      DO 1780 JR=1,IDDD
+      L=1
+      IF((JR/2)*2.NE.JR) L=-1
+      IF(IS(JR).EQ.0) GO TO 1780
+      Y(IS(JR)+L)=Y(IS(JR))=Y(IS(JR))+3.E-2*TAN(BETB(JR))
+ 1780 CONTINUE
+      GO TO 901
+   33 DNU= ATAN(FFBOD(LWALL))-ATAN(FBOD)
+      WRITE(6,7713) DNU,X(1)
+      SQEM=SQRT(EM(NPTS)*EM(NPTS)-1.)
+      G=SQRT((GAM(NPTS)+1.)/(GAM(NPTS)-1.))
+      GN=SQRT((GAM(NPTS)-1.)/(GAM(NPTS)+1.))
+      NUBEGIN=G*ATAN(GN*SQEM)-ATAN(SQEM)
+      UMU= ASIN(1./EM(NPTS))
+      NUFINAL=NUBEGIN +DNU
+      EMF=EM(NPTS)  +  .001
+      IF(EM(NPTS).LT.2.) EMF=EM(NPTS)+1./EM(NPTS)
+   77 SQEMF= SQRT(EMF*EMF-1.)
+      FINAL= G*ATAN(GN*SQEMF)-ATAN(SQEMF)
+      IF(ABS(NUFINAL-FINAL).LE..0001) GO TO 1116
+      IF(FINAL-NUFINAL) 1114,1116,1115
+ 1114 EMF= EMF +.001
+      GO TO 77
+ 1115 EMF= EMF - .0001333
+      GO TO 77
+ 1116 UMUF=ASIN(1./EMF)
+      FAN= DNU +UMU -UMUF
+      FIRST= -UMU + ATAN(FBOD)
+      FLINE= FIRST +FAN
+      GR=2./(GAM(NPTS)-1.)
+      PF=P(NPTS)*((EM(NPTS)**2+GR)/(EMF**2+GR))**(GAM(NPTS)/
+     Z(GAM(NPTS)-1.))
+      RHOF=RHO(NPTS)*(PF/P(NPTS))**(1./GAM(NPTS))
+      QQ=-(2.*GAM(NPTS)/(GAM(NPTS)-1.))*(PF/RHOF-P(NPTS)/RHO(NPTS))
+      QF= SQRT(Q(NPTS)**2 +QQ)
+      TF= T(NPTS)*(PF/P(NPTS))**((GAM(NPTS)-1.)/GAM(NPTS))
+      EM(2+NPTS)=EM(1+NPTS)=EMF
+      XMU(1+NPTS)=XMU(2+NPTS)=UMUF
+      P(2+NPTS)=P(1+NPTS)=PF
+      TH(2+NPTS)=TH(1+NPTS)=ATAN(FFBOD(LWALL))
+      T(2+NPTS)=T(1+NPTS)=TF
+      RHO(2+NPTS)=RHO(1+NPTS)=RHOF
+      Q(2+NPTS)=Q(1+NPTS)=QF
+      DO 90001 J=1,NSP
+      ALP(J,1+NPTS)=ALP(J,NPTS)
+90001 ALP(J,2+NPTS)=ALP(J,NPTS)
+      W(1+NPTS)=0.
+      CPX(1+NPTS)=0.
+      CALL THERMO(T( NPTS+ 1),H1,CP1)
+      DO 66669 J=1,NSP
+      H (J, NPTS+1)=H1(J)
+      H (J,NPTS+2) =H (J,NPTS+ 1)
+      CP (J,NPTS+ 2)=CP (J,NPTS+1)=CP1(J)
+      W(1+NPTS)=W(1+NPTS)+ ALP(J,1+NPTS)/WTMOLE(J)
+      CPX(1+NPTS)=CPX(1+NPTS) + ALP(J,1+NPTS)*CP(J,1+NPTS)
+      CPX(2+NPTS)=CPX(1+NPTS)
+66669 CONTINUE
+      W(1+NPTS)=W(2+NPTS)=1./W(1+NPTS)
+      R(2+NPTS)=R(1+NPTS)=RO/W(1+NPTS)
+      GAM(1+NPTS)=GAM(2+NPTS)=CPX(1+NPTS)/(CPX(1+NPTS)-R(1+NPTS)/CPIN)
+      NPTS = NPTS + 2
+      EBOD=EEBOD(LWALL)
+      FBOD=FFBOD(LWALL)
+      GBOD=GGBOD(LWALL)
+      LWALL= LWALL +1
+      Y(  NPTS)=EBOD    + 3.E-2* FBOD
+      Y(NPTS-1)=EBOD   +  3.E-2*TAN(FLINE)
+      Y(NPTS-2)=EBOD    + 3.E-2*TAN(FIRST)
+      IF(Y(NPTS-2).GT.Y(NPTS-3)) GO TO 99999
+      NNN=NPTS-3
+      IF(Y(NPTS-2).LT.Y(NPTS-4)) NNN=NPTS-4
+      DO 91313 LJ=NNN,NPTS
+      KR3=1+LJ
+      IF((NPTS-NNN).EQ.4) KR3=2+LJ
+91313 CALL SWITCH(LJ,KR3)
+      NPTS=NPTS-1
+      IF((NPTS-NNN).EQ.3) NPTS=NPTS-1
+99999 CONTINUE
+      DO 1777 II=1,NPTS
+ 1777 X(II)=X(1)+3.E-2
+      XBP=X(1)
+      DO 1781 JR=1,IDD
+      L=1
+      IF((JR/2)*2.NE.JR) L=-1
+      IF(IS(JR).EQ.0) GO TO 1781
+      Y(IS(JR)+L)=Y(IS(JR))=Y(IS(JR))+3.E-2*TAN(BETB(JR))
+ 1781 CONTINUE
+  901 RETURN
+      END
+      SUBROUTINE CROSS(K,KK,KZ)
+      COMMON/AL/GAR,GEW
+      COMMON/BA/ALP(7,55),EMINF,WINF
+      COMMON/CK/WTMOLE(7)
+      COMMON/CJ/CP(7,55),CP1(7),CPX(55)
+      COMMON/DB/BETB(20),IS(20),IDD,IJENK,JENKI
+      COMMON/DP/YN(55)
+      COMMON/ED/CPIN,RO
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/EP/GAMINF,H1(7),RINF
+      COMMON/GK/DELX
+      COMMON/HM/ALPN(7,55),CPN(7,55),CPXN(55),EMN(55),GAMN(55),HN(7,55),
+     ZLS,PN(55),QN(55),RHON(55),RN(55),THN(55),TN(55),WN(55),XMUN(55)
+      COMMON/HP/BETAN(20),IEMBED
+      COMMON/PQ/JCHEM,NSP,T(55),PTZERO,IDIVERG,TH1,XE,YE,RCR,PTOJ,TOJ
+     1,EM1,XMU1,Q1
+      COMMON/QA/H(7,55),Q(55),RHO(55),XMU(55)
+      COMMON/WV/NPTS,RE,XBP,XJ
+      IF((KZ/2)*2.EQ.KZ) GO TO 3
+      DO 1 JR=2,IDD,2
+      IF((IS(JR)-K).NE.1) GO TO 1
+      YUP=Y(K)+DELX*TAN(BETB(KZ))
+      YDOWN=Y(IS(JR))+DELX*TAN(BETB(JR))
+      IF(YDOWN.GT.YUP) GO TO 1
+      D=(Y(IS(JR))-Y(K))/(TAN(BETB(KZ))-TAN(BETB(JR)))
+      YCROSS=Y(K)+TAN(BETB(KZ))*D
+      DUP=ABS(TH(K)-TH(K-1))
+      DDOWN=ABS(TH(IS(JR)+1)-TH(IS(JR)))
+   30 DELTA=DUP
+      EMSQ=EM(IS(JR)+1)**2
+      BB=-(EMSQ+2.)/EMSQ-GAM(IS(JR)+1)*SIN(DELTA)**2
+      CC=(2.*EMSQ+1.)/(EMSQ**2)+((GAM(IS(JR)+1)+1.)**2/4.+(GAM(IS(JR)+1)
+     Z-1.)/EMSQ)*SIN(DELTA)**2
+      DD=-COS(DELTA)**2/(EMSQ**2)
+      EX=(4.5*BB*CC-BB**3-13.5*DD)/SQRT((BB**2-3*CC)**3)
+      EE=ACOS(EX)
+      NN=4
+      FF=COS((EE+NN*4.*ATAN(1.))/3.)
+      GG=SQRT(-BB/3.+(2.*SQRT(BB**2-3.*CC)/3.)*FF)
+      EPS=ASIN(GG)
+   12 SE =(SIN(EPS)) **2
+      GM=.5*(GAM(IS(JR)+1)-1.)
+      SED=(SIN(EPS-DUP))**2
+      EM2=SQRT((1.+GM*EMSQ*SE)/(SED*(GAM(IS(JR)+1)*EMSQ*SE-GM)))
+      TOP=2.*GAM(IS(JR)+1)*EMSQ*SE-(GAM(IS(JR)+1)-1.)
+      PP2=TOP/(GAM(IS(JR)+1)+1.)*P(IS(JR)+1)
+      TT2=(TOP*((GAM(IS(JR)+1)+1.)*EMSQ*SE+2.)/((GAM(IS(JR)+1)+1.)**2*
+     ZEMSQ*SE))*T(IS(JR)+1)
+      BUP=EPS-TH(IS(JR)+1)
+      DELTA=DDOWN
+      EMSQ=EM(K-1)**2
+      BB=-(EMSQ+2.)/EMSQ-GAM(  K-  1)*SIN(DELTA)**2
+      CC=(2.*EMSQ+1.)/(EMSQ**2)+((GAM(  K-  1)+1.)**2/4.+(GAM( K-   1)-1
+     Z.)/EMSQ)*SIN(DELTA)**2
+      DD=-COS(DELTA)**2/(EMSQ**2)
+      EX=(4.5*BB*CC-BB**3-13.5*DD)/SQRT((BB**2-3*CC)**3)
+      EE=ACOS(EX)
+      NN=4
+      FF=COS((EE+NN*4.*ATAN(1.))/3.)
+      GG=SQRT(-BB/3.+(2.*SQRT(BB**2-3.*CC)/3.)*FF)
+      EPS=ASIN(GG)
+  112 SE =(SIN(EPS)) **2
+      GM=.5*(GAM(K-1)-1.)
+      SED=(SIN(EPS-DDOWN))**2
+      EM3=SQRT((1.+GM*EMSQ*SE)/(SED*(GAM(K-1)*EMSQ*SE-GM)))
+      TOP=2.*GAM(K-1)*EMSQ*SE-(GAM(K-1)-1.)
+      PP3=TOP/(GAM(K-1)+1.)**P(K-1)
+      TT3=(TOP*((GAM(K-1)-1.)*EMSQ*SE+2.)/((GAM(K-1)+1.)**2*EMSQ*SE))
+     Z*T(K-1)
+      BDOWN=-EPS+TH(K-1)
+      AUP=TH(IS(JR)+1)+DUP
+      ADOWN=TH(K-1)-DDOWN
+      DIF=AUP-ADOWN
+      IF(ABS(DIF).LE.1.E-4.AND.ABS(PP2-PP3).LE.1.E-3) GO TO 90
+      IF(DIF.LT.0.) GO TO 91
+      DUP=DUP*.9973
+      DDOWN=DDOWN*1.0027
+      GO TO 30
+   91 DUP=DUP*1.01
+      DDOWN=DDOWN*.99
+      GO TO 30
+   90 IS(KZ)=IS(JR)+1
+      IS(JR)=K-1
+      BETAN(KZ)=BUP
+      BETAN(JR)=BDOWN
+      K=IS(KZ)
+      YN(IS(KZ))=YN(IS(KZ)-1)=YCROSS+TAN(BUP)*(DELX-D)
+      YN(IS(JR))=YN(IS(JR)+1)=YCROSS+TAN(BDOWN)*(DELX-D)
+      EMN(IS(KZ)-1)=EM2
+      XMUN(IS(KZ)-1)=ZMU(EM2)
+      PN(IS(KZ)-1)=PP2
+      TN(IS(KZ)-1)=TT2
+      THN(IS(KZ)-1)=AUP
+      WN(IS(KZ)-1)=0.
+      CPXN(IS(KZ)-1)=0.
+      CALL THERMO(TN(IS(KZ)-1),H1,CP1)
+      DO 66 J=1,NSP
+      HN(J,IS(KZ)-1)=H1(J)
+      CPN(J,IS(KZ)-1)=CP1(J)
+      WN(IS(KZ)-1)=WN(IS(KZ)-1)+ALP(J,IS(KZ)-1)/WTMOLE(J)
+      CPXN(IS(KZ)-1)=CPXN(IS(KZ)-1)+ALP(J,IS(KZ)-1)*CPN(J,IS(KZ)-1)
+   66 CONTINUE
+      WN(IS(KZ)-1)=1./WN(IS(KZ)-1)
+      RN(IS(KZ)-1)=RO/WN(IS(KZ)-1)
+      GAMN(IS(KZ)-1)=CPXN(IS(KZ)-1)/(CPXN(IS(KZ)-1)-RN(IS(KZ)-1)/CPIN)
+      RHON(IS(KZ)-1)=GEW*WN(IS(KZ)-1)*PN(IS(KZ)-1)/TN(IS(KZ)-1)
+      QN(IS(KZ)-1)=EMN(IS(KZ)-1)/EMINF/SQRT(GAR/GAMN(IS(KZ)-1)/RN(IS(KZ)
+     Z-1)/TN(IS(KZ)-1))
+      EMN(IS(JR)+1)=EM3
+      XMUN(IS(JR)+1)=ZMU(EM3)
+      PN(IS(JR)+1)=PP3
+      TN(IS(JR)+1)=TT3
+      THN(IS(JR)+1)=ADOWN
+      WN(IS(JR)+1)=0.
+      CPXN(IS(JR)+1)=0.
+      CALL THERMO(TN(IS(JR)+1),H1,CP1)
+      DO 666 J=1,NSP
+      HN(IS(JR)+1)=H1(J)
+      CPN(J,IS(JR)+1)=CP1(J)
+      WN(IS(JR)+1)=WN(IS(JR)+1)+ALP(J,IS(JR)+1)/WTMOLE(J)
+      CPXN(IS(JR)+1)=CPXN(IS(JR)+1)+ALP(J,IS(JR)+1)*CPN(J,IS(JR)+1)
+  666 CONTINUE
+      WN(IS(JR)+1)=1./WN(IS(JR)+1)
+      RN(IS(JR)+1)=RO/WN(IS(JR)+1)
+      GAMN(IS(JR)+1)=CPN(IS(JR)+1)/(CPXN(IS(JR)+1)-RN(IS(JR)+1)/CPIN)
+      RHON(IS(JR)+1)=GEW*WN(IS(JR)+1)*PN(IS(JR)+1)/TN(IS(JR)+1)
+      QN(IS(JR)+1)=EMN(IS(JR)+1)/EMINF/SQRT(GAR/GAMN(IS(JR)+1)/RN(IS(JR)
+     Z+1)/TN(IS(JR)+1))
+      GO TO 1313
+    1 CONTINUE
+      GO TO 1313
+    3 L=1
+      IF((KZ/2)*2.EQ.KZ) L=-1
+      DO 2 J=1,IDD
+      IF((IS(J )-K).NE.2) GO TO 2
+      YUPPER=Y(IS(J ))+DELX*TAN(BETB(J))
+      YLOWER=Y(K)+DELX*TAN(BETB(KZ))
+      IF(YUPPER.GT.YLOWER) GO TO 2
+      D=(Y(IS(J))-Y(K))/(TAN(BETB(KZ))-TAN(BETB(J)))
+      YCROSS=Y(K)+TAN(BETB(KZ))*D
+      DU=ABS(TH(IS(J)+L)-TH(IS(J)))
+      DL=ABS(TH(IS(KZ)+L)-TH(IS(KZ)))
+      DELTA=DU+DL
+      EMSQ=EM(IS(KZ)+1-L)**2
+      BB=-(EMSQ+2.)/EMSQ-GAM(IS(KZ)+1-L)*SIN(DELTA)**2
+      CC=(2.*EMSQ+1.)/(EMSQ**2)+((GAM(IS(KZ)+1-L)+1.)**2/4.+(GAM(IS(KZ)+
+     Z1-L)-1.)/EMSQ)*SIN(DELTA)**2
+      DD=-COS(DELTA)**2/(EMSQ**2)
+      EX=(4.5*BB*CC-BB**3-13.5*DD)/SQRT((BB**2-3*CC)**3)
+      EE=ACOS(EX)
+      NN=4
+      FF=COS((EE+NN*4.*ATAN(1.))/3.)
+      GG=SQRT(-BB/3.+(2.*SQRT(BB**2-3.*CC)/3.)*FF)
+      EPS=ASIN(GG)
+  912 SE =(SIN(EPS)) **2
+      GM=.5*(GAM(IS(KZ)+1-L)-1.)
+      SED=(SIN(EPS-DELTA))**2
+      EM2=SQRT((1.+GM*EMSQ*SE)/(SED*(GAM(IS(KZ)+1-L)*EMSQ*SE-GM)))
+      TOP=2.*GAM(IS(KZ)+1-L)*EMSQ*SE-(GAM(IS(KZ)+1-L)-1.)
+      PP2=TOP/(GAM(IS(KZ)+1-L)+1.)*P(IS(KZ)+1-L)
+      TT2=(TOP*((GAM(IS(KZ)+1-L)-1.)*EMSQ*SE+2.)/((GAM(IS(KZ)+1-L)+1.)**
+     Z2*EMSQ*SE))*T(IS(KZ)+1-L)
+      BBETB=-(EPS-TH(IS(KZ)+1-L))*L
+      EMN(IS(KZ)+1)=EM2
+      XMUN(IS(KZ)+1)=ZMU(EM2)
+      PN(IS(KZ)+1)=PP2
+      TN(IS(KZ)+1)=TT2
+      THN(IS(KZ)+1)=AUP
+      WN(IS(KZ)+1)=0.
+      CPXN(IS(KZ)+1)=0.
+      CALL THERMO(TN(IS(KZ)+1),H1,CP1)
+      DO 44 JJ=1,NSP
+      HN(JJ,IS(KZ)+1)=H1(JJ)
+      CPN(JJ,IS(KZ)+1)=CP1(JJ)
+      WN(IS(KZ)+1)=WN(IS(KZ)+1)+ALP(JJ,IS(KZ)+1)/WTMOLE(JJ)
+      CPXN(IS(KZ)+1)=CPXN(IS(KZ)+1)+ALP(JJ,IS(KZ)+1)*CPN(JJ,IS(KZ)+1)
+   44 CONTINUE
+      WN(IS(KZ)+1)=1./WN(IS(KZ)+1)
+      RN(IS(KZ)+1)=RO/WN(IS(KZ)+1)
+      GAMN(IS(KZ)+1)=CPXN(IS(KZ)+1)/(CPXN(IS(KZ)+1)-RN(IS(KZ)+1)/CPIN)
+      RHON(IS(KZ)+1)=GEW*WN(IS(KZ)+1)*PN(IS(KZ)+1)/TN(IS(KZ)+1)
+      QN(IS(KZ)+1)=EMN(IS(KZ)+1)/EMINF/SQRT(GAR/GAMN(IS(KZ)+1)/RN(IS(KZ)
+     Z+1)/TN(IS(KZ)+1))
+      YN(IS(KZ)+1)=YN(IS(KZ)+1-L)=YCROSS+TAN(BBETB)*(DELX-D)
+      IF(L.NE.1) GO TO 7
+      JR=IS(KZ)+2
+      DO 71313 LR=JR,NPTS
+      KR3=2+LR
+71313 CALL SWITCH(LR,KR3)
+      IS(J)=0
+      BETAN(J)=0.
+      BETAN(KZ)=BBETB
+      NPTS=NPTS-2
+      KK=1
+      DO 333 I=1,IDD
+      IF(IS(I).GT.IS(KZ))IS(I)=IS(I)-2
+  333 CONTINUE
+      GO TO 2
+    7 JR=IS(KZ)-1
+      DO 91313 LR=JR,NPTS
+      KR3=2+LR
+91313 CALL SWITCH(LR,KR3)
+      IS(J)=IS(KZ)
+      IS(KZ)=0
+      BETAN(KZ)=0.
+      BETAN(J)=BBETB
+      NPTS=NPTS-2
+      KK=1
+      DO 3333 I=1,IDD
+      IF(IS(I).GT.IS(J)) IS(I)=IS(I)-2
+ 3333 CONTINUE
+    2 CONTINUE
+ 1313 RETURN
+      END
+      SUBROUTINE EMBED
+      COMMON/AC/IBOD,PIN
+      COMMON/AL/GAR,GEW
+      COMMON/AX/JSUBL,JSUBU
+      COMMON/BA/ALP(7,55),EMINF,WINF
+      COMMON/BD/XMASS(55)
+      COMMON/CJ/CP(7,55),CP1(7),CPX(55)
+      COMMON/CK/WTMOLE(7)
+      COMMON/DB/BETB(20),IS(20),IDD,IJENK,JENKI
+      COMMON/ED/CPIN,RO
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/EP/GAMINF,H1(7),RINF
+      COMMON/GK/DELX
+      COMMON/HL/ALPHA,BETA
+      COMMON/HM/ALPN(7,55),CPN(7,55),CPXN(55),EMN(55),GAMN(55),HN(7,55),
+     IL,PN(55),QN(55),RHON(55),RN(55),THN(55),TN(55),WN(55),XMUN(55)
+      COMMON/HP/BETAN(20),IEMBED
+      COMMON/PD/W(55),X(55)
+      COMMON/PQ/JCHEM,NSP,T(55)
+      COMMON/QA/H(7,55),Q(55),RHO(55),XMU(55)
+      COMMON/RC/R(55)
+      COMMON/TS/DVIS(55),DVISN(55),DVISP(2),VIS(55),VISN(55),VISP(2)
+      COMMON/TU/BQ(55),DALP(7,55),DBQ(55),DCPX(55),DDALP(7,55),DTAU(55),
+     1TAU(55)
+      COMMON/WV/NPTS,RE,XBP,XJ
+      DATA EPPRES/1.E-04/
+      IEMBED=0
+      ALPHA=1.
+      BETA=0.
+      ALPH=1.
+      BET=0.
+      DELX=1.
+      DO 500 M=1,2
+      IF(IS(M).NE.0) GO TO 500
+      IM=NPTS-2
+      DO 1 I=2,IM
+      IF(I.GE.JSUBL.AND.I.LT.JSUBU) GO TO 1
+      I2=I
+      I1=I2-1
+      I3=I2+1
+      I4=I2+2
+      T10=Y(I1)-Y(I2)
+      T11=Y(I2)-Y(I3)
+      T12=Y(I3)-Y(I4)
+      IF(T10.LT.1.E-04.OR.T11.LT.1.E-04.OR.T12.LT.1.E-04) GO TO 1
+      DZ=Y(I+1)  -Y(I)
+      IF((M/2)*2.EQ.M) GO TO 200
+      XP2=XM1(ALPH ,BET ,TH(I+1),XMU(I+1),0.,0.)
+      XP1=XM1(ALPH ,BET ,TH(I  ),XMU(I  ),0.,0.)
+      GO TO 201
+  200 CONTINUE
+      XP2=XM2(ALPH ,BET ,TH(I+1),XMU(I+1),0.,0.)
+      XP1=XM2(ALPH ,BET ,TH(I  ),XMU(I  ),0.,0.)
+  201 DZLAM=XP1-XP2
+      IF(DZLAM.LT.1.E-10) GO TO 1
+      DI=DZ/DZLAM
+      IF(DI) 1,1,7
+    7 IF(DI.GT.10.*DELX) GO TO 1
+      P1S=P(I1)*P(I1)
+      P2S=P(I2)*P(I2)
+      P3S=P(I3)*P(I3)
+      P4S=P(I4)*P(I4)
+      T1=P(I1)-P(I2)
+      T2=P(I2)-P(I3)
+      T3=P(I3)-P(I4)
+      T4=P1S-P2S
+      T5=P2S-P3S
+      T6=P3S-P4S
+      T7=P1S*P(I1)-P2S*P(I2)
+      T8=P2S*P(I2)-P3S*P(I3)
+      T9=P3S*P(I3)-P4S*P(I4)
+      CALL SOLVE(T1 ,T2 ,T3 ,T4 ,T5 ,T6 ,T7 ,T8 ,T9 ,E )
+      CALL SOLVE(T10,T11,T12,T4 ,T5 ,T6 ,T7 ,T8 ,T9 ,DB)
+      CALL SOLVE(T1 ,T2 ,T3 ,T10,T11,T12,T7 ,T8 ,T9 ,DC)
+      CALL SOLVE(T1 ,T2 ,T3 ,T4 ,T5 ,T6 ,T10,T11,T12,DD)
+      B=DB/E
+      C=DC/E
+      D=DD/E
+      A=Y(I1)+P(I1)*(-B+P(I1)*(-C-D*P(I1)))
+      TRE=1./3.
+      CD=1./27.
+      YST=A-C*B*TRE/D+2.*C**3*CD/D**2
+      IF(YST.LE.Y(I).OR.YST.GE.Y(I+1)) GO  TO 1
+      YSTP=B-C*C*TRE/D
+      IF(YSTP.GE.EPPRES) GO TO 1
+      IS(M)  =I+1
+      IF((M/2)*2.EQ.M) IS(M)=I
+      XP5=XP1
+      XP6=XP2
+      GO TO 501
+    1 CONTINUE
+      GO TO 500
+  501 ISM=IS(M)
+      BETB(M)=(ATAN(XP5)+ATAN(XP6))/2.
+      WRITE(6,506)M
+  506 FORMAT(1H1,20X,19HEMBEDDED SHOCK TYPE  I2//13X,2HIS ,5X,4HBETA )
+      WRITE(6,508) IS(M),BETB(M)
+  508 FORMAT(10X,I5,E11.3)
+      L=1
+      IF((M/2)*2.EQ.M) L=-1
+      ISMM=ISM-L
+      ISP=ISM+L
+      RAT=((Y(ISM)+Y(ISMM))/2.-Y(ISP))/(Y(ISM)-Y(ISP))
+      X     (ISM)=X     (ISP)+RAT*(X     (ISM)-X     (ISP))
+      Y     (ISM)=Y     (ISP)+RAT*(Y     (ISM)-Y     (ISP))
+      Q     (ISM)=Q     (ISP)+RAT*(Q     (ISM)-Q     (ISP))
+      P     (ISM)=P     (ISP)+RAT*(P     (ISM)-P     (ISP))
+      T     (ISM)=T     (ISP)+RAT*(T     (ISM)-T     (ISP))
+      DVIS(ISM)=DVIS(ISP)+RAT*(DVIS(ISM)-DVIS(ISP))
+      VIS(ISM)=VIS(ISP)+RAT*(VIS(ISM)-VIS(ISP))
+      TH    (ISM)=TH    (ISP)+RAT*(TH    (ISM)-TH    (ISP))
+      BQ    (ISM)=BQ    (ISP)+RAT*(BQ    (ISM)-BQ    (ISP))
+      TAU   (ISM)=TAU   (ISP)+RAT*(TAU   (ISM)-TAU   (ISP))
+      DBQ   (ISM)=DBQ   (ISP)+RAT*(DBQ   (ISM)-DBQ   (ISP))
+      DCPX  (ISM)=DCPX  (ISP)+RAT*(DCPX  (ISM)-DCPX  (ISP))
+      DTAU  (ISM)=DTAU  (ISP)+RAT*(DTAU  (ISM)-DTAU  (ISP))
+      XMASS (ISM)=XMASS (ISP)+RAT*(XMASS (ISM)-XMASS (ISP))
+      CPX(ISM)=0.
+      W(ISM)=0.
+      CALL THERMO(T(ISM),H1,CP1)
+      DO 100 KI=1,NSP
+      J=KI
+      ALP  (KI,ISM)=ALP  (KI,ISP)+RAT*(ALP  (KI,ISM)-ALP  (KI,ISP))
+      DALP (KI,ISM)=DALP (KI,ISP)+RAT*(DALP (KI,ISM)-DALP (KI,ISP))
+      DDALP(KI,ISM)=DDALP(KI,ISP)+RAT*(DDALP(KI,ISM)-DDALP(KI,ISP))
+      H(J,ISM)=H1(J)
+      CP(J,ISM)=CP1(J)
+      W(ISM)=W(ISM)+ALP(J,ISM)/WTMOLE(J)
+      CPX(ISM)=CPX(ISM)+ALP(J,ISM)*CP(J,ISM)
+      H  N(KI,ISM)=H  (KI,ISM)
+      ALPN(KI,ISM)=ALP(KI,ISM)
+  100 CONTINUE
+      W(ISM)=1./W(ISM)
+      R(ISM)=RO/W(ISM)
+      GAM(ISM)=CPX(ISM)/(CPX(ISM)-R(ISM)/CPIN)
+      RHO(ISM)=P(ISM)*W(ISM)*GEW/T(ISM)
+      RI=1./R(ISM)
+      EM(ISM)=Q(ISM)*EMINF*SQRT(GAR/GAM(ISM)*RI/T(ISM))
+      XMU(ISM)=ZMU(EM(ISM))
+      Q   N(ISM)=Q  (ISM)
+      R   N(ISM)=R  (ISM)
+      T   N(ISM)=T  (ISM)
+      P   N(ISM)=P  (ISM)
+      W   N(ISM)=W  (ISM)
+      VISN(ISM)=VIS(ISM)
+      DVISN(ISM)=DVIS(ISM)
+      TH  N(ISM)=TH (ISM)
+      RHO N(ISM)=RHO(ISM)
+      GAM N(ISM)=GAM(ISM)
+      IF(JSUBL.GT.IS(M)) JSUBL=JSUBL+1
+      IF(JSUBU.GT.IS(M)) JSUBU=JSUBU+1
+      DO 101 KK=1,4
+      IF(IS(KK).GT.IS(M)) IS(KK)=IS(KK)+1
+  101 CONTINUE
+      IEMBED=1
+      CALL HSHOCK(M)
+      IEMBED=0
+      X(ISMM)=X(ISM)
+      Y(ISMM)=Y(ISM)
+      XMASS(ISMM)=XMASS(ISM)
+      W  (ISMM)=W  N(ISMM)
+      P  (ISMM)=P  N(ISMM)
+      Q  (ISMM)=Q  N(ISMM)
+      T  (ISMM)=T  N(ISMM)
+      R  (ISMM)=R  N(ISMM)
+      TH (ISMM)=TH N(ISMM)
+      EM (ISMM)=EM N(ISMM)
+      RHO(ISMM)=RHON(ISMM)
+      VIS(ISMM)=VISN(ISMM)
+      DVIS(ISMM)=DVISN(ISMM)
+      CPX(ISMM)=CPXN(ISMM)
+      GAM(ISMM)=GAMN(ISMM)
+      XMU(ISMM)=XMUN(ISMM)
+      DO 1313 KI=1,NSP
+      H  (KI,ISMM)=H  N(KI,ISMM)
+      CP (KI,ISMM)=CP N(KI,ISMM)
+      ALP(KI,ISMM)=ALPN(KI,ISMM)
+ 1313 CONTINUE
+      IBOD=0.
+      RE=0.
+      XBP=0.
+      CALL SHEAR1(0.,0.)
+  500 CONTINUE
+      RETURN
+      END
+      SUBROUTINE SOLVE(A11,A12,A13,A21,A22,A23,A31,A32,A33,DET)
+      DET=A11*(A22*A33-A32*A23)-A12*(A21*A33-A31*A23)+A13*(A21*A32-A22*A
+     131)
+      RETURN
+      END
+      SUBROUTINE HSHOCK(K)
+      COMMON/AL/GAR,GEW
+      COMMON/BA/ALP(7,55),EMINF,WINF
+      COMMON/BB/S1A,S2A,S3AT
+      COMMON/BO/GAMB,PB,QB,RHOB,THB,WB,XMUB,YB
+      COMMON/CA/WDOTN(7,55),XN(55)
+      COMMON/CJ/CP(7,55),CP1(7),CPX(55)
+      COMMON/CK/WTMOLE(7)
+      COMMON/DB/BETB(20),IS(20),IDD,IJENK,JENKI
+      COMMON/ZY/ABOD,BBOD,CBOD,EBOD,FBOD,GBOD,IAVE,IPUNCH,JBOD,KKKKK
+      COMMON/WV/NPTS,RE,XBP,XJ
+      COMMON/DP/YN(55)
+      COMMON/ED/CPIN,RO
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/EG/EIN,PR,XLE
+      COMMON/EP/GAMINF,H1(7),RINF
+      COMMON/FE/DEL
+      COMMON/GF/DELY,IFS,KOUNTO,MMM
+      COMMON/GK/DELX
+      COMMON/HL/ALPHA,BETA
+      COMMON/HM/ALPN(7,55),CPN(7,55),CPXN(55),EMN(55),GAMN(55),HN(7,55),
+     ILS,PN(55),QN(55),RHON(55),RN(55),THN(55),TN(55),WN(55),XMUN(55)
+      COMMON/HP/BETAN(20),IEMBED
+      COMMON/PQ/JCHEM,NSP,T(55)
+      COMMON/QA/H(7,55),Q(55),RHO(55),XMU(55)
+      COMMON/QS/RHOP(2),WDOT(7,55),WDOTC(7),WP(2),XMUP(2)
+      COMMON/SQ/BQN(55),DALPN(7,55),DBQN(55),DCPXN(55),DDALPN(7,55),
+     1DTAUN(55),TAUN(55)
+      COMMON/ST/I13,IREGI,KS,KFIRST,KKKQ,PSTAR
+      COMMON/TU/BQ(55),DALP(7,55),DBQ(55),DCPX(55),DDALP(7,55),DTAU(55),
+     1TAU(55)
+      COMMON/TV/ALPP(7,2),BET,BQP(2),DACHP(7,2),DALPP(7,2),DBQP(2),
+     1DCPXP(2),DDALPP(7,2),DTAUP(2),DTCHP(2),GAMP(2),PP(2),QP(2),
+     2TAUP(2),THP(2),TP(2),YP(2)
+      COMMON/VW/ICONT,IEND,KT,THBPN,XBPN
+      DIMENSION DUMM(7)
+      REAL NBETB
+      I=IS(K)
+      IT1=1
+      BET=BETB(K)
+      IT11=1
+      XXX=1.
+      ICCC=0
+      L=1
+      IF((K/2)*2.NE.K) L=-1
+      KSAVE=KS
+      KZ=K
+      KK=0
+      KJ=0
+      CALL CROSS(KS,KK,KZ)
+      IF(KSAVE.NE.KS.OR.KK.NE.0) GO TO 1402
+      IF(L.LT.0) GO TO 2
+      TOE=  Y(1   )-Y(IS(K))
+      KJ=IS(K)-1
+      DXX= .02*TOE/(TAN(BETB(K))-BBOD)
+      DELTA =ABS(TH(IS(K)+L)-ATAN(BBOD) )
+      GO TO 3
+    2 TOE=  Y(NPTS)-Y(IS(K))
+      KJ=NPTS-IS(K)
+      DXX= .2*TOE/(TAN(BETB(K))-FBOD)
+      DELTA =ABS(TH(IS(K)+L)-ATAN(FBOD) )
+    3 IF(DXX.GT.DELX.OR.KJ.GT.1) GO TO 1
+      EMSQ  = EM(IS(K)+L)**2
+      BB=-(EMSQ+2.)/EMSQ-GAM(IS(K)+L)*SIN(DELTA)**2
+      CC=(2.*EMSQ+1.)/(EMSQ**2)+((GAM(IS(K)+L)+1.)**2/4.+(GAM(IS(K)+L)-1
+     Z.)/EMSQ)*SIN(DELTA)**2
+      DD=-COS(DELTA)**2/(EMSQ**2)
+      EX=(4.5*BB*CC-BB**3-13.5*DD)/SQRT((BB**2-3*CC)**3)
+      EE=ACOS(EX)
+      NN=4
+      FF=COS((EE+NN*4.*ATAN(1.))/3.)
+      GG=SQRT(-BB/3.+(2.*SQRT(BB**2-3.*CC)/3.)*FF)
+      EPS=ASIN(GG)
+   12 SE =(SIN(EPS)) **2
+      GM =.5*(GAM(IS(K)+L)-1.)
+      SED =  (SIN(EPS-DELTA))**2
+      EM2= SQRT((1.+GM*EMSQ*SE)/(SED*(GAM(IS(K)+L)*EMSQ*SE-GM)))
+      TOP =2.*GAM(IS(K)+L)*EMSQ*SE-(GAM(IS(K)+L)-1.)
+      PP2= TOP /(GAM(IS(K)+L)+1.)*P(IS(K)+L)
+      TT2= (TOP*((GAM(IS(K)+L)-1.)*EMSQ*SE+2.)/((GAM(IS(K)+L)+1.)**2*EMS
+     1Q*SE))*T(IS(K)+L)
+      NBETB=L*(EPS+L*TH(IS(K)+L))
+      IF((((IDD+1)/2)*2.NE.(IDD+1)).AND.(L.LT.0))GO TO 114
+      IDD =IDD+1
+      IS(IDD)= IS(K)+L
+      BETB(IDD)= NBETB
+      BETAN(IDD)=NBETB
+      GO TO 115
+  114 IDD= IDD+2
+      IS(IDD  ) =IS(K)+L
+      BETB(IDD)= NBETB
+      BETAN(IDD)=NBETB
+  115 Y2= Y(IS(K) ) + DXX*TAN(BETB(K))
+      YN(IS(K))=YN(IS(K)+L)=Y2+(DELX-DXX)*TAN(NBETB)
+      IF(L.LT.0) GO TO 22
+      YN(IS(K)-L)=Y(IS(K)-L) +DELX*BBOD
+      JENKI=1
+      GO TO 33
+   22 YN(IS(K)-L)=Y(IS(K)-L) +DELX*FBOD
+      IJENK =1
+   33 EMN(IS(K)-L)=EMN(IS(K))=EM2
+      XMUN(IS(K)-L)=XMUN(IS(K))=ZMU(EM2)
+      PN(IS(K))=PN(IS(K)-L)=PP2
+      TN(IS(K))=TN(IS(K)-L)=TT2
+      IF(L.LT.0) GO TO 44
+      THN(IS(K))=THN(IS(K)-L)=ATAN(BBOD)
+      GO TO 333
+   44 THN(IS(K))=THN(IS(K)-L)=ATAN(FBOD)
+  333 WN(IS(K)-L)=0.
+      CPXN(IS(K)-L)=0.
+      CALL THERMO(TN(IS(K)-L),H1,CP1)
+      DO 66 J=1,NSP
+      HN(J,IS(K)-L)=H1(J)
+      HN(J,IS(K))  =HN(J,IS(K)-L)
+      CPN(J,IS(K)-L)=CPN(J,IS(K))=CP1(J)
+      WN(IS(K)-L)=WN(IS(K)-L) +ALP(J,IS(K)-L)/WTMOLE(J)
+      CPXN(IS(K)-L)=CPXN(IS(K)-L) +ALP(J,IS(K)-L)*CPN(J,IS(K)-L)
+      CPXN(IS(K))=CPXN(IS(K)-L)
+   66 CONTINUE
+      WN(IS(K)-L)=WN(IS(K))=1./WN(IS(K)-L)
+      RN(IS(K))=RN(IS(K)-L)=RO/WN(IS(K)-L)
+      GAMN(IS(K)-L)=CPXN(IS(K)-L)/(CPXN(IS(K)-L)-RN(IS(K)-L)/CPIN)
+      GAMN(IS(K))=GAMN(IS(K)-L)
+      RHON(IS(K))=RHON(IS(K)-L)=GEW*WN(IS(K)-L)*PN(IS(K)-L)/TN(IS(K)-L)
+      QN(IS(K))  =QN(IS(K)-L)=EMN(IS(K)-L)/EMINF/SQRT(GAR/GAMN(IS(K)-L)/
+     ZRN(IS(K)-L)/TN(IS(K)-L))
+      WRITE(6,2002) K,IDD
+ 2002 FORMAT(1H,10H *********,//* SHOCK WAVE BETB(*,I3,*)*,*HAS REFLECTE
+     ZD FROM THE WALL AND HAS BECOME BETB(*,I3,*)*)
+      BETB(K)=0.
+      BETAN(K)=0.0
+      IS(K)=0
+      IF(L.GT.0) LS=LS+1
+      GO TO 1402
+    1 CONTINUE
+      M=IS(K)  +L
+      IF(BETA.NE.0.) GO TO 8210
+      TAUN(M)=TAU(M)
+      BQN(M)=BQ(M)
+      DCPXN(M)=DCPX(M)
+      DTAUN(M)=DTAU(M)
+      DBQN(M)=DBQ(M)
+      CPXN(M)=CPX(M)
+      DO 8211 J=1,NSP
+      DALPN(J,M)=DALP(J,M)
+      DDALPN(J,M)=DDALP(J,M)
+      ALPN(J,M)=ALPN(J,I)
+      WDOTC(J)=0.
+      WDOTN(J,M)=0.
+      WN(M)=WN(I)
+ 8211 CONTINUE
+ 8210 CONTINUE
+      IF(BETA.GT.0.)BET=BETAN(K)
+    4 IT=1
+      CA=1.
+      VT=QN(I)  *COS(BET-THN(I))
+      U1=QN(I)                     *CA*SIN(BET-THN(I))
+      U1=ABS(U1)
+      XMS=RHON(I)  *U1
+      GN=GAMN(I)
+      GP1=(GN+1.)
+      GM1=GN-1.
+      RNI=1./RN(I)
+      XM1=U1**2*EMINF**2*(GAR/GAMN(I)*RNI/TN(I))
+      OXM=1./XM1
+      IF(IT.EQ.1)U2=U1*(GM1*XM1+2.)/GP1*OXM
+    5 RH2P=XMS/U2
+      P2H=XMS*(U1-U2)+PN(I)
+      V2=VT**2
+      V1=V2+U1**2
+      V2=V2+U2**2
+      H6=0.
+      DO 1400 J=1,NSP
+ 1400 H6=HN(J,I)*ALPN(J,I)+H6
+      H2=H6+(V1-V2)/2.*EIN
+      IIT1=1
+      T1=TN(I)
+      IF(IIT1.EQ.1)T2=T1*(2.*GN*XM1-GM1)*(GM1*XM1+2.)/(2.*GP1)*OXM
+ 8200 CALL THERMO(T2,H1,CP1)
+      H2P=0.
+      DO 8201 J=1,NSP
+ 8201 H2P=H2P+ALPN(J,M)*H1(J)
+      ERR1=(H2-H2P)/H6
+      IF(ABS(ERR1).LT.1.E-08) GO TO 8202
+      IIT1=IIT1+1
+      IF(IIT1.GT.15) GO TO 8203
+      IF(IIT1.GT.2) GO TO 8204
+      ERR2=ERR1
+      T22=T2
+      T2=T2*1.01
+      GO TO 8200
+ 8203 WRITE(6,9191)
+ 9191 FORMAT(1H1)
+      WRITE(6,8205)
+ 8205 FORMAT(* ERROR IN TEMPERATURE LOOP IN HSHOCK*)
+      STOP
+ 8204 DUM=T22-ERR2*(T2-T22)/(ERR1-ERR2)
+      ERR2=ERR1
+      T22=T2
+      T2=DUM
+      GO TO 8200
+ 8202 CONTINUE
+      RH2=P2H*WN(M)*GEW/T2
+      ER=(RH2-RH2P)/RHO (I)
+      IF(ABS(ER).LT.1.E-8)GO TO 7
+      IT=IT+1
+      IF(IT.GT.25) GO TO 100
+      IF(IT.GT.2)GO TO 6
+      ER2=ER
+      U22=U2
+      U2=U2*.99
+      GO TO 5
+  100 WRITE(6,9191)
+      WRITE(6,200)
+  200 FORMAT(* ERROR IN HUGONIOT LOOP IN HSHOCK*)
+      STOP
+    6 DUM=U22-ER2*(U2-U22)/(ER-ER2)
+      ER2=ER
+      U22=U2
+      U2=DUM
+      GO TO 5
+    7 CONTINUE
+      CB=COS(BET)
+      SB=SIN(BET)
+      IF((K/2)*2.EQ.K)U2=-U2
+      QN2P=-U2*CA
+      UV=VT*CB-QN2P*SB
+      WV=VT*SB+QN2P*CB
+      PHE2=ATAN(WV/UV)
+      Q2=SQRT(UV*UV+WV*WV)
+      IF(IEMBED.EQ.1) GO TO 3535
+      YN(M)  =Y(M)  +.5*(TAN(BETB(K)  )+TAN(BET))*DELX
+      DEL=1.
+      CALL LPOINT(M,1.)
+  775 DEL=0.
+      S1A=0.
+      S2A=0.
+      S3AT=0.
+      GAMB=GAMP(1)
+      PB=PP(1)
+      QB=QP(1)
+      RHOB=RHOP(1)
+      THB=THP(1)
+      WB=WP(1)
+      XMUB=XMUP(1)
+      YB=YP(1)
+      A1=F1(M)
+      A2=F2(M,S1A,S2A,S3AT)
+      IF(JCHEM.EQ.1) GO TO 7254
+      A3=0.
+      GO TO 7257
+ 7254 TP1=(TP(1)+T2)/2.
+      DTCHP(1)=DTCHP(1)/2.
+      DO 1552 J=1,NSP
+ 1552 DUMM(J)=DACHP(J,1)/2.
+      A3=F3(TP1,DTCHP(1),TP(1),T2,THP(1),PHE2,DUMM,WP(1),WN(M))
+ 7257 CONTINUE
+      OPT=-1.
+      IF((K/2)*2.EQ.K) OPT=1.
+      A4=F4(BETA,-OPT,XMUP(1),THP(1),XMUN(M),THN(M))
+      A2=(A2+A3)*A4
+      PSH=PP(1)+(OPT*(PHE2-THP(1))-A2*DELX)/A1
+      ER3=(PSH-P2H)/P(M)
+      IF(ABS(ER3).LT.1.E-3)GO TO 19
+      IT1=IT1+1
+      IF(IT1.GT.25)GO TO 103
+      IT11=IT11+1
+      IF(IT1.EQ.2) GO TO 1430
+      IF(ER1*ER3.LT.0.) GO TO 14
+      IF(ABS(ER1-ER3).LT.5.E-06) GO TO 1492
+      IF(ABS(ER1).GT.ABS(ER3)) GO TO 1430
+      IF(ICCC.EQ.1) GO TO 103
+      XXX=-1.
+      ICCC=1
+      IT11=IT11-1
+ 1430 ER1=ER3
+      BET1=BET
+      BET=BET+.01*(IT11-1)*BET*XXX
+      GO TO 15
+ 1492 BET2=(BET-BET1 )*20.
+      ER1=ER3
+      BET1=BET
+      BET=BET+BET2
+      GO TO 15
+  103 WRITE(6,9191)
+      WRITE(6,220)
+  220 FORMAT(* ERROR IN SHOCK ANGLE IN HSHOCK*)
+      STOP
+   14 DUM=BET1-ER1*(BET-BET1)/(ER3-ER1)
+      ER1=ER3
+      BET1=BET
+      BET=DUM
+   15 YN(M)  =Y(M)  +.5*(TAN(BETB(K)  )+TAN(BET))*DELX
+      I5=IS(K)
+      YN(I5)  =YN(M)
+      KS=IS(K)
+      LS=KS
+      KT=KS
+      IF ((K/2)*2.EQ.K) KT= KT-1
+      CALL CPOINT
+      GO TO 4
+   19 BETAN(K)  =BET
+      YN(M)  =.5*(TAN(BETB(K)  )+TAN(BETAN(K)  ))*DELX+Y(M)
+      I5=IS(K)
+      YN(I5)  =YN(M)
+ 3535 CONTINUE
+      PN(M)  =P2H
+      QN(M)  =Q2
+      THN(M)   =PHE2
+      RHON(M)  =RH2
+      TN(M)=T2
+      RN(M)=RO/WN(M)
+      CPXN(M)=0.
+      DO 1401 J=1,NSP
+      HN(J,M)=H1(J)
+      CPN(J,M)=CP1(J)
+ 1401 CPXN(M)=CPXN(M)+ALPN(J,M)*CPN(J,M)
+      GAMN(M)=CPXN(M)/(CPXN(M)-RN(M)/CPIN)
+      ORM=1./RN(M)
+      EMN(M)=QN(M)*EMINF*SQRT(GAR/GAMN(M)*ORM/TN(M))
+      IF(EMN(M).LT.1.0001) GO TO 1402
+      XMUN(M)=ZMU(EMN(M))
+ 1402 CONTINUE
+      RETURN
+      END
+      SUBROUTINE SWITCH(J,K)
+      COMMON/BA/ALP(7,55),EMINF,WINF
+      COMMON/BD/XMASS(55)
+      COMMON/CJ/CP(7,55),CP1(7),CPX(55)
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/PD/W(55),X(55)
+      COMMON/PQ/JCHEM,NSP,T(55)
+      COMMON/QA/H(7,55),Q(55),RHO(55),XMU(55)
+      COMMON/RC/R(55)
+      COMMON/TS/DVIS(55),DVISN(55),DVISP(2),VIS(55),VISN(55),VISP(2)
+      COMMON/TU/BQ(55),DALP(7,55),DBQ(55),DCPX(55),DDALP(7,55),DTAU(55),
+     1TAU(55)
+      X    (J)=X    (K)
+      Y    (J)=Y    (K)
+      Q    (J)=Q    (K)
+      P    (J)=P    (K)
+      T    (J)=T    (K)
+      W    (J)=W    (K)
+      R    (J)=R    (K)
+      EM   (J)=EM   (K)
+      TH   (J)=TH   (K)
+      BQ   (J)=BQ   (K)
+      TAU  (J)=TAU  (K)
+      DBQ  (J)=DBQ  (K)
+      DVIS(J)=DVIS(K)
+      VIS(J)=VIS(K)
+      GAM  (J)=GAM  (K)
+      RHO  (J)=RHO  (K)
+      XMU  (J)=XMU  (K)
+      CPX  (J)=CPX  (K)
+      DCPX (J)=DCPX (K)
+      DTAU (J)=DTAU (K)
+      XMASS(J)=XMASS(K)
+      DO 108 JJ=1,NSP
+      H    (JJ,J)=H    (JJ,K)
+      CP   (JJ,J)=CP   (JJ,K)
+      ALP  (JJ,J)=ALP  (JJ,K)
+      DALP (JJ,J)=DALP (JJ,K)
+      DDALP(JJ,J)=DDALP(JJ,K)
+  108 CONTINUE
+      RETURN
+      END
+      SUBROUTINE PM(M,OPT)
+      COMMON/AL/GAR,GEW
+      COMMON/BA/ALP(7,55),EMINF,WINF
+      COMMON/CJ/CP(7,55),CP1(7),CPX(55)
+      COMMON/CK/WTMOLE(7)
+      COMMON/ED/CPIN,RO
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/EG/EIN,PR,XLE
+      COMMON/EP/GAMINF,H1(7),RINF
+      COMMON/PD/W(55),X(55)
+      COMMON/PQ/JCHEM,NSP,T(55),PTZERO,IDIVERG,TH1,XE,YE,RCR,PTOJ,TOJ
+     1,EM1,XMU1,Q1
+      COMMON/WV/NPTS,RE,XBP,XJ
+      COMMON/QA/H(7,55),Q(55),RHO(55),XMU(55)
+      COMMON/RC/R(55)
+      DP=ALOG(P(7)/P(2))
+      H6=0.
+      DO 2 J=1,NSP
+    2 H6=H6+H(J,M)*ALP(J,M)
+      DO 11 I=1,NPTS
+   11 X(I)=3.E-2
+      XBP=X(1)
+      RHO1=RHO(2)*EXP(DP/GAM(2))
+      G=2.*GAM(2)/(GAM(2)-1)
+      VSQUARE=QQ=-G*(P(7)/RHO1-P(2)/RHO(2))
+      Q1=SQRT(Q(5)**2+VSQUARE)
+      H2=H6-QQ/2.*EIN
+      IIT1=1
+      T1=T(2)
+      IF(IIT1.EQ.1) T2=T1*.99
+ 8200 CALL THERMO(T2,H1,CP1)
+      H2P=0.
+      DO 4 J=1,NSP
+    4 H2P=H2P+ALP(J,5)*H1(J)
+      ERR1=(H2-H2P)/H6
+      IF(ABS(ERR1).LT.1.E-08) GO TO 8202
+      IIT1=IIT1+1
+      IF(IIT1.GT.15) GO TO 8203
+      IF(IIT1.GT.2) GO TO 8204
+      ERR2=ERR1
+      T22=T2
+      T2=T2*.99
+      GO TO 8200
+ 8203 WRITE(6,9191)
+ 9191 FORMAT(1H1)
+      WRITE(6,8205)
+ 8205 FORMAT(* ERROR IN TEMPERATURE LOOP IN PM*)
+      STOP
+ 8204 DUM=T22-ERR2*(T2-T22)/(ERR1-ERR2)
+      ERR2=ERR1
+      T22=T2
+      T2=DUM
+      GO TO 8200
+ 8202 CONTINUE
+      N=5
+      T(N)=T2
+      W(N)=0.
+      CPX(N)=0.
+      DO 5 J=1,NSP
+      CP(J,N)=CP1(J)
+      H(J,N)=H1(J)
+      CPX(N)=CPX(N)+ALP(J,N)*CP1(J)
+    5 W(N)=W(N)+ALP(J,N)/WTMOLE(J)
+      W(N)=1./W(N)
+      R(N)=RO/W(N)
+      GAM(N)=CPX(N)/(CPX(N)-R(N)/CPIN)
+      ORN=1./R(N)
+      EM1=Q1*EMINF*SQRT(GAR/GAM(N)*ORN/T(N))
+      XMU1=ZMU(EM1)
+      TH1=TH(N)-OPT*(DP/GAM(2))*(COS(XMU1)*SIN(XMU1)
+     3+COS(XMU(N)) *SIN(XMU(N)))/2.
+      RETURN
+      END
+      SUBROUTINE CHEM(FAS)
+      COMMON/BA/ALP(7,55),EMINF,WINF
+      COMMON/CA/WDOTN(7,55),XN(55)
+      COMMON/DB/BETB(20),IS(20),IDD,IJENK,JENKI
+      COMMON/DP/YN(55)
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+       COMMON/HI/DALCH(7),DTCHEM
+      COMMON/OP/ALPB(7),PHI(55)
+      COMMON/PD/W(55),X(55)
+      COMMON/PQ/JCHEM,NSP,T(55)
+      COMMON/QA/H(7,55),Q(55),RHO(55),XMU(55)
+      COMMON/QS/RHOP(2),WDOT(7,55),WDOTC(7),WP(2),XMUP(2)
+      COMMON/VT/DACH(7,55),DTCH(55)
+      COMMON/WV/NPTS,RE,XBP,XJ
+      COMMON/YZ/BPRESU,CHEMFC,CPRESU,EMSUB,RTH,XSTEP
+      IF(JCHEM.EQ.0) GO TO 8351
+C         **********  CHEMISTRY PACKAGE  **********
+      DO 8355 L=1,NPTS
+      DO 89 M=1,IDD
+      IF(IS(M).EQ.0) GO TO 89
+      ITEST=IS(M)-1
+      IF((M/2)*2.EQ.M) ITEST=IS(M)
+      IF(L.EQ.ITEST.OR.L.EQ.ITEST+1) GO TO 8398
+   89 CONTINUE
+      FAT=ABS(PHI(L))
+      IF((FAT.LT..01).OR.(FAT.GT.100.)) GO TO 8398
+      K=L
+      DX=SQRT((XN(L)-X(K))**2+(YN(L)-Y(K))**2)*RTH
+      DO 8350 J=1,NSP
+ 8350 ALPB(J)=ALP(J,K)
+      CALL HOCUS(T(K),P(K),Q(K),RHO(K),ALPB,DX,L)
+      DO 8301 J=1,NSP
+ 8301 DACH(J,L)=DALCH(J)
+      DTCH(L)=DTCHEM
+      GO TO 8355
+ 8398 DTCH(L)=0.
+      DO 8399 J=1,NSP
+      WDOT(J,L)=0.
+      WDOTN(J,L)=0.
+ 8399 DACH(J,L)=0.
+ 8355 CONTINUE
+      GO TO 4000
+ 8351 DO 6100 L=1,NPTS
+      DTCH(L)=0.
+      DO 8302 J=1,NSP
+      WDOT(J,L)=0.
+      WDOTN(J,L)=0.
+ 8302 DACH(J,L)=0.
+ 6100 CONTINUE
+ 4000 CONTINUE
+      RETURN
+      END
+      SUBROUTINE SHEAR(I,ASHEAR)
+      COMMON/CJ/CP(7,55),CP1(7),CPX(55)
+      COMMON/CK/WTMOLE(7)
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/GK/DELX
+      COMMON/PD/W(55),X(55)
+      COMMON/PQ/JCHEM,NSP,T(55)
+      COMMON/QA/H(7,55),Q(55),RHO(55),XMU(55)
+      COMMON/SS/AL1,AL2,BQ1,BQ2,C1,C2,CH1,CH2,DB1,DB2,DD1,DD2,DT1,DT2,DV
+     A1,DV2,PX1,PX2,TA1,TA2,TH1,TH2,V1,V2,Y1,Y2
+      COMMON/ST/I13,IREGI,K ,KFIRST,KKKQ,PSTAR
+      COMMON/TS/DVIS(55),DVISN(55),DVISP(2),VIS(55),VISN(55),VISP(2)
+      COMMON/TU/BQ(55),DALP(7,55),DBQ(55),DCPX(55),DDALP(7,55),DTAU(55),
+     1TAU(55)
+      COMMON/VT/DACH(7,55),DTCH(55)
+      COMMON/WV/NPTS,RE,XBP,XJ
+      DIMENSION S3D(7)
+      K=I
+      V1=V2=VIS(K)
+      DV1=DV2=DVIS(K)
+      TA1=TA2=TAU(K)
+      DT1=DT2=DTAU(K)
+      Y1=Y2=Y(K)
+      TH1=TH2=TH(K)
+      S1D=S1(XJ,RE)
+      CH2D=0.
+      DO 10 J=1,NSP
+   10 CH2D=CH2D+DALP(J,K)*CP(J,K)
+      BQ1=BQ2=BQ(K)
+      C1=C2=CPX(K)
+      DB1=DB2=DBQ(K)
+      PX1=PX2=DCPX(K)
+      CH1=CH2=CH2D
+      S2D=S2(XJ,RE)
+      S3DT=0.
+      DO 20 J=1,NSP
+      AL1=AL2=DALP(J,K)
+      DD1=DD2=DDALP(J,K)
+      S3D(J)=S3(XJ,RE)
+   20 S3DT=S3DT+S3D(J)/WTMOLE(J)
+      PK=1./P(K)
+      SH1=S1D/GAM(K)*PK/EM(K)**2
+      QK=1./Q(K)
+      SH2=-(GAM(K)-1.)*S2D/GAM(K)*PK*QK
+      SH3=-W(K)*S3DT/RHO(K)*QK
+      IF(XJ.EQ.0) SH4=0.
+      IF(XJ.EQ.0) GO TO 40
+      IF(K.NE.1.OR.Y(K).GT.1.E-6) GO TO 30
+      SH4=TH(2)/Y(2)
+      GO TO 40
+   30 SH4=SIN(TH(K))/Y(K)
+   40 CONTINUE
+      OD=1./DELX
+      SH5=-DTCH(K)/T(K)*OD*COS(TH(K))
+      DUM=0.
+      DO 50 J=1,NSP
+   50 DUM=DUM+DACH(J,K)/WTMOLE(J)
+      SH6=-W(K)*DUM/DELX*COS(TH(K))
+      SH=SH1+SH2+SH3+SH4+SH5+SH6
+      ASHEAR=-GAM(K)*P(K)*EM(K)**2*SH
+      RETURN
+      END
+      SUBROUTINE PRESS(X,P,TH,THN)
+      COMMON/AC/IBOD,PIN
+      COMMON/WX/APRESS,APRESU
+      COMMON/YX/ABODS,BPRESS,CPRESS
+      P=APRESS+X*(BPRESS+CPRESS*X)
+      P=P*PIN
+      THN=TH
+      RETURN
+      END
+      FUNCTION XVIS(A,IVV,IDUM)
+      COMMON/DB/BETB(20),IS(20),IDI,IJENK,JENKI
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/QA/H(7,55),Q(55),RHO(55),XMU(55)
+      COMMON/WV/NPTS,RE,XBP,XJ
+      COMMON/GE/P3(3),VISINF
+      COMMON/PQ/P33(2),T(55)
+      COMMON/TW/TIN
+      IDD=IVV
+      U1=Q(IDUM)+.95*(Q(IDD)-Q(IDUM))
+      U2=Q(IDUM)+.5*(Q(IDD)-Q(IDUM))
+      IF(ABS(Q(IDD)-Q(IDUM))/Q(IDD).GT..15) GO TO 13
+      TD=TIN*T(IDD)*1.8
+      XXVIS=1./(VISINF*RE*RHO(IDD))
+      XVIS=2.27E-8*(SQRT(TD**3)/(TD+198.6))*XXVIS
+      RETURN
+   13 DO 10 I=IDD,IDUM
+      IF(U1.LT.Q(I))GO TO 10
+      Y1=(Q(I-1)-U1)/(Q(I-1)-Q(I))*ABS(Y(I-1)-Y(I))+Y(I-1)
+      GO TO 8
+   10 CONTINUE
+    8 DO 9I=IDD,IDUM
+      IF(U2.LT.Q(I))GO TO 9
+      Y2=(Q(I-1)-U2)/(Q(I-1)-Q(I))*ABS(Y(I-1)-Y(I))+Y(I-1)
+      GO TO 7
+    9 CONTINUE
+    7 Z=Y2-Y1
+      XVIS=ABS(.010*Z*Q(IDD))
+      RETURN
+      END
+      SUBROUTINE COWL
+      COMMON/BA/ALP(7,55),EMINF,WINF
+      COMMON/CJ/CP(7,55),CP1(7),CPX(55)
+      COMMON/DB/BETB(20),IS(20),IDD,IJENK,JENKI
+      COMMON/DE/MM
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/HJ/KOUNT,LZ,NPT
+      COMMON/HL/ALPHA,BETA
+      COMMON/HM/ALPN(7,55),CPN(7,55),CPXN(55),EMN(55),GAMN(55),HN(7,55),
+     ILS,PN(55),QN(55),RHON(55),RN(55),THN(55),TN(55),WN(55),XMUN(55)
+      COMMON/HP/BETAN(20),IEMBED
+      COMMON/PD/W(55),X(55)
+      COMMON/PQ/JCHEM,NSP,T(55),PTZERO,IDIVERG,TH1,XE,YE,RCR,PTOJ,TOJ
+     1,EM1,XMU1,Q1
+      COMMON/QA/H(7,55),Q(55),RHO(55),XMU(55)
+      COMMON/RC/R(55)
+      COMMON/TU/BQ(55),DALP(7,55),DBQ(55),DCPX(55),DDALP(7,55),DTAU(55),
+     1TAU(55)
+      COMMON/WV/NPTS,RE,XBP,XJ
+      ALPHA=1.
+      BETA=0.
+      NPTSSS=NPT
+      NPT=NPT-3
+      IF(P(NPT+MM)-P(NPT)) 2001,2002,2003
+ 2002 WRITE(6,9191)
+ 9191 FORMAT(1H1)
+      WRITE(6,2004)
+ 2004 FORMAT(1H1,67H ERROR IN INPUT DATA - NO PRESSURE DIFFERENCE ACROSS
+     1 SPLITTER PLATE/23H SET INPUT - INTACT = 0)
+      STOP
+ 2003 OPT=1.
+      K=4
+      IS(K)=NPTSSS-1
+      L=IS(K)
+      M=L+MM
+      GO TO 2005
+ 2001 OPT=-1.
+      K=3
+      IS(K)=NPT+MM
+      M=NPT
+      L=M+MM
+ 2005 IFAN=MM-2
+      KOPT=OPT*1.5
+      N13=NPTSSS-2*KOPT
+      IF((K/2)*2.EQ.K) N13=NPTSSS
+      DO 300 N12=N13,NPTS
+      K5=NPTS+N13-N12
+      J5=K5+1
+      CALL SWITCH(J5,K5)
+  300 CONTINUE
+      NPTS=NPTS+1
+      DO 301 I11=1,IDD
+      IF(I11.EQ.K) GO TO 301
+      IF(IS(I11).GT.N13) IS(I11)=IS(I11)+1
+  301 CONTINUE
+      LL=L+KOPT
+      TAU(LL)=0.
+      PN(L)=P(L)
+      THN(L)=TH(L)
+      Q  N(L)=Q  (L)
+      T  N(L)=T  (L)
+      R  N(L)=R  (L)
+      RHON(L)=RHO(L)
+      GAMN(L)=GAM(L)
+      BQ(LL)=0.
+      DCPX(LL)=0.
+      DTAU(LL)=0.
+      DBQ(LL)=0.
+      CPX(LL)=0.
+      WN(L)=W(L)
+      DO 2006 J=1,NSP
+      HN(J,L)=H(J,L)
+      DALP(J,LL)=0.
+      DDALP(J,LL)=0.
+ 2006 ALPN(J,L)=ALP(J,L)
+      ITT=1
+      BETB(K)=(TH(L)-OPT*XMU(L))*1.01
+      BET=BETB(K)
+ 2007 IEMBED=1
+      CALL HSHOCK(K)
+      IEMBED=0
+      KK=LL+KOPT
+      P  (LL)=P  N(LL)
+      Q  (LL)=Q  N(LL)
+      T  (LL)=T  N(LL)
+      W  (LL)=W  N(LL)
+      R  (LL)=R  N(LL)
+      TH (LL)=TH N(LL)
+      EM (LL)=EM N(LL)
+      XMU(LL)=XMUN(LL)
+      GAM(LL)=GAMN(LL)
+      RHO(LL)=RHON(LL)
+      CPX(LL)=CPXN(LL)
+      P  (KK)=P  N(LL)
+      Q  (KK)=Q  N(LL)
+      T  (KK)=T  N(LL)
+      W  (KK)=W  N(LL)
+      R  (KK)=R  N(LL)
+      TH (KK)=TH N(LL)
+      EM (KK)=EM N(LL)
+      XMU(KK)=XMUN(LL)
+      GAM(KK)=GAMN(LL)
+      RHO(KK)=RHON(LL)
+      CPX(KK)=CPXN(LL)
+      DO 2008 J=1,NSP
+      H  (J,LL)=H  N(J,LL)
+      CP (J,LL)=CP N(J,LL)
+      ALP(J,LL)=ALPN(J,LL)
+      H  (J,KK)=H  N(J,LL)
+      CP (J,KK)=CP N(J,LL)
+ 2008 ALP(J,KK)=ALPN(J,LL)
+      X(LL)=X(L)
+      X(KK)=X(L)
+      THS=TH(KK)
+      CALL PM(M,OPT)
+      THPM=TH1
+      ERR=THS-THPM
+      IF(ABS(ERR).LT.1.E-04) GO TO 15
+      ITT=ITT+1
+      IF(ITT.GT.15) GO TO 102
+      IF(ITT.GT.2) GO TO 14
+      ER1=ERR
+      BET1=BET
+      BET=1.01*BET
+      BETB(K)=BET
+      GO TO 2007
+  102 WRITE(6,203)
+  203 FORMAT(* ERROR IN BETA SHOCK IN COWL*)
+      STOP
+   14 DUM1=BET1-ER1*(BET-BET1)/(ERR-ER1)
+      ER1=ERR
+      BET1=BET
+      BET=DUM1
+      BETB(K)=BET
+      GO TO 2007
+   15 CONTINUE
+      EM(5)=EM1
+      ANG=TH(5)
+      TH(5)=TH1
+      Q(5)=Q1
+      XMU(5)=XMU1
+      P(5)=P(7)
+      Y(5)=1.-X(5)*TAN(XMU(5)-TH(5))
+      Y(4)=1.-X(4)*TAN(XMU(2)-ANG)
+      TH(4)=ATAN(Y(4)/(XE+X(4)))
+      NPT=NPTSSS
+      RETURN
+      END
+      SUBROUTINE DPOINT(K,L)
+      COMMON/AL/GAR,GEW
+      COMMON/BA/ALP(7,55),EMINF,WINF
+      COMMON/CJ/CP(7,55),CP1(7),CPX(55)
+      COMMON/CK/WTMOLE(7)
+      COMMON/DP/YN(55)
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/EP/GAMINF,H1(7),RINF
+      COMMON/GK/DELX
+      COMMON/PD/W(55),X(55)
+      COMMON/PQ/JCHEM,NSP,T(55)
+      COMMON/QA/H(7,55),Q(55),RHO(55),XMU(55)
+      COMMON/TS/DVIS(55),DVISN(55),DVISP(2),VIS(55),VISN(55),VISP(2)
+      COMMON/TU/BQ(55),DALP(7,55),DBQ(55),DCPX(55),DDALP(7,55),DTAU(55),
+     1TAU(55)
+      COMMON/TV/ALPP(7,2),BET,BQP(2),DACHP(7,2),DALPP(7,2),DBQP(2),
+     1DCPXP(2),DDALPP(7,2),DTAUP(2),DTCHP(2),GAMP(2),PP(2),QP(2),
+     2TAUP(2),THP(2),TP(2),YP(2)
+      COMMON/VT/DACH(7,55),DTCH(55)
+      IT=1
+      YD=(YP(1)+YP(2))/2.
+   16 RAT=(YD-YP(1))/(YP(2)-YP(1))
+      ALAMD=TAN(THP(1))+RAT*(TAN(THP(2))-TAN(THP(1)))
+      YAT=YN(L)-ALAMD*DELX
+      ERR=ABS((YAT-YD)/(YP(2)-YP(1)))
+      IF(ERR.LT.1.E-05) GO TO 18
+      YD=YAT
+      IT=IT+1
+      IF(IT.LE.10) GO TO 16
+      WRITE(6,9191)
+ 9191 FORMAT(1H1)
+      WRITE(6,202)
+  202 FORMAT(* ERROR IN D POINT ITERATION*)
+      STOP
+   18 Y(K)=YD
+      P   (K)=P   P(1)+RAT*(P   P(2)-P   P(1))
+      Q   (K)=Q   P(1)+RAT*(Q   P(2)-Q   P(1))
+      T   (K)=T   P(1)+RAT*(T   P(2)-T   P(1))
+      TH  (K)=TH  P(1)+RAT*(TH  P(2)-TH  P(1))
+      DVIS(K)=DVISP(1)+RAT*(DVISP(2)-DVISP(1))
+      VIS(K)=VISP(1)+RAT*(VISP(2)-VISP(1))
+      BQ  (K)=BQ  P(1)+RAT*(BQ  P(2)-BQ  P(1))
+      TAU (K)=TAU P(1)+RAT*(TAU P(2)-TAU P(1))
+      DBQ (K)=DBQ P(1)+RAT*(DBQ P(2)-DBQ P(1))
+      DCPX(K)=DCPXP(1)+RAT*(DCPXP(2)-DCPXP(1))
+      DTAU(K)=DTAUP(1)+RAT*(DTAUP(2)-DTAUP(1))
+      DTCH(K)=DTCHP(1)+RAT*(DTCHP(2)-DTCHP(1))
+      CPX(K)=0.
+      W(K)=0.
+      CALL THERMO(T(K),H1,CP1)
+      DO 1 J=1,NSP
+      H (J,K)=H 1(J)
+      CP(J,K)=CP1(J)
+      ALP  (J,K)=ALP  P(J,1)+RAT*(ALP  P(J,2)-ALP  P(J,1))
+      DALP (J,K)=DALP P(J,1)+RAT*(DALP P(J,2)-DALP P(J,1))
+      DACH(J,K)=DACHP(J,1)+RAT*(DACHP(J,2)-DACHP(J,1))
+      DDALP(J,K)=DDALPP(J,1)+RAT*(DDALPP(J,2)-DDALPP(J,1))
+      CPX(K)=CPX(K)+ALP(J,K)*CP(J,K)
+    1 W(K)=W(K)+ALP(J,K)/WTMOLE(J)
+      W(K)=1./W(K)
+      RHO(K)=P(K)*W(K)*GEW/T(K)
+      RETURN
+      END
+      SUBROUTINE STEP
+      COMMON/AC/IBOD,PIN
+      COMMON/AX/JSUBL,JSUBU
+      COMMON/CA/WDOTN(7,55),XN(55)
+      COMMON/DB/BETB(20),IS(20),IDD,IJENK,JENKI
+      COMMON/DP/YN(55)
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/EG/EIN,PR,XLE
+      COMMON/GE/RAD,ROO,UIN,VISINF
+      COMMON/GK/DELX
+      COMMON/HJ/KOUNT,LL,NPT
+      COMMON/HM/ALPN(7,55),CPN(7,55),CPXN(55),EMN(55),GAMN(55),HN(7,55),
+     ILS,PN(55),QN(55),RHON(55),RN(55),THN(55),TN(55),WN(55),XMUN(55)
+      COMMON/OR/THBP,YBP,YBPN
+      COMMON/PQ/JCHEM,NSP,T(55),PTZERO,IDIVERG,TH1,XE,YE,RCR,PTOJ,TOJ
+     1,EM1,XMU1,Q1
+      COMMON/PD/W(55),X(55)
+      COMMON/WAVE/XBOD(5),XWALL(5),AABOD(5),BBBOD(5),CCBOD(5),EEBOD(5),
+     ZFFBOD(5),GGBOD(5),LWALL,LBOD
+      COMMON/QA/H(7,55),Q(55),RHO(55),XMU(55)
+      COMMON/ST/I13,IREGI,KS,KFIRST,KKKQ,PSTAR
+      COMMON/TS/DVIS(55),DVISN(55),DVISP(2),VIS(55),VISN(55),VISP(2)
+      COMMON/UV/II11,IERR,IPRESS,IPRESU,ISUB
+      COMMON/VW/ICONT,IEND,KT,THBPN,XBPN
+      COMMON/WV/NPTS,RE,XBP,XJ
+      COMMON/WX/APRESS,APRESU
+      COMMON/YZ/BPRESU,CHEMFC,CPRESU,EMSUB,RTH,XSTEP
+      DIMENSION DELLX(55),XW(2),YW(2),THW(2)
+      DIMENSION DELV(55)
+      DATA I13/0/
+      DATA IREGI/0/
+      ISPP=0
+      ISPA=0
+      NSAVE=2
+      XW(1)=0.
+      XW(2)=10000.
+      YW(1)=10000.
+      YW(2)=10000.
+      THW(1)=0.
+      THW(2)=0.
+      ISUB=0
+      JSUBL=NPTS+1
+      JSUBU=NPTS+1
+      DO 910 I=1,NPTS
+      IF(EM(I).GT.EMSUB) GO TO 910
+      JSUBL=1
+      ISUB=1
+      GO TO 800
+  910 CONTINUE
+      GO TO 801
+  800 CONTINUE
+      DO 802 I=1,NPTS
+      II=NPTS-I+1
+      IF(EM(II).GT.EMSUB) GO TO 802
+      JSUBU=II+1
+      GO TO 801
+  802 CONTINUE
+  801 CONTINUE
+      IF(ISUB.EQ.0) GO TO 10
+      I13=1
+      KFIRST=KOUNT
+   10 CONTINUE
+      JDUM=JSUBU-1
+      NP2=NPTS-1
+      DO 499 K=1,NP2
+      DEY=Y(K+1)-Y(K)
+      IF(DEY.LT.1.E-08) GO TO 498
+      IF(K.GE.JSUBL.AND.K.LE.JDUM) GO TO 498
+      EM1=XM1(1.,0.,TH(K),XMU(K),0.,0.)
+      EM2=XM2(1.,0.,TH(K+1),XMU(K+1),0.,0.)
+      DELLX(K)=(Y(K+1)-Y(K))/(EM1-EM2)
+      DO 776 J=1,IDD
+      JJ= (J/2)*2
+      IF(K.EQ.IS(J).AND.JJ.NE.J) DELLX(K)=DELLX(K-1)
+      IF(K.EQ.IS(J).AND.JJ.EQ.J) DELLX(K-1)=DELLX(K-2)
+  776 CONTINUE
+      GO TO 499
+  498 DELLX(K)=1.E+06
+  499 CONTINUE
+      DELXM=DELLX(1)
+      DO 501 K=2,NP2
+      IF(DELLX(K).LT.DELXM)DELXM=DELLX(K)
+  501 CONTINUE
+      DCHAR=DELXM
+  775 DO 502 K=1,NPTS
+      IF(XLE.EQ.0..OR.VIS(K).EQ.0.)GO TO 49
+      RXLE=1./XLE
+      DELV(K)=.50*PR*RE/VIS(K)*RXLE
+      GO TO 50
+   49 DELV(K)=1.E10
+   50 DELV1=1.E10
+      IF(K.NE.1) DELY=Y(K)-Y(K-1)
+      IF(K.NE.NPTS) DELYY=Y(K+1)-Y(K)
+      IF(K.EQ.1) DELY=DELYY
+      IF(K.EQ.NPTS) DELYY=DELY
+      IF(DELYY.LT.DELY) DELY=DELYY
+      IF(DELY.LT.1.E-08) GO TO 502
+      DELV1=DELV(K)*RHO(K)*Q(K)*DELY**2*COS(TH(K))
+  502 DELLX(K)=DELV1
+      DELXM=DELLX(1)
+      DO 504 K=2,NPTS
+  504 IF(DELLX(K).LT.DELXM)DELXM=DELLX(K)
+      DSHEAR=DELXM
+      DELX=1./(1./DCHAR+1./DSHEAR)
+      DELX=DELX/XSTEP
+      IF(ISPA.EQ.1) GO TO 4
+      ISPA=1
+      CALL SPACE(ISPP)
+      IF(II11.EQ.1) RETURN
+      IF(ISPP.EQ.1) GO TO 10
+    4 CONTINUE
+      IF(X(1)+DELX.GT.XWALL(LWALL)) DELX=XWALL(LWALL)-X(1)
+      IF(X(1)+DELX.GT.XBOD(LBOD)) DELX=XBOD(LBOD)-X(1)
+      IF(JCHEM.EQ.0) GO TO 4275
+      DO 505 I=1,NPTS
+      DTEST=Q(I)*UIN*4.E-7/RTH
+      DTEST=CHEMFC*DTEST
+  505 IF(DELX.GT.DTEST) DELX=DTEST
+ 4275 CONTINUE
+      IF(I13.NE.1.OR.KOUNT.NE.KFIRST) GO TO 4545
+      KKKQ=KOUNT+20
+ 4545 CONTINUE
+      IF(EM(JSUBU).LT.1.05) KKKQ=KOUNT+1
+      XWT=XBP+DELX
+      RA=1./RAD
+      IF(XWT.LT.XW(1)) GO TO 741
+      IF(XWT.LE.XW(NSAVE)) GO TO 5209
+      THBPN=0.
+      XBPN=XW(NSAVE)
+      YBPN=YW(NSAVE)
+      II11=1
+      GO TO 5210
+ 5209 CALL TBL(XWT,THBPN,XW,THW,NSAVE)
+      GO TO 5204
+  741 THBPN=THBP+DELX/COS(THBP)*RA
+ 5204 DELX=DELX/COS(THBP)*(COS(THBP)+COS(THBPN))/2.
+      XBPN=XWT
+      YBPN=YBP+(SIN(THBP)+SIN(THBPN))*.5*DELX/COS(THBP)
+ 5210 CONTINUE
+      DO 5211 I=1,NPTS
+      XN(I)=XBPN
+      YN(I)=Y(I)+TAN(TH(I))*DELX
+ 5211 THN(I)=TH(I)
+      IF(IBOD.EQ.1) CALL BODY(XN(1),YN(1),THN(1),0)
+      IF(IPRESS.EQ.1) CALL PRESS(XN(1),PN(1),TH(1),THN(1))
+      IF(IPRESU.EQ.1) PN(NPTS)=PIN*(APRESU+XN(NPTS)*(BPRESU+CPRESU*
+     1XN(NPTS)))
+      IF(IPRESU.EQ.1) RETURN
+      IF(Y(NPTS).EQ.YBP) GO TO 6211
+      CALL BODY(XWT,YN(NPTS),THN(NPTS),1)
+      XN(NPTS)=XWT
+      RETURN
+ 6211 XN(NPTS)=XBPN
+      YN(NPTS)=YBPN
+      THN(NPTS)=THBPN
+      RETURN
+      END
+      SUBROUTINE SSONIC(IDG)
+      COMMON/AC/IBOD,PIN
+      COMMON/AX/JSUBL,JSUBU
+      COMMON/BD/XMASS(55)
+      COMMON/CG/AUP,BUP,CUP,DTSPRI(55),DUP,EUP,JCONV,THPRI(55),YPRI(55)
+      COMMON/DP/YN(55)
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/GK/DELX
+      COMMON/HJ/KOUNT,LL,NPT
+      COMMON/HL/ALPHA,BETA
+      COMMON/HM/ALPN(7,55),CPN(7,55),CPXN(55),EMN(55),GAMN(55),HN(7,55),
+     IL,PN(55),QN(55),RHON(55),RN(55),THN(55),TN(55),WN(55),XMUN(55)
+      COMMON/RO/AP0,AP1,AP2
+      COMMON/ST/I13,IREGI,K ,KFIRST,KKKQ,PSTAR
+      COMMON/UV/II11,IERR,IPRESS,IPRESU,ISUB
+      COMMON/VW/ICONT,IEND,KT,THBPN,XBPN
+      COMMON/WV/NPTS,RE,XBP,XJ
+      DIMENSION EZ(2),ERET(2),ERTHL(2)
+      DATA LKIP/1/,LME/1/,LICQ/0/,LICK/0/,LIJUMP/0/
+      DATA DTHQ/0./
+      IF(I13.NE.1.OR.KOUNT.NE.KFIRST) GO TO 1777
+      XKF=XBP
+      CALL DPDTH(THSBOT,JSUBL)
+      ATHB=Y(JSUBL)
+      BTHB=TAN(TH(JSUBL))
+      IF(IREGI.EQ.0)CTHB=THSBOT/COS(TH(JSUBL))**3
+      IF(IREGI.NE.0)CTHB=(CTHB+DTHB*XDEL)
+      DTHB=DTHQ
+      XMKF=XMASS(JSUBU)
+ 1777 CONTINUE
+      K=JSUBU
+      DQ=XBPN-XKF
+      OS=1./6.
+      OQ=1./24.
+      YN(K)=AUP+BUP*DQ+CUP*DQ**2*.5+DUP*DQ**3*OS+EUP*DQ**4*OQ
+      THN(K)=ATAN(BUP+CUP*DQ+DUP*DQ**2*.5+EUP*DQ**3*OS)
+      DS=2.*DELX/(COS(TH(K))+COS(THN(K)))
+      THGH=THN(K)
+      YGH=YN(K)
+      IBOD1=IBOD
+      IBOD=1
+      IPRES1=IPRESS
+      IPRESS=0
+      IPRE U1=IPRESU
+      IPRESU=0
+      ALSV=ALPHA
+      BESV=BETA
+      CALL LPOINT(JSUBU,0.)
+      K=JSUBU
+      THN(K)=THGH
+      YN(K)=YGH
+      ALPHA=.5
+      BETA=.5
+      CALL LPOINT(JSUBU,0.)
+      ALPHA=ALSV
+      BETA=BESV
+      K=JSUBU
+      THN(K)=THGH
+      YN(K)=YGH
+      IBOD=IBOD1
+      IPRESS=IPRES1
+      IPRESU=IPREU1
+      DS=2.*DELX/(COS(TH(K))+COS(THN(K)))
+      PSA=(PN(K)-P(K))/DS
+      THSA=(CUP+DUP*DQ+EUP*DQ**2*.5)*COS(THN(K))**3
+      PNA=-GAMN(K)*PN(K)*EMN(K)**2*THSA
+      PYU=COS(THN(K))*PNA+SIN(THN(K))*PSA
+      K=JSUBL
+      DQ=XBPN-XKF
+      YN(K)=ATHB+BTHB*DQ+CTHB*DQ**2*.5+DTHB*DQ**3*OS
+      THN(K)=ATAN(BTHB+CTHB*DQ+DTHB*DQ**2*.5)
+      THSB=(CTHB+DTHB*DQ)*COS(THN(K))**3
+      DS=2.*DELX/(COS(TH(K))+COS(THN(K)))
+      PYB=AP1
+      ITE1=1
+      IET=0
+ 1790 AP2=(PYU-PYB)*.5/(YN(JSUBU)-YN(K))
+      AP0=PN(JSUBU)-.5*(PYB+PYU)*(YN(JSUBU)-YN(K))
+      AP1=PYB
+      PN(K)=AP0
+      ICONT=1
+      IEND=0
+      KP=K
+      L=K
+      KT=K
+      PSTAR=PN(K)
+      YGH=YN(K)
+      THGH=THN(K)
+      CALL CPOINT
+      YN(K)=YGH
+      THN(K)=THGH
+      PNB=-GAMN(K)*PN(K)*EMN(K)**2*THSB
+      PYB2=COS(THN(K))*PNB
+      ET=PYB-PYB2
+      IF(ABS(ET).LT.1.E-06) GO TO 1789
+      IET=IET+1
+      IF(IET.LT.20) GO TO 6532
+      WRITE(6,6533)
+ 6533 FORMAT(* ET LOOP IN SSONIC*)
+      STOP
+ 6532 CONTINUE
+      ERET(ITE1)=ET
+      IF(ITE1.GT.1) GO TO 358
+      ITE1=2
+      PYB1=PYB
+      PYB=PYB2
+      GO TO 1790
+  358 PYBD=PYB1-ERET(1)*(PYB-PYB1)/(ERET(2)-ERET(1))
+      PYB1=PYB
+      ERET(1)=ERET(2)
+      PYB=PYBD
+      GO TO 1790
+ 1789 CONTINUE
+      ICONT=1
+      IEND=0
+      JSUBL1=JSUBL+1
+      JSUBU1=JSUBU-1
+      DO 1734 KK=JSUBL1,JSUBU1
+      K=JSUBU-KK+1
+      THN(K)=TH(K)
+      YN(K)=TAN(TH(K))*DELX+Y(K)
+      PN(K)=AP0+AP1*(YN(K)-YN(JSUBL))+AP2   *(YN(K)-YN(JSUBL))**2
+      KIP=1
+      ME=1
+      KP=K
+      L=K
+      KT=K
+      PSTAR=PN(K)
+      DS=2.*DELX/(COS(TH(K))+COS(THN(K)))
+      YN(K)=Y(K)+.5*(TAN(TH(K))+TAN(THN(K)))*DELX
+      YGH=YN(K)
+      THGH=THN(K)
+      CALL CPOINT
+      YN(K)=YGH
+      THN(K)=THGH
+      YN(K)=Y(K)+.5*(TAN(TH(K))+TAN(THN(K)))*DELX
+      KP=K+1
+      TERM=(RHON(K)*QN(K)*COS(THN(K))+RHON(KP)*QN(KP)*COS(THN(KP)))/2.
+      XMDUM=XMASS(KP)+TERM*(YN(K)**(1.+XJ)-YN(KP)**(1.+XJ))/(1.+XJ)
+      Q1J=1.+XJ
+      YN(K)=(YN(KP)**Q1J+Q1J*(XMASS(K)-XMASS(KP))/TERM)**(1./Q1J)
+ 1734 CONTINUE
+      IF(KOUNT.NE.KKKQ-1) RETURN
+      XMDIFF=XMKF-XMASS(JSUBU)
+      JK=JSUBL+1
+      DO 347 I=JK,JSUBU
+  347 XMASS(I)=XMASS(I)+XMDIFF
+      JSU1=JSUBU-1
+      WRITE(6,1418)
+ 1418 FORMAT(10X,*CORRECTED INTERMEDIATE STREAMLINES*/2X,*STREAMLINE NO.
+     1*,7X,*X*,12X,*Y*,11X,*TH*)
+      DO 386 KK=1,JSU1
+      K=JSUBU-KK
+      KIP=1
+      ME=1
+      DTERM=0.
+      DYDX=TAN(THPRI(K))
+      D2YDX2=DTSPRI(K)/COS(THPRI(K))**3*.5
+      IF(K.EQ.1)D2YDX2= CTHB*.5
+      XDEL=XBPN-XKF
+ 6030 YSTAR=YPRI(K)+DYDX*XDEL+D2YDX2*XDEL**2+DTERM*XDEL**3*OS
+      THSTAR=ATAN(DYDX+2.*D2YDX2*XDEL+DTERM*XDEL**2*.5)
+      KP=K+1
+      TERM=(RHON(KP)*QN(KP)*COS(THN(KP))+RHON(K)*QN(K)*COS(THSTAR))/2.
+      X1J=1.+XJ
+      XMDUM=XMASS(KP)+TERM*(YSTAR**X1J-YN(KP)**X1J)/X1J
+      EZ(ME)=XMDUM-XMASS(K)
+      IF(ABS(EZ(ME)).LT.1.E-06              ) GO TO 6034
+      KIP=KIP+1
+      GO TO (6041,6042),ME
+ 6041 ME=2
+      DTERM1=DTERM
+      DTERM=-.01/XDEL**2
+      GO TO 6030
+ 6042 DTERMD=DTERM1-EZ(1)*(DTERM-DTERM1)/(EZ(2)-EZ(1))
+      DTERM1=DTERM
+      DTERM=DTERMD
+      EZ(1)=EZ(2)
+      IF(KIP.LE.20) GO TO 6030
+      WRITE(6,6081)
+ 6081 FORMAT(* TOO MANY ITERATIONS FOR ONE POINT IN SSONIC*)
+      STOP
+ 6034 IF(K.EQ.1) GO TO 6036
+      YN(K)=YSTAR
+      THN(K)=THSTAR
+      XDEL1=XDEL/4.
+      DO 1417 I=1,4
+      XDE=XDEL1*FLOAT(I)
+      XPRNT=XKF+XDE
+      YPRNT=YPRI(K)+DYDX*XDE+D2YDX2*XDE**2+DTERM*XDE**3*OS
+      THPRNT=ATAN(DYDX+2.*D2YDX2*XDE+DTERM*XDE**2*.5)
+      WRITE(6,1419) K,XPRNT,YPRNT,THPRNT
+ 1419 FORMAT(5X,I5,5X,3E13.5)
+ 1417 CONTINUE
+      GO TO 386
+ 6036 ERTH=THSTAR-THN(JSUBL)
+      JCONV=0
+      I13=2
+      ERTHL(LME)=ERTH
+      IF(LIJUMP.EQ.1) GO TO 2501
+      IF(ABS(ERTHL(LME)).LT..001) GO TO 2501
+      LKIP=LKIP+1
+      GO TO (2502,2503),LME
+ 2502 LME=2
+      DTHB2=DTHB
+      DTHQ=DTHB-.05
+      GO TO 2504
+ 2503 IF(LICQ.EQ.1) GO TO 2505
+      IF(ERTHL(1)*ERTHL(2).LT.0.) GO TO 2505
+      IF(LICK.EQ.1) GO TO 2506
+      LICK=1
+      RTHL=-.5
+      IF(ABS(ERTHL(2)).GT.ABS(ERTHL(1))) RTHL=-RTHL
+ 2506 IF(ABS(ERTHL(2)).GT.ABS(ERTHL(1)).AND.LKIP.GE.4) GO TO 2507
+      DTHB1=DTHB2
+      DTHB2=DTHB
+      DTHQ=DTHB+RTHL
+ 2509 ERTHX=ERTHL(1)
+      ERTHL(1)=ERTHL(2)
+      IF(LKIP.LE.10) GO TO 2504
+      WRITE(6,2508)
+ 2508 FORMAT(* TOO MANY ITERATIONS IN LOWER WALL LOOP IN SSONIC*)
+      STOP
+ 2507 PMB=ERTHL(1)*DTHB**2-ERTHL(2)*DTHB2**2+ERTHL(2)*DTHB1**2-ERTHX*
+     1DTHB**2+ERTHX*DTHB2**2-ERTHL(1)*DTHB1**2
+      PMC=ERTHL(2)*DTHB2-ERTHL(1)*DTHB+ERTHX*DTHB-ERTHL(2)*DTHB1
+     1+ERTHL(1)*DTHB1-ERTHX*DTHB2
+      DTHQ=-PMB/(2.*PMC)
+      LIJUMP=1
+      GO TO 2504
+ 2505 LICQ=1
+      DTHD=DTHB2-ERTHL(1)*(DTHB-DTHB2)/(ERTHL(2)-ERTHL(1))
+      DTHB1=DTHB2
+      DTHB2=DTHB
+      DTHQ=DTHD
+      GO TO 2509
+ 2501 JCONV=1
+      I13=0
+      LKIP=1
+      LME=1
+      LICQ=0
+      LICK=0
+      LIJUMP=0
+      IREGI=1
+      DTHQ=0.
+ 2504 IF(JCONV.EQ.0)DTHB=DTHQ
+  386 CONTINUE
+      RETURN
+      END
+      SUBROUTINE BODY(X1,Y,TH,ID)
+      COMMON/AC/IBOD,PIN
+      COMMON/X0/X00
+      COMMON/ZY/ABOD,BBOD,CBOD,EBOD,FBOD,GBOD,IAVE,IPUNCH,JBOD,KKKKK
+      COMMON/WAVE/XBOD(5),XWALL(5),AABOD(5),BBBOD(5),CCBOD(5),EEBOD(5),
+     ZFFBOD(5),GGBOD(5),LWALL,LBOD
+      XB=XBOD(LBOD-1)
+      IF((LBOD-1).EQ.0) XB=0.0
+      X=X1-XB
+      IF(ID.EQ.1) GO TO 4
+      IF(IBOD.EQ.0) GO TO 1
+      X=X1-XB-X00
+      Y=ABOD+X*(BBOD+X*CBOD)
+      TH=ATAN(BBOD+2.*CBOD*X)
+      GO TO 2
+    1 Y=0.
+      TH=0.
+      GO TO 2
+    4 XB=XWALL(LWALL-1)
+      IF((LWALL-1).EQ.0) XB=0.0
+      X=X1-XB
+      Y=EBOD + X*(FBOD + X*GBOD)
+      TH=ATAN(FBOD+2.*GBOD*X)
+    2 RETURN
+      END
+      SUBROUTINE DPDTH(DTDS,I)
+      COMMON/AX/JSUBL,JSUBU
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/RO/AP0,AP1,AP2
+      CALL SHEAR(I,ASHEAR)
+      ASH=ASHEAR
+      PY=AP1+2.*AP2*(Y(I)-Y(JSUBL))
+      D2=Y(I+1)-Y(I)
+      D1=Y(I)-Y(I-1)
+      SUM=D1+D2
+      RAT1=D1/D2
+      RAT2=D2/D1
+      IF(I.GT.JSUBU) PY=(P(I+1)*RAT1-P(I)*(RAT1-RAT2)-P(I-1)*RAT2)/SUM
+      THY=(TH(I+1)*RAT1-TH(I)*(RAT1-RAT2)-TH(I-1)*RAT2)/SUM
+      DPDS   =(ASH*COS(TH(I))**2-GAM(I)*P(I)*EM(I)**2*COS(TH(I))*THY
+     1-SIN(TH(I))*PY)/(EM(I)**2*COS(TH(I))**2-1.)
+      DPDN=PY/COS(TH(I))-TAN(TH(I))*DPDS
+      GS=1./GAM(I)
+      SM=1./EM(I)**2
+      DTDS=-DPDN*GS/P(I)*SM
+      RETURN
+      END
+      SUBROUTINE CPOINT
+      COMMON/AL/GAR,GEW
+      COMMON/BA/ALP(7,55),EMINF,WINF
+      COMMON/BO/GAMB,PB,QB,RHOB,THB,WB,XMUB,YB
+      COMMON/CA/WDOTN(7,55),XN(55)
+      COMMON/CJ/CP(7,55),CP1(7),CPX(55)
+      COMMON/CK/WTMOLE(7)
+      COMMON/DB/BETB(20),IS(20),IDD,IJENK,JENKI
+      COMMON/DP/YN(55)
+      COMMON/ED/CPIN,RO
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/EG/EIN,PR,XLE
+      COMMON/EP/GAMINF,H1(7),RINF
+      COMMON/GF/DELY,IFS,KOUNTO,MMM
+      COMMON/GK/DELX
+      COMMON/HL/ALPHA,BETA
+      COMMON/HM/ALPN(7,55),CPN(7,55),CPXN(55),EMN(55),GAMN(55),HN(7,55),
+     IL,PN(55),QN(55),RHON(55),RN(55),THN(55),TN(55),WN(55),XMUN(55)
+      COMMON/HN/CHC(2),CPB(7),CPXP(2),DALDIF(7),DALPB(7),DDALPB(7),DELS,
+     AEMP(2),HB(7),HC(7),RP(2),S3A(7),S3B(7),S3D(7),WDOTB(7),XP(2)
+      COMMON/PD/W(55),X(55)
+      COMMON/PQ/JCHEM,NSP,T(55)
+      COMMON/QA/H(7,55),Q(55),RHO(55),XMU(55)
+      COMMON/QS/RHOP(2),WDOT(7,55),WDOTC(7),WP(2),XMUP(2)
+      COMMON/SQ/BQN(55),DALPN(7,55),DBQN(55),DCPXN(55),DDALPN(7,55),
+     1DTAUN(55),TAUN(55)
+      COMMON/SS/AL1,AL2,BQ1,BQ2,C1,C2,CH1,CH2,DB1,DB2,DD1,DD2,DT1,DT2,DV
+     A1,DV2,PX1,PX2,TA1,TA2,TH1,TH2,V1,V2,Y1,Y2
+      COMMON/ST/I13,IREGI,K ,KFIRST,KKKQ,PSTAR
+      COMMON/TS/DVIS(55),DVISN(55),DVISP(2),VIS(55),VISN(55),VISP(2)
+      COMMON/TU/BQ(55),DALP(7,55),DBQ(55),DCPX(55),DDALP(7,55),DTAU(55),
+     1TAU(55)
+      COMMON/TV/ALPP(7,2),BET,BQP(2),DACHP(7,2),DALPP(7,2),DBQP(2),
+     1DCPXP(2),DDALPP(7,2),DTAUP(2),DTCHP(2),GAMP(2),PP(2),QP(2),
+     2TAUP(2),THP(2),TP(2),YP(2)
+      COMMON/VT/DACH(7,55),DTCH(55)
+      COMMON/VW/ICONT,IEND,KT,THBPN,XBPN
+      COMMON/WV/NPTS,RE,XBP,XJ
+      DIMENSION ALPSS(7),DALPSS(7),DDALPS(7),HSS(7),CPSS(7)
+      DIMENSION DUMCHP(7),DACHSS(7)
+      IF(IEND.EQ.1) GO TO 601
+      EM3=XM3(ALPHA,BETA,TH(K),THN(L))
+      XN(L)=XBPN
+      IF(IFS.EQ.1.AND.L.EQ.IS(MMM)) EM3=TAN(BETB(MMM))
+      IF(IFS.EQ.2.AND.L.EQ.IS(MMM)) EM3=.5*(TAN(BETB(MMM))+TAN(BET))
+      YN(L)=Y(K)+DELX*EM3
+      IF(ICONT.EQ.1) GO TO 601
+      KP=1
+      EM2P=XM1(ALPHA,BETA,TH(KT+1),XMU(KT+1),THN(L),XMUN(L))
+      EM2L=XM1(ALPHA,BETA,TH(KT),XMU(KT),THN(L),XMUN(L))
+  351 EM2K=0.5*(EM2L+EM2P)
+      XP(KP)=XBP
+      YP(KP)=YN(L)-DELX*EM2K
+      IF(KP.EQ.1.AND.IS(MMM).EQ.K.AND.((MMM/2)*2.EQ.MMM))
+     AYP(KP)=Y(KT)+2.E-4
+      KIP2=0
+      IF(YP(KP).LT.Y(KT+1)+1.E-05.AND.YP(KP).GT.Y(KT)-1.E-05) GO TO 201
+ 4150 FORMAT(3I5,6E13.5)
+      WRITE(6,9191)
+      WRITE(6,4150) KP   ,L,KT,ALPHA,YP(KP),YN(L),THN(L),XMUN(L),PN(L)
+      WRITE(6,111) Y(KT),Y(K),DELX,EM2K,XBPN,TH(K),XMU(KT),XMU(KT+1),
+     1DELS,THBPN,DELY,Y(KT+1)
+      WRITE(6,2000)
+ 2000 FORMAT(97H Y LOCATION OF CHARACTERISTIC ON ORIGIONAL DATA LINE IS
+     1OUTSIDE OF BOUNDING STREAMLINES IN CPOINT         )
+      CALL PUNCH
+      STOP
+  201 RATB=(YP(KP)-Y(KT))/(Y(KT+1)-Y(KT))
+      EM2=EM2L+RATB*(EM2P-EM2L)
+      YBT=YP(KP)
+      YP(KP)=YN(L)-DELX*EM2
+      IF((ABS(YP(KP)-YBT)/ABS(Y(KT+1)-Y(KT))).LT.0.01)GO TO 202
+      KIP2=KIP2+1
+      IF(KIP2.LE.20) GO TO 201
+      WRITE(6,9191)
+ 9191 FORMAT(1H1)
+      WRITE(6,2001)
+ 2001 FORMAT(56H UNABLE TO LOCATE Y LOCATION OF CHARACTERISTIC IN CPOINT
+     1)
+      STOP
+  202 RATB=(YP(KP) -Y(KT))/(Y(KT+1)-Y(KT))
+      QP(KP)=Q(KT)+RATB*(Q(KT+1)-Q(KT))
+      PP(KP)=P(KT)+RATB*(P(KT+1)-P(KT))
+      TP(KP) =T(KT)+RATB*(T(KT+1)-T(KT))
+      THP(KP)=TH(KT)+RATB*(TH(KT+1)-TH(KT))
+      VISP(KP)=VIS(KT)+RATB*(VIS(KT+1)-VIS(KT))
+      DVISP(KP)=DVIS(KT)+RATB*(DVIS(KT+1)-DVIS(KT))
+      TAUP(KP)=TAU(KT)+RATB*(TAU(KT+1)-TAU(KT))
+      BQP(KP)=BQ(KT)+RATB*(BQ(KT+1)-BQ(KT))
+      DCPXP(KP)=DCPX(KT)+RATB*(DCPX(KT+1)-DCPX(KT))
+      DTAUP(KP)=DTAU(KT)+RATB*(DTAU(KT+1)-DTAU(KT))
+      DBQP(KP)=DBQ(KT)+RATB*(DBQ(KT+1)-DBQ(KT))
+      DTCHP(KP)=DTCH(KT)+RATB*(DTCH(KT+1)-DTCH(KT))
+      CPXP(KP)=0.0
+      WP(KP)=0.0
+      CHC(KP)=0.
+      CALL THERMO(TP(KP),HB,CPB)
+      DO 4020 J=1, NSP
+      ALPP(J,KP)=ALP(J, KT)+RATB*(ALP(J, KT+1)-ALP(J, KT))
+      DALPP(J,KP)=DALP(J, KT)+RATB*(DALP(J, KT+1)-DALP(J, KT))
+      DDALPP(J,KP)=DDALP(J, KT)+RATB*(DDALP(J, KT+1)-DDALP(J, KT))
+      CHC(KP)=CHC(KP)+DALPP(J,KP)*CPB(J)
+      CPXP(KP)=CPXP(KP)+ALPP(J,KP)*CPB(J)
+      WP(KP)=WP(KP)+ ALPP(J,KP)/WTMOLE(J)
+      DACHP(J,KP)=DACH(J,KT)+RATB*(DACH(J,KT+1)-DACH(J,KT))
+      IF(KP.NE.2)GO TO 4020
+      WDOTB(J)=WDOT(J,KT)+RATB*(WDOT(J,KT+1)-WDOT(J,KT))
+ 4020 CONTINUE
+      WP(KP)=1./WP(KP)
+      RP(KP)=RO/WP(KP)
+      GAMP(KP)=CPXP(KP)/(CPXP(KP)-RP(KP)/CPIN)
+      RK=1./RP(KP)
+      RHOP(KP)=PP(KP)*WP(KP)*GEW/TP(KP)
+      EMP(KP)=QP(KP)*EMINF*SQRT(GAR/GAMP(KP)*RK/TP(KP))
+      XMUP(KP)=ZMU(EMP(KP))
+      IF(KP.EQ.2) GO TO 601
+      KP=2
+      IF(IFS.EQ.0) KT=L
+      EM2P=XM2(ALPHA,BETA,TH(KT+1),XMU(KT+1),THN(L),XMUN(L))
+      EM2L=XM2(ALPHA,BETA,TH(KT),XMU(KT),THN(L),XMUN(L))
+      GO TO 351
+C     GET ALL THE PROPERTIES AT THE C POINT
+  601 CONTINUE
+      IF(IFS.EQ.0) GO TO 8600
+      Y   SS=Y   (K)
+      P   SS=P   (K)
+      Q   SS=Q   (K)
+      T   SS=T   (K)
+      TH  SS=TH  (K)
+      BQ  SS=BQ  (K)
+      W   SS=W   (K)
+      TAU SS=TAU (K)
+      RHO SS=RHO (K)
+      CPX SS=CPX (K)
+      DBQ SS=DBQ (K)
+      DTAUSS=DTAU(K)
+      DCPXSS=DCPX(K)
+      DTCHSS=DTCH(K)
+      DO 1555 J=1,NSP
+      CPSS(J)=CP(J,K)
+      HSS(J)=H(J,K)
+      ALPSS(J)=ALP(J,K)
+      DALPSS(J)=DALP(J,K)
+      DACHSS(J)=DACH(J,K)
+ 1555 DDALPS(J)=DDALP(J,K)
+      CALL DPOINT(K,L)
+      KT=K
+ 8600 CONTINUE
+      CH2D=0.0
+      DO 4030 J=1, NSP
+      CH2D=CH2D+DALP(J,K)*CP(J,K)
+ 4030 CONTINUE
+      IF(BETA.NE.0.0)GO TO 4036
+      TAUN(L)=TAU(K)
+      BQN(L)=BQ(K)
+      VISN(L)=VIS(K)
+      DVISN(L)=DVIS(K)
+      DCPXN(L)=DCPX(K)
+      DTAUN(L)=DTAU(K)
+      DBQN(L)=DBQ(K)
+      THN(L)=TH(K)
+      CPXN(L)=CPX(K)
+      TN(L)=T(K)+DTCH(K)
+      WN(L)=W(K)
+      CH2C=CH2D
+      DO 4035 J=1, NSP
+      DALPN(J,L)=DALP(J,K)
+      DDALPN(J,L)=DDALP(J,K)
+      HC(J)=H(J,K)
+      WDOTC(J)=WDOTN(J,L)
+ 4035 CONTINUE
+ 4036 CONTINUE
+      IF(BETA.EQ.0.0) GO TO 302
+      CH2C=0.
+      DO 301 J=1,NSP
+      HC(J)=HN(J,K)
+      WDOTC(J)=WDOTN(J,L)
+  301 CH2C=CH2C+DALPN(J,L)*CPN(J,L)
+  302 CONTINUE
+      V1=VISP(1)
+      V2=VISN(L)
+      DV1=DVISP(1)
+      DV2=DVISN(L)
+      TA1=TAUP(1)
+      TA2=TAUN(L)
+      DT1=DTAUP(1)
+      DT2=DTAUN(L)
+      BQ1=BQP(1)
+      BQ2=BQN(L)
+      Y1=YP(1)
+      Y2=YN(L)
+      TH1=THP(1)
+      TH2=THN(L)
+      C1=CPXP(1)
+      C2=CPXN(L)
+      DB1=DBQP(1)
+      DB2=DBQN(L)
+      PX1=DCPXP(1)
+      PX2=DCPXN(L)
+      CH1=CHC(1)
+      CH2=CH2C
+      IF(ICONT.EQ.1) GO TO 4309
+      S1A=S1(XJ,RE)
+      S2A=S2(XJ,RE)
+ 4309 V1=VIS(K)
+      DV1=DVIS(K)
+      TA1=TAU(K)
+      DT1=DTAU(K)
+      BQ1=BQ(K)
+      Y1=Y(K)
+      TH1=TH(K)
+      C1=CPX(K)
+      DB1=DBQ(K)
+      PX1=DCPX(K)
+      CH1=CH2D
+      S1D=S1(XJ,RE)
+      S2D=S2(XJ,RE)
+      IF(ICONT.EQ.1) GO TO 6427
+      IF(L.EQ.NPTS) GO TO 6427
+      V1=VISP(2)
+      DV1=DVISP(2)
+      TA1=TAUP(2)
+      DT1=DTAUP(2)
+      BQ1=BQP(2)
+      Y1=YP(2)
+      TH1=THP(2)
+      C1=CPXP(2)
+      DB1=DBQP(2)
+      PX1=DCPXP(2)
+      CH1=CHC(2)
+      S1B=S1(XJ,RE)
+      S2B=S2(XJ,RE)
+ 6427 CONTINUE
+      S3AT=0.0
+      S3BT=0.0
+      S3DT=0.0
+      DO 4040 J=1, NSP
+      AL2=DALPN(J,L)
+      DD2=DDALPN(J,L)
+      IF(ICONT.EQ.1) GO TO 4311
+      V1=VISP(1)
+      DV1=DVISP(1)
+      AL1=DALPP(J,1)
+      DD1=DDALPP(J,1)
+      BQ1=BQP(1)
+      TH1=THP(1)
+      Y1=YP(1)
+      S3A(J)=S3(XJ,RE)
+      S3AT=S3AT+S3A(J)/WTMOLE(J)
+ 4311 AL1=DALP(J,KT)
+      DD1=DDALP(J,KT)
+      V1=VIS(K)
+      DV1=DVIS(K)
+      BQ1=BQ(KT)
+      TH1=TH(KT)
+      Y1=Y(KT)
+      S3D(J)=S3(XJ,RE)
+      S3DT=S3DT+S3D(J)/WTMOLE(J)
+      IF(ICONT.EQ.1)GO TO 4040
+      IF(L.EQ.NPTS)GO TO 4040
+      V1=VISP(2)
+      DV1=DVISP(2)
+      AL1=DALPP(J,2)
+      DD1=DDALPP(J,2)
+      BQ1=BQP(2)
+      TH1=THP(2)
+      Y1=YP(2)
+      S3B(J)=S3(XJ,RE)
+      S3BT=S3BT+S3B(J)/WTMOLE(J)
+ 4040 CONTINUE
+      IF(ICONT.EQ.1) GO TO 6429
+      GAMB=GAMP(1)
+      PB=PP(1)
+      QB=QP(1)
+      RHOB=RHOP(1)
+      THB=THP(1)
+      WB=WP(1)
+      XMUB=XMUP(1)
+      YB=YP(1)
+      A1=F1(L)
+      A2=F2(L,S1A,S2A,S3AT)
+      IF(JCHEM.EQ.1) GO TO 7252
+      A3=0.
+      GO TO 7255
+ 7252 DO 1712 J=1,NSP
+ 1712 DUMCHP(J)=(DACHP(J,1)+DACH(J,K))/2.
+      DTCHP(1)=(DTCHP(1)+DTCH(K))/2.
+      TP1=(T(L)+TP(1)+DTCH(L))/2.
+      A3=F3(TP1,DTCHP(1),TP(1),TN(L),THP(1),THN(L),DUMCHP,WP(1),WN(L))
+ 7255 A4=F4(BETA,1.,XMUP(1),THP(1),XMUN(L),THN(L))
+      A2=(A2+A3)*A4
+      IF(L.EQ.NPTS) GO TO 6429
+      GAMB=GAMP(2)
+      PB=PP(2)
+      QB=QP(2)
+      RHOB=RHOP(2)
+      THB=THP(2)
+      WB=WP(2)
+      XMUB=XMUP(2)
+      YB=YP(2)
+      B1=F1(L)
+      B2=F2(L,S1B,S2B,S3BT)
+      IF(JCHEM.EQ.1) GO TO 7253
+      B3=0.
+      GO TO 7256
+ 7253 DO 1713 J=1,NSP
+ 1713 DUMCHP(J)=(DACHP(J,2)+DACH(J,K))/2.
+      DTCHP(2)=(DTCHP(2)+DTCH(K))/2.
+      TP2=(T(L)+TP(2)+DTCH(L))/2.
+      B3=F3(TP2,DTCHP(2),TP(2),TN(L),THP(2),THN(L),DUMCHP,WP(2),WN(L))
+ 7256 B4=F4(BETA,-1.,XMUP(2),THP(2),XMUN(L),THN(L))
+      B2=(B2+B3)*B4
+ 6429 CONTINUE
+      IF(IEND.EQ.0) GO TO 630
+      THN(L)=THBPN
+      PN(L)=PP(1)+(THP(1)-THN(NPTS)-A2*(XN(NPTS)-XP(1)))/A1
+      GO TO 631
+  630 IF(ICONT.EQ.0)
+     1PN(L)=(A1*PP(1)+B1*PP(2)+THP(1)-THP(2)-
+     2(A2+B2)*XN(L)+A2*XP(1)+B2*XP(2))/(A1+B1)
+      IF(ICONT.EQ.1)
+     1PN(L)=PSTAR
+      IF(ICONT.EQ.0)
+     1THN(L)=THP(1)-A1*(PN(L)-PP(1))-A2*(XN(L)-XP(1))
+  631 CONTINUE
+      DELS=2.*(XN(L)-X(K))/(COS(TH(K))+COS(THN(L)))
+      TERM2=RHO(K)*Q(K)
+      IF(BETA.GT.0.)TERM2=(TERM2+RHON(L)*QN(L))*.5
+      OT=1./TERM2
+      QN(L)=(S1D*DELS-PN(L)+P(K))*OT+Q(K)
+      IF(BETA.EQ.0.0)CPXN(L)=CPX(K)
+      DTCHEM=DTCH(L)+(PN(L)-P(K))*(QN(L)+Q(K))/(CPX(K)+CPXN(L))*EIN*OT
+      DTDIFF=S2D*DELS*EIN*2./(CPX(K)+CPXN(L))*OT
+      TN(L)=T(K)+DTCHEM+DTDIFF
+      CPXN(L)=0.0
+      WN(L)=0.0
+      CALL THERMO(TN(L),H1,CP1)
+      DO 4050 J=1, NSP
+      DALDIF(J)=S3D(J)*DELS*OT
+      ALPN(J, L)=ALP(J,K)          +DALDIF(J)+DACH(J,L)
+      HN(J,L)=H1(J)
+      CPN(J,L)=CP1(J)
+      WN(L)=WN(L)+ALPN(J, L)/WTMOLE(J)
+      CPXN(L)=CPXN(L)+ALPN(J, L)*CPN(J, L)
+ 4050 CONTINUE
+      WN(L)=1./WN(L)
+      RN(L)=RO/WN(L)
+      GAMN(L)=CPXN(L)/(CPXN(L)-RN(L)/CPIN)
+      ORN=1./RN(L)
+      RHON(L)=PN(L)*WN(L)*GEW/TN(L)
+      EMN(L)=QN(L)*EMINF*SQRT(GAR/GAMN(L)*ORN/TN(L))
+      IF(EMN(L).LT.1.0001) GO TO 900
+ 7360 XMUN(L)=ZMU(EMN(L))
+  900 CONTINUE
+      IF(IFS.EQ.0) GO TO 1361
+      Y   (K)=Y   SS
+      P   (K)=P   SS
+      Q   (K)=Q   SS
+      T   (K)=T   SS
+      W   (K)=W   SS
+      TH  (K)=TH  SS
+      BQ  (K)=BQ  SS
+      TAU (K)=TAU SS
+      DBQ (K)=DBQ SS
+      CPX (K)=CPX SS
+      RHO (K)=RHO SS
+      DCPX(K)=DCPXSS
+      DTAU(K)=DTAUSS
+      DTCH(K)=DTCHSS
+      DO 1556 J=1,NSP
+      ALP(J,K)=ALPSS(J)
+      DALP(J,K)=DALPSS(J)
+      DACH(J,K)=DACHSS(J)
+      DDALP(J,K)=DDALPS(J)
+      CP(J,K)=CPSS(J)
+ 1556 H(J,K)=HSS(J)
+ 1361 CONTINUE
+  111 FORMAT(10X,9E13.5)
+      RETURN
+      END
+      SUBROUTINE SPACE(ISPP)
+      COMMON/AC/IBOD,PIN
+      COMMON/AL/GAR,GEW
+      COMMON/AX/JSUBL,JSUBU
+      COMMON/BA/ALP(7,55),EMINF,WINF
+      COMMON/BD/XMASS(55)
+      COMMON/CA/WDOTN(7,55),XN(55)
+      COMMON/CJ/CP(7,55),CP1(7),CPX(55)
+      COMMON/CK/WTMOLE(7)
+      COMMON/DB/BETB(20),IS(20),IDD,IJENK,JENKI
+      COMMON/DP/YN(55)
+      COMMON/ED/CPIN,RO
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/EP/GAMINF,H1(7),RINF
+      COMMON/GK/DELX
+      COMMON/HM/ALPN(7,55),CPN(7,55),CPXN(55),EMN(55),GAMN(55),HN(7,55),
+     IL,PN(55),QN(55),RHON(55),RN(55),THN(55),TN(55),WN(55),XMUN(55)
+      COMMON/PD/W(55),X(55)
+      COMMON/PQ/JCHEM,NSP,T(55)
+      COMMON/QA/H(7,55),Q(55),RHO(55),XMU(55)
+      COMMON/RC/R(55)
+      COMMON/RO/AP0,AP1,AP2
+      COMMON/SQ/BQN(55),DALPN(7,55),DBQN(55),DCPXN(55),DDALPN(7,55),
+     1DTAUN(55),TAUN(55)
+      COMMON/ST/I13,IREGI,KS,KFIRST,KKKQ,PSTAR
+      COMMON/TS/DVIS(55),DVISN(55),DVISP(2),VIS(55),VISN(55),VISP(2)
+      COMMON/TU/BQ(55),DALP(7,55),DBQ(55),DCPX(55),DDALP(7,55),DTAU(55),
+     1TAU(55)
+      COMMON/UV/II11,IERR,IPRESS,IPRESU,ISUB
+      COMMON/WV/NPTS,RE,XBP,XJ
+      COMMON/WX/APRESS,APRESU
+      COMMON/XY/APRS,APUS,DELTAY,EBODS,IBODS,INTACT,IPRS,IPUS,ITYP,
+     1JBODS,MMAX,RHEAT,XK2,XK4,YBOT,YTP
+      COMMON/YX/ABODS,BPRESS,CPRESS
+      COMMON/ZY/ABOD,BBOD,CBOD,EBOD,FBOD,GBOD,IAVE,IPUNCH,JBOD,KKKKK
+      DIMENSION ISN(4),XMASSN(55)
+      XJ2=1.-XJ
+      XJ1=1.+XJ
+      DY=DELTAY
+      DO 1 I=1,IDD
+      IF(IS(I).EQ.0) GO TO 1
+      N=-1
+      IF((I/2)*2.EQ.I) N=1
+      ISI=IS(I)
+      DYS=ABS(Y(ISI+N)-Y(ISI+2*N))
+      IF(DYS.LT.2.*DY) GO TO 2
+C*********  ADD PT ON DOWNSTREAM SIDE OF SHOCK  *****
+      ISM=IS(I)-1
+      IF((I/2)*2.EQ.I) ISM=IS(I)+2
+      DO 3 KK=ISM,NPTS
+      K=NPTS+ISM-KK
+      J=K+1
+      CALL SWITCH(J,K)
+    3 CONTINUE
+      NPTS=NPTS+1
+      ISPP=1
+      IF(JSUBL.GT.IS(I)) JSUBL=JSUBL+1
+      IF(JSUBU.GT.IS(I)) JSUBU=JSUBU+1
+      DO 4 J=1,IDD
+      IF(IS(J).GT.IS(I)) IS(J)=IS(J)+1
+    4 CONTINUE
+      IF((I/2)*2.NE.I) IS(I)=IS(I)+1
+      L=ISM-1
+      M=ISM+1
+      K=ISM
+      RAT=.5
+      P    (K)=P    (L)+RAT*(P    (M)-P    (L))
+      TH   (K)=TH   (L)+RAT*(TH   (M)-TH   (L))
+      X    (K)=X    (L)+RAT*(X    (M)-X    (L))
+      Y    (K)=Y    (L)+RAT*(Y    (M)-Y    (L))
+      Q    (K)=Q    (L)+RAT*(Q    (M)-Q    (L))
+      T    (K)=T    (L)+RAT*(T    (M)-T    (L))
+      VIS(K)=VIS(L)+RAT*(VIS(M)-VIS(L))
+      DVIS(K)=DVIS(L)+RAT*(DVIS(M)-DVIS(L))
+      BQ   (K)=BQ   (L)+RAT*(BQ   (M)-BQ   (L))
+      TAU  (K)=TAU  (L)+RAT*(TAU  (M)-TAU  (L))
+      DBQ  (K)=DBQ  (L)+RAT*(DBQ  (M)-DBQ  (L))
+      DCPX (K)=DCPX (L)+RAT*(DCPX (M)-DCPX (L))
+      DTAU (K)=DTAU (L)+RAT*(DTAU (M)-DTAU (L))
+      XMASS(K)=XMASS(L)+RAT*(XMASS(M)-XMASS(L))
+      CPX(K)=0.
+      W(K)=0.
+      CALL THERMO(T(K),H1,CP1)
+      DO 5 J=1,NSP
+      ALP  (J,K)=ALP  (J,L)+RAT*(ALP  (J,M)-ALP  (J,L))
+      DALP (J,K)=DALP (J,L)+RAT*(DALP (J,M)-DALP (J,L))
+      DDALP(J,K)=DDALP(J,L)+RAT*(DDALP(J,M)-DDALP(J,L))
+      H(J,K)=H1(J)
+      CP(J,K)=CP1(J)
+      W(K)=W(K)+ALP(J,K)/WTMOLE(J)
+      CPX(K)=CPX(K)+ALP(J,K)*CP(J,K)
+    5 CONTINUE
+      W(K)=1./W(K)
+      R(K)=RO/W(K)
+      GAM(K)=CPX(K)/(CPX(K)-R(K)/CPIN)
+      OR=1./R(K)
+      RHO(K)=P(K)*W(K)*GEW/T(K)
+      EM(K)=Q(K)*EMINF*SQRT(GAR/GAM(K)*OR/T(K))
+      XMU(K)=ZMU(EM(K))
+    2 CONTINUE
+      IF((I/2)*2.EQ.I) GO TO 6
+      J=IS(I)
+      K=J+1
+      GO TO 7
+    6 J=IS(I)
+      K=J-1
+    7 IF(N*(Y(J)-Y(K)).GT..5*DY) GO TO 1
+      ISIMN=IS(I)-N
+      IF(ISIMN.EQ.NPTS.OR.ISIMN.EQ.1)GO TO 1
+C*********  SUBTRACT PT FROM FREE STREAM SIDE OF SHOCK  ****
+  775 L=K+1
+      DO 8 K=L,NPTS
+      J=K-1
+      CALL SWITCH(J,K)
+    8 CONTINUE
+      NPTS=NPTS-1
+      ISPP=1
+      IF(JSUBL.GT.IS(I)) JSUBL=JSUBL-1
+      IF(JSUBU.GT.IS(I)) JSUBU=JSUBU-1
+      DO 9 J=1,IDD
+      IF(IS(J).GT.IS(I)) IS(J)=IS(J)-1
+    9 CONTINUE
+      IF((I/2)*2.EQ.I) IS(I)=IS(I)-1
+    1 CONTINUE
+      IF(ITYP.NE.1) GO TO 850
+      IF(NPTS.LT.MMAX) GO TO 2121
+      II11=1
+      IPUNCH=1
+      WRITE(6,9191)
+ 9191 FORMAT(1H1)
+      WRITE(6,851)
+  851 FORMAT(74H REQUESTED MAXIMUM NUMBER OF FLOW FIELD PTS. EXCEEDED, P
+     1UNCH FILE OBTAINED/97H RESUBMIT RUN WITH REDUCED NUMBER OF FLOW FI
+     1ELD PTS. OR INCREASE INPUT FOR MAXIMUM NUMBER OF PTS.)
+      RETURN
+  850 CONTINUE
+      IF(Y(1).EQ.YBOT.OR.ITYP.EQ.4) GO TO 2100
+      IPRESS=1
+      APRESS=P(1)/PIN
+ 2100 IF(Y(NPTS).EQ.YTP.OR.ITYP.EQ.3) GO TO 2101
+      IPRESU=1
+      APRESU=P(NPTS)/PIN
+ 2101 CONTINUE
+      IF(NPTS.LT.MMAX) GO TO 1000
+      ISC=0
+      DO 700 I=1,IDD
+  700 IF(IS(I).NE.0) ISC=ISC+1
+      IF(ITYP.NE.2.OR.ISC.NE.0.OR.ISUB.NE.0.)GO TO 701
+      YQ=YTP
+      IF(Y(NPTS).LE.YTP-2.*DELTAY)YQ=Y(NPTS)+DELTAY
+      IK=1
+      IX=1
+      NP=NPTS
+      IF((NPTS/2)*2.NE.NPTS) GO TO 702
+  800 J=NPTS+1
+      K=NPTS
+      CALL SWITCH(J,K)
+      Y(J)=YQ
+      NPTS=NPTS+1
+      YFUN=(Y(J)*(XJ2+Y(J)*XJ)-Y(K)*(XJ2+Y(K)*XJ))/XJ1
+      RQAV=RHO(K)*Q(K)*COS(TH(K))
+      XMASS(J)=XMASS(K)+RQAV*YFUN
+      TH(NPTS)=0.
+      APRESU=P(NPTS)/PIN
+      GO TO (702,903),IX
+  702 J=1
+      DO 703 K=3,NP,2
+      J=J+1
+      CALL SWITCH(J,K)
+  703 CONTINUE
+      DELTAY=DELTAY*2.
+      IF(IK.EQ.2) GO TO 704
+      NPTS=NPTS/2+1
+      GO TO 1000
+  701 IF(ITYP.NE.3.OR.IS(3).EQ.0.OR.ISUB.NE.0.OR.ISC.NE.1) GO TO 303
+      IK=2
+      NP=IS(3)-1
+      IF((NP/2)*2.NE.NP) GO TO 702
+      IQ=1
+      IF(Y(1).GE.YBOT+2.*DELTAY+1.E-03) GO TO 706
+      YT=YBOT
+      GO TO 707
+  706 YT=Y(1)-DELTAY
+  707 DO 708 KK=1,NPTS
+      K=NPTS+1-KK
+      J=K+1
+      CALL SWITCH(J,K)
+  708 CONTINUE
+      NPTS=NPTS+1
+      DO 709 I=1,IDD
+  709 IF(IS(I).NE.0) IS(I)=IS(I)+1
+      IF(ISUB.EQ.0) GO TO 710
+      JSUBL=JSUBL+1
+      JSUBU=JSUBU+1
+  710 Y(1)=YT
+      YFUN=(Y(2)*(XJ2+Y(2)*XJ)-Y(1)*(XJ2+Y(1)*XJ))/XJ1
+      RQAV=RHO(2)*Q(2)*COS(TH(2))
+      XMASS(1)=XMASS(2)-RQAV*YFUN
+      TH(1)=0.
+      APRESS=P(1)/PIN
+      GO TO (711,907),IQ
+  711 NP=NP+1
+      GO TO 702
+  704 ISN(3)=NP/2+2
+      ID=IS(3)-ISN(3)
+      ISS=IS(3)
+      IS(3)=ISN(3)
+      DO 705 K=ISS,NPTS
+      J=K-ID
+      CALL SWITCH(J,K)
+  705 CONTINUE
+      NPTS=NPTS-ID
+      GO TO 1000
+  303 ICT=ISC
+      ITOP=NPTS
+      IF(IS(3).NE.0) ITOP=IS(3)-1
+      IBOT=1
+      IF(IS(4).NE.0) IBOT=IS(4)+1
+      DTY=Y(ITOP)-Y(IBOT)
+      DELTAY=DTY/FLOAT((MMAX-(NPTS-ITOP)-IS(4))/2-ICT)
+      IB=IBOT
+      ISN(1)=IS(1)
+      ISN(2)=IS(2)
+      ISN(3)=IS(3)
+      ISN(4)=IS(4)
+      JSUBLN=JSUBL
+      JSUBUN=JSUBU
+      IBB=IB
+      IREG=1
+      IF(IS(2).EQ.0) GO TO 501
+      IT=IS(2)
+      GO TO 502
+  501 IREG=2
+      IF(ISUB.EQ.0) GO TO 504
+      IF(JSUBL.EQ.1) GO TO 503
+      IT=JSUBL
+      GO TO 502
+  503 CONTINUE
+      IB=JSUBU
+      IBB=IB
+  504 IREG=4
+      IF(IS(1).EQ.0) GO TO 505
+      IT=IS(1)-1
+      GO TO 502
+  505 IREG=5
+      IF(IS(3).EQ.0) GO TO 506
+      IT=IS(3)-1
+      GO TO 502
+  506 IT=NPTS
+  502 MP=(Y(IT)-Y(IB))/DELTAY
+      L=IB
+      JZ=1
+      DEL=(Y(IT)-Y(IB))/FLOAT(MP)
+ 5932 CONTINUE
+      J=IBB
+      K=IB
+      X   N(J)=X    (K)
+      Y   N(J)=Y    (K)
+      Q   N(J)=Q    (K)
+      P   N(J)=P    (K)
+      T   N(J)=T    (K)
+      W   N(J)=W    (K)
+      R   N(J)=R    (K)
+      EM  N(J)=EM   (K)
+      TH  N(J)=TH   (K)
+      BQ  N(J)=BQ   (K)
+      DVISN(J)=DVIS(K)
+      VISN(J)=VIS(K)
+      TAU N(J)=TAU  (K)
+      DBQ N(J)=DBQ  (K)
+      GAM N(J)=GAM  (K)
+      RHO N(J)=RHO  (K)
+      XMU N(J)=XMU  (K)
+      CPX N(J)=CPX  (K)
+      DCPXN(J)=DCPX (K)
+      DTAUN(J)=DTAU (K)
+      XMASSN(J)=XMASS(K)
+      DO3108 JJ=1,NSP
+      H   N(JJ,J)=H    (JJ,K)
+      CP  N(JJ,J)=CP   (JJ,K)
+      ALP N(JJ,J)=ALP  (JJ,K)
+      DALPN(JJ,J)=DALP (JJ,K)
+      DDALPN(JJ,J)=DDALP(JJ,K)
+ 3108 CONTINUE
+      GO TO (2201,2904),JZ
+ 2201 DO 600 KK=1,MP
+      I=KK+IBB-1
+      YN(I+1)=YN(I)+DEL
+  602 IF(YN(I+1).GE.Y(L).AND.YN(I+1).LT.Y(L+1)) GO TO 601
+      L=L+1
+      GO TO 602
+  601 RAT=(YN(I+1)-Y(L))/(Y(L+1)-Y(L))
+      IF(IT.EQ.JSUBU) GO TO 1200
+      PN(I+1)=P(L)+RAT*(P(L+1)-P(L))
+      THN(I+1)=TH(L)+RAT*(TH(L+1)-TH(L))
+      GO TO 1201
+ 1200 CONTINUE
+      YY=YN(I+1)
+      PN(I+1)=AP0+YY*(AP1+YY*AP2)
+      THN(I+1)=0.
+ 1201 CONTINUE
+      M=L+1
+      K=I+1
+      X   N(K)=X    (L)+RAT*(X    (M)-X    (L))
+      Y   N(K)=Y    (L)+RAT*(Y    (M)-Y    (L))
+      Q   N(K)=Q    (L)+RAT*(Q    (M)-Q    (L))
+      T   N(K)=T    (L)+RAT*(T    (M)-T    (L))
+      BQ  N(K)=BQ   (L)+RAT*(BQ   (M)-BQ   (L))
+      VISN(K)=VIS(L)+RAT*(VIS(M)-VIS(L))
+      DVISN(K)=DVIS(L)+RAT*(DVIS(M)-DVIS(L))
+      TAU N(K)=TAU  (L)+RAT*(TAU  (M)-TAU  (L))
+      DBQ N(K)=DBQ  (L)+RAT*(DBQ  (M)-DBQ  (L))
+      DCPXN(K)=DCPX (L)+RAT*(DCPX (M)-DCPX (L))
+      DTAUN(K)=DTAU (L)+RAT*(DTAU (M)-DTAU (L))
+      XMASSN(K)=XMASS(L)+RAT*(XMASS(M)-XMASS(L))
+      CPXN(K)=0.
+      WN(K)=0.
+      CALL THERMO(TN(K),H1,CP1)
+      DO55 J=1,NSP
+      ALP N(J,K)=ALP  (J,L)+RAT*(ALP  (J,M)-ALP  (J,L))
+      DALPN(J,K)=DALP (J,L)+RAT*(DALP (J,M)-DALP (J,L))
+      DDALPN(J,K)=DDALP(J,L)+RAT*(DDALP(J,M)-DDALP(J,L))
+      HN(J,K)=H1(J)
+      CPN(J,K)=CP1(J)
+      WN(K)=WN(K)+ALPN(J,K)/WTMOLE(J)
+      CPXN(K)=CPXN(K)+ALPN(J,K)*CPN(J,K)
+   55 CONTINUE
+      WN(K)=1./WN(K)
+      RN(K)=RO/WN(K)
+      GAMN(K)=CPXN(K)/(CPXN(K)-RN(K)/CPIN)
+      RK=1./RN(K)
+      RHON(K)=PN(K)*WN(K)*GEW/TN(K)
+      EMN(K)=QN(K)*EMINF*SQRT(GAR/GAMN(K)*RK/TN(K))
+      IF(EMN(K).GT.1.)
+     1XMUN(K)=ZMU(EMN(K))
+  600 CONTINUE
+      GO TO (2200,603,604,605,606),IREG
+ 2200 ISN(2)=I+1
+      IB=IS(2)+1
+      IBB=ISN(2)+1
+      GO TO 501
+  603 JSUBLN=I+1
+      IB=JSUBU
+      JSUBUN=JSUBLN+JSUBU-JSUBL
+      IBB=JSUBUN
+  604 CONTINUE
+      GO TO 504
+  605 ISN(1)=I+2
+      IB=IS(1)
+      IBB=ISN(1)
+      GO TO 505
+  606 IF(IS(3).NE.0) ISN(3)=I+2
+      IF(IS(3).EQ.0) NPTS=I+1
+      NP=NPTS
+      IF(IS(3).EQ.0) GO TO 2203
+      ID=IS(3)-ISN(3)
+      ISS=IS(3)
+      DO 2304 K=ISS,NPTS
+      J=K-ID
+      CALL SWITCH(J,K)
+ 2304 CONTINUE
+      NPTS=NPTS-ID
+      NP=ISN(3)-1
+       IF(ISUB.EQ.0) GO TO 2903
+      JZ=2
+      JZIO=JSUBL-1
+      JZI=JSUBLN-1
+ 2904 JZI=JZI+1
+      JZIO=JZIO+1
+      IF(JZI.EQ.JSUBUN) GO TO 2903
+      IBB=JZI
+      IB=JZIO
+      GO TO 5932
+ 2903 CONTINUE
+ 2203 DO 2204 I=IBOT,NP
+      J=I
+      K=I
+      X    (J)=XN   (K)
+      Y    (J)=YN   (K)
+      Q    (J)=QN   (K)
+      P    (J)=P   N(K)
+      T    (J)=T   N(K)
+      W    (J)=W   N(K)
+      R    (J)=R   N(K)
+      EM   (J)=EM  N(K)
+      TH   (J)=TH  N(K)
+      DVIS(J)=DVISN(K)
+      VIS(J)=VISN(K)
+      BQ   (J)=BQ  N(K)
+      TAU  (J)=TAU N(K)
+      DBQ  (J)=DBQ N(K)
+      GAM  (J)=GAM N(K)
+      RHO  (J)=RHO N(K)
+      XMU  (J)=XMU N(K)
+      CPX  (J)=CPX N(K)
+      DCPX (J)=DCPXN(K)
+      DTAU (J)=DTAUN(K)
+      XMASS(J)=XMASSN(K)
+      DO4108 JJ=1,NSP
+      H    (JJ,J)=H   N(JJ,K)
+      CP   (JJ,J)=CP  N(JJ,K)
+      ALP  (JJ,J)=ALP N(JJ,K)
+      DALP (JJ,J)=DALPN(JJ,K)
+      DDALP(JJ,J)=DDALPN(JJ,K)
+ 4108 CONTINUE
+ 2204 CONTINUE
+      DO 607 I=1,4
+  607 IS(I)=ISN(I)
+      JSUBL=JSUBLN
+      JSUBU=JSUBUN
+ 1000 CONTINUE
+      IF(ITYP.EQ.3) GO TO 903
+      IF(Y(NPTS).EQ.YTP) GO TO 903
+      YQ=YTP
+      IF(Y(NPTS).LE.YTP-1.*DELTAY)YQ=Y(NPTS)+DELTAY
+      IX=2
+      L=NPTS-1
+      M=L-1
+      IF(ABS(P(M)-P(L))/P(L)-.001) 900,900,800
+  900 IF(ABS(Q(M)-Q(L))/Q(L)-.001) 901,901,800
+  901 IF(ABS(T(M)-T(L))/T(L)-.001) 902,902,800
+  902 IF(ABS(ALP(5,M)-ALP(5,L))-.001*ALP(5,L)) 903,903,800
+  903 IF(Y(1).EQ.YBOT) GO TO 907
+      IF(ITYP.EQ.4) GO TO 907
+      L=2
+      M=3
+      IQ=2
+      IF(Y(1).GE.YBOT+DELTAY+1.E-03) GO TO 910
+      YT=YBOT
+      GO TO 912
+  910 YT=Y(1)-DELTAY
+  912 IF(ABS(P(M)-P(L))/P(L)-.001) 904,904,707
+  904 IF(ABS(Q(M)-Q(L))/Q(L)-.001) 905,905,707
+  905 IF(ABS(T(M)-T(L))/T(L)-.001) 906,906,707
+  906 IF(ABS(ALP(4,M)-ALP(4,L))-.001*ALP(4,L)) 907,907,707
+  907 CONTINUE
+      IF(ITYP.EQ.4) GO TO 2102
+      IF(Y(1).NE.YBOT) GO TO 2102
+      IBOD=IBODS
+      ABOD=ABODS
+      IPRESS=IPRS
+      APRESS=APRS
+ 2102 IF(ITYP.EQ.3) GO TO 2103
+      IF(Y(NPTS).NE.YTP) GO TO 2103
+      JBOD=JBODS
+      EBOD=EBODS
+      IPRESU=IPUS
+      APRESU=APUS
+ 2103 CONTINUE
+      IF(Y(1).EQ.YBOT.AND.ITYP.EQ.3) ITYP=1
+      IF(Y(1).EQ.YBOT.AND.ITYP.EQ.2) ITYP=4
+      IF(Y(NPTS).EQ.YTP.AND.ITYP.EQ.4) ITYP=1
+      IF(Y(NPTS).EQ.YTP.AND.ITYP.EQ.2) ITYP=3
+ 2121 CONTINUE
+      IF(ISUB.EQ.1) RETURN
+      JSUBL=NPTS+1
+      JSUBU=NPTS+1
+      RETURN
+      END
+      SUBROUTINE RSET
+      COMMON/AL/GAR,GEW
+      COMMON/BA/ALP(7,55),EMINF,WINF
+      COMMON/BD/XMASS(55)
+      COMMON/CJ/CP(7,55),CP1(7),CPX(55)
+      COMMON/DP/YN(55)
+      COMMON/ED/CPIN,RO
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/EP/GAMINF,H1(7),RINF
+      COMMON/HM/ALPN(7,55),CPN(7,55),CPXN(55),EMN(55),GAMN(55),HN(7,55),
+     IL,PN(55),QN(55),RHON(55),RN(55),THN(55),TN(55),WN(55),XMUN(55)
+      COMMON/OR/THBP,YBP,YBPN
+      COMMON/PD/W(55),X(55)
+      COMMON/PQ/JCHEM,NSP,T(55)
+      COMMON/QA/H(7,55),Q(55),RHO(55),XMU(55)
+      COMMON/RC/R(55)
+      COMMON/SQ/BQN(55),DALPN(7,55),DBQN(55),DCPXN(55),DDALPN(7,55),
+     1DTAUN(55),TAUN(55)
+      COMMON/TS/DVIS(55),DVISN(55),DVISP(2),VIS(55),VISN(55),VISP(2)
+      COMMON/TU/BQ(55),DALP(7,55),DBQ(55),DCPX(55),DDALP(7,55),DTAU(55),
+     1TAU(55)
+      COMMON/VW/ICONT,IEND,KT,THBPN,XBPN
+      COMMON/WV/NPTS,RE,XBP,XJ
+      DO 5110 I=1,NPTS
+      TH(I)=THN(I)
+      X(I)=XBPN
+      Y(I)=YN(I)
+      Q(I)=QN(I)
+      P(I)=PN(I)
+      T(I)=TN(I)
+      RHO(I)=RHON(I)
+      EM(I)=EMN(I)
+      XMU(I)=XMUN(I)
+      VIS(I)=VISN(I)
+      DVIS(I)=DVISN(I)
+      TAU(I)=TAUN(I)
+      BQ(I)=BQN(I)
+      DCPX(I)=DCPXN(I)
+      DTAU(I)=DTAUN(I)
+      DBQ(I)=DBQN(I)
+      DO4090J=1, NSP
+      ALP(J, I)=ALPN(J, I)
+      DALP(J, I)=DALPN(J, I)
+      DDALP(J, I)=DDALPN(J, I)
+      CP(J, I)=CPN(J, I)
+      H(J, I)=HN(J, I)
+ 4090 CONTINUE
+      W(I)=WN(I)
+      R(I)=RN(I)
+      GAM(I)=GAMN(I)
+      CPX(I)=CPXN(I)
+ 5110 CONTINUE
+      XJ1=1.+XJ
+      IF(Y(1).EQ.0.) XMASS(1)=0.
+      DO 10 I=2,NPTS
+      YFUN=(Y(I)*(1.-XJ+Y(I)*XJ)- Y(I-1)*(1.-XJ+Y(I-1)*XJ))/XJ1
+      RQAV=(RHO(I)*Q(I)*COS(TH(I))+ RHO(I-1)*Q(I-1)*COS(TH(I-1)))/2.
+      XMASS(I)=XMASS(I-1)+RQAV*YFUN
+   10 CONTINUE
+      DO 8409 I=1,NPTS
+      CPX(I)=0.
+      CALL THERMO(T(I),H1,CP1)
+      DO 8410 I4=1,NSP
+      CP(I4,I)=CP1(I4)
+      H(I4,I)=H1(I4)
+ 8410 CPX(I)=CPX(I)+ALP(I4,I)*CP1(I4)
+      RHO(I)=GEW*W(I)*P(I)/T(I)
+      GAM(I)=CPX(I)/(CPX(I)-R(I)/CPIN)
+      RI=1./R(I)
+      EM(I)=Q(I)*EMINF*SQRT(GAR/GAM(I)*RI/T(I))
+      IF(EM(I).LT.1.0001) GO TO 8409
+      XMU(I)=ZMU(EM(I))
+ 8409 CONTINUE
+      XBP=XBPN
+      YBP=Y(NPTS)
+      THBP=TH(NPTS)
+      IF(YBPN.EQ.YN(NPTS)) RETURN
+      YBP=YBPN
+      THBP=THBPN
+      RETURN
+      END
+      SUBROUTINE SHEAR1(CFF,VISD)
+      COMMON/AC/IBOD,PIN
+      COMMON/BA/ALP(7,55),EMINF,WINF
+      COMMON/CJ/CP(7,55),CP1(7),CPX(55)
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/PQ/JCHEM,NSP,T(55)
+      COMMON/QA/H(7,55),Q(55),RHO(55),XMU(55)
+      COMMON/SQ/BQN(55),DALPN(7,55),DBQN(55),DCPXN(55),DDALPN(7,55),
+     1DTAUN(55),TAUN(55)
+      COMMON/TS/DVIS(55),DVISN(55),DVISP(2),VIS(55),VISN(55),VISP(2)
+      COMMON/TU/BQ(55),DALP(7,55),DBQ(55),DCPX(55),DDALP(7,55),DTAU(55),
+     1TAU(55)
+      COMMON/WV/NPTS,RE,XBP,XJ
+      DIMENSION LOCS(8)
+      KKI=0
+      DO 100 K=1,8
+  100 LOCS(K)=0
+      LAST=NPTS
+      LAST1=NPTS+1
+      LAST2=NPTS-1
+      Y (LAST1)=2.*Y (LAST)-Y (LAST2)
+      Q (LAST1)=Q (LAST2)
+      T (LAST1)=T (LAST2)
+      VIS(LAST1)=VIS(LAST2)
+      CPX (LAST1)=CPX (LAST2)
+      P(LAST1)=P(LAST2)
+      TH(LAST1)=TH(LAST2)
+      TAU (LAST)=0.
+      BQ (LAST)=0.
+      DCPX (LAST)=0.
+      DO 6290 J=1,NSP
+      DALP (J,LAST)=0.
+ 6290 ALP (J,LAST1)=ALP (J,LAST2)
+      DO 6292 K=2,LAST
+      DELY2=Y (K+1)-Y (K)
+      DELY1=Y (K)-Y (K-1)
+      IF(DELY2.LT.1.E-06.OR.DELY1.LT.1.E-06) GO TO 1301
+      SUM=DELY1+DELY2
+      RATIO1=DELY1/DELY2
+      RATIO2=DELY2/DELY1
+      SU=1./SUM
+      RMR=RATIO1-RATIO2
+      TAU(K)=(Q(K+1)*RATIO1-Q(K)*RMR-Q(K-1)*RATIO2)*SU
+      OD=1./DELY2
+      DTAU(K)=2.*(Q(K+1)*DELY1*SU-Q(K)+Q(K-1)*DELY2*SU)/DELY1*OD
+      BQ(K)=(T(K+1)*RATIO1-T(K)*RMR-T(K-1)*RATIO2)*SU
+      DBQ(K)=2.*(T(K+1)*DELY1*SU-T(K)+T(K-1)*DELY2*SU)/DELY1*OD
+      DCPX(K)=(CPX(K+1)*RATIO1-CPX(K)*RMR-CPX(K-1)*RATIO2)*SU
+      DVIS(K)=(VIS(K+1)*RATIO1-VIS(K)*(RATIO1-RATIO2)-VIS(K-1)*RATIO2)/S
+     1UM
+      DO 6291 J=1,NSP
+      DALP(J,K)=(ALP(J,K+1)*RATIO1-ALP(J,K)*RMR-ALP(J,K-1)*RATIO2)*SU
+      DDALP(J,K)=2.*(ALP(J,K+1)*DELY1*SU-ALP(J,K)+ALP(J,K-1)*DELY2*SU)
+     1/DELY1*OD
+ 6291 CONTINUE
+      GO TO 6292
+ 1301 KKI=KKI+1
+      LOCS(KKI)=K
+ 6292 CONTINUE
+      DVIS(1)=0.
+      TAU (1)=0.0
+      DY=Y(2)-Y(1)
+      IF(IBOD.EQ.1)TAU(1)=CFF*RE*RHO(1)*Q(1)**2*.5/VISD
+      BQ (1)=0.0
+      DCPX (1)=0.
+      DTAU (1)=(Q (2)-Q (1))*2./(Y (2)-Y (1))**2
+      IF(IBOD.EQ.1) DTAU(1)=4.*(Q(2)-Q(1))/DY**2-2.*(TAU(1)+TAU(2))/DY+
+     1DTAU(2)
+      DBQ (1)=(T (2)-T (1))*2./(Y (2)-Y (1))**2
+      IF(IBOD.EQ.1) DBQ(1)=4.*(T(2)-T(1))/DY**2-2.*BQ(2)/DY+DBQ(2)
+      DO6293J=1, NSP
+      DALP (J, 1)=0.0
+      DDALP (J, 1)=2.*(ALP (J, 2)-ALP (J, 1))/(Y (2)-
+     1Y (1))**2
+      IF(IBOD.EQ.1) DDALP(J,1)=4.*(ALP(J,2)-ALP(J,1))/DY**2-2.*DALP(J,2
+     1)/DY+DDALP(J,2)
+ 6293 CONTINUE
+      DO 101 M=1,8
+      IF(LOCS(M).EQ.0) GO TO 102
+      K=LOCS(M)
+      L=1
+      IF((M/2)*2.NE.M) L=-1
+      YNK=Y (K)-Y (K+L)
+      BQ (K)=2.*(T (K)-T (K+L))/YNK-BQ  (K+L)
+      TAU (K)=2.*(Q (K)-Q (K+L))/YNK-TAU (K+L)
+      DCPX (K)=2.*(CPX (K)-CPX (K+L))/YNK-DCPX (K+L)
+      DTAU (K)=2.*(TAU (K)-TAU (K+L))/YNK-DTAU (K+L)
+      DBQ (K)=2.*(BQ (K)-BQ (K+L))/YNK-DBQ (K+L)
+      DO 103 J=1,NSP
+      DALP (J,K)=2.*(ALP (J,K)-ALP (J,K+L))/YNK-DALP (J,K+L)
+  103 DDALP (J,K)=2.*(DALP (J,K)-DALP (J,K+L))/YNK-DDALP (J,K+L)
+  101 CONTINUE
+  102 CONTINUE
+      DO 7000 I=1,LAST
+      TAUN(I)=TAU(I)
+      BQN(I)=BQ(I)
+      DCPXN(I)=DCPX(I)
+      DTAUN(I)=DTAU(I)
+      DBQN(I)=DBQ(I)
+      DO 7001 J=1,NSP
+      DALPN(J,I)=DALP(J,I)
+ 7001 DDALPN(J,I)=DDALP(J,I)
+ 7000 CONTINUE
+      NPTS=LAST
+      RETURN
+      END
+      SUBROUTINE SHEAR2(CFF,VISD)
+      COMMON/AC/IBOD,PIN
+      COMMON/DP/YN(55)
+      COMMON/HM/ALPN(7,55),CPN(7,55),CPXN(55),EMN(55),GAMN(55),HN(7,55),
+     ILS,PN(55),QN(55),RHON(55),RN(55),THN(55),TN(55),WN(55),XMUN(55)
+      COMMON/PQ/JCHEM,NSP,T(55)
+      COMMON/SQ/BQN(55),DALPN(7,55),DBQN(55),DCPXN(55),DDALPN(7,55),
+     1DTAUN(55),TAUN(55)
+      COMMON/TS/DVIS(55),DVISN(55),DVISP(2),VIS(55),VISN(55),VISP(2)
+      COMMON/WV/NPTS,RE,XBP,XJ
+      DIMENSION LOCS(8)
+      KKI=0
+      DO 100 K=1,8
+  100 LOCS(K)=0
+      LAST=NPTS
+      LAST1=NPTS+1
+      LAST2=NPTS-1
+      YN(LAST1)=2.*YN(LAST)-YN(LAST2)
+      QN(LAST1)=QN(LAST2)
+      TN(LAST1)=TN(LAST2)
+      VISN(LAST1)=VISN(LAST2)
+      CPXN(LAST1)=CPXN(LAST2)
+      PN(LAST1)=PN(LAST2)
+      THN(LAST1)=THN(LAST2)
+      TAUN(LAST)=0.
+      BQN(LAST)=0.
+      DCPXN(LAST)=0.
+      DO 3001 J=1,NSP
+      DALPN(J,LAST)=0.
+ 3001 ALPN(J,LAST1)=ALPN(J,LAST2)
+      DO 6002 K=2,LAST
+      DELY2=YN(K+1)-YN(K)
+      DELY1=YN(K)-YN(K-1)
+      IF(DELY2.LT.1.E-06.OR.DELY1.LT.1.E-06) GO TO 1301
+      SUM=DELY1+DELY2
+      RATIO1=DELY1/DELY2
+      RATIO2=DELY2/DELY1
+      SU=1./SUM
+      OD=1./DELY2
+      RMR=RATIO1-RATIO2
+      TAUN(K)=(QN(K+1)*RATIO1-QN(K)*RMR-QN(K-1)*RATIO2)*SU
+      DTAUN(K)=2.*(QN(K+1)*DELY1*SU-QN(K)+QN(K-1)*DELY2*SU)/DELY1*OD
+      BQN(K)=(TN(K+1)*RATIO1-TN(K)*RMR-TN(K-1)*RATIO2)*SU
+      DBQN(K)=2.*(TN(K+1)*DELY1*SU-TN(K)+TN(K-1)*DELY2*SU)/DELY1*OD
+      DCPXN(K)=(CPXN(K+1)*RATIO1-CPXN(K)*RMR-CPXN(K-1)*RATIO2)*SU
+      DVISN(K)=(VISN(K+1)*RATIO1-VISN(K)*(RATIO1-RATIO2)-VISN(K-1)*RATIO
+     12)/SUM
+      DO 4081 J=1,NSP
+      DALPN(J,K)=(ALPN(J,K+1)*RATIO1-ALPN(J,K)*RMR-ALPN(J,K-1)*RATIO2)
+     1*SU
+      DDALPN(J,K)=2.*(ALPN(J,K+1)*DELY1*SU-ALPN(J,K)+ALPN(J,K-1)*DELY2
+     1*SU)/DELY1*OD
+ 4081 CONTINUE
+      GO TO 6002
+ 1301 KKI=KKI+1
+      LOCS(KKI)=K
+ 6002 CONTINUE
+      TAUN(1)=0.0
+      DY=YN(2)-YN(1)
+      IF(IBOD.EQ.1)TAUN(1)=CFF*RE*RHON(1)*QN(1)**2*.5/VISD
+      BQN(1)=0.0
+      DVISN(1)=0.0
+      DCPXN(1)=0.
+      DTAUN(1)=(QN(2)-QN(1))*2./(YN(2)-YN(1))**2
+      IF(IBOD.EQ.1) DTAUN(1)=4.*(QN(2)-QN(1))/DY**2-2.*(TAUN(1)+TAUN(2)
+     1)/DY+DTAUN(2)
+      DBQN(1)=(TN(2)-TN(1))*2./(YN(2)-YN(1))**2
+      IF(IBOD.EQ.1) DBQN(1)=4.*(TN(2)-TN(1))/DY**2-2.*BQN(2)/DY+DBQN(2)
+      DO4082J=1, NSP
+      DALPN(J, 1)=0.0
+      DDALPN(J, 1)=2.*(ALPN(J, 2)-ALPN(J, 1))/(YN(2)-
+     1YN(1))**2
+      IF(IBOD.EQ.1) DDALPN(J,1)=4.*(ALPN(J,2)-ALPN(J,1))/DY**2-2.*DALPN
+     1(J,2)/DY+DDALPN(J,2)
+ 4082 CONTINUE
+      DO 101 M=1,8
+      IF(LOCS(M).EQ.0) GO TO 102
+      K=LOCS(M)
+      L=1
+      IF((M/2)*2.NE.M) L=-1
+      YNK=YN(K)-YN(K+L)
+      BQN(K)=2.*(TN(K)-TN(K+L))/YNK-BQ N(K+L)
+      TAUN(K)=2.*(QN(K)-QN(K+L))/YNK-TAUN(K+L)
+      DCPXN(K)=2.*(CPXN(K)-CPXN(K+L))/YNK-DCPXN(K+L)
+      DTAUN(K)=2.*(TAUN(K)-TAUN(K+L))/YNK-DTAUN(K+L)
+      DBQN(K)=2.*(BQN(K)-BQN(K+L))/YNK-DBQN(K+L)
+      DO 103 J=1,NSP
+      DALPN(J,K)=2.*(ALPN(J,K)-ALPN(J,K+L))/YNK-DALPN(J,K+L)
+  103 DDALPN(J,K)=2.*(DALPN(J,K)-DALPN(J,K+L))/YNK-DDALPN(J,K+L)
+  101 CONTINUE
+  102 CONTINUE
+      NPTS=LAST
+      RETURN
+      END
+      SUBROUTINE LPOINT(I,OPTP)
+      COMMON/AB/EPP,EPQ,EPT
+      COMMON/AC/IBOD,PIN
+      COMMON/AL/GAR,GEW
+      COMMON/BA/ALP(7,55),EMINF,WINF
+      COMMON/BB/S1B,S2B,S3BT
+      COMMON/BO/GAMB,PB,QB,RHOB,THB,WB,XMUB,YB
+      COMMON/CA/WDOTN(7,55),XN(55)
+      COMMON/CJ/CP(7,55),CP1(7),CPX(55)
+      COMMON/CK/WTMOLE(7)
+      COMMON/DP/YN(55)
+      COMMON/ED/CPIN,RO
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/EG/EIN,PR,XLE
+      COMMON/EP/GAMINF,H1(7),RINF
+      COMMON/FE/DEL
+      COMMON/GF/DELY,IFS,KOUNTO,MMM
+      COMMON/GK/DELX
+      COMMON/HL/ALPHA,BETA
+      COMMON/HM/ALPN(7,55),CPN(7,55),CPXN(55),EMN(55),GAMN(55),HN(7,55),
+     ILS,PN(55),QN(55),RHON(55),RN(55),THN(55),TN(55),WN(55),XMUN(55)
+      COMMON/HN/CHC(2),CPB(7),CPXP(2),DALDIF(7),DALPB(7),DDALPB(7),DELS,
+     AEMP(2),HB(7),HC(7),RP(2),S3A(7),S3B(7),S3D(7),WDOTB(7),XP(2)
+      COMMON/OP/ALPB(7),PHI(55)
+      COMMON/PD/W(55),X(55)
+      COMMON/PQ/JCHEM,NSP,T(55)
+      COMMON/QA/H(7,55),Q(55),RHO(55),XMU(55)
+      COMMON/QS/RHOP(2),WDOT(7,55),WDOTC(7),WP(2),XMUP(2)
+      COMMON/SQ/BQN(55),DALPN(7,55),DBQN(55),DCPXN(55),DDALPN(7,55),
+     1DTAUN(55),TAUN(55)
+      COMMON/SS/AL1,AL2,BQ1,BQ2,C1,C2,CH1,CH2,DB1,DB2,DD1,DD2,DT1,DT2,DV
+     A1,DV2,PX1,PX2,TA1,TA2,TH1,TH2,V1,V2,Y1,Y2
+      COMMON/TS/DVIS(55),DVISN(55),DVISP(2),VIS(55),VISN(55),VISP(2)
+      COMMON/TU/BQ(55),DALP(7,55),DBQ(55),DCPX(55),DDALP(7,55),DTAU(55),
+     1TAU(55)
+      COMMON/TV/ALPP(7,2),BET,BQP(2),DACHP(7,2),DALPP(7,2),DBQP(2),
+     1DCPXP(2),DDALPP(7,2),DTAUP(2),DTCHP(2),GAMP(2),PP(2),QP(2),
+     2TAUP(2),THP(2),TP(2),YP(2)
+      COMMON/UV/II11,IERR,IPRESS,IPRESU,ISUB
+      COMMON/VT/DACH(7,55),DTCH(55)
+      COMMON/WV/NPTS,RE,XBP,XJ
+      DIMENSION DACHB(7)
+      KPRESS=0
+      L=I
+      K=I+1
+      IF(OPTP.EQ.0.) GO TO 2000
+      K=I-1
+      IF(IFS.NE.2) GO TO 8500
+      IF((MMM/2)*2.NE.MMM) GO TO 8500
+      K=I+1
+      EM1R=XM2(ALPHA,BETA,TH(I   ),XMU(I   ),THN(I  ),XMUN(I  ))
+      EM1L=XM2(ALPHA,BETA,TH(K   ),XMU(K   ),THN(I  ),XMUN(I  ))
+      GO TO 8501
+ 8500 CONTINUE
+      EM1R=XM1(ALPHA,BETA,TH(I),XMU(I),THN(I),XMUN(I))
+      EM1L=XM1(ALPHA,BETA,TH(K),XMU(K),THN(I),XMUN(I))
+ 8501 CONTINUE
+ 2000 CONTINUE
+      YB=(Y(K)+Y(I))/2.
+      KIP4=0
+ 8372 CONTINUE
+      RATG=(YB-Y(I))/(Y(K)-Y(I))
+      THB=TH(I)+RATG*(TH(K)-TH(I))
+      XMUB=XMU(I)+RATG*(XMU(K)-XMU(I))
+      EM2=XM2(ALPHA,BETA,THB,XMUB,THN(I),XMUN(I))
+      IF(OPTP.NE.0.) EM2=EM1L+RATG*(EM1R-EM1L)
+      YBT=YB
+      XB=XBP
+      YB=YN(I)-EM2*DELX
+      TESTY=(YB-YBT)/(Y(K)-Y(I))
+      IF(ABS(TESTY).LT.0.01) GO TO 8371
+      KIP4=KIP4+1
+      IF(KIP4.LE.20) GO TO 8372
+      WRITE(6,9191)
+ 9191 FORMAT(1H1)
+      WRITE(6,2020)
+ 2020 FORMAT(56H UNABLE TO LOCATE Y LOCATION OF CHARACTERISTIC IN LPOINT
+     1)
+      STOP
+ 8371 RATG=(YB-Y(I))/(Y(K)-Y(I))
+   51 THB=TH(I)+RATG*(TH(K)-TH(I))
+      QB=Q(I)+RATG*(Q(K)-Q(I))
+      PB=P(I)+RATG*(P(K)-P(I))
+      TT=T(I)+RATG*(T(K)-T(I))
+      TAUB=TAU(I)+RATG*(TAU(K)-TAU(I))
+      BQB=BQ(I)+RATG*(BQ(K)-BQ(I))
+      VISB=VIS(I)+RATG*(VIS(K)-VIS(I))
+      DVISB=DVIS(I)+RATG*(DVIS(K)-DVIS(I))
+      DCPXB=DCPX(I)+RATG*(DCPX(K)-DCPX(I))
+      DTAUB=DTAU(I)+RATG*(DTAU(K)-DTAU(I))
+      DBQB=DBQ(I)+RATG*(DBQ(K)-DBQ(I))
+      DTCHP(1)=DTCH(I)+RATG*(DTCH(K)-DTCH(I))
+      DTCHB=(DTCHP(1)+DTCH(I))*.5
+      CPXB=0.0
+      WB=0.0
+      CH2D=0.
+      CH2B=0.0
+      CALL THERMO(TT,HB,CPB)
+      DO4060J=1, NSP
+      ALPB(J)=ALP(J, I)+RATG*(ALP(J,K)-ALP(J, I))
+      DALPB(J)=DALP(J,I)+RATG*(DALP(J,K)-DALP(J,I))
+      DDALPB(J)=DDALP(J,I)+RATG*(DDALP(J,K)-DDALP(J,I))
+      CH2D=CH2D+DALP(J, I)*CP(J, I)
+      CH2B=CH2B+DALPB(J)*CPB(J)
+      CPXB=CPXB+ALPB(J)*CPB(J)
+      WB=WB+ALPB(J)/WTMOLE(J)
+      WDOTB(J)=WDOT(J,I)+RATG*(WDOT (J,K)-WDOT(J,I))
+      DACHH=DACH(J,I)+RATG*(DACH(J,K)-DACH(J,I))
+      DACHB(J)=(DACHH+DACH(J,I))*.5
+      DACHP(J,1)=DACHH
+ 4060 CONTINUE
+      WB=1./WB
+      RB=RO/WB
+      GAMB=CPXB/(CPXB-RB/CPIN)
+      OR=1./RB
+      RHOB=PB*WB*GEW/TT
+      EMB=QB*EMINF*SQRT(GAR/GAMB*OR/TT)
+      XMUB=ZMU(EMB)
+      IF(DEL.EQ.0.) GO TO 8392
+      Y   P(1)=Y   B
+      X   P(1)=X   B
+      Q   P(1)=Q   B
+      P   P(1)=P   B
+      T   P(1)=TT
+      W   P(1)=W   B
+      R   P(1)=R   B
+      TH  P(1)=TH  B
+      EM  P(1)=EM  B
+      BQ  P(1)=BQ  B
+      VISP(1)=VISB
+      DVISP(1)=DVISB
+      RHO P(1)=RHO B
+      XMU P(1)=XMU B
+      CPX P(1)=CPX B
+      GAM P(1)=GAM B
+      TAU P(1)=TAU B
+      DBQ P(1)=DBQ B
+      DTAUP(1)=DTAUB
+      DCPXP(1)=DCPXB
+      DO 3939 J=1,NSP
+      ALP  P(J,1)=ALP  B(J)
+      DALP P(J,1)=DALP B(J)
+ 3939 DDALPP(J,1)=DDALPB(J)
+ 8392 CONTINUE
+      IF(BETA.NE.0.0)GOTO4070
+      TAUN(I)=TAU(I)
+      BQN(I)=BQ(I)
+      DCPXN(I)=DCPX(I)
+      DTAUN(I)=DTAU(I)
+      VISN(I)=VIS(I)
+      DVISN(I)=DVIS(I)
+      TN(I)=T(I)+DTCH(I)
+      WN(I)=W(I)
+      DBQN(I)=DBQ(I)
+      CPXN(I)=CPX(I)
+      CH2C=CH2D
+      DO4071J=1, NSP
+      DALPN(J, L)=DALP(J,I)
+      DDALPN(J, L)=DDALP(J,I)
+      HC(J)=H(J,I)
+      WDOTC(J)=WDOTN(J,I)
+ 4071 CONTINUE
+ 4070 CONTINUE
+      IF(BETA.EQ.0.0) GO TO 4072
+      CH2C=0.0
+      DO 4073 J=1,NSP
+      HC(J)=HN(J,I)
+      WDOTC(J)=WDOTN(J,I)
+ 4073 CH2C=CH2C+DALPN(J,I)*CPN(J,I)
+ 4072 CONTINUE
+      V1=VISB
+      V2=VISN(I)
+      DV1=DVISB
+      DV2=DVISN(I)
+      TA1=TAUB
+      TA2=TAUN(I)
+      DT1=DTAUB
+      DT2=DTAUN(I)
+      BQ1=BQB
+      BQ2=BQN(I)
+      Y1=YB
+      Y2=YN(I)
+      TH1=THB
+      TH2=THN(I)
+      S1B=S1(XJ,RE)
+      C1=CPXB
+      C2=CPXN(I)
+      DB1=DBQB
+      DB2=DBQN(I)
+      PX1=DCPXB
+      PX2=DCPXN(I)
+      CH1=CH2B
+      CH2=CH2C
+      IF(DEL.EQ.0.)1,2
+    1 S2B=S2(XJ,RE)
+      V1=VIS(I)
+      DV1=DVIS(I)
+      TA1=TAU(I)
+      DT1=DTAU(I)
+      BQ1=BQ(I)
+      Y1=Y(I)
+      TH1=TH(I)
+      S1D=S1(XJ,RE)
+      GO TO 56
+    2 S2B=S2(XJ,RE)
+   56 IF(DEL.EQ.0.)3,4
+    3 V1=VIS(I)
+      DV1=DVIS(I)
+      C1=CPX(I)
+      BQ1=BQ(I)
+      DB1=DBQ(I)
+      TA1=TAU(I)
+      TH1=TH(I)
+      Y1=Y(I)
+      PX1=DCPX(I)
+      CH1=CH2D
+      S2D=S2(XJ,RE)
+    4 S3BT=0.
+      S3DT=0.0
+      DO4075J=1, NSP
+      AL1=DALPB(J)
+      AL2=DALPN(J,L)
+      DD1=DDALPB(J)
+      DD2=DDALPN(J,L)
+      V1=VISB
+      DV1=DVISB
+      BQ1=BQB
+      TH1=THB
+      Y1=YB
+      S3B(J)=S3(XJ,RE)
+      IF(DEL.EQ.0.)5,8
+    5 V1=VIS(I)
+      DV1=DVIS(I)
+      AL1=DALP(J,I)
+      DD1=DDALP(J,I)
+      BQ1=BQ(I)
+      TH1=TH(I)
+      Y1=Y(I)
+      S3D(J)=S3(XJ,RE)
+      S3DT=S3DT+S3D(J)/WTMOLE(J)
+    8 S3BT=S3BT+S3B(J)/WTMOLE(J)
+ 4075 CONTINUE
+      IF(DEL.NE.0.) RETURN
+      B1=F1(I)
+      I15=0
+      YAX=YB*YN(I)
+      IF(YAX.LT.1.E-06.AND.XJ.NE.0.) I15=1
+      XX=XJ
+      IF(I15.EQ.1)60,61
+   60 XJ=0.
+   61 B2=F2(I,S1B,S2B,S3BT)
+      XJ=XX
+      IF(JCHEM.EQ.1) GO TO 7254
+      B3=0.
+      GO TO 7257
+ 7254 TP1=(T(I)+DTCH(I)+TT)/2.
+      B3=F3(TP1,DTCHB,TT,TN(I),THB,THN(I),DACHB,WB,WN(I))
+ 7257 OPTT=1.
+      IF(OPTP.NE.0.) OPTT=-1.
+      B4=F4(BETA,-OPTT,XMUB,THB,XMUN(I),THN(I))
+      B2=(B2+B3)*B4
+      IF(OPTP.NE.0..AND.IPRES U.EQ.0) GO TO 7444
+      IF(OPTP.NE.0..AND.IPRES U.EQ.1) GO TO 7482
+      IF(IBOD.EQ.1) GO TO 7444
+      IF(IPRESS.EQ.1) GO TO 7482
+      AX=1.
+      IF(I15.EQ.0) GO TO 100
+      AX=XJ*SIN(XMUB)/SIN(THB-XMUB)
+      IF(BETA.GT.0.0)AX=(AX+XJ*SIN(XMUN(I))
+     1/SIN(THN(I)-XMUN(I)))*.5
+      AX=1.-AX
+  100 CONTINUE
+      PN(I)=PB-(THB*AX+B2*(XN(I)-XB))/B1
+      GO TO 7445
+ 7482 CONTINUE
+      KPRESS=KPRESS+1
+      IF(KPRESS.LT.6) GO TO 3232
+      IERR=7482
+      WRITE(6,3131) IERR,I,THN(I),PN(I),YN(I),THB,PB,YB
+ 3131 FORMAT(2I5,6E13.5)
+      STOP
+ 3232 THDUM=THN(I)
+      KIP4=0
+      THN(I)=THB+OPTT*B1*(PN(I)-PB)+OPTT*B2*(XN(I)-XB)
+      IF(ABS(THN(I)-THDUM).GT.1.E-04) GO TO 8372
+      YN(I)=Y(I)+.5*(TAN(TH(I))+TAN(THN(I)))*DELX
+      GO TO 7445
+ 7444 PN(I)=PB+OPTT*(THN(I)-THB)/B1-B2/B1*(XN(I)-XB)
+ 7445 CONTINUE
+      IF(ABS(PN(L)-P(L)).LE.EPP) PN(L)=P(L)
+      DELS=2.*(XN(I)-X(I))/(COS(TH(I))+COS(THN(I)))
+      TERM2=RHO(I)*Q(I)
+      IF(BETA.GT.0.0)TERM2=(TERM2+RHON(I)
+     1*QN(I))*.5
+      OT=1./TERM2
+      QN(I)=(S1D*DELS-PN(I)+P(I))*OT+Q(I)
+      IF(ABS(QN(L)-Q(L)).LE.EPQ) QN(L)=Q(L)
+      IF(BETA.EQ.0.0)CPXN(I)=CPX(I)
+      DTCHEM=DTCH(I)+(PN(I)-P(I))*(QN(I)+Q(I))/(CPX(I)+CPXN(I))*EIN*OT
+      DTDIFF=S2D*DELS*EIN*2./(CPX(I)+CPXN(I))*OT
+      TN(I)=T(I)+DTCHEM+DTDIFF
+      IF(ABS(TN(L)-T(L)).LE.EPT) TN(L)=T(L)
+      CPXN(I)=0.0
+      WN(I)=0.0
+      CALL THERMO(TN(I),H1,CP1)
+      DO4080J=1, NSP
+      DALDIF(J)=S3D(J)*DELS/TERM2
+      ALPN(J,I)=ALP(J,I)         +DALDIF(J)+DACH(J,I)
+      HN(J,I)=H1(J)
+      CPN(J,I)=CP1(J)
+      WN(I)=WN(I)+ALPN(J, I)/WTMOLE(J)
+      CPXN(I)=CPXN(I)+ALPN(J, I)*CPN(J, I)
+ 4080 CONTINUE
+      WN(I)=1./WN(I)
+      RN(I)=RO/WN(I)
+      GAMN(I)=CPXN(I)/(CPXN(I)-RN(I)/CPIN)
+      OR=1./RN(I)
+      RHON(I)=PN(I)*WN(I)*GEW/TN(I)
+      EMN(I)=QN(I)*EMINF*SQRT(GAR/GAMN(I)*OR/TN(I))
+      XMUN(I)=ZMU(EMN(I))
+      RETURN
+      END
+      FUNCTION DERY(X1,X2,X3)
+      COMMON/QR/DEL1,DEL2,RAT1,RAT2,SUM
+      DERY=(X1*RAT1-X2*(RAT1-RAT2)-X3*RAT2)/SUM
+      RETURN
+      END
+      SUBROUTINE THSSS(THSS)
+      COMMON/AX/JSUBL,JSUBU
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/QR/DEL1,DEL2,RAT1,RAT2,SUM
+      COMMON/RS/GPMS,PS,THS,THSL,THSU
+      JSUBP=JSUBU+1
+      JSUBM=JSUBU-1
+      CALL SHEAR(JSUBP,ASH1)
+      CALL SHEAR(JSUBU,ASH2)
+      CALL SHEAR(JSUBM,ASH3)
+      EMS=0.
+      DEL2=Y(JSUBP)-Y(JSUBU)
+      DEL1=Y(JSUBU)-Y(JSUBM)
+      SUM=DEL2+DEL1
+      RAT1=DEL1/DEL2
+      RAT2=DEL2/DEL1
+      AY=DERY(ASH1,ASH2,ASH3)
+      COSTH=COS(TH(JSUBU))
+      TERM1=-AY*COSTH
+      EMY=DERY(EM(JSUBP),EM(JSUBU),EM(JSUBM))
+      TANTH=TAN(TH(JSUBU))
+      EMNN=EMY/COSTH-EMS*TANTH
+      GPM=GAM(JSUBU)*P(JSUBU)*EM(JSUBU)**2
+      TERM2=2.*COSTH*EM(JSUBU)*EMNN*PS
+      GPMY=DERY(GAM(JSUBP)*P(JSUBP)*EM(JSUBP)**2,GPM,GAM(JSUBM)*P(JSUBM)
+     1*EM(JSUBM)**2)
+      GPMN=GPMY/COSTH-GPMS*TANTH
+      THY=DERY(TH(JSUBP),TH(JSUBU),TH(JSUBM))
+      THNN=THY/COSTH-THS*TANTH
+      TERM3=GPMN*COSTH*THNN
+      TERM4=-GPMS*COSTH*COSTH*(EM(JSUBU)**2-1.)*THS
+      THSY=DERY(THSU,THS,THSL)
+      TERM5=GPM*SIN(TH(JSUBU))*THSY
+      THYP=DERY(TH(JSUBP+1),TH(JSUBP),TH(JSUBU))
+      THYL=DERY(TH(JSUBU),TH(JSUBM),TH(JSUBM-1))
+      THNNP=THYP/COSTH-THSU*TANTH
+      THNNL=THYL/COSTH-THSL*TANTH
+      THNY=DERY(THNNP,THNN,THNNL)
+      TERM6=-GPM*COSTH*THNY
+      D=GPM*(EM(JSUBU)**2*COSTH*COSTH-1.)
+      XNUM=TERM1+TERM2+TERM3+TERM4+TERM5+TERM6
+      THSS=XNUM/D
+      RETURN
+      END
+      FUNCTION ZMU(EM)
+      ZMU=ATAN(1.0/SQRT(EM*EM-1.0))
+      RETURN
+      END
+      SUBROUTINE THERMO(TI,H,CB)
+      COMMON/ED/CPIN,RO
+      COMMON/HK/RCO2,RH2O,WFUEL
+      COMMON/TW/TIN
+      DIMENSION WTMOLE(9)
+      DIMENSION H(7),CB(7)
+      DIMENSION Q(9),AP(9)
+      WTMOLE(1)=1.008
+      WTMOLE(2)=16.0
+      WTMOLE(3)=18.016
+      WTMOLE(4)=2.016
+      WTMOLE(5)=32.0
+      WTMOLE(6)=17.008
+      WTMOLE(7)=28.014
+      WTMOLE(8)=44.011
+      WTMOLE(9)=WFUEL
+      T=TI*TIN
+      C1=RO/CPIN
+      C2=C1/TIN
+      DO 10 J=1,9
+      H1=C2/WTMOLE(J)
+      H2=C1/WTMOLE(J)
+      CALL COEFF(J,T,A,B,C,D,E,F,G)
+      Q(J)=T*(A+T*(B*.5+T*(C/3.+T*(D*.25+E*.2*T))))+F
+      Q(J)=Q(J)*H1
+      AP(J)=A+T*(B+T*(C+T*(D+E*T)))
+      AP(J)=AP(J)*H2
+   10 CONTINUE
+      H(1)=Q(1)
+      H(2)=Q(2)
+      H(3)=RH2O*Q(3)+RCO2*Q(8)
+      H(4)=Q(4)
+      H(5)=Q(5)
+      H(6)=Q(6)
+      H(7)=Q(7)
+      CB(1)=AP(1)
+      CB(2)=AP(2)
+      CB(3)=RH2O*AP(3)+RCO2*AP(8)
+      CB(4)=AP(4)
+      CB(5)=AP(5)
+      CB(6)=AP(6)
+      CB(7)=AP(7)
+      RETURN
+      END
+      SUBROUTINE TBL(TX,TEMPY,X,Y,N)
+      DIMENSION X(1),Y(1)
+      DO 10 J5=1,N
+      IF(TX-X(J5)) 8,9,10
+    8 J6=J5-1
+      TEMPY=Y(J6)+(Y(J5)-Y(J6))*(TX-X(J6))/(X(J5)-X(J6))
+      GO TO 11
+    9 TEMPY=Y(J5)
+      GO TO 11
+   10 CONTINUE
+   11 RETURN
+      END
+      FUNCTION XM1(ALPHA,BETA,TA,XA,TC,XC)
+      XM1=ALPHA*TAN(TA+XA)
+      IF(BETA.GT.0.)XM1=XM1+BETA*TAN(TC+XC)
+      RETURN
+      END
+      FUNCTION XM2(AL,B,TA,XA,TC,XC)
+      XM2=AL*TAN(TA-XA)
+      IF(B.GT.0.)XM2=XM2+B*TAN(TC-XC)
+      RETURN
+      END
+      FUNCTION XM3(A,B,TD,TC)
+      XM3=A*TAN(TD)
+      IF(B.GT.0.0)XM3=XM3+B*TAN(TC)
+      RETURN
+      END
+      SUBROUTINE HOCUS(TI,P1,U1,RHO1,ALPHA,DX,L)
+      COMMON/AC/IBOD,PIN
+      COMMON/BC/IOCHEM
+      COMMON/CA/WDOTN(7,55),XN(55)
+      COMMON/GE/RAD,ROO,UIN,VISINF
+       COMMON/HI/DALCH(7),DTCHEM
+      COMMON/PO/ALPHN(7),IFUEL,PRES
+      COMMON/QS/RHOP(2),WDOT(7,55),WDOTC(7),WP(2),XMUP(2)
+      COMMON/TW/TIN
+      DIMENSION ASAVE(7),WTMOLE(7),ALPHA(7)
+      WTMOLE(1)=1.008
+      WTMOLE(2)=16.
+      WTMOLE(3)=18.016
+      WTMOLE(4)=2.016
+      WTMOLE(5)=32.0
+      WTMOLE(6)=17.008
+      WTMOLE(7)=28.014
+      TXX=TI
+      PXX=P1
+      UXX=U1
+      TERM=RHO1*U1
+      TI=TI*TIN*.001
+      P1=P1/PIN*PRES/2116.
+      U1=U1*UIN
+      DELTAT=4.E-7
+      DELTAX=U1*DELTAT
+      JER=INT(DX/DELTAX)
+      IF (JER.EQ.0) JER=1
+      DELX=DX/FLOAT(JER)
+      TSAVE=TI
+      DO 201 J=1,7
+  201 ASAVE(J)=ALPHA(J)
+      DT=DELX/U1
+      P=P1
+      OP=2116./89517.
+      RH=P*OP/TI*.001
+      DO 10 JERRY=1,JER
+      P=P1
+      DUM=0.0
+      DO 96 J=1,7
+ 96   DUM=DUM+ASAVE(J)/WTMOLE(J)
+      RHOI=RH/DUM
+        IF(IOCHEM.EQ.0)
+     1WRITE(6,250) TI,P,RHOI,ASAVE,DT,TN,ALPHN
+  250 FORMAT(* POCUS FROM HOCUS*,10E11.3/17X,10E11.3/)
+      CALL POCUS(TI,P,RHOI,ASAVE,DT,TN)
+        IF(IOCHEM.EQ.0)
+     1WRITE(6,250) TI,P,RHOI,ASAVE,DT,TN,ALPHN
+        IF(IOCHEM.EQ.0)
+     1WRITE(6,232)
+  232 FORMAT(//)
+      IF(JERRY.NE.1) GO TO 100
+      DO 110 J=1,7
+  110 WDOT(J,L)=TERM*(ALPHN(J)-ASAVE(J))/DELX
+  100 CONTINUE
+      IF(JERRY.EQ.JER)GO TO 10
+      TI=TN
+      DO 20 J=1,7
+ 20   ASAVE(J)=ALPHN(J)
+ 10   CONTINUE
+      DTCHEM=(TN-TSAVE)*1000./TIN
+      DO 40 J=1,7
+      DALCH(J)=ALPHN(J)-ALPHA(J)
+   40 WDOTN(J,L)=TERM*(ALPHN(J)-ASAVE(J))/DELX
+      TI=TXX
+      P1=PXX
+      U1=UXX
+      RETURN
+      END
+      SUBROUTINE COEFF(I,T,A   ,B   ,C   ,D   ,E   ,F   ,G   )
+      IF(T-1000)10,10,20
+   10 GO TO (15,16,13,11,12,17,14,18,19),I
+   11 A   = 2.8460849E 00
+      B   = 4.1932116E-03
+      C   =-9.6119332E-06
+      D   = 9.5122662E-09
+      E   =-3.3093421E-12
+      F   =-9.6725372E 02
+      G   =-1.4117850E 00
+      GO TO 40
+   12 A   = 3.7189946E 00
+      B   =-2.5167288E-03
+      C   = 8.5837353E-06
+      D   =-8.2998716E-09
+      E   = 2.7082180E-12
+      F   =-1.0576706E 03
+      G   = 3.9080704E 00
+      GO TO 40
+   13 A   = 4.1565016E 00
+      B   =-1.7244334E-03
+      C   = 5.6982316E-06
+      D   =-4.5930044E-09
+      E   = 1.4233654E-12
+      F   =-3.0288770E 04
+      G   =-6.8616246E-01
+      GO TO 40
+   14 A   = 3.6916148E 00
+      B   =-1.3332552E-03
+      C   = 2.6503100E-06
+      D   =-9.7688341E-10
+      E   =-9.9772234E-14
+      F   =-1.0628336E 03
+      G   = 2.2874980E 00
+      GO TO 40
+   15 A   = 2.5000000E 00
+      B   = 0.0
+      C   = 0.0
+      D   = 0.0
+      E   = 0.0
+      F   = 2.5470497E 04
+      G   =-4.6001096E-01
+      GO TO 40
+   16 A   = 3.0218894E 00
+      B   =-2.1737249E-03
+      C   = 3.7542203E-06
+      D   =-2.9947200E-09
+      E   = 9.0777547E-13
+      F   = 2.9137190E 04
+      G   = 2.6460076E 00
+      GO TO 40
+   17 A   = 3.8234708E 00
+      B   =-1.1187229E-03
+      C   = 1.2466819E-06
+      D   =-2.1035896E-10
+      E   =-5.2546551E-14
+      F   = 3.5852787E 03
+      G   = 5.8253029E-01
+      GO TO 40
+   18 A=2.1701
+      B=1.0378E-02
+      C=-1.07339E-05
+      D=6.34592E-09
+      E=-1.62807E-12
+      F=-4.83526E+04
+      G=10.6644
+      GO TO 40
+   19 A=2.49125
+      B=7.64362E-03
+      C=7.97754E-06
+      D=-1.29578E-08
+      E=5.03078E-12
+      F=-5421.86
+      G=0.
+      GO TO 40
+   20 GO TO (25,26,23,21,22,27,24,28,29),I
+   21 A   = 3.0436897E 00
+      B   = 6.1187110E-04
+      C   =-7.3993551E-09
+      D   =-2.0331907E-11
+      E   = 2.4593791E-15
+      F   =-8.5491002E 02
+      G   =-1.6481339E 00
+      GO TO 40
+   22 A   = 3.5976129E 00
+      B   = 7.8145603E-04
+      C   =- 2.2386670E-07
+      D   = 4.2490159E-11
+      E   =-3.3460204E-15
+      F   =-1.1927918E 03
+      G   = 3.7492659E 00
+      GO TO 40
+   23 A   = 2.6707532E 00
+      B   = 3.0317115E-03
+      C   =-8.5351570E-07
+      D   = 1.1790853E-10
+      E   =-6.1973568E-15
+      F   =-2.9888994E 04
+      G   = 6.8838391E 00
+      GO TO 40
+   24 A   = 2.8545761E 00
+      B   = 1.5976316E-03
+      C   =-6.2566254E-07
+      D   = 1.1315849E-10
+      E   =-7.6897070E-15
+      F   =-8.9017445E+02
+      G   = 6.3902879E 00
+      GO TO 40
+   25 A   = 2.5000000E 00
+      B   = 0.0
+      C   = 0.0
+      D   = 0.0
+      E   = 0.0
+      F   = 2.5470497E 04
+      G   =-4.6001096E-01
+      GO TO 40
+   26 A   = 2.5372567E 00
+      B   =-1.8422190E-05
+      C   =-8.8017921E-09
+      D   = 5.9643621E-12
+      E   =-5.5743608E-16
+      F   = 2.9230007E 04
+      G   = 4.9467942E 00
+      GO TO 40
+   27 A   = 2.8895544E 00
+      B   = 9.9835061E-04
+      C   =-2.1879904E-07
+      D   = 1.9802785E-11
+      E   =-3.8452940E-16
+      F   = 3.8811792E 03
+      G   = 5.5597016E 00
+      GO TO 40
+   28 A=4.41293
+      B=3.19229E-03
+      C=-1.2978E-06
+      D=2.4147E-10
+      E=-1.6743E-14
+      F=-4.8944E+04
+      G=-.72876
+      GO TO 40
+   29 A=3.16941
+      B=1.02274E-02
+      C=-3.85032E-06
+      D=6.77198E-10
+      E=-4.50135E-14
+      F=-5845.93
+      G=0.
+   40 RETURN
+      END
+      FUNCTION S2(XJ,RE)
+      COMMON/EG/EIN,PR,XLE
+      COMMON/SS/AL1,AL2,BQ1,BQ2,C1,C2,CH1,CH2,DB1,DB2,DD1,DD2,DT1,DT2,DV
+     A1,DV2,PX1,PX2,TA1,TA2,TH1,TH2,V1,V2,Y1,Y2
+      RPR=1./PR
+      TERM1=V1*C1*DB1*RPR+V2*C2*DB2*RPR
+      TERM2=C1*DV1*BQ1*RPR+C2*DV2*BQ2*RPR
+      TERM3=(V1*BQ1*CH1+V2*BQ2*CH2)*XLE*RPR
+      TERM4=(V1*BQ1*PX1+V2*BQ2*PX2)*RPR
+      TERM5=(V1*TA1**2+V2*TA2**2)*EIN
+      IF(XJ.NE.0.) GO TO 10
+      TERM6=0.
+      GO TO 2
+   10 YT=Y1*Y2
+      IF(YT.LE.1.E-10) GO TO 20
+      TERM6=V1*C1*BQ1*COS(TH1)/Y1*RPR+V2*C2*BQ2*COS(TH2)/Y2*RPR
+      GO TO 2
+   20 CONTINUE
+      TERM6=V1*C1*DB1*RPR+V2*C2*DB2*RPR
+    2 S2=(TERM1+TERM2+TERM3+TERM4+TERM5+TERM6)/RE*.5/EIN
+      RETURN
+      END
+      FUNCTION S3(XJ,RE)
+      COMMON/EG/EIN,PR,XLE
+      COMMON/SS/AL1,AL2,BQ1,BQ2,C1,C2,CH1,CH2,DB1,DB2,DD1,DD2,DT1,DT2,DV
+     A1,DV2,PX1,PX2,TA1,TA2,TH1,TH2,V1,V2,Y1,Y2
+      RPR=1./PR
+      TERM1=V1*DD1+V2*DD2
+      TERM2=DV1*AL1+DV2*AL2
+      IF(XJ.NE.0.) GO TO 10
+      TERM3=0.
+      GO TO 2
+   10 YT=Y1*Y2
+      IF(YT.LE.1.E-10) GO TO 20
+      TERM3=COS(TH1)*V1*AL1/Y1+COS(TH2)*V2*AL2/Y2
+      GO TO 2
+   20 CONTINUE
+      TERM3=TERM1
+    2 S3=(TERM1+TERM2+TERM3)*XLE*RPR/RE*.5
+      RETURN
+      END
+      FUNCTION F1(M)
+      COMMON/BO/GAMB,PB,QB,RHOB,THB,WB,XMUB,YB
+      COMMON/HL/ALPHA,BETA
+      COMMON/HM/ALPN(7,55),CPN(7,55),CPXN(55),EMN(55),GAMN(55),HN(7,55),
+     1L,PN(55),QN(55),RHON(55),RN(55),THN(55),TN(55),WN(55),XMUN(55)
+      RP=1./PB
+      F1=SIN(XMUB)*COS(XMUB)/GAMB*RP
+      RPN=1./PN(M)
+      IF(BETA.GT.0.)F1=(F1+SIN(XMUN(M))*COS(XMUN(M))/GAMN(M)*RPN)*.5
+      RETURN
+      END
+      FUNCTION F2(M,S11,S21,S31)
+      COMMON/BO/GAMB,PB,QB,RHOB,THB,WB,XMUB,YB
+      COMMON/DP/YN(55)
+      COMMON/HL/ALPHA,BETA
+      COMMON/HM/ALPN(7,55),CPN(7,55),CPXN(55),EMN(55),GAMN(55),HN(7,55),
+     IL,PN(55),QN(55),RHON(55),RN(55),THN(55),TN(55),WN(55),XMUN(55)
+      COMMON/QA/H(7,55),Q(55),RHO(55),XMU(55)
+      COMMON/WV/NPTS,RE,XBP,XJ
+      IF(XJ.EQ.0.0)TERM1=0.0
+      IF(XJ.NE.0.)TERM1=SIN(THB)/YB
+      IF(XJ.NE.0..AND.BETA.GT.0.)TERM1=.5*(TERM1+SIN(THN(M))/YN(M))
+      QS=1./QB**2
+      TERM2=S11/RHOB*QS
+      SQ=1./QN(M)**2
+      IF(BETA.GT.0.)TERM2=.5*(TERM2+S11/RHON(M)*SQ)
+      P1=1./PB
+      TERM3=S21*(GAMB-1.)/GAMB*P1/QB
+      P2=1./PN(M)
+      IF(BETA.GT.0.)TERM3=.5*(TERM3+S21*(GAMN(M)-1.)/GAMN(M)*P2/QN(M))
+      RQ=1./QB
+      TERM4=S31*WB/RHOB*RQ
+      QD=1./QN(M)
+      IF(BETA.GT.0.)TERM4=.5*(TERM4+S31*WN(M)/RHON(M)*QD)
+      F2=(TERM1+TERM2-TERM3-TERM4)
+      RETURN
+      END
+      FUNCTION F4(B,OPT,XMU1,TH1,XMU2,TH2)
+      F4=SIN(XMU1)/COS(TH1+OPT*XMU1)
+      IF(B.GT.0.)F4=(F4+SIN(XMU2)/COS(TH2+OPT*XMU2))*.5
+      RETURN
+      END
+      SUBROUTINE HERMAN(YN,DT,A,Y,CI,BB,CC,SCALE)
+      DIMENSION P(10,10),SMALB(10),Q(10),A(10,10),Y(7),YN(7),CI(4),FINK(
+     14)
+      TIM1=DT/2.0
+      TIM2=DT
+      T0=TIM1**2
+      T1=(DT**2-T0)*.5
+      T2=(DT**3-TIM1*T0)/3.0
+      T3=T0*.5
+      T4=TIM1*T0/3.0
+      K=1
+      DO 19 I=1,4
+      DO 10 J=1,4
+      P(K,J)=-A(I,J)*T3
+   10 P(K+1,J)=-A(I,J)*T1
+   19 K=K+2
+      K=1
+      DO 20 I=1,4
+      DO 11 J=1,4
+      P(K,J+4)=-A(I,J)*(T4)
+   11 P(K+1,J+4)=-A(I,J)*(T2)
+   20 K=K+2
+      J=1
+      DO 12 I=1,8,2
+      S=1./SCALE
+      P(I,J)=P(I,J)+TIM1*S
+      P(I,J+4)=P(I,J+4)+T0*S
+      K=I+1
+      P(K,J)=P(K,J)+(TIM2-TIM1)*S
+      P(K,J+4)=P(K,J+4)+2.*T1*S
+      J=J+1
+   12 CONTINUE
+      DO 13 I=1,8
+   13 Q(I)=0.0
+      FINK(1)=Y(1)
+      FINK(2)=Y(2)
+      FINK(3)=Y(6)
+      FINK(4)=Y(3)
+      K=1
+      DO 15 I=1,4
+      DO 14J=1,4
+   14 Q(K)=Q(K)+A(I,J)*FINK(J)*(TIM2-TIM1)
+      Q(K+1)=Q(K)
+   15 K=K+2
+      DO 16 I=1,4
+      J=2*I
+      Q(J-1)=Q(J-1)+CI(I)*(TIM2-TIM1)
+   16 Q(J)=Q(J)+CI(I)*(TIM2-TIM1)
+      DO 202 I=1,8
+      Q(I)=Q(I)/1.0E-5
+      DO 202 J=1,8
+  202 P(I,J)=P(I,J)/1.0E-5
+      CALL CLEM(8,SMALB,P,Q)
+      CALL SOLT(SMALB,DT,CC,BB,Y,YN)
+      RETURN
+      END
+      SUBROUTINE CLEM(M,X,B,D)
+      DIMENSION AT(10,11),X(10)
+      DIMENSION B(10,10),D(10)
+      M1=M+1
+      DO 12 I=1,M
+   12 X(I)=0.0
+      DO 200 I=1,M
+  200 AT(I,M1)=D(I)
+      DO 201 I=1,M
+      DO 201 J=1,M
+  201 AT(I,J)=B(I,J)
+      DO 32 N=1,M
+      O=AT(N,N)
+      IT=0
+      DO 9 I=N,M
+      IF(ABS(AT(I,N))-ABS(O)) 9,9,8
+    8 O=AT(I,N)
+      IT=I
+    9 CONTINUE
+      IF(IT-N)7,7,70
+   70 DO 71 J=N,M1
+      TEMP=AT(N,J)
+      AT(N,J)=AT(IT,J)
+   71 AT(IT,J)=TEMP
+    7 DO 10 I=1,M1
+   10 AT(N,I)=AT(N,I)/O
+      IF(M-N)50,50,18
+   18 N1=N+1
+      DO 30 I=N1,M
+      O=AT(I,N)
+      DO 30 J=N,M1
+   30 AT(I,J)=AT(I,J)-AT(N,J)*O
+   32 CONTINUE
+   50 X(M)=AT(M,M+1)
+      DO 65 N=2,M
+      NR=M+1-N
+      O=AT(NR,M+1)
+      DO 60 I=NR,M
+   60 O=O-AT(NR,I)*X(I)
+   65 X(NR)=O/AT(NR,NR)
+      RETURN
+      END
+      SUBROUTINE SOLT(SMALB,DT,CC,BB,Y,YN)
+      DIMENSION SMALB(10),Y(7),YN(7)
+      TIME=DT
+      TNX=TIME**2
+      YN(1)=Y(1)+SMALB(1)*TIME+SMALB(5)*TNX
+      YN(2)=Y(2)+SMALB(2)*TIME+SMALB(6)*TNX
+      YN(6)=Y(6)+SMALB(3)*TIME+SMALB(7)*TNX
+      YN(3)=Y(3)+SMALB(4)*TIME+SMALB(8)*TNX
+      YN(4)=CC-(YN(1)+YN(6))*.5-YN(3)
+      YN(5)=BB-(YN(2)+YN(6)+YN(3))*.5
+      RETURN
+      END
+      FUNCTION S1(XJ,RE)
+      COMMON/SS/AL1,AL2,BQ1,BQ2,C1,C2,CH1,CH2,DB1,DB2,DD1,DD2,DT1,DT2,DV
+     A1,DV2,PX1,PX2,TA1,TA2,TH1,TH2,V1,V2,Y1,Y2
+      TERM1=V1*DT1+V2*DT2
+      TERM2=DV1*TA1+DV2*TA2
+      IF(XJ.NE.0.) GO TO 10
+      TERM3=0.
+      GO TO 2
+   10 YT=Y1*Y2
+      IF(YT.LE.1.E-10) GO TO 20
+      TERM3=COS(TH1)*V1*TA1/Y1+COS(TH2)*V2*TA2/Y2
+      GO TO 2
+   20 CONTINUE
+      TERM3=TERM1
+    2 S1=(TERM1+TERM2+TERM3)/RE*.5
+      RETURN
+      END
+      SUBROUTINE PUNCH
+      COMMON/AC/IBOD,PIN
+      COMMON/BA/ALP(7,55),EMINF,WINF
+      COMMON/DB/BETB(20),IS(20),IDD,IJENK,JENKI
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/EG/EIN,PR,XLE
+      COMMON/FH/XK1,XK3,XPOT
+      COMMON/HJ/KOUNT,LL,NPT
+      COMMON/PO/ALPHN(7),IFUEL,PRES
+      COMMON/PQ/JCHEM,NSP,T(55),PTZERO,IDIVERG,TH1,XE,YE,RCR,PTOJ,TOJ
+     1,EM1,XMU1,Q1
+      COMMON/WAVE/XBOD(5),XWALL(5),AABOD(5),BBBOD(5),CCBOD(5),EEBOD(5),
+     ZFFBOD(5),GGBOD(5),LWALL,LBOD,III,JJJ
+      COMMON/TW/TIN
+      COMMON/WV/NPTS,RE,XBP,XJ
+      COMMON/XY/APRS,APUS,DELTAY,EBODS,IBODS,INTACT,IPRS,IPUS,ITYP,
+     1JBODS,MMAX,RHEAT,XK2,XK4,YBOT,YTP
+      COMMON/YX/ABODS,BPRESS,CPRESS
+      COMMON/YZ/BPRESU,CHEMFC,CPRESU,EMSUB,RTH,XSTEP
+      COMMON/ZY/ABOD,BBOD,CBOD,EBOD,FBOD,GBOD,IAVE,IPUNCH,JBOD,KKKKK
+      COMMON/1/MASFRAC
+      REAL MASFRAC(7)
+      REWIND 7
+  100 FORMAT(16I5)
+  101 FORMAT(8E10.3)
+  200 FORMAT(I5,5X,7E10.3)
+  102 FORMAT(7E10.3,F10.5)
+  103 FORMAT(5F10.5)
+  104 FORMAT(7E11.4)
+      WRITE(7,100) KKKKK ,LL
+      WRITE(7,200)IPUNCH,XSTEP,PTZERO,XE,YE,RCR,PTOJ,TOJ
+      INTACT=0
+      ISHOCK=0
+      DO 1111 I=1,IDD
+ 1111 IF(IS(I).NE.0) ISHOCK=1
+      WRITE(7,100)NPTS,NPT,ITYP,ISHOCK,MMAX,KOUNT
+      WRITE(7,100)JCHEM,IAVE,INTACT,IDIVERG,IDD
+      WRITE(7,102)XJ,      EMSUB,RTH,DELTAY,YBOT,YTP,CHEMFC,XBP
+      RQ=RE/RTH
+      WRITE(7,101)RQ,PR,XLE,EMINF,TIN,WINF,PRES
+      WRITE(7,101)XPOT,XK1,XK2,XK3,XK4
+      WRITE(7,200) IBODS,ABOD,BBOD,CBOD
+      IF(IBODS.EQ.0) GO TO 3333
+      WRITE(7,100)III
+      IF(III.LE.0) GO TO 3333
+      DO 2 I=1,III
+    2 WRITE(7,101) XBOD(I),AABOD(I),BBBOD(I),CCBOD(I)
+ 3333 CONTINUE
+      WRITE(7,200)JBODS,EBODS,FBOD,GBOD
+      IF(JBODS.EQ.0) GO TO 333
+      WRITE(7,100)JJJ
+      IF(JJJ.LE.0) GO TO 333
+      DO 6 I=1,JJJ
+    6 WRITE(7,101)XWALL(I),EEBOD(I),FFBOD(I),GGBOD(I)
+  333 CONTINUE
+      WRITE(7,100) LWALL,LBOD
+      WRITE(7,200)IPRS,APRS    ,BPRESS,CPRESS
+      WRITE(7,200)IPUS,APUS    ,BPRESU,CPRESU
+      IF(ISHOCK.EQ.0) GO TO 5
+      WRITE(7,100)(IS(I),I=1,IDD)
+      WRITE(7,101)(BETB(I),I=1,IDD)
+    5 CONTINUE
+      DO 10 I=1,NPTS
+      A   =P(I)/PIN
+      ALP7=ALP(7,I)-ALP(4,I)*(1.-RHEAT)
+      ALP4=ALP(4,I)/RHEAT
+      WRITE(7,103)Y(I),A   ,TH(I),EM(I),T(I)
+      WRITE(7,104) ALP(1,I),ALP(2,I),ALP(3,I),ALP4,ALP(5,I),ALP(6,I),ALP
+     17
+   10 CONTINUE
+      WRITE(7,101)(MASFRAC(I),I=1,7)
+      REWIND 7
+      END
+      SUBROUTINE INDATA
+      COMMON/AC/IBOD,PIN
+      COMMON/AL/GAR,GEW
+      COMMON/BA/ALP(7,55),EMINF,WINF
+      COMMON/BD/XMASS(55)
+      COMMON/CJ/CP(7,55),CP1(7),CPX(55)
+      COMMON/CK/WTMOLE(7)
+      COMMON/DB/BETB(20),IS(20),IDD,IJENK,JENKI
+      COMMON/ED/CPIN,RO
+      COMMON/EF/EM(55),GAM(55),P(55),TH(55),Y(55)
+      COMMON/EG/EIN,PR,XLE
+      COMMON/EP/GAMINF,H1(7),RINF
+      COMMON/FH/XK1,XK3,XPOT
+      COMMON/GE/RAD,ROO,UIN,VISINF
+      COMMON/GF/DELY,IFS,KOUNTO,MMM
+      COMMON/HJ/KOUNT,LL,NPT
+      COMMON/HK/RCO2,RH2O,WFUEL
+      COMMON/OR/THBP,YBP,YBPN
+      COMMON/PD/W(55),X(55)
+      COMMON/PO/ALPHN(7),IFUEL,PRES
+      COMMON/PQ/JCHEM,NSP,T(55),PTZERO,IDIVERG,TH1,XE,YE,RCR,PTOJ,TOJ
+     1,EM1,XMU1,Q1
+      COMMON/QA/H(7,55),Q(55),RHO(55),XMU(55)
+      COMMON/RC/R(55)
+      COMMON/TW/TIN
+      COMMON/UV/II11,IERR,IPRESS,IPRESU,ISUB
+      COMMON/WV/NPTS,RE,XBP,XJ
+      COMMON/WX/APRESS,APRESU
+      COMMON/XY/APRS,APUS,DELTAY,EBODS,IBODS,INTACT,IPRS,IPUS,ITYP,
+     1JBODS,MMAX,RHEAT,XK2,XK4,YBOT,YTP
+      COMMON/YX/ABODS,BPRESS,CPRESS
+      COMMON/YZ/BPRESU,CHEMFC,CPRESU,EMSUB,RTH,XSTEP
+      COMMON/ZY/ABOD,BBOD,CBOD,EBOD,FBOD,GBOD,IAVE,IPUNCH,JBOD,KKKKK
+      COMMON/WAVE/XBOD(5),XWALL(5),AABOD(5),BBBOD(5),CCBOD(5),EEBOD(5),
+     ZFFBOD(5),GGBOD(5),LWALL,LBOD,III,JJJ
+      COMMON/1/MASFRAC
+      REAL MASFRAC(7)
+      DIMENSION CPINJ(7)
+      IIN=5
+      ISUB=0
+      XBP=0.
+      YBP=10000.
+      THBP=0.
+      RAD=0.
+      IFUEL=1
+      WFUEL=2.016
+  100 FORMAT(16I5)
+  101 FORMAT(8E10.0)
+  404 FORMAT(7E11.4)
+  200 FORMAT(I5,5X,7E10.0)
+      READ(IIN,100)       KKKKK,LL
+      READ(IIN,200) IPUNCH,XSTEP,PTZERO,XE,YE,RCR,PTOJ,TOJ
+      READ(IIN,100) NPTS,NPT,ITYP,ISHOCK,MMAX,KOUNT
+      READ(IIN,100)JCHEM,IAVE,INTACT,IDIVERG,IDD
+      IF(KOUNT.LT.1) KOUNT=0
+      KOUNTO=KOUNT
+      WRITE(6,111) KKKKK,LL
+  111 FORMAT(8H1KKKKK =I5,5X,4HLL =I3/)
+      WRITE(6,112)IPUNCH,XSTEP,PTZERO,IDIVERG,IDD
+  112 FORMAT(9H IPUNCH =I2,5X,7HXSTEP =E10.3,5X,8HPTZERO =E10.3,5X,9HIDI
+     6VERG =I2,5X,6HIDD = I2/)
+      WRITE(6,1112)XE,YE,RCR,PTOJ,TOJ
+ 1112 FORMAT(1X,*XE,YE,RCR,PTOJ,TOJ*,8E10.3/)
+      WRITE(6,113) NPTS,NPT,ITYP,ISHOCK,MMAX
+  113 FORMAT(7H NPTS =I3,5X,5HNPT =I2,5X,6HITYP =I2,5X,8HISHOCK =I2,5X,6
+     1HMMAX =I3/)
+      WRITE(6,114) JCHEM,IAVE,           INTACT
+  114 FORMAT(8H JCHEM =I2,5X,6HIAVE =I2,5X,
+     18HINTACT =I2/)
+      IF(ITYP.NE.2.AND.ITYP.NE.4) GO TO 12
+      IF(INTACT.EQ.0.AND.ISHOCK.EQ.0) GO TO 12
+      WRITE(6,9191)
+ 9191 FORMAT(1H1)
+      WRITE(6,102)
+  102 FORMAT(91H TYPE 2 OR TYPE 4 FLOWS MAY NOT START WITH SHOCKS OR HAV
+     6E SHOCKS COMING OFF SPLITTER PLATES/43H RECHECK INPUTS AND SUBMIT
+     1WITH PROPER TYPE)
+      STOP
+   12 CONTINUE
+  104 READ(IIN,101) XJ,      EMSUB,RTH,DELTAY,YBOT,YTP,CHEMFC,XBP
+      READ(IIN,101) RE,PR,XLE,EMINF,TIN,WINF,PRES
+      READ(IIN,101) XPOT,XK1,XK2,XK3,XK4
+      READ(IIN,200) IBOD,ABOD,BBOD,CBOD
+      IF(IBOD.EQ.0) GO TO 1
+      READ(5,100) III
+      IF(III.LE.0) GO TO 1
+      DO 2 I=1,III
+    2 READ(5,101) XBOD(I),AABOD(I),BBBOD(I),CCBOD(I)
+    1 CONTINUE
+      READ(IIN,200) JBOD,EBOD,FBOD,GBOD
+      IF(JBOD.EQ.0) GO TO 4
+      READ(5,100) JJJ
+      IF(JJJ.LE.0) GO TO 4
+      DO 6 I=1,JJJ
+    6 READ(5,101)XWALL(I),EEBOD(I),FFBOD(I),GGBOD(I)
+    4 CONTINUE
+      READ(IIN,100) LWALL,LBOD
+      IF((LBOD-1).EQ.0)                       GO TO 97777
+      ABOD=AABOD(LBOD-1)
+      BBOD=BBBOD(LBOD-1)
+      CBOD=CCBOD(LBOD-1)
+97777 CONTINUE
+      IF((LWALL-1).EQ.0)                        GO TO 93333
+      EBOD=EEBOD(LWALL-1)
+      FBOD=FFBOD(LWALL-1)
+      GBOD=GGBOD(LWALL-1)
+93333 CONTINUE
+      READ(IIN,200) IPRESS,APRESS,BPRESS,CPRESS
+      READ(IIN,200) IPRESU,APRESU,BPRESU,CPRESU
+      IF(XBP.LT.0.) XBP=0.
+      J=XJ+.5
+      XJ=J
+      WRITE(6,115) XJ,EMSUB,RTH,DELTAY,YBOT,YTP,CHEMFC
+  115 FORMAT(5H XJ =E10.3,2X,7HEMSUB =E10.3,2X,5HRTH =E10.3,2X,8HDELTAY
+     1=E10.3,2X,6HYBOT =E10.3,2X,5HYTP =E10.3,2X,8HCHEMFC =E10.3/)
+      WRITE(6,116) RE,PR,XLE,EMINF,TIN,WINF,PRES
+  116 FORMAT(5H RE =E10.3,2X,4HPR =E10.3,2X,5HXLE =E10.3,2X,7HEMINF =E10
+     1.3,2X,5HTIN =E10.3,2X,6HWINF =E10.3,2X,6HPRES =E10.3/)
+      WRITE(6,117) XPOT,XK1,XK2,XK3,XK4
+  117 FORMAT(7H XPOT =E10.3,2X,5HXK1 =E10.3,2X,5HXK2 =E10.3,2X,5HXK3 =E1
+     10.3,2X,5HXK4 =E10.3/)
+      WRITE(6,118) IBOD,ABOD,BBOD,CBOD
+  118 FORMAT(7H IBOD =I2,2X,6HABOD =E10.3,2X,6HBBOD =E10.3,2X,6HCBOD =E1
+     10.3/)
+      IF(III.LE.0) GO TO 222
+      WRITE(6,500) III
+  500 FORMAT(1X,*III=*,I5//,2X,*XBOD,AABOD,BBBOD,CCBOD*)
+      DO 22 I=1,III
+   22 WRITE(6,1010) XBOD(I),AABOD(I),BBBOD(I),CCBOD(I)
+ 1010 FORMAT(8E10.3)
+  222 CONTINUE
+      WRITE(6,119) JBOD,EBOD,FBOD,GBOD
+  119 FORMAT(7H JBOD =I2,2X,6HEBOD =E10.3,2X,6HFBOD =E10.3,2X,6HGBOD =E1
+     10.3/)
+      IF(JJJ.LE.0) GO TO 666
+      WRITE(6,501) JJJ
+  501 FORMAT(1X,*JJJ=*,I5//,2X,*XWALL,EEBOD,FFBOD,GGBOD*)
+      DO 66 I=1,JJJ
+   66 WRITE(6,1010)XWALL(I),EEBOD(I),FFBOD(I),GGBOD(I)
+  666 CONTINUE
+      WRITE(6,502) LWALL,LBOD
+  502 FORMAT(1X,*LWALL=*,I5,6X,*LBOD=*,I5)
+      WRITE(6,120) IPRESS,APRESS,BPRESS,CPRESS
+  120 FORMAT(9H IPRESS =I2,2X,8HAPRESS =E10.3,2X,8HBPRESS =E10.3,2X,8HCP
+     1RESS =E10.3/)
+      WRITE(6,121) IPRESU,APRESU,BPRESU,CPRESU
+  121 FORMAT(9H IPRESU =I2,2X,8HAPRESU =E10.3,2X,8HBPRESU =E10.3,2X,8HCP
+     1RESU =E10.3/)
+  411 IBODS=IBOD
+      ABODS=ABOD
+      IPRS=IPRESS
+      APRS=APRESS
+      JBODS=JBOD
+      EBODS=EBOD
+      IPUS=IPRESU
+      APUS=APRESU
+      IF(ISHOCK.EQ.0) GO TO 5
+      READ(IIN,100)(IS(I),I=1,IDD)
+      READ(IIN,101)(BETB(I),I=1,IDD)
+      WRITE(6,128)(I,IS(I),I=1,IDD)
+  128 FORMAT(4(4H IS(,I2,2H)=I3,2X)/)
+      WRITE(6,129)(I,BETB(I),I=1,IDD)
+  129 FORMAT(4(6H BETB(,I2,2H)=E10.3,2X)/)
+    5 CONTINUE
+      DO 10 I=1,NPTS
+      READ(IIN,101) Y(I),P(I),TH(I),EM(I),T(I)
+      READ(IIN,404) (ALP(J,I),J=1,NSP)
+   10 CONTINUE
+      READ(5,101)(MASFRAC(I),I=1,7)
+      WRITE(6,1101)(I,MASFRAC(I),I=1,7)
+ 1101 FORMAT(9H MASFRAC(,I2,2H)=E15.7,2X)
+      IF(ITYP.EQ.1)GO TO 4201
+      IBOD=0
+      JBOD=0
+      IF(ITYP.EQ.3) JBOD=JBODS
+      IF(ITYP.EQ.4) IBOD=IBODS
+ 4201 RHEAT=1.
+      RH2O=1.
+      RCO2=0.
+ 4204 WTMOLE(4)=WFUEL
+      RE=RE*RTH
+      IERR=0
+      DO 13 I=1,7
+      IF(MASFRAC(I).EQ.0.0) GO TO 13
+      CALL COEFF(I,TIN,AZ,BZ,CZ,DZ,HZ,FZ,GZ)
+      CPINJ(I)=(AZ+BZ*TIN+CZ*TIN**2+DZ*TIN**3+HZ*TIN**4)*RO/WTMOLE(I)
+   13 CONTINUE
+      CPIN=0.
+      DO 1313 I=1,7
+      CPIN=CPIN+MASFRAC(I)*CPINJ(I)
+ 1313 CONTINUE
+      RINF=RO/WINF
+      GAMINF=1./(1.-RINF/CPIN)
+      RINFF=ROO/WINF
+      UIN=EMINF*SQRT(GAMINF*RINFF*TIN)
+      RF=1./RINFF
+      RHOINF=PRES*RF/TIN
+      VISINF=RHOINF*UIN*RTH/RE
+      GAR=GAMINF*RINF
+      GEW=GAMINF*EMINF**2/WINF
+      EIN= (GAMINF-1.) * EMINF**2
+      EMS=1./EMINF**2
+      PIN=1./GAMINF*EMS
+      WRITE(6,6898)
+ 6898 FORMAT(////48X,31HP R O G R A M   V I S - C H A R //60X,7HW I T H
+     1//42X,43HE M B E D D E D   S U B S O N I C   F L O W//53X,21HS H O
+     1 C K   W A V E S//33X,63HA N D   F I N I T E   R A T E   H 2 - A I
+     1 R   C H E M I S T R Y)
+      IF(XJ.EQ.0.) WRITE(6,5610)
+      IF(XJ.NE.0.) WRITE(6,5611)
+      IF(JCHEM.EQ.0) WRITE(6,5612)
+      IF(JCHEM.EQ.1) WRITE(6,5613)
+ 5610 FORMAT(///10X,31HTYPE OF FLOW IS TWO DIMENSIONAL)
+ 5611 FORMAT(///10X,28HTYPE OF FLOW IS AXISYMMETRIC)
+ 5612 FORMAT(10X,19HCHEMISTRY IS FROZEN)
+ 5613 FORMAT(10X,24HCHEMISTRY IS FINITE RATE)
+      WRITE(6,5600) RTH
+ 5600 FORMAT(
+     110X,28HJET OR NOZZLE RADIUS (RTH) = E13.5,4H FT.)
+      WRITE(6,5601) EMINF,UIN,TIN,PRES,RHOINF,GAMINF,WINF,RE,PR,XLE
+ 5601 FORMAT(///20X,20HREFERENCE CONDITIONS/20X,20H--------------------/
+     110X,18HMACH NO. (EMINF) = E13.5/10X,16HVELOCITY (UIN) = E13.5,
+     1 7H FT/SEC/10X,19HTEMPERATURE (TIN) =E13.5,10H DEGREES K/10X,17HPR
+     1ESSURE (PRES) =E13.5,9 H LB/FT**2/10X,18HDENSITY (RHOINF) =E13.5,
+     112H SLUGS/FT**3/10X,37
+     1HFROZEN SPECIFIC HEAT RATIO (GAMINF) =E13.5/10X,25HMOLECULAR WEIGH
+     1T (WINF) =E13.5/10X,22HREYNOLDS NUMBER (RE) =E13.5/10X,21HPRANDTL
+     1NUMBER (PR) =E13.5/10X,20HLEWIS NUMBER (XLE) =E13.5)
+      WRITE(6,5602)
+ 5602 FORMAT(///20X,15HOUTPUT HEADINGS/20X,15H---------------/
+     110X, 9HX - X/RTH/10X, 9HY - Y/RTH/10X,16HQ - VELOCITY/UIN/10X,
+     119HT - TEMPERATURE/TIN/10X,17HP - PRESSURE/PRES/10X,30HTH - FLOW D
+     1EFLECTION (RADIANS) /10X,16HEM - MACH NUMBER/10X,20HRHO - DENSITY/
+     1RHOINF/10X,19HGAM - SPECIFIC HEAT
+     1     /10X,33HXMASS - NON-DIMENSIONAL MASS FLOW
+     1                        /10X,23HPHI - EQUIVALENCE RATIO/10X,
+     120HW - MOLECULAR WEIGHT//10X14HMASS FRACTIONS/15X10HALP(1) - H/15X
+     110HALP(2) - O/15X,12HALP(3) - H2O/15X,11HALP(4) - H2/15X,11HALP(5)
+     1 - O2/15X,11HALP(6) - OH/15X,11HALP(7) - N2)
+  413 DO 1774 I=1,NPTS
+      X(I)=XBP
+      P(I)=P(I)*PIN
+      ALP(4,I)=RHEAT*ALP(4,I)
+      ALP(7,I)=(1.-RHEAT)*ALP(4,I)+ALP(7,I)
+      DO 788 J=1,NSP
+  788 IF(ALP(J,I).LT.1.1E-10) ALP(J,I)=1.1E-10
+      ALP(7,I)=1.-(ALP(1,I)+ALP(2,I)+ALP(3,I)+ALP(4,I)+ALP(5,I)+ALP(6,I)
+     1)
+ 1774 CONTINUE
+      DO 8883 I=1,NPTS
+      CALL THERMO(T(I),H1,CP1)
+      CPX(I)=0.0
+      W(I)=0.0
+      DO1776 J=1, NSP
+      CP(J,I)=CP1(J)
+      H(J,I)=H1(J)
+      CPX(I)=CPX(I)+ALP(J,I)*CP(J,I)
+ 1776 W(I)=W(I)+ALP(J,I)/WTMOLE(J)
+      W(I)=1./W(I)
+      RHO(I)=GEW*W(I)*P(I)/T(I)
+      R(I)=RO/W(I)
+      GAM(I)=CPX(I)/(CPX(I)-R(I)/CPIN)
+      OM=1./EMINF
+      OR=1./R(I)
+      Q(I)=EM(I)*OM/SQRT(GAR/GAM(I)*OR/T(I))
+      IF(EM(I).GT.1.)
+     1XMU(I)=ATAN(1./SQRT(EM(I)**2-1.))
+ 8883 CONTINUE
+      IF(INTACT.EQ.1) CALL COWL
+      IF(INTACT.NE.1) GO TO 8401
+      DO 3 K3=5,NPTS
+      K3K=NPTS+5-K3
+      J3=K3K+1
+      CALL SWITCH(J3,K3K)
+    3 CONTINUE
+      NPTS=NPTS+1
+      IS(3)=IS(3)+1
+      IS(4)=5
+      ZMANG=ASIN(1./EM(5))
+      BETB(4)=-(ZMANG-TH(5))
+ 8401 XJ1=1.+XJ
+      XMASS(1)=0.
+      DO 1785 I=1,NPTS
+      IF(I.EQ.1) GO TO 1785
+      XJ1=1.+XJ
+      YFUN=(Y(I)*(1.-XJ+Y(I)*XJ)- Y(I-1)*(1.-XJ+Y(I-1)*XJ))/XJ1
+      RQAV=(RHO(I)*Q(I)*COS(TH(I))+ RHO(I-1)*Q(I-1)*COS(TH(I-1)))/2.
+      XMASS(I)=XMASS(I-1)+RQAV*YFUN
+ 1785 CONTINUE
+      DELY=(YBP-Y(1))/FLOAT(NPTS-1)
+      RETURN
+      END
+      FUNCTION F3(TP1,DTC,T1,TC,TH1,THC,DA,W1,WC)
+      COMMON/CK/WTMOLE(7)
+      COMMON/GK/DELX
+      COMMON/HL/ALPHA,BETA
+      DIMENSION DA(7)
+      NSP=7
+      A=ALPHA
+      B=BETA
+      TERM1=DTC/((A-B)*TP1+B*(T1+TC))
+      TERM2=0.
+      DO 10 J=1,NSP
+      TERM2=TERM2+DA(J)/WTMOLE(J)
+   10 CONTINUE
+      TERM5=A*W1+B*WC
+      TERM2=TERM2*TERM5
+      TERM3=A*COS(TH1)+B*COS(THC)
+      F3=-(TERM1+TERM2)*TERM3/DELX
+      RETURN
+      END
+      SUBROUTINE POCUS(TI,PRESSI,RHOI,ALPHI,DT,TN)
+      COMMON/PO/ALPHN(7),IFUEL,PRES
+      DIMENSION ALPHI(7),AD(10,10),CI(10),Y(7),YN(7),ALPHA(7)
+      DIMENSION T0(7),T1(7),B(7),C(7),D(7),E(7),G(7),Z(7)
+      T0(1)=6.0
+      T0(2)=6.0
+      T0(3)=0.5
+      T0(4)=0.5
+      T0(5)=0.5
+      T0(6)=0.5
+      T0(7)=0.5
+      T1(1)=6.0
+      T1(2)=6.0
+      T1(3)=3.0259
+      T1(4)=4.0960
+      T1(5)=2.9282
+      T1(6)=3.6392
+      T1(7)=2.4800
+      B(1)=39.7055
+      B(2)=2.5674
+      B(3)=3.5961
+      B(4)=27.4123
+      B(5)=1.7771
+      B(6)=3.3496
+      B(7)=2.0043
+      C(1)=0.0
+      C(2)=0.0
+      C(3)=.5486
+      C(4)=1.5999
+      C(5)=.1595
+      C(6)=.1619
+      C(7)=.1531
+      D(1)=0.0
+      D(2)=0.0
+      D(3)=-31.7850
+      D(4)=-34.5288
+      D(5)=-1.8504
+      D(6)=1.3139
+      D(7)=-1.4976
+      E(1)=0.0
+      E(2)=0.0
+      E(3)=6.3657
+      E(4)=38.9184
+      E(5)=2.5521
+      E(6)=4.3679
+      E(7)=2.6093
+      G(1)=404.5564
+      G(2)=29.1774
+      G(3)=-26.9024
+      G(4)=-8.088
+      G(5)=-.522
+      G(6)=3.4213
+      G(7)=-.5961
+      Z(1)=.063
+      Z(2)=1.0
+      Z(3)=1.13
+      Z(4)=.126
+      Z(5)=2.0
+      Z(6)=1.063
+      Z(7)=1.75
+      PSSSS=PRESSI
+      KASE=IFUEL
+      IF(KASE.EQ.2) PRESSI=PRESSI*.35
+      IF(KASE.EQ.3) PRESSI=.2*PRESSI
+      RHOI=RHOI*PRESSI/PSSSS
+      KTEST=0
+      EL0=1.0
+      DLTI=0.0
+      EPS=.001
+      TIME0=1.38725E-5*EL0
+      DT=DT/TIME0
+      P0=PRESSI*1.01325E6
+      RHO0=P0*1.924465E-10
+      RHOI=RHOI*.5154/RHO0
+      PRESSI=1.0
+      T=TI
+      HI=0.0
+      DO 65 I=1,7
+      IF(T-T1(I)) 62,61,61
+   61 HI=(D(I)+E(I)*T)*ALPHI(I)+HI
+      GO TO 65
+   62 IF(T-T0(I)) 63,63,64
+   63 HI=(G(I)+B(I)*T)*ALPHI(I)+HI
+      GO TO 65
+   64 HI=(G(I)+B(I)*T+C(I)*(T-T0(I))**2)*ALPHI(I)+HI
+   65 CONTINUE
+   92 CONTINUE
+      JJJ = 25
+      JJ=0
+      T = TI
+      TSAVE=T
+      KOUNT=0
+      RHO=RHOI
+      DELTA=DLTI
+      GAMMA=DT*DELTA+1.
+      PRESS=PRESSI
+      H=HI
+      SUMY=0.
+      DO 11 I=1,7
+      ALPHA(I)=ALPHI(I)
+      Y(I)=RHO*ALPHA(I)/Z(I)
+      YN(I)=0.0
+   11 SUMY=SUMY+Y(I)
+      DUM1=8.67031E-7*RHO0*EL0
+      DUM2=DUM1*RHO0/16.
+      IF(ALPHA(3).GT.1.E-10)GO TO 6
+      IF(ALPHA(6).GT.1.E-10) GO TO 6
+      IF(ALPHA(5).GT.1.E-10) GO TO 30
+      IF(ALPHA(2).GT.1.E-10) GO TO 30
+      F5=(1.85E17*EXP (-25./T))*(DUM1*EXP (-29./T)/T)
+      B5=1.E16*DUM1*RHO0/16.
+      B11=-(F5*.5+2.*B5*Y(1))*SUMY
+      CC1=B5*Y(1)**2*SUMY
+      CC=GAMMA*(Y(2)+Y(1)*.5)
+      C1=F5*CC*SUMY+CC1
+      A11=DELTA+B11
+      DUM=C1/A11
+      YN(1)=-DUM+(Y(1)+DUM)*EXP (A11*DT)
+      IF(YN(1).LT.0.0) YN(1)=0.0
+      YN(4)=CC-YN(1)*.5
+      GO TO 99
+   30 IF(ALPHA(4).GT.1.E-10) GO TO 6
+      IF(ALPHA(1).GT.1.E-10) GO TO 6
+      F8=(5.8E16*EXP (-30.3/T))*(DUM1*EXP (-30.3/T)/T)
+      B8=6.E14*DUM1*RHO0/16.
+      B11=-(F8*.5+2.*B8*Y(1))*SUMY
+      CC1=B8*Y(1)*Y(1)*SUMY
+      BB=GAMMA*(Y(2)+Y(1)*.5)
+      C1=F8*BB*SUMY+CC1
+      A11=DELTA+B11
+      DUM=C1/A11
+      YN(1)=-DUM+(Y(1)+DUM)*EXP (A11*DT)
+      YN(2)=BB-YN(1)*.5
+      IF(YN(2).LT.0.0) YN(2)=0.0
+      YN(5)=BB-YN(2)*.5
+      GO TO 99
+    6 CONTINUE
+      KOUNT=1
+      IF(KASE.EQ.2) T=1./(1.1087/T-.09497)
+      IF(KASE.EQ.3) T=1./(.786/T+.2381)
+      F1=3.E14*EXP (-8.81/T)*DUM1
+      F2=3.E14*EXP (-4.03/T)*DUM1
+      F3=3.E14*EXP (-3.02/T)*DUM1
+      F4=F3
+      B1=2.48E13*EXP (-.66/T)*DUM1
+      B2=1.3E14*EXP (-2.49/T)*DUM1
+      B3=1.33E15*EXP (-10.95/T)*DUM1
+      B4=3.12E15*EXP (-12.51/T)*DUM1
+       T=TSAVE
+      TSAVE=T
+      IF(KASE.EQ.2) T=1.241+.05524*T
+      F6=9.66E18*EXP (-62.2/T)/T*DUM1
+      F7=8.00E16*EXP (-52.5/T)/T*DUM1
+      B6=1.E17*DUM2
+      B7=1.E16*DUM2
+      T=TSAVE
+      F5=1.85E17*EXP (-54./T)/T*DUM1
+      F8=5.80E16*EXP (-60.6/T)/T*DUM1
+      B5=1.E16*DUM2
+      B8=6.E14*DUM2
+      DUM1=(Y(2)+Y(6)+Y(3))*.5
+      DUM2=(Y(1)+Y(6))*.5+Y(3)
+      DUM3=Y(1)*.5+Y(6)+Y(3)
+      DUM4=F1*Y(1)*DUM1+B1*Y(2)*Y(6)
+      DUM5=F2*Y(2)*DUM2+B2*Y(1)*Y(6)
+      DUM6=F3*Y(6)*DUM2+B3*Y(1)*Y(3)
+      DUM7=F4*Y(6)*Y(6)-B4*Y(2)*Y(3)
+      DUM8=(F2*.5-B7*SUMY)*Y(2)+B2*Y(6)
+      DUM9=(F1*.5-B7*SUMY)*Y(1)+B1*Y(6)
+      DUM10=(F2*.5-B1)*Y(2)+(B2-F1*.5)*Y(1)
+      DUM11=(F1*.5-B3)*Y(1)-F3*Y(6)
+      DUM12=F1*DUM1-B3*Y(3)-F3*.5*Y(6)
+      DUM13=(F8*SUMY+F1*Y(1))*.5
+      DUM14=B6*Y(1)*SUMY-F3*DUM3
+      DUM15=2.*F4*Y(6)
+      DUM16=SUMY*Y(1)
+      DUM17=B6*SUMY*Y(6)
+      B12=DUM9-F2*DUM2
+      B21=DUM8-F1*DUM1
+      B19=(F6-F5)*SUMY-F2*Y(2)+DUM11
+      B29=(F2-B4)*Y(2)-DUM13
+      B91=DUM12+B21-DUM8+DUM17
+      B27=SUMY*(F7-F8/2.)+DUM10+DUM15
+      B79=F6*SUMY-DUM11+(2.*B4-F2)*Y(2)
+      B77=-(DUM14+SUMY*F7+(F1*.5+B2)*Y(1)+(B1+F2*.5)*Y(2)+2.*DUM15)
+      B92=-B4*Y(3)
+      B22=-SUMY*(2.*B8*Y(2)+B7*Y(1))-B1*Y(6)+F2*DUM2-DUM13+B92
+      B11=DUM12-F5*SUMY*.5-(F2*.5+B7*SUMY)*Y(2)-B2*Y(6)-DUM17-2.*B5*DUM1
+     16
+      B97=DUM14+DUM15
+      B99=DUM11-(F1*.5*Y(1)+F6*SUMY+B4*Y(2))
+      B71=-(DUM12+DUM8+DUM17)
+      B72=2.*B4*Y(3)-DUM9-F2*DUM2
+      B17=SUMY*(F7-F5/2.)-DUM10-DUM14-2.*F3*DUM3
+      CC1=DUM5-DUM4+DUM6+(B6*Y(6)+B5*Y(1)+B7*Y(2))*DUM16
+      CC2=DUM4-DUM5-DUM7+(B7*Y(1)+B8*Y(2))*SUMY*Y(2)
+      CC7=DUM4+DUM5-DUM6+2.*DUM7+(B6*Y(6)-B7*Y(2))*DUM16
+      CC9=DUM6-DUM7-B6*Y(6)*DUM16
+   14 BB=GAMMA*(Y(5)+(Y(2)+Y(6)+Y(3))*.5)
+      CC=GAMMA*(Y(4)+Y(3)+(Y(1)+Y(6))*.5)
+      AD(1,1)=B11+DELTA-F1*BB
+      AD(1,2)=B12+F2*CC
+      AD(1,3)=B17+F3*CC
+      AD(1,4)=B19
+      AD(2,1)=B21+F1*BB
+      AD(2,2)=B22+DELTA-F2*CC
+      AD(2,3)=B27
+      AD(2,4)=B29
+      AD(3,1)=B71+F1*BB
+      AD(3,2)=B72+F2*CC
+      AD(3,3)=B77+DELTA-F3*CC
+      AD(3,4)=B79
+      AD(4,1)=B91
+      AD(4,2)=B92
+      AD(4,3)=B97+F3*CC
+      AD(4,4)=B99+DELTA
+      CI(1)=CC1+F5*SUMY*CC
+      CI(2)=CC2+F8*SUMY*BB
+      CI(3)=CC7
+      CI(4)=CC9
+      SCALE=0.0
+      DO 50 I=1,4
+      DO 50 J=1,4
+   50 SCALE=AMAX1(SCALE,ABS(AD(I,J)))
+      DO 51 I=1,4
+      DO 52 J=1,4
+   52 AD(I,J)=AD(I,J)/SCALE
+   51 CI(I)=CI(I)/SCALE
+      CALL HERMAN(YN,DT,AD,Y,CI,BB,CC,SCALE)
+   99 DO 90 J=1,6
+      IF(YN(J).GE.0.0) GO TO 90
+      DT=DT/10.
+      KTEST=KTEST+1
+      IF(KTEST-3) 92,27,27
+   90 CONTINUE
+      DUM=0.0
+      DO 1 J=1,6
+    1 DUM=DUM+YN(J)*Z(J)
+      RHON=DUM/(1.-ALPHA(7))
+      YN(7)=RHON*ALPHA(7)/Z(7)
+      SUMYN=0.0
+      DO 2 J=1,7
+    2 SUMYN=SUMYN+YN(J)
+      TT=PRESS/SUMYN
+      DO 4 J=1,6
+    4 ALPHA(J)=YN(J)*Z(J)/RHON
+      AH=0.0
+      BH=0.0
+      CH=0.0
+      DO 505 I=1,7
+      IF(TT-T1(I)) 502,501,501
+  501 BH=BH-E(I)*ALPHA(I)*.5
+      CH=CH+D(I)*ALPHA(I)
+      GO TO 505
+  502 IF(TT-T0(I)) 503,503,504
+  503 BH=BH-B(I)*ALPHA(I)*.5
+      CH=CH+G(I)*ALPHA(I)
+      GO TO 505
+  504 AH=AH+C(I)*ALPHA(I)
+      BH=BH+ALPHA(I)*(C(I)*T0(I)-B(I)*.5)
+      CH=CH+ALPHA(I)*(G(I)+C(I)*T0(I)**2)
+  505 CONTINUE
+      CH=CH-H
+      IF(AH) 507,506,507
+  506 T=CH/BH/2.
+      GO TO 508
+  507 T=(BH+SQRT (BH*BH-AH*CH))/AH
+  508 CONTINUE
+      IF(JJ)31,31,22
+   31 ERR1=TT-T
+      IF(ABS(TT/T-1.0).LE.EPS) GO TO 27
+      GAM1=GAMMA
+      GAMMA=.98*GAMMA
+  130 GAM2=GAMMA
+      DELTA=(GAMMA-1.)/DT
+      JJ=JJ+1
+      IF (JJ-JJJ) 84,84,12
+   84 IF (KOUNT.EQ.1) GO TO 14
+      T=TSAVE
+      GO TO 6
+   22 ERR2=TT-T
+      IF(ABS(TT/T-1.0).LE.EPS) GO TO 27
+   25 GAMMA=GAM1-ERR1*(GAM2-GAM1)/(ERR2-ERR1)
+      GAM1=GAM2
+      ERR1=ERR2
+      GO TO 130
+   12 WRITE(6,13)
+   13 FORMAT(1H0,23H JJ IS GREATER THAN JJJ)
+   27 TN=T
+      DO 28 J=1,7
+   28 ALPHN(J)=ALPHA(J)
+      DT=DT*TIME0
+      PRESSI=PSSSS
+      RETURN
+      END

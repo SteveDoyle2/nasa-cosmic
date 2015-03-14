@@ -1,0 +1,40 @@
+ TEXVIEW- PRODUCTION OF VIEWGRAPHS WITH TEX
+
+( Cal Tech/Jet Propulsion Lab. )
+
+     TEXVIEW is a package of TEX macros that facilitate viewgraph produc-
+tion. TEXVIEW is based on TEX, a public domain typesetting language devel-
+oped by Dr. Donald Knuth of Stanford University. The TEXVIEW macros are
+grouped into the following categories: format control; indentation con-
+trol; font control; spacing control; graphical control; and page layout.
+
+     TEXVIEW is written in TEX. Optional command procedures and command
+definition files for producing a high speed version when run under VAX/VMS
+are included. Although implemented on a VAX under VMS 4.X, TEXVIEW is ma-
+chine and output device independent. This program was developed in 1987 and
+updated in 1989.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: TEX
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 1,692 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX BACKUP Format Magnetic Tape
+
+PROGRAM NUMBER: NPO-17299
+
+DOMESTIC - DOCUMENTATION PRICE: $13.00    PROGRAM PRICE: $600.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $26.00   PROGRAM PRICE: $1200.00
+
+
+
+                                        1
+

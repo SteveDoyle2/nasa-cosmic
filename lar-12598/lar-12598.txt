@@ -1,0 +1,78 @@
+ VISCOUS CHARACTERICTICS ANALYSIS
+
+( NASA Langley Research Center )
+
+     Current investigations of the hydrogen-fueled supersonic combus-
+tion ramjet engine have delineated several technological problem areas.
+One area, the analysis of the injection, turbulent mixing, and combusiton
+of hydrogen, requires the accurate calculation of the supersonic combus-
+tion flow fields. This calculation has proven difficult because of an in-
+teresting phenomena which makes possible the transition from supersonic
+to subsonic flow in the combustion field, due to the temperature transi-
+tions which occur in the flow field. This computer program was developed to
+use viscous characteristics theory to analyze supersonic combustion flow
+fields with imbedded subsonic regions. Intended to be used as a practical
+design tool for two-dimensional and axisymmetric supersonic combustor de-
+velopment, this program has proven useful in the analysis of such problems
+as determining the flow field of a single underexpanded hydrogen jet, the
+internal flow of a gas sampling probe, the effects of fuel-injector strut
+shape, and the effects of changes in combustor configuration.
+
+     Both combustion and diffusive effects can significantly alter the wave
+pattern in a supersonic field and generate significant pressure gradients
+in both the axial and radial directions. The induced pressure, in turn,
+substantially influences the ignition delay and reaction times as well as
+the velocity distribution. To accurately analyze the flow fields, the ef-
+fects of finite rate chemistry, mixing, and wave propagation must be prop-
+erly linked to one another. The viscous characteristics theory has been
+used in the past to describe flows that are purely supersonic; however, the
+interacting pressure effects in the combustor often allow for the devel-
+opment of shock waves and imbedded subsonic regions. Numerical investi-
+gation of these transonic situations has required the development of a new
+viscous characteristics procedure which is valid within the subsonic re-
+gion and can be coupled with the standard viscous characteristics proce-
+dure in the supersonic region. The basic governing equations used are the
+'viscous-inviscid' equations, similar to those employed in higher-order
+boundary layer analyses, with finite rate chemistry terms included. In ad-
+dition, the Rankine-Hugoniot and Prandtl-Meyer relations are used to com-
+pute shock and expansion conditions. The program can handle up to 20 si-
+multaneous shock waves. Chemistry terms are computed for a 7-species 8-
+mechanism hydrogen-air reaction scheme. The user input consists of a phys-
+ical description of the combustor and flow determination parameters. Out-
+put includes detail flow parameter values at selected points within the
+flow field.
+
+     This computer program is written in FORTRAN IV for batch execution and
+has been implemented on a CDC CYBER 175 with a central memory requirement
+of approximately 114K (octal) of 60 bit words. The program was developed in
+1978.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC CYBER 70 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 5,170 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-12598
+
+DOMESTIC - DOCUMENTATION PRICE: $47.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $94.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

@@ -1,0 +1,35 @@
+
+edit.hlp
+dirkey.hlp
+cngdrive.hlp
+down.hlp
+
+
+
+
+
+The UPLOAD/DOWNLOAD to/from the host menu waits for the name of the file which
+you wish to upload.  If this is desired, type the 8 letter or less filename
+followed by a return.  If downloading is desired press F5 Download.  In either
+case the program will turn control over to the communication program.  Follow
+the prompts given to execute the communication and when the communication
+program is finished, it will return control to the chart program with the Main
+Menu being displayed.  If uploading or downloading is not desired from the menu
+press F10 exit to return to the Main Menu without any communication.
+
+To obtain help for any of the following subjects,  press the function key next
+to the desired subject.
+
+ 
+        F2  Edit
+        F3  Directory
+        F4  Change Drive
+        F5  Download
+ 
+ 
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last help screen or F10 to leave the help mode
+

@@ -1,0 +1,106 @@
+/*****************************************************************************/
+/*                                                                           */
+/*  Set_false                                                                */
+/*                                                                           */
+/*  This function sets one condition to false.  No assumption is made about  */
+/*  the state of the condition before the function is called.                */
+/*                                                                           */
+/*  Input:  cond - pointer to a condition.                                   */
+/*  Output: none.                                                            */
+/*                                                                           */
+/*  Method: If the last value was true                                       */
+/*              set the value to false.                                      */
+/*              adjust the false counters, etc. of all rules which depend    */
+/*                      on the condition.                                    */
+/*          If the last value was undefined                                  */
+/*              set the value to false.                                      */
+/*              adjust the undef and false counters, etc. of all rules which */
+/*                      depend on the condition.                             */
+/*                                                                           */
+/*  Programmer: G R Goodrum, MDTSCO, June 1984                               */
+/*                                                                           */
+/*****************************************************************************/
+
+#include "structures.inc"
+
+set_false ( cond )
+struct cond_info *cond;
+{
+    struct rule_info **r_list;
+    struct rule_info *set_rule;
+#ifdef TRACE
+    extern struct rule_info rule[];
+    extern struct cond_info condition[];
+
+    if  ( cond -> trace )
+        trace ( cond, FALSE );
+#endif
+    cond -> mark  =  FALSE;
+
+    if  ( cond -> last_value > 0 )      /* true */
+    {
+        count ( 9, 0 );                                         /* debug */
+        cond -> last_value  =  FALSE;
+
+        r_list  =  cond -> rule_list;
+        while  ( ( set_rule = *r_list++ ) != NULL )
+        {
+            count ( 9, 3 );                                     /* debug */
+            if  ( ++( set_rule -> false_count ) == 1 )
+            {
+                count ( 9, 5 );                                 /* debug */
+                set_rule -> only_false  =  cond;
+                take_from_queue ( set_rule );
+                reqr_none ( set_rule );
+#ifdef TRACE
+                if  ( set_rule -> trace )
+                {
+                    printf ( "\nTake rule %d from conflict set\n",
+                        set_rule - &rule[0] );
+                    printf ( "    Because condition %d is false\n",
+                        cond-&condition[0] );
+                }
+#endif
+            }
+
+            else if  ( set_rule -> false_count == 2 )
+            {                                                   /* debug */
+                count ( 9, 6 );                                 /* debug */
+                set_rule -> only_false -> is_val_required  -=  1;
+            }                                                   /* debug */
+            else count ( 9, 7 );                                /* debug */
+            check_rule ( set_rule );                            /* debug */
+        }
+        count ( 9, 4 );                                         /* debug */
+    }
+
+    else if  ( cond -> last_value < 0 )         /* undefined */
+    {
+        count ( 9, 1 );                                         /* debug */
+        cond -> last_value  =  FALSE;
+
+        r_list  =  cond -> rule_list;
+        while  ( ( set_rule = *r_list++ ) != NULL )
+        {
+            count ( 9, 8 );                                     /* debug */
+            set_rule -> undef_count  -=  1;
+            if  ( ++( set_rule -> false_count ) == 2 )
+            {                                                   /* debug */
+                count ( 9, 10 );                                /* debug */
+                set_rule -> only_false -> is_val_required  -=  1;
+            }                                                   /* debug */
+            else  if  ( set_rule -> false_count == 1 )
+            {
+                count ( 9, 11 );                                /* debug */
+                set_rule -> only_false  =  cond;
+                reqr_none ( set_rule );
+            }
+            else count ( 9, 12 );                               /* debug */
+            check_rule ( set_rule );                            /* debug */
+        }
+        count ( 9, 9 );                                         /* debug */
+    }
+    else count ( 9, 2 );                                        /* debug */
+
+    check_cond ( cond );                                        /* debug */
+}

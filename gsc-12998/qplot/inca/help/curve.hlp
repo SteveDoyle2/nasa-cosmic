@@ -1,0 +1,116 @@
+1 CURVE     
+
+     Curves are used in INCA to store the results of analytical 
+calculations, including the Root Locus, and Frequency and Time 
+Response.  The curve command allows the user to examine, rename, 
+delete, write, and load curves.  
+
+     The curves are given default names by the analysis module
+which created them.  For example, the result of a frequency response 
+analysis is placed in the curve "FR".  This curve is plotted 
+automatically immediately after the analysis is complete.  However, if 
+the user wants to plot this curve again, he may type just "PLOT FR"
+instead of repeating the analysis.  
+
+     Format:     CURVE  modifier  [parameters]
+
+2 AUDIT             
+
+     This modifier will place in the audit file a list of various
+parameters for the currently defined curves.  This includes the name,
+label, and type. 
+
+     Format:     CURVE  AUDIT
+
+2 DELETE            
+
+     This modifier will delete one or all of the currently defined 
+curves.
+
+     Format:     CURVE  DELETE  [ALL]  [curve-name]
+
+2 LOAD              
+
+     This modifier is used to read a curve disc file.  Items may be
+placed in a disc file by using the CURVE SAVE command.  The user will
+be asked to select a filename. The extension must be one of the
+following: 
+
+                  .FR      Frequency response result.
+                  .RL      Root locus result.
+                  .TR      Time response result.
+
+The curve file must be in ASCII format, and the order of certain items 
+is critical.
+
+     Format:     CURVE  LOAD  file-name
+
+2 RENAME            
+
+     The RENAME modifier is used to rename a curve.  This command is 
+used to preserve previously generated curves when a new analysis is 
+being done, since the new curve will have the standard name (FR, RL or 
+TR) as the old curve.
+
+     Format:     CURVE  RENAME  old-curve-name  new-curve-name
+
+2 SAVE              
+
+     This modifier will cause a curve to be saved in a curve disc
+file. The user will be asked to select a curve, and then to select a
+filename.  No extension is allowed, as INCA will add the extension
+depending upon the type of curve: 
+
+                  .FR      Frequency response result.
+                  .RL      Root locus result.
+                  .TR      Time response result.
+
+The curve data is then written to this file in ASCII format.
+
+     Format:     CURVE  SAVE  curve-name  file-name
+
+2 TABLE             
+
+     This modifier is used to generate a table of the 
+results contained in a particular curve.  These are made in an 
+easily read format, suitable for placing in a report or kept as a 
+written record.  The destination is one of the following:
+
+     Format:     CURVE  TABLE  destination  curve-name  [file-name]
+
+3 AUDIT             
+
+     The table will be written to the audit file.
+
+     Format:     CURVE  TABLE  AUDIT  curve-name
+
+3 FILE              
+
+     The table will be written to a file.  After selecting a curve,
+the user must then select a file name. 
+
+     Format:     CURVE  FILE  file-name
+
+3 VIEW              
+
+     The table will be displayed on the terminal screen.  Use CTRL-C
+or CTRL-O to abort display. 
+
+     Format:     CURVE  TABLE VIEW  curve-name
+
+2 VIEW              
+
+     This modifier will display a list of various parameters for the
+currently defined curves.  This includes the name, label, and type. 
+
+     Format:     CURVE  VIEW
+
+2 WORMFORMAT        
+
+     This modifier is used to generate a dat base of the results
+for use by the WORM program.  It only works (currently) for time
+response curves.  The WORM format is R8, and the number of locations 
+is equal to one plus the number of gains used.
+
+     Format:     CURVE  WORMFORMAT  file-name
+

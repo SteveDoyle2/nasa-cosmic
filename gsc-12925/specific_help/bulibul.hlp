@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+The Insert Bullet key in the Text Mode of the bullet chart is used to insert a
+bullet.  To insert a bullet, place the cursor on the field which is to be above
+the new bullet.  Press F3 and a blank line will be created on which a new
+bullet can be entered.  To insert the first bullet place the cursor on the
+organization field before pressing F3.
+
+When entering data in the bullet chart for the first time, inserting will
+automatically be done when pressing the carriage return.  If the new field is
+not desired, press the return key before entering any characters.
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

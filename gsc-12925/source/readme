@@ -1,0 +1,42 @@
+This is a suggested way of compiling these charts :
+
+        1. Copy *.int files from disk # 1 to a disk containing the
+           Pascal compiler.
+
+        2. Compile *.asm files on disk #1 with a Macro Assembler.
+
+        3. Copy *.imp from disk #1 to a blank formatted disk.
+
+        4. Compile *.imp on this disk by placing the Pascal disk in
+           A: and this disk in B: with the default set to drive B:.
+
+        5. Copy *.obj from all disks to a disk containing the Linker
+           and the Pascal library.
+
+        The remaining steps must be done for each chart.
+
+        6. Copy all files beginning with the same first three letters
+           from disk #2 or 3 to a blank formatted disk.
+
+        7. Compile *.imp and *.pas on this disk using the same method as 4.
+
+        8. Copy *.obj from this disk to another blank formatted disk.
+           (This is due to a shortage of space.)
+
+        9. When linking from this disk, place Linker in A: and the disk
+           from 8. in B:. All obj files must be included starting with
+           the asm files ( except for graphpak, which should not be
+           included for any chart on disk #3 or for NSQ on disk #2).
+           The following is an example of a linker batch file for the
+           milestone chart :
+
+                a:dsasm a:vbpas a:vbasm a:dspas a:sfpas a:sfasm+
+                a:fonts a:font1 a:font2 a:font3+
+                a:vdmpas a:vdmgen+
+                mls mlsaltd mlsexec+
+                a:getparam a:option a:utility a:dialog+
+                a:display a:execute a:ldb a:alterl, mls, con;
+
+       10. When linking is done the execution file has been created,
+           but to run it, the CTL file must be on the default disk.
+

@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+The Insert Mid-level key in the Text Mode of the organization chart is used to
+insert a mid-level.  To insert a mid-level, place the cursor on the field which
+is to be next to the new mid-level.  Press F3 and a blank line will be created
+on which the new mid-level can be entered.  To insert the first mid-level place
+the cursor on the last staff, or, if there are no staff, on the last deputy,
+or, if neither exist, on the top-level before entering F3.  To insert any other
+mid-level, the cursor can be on any of the low-levels of the previous mid-level
+or on the mid-level itself.
+
+When entering data in the organization chart for the first time, inserting will
+automatically be done when pressing the carriage return.  If the new field is
+not desired, press the return key before entering any characters.
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

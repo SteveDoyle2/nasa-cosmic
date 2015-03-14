@@ -1,0 +1,35 @@
+delanno.hlp
+revanno.hlp
+insanno.hlp
+moveanno.hlp
+window.hlp
+
+
+
+
+
+Annotation Mode allows entering of text anywhere on the chart.  Annotations are
+not allowed on the Bullet chart due to the paging done.  The crosshair cursor
+points to the current location on the chart.  Move this cursor to the desired
+location and press F3 to insert an annotation.  The annotation will be echoed
+at the lower part of the screen while being typed and will be copied to the
+proper position in the chart when a return is pressed.  Press the appropriate
+function key to recieve more information on the remainder of the available
+keys.
+
+To obtain help for any of the following subjects,  press the function key next
+to the desired subject.
+
+        F1  Delete
+        F2  Revise
+        F3  Insert
+        F4  Move
+        F5  Window
+
+
+        F8  Return to Previous Menu
+
+        F10 Exit from Help
+
+Press F8 to return to the last help screen or F10 to leave the help mode
+

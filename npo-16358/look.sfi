@@ -1,0 +1,914 @@
+      PROGRAM LOOK
+CD    This program is designed to look at long printout files.  It has
+CD    the features that it can jump to any place in the file (either back-
+CD    wards or forwards) without having to read in any of the intermediate
+CD    data.  It can also search (either forward or backward) for strings,
+CD    and scroll at different speeds.
+CD
+CD        When run on a VT100 the program is puts the terminal in some
+CD    rather strange modes, so if the program exits abnormally (by ^Y or
+CD    by the system crashing, for example) one should push the SET-UP key
+CD    followed by a shift-R (capital R) to restore the terminals default
+CD    modes.
+CD
+CDM        Either of the following will actually start running the program;
+CDM   typing RUN JPL:[JLV.LOOK]LOOK, or defining a symbol to run the
+CDM   program (i.e. LOOK:==$JPL:[JLV.LOOK]LOOK.EXE) and then typing the
+CDM   symbol.  The later method has the advantage that one can enter the
+CDM   name of the file to be looked at and/or the symbol definition file's
+CDM   name (see below) on the command line (for example:
+CDM                    LOOK PRINT.LIS/DEFINITIONS=LOOKCOM.DAT
+CDM   will run the program (if LOOK is defined as above) on the file
+CDM   PRINT.LIS with the symbol definitions taken from LOOKCOM.DAT
+CDM   (the DEFINITIONS switch can go before or after the main file's
+CDM   name and can be abbreviated all the way to a D)).  If the switch
+CDM   /NARROW is on the command line, then the screen will not be converted
+CDM   into 132 column mode (this, of course, only applies to VT100 terminals).
+CDM   If the switch /WRAP is present then the lines will be printed with
+CDM   terminal wrapping, instead of being cut to the width of the terminal.
+CDM   If the switch /BOX is present then one line of output is sacrificed
+CDM   to allow a line to be drawn dividing the file text from the command
+CDM   input line.
+CDM
+CDM        The following commands are the "basic" command set of the
+CDM   program:
+CDM             n$         - jump by n lines (positive or negative)
+CDM             n%         - jump by n blocks (positive or negative)
+CDM             ^          - search (forward) for the string(s) in the search
+CDM                          buffers (up to 10) and display from that line if
+CDM                          found, if not found ring the terminal bell and
+CDM                          turn on LED 3 (VT100's only).  Matches are found
+CDM                          irregardless of lower/uppercase differences.
+CDM             -^         - search (backward) for string(s), same rules as
+CDM                          forward search.
+CDM             - "string" 'string' ... ^
+CDM                        - load search buffers with the given strings and
+CDM                          search (backward) for them, same rules as
+CDM                          forward search.
+CDM             "string"   - clear the search buffers and save the given
+CDM                          string as the only search string.  A string
+CDM                          can consist of any characters, to include a
+CDM                          quotation mark (") one must put two of them in
+CDM                          a row ("").
+CDM             'string' 'string' ...
+CDM                        - add the given string(s) to the search buffers.
+CDM                          A string can consist of any characters, to
+CDM                          include a single quote (') one must put two of
+CDM                          them in a row ('').
+CDM             !          - set reverse switch, all commands will now work
+CDM                          in reverse (i.e. n$ will jump -n lines, etc.)
+CDM             #          - scroll
+CDM             -#         - scroll backward
+CDM             (          - stop scrolling (only valid command when
+CDM                          scrolling is in operation),
+CDM                          or cancel current line jump, search, or
+CDM                          & command.
+CDM             n)         - set scrolling speed to n lines per second
+CDM                          (positive or negative, integer or real)
+CDM                          (originally set to 2).
+CDM                          NOTE:  there is a maximum speed that will not
+CDM                          be exceeded (varies with situation) even if
+CDM                          scrolling speed is set at a fast value.
+CDM             n*         - mark the nth line from the top of the screen
+CDM                          as the boundary of the print range.  The print
+CDM                          range is defined by the last two such marked
+CDM                          lines.
+CDM             n&         - print the range of lines from the top of the
+CDM                          screen to the nth line from the top of the
+CDM                          screen (n can be either positive or negative).
+CDM                          onto device SYS$PRINT.  if n is 0 or absent
+CDM                          then the range marked with the * command is
+CDM                          used, if available, otherwise 23 is used for
+CDM                          n.  The format of the printout will be that
+CDM                          of the original file, not necessarily what
+CDM                          is shown on the screen (i.e. FORTRAN carriage-
+CDM                          control, and all printer control will work as
+CDM                          they are supposed to).
+CDM             n-&        - same as n&, except output is put into a file
+CDM                          named LOOKPRINT.LIS in the default directory
+CDM                          (File format will be the same as the original
+CDM                          file, except organization will be sequential)
+CDM                          (appended to the latest version if a previous n-&
+CDM                          or n--& command has been given, otherwise a new
+CDM                          version is created).
+CDM             n--&       - same as n-&, except always creates a new version
+CDM                          of the output file.
+CDM             @          - exit the program.
+CDM             +          - re-writes the screen.
+CDM             <          - repeat the last command.
+CDM
+CDM        If an invalid command is typed the terminal bell is rung and on
+CDM   a VT100 LED #3 is turned on.  The line is parsed in such a way that a
+CDM   valid command will be executed even if followed by an invalid command.
+CDM   Note that no command is executed until a standard line terminator is
+CDM   received (ASCII code of 1 to 31).  Note that commands are limited to
+CDM   34 characters when entered in response to the prompt.  In order to
+CDM   enter longer commands one can use the "command mode" DEFINE command
+CDM   (see below) and then execute the symbol.  Also all search strings
+CDM   are limited to 30 characters.
+CDM
+CDM        If the user types ^Z (Control-Z) whenever the program is not
+CDM   currently executing a command, the program will enter "command" mode.
+CDM   This mode allows the user to use any of the following commands:
+CDM             DEFINE s := a1 a2 ...
+CDM                            - which defines a symbol s in the same man-
+CDM                              ner as a line in the definitions file (see
+CDM                              below), including line continuations.
+CDM             EXIT           - returns to the normal "look" mode.
+CDM             HELP a         - where a is one of the commands shown above.
+CDM             SET [NO]switch - with switch being any of WRAP, BOX, WIDE
+CDM                              or NARROW.  These have the same affect as
+CDM                              the command line switches of the same
+CDM                              names (WIDE is the same as NONARROW),
+CDM                              with the NO qualifier turning them off.
+CDM             SHOW [s]       - where s is a defined symbol.  This will
+CDM                              show what commands a symbol is defined
+CDM                              as. (if s is omitted, all defined symbols
+CDM                              are shown).
+CDM             @filename      - Inputs the file filename as a definitions
+CDM                              file.
+CDM
+CDM        The user is also allowed to define symbols for a command or
+CDM   commands.  Valid symbols consist of the characters a-z (lower and
+CDM   upper-case are equivalent), _, =, `, ~, [, ], {, }, ;, :,
+CDM   ,(comma), >, ?, /, \,and  |.  Symbol definitions are given in
+CDM   a symbol definition file which is read at the start of execution
+CDM   (or by the "command" level @ command), or by the "command" level
+CDM   DEFINE command.  This file is either given by the /DEFINITIONS
+CDM   switch, or a file named LOOKCOM.DAT is searched for in the fol-
+CDM   lowing places:  The default directory (the file is used only if
+CDM   the user owns it), the user's username directory on JPL,
+CDM   CIT, and SYS2 in that order.
+CDM
+CDM        In the symbol definition file the user can place both commands
+CDM   and definitions.  Commands will be executed on encounter, and def-
+CDM   initions will be placed in the definitons list.  Definitions have
+CDM   the following form:
+CDM                 symbol := command1 command2 command3 ... command9
+CDM   Up to ten commands can be contained in each symbol (exception - a
+CDM   symbol for the stop scrolling command should have only the one command
+CDM   in it ( ( )) and will be executed (when the symbol is typed) in the
+CDM   order they appear in the definition.  A - (minus sign) as the last
+CDM   character in a line means the definition is continued on the next
+CDM   line.  The following are default symbol definitions (they can be
+CDM   overriden by the symbol definition file):
+CDM             U := 23$
+CDM             D := -23$
+CDM             S := #
+CDM             Q := (
+CDM             J := 20%
+CDM             B := -20%
+CDM             P := 23&
+CDM             A := 23-&
+CDM             L := 23--&
+CDM             E := @
+CDM             M := *
+CDM             C := +
+CDM             R := <
+CDM
+CDM   Note, that only the first character of a symbol is significant in the
+CDM   symbol definition file.  Also when input as a command the symbol should
+CDM   be input as only one character.
+CDM
+CDM        A line enclosed by braces ({ }) will be treated as a "command"
+CDM   level command (such as SET WIDE, @filename, etc.).
+CDM
+CDM        The LEDs on a VT100 terminal are used to convey various bits of
+CDM   information.  Their meanings are as follows:
+CDM             1 - on indicates a command is being executed (useful since
+CDM                 some of the commands don't affect the screen until
+CDM                 completion).
+CDM             2 - on indicates that reverse is on (an odd number of !
+CDM                 commands have been executed).
+CDM             3 - on indicates an invalid command was encountered (either
+CDM                 input from the terminal, or while executeing a def-
+CDM                 inition), or a search failed.
+CDM             4 - on indicates that a range of lines has been marked for
+CDM                 printing
+CDM
+CDM
+CDM   NOTE:  If while using the program (on variable length record files)
+CDM          one gets garbage on the screen, try moving either one block
+CDM          forward or backward to realign the record boundaries.  Also
+CDM          when working with FORTRAN carriage-control files the + (plus)
+CDM          carriage-control character is ignored, and when working with
+CDM          printer files, all carriage-control with the exception of
+CDM          line feeds is ignored, and at least one line feed before each
+CDM          record is assumed.
+CDM
+CDM   Programmer - Jon Vavrus  12 NOV 1980
+CDM   Revised    - Jon Vavrus  30 MAR 1981
+CDM   Revised    - Jon Vavrus   4 MAY 1981
+CDM   Revised    - Jon Vavrus  12 MAY 1981
+CDM   Revised    - Jon Vavrus  31 JUL 1981 (changed CCLINE usage)
+CDM   Revised    - Jon Vavrus  27 AUG 1981
+CDM   Revised    - Jon Vavrus   3 SEP 1981
+CDM   Revised    - Jon Vavrus  30 DEC 1981 (added ^X)
+CDM   Revised    - Jon Vavrus   4 MAY 1982 (handles non-AVO VT100's)
+CDM   Revised    - Jon Vavrus  15 JUL 1982 (extract some proc's add
+CDM                                         "command" level to symbol file)
+CDM   Revised    - Jon Vavrus  18 AUG 1982 (bigger arrays)
+CDM   Revised    - Jon Vavrus   9 SEP 1982
+CDM   Revised    - Jon Vavrus   4 APR 1983 (broadcast stuff)
+CDM   Revised    - Jon Vavrus  13 APR 1983
+CDM   Revised    - Jon Vavrus  17 MAY 1983
+CDM   Revised    - Jon Vavrus  28 MAY 1983
+CDM   Revised    - Jon Vavrus   9 SEP 1983
+CDM   Revised    - Jon Vavrus  27 SEP 1983
+CM
+CM    -------------------------------------------------------------------------
+CM
+CM         The program works by calculating or finding a record boundary
+CM    near the current position and extracting actual records from there.
+CM    This is done for fixed files by calculating the record boundary from
+CM    the start of the file (or start of the block for blocked files),
+CM    keeping in mind the fact that records are extended to an even number
+CM    of bytes (word aligned).  For variable length records a record length
+CM    count word is looked for (a byte containing a number equal to or
+CM    less than 133 plus the record header size (FSZ), followed by a zeroed
+CM    byte), which points to another record length count word.
+CM
+CM         When the current line position needs to be converted to a
+CM    position in terms of blocks and bytes, the program calculates the
+CM    byte count from the last line in the output arrays to the current
+CM    line, then using this plus the block number of the next block to be
+CM    read in the position is calculated.  This is fairly straight forward
+CM    for all but fixed blocked files, in which the count of unused bytes
+CM    in each block must be taken into account.  For variable length record
+CM    files a further check on position is made by trying to match the
+CM    line pointed to and the lines around it to a specific area in the
+CM    block.
+CM
+CM         Command input is handled by a QIO request to the terminal.  This
+CM    input is terminated by the standard terminators, whihc are not echoed.
+CM    Input is done with conversion to upper case (to make life easier), and
+CM    with no translation of ^U, ^R, and <DEL> (all of which is done by the
+CM    program).  One will note that while scrolling, the QIO is alternately
+CM    requested and cancelled with each output to the terminal, this is done
+CM    so that the terminal will not get simultaneous read and write requests.
+CM
+CM         Scrolling speed is controlled by the use of the SYS$SETIMR and
+CM    SYS$WAITFR system services.  Thus the QIO AST for the stop scrolling
+CM    command must cancel the timer request, and also set the event flag.
+CM
+CM         Symbol definitions are kept in several arrays (DEFS - command
+CM    number and length of any search buffers, NUMDEF - associated numbers,
+CM    DEFBUF - search buffers, and DEFFLG - associated command flags).
+CM    The total number of defined symbols is thus limited to 60.
+C
+C***   CALLED ROUTINES
+C
+CC    BLKIN   Reads in one block of data from the input file.
+CC    BLKOPN  Opens a file for block input.
+CC    BLKSIN  Reads in 7 blocks of data from the input file.
+CC    BRDCST  Fields braodcast messages.
+CC    COMLVL  Executes "command level" commands.
+CC    DODEF   Processes a symbol file.
+CC    DOIT    Executes a command.
+CC    INTASC  Converts a string of bytes into a character variable
+CC    LINCON  Converts data in the input buffer into lines in the output
+CC            arrays.
+CC    PRSCOM  Parses a command line.
+CC    TTBRDINI Initializes broadcast handler.
+C
+C***   COMMON AREAS
+C
+CS    BRDCM1  Contains character variables for broadcast handling.
+CS              BRDNOT holds the notice to be displayed on the screen.
+CS              BRDMSG which holds broadcast messages.
+C
+CS    BRDCM2  Contains non-character information for broadcast handling.
+CS              BRDLEN the length of strings in BRDMSG.
+CS              BRDCNT the count of strings in BRDMSG.
+CS              BRDFLG a flag telling if there are unread messages.
+C
+CS    CHARS   Used to pass character variables; contains LINES a character
+CS            array of the output lines, and SRCHBF the search buffer, and
+CS            CRLF which contains <CR><LF>, and REVVID + REGVID which are
+CS            the VT100 control sequences to set/unset reverse video
+C
+CS    DOITNM  Contains information transferred from the main program:
+CS                 INCHAN - input channel of the terminal
+CS                 TIME   - scrolling speed in -10000000*seconds/line
+CS                 SBFFLG - flag indicating whether there is a string
+CS                          in the search buffer
+CS                 DIRECT - flag for reverse (-1 for reverse, else 1)
+CS                 EBK    - EBK of input file
+CS                 SBFLEN - length(s) of string(s) in search buffer(s)
+CS                 RECBLK - number of bytes used per block in FIX-BLK files
+CS                 RANGE  - beginning and ending block numbers and pointers
+CS                          of the print range
+CS                 VT100  - flag set .TRUE. if terminal is VT100.
+CS                 LRL    - length of the longest record in input file.
+CS                 LENLMT - maximum output length (if <0 then WRAP set)
+CS                 PAGEND - line number of last line output to screen
+CS                 PAGLEN - number of lines per page
+CS                 COMLIN - line number for command input (bottom of screen)
+CS                 VT100A - flag set .TRUE. if VT100 has advanced video option
+C
+CS    INPUTC  Contains the input character buffer INLINE and the defined
+CS            symbols SYMS and the definition search buffers DEFBUF
+C
+CS    INPUTN  Contains the input character buffer length LENSAV, and the
+CS            symbol definitions DEFS, the number of such definitions
+CS            (NDEFS), the definition flags DEFFLG, and the definition
+CS            numbers NUMDEF
+C
+CS    LNCN    Contains output arrays, and file pointers and information:
+CS                 LINLEN - array of output line lengths
+CS                 LINEP  - top of screen line (or last line output by
+CS                          backward scroll)
+CS                 NLINES - number of lines in arrays
+CS                 BUFFER - array of unconverted data
+CS                 PBUF   - current position in BUFFER
+CS                 NBUF   - number of bytes in BUFFER
+CS                 BLK    - next block in file
+CS                 FSZ    - record length for FIX files, or FSZ for VFC files
+CS                 IFSZ   - word extended record length for FIX files
+CS                 RFM    - files RFM
+CS                 RAT    - files RAT (1=CR,2=FTN,3=PRN,4=none,<0=BLK set)
+CS                 SBLK   - starting block of current batch of output lines
+CS                 CCLINE - array containing pointer to where the line's
+CS                          record starts in the file (CCLINE(1,x) = block
+CS                          #, CCLINE(2,x) = byte number in block).  If
+CS                          CCLINE(1,x) = 0 then it is a carriage control
+CS                          line.
+CS                 LBLK   - last block processed by LINCON
+CS                 LPBUF  - last value of PBUF processed by LINCON
+C
+CS    OWNER   Used to pass the file owner's UIC back to the main program
+CS            from a FORTRAN OPEN.
+C
+C***   INPUT VARIABLS
+C
+CI    FILE    Used to input the symbol file's name.
+C
+C***   INPUT/OUTPUT VARIABLES
+C
+CIO   LINE    Used to get an error message from SYS$GETMSG and to input
+CIO           a line from the symbol file, or to output error message,
+CIO           and as the terminal input buffer.
+C
+C***   OUTPUT VARIABLES
+C
+CO    FILE    Output with error message on open failure.
+CO    LINES   Output array, contains converted lines of output.
+C
+C***   INPUT UNITS
+C
+CR    INCHAN  Input channel number of the terminal.
+CR    30      Symbol file (file containing symbol definitions).
+C
+C***   OUTPUT UNITS
+C
+CW    6       Output to terminal.  Used for error messages.
+CW    9       Output to terminal.  Carriage-control LIST.
+C
+      PARAMETER NULL1=CHAR(0)//CHAR(0)//CHAR(0)//CHAR(0)
+      PARAMETER NULLS=NULL1//NULL1//NULL1
+      EXTERNAL GETOWN,EXITR,BRDCST
+      CHARACTER*1024 LINE
+      CHARACTER*135 DIVLIN
+      CHARACTER*132 LINES(600),CLINE
+      CHARACTER*128 INLINE,BRDMSG(20)
+      CHARACTER*122 BLANK
+      CHARACTER*64 FILE,SYMFIL
+      CHARACTER*30 SRCHBF(10),TEMP(10),DEFBUF(10,10,60)
+      CHARACTER*22 BRDNOT
+      CHARACTER*12 CHUSER
+      CHARACTER*11 DEFSW
+      CHARACTER*8 NARROW
+      CHARACTER*4 REVVID,REGVID,WRAP
+      CHARACTER*3 BOX
+      CHARACTER*2 CRLF,MSGNUM
+      CHARACTER*1 SYMS(60),COMAND(12)
+      REAL*4 NUMDEF(10,60)
+      INTEGER*4 GETLIS(10),ERR,RFM,RAT,FSZ,TERM(2),INCHAN,
+     1          SYS$ASSIGN,SYS$SETIMR,TIME,PBUF,EBK,SYS$TRNLOG,
+     2          BLK,SBLK,RANGE(2,2),CCLINE(2,600),PAGEND,DSCBLK(4)
+      INTEGER*2 GROUP,MEMBER,OWNER(2),IOSB(4),LINLEN(600),DIRECT,
+     1          SBFLEN(10),RECBLK,DEFS(11,10,60),LENLMT,LENSAV,PAGLEN,
+     2          HLDLEN(10),COMLIN,OUTLEN,BRDCNT,BRDLEN(20)
+      LOGICAL*1 BUFFER(3750),USER(12),SBFFLG,END(16),NUMFLG,MINFLG,
+     1          ESC,WIDE,BSP,VT100,BELL,CR,LF,DELETE(11),FILEOK,
+     2          DEFFLG(3,10,60),HLDFLG,VT100A,DONE,BRDFLG
+
+      COMMON /OWNER/OWNER
+      COMMON /DOITNM/INCHAN,TIME,SBFFLG,DIRECT,EBK,SBFLEN,RECBLK,RANGE,
+     1               VT100,LRL,LENLMT,PAGEND,PAGLEN,COMLIN,VT100A
+      COMMON /CHARS/LINES,SRCHBF,CRLF,REVVID,REGVID
+      COMMON /LNCN/LINLEN,LINEP,NLINES,BUFFER,PBUF,NBUF,BLK,FSZ,IFSZ,
+     1             RFM,RAT,SBLK,CCLINE,LBLK,LPBUF
+      COMMON /INPUTC/INLINE,SYMS,DEFBUF
+      COMMON /INPUTN/LENSAV,DEFS,NDEFS,DEFFLG,NUMDEF
+      COMMON /BRDCM1/BRDNOT,BRDMSG
+      COMMON /BRDCM2/BRDLEN,BRDCNT,BRDFLG
+C
+C***   Initialize many things......
+C
+      DATA BRDCNT,BRDFLG/0,.FALSE./		! Broadcast info.
+      DATA FILEOK/.TRUE./
+      DATA GETLIS/'202000C'X,0,0,'3080002'X,0,0,'3070002'X,0,0,0/
+      DATA END/'FE'X,'FF'X,'FF'X,'FF'X,11*0,'80'X/,TERM(1)/16/
+      DATA BUFFER/3750*1/			! Empty buffer
+      DATA BLANK,ESC,BELL,BSP,CR,LF		! ASCII values
+     1     /' ',0027,0007,008,13,10/
+      DATA REGVID,REVVID/' [0m',' [7m'/
+      DATA DELETE/27,'[','0','m',8,32,8,27,'[','7','m'/
+      DATA SYMFIL/' '/				! No definition file
+      DATA NARROW , WRAP , BOX , DEFSW		! Valid command switches
+     1   /'NARROW','WRAP','BOX','DEFINITIONS'/
+      DATA VT100A/.FALSE./			! Not an AVO VT100
+      DATA WIDE/0/,LENLMT/132/			! Wide mode
+      DATA SBFFLG/.FALSE./			! No search buffer
+      DATA RANGE/0,0,0,0/			! No print range
+      DATA TIME/-5000000/			! Scrolling speed
+      DATA DIRECT/1/				! Forward movement
+      DATA OUTLEN/0/				! Wrap mode
+      DATA PAGLEN,COMLIN/23,24/			! 23 lines of output
+      DATA NDEFS,(SYMS(I),DEFS(1,1,I),NUMDEF(1,I),DEFFLG(1,1,I),
+     1     DEFFLG(2,1,I),DEFFLG(3,1,I),DEFS(1,2,I),I=1,13)/13,
+C          Default key definitions:
+C          Key command   number     minus  search  0 to terminate
+     2     'U',   1,   23.,.TRUE., .FALSE.,.FALSE.,0,
+     3     'D',   1,  -23.,.TRUE., .FALSE.,.FALSE.,0,
+     4     'S',   5,    0.,.FALSE.,.FALSE.,.FALSE.,0,
+     5     'Q',   6,    0.,.FALSE.,.FALSE.,.FALSE.,0,
+     6     'J',   2,   20.,.TRUE., .FALSE.,.FALSE.,0,
+     7     'B',   2,  -20.,.TRUE., .FALSE.,.FALSE.,0,
+     8     'E',  11,    0.,.FALSE.,.FALSE.,.FALSE.,0,
+     9     'P',  10,   23.,.TRUE., .FALSE.,.FALSE.,0,
+     A     'A',  10,   23.,.TRUE., .TRUE., .FALSE.,0,
+     B     'L',   9,   23.,.TRUE., .FALSE.,.FALSE.,0,
+     C     'M',   8,    0.,.FALSE.,.FALSE.,.FALSE.,0,
+     D     'C',  12,    0.,.FALSE.,.FALSE.,.FALSE.,0,
+     E     'R',  13,    0.,.FALSE.,.FALSE.,.FALSE.,0/
+
+      WRITE (UNIT=CRLF,FMT=100)CR,LF
+100   FORMAT (2A1)
+      WRITE (UNIT=REVVID(1:1),FMT=100)ESC
+      REGVID(1:1) = REVVID(1:1)
+      TERM(2) = %LOC(END(1))
+C
+C***   Set things up
+C
+      EXECUTE (PROCESS_COM_LINE)
+      EXECUTE (OPEN_PRINTOUT)
+      EXECUTE (SETUP_TERM)
+      EXECUTE (GET_FIRST_SCREEN)
+      EXECUTE (PROCESS_SYMBOL_FILE)
+C
+C---   Set up to catch broadcast messages
+C
+      IF (VT100)
+        IF (VT100A)
+          BRDNOT = CHAR(BELL)//CHAR(BELL)//CHAR(ESC)//'[0;1;5m'//
+     1             'MESSAGES'//CHAR(ESC)//'8'
+          I = 20
+        ELSE
+          BRDNOT = CHAR(BELL)//CHAR(BELL)//'MESSAGES'//CHAR(ESC)//'8'
+          I = 12
+        ENDIF
+      ELSE
+        BRDNOT = CHAR(BELL)//CHAR(BELL)//'MESSAGES'
+        I = 10
+      ENDIF
+      BRDNOT = BRDNOT(:I)//NULLS
+      CALL TTBRDINI(BRDCST)
+C
+C***   Set up command input QIO request
+C
+1400  DO FOREVER
+C
+C---   Output dividing line if wanted
+C
+       IF (PAGLEN .EQ. (COMLIN - 2))
+         IF (VT100A)
+           CALL LIB$PUT_SCREEN(DIVLIN(:IABS(LENLMT)+3)//DIVLIN(1:1)//
+     1                         '(A',COMLIN-1,1)
+         ELSE
+           CALL LIB$PUT_SCREEN(DIVLIN(:80),COMLIN-1,1)
+         ENDIF
+       ENDIF
+       IF (OUTLEN .GT. 0) CALL LIB$PUT_SCREEN(BLANK(:OUTLEN),COMLIN,10)
+       IF (VT100A) CALL LIB$PUT_SCREEN(REVVID)
+       IF (LENSAV .GT. 0)
+         LINE(1+LENBUF:) = INLINE
+         LENBUF = LENSAV + LENBUF
+         LENSAV = 0
+       ENDIF
+C
+C---   Output "messages" message (without bells)
+C
+       IF (BRDFLG)
+         IF (VT100) CALL LIB$PUT_SCREEN(CHAR(27)//'7')
+         CALL LIB$PUT_SCREEN(BRDNOT(3:),COMLIN,IABS(LENLMT)-28)
+       ENDIF
+C
+       IF (LENBUF .GT. 0)
+         CALL LIB$PUT_SCREEN('Command: '//LINE(:LENBUF),COMLIN,1)
+       ELSE
+         CALL LIB$PUT_SCREEN('Command: ',COMLIN,1)
+       ENDIF
+       LENBUF = LENBUF + 1
+       J = 35 - LENBUF
+C
+C***   Input loop
+C
+       DO FOREVER
+        CALL SYS$QIOW(,%VAL(INCHAN),%VAL('1331'X),IOSB,,,
+     1                %REF(LINE(LENBUF:)),%VAL(J),,TERM,,)
+        LENBUF = IOSB(2) + LENBUF
+        IF (ICHAR(LINE(LENBUF:LENBUF)) .EQ. 127)
+C
+C---   Check for delete
+C
+          IF (LENBUF .GT. 1)
+            LENBUF = LENBUF - 1
+            IF (VT100A)
+              CALL SYS$QIOW(,%VAL(INCHAN),%VAL('30'X),,,,DELETE,
+     1                      %VAL(11),,,,)
+            ELSE
+              CALL SYS$QIOW(,%VAL(INCHAN),%VAL('30'X),,,,DELETE(5),
+     1                      %VAL(3),,,,)
+            ENDIF
+          ENDIF
+        ELSE
+C
+C---   Check for ^U/^X
+C
+          IF (ICHAR(LINE(LENBUF:LENBUF)) .EQ. 21 .OR.
+     1        ICHAR(LINE(LENBUF:LENBUF)) .EQ. 24)
+            LENBUF = 1
+            EXECUTE (ERASE_COMMAND)
+          ELSE
+C
+C---   Check for ^R
+C
+            IF (ICHAR(LINE(LENBUF:LENBUF)) .EQ. 18)
+              EXECUTE (ERASE_COMMAND)
+              CALL SYS$QIOW(,%VAL(INCHAN),%VAL('30'X),,,,%REF(LINE),
+     1                      %VAL(LENBUF-1),,,,)
+            ELSE
+C
+C---   Check for ^Z
+C
+              IF (ICHAR(LINE(LENBUF:LENBUF)) .EQ. 26)
+C
+C===   Erase screen
+C
+              CALL LIB$ERASE_PAGE(1,1)
+              IF (BRDFLG)
+                IF (VT100A) CALL LIB$PUT_SCREEN(REVVID)
+                IF (BRDCNT .EQ. 1)
+                  CALL LIB$PUT_OUTPUT('THERE IS A BROADCAST '//
+     1                 'MESSAGE'//CHAR(BELL),1,1)
+                ELSE
+                  WRITE (UNIT=MSGNUM,FMT='(I2)') BRDCNT
+                  IF (BRDCNT .LT. 10)
+                    CALL LIB$PUT_OUTPUT('THERE ARE'//MSGNUM//
+     1                   ' BROADCAST MESSAGES'//CHAR(BELL),1,1)
+                  ELSE
+                    CALL LIB$PUT_OUTPUT('THERE ARE '//MSGNUM//
+     1                   ' BROADCAST MESSAGES'//CHAR(BELL),1,1)
+                  ENDIF
+                ENDIF
+                CALL LIB$SET_CURSOR(3,1)
+              ENDIF
+              IF (VT100A) CALL LIB$PUT_SCREEN(REGVID)
+                DO FOREVER
+                 CALL LIB$GET_INPUT(CLINE,'Command: ',LENGTH)
+                 CALL COMLVL(CLINE(:LENGTH),DONE)
+                 UNDO IF (DONE)
+                END DO FOREVER
+                CALL DOIT(-1,.TRUE.,0.,.FALSE.)
+                CALL DOIT(-12,.FALSE.,0.,.FALSE.)
+                LENBUF = LENBUF - 1
+                CYCLE 1400
+              ELSE
+                LENBUF = LENBUF - 1
+                UNDO
+              ENDIF
+            ENDIF
+          ENDIF
+        ENDIF
+       END DO FOREVER
+       OUTLEN = LENBUF
+       IF (VT100A) CALL LIB$PUT_SCREEN(REGVID)
+       CALL LIB$SET_CURSOR(1,1)
+C
+C***   Execute commands
+C
+       CALL STR$TRANSLATE(LINE,LINE,' ','	')
+       CALL STR$TRIM(LINE(:LENBUF),LINE(:LENBUF),LENBUF)
+       DO FOREVER
+        CALL PRSCOM(LINE,LENBUF,ICOM,NUMFLG,ANUMB,MINFLG,0,0)
+        UNDO IF (ICOM .EQ. 0)
+        IF (ICOM .GT. 0) CALL DOIT(ICOM,NUMFLG,ANUMB,MINFLG)
+        UNDO IF (ICOM .EQ. 5)
+       END DO FOREVER
+      END DO FOREVER
+C
+C***********************************************************************
+C****************************   PROCEDURES   ***************************
+C***********************************************************************
+C
+      PROCEDURE (ERASE_COMMAND)
+CP    This procedure erase the command part of the bottom line.
+        IF (VT100A)
+          CALL LIB$PUT_SCREEN(REGVID//BLANK(:LENBUF)//REVVID,COMLIN,10)
+        ELSE
+          CALL LIB$PUT_SCREEN(BLANK(:LENBUF),COMLIN,10)
+        ENDIF
+        CALL LIB$SET_CURSOR(COMLIN,10)
+      END PROCEDURE
+      PROCEDURE (GET_FIRST_SCREEN)
+CP    This procedure inputs and formats the first screen-full of output.
+C
+C***   Read in first bunch of data and output
+C
+        BLK = 1
+        SBLK = BLK
+        IF (EBK .GT. 6)
+          CALL BLKSIN(BLK,NBUF,BUFFER(1))
+          IF (NBUF .EQ. 0)
+            EXECUTE (READ_ERROR)
+          ENDIF
+        ELSE
+          NBUF = 0
+          DO FOR I=1,EBK
+           CALL BLKIN(BLK,J,BUFFER(NBUF+1))
+           IF (J .EQ. 0)
+             EXECUTE (READ_ERROR)
+           ENDIF
+           NBUF = NBUF + J
+          END DO FOR
+        ENDIF
+        CALL LINCON(.TRUE.)
+        J = PAGLEN
+        IF (NLINES .LT. PAGLEN)
+          DO FOREVER
+           IF (BLK .GT. EBK)
+             J = NLINES
+             UNDO
+           ENDIF
+           CALL BLKIN(BLK,I,BUFFER(NBUF+1))
+           IF (I .EQ. 0)
+             EXECUTE (READ_ERROR)
+           ENDIF
+           NBUF = NBUF + I
+           CALL LINCON(.FALSE.)
+           UNDO IF (NLINES .GE. PAGLEN)
+          END DO FOREVER
+        ENDIF
+        CALL LIB$ERASE_PAGE(1,1)
+        CALL LIB$SET_CURSOR(1,1)
+        DO FOR I=1,J
+         IF (LENLMT .LT. 0)
+           IF (LINLEN(I) .LE. (-LENLMT))
+             CALL LIB$PUT_SCREEN(LINES(I)(:LINLEN(I))//CRLF)
+           ELSE
+             CALL LIB$PUT_SCREEN(LINES(I)(:-LENLMT)//CRLF//
+     1                           LINES(I)(1-LENLMT:LINLEN(I))//CRLF)
+           ENDIF
+         ELSE
+           IF (LINLEN(I) .LT. LENLMT)
+             CALL LIB$PUT_SCREEN(LINES(I)(:LINLEN(I))//CRLF)
+           ELSE
+             CALL LIB$PUT_SCREEN(LINES(I)(:LENLMT)//CRLF)
+           ENDIF
+         ENDIF
+        END DO FOR
+        PAGEND = J
+        IF (PAGLEN .EQ. 22) CALL LIB$PUT_SCREEN(CRLF)
+        IF (VT100A) CALL LIB$PUT_SCREEN(REVVID)
+        CALL LIB$PUT_SCREEN('Block 1',24,IABS(LENLMT)-6)
+        IF (VT100A) CALL LIB$PUT_SCREEN(REGVID)
+        CALL LIB$SET_CURSOR(1,1)
+      END PROCEDURE
+      PROCEDURE (MAIN_DIR_SEARCH)
+CP    This routine searches the directories of the users username on the
+CP    various disks (JPL, CIT, and SYS2 in that order) for the
+CP    symbol file (LOOKCOM.DAT), and if found opens it.
+        CALL INTASC(I,USER,CHUSER)
+        SYMFIL='JPL:['//CHUSER(:INDEX(CHUSER,' ')-1)//']LOOKCOM.DAT'
+        OPEN (UNIT=30,NAME=SYMFIL,TYPE='OLD',READONLY,ERR=1000,
+     1        ACCESS='SEQUENTIAL',FORM='FORMATTED')
+        DO LABEL
+          LABEL 1000
+            SYMFIL(1:3) = 'CIT'
+            OPEN (UNIT=30,NAME=SYMFIL,TYPE='OLD',READONLY,ERR=1100,
+     1            ACCESS='SEQUENTIAL',FORM='FORMATTED')
+          LABEL 1100
+            SYMFIL = 'SYS2'//SYMFIL(4:)
+            OPEN (UNIT=30,NAME=SYMFIL,TYPE='OLD',READONLY,ERR=1200,
+     1            ACCESS='SEQUENTIAL',FORM='FORMATTED')
+          LABEL 1200
+            FILEOK = .FALSE.
+        END DO LABEL
+      END PROCEDURE
+      PROCEDURE (NO_INPUT_EXIT)
+CP    This routine is an error routine if something goes wrong with getting
+CP    input from the terminal.
+        CALL LIB$PUT_OUTPUT(' CANNOT INPUT FROM SYS$INPUT.')
+        CALL EXIT
+      END PROCEDURE
+      PROCEDURE (OPEN_PRINTOUT)
+CP    This procedure opens the input file.
+C
+C***  Try to open printout file
+C
+        J = LIB$SKPC(' ',LINE)
+        FILE = LINE(J:)
+        I = INDEX(FILE,' ') - 1
+        CALL BLKOPN(FILE(:I),ERR,RFM,RAT,FSZ,EBK,LRL)
+        IF (ERR .NE. 1)
+          IF (I .LE. 0) I = 1
+          CALL SYS$GETMSG(%VAL(ERR),J,LINE,%VAL(15),)
+          CALL LIB$PUT_OUTPUT('****   UNABLE TO OPEN FILE '//FILE(:I))
+          CALL LIB$PUT_OUTPUT(LINE(:J))
+          CALL EXIT
+        ENDIF
+        IF (RFM .EQ. 1 .AND. FSZ)
+          IFSZ = FSZ + 1
+        ELSE
+          IFSZ = FSZ
+        ENDIF
+        IF (RAT .LT. 0 .AND. RFM .EQ. 1)
+          RECBLK = IFSZ*(512/IFSZ)
+        ELSE
+          RECBLK = 512
+        ENDIF
+      END PROCEDURE
+      PROCEDURE (PROCESS_COM_LINE)
+CP    This procedure processes the command line.
+C
+C***  Get file name off command line or prompt for it
+C***  Also check for /DEFINITIONS switch
+C
+        CALL LIB$GET_FOREIGN(LINE,'Filename: ',LENGTH)
+        CALL STR$UPCASE(LINE(:LENGTH),LINE(:LENGTH))
+C
+C***  Get rid of tabs
+C
+        CALL STR$TRANSLATE(LINE(:LENGTH),LINE(:LENGTH),' ','	')
+C
+C***  Get the switches
+C
+        DO FOREVER
+         I = INDEX(LINE(:LENGTH),'/') + 1
+         UNDO IF (I .EQ. 1)
+         J = INDEX(LINE(I:LENGTH),'/') + I - 2
+         IF (J .EQ. (I - 2)) J = LENGTH
+         K = INDEX(LINE(I:LENGTH),' ') + I - 2
+         IF (K .EQ. (I - 2)) K = LENGTH
+         IF (K .LT. J) J = K
+         DO
+C
+C---   WRAP
+C
+          IF ((J - I) .LE. 3)
+            IF (LINE(I:J) .EQ. WRAP(:J-I+1))
+              LENLMT = -LENLMT
+              UNDO
+            ENDIF
+          ENDIF
+C
+C---   NARROW
+C
+          IF ((J - I) .LE. 5)
+            IF (LINE(I:J) .EQ. NARROW(:J-I+1))
+              WIDE = 1
+              IF (LENLMT .LT. 0)
+                LENLMT = -80
+              ELSE
+                LENLMT = 80
+              ENDIF
+              UNDO
+            ENDIF
+          ENDIF
+C
+C---   BOX
+C
+          IF ((J - I) .LE. 2)
+            IF (LINE(I:J) .EQ. BOX(:J-I+1))
+              PAGLEN = 22
+              UNDO
+            ENDIF
+          ENDIF
+C
+C---   Definitions file
+C
+          K = INDEX(LINE,'=')
+          IF (K .NE. 0 .AND. K .NE. J .AND. (K - I) .LE. 11)
+            IF (LINE(I:K-1) .EQ. DEFSW(:K-I))
+              SYMFIL = LINE(K+1:J)
+              L = INDEX(SYMFIL,']') + 1
+              IF (INDEX(SYMFIL(L:),'.') .EQ. 0)
+                L = INDEX(SYMFIL,';')
+                IF (L .EQ. 0)
+                  SYMFIL = LINE(K+1:J)//'.'
+                ELSE
+                  SYMFIL = SYMFIL(:L-1)//'.'//SYMFIL(L:)
+                ENDIF
+              ENDIF
+              UNDO
+            ENDIF
+          ENDIF
+          CALL LIB$PUT_OUTPUT(' ****   INVALID SWITCH   ****')
+          CALL EXIT
+         END DO
+         LINE = LINE(:I-2)//LINE(J+1:)
+         LENGTH = LENGTH - J + I - 2
+        END DO FOREVER
+      END PROCEDURE
+      PROCEDURE (PROCESS_SYMBOL_FILE)
+CP    This procedure processes the symbol/command file.
+300     DO
+         IF (SYMFIL .EQ. ' ')
+C
+C***  Get user information to try and find a definitions file
+C
+           GETLIS(2) = %LOC(USER(1))
+           GETLIS(3) = %LOC(I)
+           GETLIS(5) = %LOC(GROUP)
+           GETLIS(8) = %LOC(MEMBER)
+           CALL SYS$GETJPI(,,,GETLIS,,,)
+           OPEN (UNIT=30,NAME='LOOKCOM.DAT',TYPE='OLD',READONLY,ERR=400,
+     1           ACCESS='SEQUENTIAL',FORM='FORMATTED',USEROPEN=GETOWN)
+           IF (OWNER(1) .NE. GROUP .OR. OWNER(2) .NE. MEMBER)
+             CLOSE (UNIT=30)
+             EXECUTE (MAIN_DIR_SEARCH)
+           ENDIF
+           DO LABEL
+             LABEL 400
+               EXECUTE (MAIN_DIR_SEARCH)
+           END DO LABEL
+         ELSE
+           OPEN (UNIT=30,NAME=SYMFIL,TYPE='OLD',READONLY,ERR=500,
+     1           ACCESS='SEQUENTIAL',FORM='FORMATTED')
+           DO LABEL
+             LABEL 500
+               CALL LIB$PUT_SCREEN(REVVID//'Could not open file '//
+     1              SYMFIL(:INDEX(SYMFIL,' ')-1)//REGVID//CHAR(BELL),
+     2              24,20)
+               UNDO 300
+           END DO LABEL
+         ENDIF
+C
+C***   Read in lines and interpret them
+C
+         IF (FILEOK) CALL DODEF
+        END DO
+      END PROCEDURE
+      PROCEDURE (READ_ERROR)
+CP    This procedure is executed if an error occurs while reading the
+CP    input file.
+        CALL LIB$PUT_OUTPUT(' ERROR READING FILE')
+        CALL EXIT
+      END PROCEDURE
+      PROCEDURE (SETUP_TERM)
+CP    This procedure opens and sets up the terminal.
+C
+C***   Open a channel to SYS$INPUT
+C
+        IF (.NOT.SYS$TRNLOG('TT',I,SRCHBF(1),,,))
+          EXECUTE (NO_INPUT_EXIT)
+        ENDIF
+        IF (INDEX(SRCHBF(1)(:I),'LPA0') .NE. 0)
+          IF (.NOT.SYS$TRNLOG('SYS$INPUT',I,SRCHBF(1),,,))
+            EXECUTE (NO_INPUT_EXIT)
+          ENDIF
+        ENDIF
+        IF (ICHAR(SRCHBF(1)) .EQ. 27)
+          I = I - 4
+          SRCHBF(1) = SRCHBF(1)(5:)
+        ENDIF
+        IF (.NOT.SYS$ASSIGN(SRCHBF(1)(:I),INCHAN,,))
+          EXECUTE (NO_INPUT_EXIT)
+        ENDIF
+C
+C***   Set terminal characteristics
+C
+        CALL SETERM(INCHAN,WIDE,LENLMT)
+C
+C***   Declare exit handler
+C
+        DSCBLK(2) = %LOC(EXITR)
+        DSCBLK(3) = 1
+        DSCBLK(4) = %LOC(I)
+        CALL SYS$DCLEXH(DSCBLK)
+C
+C***   If wanted format dividing line
+C
+        IF (VT100A)
+          DIVLIN(1:1) = REVVID(1:1)
+          DIVLIN(2:) = '(0qqqqqqqqqqqqqqqqqqqqqqqqqqq'//
+     1         'qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq'//
+     2         'qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq'
+        ELSE
+          DIVLIN = '--------------------------------'//
+     1         '---------------------------------------------------'
+        ENDIF
+      END PROCEDURE
+      END

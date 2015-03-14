@@ -1,0 +1,268 @@
+1 Introduction      
+
+     The program INCA (INteractive Controls Analysis) is primarily
+intended for the analysis and design of feedback control systems.
+Using the interactive graphics capability, the user can quickly plot a
+root locus, frequency response, or time response of either a
+continuous time system or a sampled data system.  The system
+configuration and parameters can be easily changed, allowing the user
+to design compensation networks and perform sensitivity analyses in a
+very convenient manner. 
+
+     INCA is designed to be an interactive program for use with both
+small and large order systems.  The user can perform all transfer
+function manipulations and plotting without leaving INCA, although
+provisions are made to read transfer functions from data files.  By
+using a small set of commands, the user can create, calculate and edit
+transfer functions, and then examine these functions using the
+ROOT_LOCUS, FREQUENCY_RESPONSE, and TIME_RESPONSE capabilities. 
+
+     The transfer function (hereafter refered to as just "function")
+is the basic unit of INCA.  The functions are normally grouped into an
+entity called a "project".  A project can be anything the user wants
+it to be, and contains a group of distinct but related functions. 
+
+     INCA is suitable only for systems which can be described by a
+collection of rational transfer fuctions.  These functions can be
+either Laplace transforms, Z-transforms or W-Transforms.  A function
+is the quotient of two real polynomials in s,z or w.  
+
+     Multiplication and division in function expressions are done by 
+collection and cancellation of factors.  Addition, subtraction, and 
+plane transformation use the QZ algorithm in most cases, although
+sometimes a polynomial rooter must be used.
+
+     The maximum order of the polynomials is one hundred. It is
+assumed that the coefficient of the highest order term is unity.  The
+function definition also contains the gain.  Z and W plane functions
+have an associated sampling period. The maximum number of transfer
+functions which can be defined is limited by system quotas. 
+
+     Transfer functions are stored in either factored form (STATIC) or
+has a FORTRAN like expression (DYNAMIC).  STATIC functions are stored
+internally in factored form for maximum accuracy.  The root locus and
+frequency response routines are designed for use with large order
+systems.  These routines are protected from overflow and do not use a
+polynomial rooter. 
+
+     Since INCA has extensive graphics capabilities, it is suggested
+that a graphics terminal be used.  If one is not available, however,
+any terminal can be used to explore the non-graphics capabilities of
+INCA. 
+
+     INCA currently runs on the VAX/VMS operating system only.  The
+graphics can be displayed on the Tektronics 401x, 410x, and 420x, and
+VT24x and several other terminals.  Non-graphics commands can be
+executed on any terminal, and batch capabilitity also exists. 
+
+2 Files             
+
+     INCA creates and uses several different types of files in the 
+course of a session.  The file types each have a different default 
+extension.  A brief summary is given below.
+
+File type              ext   Format         Created by          Used by
+-------------------   ----   ------     ------------------ ------------------ 
+Project File          .PRO   binary     Automatically      Initialization
+Audit File            .AUD   ascii      Automatically      user
+Function Save         .DAT   ascii      FUNCTION SAVE      FUNCTION LOAD
+Command Source        .SOU   ascii      user               UTILITIES ATSIGN 
+                                                           UTILITIES INPUT
+Root Locus Data       .RL    ascii      CURVE SAVE         CURVE LOAD
+Freq. Resp. Data      .FR    ascii      CURVE SAVE         CURVE LOAD
+Time Resp. Data       .TR    ascii      CURVE SAVE         CURVE LOAD
+Workspace File        .WOR   binary     INCA 2.0x          PROJECT OLD_INCA
+-------------------   ----   ------     ------------------ ------------------ 
+
+     The user can also write or generate his own .DAT, .RL, .FR, or 
+.TR files.  Thus INCA's graphics capability could be used to analyze 
+data produced by other application programs.  It is important to 
+realize that the format be exactly right or unpredictable results 
+might occur.
+
+2 Installation      
+
+     INCA has been designed for easy transfer among computers of the VAX
+family while remaining as easy to use as possible.  Decide on a 
+directory in which to place INCA, and the place the files INCA.EXE, 
+INCA.HLB and SETUP.EXE in that directory.  Run the setup program, and
+several more files will be create as described below.  One of these 
+files is names LOGIN.INC.  The user should include this in his login 
+file, and INCA will be ready to use regardless of the current directory.
+
+3 Files             
+
+     These files are needed for the proper functioning of INCA.
+
+INCA.EXE           INCA executable image.
+INCA.HLB           INCA online help library.
+SETUP.EXE          Used to generate the following files...
+
+INCANEWS.DAT       This is a short text file containing news
+                   of interest to INCA users.  It is displayed
+                   at the beginning of each INCA session, and 
+                   also when the SHOW /NEWS command is used.
+TERMINAL.MAP       This is a listing of the type of each 
+                   terminal currently available on the 
+                   system.  This file should be maintained by 
+                   the system manager for maximum convenience
+                   of INCA users.
+
+3 Terminal Map      
+
+     The file QPLOTHOME:TERMMAP.DAT should contain a listing of the
+various terminals on the system.  It is convenient for users if this
+file be kept up to date, as then users will not need to type in their
+terminal type when they begin an INCA session.  Note that disc drives
+should also be included in this table, as they serve as terminals for
+batch jobs.  A list of allowable terminal types is given under the
+terminal command. 
+
+; PORT   NAME   HARDCOPY CONFIGURATION FILE comments
+;----- -------- -------- ------------------ ---------------------
+; Non terminal ports
+;----- -------- -------- ------------------ ---------------------
+OPA0   DUMB     LOCAL                       B11 S332  = DecWriter
+CRA0   NONE     NONE                        B11 S332  = Card Rdr
+DUA0   NONE     NONE                        B11 S332  = Hard Disc
+DUA1   NONE     NONE                        B11 S332  = Hard Disc
+DUA2   NONE     NONE                        B11 S332  = Hard Disc
+;----- -------- -------- ------------------ ---------------------
+RTA0   UNKNOWN  LOCAL                       DecNet
+RTA1   UNKNOWN  LOCAL                       DecNet
+RTA2   UNKNOWN  LOCAL                       DecNet
+RTA3   UNKNOWN  LOCAL                       DecNet
+;----- -------- -------- ------------------ ---------------------
+; TTAx group
+;----- -------- -------- ------------------ ---------------------
+TTA0   UNKNOWN  LOCAL                       B5
+TTA1   UNKNOWN  LOCAL                       B5
+TTA2   UNKNOWN  LOCAL                       B5
+TTA3   UNKNOWN  LOCAL                       B5
+TTA4   UNKNOWN  LOCAL                       B5
+TTA5   UNKNOWN  LOCAL                       B5
+TTA6   UNKNOWN  LOCAL                       B5
+TTA7   TEK4014  LOCAL                       B5  (AFDFE)
+;----- -------- -------- ------------------ ---------------------
+; TTBx group
+;----- -------- -------- ------------------ ---------------------
+TTB0   VT240    LOCAL                       B5  (AFJPS)
+TTB1   UNKNOWN  LOCAL                       B5
+TTB2   UNKNOWN  LOCAL                       DTI
+TTB3   UNKNOWN  LOCAL                       
+TTB4   TEK4109  CI300                       B11 S332    temp for Louise
+TTB5   TV922    CI300                       B11 S332
+TTB6   DUMB     LOCAL                       B5  (AFRSS)
+TTB7   UNKNOWN  LOCAL                       Phone
+;----- -------- -------- ------------------ ---------------------
+; TTCx group
+;----- -------- -------- ------------------ ---------------------
+TTC0   UNKNOWN  LOCAL                       B5
+TTC1   UNKNOWN  LOCAL                       B5
+TTC2   UNKNOWN  LOCAL                       DTI 53134
+TTC3   UNKNOWN  LOCAL                       Phone
+TTC4   UNKNOWN  LOCAL                       DTI 53137
+TTC5   UNKNOWN  LOCAL                       DTI 53138
+TTC6   UNKNOWN  LOCAL                       DTI 53139
+TTC7   UNKNOWN  LOCAL                       DTI 53140
+;----- -------- -------- ------------------ ---------------------
+; TXAx group
+;----- -------- -------- ------------------ ---------------------
+TXA0   UNKNOWN  NONE                        B5 = Fast printer
+TXA1   UNKNOWN  LOCAL                       Phone
+TXA2   UNKNOWN  LOCAL                       B5
+TXA3   UNKNOWN  LOCAL                       B5
+TXA4   TEK4107  LOCAL                       B5
+TXA5   UNKNOWN  LOCAL                       B5
+TXA6   UNKNOWN  LOCAL                       B5
+TXA7   TEK4114  LOCAL                       B11 S332
+;----- -------- -------- ------------------ ---------------------
+; TXBx group
+;----- -------- -------- ------------------ ---------------------
+TXB0   UNKNOWN  LOCAL                       Phone 
+TXB1   UNKNOWN  LOCAL                       Phone 
+TXB2   VT100    LOCAL                       B11
+TXB3   DUMB     LOCAL                       B11
+TXB4   VS550    LOCAL                       B11 E221
+TXB5   VS550    LOCAL                       B11 E208
+TXB6   VT125    LOCAL                       B11 E235 = Pro 380
+TXB7   VT125    LOCAL                       B11 ???? = MacIntosh
+;----- -------- -------- ------------------ ---------------------
+; TXCx group
+;----- -------- -------- ------------------ ---------------------
+TXC0   UNKNOWN  LOCAL                       DTI 53135
+TXC1   UNKNOWN  LOCAL                       DTI 53136
+TXC2   TEK4109  LOCAL    ROOMS221           B11 S221
+TXC3   TEK4107  LOCAL    ROOMS221           B11 S221
+TXC4   TV922    LOCAL                       B11 S221B
+TXC5   TEK4107  LOCAL    ROOMS221           B11 S221
+TXC6   VT100    LOCAL                       B11 S121
+TXC7   TEK4207  LOCAL                       B11 S129
+;----- -------- -------- ------------------ ---------------------
+
+2 Batch processing  
+
+     INCA can be run in the batch mode for jobs that are too lenghty 
+for interactive processing.  All commands are available except for 
+those graphics mode commands that require a cursor position.
+
+     To run a batch job in INCA it is necessary to create a VAX
+command file (".COM" default extension).  The command file should set
+default directories and do any necessary assignments, and then contain
+the line 
+
+     "$ INCA/NONE project".
+
+The next lines should contain all INCA commands needed for the run, 
+including the final XIT command.  For information on how to set up 
+INCA commands, see the ATSIGN command.
+
+2 Startup-file      
+
+     The user can customize the INCA status as he desires by using a
+INCA.SOU file.  At the start of any INCA session, a search is made for
+a file with the name INCA.SOU in the users current directory.  This is
+similar in concept to the LOGIN.COM file.  If the file exists, the
+next input is taken from this file, and continues so until an end of
+file is found.  This file can also be in any higher level
+subdirectory, up to and including the main directory.  If the INCA.SOU
+file is placed in the main directory, it will be used for any INCA
+sessions done by the user. 
+
+     The user may rerun his startup file at any time by entering:  
+
+          @INCA, or 
+          U I INCA.
+
+     A sample login file is qiven under example.
+
+3 Example           
+
+     The following example will set the NEARNESS fuzz factor to the 
+default value.  It is a good idea to put SHOW /NEWS at the end of your 
+login file to repeat the news of the day, which may have flashed by 
+too quick to see.
+
+;--------------------------------
+;    Sample Login file
+;
+;
+; Set up three macros:
+;    Q = Xit Delete
+;    E = Function Edit Screen
+;    Z = Misc No_Error_Trap Yes
+U S M Q X D
+U S M E F E S
+U S M Z M N Y
+; Turn gridding on in both X and Y directions.
+U F X G DARKGRAY
+U F Y G DARKGRAY
+; Make default frequency response plot a Nichols Plot.
+SET FREQUENCY_PLOT       C-NICHOLS
+; Set Zagging on Nyquist plots
+SET ZAGGING              40
+; Clear screen.
+M Z
+;
+;    End of Sample Login file
+;--------------------------------

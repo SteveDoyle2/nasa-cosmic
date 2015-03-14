@@ -1,0 +1,203 @@
+                               PROGRAM LOOK
+      This program is designed to look at long printout files.  It has
+      the features that it can jump to any place in the file (either back-
+      wards or forwards) without having to read in any of the intermediate
+      data.  It can also search (either forward or backward) for strings,
+      and scroll at different speeds.
+
+          When run on a VT100 the program is puts the terminal in some
+      rather strange modes, so if the program exits abnormally (by ^Y or
+      by the system crashing, for example) one should push the SET-UP key
+      followed by a shift-R (capital R) to restore the terminals default
+      modes.
+
+           Either of the following will actually start running the program;
+      typing RUN JPL:[JLV.LOOK]LOOK, or defining a symbol to run the
+      program (i.e. LOOK:==$JPL:[JLV.LOOK]LOOK.EXE) and then typing the
+      symbol.  The later method has the advantage that one can enter the
+      name of the file to be looked at and/or the symbol definition file's
+      name (see below) on the command line (for example:
+                       LOOK PRINT.LIS/DEFINITIONS=LOOKCOM.DAT
+      will run the program (if LOOK is defined as above) on the file
+      PRINT.LIS with the symbol definitions taken from LOOKCOM.DAT
+      (the DEFINITIONS switch can go before or after the main file's
+      name and can be abbreviated all the way to a D)).  If the switch
+      /NARROW is on the command line, then the screen will not be converted
+      into 132 column mode (this, of course, only applies to VT100 terminals).
+      If the switch /WRAP is present then the lines will be printed with
+      terminal wrapping, instead of being cut to the width of the terminal.
+      If the switch /BOX is present then one line of output is sacrificed
+      to allow a line to be drawn dividing the file text from the command
+      input line.
+
+           The following commands are the "basic" command set of the
+      program:
+                n$         - jump by n lines (positive or negative)
+                n%         - jump by n blocks (positive or negative)
+                ^          - search (forward) for the string(s) in the search
+                             buffers (up to 10) and display from that line if
+                             found, if not found ring the terminal bell and
+                             turn on LED 3 (VT100's only).  Matches are found
+                             irregardless of lower/uppercase differences.
+                -^         - search (backward) for string(s), same rules as
+                             forward search.
+                - "string" 'string' ... ^
+                           - load search buffers with the given strings and
+                             search (backward) for them, same rules as
+                             forward search.
+                "string"   - clear the search buffers and save the given
+                             string as the only search string.  A string
+                             can consist of any characters, to include a
+                             quotation mark (") one must put two of them in
+                             a row ("").
+                'string' 'string' ...
+                           - add the given string(s) to the search buffers.
+                             A string can consist of any characters, to
+                             include a single quote (') one must put two of
+                             them in a row ('').
+                !          - set reverse switch, all commands will now work
+                             in reverse (i.e. n$ will jump -n lines, etc.)
+                #          - scroll
+                -#         - scroll backward
+                (          - stop scrolling (only valid command when
+                             scrolling is in operation),
+                             or cancel current line jump, search, or
+                             & command.
+                n)         - set scrolling speed to n lines per second
+                             (positive or negative, integer or real)
+                             (originally set to 2).
+                             NOTE:  there is a maximum speed that will not
+                             be exceeded (varies with situation) even if
+                             scrolling speed is set at a fast value.
+                n*         - mark the nth line from the top of the screen
+                             as the boundary of the print range.  The print
+                             range is defined by the last two such marked
+                             lines.
+                n&         - print the range of lines from the top of the
+                             screen to the nth line from the top of the
+                             screen (n can be either positive or negative).
+                             onto device SYS$PRINT.  if n is 0 or absent
+                             then the range marked with the * command is
+                             used, if available, otherwise 23 is used for
+                             n.  The format of the printout will be that
+                             of the original file, not necessarily what
+                             is shown on the screen (i.e. FORTRAN carriage-
+                             control, and all printer control will work as
+                             they are supposed to).
+                n-&        - same as n&, except output is put into a file
+                             named LOOKPRINT.LIS in the default directory
+                             (File format will be the same as the original
+                             file, except organization will be sequential)
+                             (appended to the latest version if a previous n-&
+                             or n--& command has been given, otherwise a new
+                             version is created).
+                n--&       - same as n-&, except always creates a new version
+                             of the output file.
+                @          - exit the program.
+                +          - re-writes the screen.
+                <          - repeat the last command.
+
+           If an invalid command is typed the terminal bell is rung and on
+      a VT100 LED #3 is turned on.  The line is parsed in such a way that a
+      valid command will be executed even if followed by an invalid command.
+      Note that no command is executed until a standard line terminator is
+      received (ASCII code of 1 to 31).  Note that commands are limited to
+      34 characters when entered in response to the prompt.  In order to
+      enter longer commands one can use the "command mode" DEFINE command
+      (see below) and then execute the symbol.  Also all search strings
+      are limited to 30 characters.
+
+           If the user types ^Z (Control-Z) whenever the program is not
+      currently executing a command, the program will enter "command" mode.
+      This mode allows the user to use any of the following commands:
+                DEFINE s := a1 a2 ...
+                               - which defines a symbol s in the same man-
+                                 ner as a line in the definitions file (see
+                                 below), including line continuations.
+                EXIT           - returns to the normal "look" mode.
+                HELP a         - where a is one of the commands shown above.
+                READ           - outputs the broadcast messages (if any)
+                                 which have been received.
+                SET [NO]switch - with switch being any of WRAP, BOX, WIDE
+                                 or NARROW.  These have the same affect as
+                                 the command line switches of the same
+                                 names (WIDE is the same as NONARROW),
+                                 with the NO qualifier turning them off.
+                SHOW [s]       - where s is a defined symbol.  This will
+                                 show what commands a symbol is defined
+                                 as. (if s is omitted, all defined symbols
+                                 are shown).
+                SPAWN          - starts a sub-process up to allow the user
+                                 to do DCL commands.
+                @filename      - Inputs the file filename as a definitions
+                                 file.
+
+           The user is also allowed to define symbols for a command or
+      commands.  Valid symbols consist of the characters a-z (lower and
+      upper-case are equivalent), _, =, `, ~, [, ], {, }, ;, :, ',
+      ,(comma), >, ?, /, \,and  |.  Symbol definitions are given in
+      a symbol definition file which is read at the start of execution
+      (or by the "command" level @ command), or by the "command" level
+      DEFINE command.  This file is either given by the /DEFINITIONS
+      switch, or a file named LOOKCOM.DAT is searched for in the fol-
+      lowing places:  The default directory (the file is used only if
+      the user owns it), the user's username directory on JPL, CIT, and
+      SYS$SYSDISK in that order.
+
+           In the symbol definition file the user can place both commands
+      and definitions.  Commands will be executed on encounter, and def-
+      initions will be placed in the definitons list.  Definitions have
+      the following form:
+                    symbol := command1 command2 command3 ... command9
+      Up to nine commands can be contained in each symbol (exception - a
+      symbol for the stop scrolling command should have only the one command
+      in it ( ( )) and will be executed (when the symbol is typed) in the
+      order they appear in the definition.  A - (minus sign) as the last
+      character in a line means the definition is continued on the next
+      line.  The following are default symbol definitions (they can be
+      overriden by the symbol definition file):
+                U := 23$
+                D := -23$
+                S := #
+                Q := (
+                J := 20%
+                B := -20%
+                P := 23&
+                A := 23-&
+                L := 23--&
+                E := @
+                M := *
+                C := +
+                R := <
+
+      Note, that only the first character of a symbol is significant in the
+      symbol definition file.  Also when input as a command the symbol should
+      be input as only one character.
+
+           The LEDs on a VT100 terminal are used to convey various bits of
+      information.  Their meanings are as follows:
+                1 - on indicates a command is being executed (useful since
+                    some of the commands don't affect the screen until
+                    completion).
+                2 - on indicates that reverse is on (an odd number of !
+                    commands have been executed).
+                3 - on indicates an invalid command was encountered (either
+                    input from the terminal, or while executeing a def-
+                    inition), or a search failed.
+                4 - on indicates that a range of lines has been marked for
+                    printing
+
+
+      NOTE:  If while using the program (on variable length record files)
+             one gets garbage on the screen, try moving either one block
+             forward or backward to realign the record boundaries.  Also
+             when working with FORTRAN carriage-control files the + (plus)
+             carriage-control character is ignored, and when working with
+             printer files, all carriage-control with the exception of
+             line feeds is ignored, and at least one line feed before each
+             record is assumed.
+
+
+           Any questions, comments, or complaints should be directed to JLV.
+
+                                        - Jon Vavrus

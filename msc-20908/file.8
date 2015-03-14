@@ -1,0 +1,46 @@
+/*****************************************************************************/
+/*                                                                           */
+/*  Main Program                                                             */
+/*                                                                           */
+/*  This module drives the execution of the main queue until the halt flag   */
+/*  is turned on.                                                            */
+/*                                                                           */
+/*  Programmer: G R Goodrum, MDTSCO, June 1984                               */
+/*                                                                           */
+/*****************************************************************************/
+
+#include "structures.inc"
+
+int counters[20][30];                                           /* debug */
+
+main()
+{
+    extern struct rule_queue queue[];
+    extern int halt;
+    int i, j;                                                   /* debug */
+
+    for ( i=0; i<20; i++ )                                      /* debug */
+        for ( j=0; j<30; j++ )                                  /* debug */
+            counters[i][j] = 0;                                 /* debug */
+
+    initialize();
+
+    while ( !halt )
+        exec_queue ( &queue[0] );
+
+    printf ( "\n\nTest case coverage\n" );                      /* debug */
+    printf ( "\nFunction     branch     counts\n\n" );          /* debug */
+    for ( i=0; i<20; i++ )                                      /* debug */
+        for ( j=0; j<30; j++ )                                  /* debug */
+            if  ( counters[i][j] )                              /* debug */
+                printf ( "%5d       %4d      %5d\n", i, j,      /* debug */
+                        counters[i][j] );                       /* debug */
+
+    printf ( "\n\n\nDone\n" );
+}
+
+count ( i, j )                                                  /* debug */
+int i, j;                                                       /* debug */
+{                                                               /* debug */
+        counters[i][j]  +=  1;                                  /* debug */
+}                                                               /* debug */

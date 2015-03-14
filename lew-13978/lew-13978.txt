@@ -1,0 +1,57 @@
+ SOLUTION OF RADIATION AND CONVECTION FIN HEAT TRANSFER PROBLEMS
+
+( GENERAL DYNAMICS CORP. )
+
+     This program was developed to provide for the rapid, steady-state so-
+lution of fin-type heat transfer problems. The program accomodates a vari-
+ety of fin-type heat conduction applications involving radiative and con-
+vective boundary conditions with additionally imposed local heat flux. It
+also accomodates lengthwise variation of fin boundary conditions, conduc-
+tances, and dimensions. The program is particularly suited for use in para-
+metric studies during fin design. It can also be used for a variety of one-
+dimensional and two-dimensional heat transfer problems that do not corre-
+spond specifically to fin-type applications. A powerful and efficient ana-
+lytic tool, this program can achieve an order-of-magnitude reduction in run
+time when employed as a substitute for a general purpose heat transfer pro-
+gram.
+
+     The heat transfer application addressed by this program is represented
+by a second order ordinary differential equation and is posed as a two-point
+boundary value problem. An implicit finite difference method is used to
+approximate the differential equation. The Newton-Raphson method is em-
+ployed with a tri-diagonal linear equation technique to solve the system
+of implicit difference equations. The program computes fin node tempera-
+tures, while boundary node temperatures are constrained. Vertical link-
+ages are used to represent radiation or convection, and could easily be con-
+trived to represent conduction. Fin nodes may have additional heat flux,
+and are not required to have vertical linkages.
+
+     This program is written in FORTRAN IV for batch or interactive execu-
+tion and has been implemented on a CDC CYBER 170 series computer with a cen-
+tral memory requirement of approximately 45K (octal) of 60 bit words. This
+program was developed in 1980.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC CYBER 170 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 1,000 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LEW-13978
+
+DOMESTIC - DOCUMENTATION PRICE: $13.00    PROGRAM PRICE: $400.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $26.00   PROGRAM PRICE: $800.00
+
+
+
+                                        1
+

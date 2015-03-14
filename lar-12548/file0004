@@ -1,0 +1,992 @@
+(*$L-,E-,U-*) 
+
+PROGRAM MAKETABLES (INPUT*, OUTPUT, TABLEFILE) ;
+  
+(* CONSTANTS, TYPES AND VARIABLES DEFINED IN THE OUTMOST BLOCK *) 
+  
+CONST 
+  
+   LINESIZE = 60 ; (* MAX NO. OF RELEVANT CHARS IN A LINE *)
+  
+   IDENTMAX = 20 ; (* MAX NO. OF CHARS IN AN IDENT; 
+                      DEFINES THE TYPES STRING20 + UNSTRING20 *)
+   CCHRSIZE = 10 ; (* MAX NO. OF CHARS IN A COMPOUND CHAR;
+                      DEFINES THE TYPES CCHR + UNCCHR *)
+  
+   CCHRMAX  = 10 ; (* MAX NO. OF CCHR ALLOWED *)
+   RITESIZE = 12 ; (* MAX NO. OF ITEMS AT THE RIGHT SIDE OF A BNCF RULE *)
+   BSFSIZE  = 18 ; (* MAX NO. OF BSF ITEMS IN A TEMPLATE *) 
+                   (* NOTE THAT BSFSIZE MUST BE >= RITESIZE *)
+  
+   RULESMAX  = 400 ; (* MAX NO. OF PRODUCTION RULES *)
+   TSYMMAX   = 130 ; (* MAX NO. OF TERMINAL SYMBOLS (INCLUDING 6 BUILT-INS) *)
+   BSFLITMAX = 255 ; (* MAX NO. OF BSF LITERALS, MUST > TSYMMAX *)
+   NTSYMMAX  = 150 ; (* MAX NO. OF NON-TERMINAL SYMBOLS *)
+   STATEMAX  = 680 ; (* MAX NO. OF STATES *)
+  
+   CPOOLSIZE = 50 ;   (* DLIST + A FEW OTHERS *)
+   SPOOLSIZE = 256 ;  (* TERM SYMS, BSF LITERALS, BUILT-IN FUNCS + CONS *)
+   NPOOLSIZE = 10 ;   (* GLUELEFT + GLUERITE *) 
+  
+   ACTPLSZ   = 4000 ; (* ACTION TABLE *)
+   GOTOPLSZ  =  550 ; (* GOTO TABLE *)
+  
+      ANYDEX = 0 ;
+     GLUEDEX = 1 ;
+      EOFDEX = 2 ;
+     EOLNDEX = 3 ;
+   STRINGDEX = 4 ;
+   DIGITSDEX = 5 ;
+    CHUNKDEX = 6 ;
+   BTSYMDIFF = 6 ; (* NO. OF DIFFERENT BUILT-IN TERMINAL SYMBOLS *) 
+  
+   BNCFDIFF = 15 ; (* NO. OF DIFFERENT INTERNAL BNCF SYMBOLS *) 
+   METADIFF = 19 ; (* NO. OF DIFFERENT META SYMBOLS *)
+   ACTDIFF  =  4 ; (* NO. OF DIFFERENT ACTION TYPES *)
+  
+   QUOTE = '''' ; 
+  
+   STARSIZE = IDENTMAX ; (* USED AS SEPARATOR IN INFILE *)
+  
+   EOFCCHR  = 'EOF       ' ;
+   EOLNCCHR = 'EOLN      ' ;
+  
+  
+TYPE
+  
+   STRING20 = PACKED ARRAY [ 1..IDENTMAX ] OF CHAR ;
+   UNSTRING20 = ARRAY [ 1..IDENTMAX ] OF CHAR ; 
+  
+   CCHR = PACKED ARRAY [1..CCHRSIZE] OF CHAR ;
+   UNCCHR = ARRAY [1..CCHRSIZE] OF CHAR ; 
+  
+   CHAR2 = PACKED ARRAY [ 1..2 ] OF CHAR ;
+  
+   CHAMELEON = RECORD CASE INTEGER OF 
+           1 % (INT % ARRAY [1..2] OF INTEGER) ;
+           2 % (STR % STRING20) 
+               END ;
+  
+   SUBLIST = RECORD 
+       BEG % INTEGER ;
+       MAX % INTEGER
+       END ;
+  
+   BNFTYPE = (PROCDEF, PROCNAME, IDEN, OTHERS, PACKIT, BNFEND) ;
+   BCFTYPE = (NOTHING, LOCAL, ASSIGNED, NOTID) ;
+   BSFTYPE = (BSFMETA, BSFLIT, BSFNUM, BSFEND) ;
+  
+   BSF1 = PACKED RECORD 
+      CASE BSFTYP % BSFTYPE OF
+          BSFMETA % (META % 1..METADIFF) ;
+           BSFLIT % (LIT % 1..BSFLITMAX) ;
+           BSFNUM % (NUM % 1..BSFSIZE) ;
+           BSFEND % ()
+   END ;
+  
+   BNFTUPLE = ARRAY [ 1..RITESIZE ] OF BNFTYPE ;
+   BCFTUPLE = ARRAY [ 1..RITESIZE ] OF BCFTYPE ;
+  
+   ACTIONTYPE = (SHIFT, REDUCE, DONE, BADSYNTAX) ;
+  
+   TABLES = RECORD
+  
+      CCTAB % ARRAY [1..CCHRMAX, 1..CCHRSIZE] OF CHAR ; 
+      CCTABSIZE % INTEGER ; 
+  
+      IGNORE % SUBLIST ;
+      SLIST, SELIST, ELIST % SUBLIST ;
+      CLIST, CELIST % SUBLIST ; 
+      DLIST % SUBLIST ; 
+      TSYMLIST % SUBLIST ;
+      BSFLITLIST % SUBLIST ;
+      BIFLIST, BICLIST% SUBLIST ; 
+      GLUELEFT, GLUERITE % SUBLIST ;
+  
+      CCHRPOOL % ARRAY [1..CPOOLSIZE] OF CCHR ; 
+      STR20POOL % ARRAY [1..SPOOLSIZE] OF STRING20 ;
+      NUMPOOL % ARRAY [1..NPOOLSIZE] OF INTEGER ; 
+  
+      BNF % PACKED ARRAY [1..RULESMAX] OF PACKED RECORD 
+         LEFTSIDE % 1..NTSYMMAX ; 
+         RITESIDE % PACKED ARRAY [1..RITESIZE] OF BNFTYPE 
+      END ; 
+  
+      BCF % PACKED ARRAY [1..RULESMAX, 1..RITESIZE] OF BCFTYPE ;
+  
+      BSF % PACKED ARRAY [1..RULESMAX, 1..BSFSIZE] OF BSF1 ;
+  
+      ACTAB % PACKED ARRAY [1..STATEMAX] OF 1..ACTPLSZ ;
+      GOTAB % PACKED ARRAY [1..NTSYMMAX] OF 1..GOTOPLSZ ; 
+  
+      ACTPOOL % PACKED ARRAY [1..ACTPLSZ] OF PACKED RECORD
+           TSYM % 0..TSYMMAX ;
+         ACTTYP % ACTIONTYPE ;
+         ACTNUM % 1..STATEMAX (* MAX (STATEMAX, RULESMAX) *)
+      END ; 
+  
+      GOTOPOOL % PACKED ARRAY [1..GOTOPLSZ] OF PACKED RECORD
+         OLDSTATE % 0..STATEMAX ; 
+         NEWSTATE % 1..STATEMAX 
+      END 
+  
+   END ;
+  
+   TABFILE = FILE OF TABLES ; 
+  
+  
+VAR 
+  
+   MEMBER % INTEGER ; 
+   THECHAMELEON % CHAMELEON ; 
+  
+   TABLEFILE % TABFILE ;
+  
+   BTSYMCODE % ARRAY [0..BTSYMDIFF] OF CHAR ; 
+  
+   BNCFCODE % ARRAY [1..BNCFDIFF] OF RECORD 
+      INSYM % CHAR2 ; 
+        BNF % BNFTYPE ; 
+        BCF % BCFTYPE 
+        END ; 
+  
+   BSFCODE % ARRAY [1..METADIFF] OF CHAR2 ; 
+  
+   ACTCODE % ARRAY [1..ACTDIFF] OF RECORD 
+     INSYM % CHAR ; 
+       ACT % ACTIONTYPE 
+       END ;
+  
+  
+   LEFTMARGIN % INTEGER ; 
+  
+  
+(*$H+*) (*$L**) 
+  
+FUNCTION EQ20   ( S1 % STRING20 ; S2 % STRING20 ) % BOOLEAN ; 
+  
+VAR I % INTEGER ; 
+    TEMP % BOOLEAN ;
+  
+BEGIN 
+    TEMP %= TRUE; 
+    I %= 0; 
+    WHILE TEMP AND ( I < 20 ) DO BEGIN
+        I %= I + 1 ;
+        IF S1[ I ] <> S2[ I ] THEN TEMP %= FALSE END; 
+    EQ20    %= TEMP 
+END ; (*   EQ20      *) 
+  
+  
+  
+FUNCTION MIN (X, Y% INTEGER) % INTEGER ;
+  
+BEGIN 
+  
+   IF (X <= Y) THEN MIN %= X
+               ELSE MIN %= Y ;
+  
+END (* MIN *) ; 
+  
+  
+  
+FUNCTION MAX (X, Y% INTEGER) % INTEGER ;
+  
+BEGIN 
+  
+   IF (X >= Y) THEN MAX %= X
+               ELSE MAX %= Y ;
+  
+END (* MAX *) ; 
+  
+  
+  
+PROCEDURE INDENT ;
+  
+VAR I% INTEGER ;
+  
+BEGIN 
+  
+   FOR I %= 1 TO LEFTMARGIN DO WRITE (' ') ;
+  
+END (* INDENT *) ;
+  
+  
+  
+PROCEDURE PRINTMSG (MSG% INTEGER) ; 
+  
+BEGIN 
+  
+   CASE MSG OF
+       1 % WRITE ('UNEXPECTED END OF FILE') ; 
+       2 % WRITE ('UNEXPECTED END OF LINE') ; 
+       3 % WRITE ('EXPECTED NUMBER MISSING') ;
+       4 % WRITE ('UNKNOWN SYMBOL') ; 
+       5 % WRITE ('TOO MANY COUMPOUND CHARACTERS') ;
+       6 % WRITE ('TOO MANY STRING20S') ; 
+       7 % WRITE ('TOO MANY TERMINAL SYMBOLS') ;
+       8 % WRITE ('TOO MANY PRODUCTION RULES') ;
+       9 % WRITE ('UNKNOWN BNCF CODE') ;
+      10 % WRITE ('UNKNOWN META SYMBOL') ;
+      11 % WRITE ('STATE NUMBER OUT OF RANGE') ;
+      12 % WRITE ('FORWARD REFERENCE NOT ALLOWED') ;
+      13 % WRITE ('ACTIONTABLE/GOTOTABLE OVERFLOW') ; (* OBSOLETE *)
+      14 % WRITE ('UNKNOWN ACTION TYPE CODE') ; 
+      15 % WRITE ('NON-TERMINAL SYMBOL OUT OF RANGE') ; 
+      16 % WRITE ('UNKNOWN BUILT-IN TERMINAL SYMBOL CODE') ;
+      17 % WRITE ('BNCF TOO LONG') ;
+      18 % WRITE ('BSF TOO LONG') ; 
+      19 % WRITE ('ACTION TABLE OVERFLOW') ;
+      20 % WRITE ('GOTO TABLE OVERFLOW') ;
+       0 %  
+   END ;
+  
+END (* PRINTMSG *) ;
+  
+(*$H+*) (*$L**) 
+  
+PROCEDURE READIN (VAR INFILE% TEXT; VAR TABS% TABLES) ; 
+  
+VAR 
+  
+   LINECNT % INTEGER ;
+   LINE % ARRAY [1..LINESIZE] OF CHAR ; 
+   LDEX, LMAX% INTEGER ;
+   CPOOLDEX, SPOOLDEX, NPOOLDEX% INTEGER ;
+   ACTPLDEX, GOTOPLDEX% INTEGER ; 
+  
+  
+FUNCTION MEMSTR20 (STR% STRING20; WHERE% SUBLIST) % BOOLEAN ; 
+  
+VAR I% INTEGER ; MATCH% BOOLEAN ; 
+  
+BEGIN 
+  
+   I %= 1 ; 
+   MATCH %= FALSE ; 
+   WHILE (I <= WHERE.MAX) AND NOT (MATCH) DO BEGIN
+      MATCH %= EQ20 (STR, TABS.STR20POOL [I+WHERE.BEG-1]) ; 
+      I %= I + 1 ;
+   END ;
+   MEMBER %= I - 1 ;
+   MEMSTR20 %= MATCH ;
+  
+END (* MEMSTR20 *) ;
+  
+  
+  
+PROCEDURE ERROR (MSG% INTEGER) ;
+  
+VAR I% INTEGER ;
+  
+BEGIN 
+  
+   PAGE (OUTPUT) ;
+   INDENT ; 
+   WRITE ('INPUT FILE IN BAD FORMAT % ') ;
+   PRINTMSG (MSG) ; 
+   WRITELN ;
+   WRITELN ;
+   INDENT ; 
+   WRITE ('LINE = ') ;
+   WRITE (LINECNT%5) ;
+   WRITELN ;
+   WRITELN ;
+   INDENT ; 
+   WRITE ('     => ') ; 
+   FOR I %= 1 TO LMAX DO WRITE (LINE[I]) ;
+   WRITELN ;
+   INDENT ; 
+   WRITE ('     => ') ; 
+   FOR I %= 1 TO LDEX-1 DO WRITE (' ') ;
+   WRITE ('^') ;
+   WRITELN ;
+   WRITELN ;
+   PAGE (OUTPUT) ;
+   HALT ; 
+  
+END (* ERROR *) ; 
+  
+  
+  
+PROCEDURE READLINE (MAX% INTEGER) ; 
+  
+BEGIN 
+  
+   IF EOF (INFILE) THEN ERROR (1) ; 
+   LDEX %= 1 ;
+  
+   REPEAT 
+  
+      LMAX %= 0 ; 
+      WHILE (NOT (EOLN (INFILE))) AND (LMAX < MAX) DO BEGIN 
+         LMAX %= LMAX+1 ; 
+         LINE [LMAX] %= INFILE^ ; 
+         GET (INFILE) ; 
+      END ; 
+      READLN (INFILE) ; 
+      LINECNT %= LINECNT + 1 ;
+  
+   UNTIL (LMAX > 0) ; 
+  
+END (* READLINE *) ;
+  
+  
+  
+FUNCTION READSTAR (MAXCHAR% INTEGER) % BOOLEAN ;
+  
+VAR STAR% BOOLEAN; I% INTEGER ; 
+  
+BEGIN 
+  
+   READSTAR %= FALSE ;
+   READLINE (MAX (STARSIZE, MAXCHAR)) ; 
+  
+   IF (LMAX >= STARSIZE) THEN 
+      BEGIN 
+      STAR %= TRUE ;
+      I %= 1 ;
+      REPEAT
+         STAR %= (LINE [I] = '*') ; 
+         I %= I + 1 ; 
+      UNTIL NOT (STAR) OR (I > STARSIZE) ;
+      READSTAR %= STAR ;
+      END ; 
+  
+   LMAX %= MIN (LMAX, MAXCHAR) ;
+  
+END (* READSTAR *) ;
+  
+  
+  
+PROCEDURE SKIPB ; 
+  
+VAR BLANKQ% BOOLEAN ; 
+  
+BEGIN 
+  
+   BLANKQ %= TRUE ; 
+   WHILE (LDEX <= LMAX) AND (BLANKQ) DO 
+      IF LINE [LDEX] <> ' ' THEN BLANKQ %= FALSE
+                            ELSE LDEX %= LDEX + 1 ; 
+  
+END (* SKIPB *) ; 
+  
+  
+  
+FUNCTION MORE % BOOLEAN ; 
+  
+BEGIN 
+  
+   SKIPB ;
+   MORE %= (LDEX <= LMAX) ; 
+  
+END (* MORE *) ;
+  
+  
+  
+FUNCTION GETCHAR % CHAR ; 
+  
+BEGIN 
+  
+   IF LDEX > LMAX THEN ERROR (2) ;
+   GETCHAR %= LINE [LDEX] ; 
+   LDEX %= LDEX + 1 ; 
+  
+END (* GETCHAR *) ; 
+  
+  
+  
+PROCEDURE GETCHAR2 (VAR C% CHAR2) ; 
+  
+BEGIN 
+  
+   IF LDEX > LMAX THEN ERROR (2) ;
+   C [1] %= LINE [LDEX] ; 
+   LDEX %= LDEX + 1 ; 
+   IF (LDEX <= LMAX) AND (LINE [LDEX] <> ' ') 
+      THEN BEGIN C [2] %= LINE [LDEX] ; LDEX %= LDEX + 1 END
+      ELSE C [2] %= ' ' ; 
+  
+END (* GETCHAR2 *) ;
+  
+  
+  
+FUNCTION GETNUM % INTEGER ; 
+  
+VAR 
+  
+   C% CHAR ;
+   FLAG% BOOLEAN ;
+   OLDEX% INTEGER ; 
+   NUM% INTEGER ; 
+  
+BEGIN 
+  
+   IF LDEX > LMAX THEN ERROR (2) ;
+   OLDEX %= LDEX ;
+   NUM %= 0 ; 
+  
+   FLAG %= TRUE ; 
+   WHILE ((LDEX <= LMAX) AND FLAG) DO BEGIN 
+      C %= LINE [LDEX] ;
+      IF (C IN ['0'..'9'])
+         THEN BEGIN 
+              NUM %= NUM*10 + ORD(C) - ORD('0') ; 
+              LDEX %= LDEX + 1 ;
+              END 
+         ELSE FLAG %= FALSE ; 
+   END ;
+  
+   IF (LDEX = OLDEX) THEN ERROR (3) ; 
+   GETNUM %= NUM ;
+  
+END (* GETNUM *) ;
+  
+  
+  
+PROCEDURE GETSTR (VAR STR% STRING20) ;
+  
+VAR 
+  
+   I, J% INTEGER ;
+   DONE% BOOLEAN ;
+   BUF% UNSTRING20 ;
+  
+BEGIN 
+  
+   LDEX %= LDEX + 1 ; 
+   I %= 1 ; 
+   DONE %= FALSE ;
+  
+   WHILE (LDEX <= LMAX) AND NOT (DONE) DO BEGIN 
+  
+           IF (LINE [LDEX] <> QUOTE) THEN 
+              BEGIN 
+              IF (I <= IDENTMAX) THEN BUF [I] %= LINE [LDEX] ;
+              I %= I + 1 ;
+              END 
+      ELSE IF (LDEX = LMAX) THEN
+              DONE %= TRUE
+      ELSE IF (LINE [LDEX+1] <> QUOTE) THEN 
+              DONE %= TRUE
+         ELSE BEGIN 
+              IF (I <= IDENTMAX) THEN BUF [I] %= QUOTE ;
+              I %= I + 1 ;
+              LDEX %= LDEX + 1 ;
+              END ; 
+  
+      LDEX %= LDEX + 1 ;
+  
+   END ;
+  
+   FOR J %= I TO IDENTMAX DO BUF [J] %= ' ' ; 
+   PACK (BUF, 1, STR) ; 
+  
+END (* GETSTR *) ;
+  
+  
+  
+FUNCTION GETSYM (LIST% SUBLIST) % INTEGER ; 
+  
+VAR STR% STRING20 ; 
+  
+BEGIN 
+  
+   GETSTR (STR) ; 
+   IF NOT (MEMSTR20 (STR, LIST)) THEN ERROR (4) ; 
+   GETSYM %= MEMBER ; 
+  
+END (* GETSYM *) ;
+  
+  
+  
+FUNCTION GETTSYM % INTEGER ;
+  
+VAR 
+  
+   I% INTEGER ; 
+   C% CHAR ;
+   MATCH% BOOLEAN ; 
+  
+BEGIN 
+  
+   IF LINE [LDEX] = QUOTE 
+      THEN BEGIN
+           GETTSYM %= GETSYM (TABS.TSYMLIST) + BTSYMDIFF ;
+           END
+      ELSE BEGIN
+           C %= GETCHAR ; 
+           I %= 0 ; 
+           REPEAT 
+              MATCH %= (BTSYMCODE [I] = C) ;
+              I %= I + 1 ;
+           UNTIL (MATCH) OR (I > BTSYMDIFF) ; 
+           IF NOT (MATCH) THEN ERROR (16) ; 
+           GETTSYM %= I - 1 ; 
+           END ;
+  
+END (* GETTSYM *) ; 
+  
+  
+  
+FUNCTION GETBSFLIT % INTEGER ;
+  
+VAR STR% STRING20 ; 
+  
+BEGIN 
+  
+   GETSTR (STR) ; 
+   IF (MEMSTR20 (STR, TABS.BSFLITLIST)) 
+      THEN GETBSFLIT %= MEMBER
+      ELSE BEGIN
+           SPOOLDEX %= SPOOLDEX + 1 ; 
+           IF (SPOOLDEX > SPOOLSIZE) THEN ERROR (6) ; 
+           TABS.BSFLITLIST.MAX %= SPOOLDEX ;
+           TABS.STR20POOL [SPOOLDEX] %= STR ; 
+           GETBSFLIT %= SPOOLDEX ;
+           END ;
+  
+END (* GETBSFLIT *) ; 
+  
+  
+  
+PROCEDURE READCLIST (VAR WHERE% SUBLIST) ;
+  
+VAR I% INTEGER ;
+  
+BEGIN 
+  
+   WHERE.BEG %= CPOOLDEX + 1 ;
+   WHILE NOT (READSTAR (IDENTMAX)) DO BEGIN 
+      CPOOLDEX %= CPOOLDEX + 1 ;
+      IF CPOOLDEX > CPOOLSIZE THEN ERROR (5) ;
+      FOR I %= LMAX+1 TO CCHRSIZE DO LINE [I] %= ' ' ;
+      PACK (LINE, 1, TABS.CCHRPOOL [CPOOLDEX]) ;
+   END ;
+   WHERE.MAX %= CPOOLDEX - WHERE.BEG + 1 ;
+  
+END (* READCLIST *) ; 
+  
+  
+  
+PROCEDURE READSLIST (VAR WHERE% SUBLIST) ;
+  
+VAR I% INTEGER ;
+  
+BEGIN 
+  
+   WHERE.BEG %= SPOOLDEX + 1 ;
+   WHILE NOT (READSTAR (IDENTMAX)) DO BEGIN 
+      SPOOLDEX %= SPOOLDEX + 1 ;
+      IF SPOOLDEX > SPOOLSIZE THEN ERROR (6) ;
+      FOR I %= LMAX+1 TO IDENTMAX DO LINE [I] %= ' ' ;
+      PACK (LINE, 1, TABS.STR20POOL [SPOOLDEX]) ; 
+   END ;
+   WHERE.MAX %= SPOOLDEX - WHERE.BEG + 1 ;
+  
+END (* READSLIST *) ; 
+  
+  
+  
+PROCEDURE READTSLIST (VAR WHERE% SUBLIST) ; 
+  
+VAR I% INTEGER ;
+  
+BEGIN 
+  
+   WHERE.BEG %= NPOOLDEX + 1 ;
+   WHILE NOT (READSTAR (IDENTMAX*2+2)) DO BEGIN 
+      NPOOLDEX %= NPOOLDEX + 1 ;
+      IF NPOOLDEX > NPOOLSIZE THEN ERROR (7) ;
+      TABS.NUMPOOL [NPOOLDEX] %= GETTSYM ;
+   END ;
+   WHERE.MAX %= NPOOLDEX -WHERE.BEG + 1 ; 
+  
+END (* READTSLIST *) ;
+  
+  
+  
+PROCEDURE CRUNCHCCHR ;
+  
+VAR I, J, N% INTEGER ;
+  
+BEGIN 
+  
+   N %= 0 ; 
+   WHILE (NOT (READSTAR (CCHRSIZE))) DO BEGIN 
+      N %= N + 1 ;
+      IF N > CCHRMAX THEN ERROR (5) ; 
+      J %= LMAX ; 
+      FOR I %= 1 TO J DO TABS.CCTAB [N,I] %= LINE [I] ; 
+      FOR I %= J+1 TO CCHRSIZE DO TABS.CCTAB [N,I] %= ' ' ; 
+   END ;
+   TABS.CCTABSIZE %= N ;
+  
+END (* CRUNCHCCHR *) ;
+  
+  
+  
+PROCEDURE CRUNCHBNCF ;
+  
+VAR 
+  
+   I, J, K, RN% INTEGER ; 
+   C2% CHAR2 ;
+   MATCH% BOOLEAN ; 
+   BNF% BNFTUPLE ;
+   BCF% BCFTUPLE ;
+   PKBNF% PACKED ARRAY [1..RITESIZE] OF BNFTYPE ; 
+   PKBCF% PACKED ARRAY [1..RITESIZE] OF BCFTYPE ; 
+   BNF1% BNFTYPE ;
+   BCF1% BCFTYPE ;
+  
+BEGIN 
+  
+   RN %= 0 ;
+  
+   WHILE NOT (READSTAR (LINESIZE)) DO BEGIN 
+  
+      RN %= RN + 1 ;
+      IF RN > RULESMAX THEN ERROR (8) ; 
+      TABS.BNF[RN].LEFTSIDE %= GETNUM ; 
+  
+      I %= 0 ;
+      WHILE (MORE) DO BEGIN 
+         I %= I + 1 ; 
+         IF (I > RITESIZE) THEN ERROR (17) ;
+         GETCHAR2 (C2) ;
+         J %= 1 ; 
+         REPEAT 
+            MATCH %= (BNCFCODE[J].INSYM = C2) ; 
+            J %= J + 1 ;
+         UNTIL (MATCH) OR (J > BNCFDIFF) ;
+         IF NOT (MATCH) THEN ERROR (9) ;
+         BNF[I] %= BNCFCODE[J-1].BNF ;
+         BCF[I] %= BNCFCODE[J-1].BCF ;
+      END ; 
+  
+      FOR K %= 1 TO (I DIV 2) DO
+         BEGIN
+         BNF1 %= BNF [I+1-K] ;
+         BNF [I+1-K] %= BNF [K] ; 
+         BNF [K] %= BNF1 ;
+         END ;
+  
+      FOR K %= 1 TO (I DIV 2) DO
+         BEGIN
+         BCF1 %= BCF [I+1-K] ;
+         BCF [I+1-K] %= BCF [K] ; 
+         BCF [K] %= BCF1 ;
+         END ;
+  
+      IF (I < RITESIZE) THEN BNF [I+1] %= BNFEND ;
+      PACK (BNF, 1, PKBNF) ;
+      TABS.BNF[RN].RITESIDE %= PKBNF ;
+      PACK (BCF, 1, PKBCF) ;
+      TABS.BCF[RN] %= PKBCF ; 
+  
+   END ;
+  
+END (* CRUNCHBNCF *) ;
+  
+  
+  
+PROCEDURE CRUNCHBSF ; 
+  
+VAR 
+  
+   I, J, K, RN% INTEGER ; 
+   NUM% INTEGER ; 
+   C2% CHAR2 ;
+   MATCH% BOOLEAN ; 
+   BSF% ARRAY [1..BSFSIZE] OF BSF1 ;
+   PKBSF% PACKED ARRAY [1..BSFSIZE] OF BSF1 ; 
+  
+BEGIN 
+  
+   RN %= 0 ;
+  
+   WHILE NOT (READSTAR (LINESIZE)) DO BEGIN 
+  
+      RN %= RN + 1 ;
+      IF RN > RULESMAX THEN ERROR (8) ; 
+  
+      I %= 0 ;
+      WHILE (MORE) DO BEGIN 
+         I %= I + 1 ; 
+         IF (I > BSFSIZE) THEN ERROR (18) ; 
+              IF LINE [LDEX] IN ['0'..'9'] THEN 
+                 BEGIN
+                 BSF[I].BSFTYP %= BSFNUM ;
+                 BSF[I].NUM %= GETNUM ; 
+                 END
+         ELSE IF LINE [LDEX] = QUOTE THEN 
+                 BEGIN
+                 BSF[I].BSFTYP %= BSFLIT ;
+                 BSF[I].LIT %= GETBSFLIT ;
+                 END
+            ELSE BEGIN
+                 GETCHAR2 (C2) ;
+                 J %= 1 ; 
+                 REPEAT 
+                    MATCH %= (BSFCODE[J] = C2) ;
+                    J %= J + 1 ;
+                 UNTIL (MATCH) OR (J > METADIFF) ;
+                 IF NOT (MATCH) THEN ERROR (10) ; 
+                 BSF[I].BSFTYP %= BSFMETA ; 
+                 BSF[I].META %= J-1 ; 
+                 END ;
+      END ; 
+      IF (I < BSFSIZE) THEN BSF[I+1].BSFTYP %= BSFEND ; 
+  
+      PACK (BSF, 1, PKBSF) ;
+      TABS.BSF [RN] %= PKBSF ;
+  
+   END ;
+  
+END (* CRUNCHBSF *) ; 
+  
+  
+  
+PROCEDURE CRUNCHACTAB ; 
+  
+VAR 
+  
+   STATE% INTEGER ; 
+   I, S% INTEGER ;
+   T, N% INTEGER ; A% ACTIONTYPE ;
+   MATCH% BOOLEAN ; 
+   C% CHAR ;
+  
+BEGIN 
+  
+   N %= 1 ; (* AVOID OBSCURE BUG *) 
+  
+  
+   WHILE NOT (READSTAR (LINESIZE)) DO BEGIN 
+  
+      STATE %= GETNUM ; 
+      IF STATE > STATEMAX THEN ERROR (11) ; 
+  
+           IF (MORE) THEN 
+              BEGIN 
+              IF LINE [LDEX] <> '=' THEN ERROR (2) ;
+              LDEX %= LDEX + 1 ;
+              SKIPB ; 
+              S %= GETNUM ; 
+              IF (S >= STATE) OR (S > STATEMAX) THEN ERROR (12) ; 
+              TABS.ACTAB [STATE] %= TABS.ACTAB [S] ;
+              END 
+  
+         ELSE BEGIN 
+              IF (ACTPLDEX+1 > ACTPLSZ) THEN ERROR (19) ; 
+              TABS.ACTAB [STATE] %= ACTPLDEX + 1 ;
+              REPEAT
+                 ACTPLDEX %= ACTPLDEX + 1 ; 
+                 IF (ACTPLDEX > ACTPLSZ) THEN ERROR (19) ;
+                 READLINE (LINESIZE) ;
+                 T %= GETTSYM ; 
+                 SKIPB ;
+                 C %= GETCHAR ; 
+                 I %= 1 ; 
+                 REPEAT 
+                    MATCH %= (C = ACTCODE[I].INSYM) ; 
+                    I %= I + 1 ;
+                 UNTIL (MATCH) OR (I > ACTDIFF) ; 
+                 IF NOT (MATCH) THEN ERROR (14) ; 
+                 A %= ACTCODE[I-1].ACT ;
+                 IF (A IN [SHIFT, REDUCE]) THEN 
+                    BEGIN 
+                    SKIPB ; 
+                    N %= GETNUM ; 
+                    END ; 
+                 WITH TABS.ACTPOOL[ACTPLDEX] DO 
+                    BEGIN 
+                    TSYM %= T ; 
+                    ACTTYP %= A ; 
+                    ACTNUM %= N ; 
+                    END ; 
+              UNTIL (T = ANYDEX) ;
+              END ; 
+  
+   END ;
+  
+END (* CRUNCHACTAB *) ; 
+  
+  
+  
+PROCEDURE CRUNCHGOTAB ; 
+  
+VAR NTSYM% INTEGER ; O, N% INTEGER ;
+  
+BEGIN 
+  
+   WHILE NOT (READSTAR (LINESIZE)) DO BEGIN 
+      NTSYM %= GETNUM ; 
+      IF NTSYM > NTSYMMAX THEN ERROR (15) ; 
+      IF (GOTOPLDEX+1 > GOTOPLSZ) THEN ERROR (20) ; 
+      TABS.GOTAB [NTSYM] %= GOTOPLDEX + 1 ; 
+      REPEAT
+         GOTOPLDEX %= GOTOPLDEX + 1 ; 
+         IF (GOTOPLDEX > GOTOPLSZ) THEN ERROR (20) ;
+         READLINE (LINESIZE) ;
+         IF LINE [1] = '*' THEN BEGIN O %= 0 ; LDEX %= 2 END
+                           ELSE O %= GETNUM ; 
+         SKIPB ;
+         N %= GETNUM ;
+         WITH TABS.GOTOPOOL[GOTOPLDEX] DO BEGIN 
+            OLDSTATE %= O ; 
+            NEWSTATE %= N ; 
+         END ;
+      UNTIL (O = 0) ; 
+   END ;
+  
+END (* CRUNCHGOTAB *) ; 
+  
+  
+BEGIN 
+  
+   LINECNT %= 0 ; 
+  
+   CPOOLDEX %= 0 ;
+   SPOOLDEX %= 0 ;
+   NPOOLDEX %= 0 ;
+   ACTPLDEX   %= 0 ;
+   GOTOPLDEX  %= 0 ;
+  
+   CRUNCHCCHR ; 
+  
+   READCLIST (TABS.IGNORE) ;
+   READCLIST (TABS.SLIST) ; 
+   READCLIST (TABS.SELIST) ;
+   READCLIST (TABS.ELIST) ; 
+   READCLIST (TABS.CLIST) ; 
+   READCLIST (TABS.CELIST) ;
+   READCLIST (TABS.DLIST) ; 
+   READSLIST (TABS.TSYMLIST) ;
+   READSLIST (TABS.BIFLIST) ; 
+   READSLIST (TABS.BICLIST) ; 
+   TABS.BSFLITLIST.BEG %= TABS.TSYMLIST.BEG ; 
+   TABS.BSFLITLIST.MAX %= TABS.TSYMLIST.MAX + 
+                          TABS.BIFLIST.MAX + TABS.BICLIST.MAX ; 
+   READTSLIST (TABS.GLUELEFT) ; 
+   READTSLIST (TABS.GLUERITE) ; 
+  
+   CRUNCHBNCF ; 
+   CRUNCHBSF ;
+   CRUNCHACTAB ;
+   CRUNCHGOTAB ;
+  
+  
+   PAGE (OUTPUT) ;
+   INDENT ; 
+   WRITE (' ** INTERNAL STATISTICS **') ; 
+   WRITELN ;
+   WRITELN ;
+   INDENT ; 
+   WRITE ('CPOOLDEX = ') ;
+   WRITE (CPOOLDEX%4) ; 
+   WRITE (' / ') ;
+   WRITE (CPOOLSIZE%4) ;
+   WRITELN ;
+   INDENT ; 
+   WRITE ('SPOOLDEX = ') ;
+   WRITE (SPOOLDEX%4) ; 
+   WRITE (' / ') ;
+   WRITE (SPOOLSIZE%4) ;
+   WRITELN ;
+   INDENT ; 
+   WRITE ('NPOOLDEX = ') ;
+   WRITE (NPOOLDEX%4) ; 
+   WRITE (' / ') ;
+   WRITE (NPOOLSIZE%4) ;
+   WRITELN ;
+   INDENT ; 
+   WRITE ('ACTPLDEX   = ', ACTPLDEX  %4, '/', ACTPLSZ  %4) ;
+   WRITELN ;
+   INDENT ; 
+   WRITE ('GOTOPLDEX  = ', GOTOPLDEX %4, '/', GOTOPLSZ %4) ;
+   WRITELN ;
+   WRITELN ;
+   WRITELN ;
+   PAGE (OUTPUT) ;
+  
+END (* READIN *) ;
+  
+(*$H+*) (*$L**) 
+BEGIN 
+  
+   BTSYMCODE [ANYDEX]    %= '*' ; 
+   BTSYMCODE [GLUEDEX]   %= '$' ; 
+   BTSYMCODE [EOFDEX]    %= 'E' ; 
+   BTSYMCODE [EOLNDEX]   %= '?' ; 
+   BTSYMCODE [STRINGDEX] %= 'S' ; 
+   BTSYMCODE [DIGITSDEX] %= 'D' ; 
+   BTSYMCODE [CHUNKDEX]  %= 'C' ; 
+  
+   WITH BNCFCODE[1]  DO 
+        BEGIN INSYM %= '< ' ; BNF %= PACKIT   ; BCF %= NOTID    END ; 
+   WITH BNCFCODE[2]  DO 
+        BEGIN INSYM %= '$ ' ; BNF %= PROCDEF  ; BCF %= NOTID    END ; 
+   WITH BNCFCODE[3]  DO 
+        BEGIN INSYM %= 'O ' ; BNF %= OTHERS   ; BCF %= NOTHING  END ; 
+   WITH BNCFCODE[4]  DO 
+        BEGIN INSYM %= 'O-' ; BNF %= OTHERS   ; BCF %= NOTID    END ; 
+   WITH BNCFCODE[5]  DO 
+        BEGIN INSYM %= '-O' ; BNF %= OTHERS   ; BCF %= NOTID    END ; 
+   WITH BNCFCODE[6]  DO 
+        BEGIN INSYM %= 'OA' ; BNF %= OTHERS   ; BCF %= ASSIGNED END ; 
+   WITH BNCFCODE[7]  DO 
+        BEGIN INSYM %= 'AO' ; BNF %= OTHERS   ; BCF %= ASSIGNED END ; 
+   WITH BNCFCODE[8]  DO 
+        BEGIN INSYM %= 'OL' ; BNF %= OTHERS   ; BCF %= LOCAL    END ; 
+   WITH BNCFCODE[9]  DO 
+        BEGIN INSYM %= 'LO' ; BNF %= OTHERS   ; BCF %= LOCAL    END ; 
+   WITH BNCFCODE[10] DO 
+        BEGIN INSYM %= '+ ' ; BNF %= IDEN     ; BCF %= NOTHING  END ; 
+   WITH BNCFCODE[11] DO 
+        BEGIN INSYM %= '+A' ; BNF %= IDEN     ; BCF %= ASSIGNED END ; 
+   WITH BNCFCODE[12] DO 
+        BEGIN INSYM %= 'A+' ; BNF %= IDEN     ; BCF %= ASSIGNED END ; 
+   WITH BNCFCODE[13] DO 
+        BEGIN INSYM %= '+L' ; BNF %= IDEN     ; BCF %= LOCAL    END ; 
+   WITH BNCFCODE[14] DO 
+        BEGIN INSYM %= 'L+' ; BNF %= IDEN     ; BCF %= LOCAL    END ; 
+   WITH BNCFCODE[15] DO 
+        BEGIN INSYM %= '* ' ; BNF %= PROCNAME ; BCF %= NOTID    END ; 
+  
+   BSFCODE [1]  %= '_ ' ; 
+   BSFCODE [2]  %= ', ' ; 
+   BSFCODE [3]  %= '; ' ; 
+   BSFCODE [4]  %= '[ ' ; 
+   BSFCODE [5]  %= '] ' ; 
+   BSFCODE [6]  %= '( ' ; 
+   BSFCODE [7]  %= ') ' ; 
+   BSFCODE [8]  %= '< ' ; 
+   BSFCODE [9]  %= '> ' ; 
+   BSFCODE [10] %= '(-' ; 
+   BSFCODE [11] %= '-)' ; 
+   BSFCODE [12] %= '<-' ; 
+   BSFCODE [13] %= '->' ; 
+   BSFCODE [14] %= '/-' ; 
+   BSFCODE [15] %= '-/' ; 
+   BSFCODE [16] %= '& ' ; 
+   BSFCODE [17] %= '! ' ; 
+   BSFCODE [18] %= '/*' ; 
+   BSFCODE [19] %= '*/' ; 
+  
+   WITH ACTCODE [1] DO BEGIN INSYM %= 'S' ; ACT %= SHIFT     END ;
+   WITH ACTCODE [2] DO BEGIN INSYM %= 'R' ; ACT %= REDUCE    END ;
+   WITH ACTCODE [3] DO BEGIN INSYM %= 'D' ; ACT %= DONE      END ;
+   WITH ACTCODE [4] DO BEGIN INSYM %= 'E' ; ACT %= BADSYNTAX END ;
+  
+   REWRITE (TABLEFILE) ;
+   LEFTMARGIN %= 1 ; (* LINE PRINTERS NEED AT LEAST 1 *)
+   READIN (INPUT, TABLEFILE^) ; 
+   PUT (TABLEFILE) ;
+  
+  
+END (*PROGRAM*) . 
+  
+V4%%%>

@@ -1,0 +1,150 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STANDARD',
+               'QLIBHOME:FIG',
+               'QLIBHOME:TERM_VAX',
+               'QLIBHOME:TERM_ANSI',
+               'QLIBHOME:TERM_4010'),
+  ENVIRONMENT ('QLIBHOME:ERGO301.TEN') ]
+MODULE term_ERGO301;
+{=============================================================================}
+{-- PROCEDURES FOR TERMINAL TYPE ERGO301 -------------------------------------}
+{=============================================================================}
+[ GLOBAL ]
+FUNCTION termname_ERGO301 (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0: termname_ERGO301 := '1';
+   1: termname_ERGO301 := 'ERGO301 ';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE colorsetup_ERGO301;
+BEGIN
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE executecom_ERGO301;
+VAR
+   oldpos        : ipoint;
+{------------------------------}
+PROCEDURE bufferempty;
+BEGIN
+IF length(env.buffer) <> 0 
+ THEN 
+  BEGIN
+  CASE env.mode OF
+     M_TEXT,
+     M_DUAL:  BEGIN
+              qiowwrite (ESC + '[H' + ESC + '[J' + CRLF);
+              qiowwrite (ESC + '1' + ESC + '*' + CRLF);
+              END;
+     END;
+  env.mode := M_PLOT;
+  qiowwrite (env.buffer + CRLF);
+  env.buffer := '';
+  END;
+END;
+{------------------------------}
+BEGIN
+WITH plotitem DO CASE ins OF
+   I_col:  bufferempty;
+   I_pan:  ;
+   I_clo:  ;
+   I_pos:  BEGIN
+           bufferempty;
+           env.pos.ix := ix;
+           env.pos.iy := iy;
+           END;
+   I_dra:  draw_4010(ix,iy,false,bufferempty); 
+   I_siz:  ;
+   I_mar:  ;
+   I_pri:  IF env.visible AND (st <> '') 
+            THEN 
+             BEGIN
+             bufferempty;
+             env.buffer := chr(29) + strofpos_4010 (env.pos) 
+                         + chr(31) + st;
+             bufferempty;
+             END;
+   I_emp:  bufferempty;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE writeterm_ERGO301 (str : VARYING [l2] OF char);
+BEGIN
+IF env.mode = M_PLOT
+ THEN
+  BEGIN
+  env.mode := M_DUAL;
+  qiowwrite (ESC + 'O' +  ESC + '2' + CRLF);
+  END;
+qiowwritevirtual (str);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE readterm_ERGO301 (VAR outstr : VARYING [l2] OF char);  
+BEGIN
+readterm_vax (outstr);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screenerase_ERGO301;
+BEGIN
+qiowwrite (ESC + '1' + ESC + '*' + CRLF);
+qiowwrite (ESC + chr(12));
+qiowwrite (ESC + chr(12) + ESC + 'O' + ESC + '2');
+qiowwrite (ESC + '[?3l');
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screencopy_ERGO301;
+BEGIN
+screencopy_4010;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE gin_ERGO301 (VAR key : char;  VAR ipt : ipoint;  color : color_type);
+VAR
+   ip  : ipoint;
+   str : VARYING [20] OF char;
+BEGIN
+IF env.mode = M_DUAL 
+ THEN
+  BEGIN
+  qiowwrite (ESC + '[H' + ESC + '[J' + CRLF);
+  qiowwrite (ESC + '1' + ESC + '*' + CRLF);
+  END;
+
+gin_4010 (key,ipt);
+
+qiowwrite (chr(31));
+IF key = ESC THEN qiowread (str);
+END;
+{-----------------------------------------------------------------------------}
+[GLOBAL]
+FUNCTION readmenu_ERGO301 (default : char;  toplevel : boolean;
+   helpprefix : anystring) : command_type;
+BEGIN
+readmenu_ERGO301 := readmenu_ansi (default,toplevel,helpprefix,true);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE termconfig_ERGO301 (configcontrol : configcontrol_type);
+BEGIN
+CASE configcontrol OF
+   CON:  BEGIN
+         config.ch := ch_type (878,1428,283,204);
+         config.resolution := 204;
+         config.dotsize    := 204;
+         config.starsize   := 612;
+         config.ansi364    := true;
+         config.drawblack  := false;
+         END;
+   QUE:  ;
+   REP:  ;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+END.

@@ -1,0 +1,189 @@
+
+
+
+
+ ********** START CASE  1 **********
+
+
+
+
+
+
+ ***************** USER GUIDE TABLE ZERO *****************
+
+
+
+$IS THIS AN INTERACTIVE RUN ?  ENTER (Y/N) > 
+
+
+ ***************** USER GUIDE TABLE 1 *****************
+
+
+ <<< FIRST TIME AND INCREMENT(DAYS) CONTROLS >>>
+
+   FIRST VALUE =   500101.000000    
+   INCREMENT =     5.00000000000    
+   NUM VALUES =           1
+
+$  ENTER NEW CONTROLS -----> 
+
+   ENTERED -->    890101.000000       5.00000000000          7
+
+
+
+ ***************** USER GUIDE TABLE 2 *****************
+
+
+
+ SPECIFY ORBIT ALTITUDE (EARTH RAD=6378.166)  DEFAULT= 300.000
+
+$ENTER > 
+
+
+ ***************** USER GUIDE TABLE 3 *****************
+
+
+
+ SPECIFY THE ORBIT INCLINATION. DEFAULT=  28.500
+
+$ENTER > 
+
+
+ ***************** USER GUIDE TABLE 4 *****************
+
+
+
+ SPECIFY THE METHOD OF ASSIGNING ORBIT RAAN'S.
+
+    1= NODE RANGE SPECIFIED DIRECTLY.
+    2= MEAN SOLAR TIME RANGE IS SPECIFIED. RAAN COMPUTED.
+
+    DEFAULT =  1
+
+$ENTER > 
+
+
+ ***************** USER GUIDE TABLE 5A *****************
+
+
+ <<< ORBIT RAAN CONTROLS >>>
+
+   FIRST VALUE =  0.000000000000E+00
+   INCREMENT =     7.50000000000    
+   NUM VALUES =          49
+
+$  ENTER NEW CONTROLS -----> 
+
+   ENTERED -->   0.000000000000E+00   10.0000000000         37
+
+
+
+ ***************** USER GUIDE TABLE 6 *****************
+
+
+
+$DUMMY READ. ENTER SLASH(/).  > 
+
+
+ ***************** USER GUIDE TABLE 7 *****************
+
+
+
+ THE SKY SURVEY OPTION IS ON.
+
+   SET CONTROLS.  DEFAULTS ARE --
+
+     OUTPUT FREQUENCY(NUM TIME STEPS BETWEEN OUTPUT)....   1
+     VISIB TIME FLAG (1=CURR,2=CUMM,ELSE=BOTH)..........   3
+     FORMAT FLAG (1=GRID,2=MAP,ELSE=BOTH)...............   3
+
+$ENTER > 
+
+
+ ***************** USER GUIDE TABLE 8 *****************
+
+
+
+ ORBIT EVENT INDICATOR FOR RELATIVE TIME USE =   2
+
+    ASSIGNMENTS: 1= CROSS ORBIT SUNSET                      
+                 2= CROSS ORBIT SUNRISE                     
+                 3= CROSS TRUE SUN MERIDIAN                 
+                 4= CROSS ASCENDING NODE                    
+                 5= CROSS THE DESCENDING NODE               
+                 6= CROSS TARGET MERIDIAN                   
+                 7= CROSS INERTIAL ZERO RIGHT ASCENSION     
+
+ MINIMUM AVAILABILITY(MINUTES) FOR SUMMARY TABLE ENTRY =  0.0000E+00
+
+$ENTER > 
+1          CASE  1 STARTED AT 10-JUN-87 18:29:34
+
+
+
+
+ FIRST AND LAST TIMES(YYMMDD.HHMMSS) =  890101.000000  890131.000000
+
+         INCREMENT(DAYS) =   5.0
+         NUMBER OF TIMES =     7
+         TIME SPAN(DAYS) =  30.0
+
+ ORBIT SEMI-MAJOR AXIS(KM) =  6678.166  (PERIOD(MIN)=  90.520)
+ ORBIT INCLINATION(DEG) =       28.500
+
+ RAAN RANGE WAS INPUT:
+
+         FIRST AND FINAL RAAN(DEG) =     0.000  360.000
+         INCREMENT(DEG) =   10.000
+         NUMBER OF RAANS =      37
+         SPAN(DEG) =       360.000
+
+ OBSERVATION CONSTRAINTS:
+
+         EARTH AVOIDANCE(DEG)........  17.0
+         VEL VEC AVOIDANCE(DEG)......   0.0
+         MAX TARGET/ZENITH SEP(DEG).. 180.0
+         ORBIT NIGHT................. REQUIRED  
+
+ EXECUTING THE SKY SURVEY OPTION:
+
+     OUTPUT EACH N'TH TIME PROCESSED;  N=.....   1
+     OUTPUT CURRENT/COMPOSITE TIME REQULTS.... BOTH      
+     GRID/MAP FORMAT OPTION................... BOTH      
+
+
+
+ FOR YOUR INFO:    TIME= 10-JUN-87 18:29:34
+    (NUMBER OF DATES)*(NUMBER OF NODES)*(NUMBER OF TARGS) =  182077
+              7                37                 703
+ START PROCESSING TIME NUMBER   1 OF   7 AT 10-JUN-87 18:29:34
+ START PROCESSING TIME NUMBER   2 OF   7 AT 10-JUN-87 18:40:30
+ START PROCESSING TIME NUMBER   3 OF   7 AT 10-JUN-87 18:52:37
+ START PROCESSING TIME NUMBER   4 OF   7 AT 10-JUN-87 19:04:05
+ START PROCESSING TIME NUMBER   5 OF   7 AT 10-JUN-87 19:15:10
+ START PROCESSING TIME NUMBER   6 OF   7 AT 10-JUN-87 19:26:11
+ START PROCESSING TIME NUMBER   7 OF   7 AT 10-JUN-87 19:37:17
+
+ END PROCESSING CASE  1     10-JUN-87 19:48:19
+
+
+
+
+
+ ********** START CASE  2 **********
+
+
+
+
+
+
+ ***************** USER GUIDE TABLE 1 *****************
+
+
+ <<< FIRST TIME AND INCREMENT(DAYS) CONTROLS >>>
+
+   FIRST VALUE =   890101.000000    
+   INCREMENT =     5.00000000000    
+   NUM VALUES =           7
+
+$  ENTER NEW CONTROLS -----> 

@@ -1,0 +1,73 @@
+ FPT- FORTRAN PROGRAMMING TOOLS FOR THE DEC VAX
+
+( NASA Ames Research Center )
+
+     The FORTRAN Programming Tools (FPT) are a series of tools used to sup-
+port the development and maintenance of FORTRAN 77 source codes. Included
+are a debugging aid, a CPU time monitoring program, source code maintenance
+aids, print utilities, and a library of useful, well-documented programs.
+These tools assist in reducing development time and encouraging high qual-
+ity programming. Although intended primarily for FORTRAN programmers,
+some of the tools can be used on data files and other programming languages.
+
+     BUGOUT is a series of FPT programs that have proven very useful in de-
+bugging a particular kind of error and in optimizing CPU-intensive codes.
+The particular type of error is the illegal addressing of data or code as
+a result of subtle FORTRAN errors that are not caught by the compiler or at
+run time. A TRACE option also allows the programmer to verify the execution
+path of a program. The TIME option assists the programmer in identifying
+the CPU-intensive routines in a program to aid in optimization studies.
+
+     Program coding, maintenance, and print aids available in FPT include:
+routines for building standard format subprogram stubs; cleaning up com-
+mon blocks and NAMELISTs; removing all characters after column 72; display-
+ing two files side by side on a VT-100 terminal; creating a neat listing of a
+FORTRAN source code including a Table of Contents, an Index, and Page Head-
+ings; converting files between VMS internal format and standard carriage
+control format; changing text strings in a file without using EDT; and re-
+placing tab characters with spaces.
+
+     The library of useful, documented programs includes the following:
+time and date routines; a string categorization routine; routines for con-
+verting between decimal, hex, and octal; routines to delay process ex-
+ecution for a specified time; a Gaussian elimination routine for solv-
+ing a set of simultaneous linear equations; a curve fitting routine for
+least squares fit to polynomial, exponential, and sinusoidal forms (with a
+screen-oriented editor); a cubic spline fit routine; a screen-oriented ar-
+ray editor; routines to support parsing; and various terminal support rou-
+tines.
+
+     These FORTRAN programming tools are written in FORTRAN 77 and ASSEM-
+BLER for interactive and batch execution. FPT is intended for implementa-
+tion on DEC VAX series computers operating under VMS. This collection of
+tools was developed in 1985.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: FORTRAN 77 ( 100 %); ASSEMBLER ( 00 %);
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 23,970 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX FILES-11 Format Magnetic Tape
+
+PROGRAM NUMBER: ARC-11676
+
+DOMESTIC - DOCUMENTATION PRICE: $19.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $38.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

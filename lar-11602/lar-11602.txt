@@ -1,0 +1,51 @@
+ UNIVERSITY OF KANSAS STATIC AEROELASTIC PROGRAM
+
+( KANSAS UNIV. )
+
+     This software package contains three programs which compute geomet-
+ric, mass, aerodynamic, and structural characteristics of fighter type
+aircraft. The programs were developed for computational support of a para-
+metric study of planform and aeroelastic effects on aerodynamic center and
+stability derivatives. They calculate alpha- and q- stability derivatives
+and induced drag for thin elastic aeroplanes at subsonic and supersonic
+speeds. The programs are applicable to studies of steady state aeroelastic
+effects on stability characteristics of airplanes, but results are limited
+in validity to wings of typical fighter airplanes with a weight of 40,000
+pounds (178,000 Newtons) and wing structures designed to withstand a limit
+load of 7.33 g's.
+
+     The programs represent the airplane at subsonic and supersonic speeds
+as thin surface(s) (without dihedral) composed of discrete panels of con-
+stant pressure for the aerodynamic effects, and as slender beam(s) for the
+structural effects. They compute the static aeroelastic angle-of-attack
+and pitch rate stability derivatives for a twisted and cambered thin air-
+plane configuration at various flight conditions.
+
+     The program operates in batch mode and was written in CDC FORTRAN Ver-
+sion 2.3 to run on CDC 6000 Series computers with the SCOPE 3.0 Base Operat-
+ing System and Library Tape.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC 6000 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 2,865 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-11602
+
+DOMESTIC - DOCUMENTATION PRICE: $57.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $114.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

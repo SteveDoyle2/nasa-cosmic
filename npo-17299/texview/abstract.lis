@@ -1,0 +1,61 @@
+
+ABSTRACT
+
+1.	This program facilitates the production of viewgraphs.  It does
+	so using TeX, a public-domain typesetting language developed by
+	Dr. Donald Knuth of Stanford University, now widely used throughout
+	the scientific and educational community.  TeXVIEW defines an 
+	environment and macros for producing viewgraphs that unburden
+	the user of typesetting considerations.
+
+2.	TeXVIEW is machine- and output-device-independent.  It is set
+	up for a specific viewgraph environment that matches that used
+	at the Jet Propulsion Laboratory exactly.  It would be trivial
+	to modify it for other institutional formats.  The inclusion of
+	graphics is allowed by an implementation-specific command that
+	may not exist or be in the same format on other systems; however,
+	it will be very easy to convert in such an instance.
+
+	                                                  
+
+
+REQUIREMENTS:
+
+1.	The problem: produce viewgraphs without the user having to
+	specify endless complicated formatting commands.
+
+2.	The solution: a series of TeX macros and output routines
+	that set up an environment for producing viewgraphs, and
+	a series of simple commands oriented towards functions
+	required in viewgraphs.
+
+3.	Language: TeX, with optional command procedures and command
+	definition files for producing a high-speed version when run
+	under VAX/VMS.
+
+Size:     900 lines of TeX
+          10 lines of DCL
+          10 lines of VAX Command Definition Language      
+
+4.	Machine requirements: none.  If the user wishes to implement the
+	preloaded format, you need a VAX computer and the VMS operating
+	system to take advantage of the supplied routines; however these
+	are so short that they could easily be used on another machine
+	which supplies the same functionality.
+
+5.	User instructions: See the file MANUAL.TEX, which is coded in
+	TeXVIEW instructions.  Process it through TeXVIEW in order to
+	generate the manual.  If you do not have the high-speed version,
+	insert the command "\input texview" at the head of the file
+	to load the TeXVIEW routines.
+
+6.	Operating instructions: with the high-speed version, simply
+	define the commands as specified in the file README. and type
+	TEXVIEW input_file.  Otherwise insert the command "\input texview"
+	at the head of the input file and type TEX input_file.
+
+Sample input and output: the file MANUAL.TEX and the result of passing
+it through TeXVIEW supply these.
+
+
+Peter Scott   (PJS%GROUCH.SPAN)

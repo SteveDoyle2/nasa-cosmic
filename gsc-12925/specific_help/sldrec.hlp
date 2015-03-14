@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+When recieving something from TELEMAIL to the Slide Show, after the recieve
+option has been selected, the prompt warns that the directory will be replaced.
+If downloading just one file, the directory will not be replaced, but whatever
+is in HOSTMAIL will be deleted and the file recieved will be there.  When
+recieving all the slide shows the directory will be rewritten.  Whatever was
+sent to TELEMAIL will be recieved.  If recieving is desired, press F2 to
+continue.  Otherwise, press F1(Cancel) to return to the Slide Show Main menu.
+
+
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

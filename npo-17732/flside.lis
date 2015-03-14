@@ -1,0 +1,418 @@
+RM/FORTRAN Compiler (V2.11)                                         Page     1
+Source File: FLCOSMO.FOR           Options: /L               08/29/88 10:18:12 
+ 
+   1 C *******************************************************************
+   2 C
+   3 C       FLUX DISTRIBUTION IN CYLINDRICAL RECEIVER CAVITY
+   4 C       BY CONTOUR ERROR METHOD
+   5 C       Code written by PRADEEP BHANDARI, Jet Propulsion Laboratory
+   6 C
+   7 C *******************************************************************
+   8 C
+   9       DIMENSION ARALP(100),ZMIN(100),ZMAX(100),
+  10      * FZ(100),ALP(100),Z2(100),Z3(100)
+  11       REAL L,MU
+  12        CHARACTER B*12
+  13       COMMON PI,GS,NZCY,NZ,NAL,REFCONC,FOCAL,ALPMAX,BETA,
+  14      *       DCY,DAP,L,RCY,ALPHA,G,P,CONANG,
+  15      *       MU,KCRIT
+  16 C
+  17       PI=3.141593
+  18 C
+  19 C   SOLAR CONSTANT NORMALIZED
+  20       GS=1.0
+  21 C
+  22 C ----------------------------------------------------------
+  23 C ****** INPUT PARAMETERS ********
+  24 C
+  25        WRITE (6,1500)
+  26  1500 FORMAT (1X,' WELCOME TO THE SIMPLIFIED PROGRAM TO CALCULATE')
+  27        WRITE (6,1510)
+  28  1510 FORMAT (1X,' THE SOLAR FLUX DISTRIBUTION ON THE SIDE WALL OF')
+  29        WRITE (6,1520)
+  30  1520 FORMAT (1X,' CYLINDRICAL RECEIVER CAVITIES')
+  31        WRITE (6,1560)
+  32  1560 FORMAT (/1X,'NAME OF FILE FOR STORING OUTPUT: ENTER "*:*.OUT"?  ')
+  33       READ (5,1565) B
+  34  1565 FORMAT(A12)
+  35       OPEN (1,FILE=B)
+  36       WRITE (6,1600)
+  37  1600 FORMAT(/1X,'ENTER ALL DIMENSIONS IN THE SAME UNITS,')
+  38       WRITE (6,1601)
+  39  1601 FORMAT(1X,'EXCEPT AS PROMPTED')
+  40       WRITE (6,1602)
+  41  1602 FORMAT(//1X,'ENTER DIMENSIONS OF RECEIVER CAVITY: ')
+  42  1605 WRITE (6,1610)
+  43  1610 FORMAT (1X,'CAVITY DIAMETER, CAVITY HEIGHT ?     ')
+  44       READ (5,*,ERR=1605) DCY,L
+  45  1620 WRITE (6,1630)
+  46  1630 FORMAT (1X,'APERTURE DIAMETER ?   ')
+  47       READ (5,*,ERR=1620) DAP
+  48       WRITE (6,5000)
+  49  5000 FORMAT(//1X,'ENTER CONCENTRATOR DATA :    ')
+  50  5005 WRITE (6,5010)
+  51  5010 FORMAT (1X,'FOCAL LENGTH, RIM ANGLE (DEGREES) ?    ')
+  52       READ (5,*,ERR=5005) FOCAL,ALPMAX
+  53  5020 WRITE (6,5025)
+  54  5025 FORMAT (1X,'CONCENTRATOR REFLECTIVITY ( <= 1.0 ) ?    ')
+  55       READ (5,*,ERR=5020) REFCONC
+  56  5030 WRITE (6,5035)
+  57  5035 FORMAT (1X,'CONCENTRATOR SLOPE ERROR ( MILLI RADIANS ) ?    ')
+  58       READ (5,*,ERR=5030) SERR
+  59 C
+  60       WRITE (1,3300) DCY
+RM/FORTRAN Compiler (V2.11)                                         Page     2
+Source File: FLCOSMO.FOR           Options: /L               08/29/88 10:18:12 
+ 
+  61  3300 FORMAT(/1X,'CAVITY DIAMETER = ',F7.2)
+  62       WRITE (1,3305) L
+  63  3305 FORMAT(/1X,'CAVITY HEIGHT = ',F7.2)
+  64       WRITE (1,3310) DAP
+  65  3310 FORMAT(/1X,'APERTURE DIAMETER = ',F7.2)
+  66       WRITE (1,3315) FOCAL
+  67  3315 FORMAT(/1X,'FOCAL LENGTH OF CONCENTRATOR = ',F7.2)
+  68       WRITE (1,3320) ALPMAX
+  69  3320 FORMAT(/1X,'CONC. RIM ANGLE = ',F7.2,' degrees')
+  70       WRITE (1,3325) REFCONC
+  71  3325 FORMAT(/1X,'CONC. REFLECTIVITY = ',F7.2)
+  72       WRITE (1,3330) SERR
+  73  3330 FORMAT(/1X,'CONC. SLOPE ERROR = ',F7.2,' milliradians'///)
+  74 C
+  75 C ----------------------------------------------------------
+  76 C ****** NUMERICAL PARAMETERS *************************************
+  77 C
+  78 C   NO. OF CYL. SEGMENTS FOR FLUX CALCS.
+  79       NZCY = 40
+  80 C
+  81 C   NO. OF SEGMENTS FOR BEAM AREA CALCS.
+  82       NZ = 60
+  83 C
+  84 C   NO. OF ANGLE SEGMENTS ON CONCENTRATOR
+  85       NAL = 60
+  86 C
+  87 C ___________________________________________________________________
+  88 C
+  89 C  ARRAYS FOR ZMIN,ZMAX & AREA OF BEAM ON CYLIN. FOR VARIOUS ALPHAS
+  90 C
+  91       RCY = DCY/2.0
+  92       RAP = DAP/2.0
+  93       ALPMAX = ALPMAX*PI/180.0
+  94       BETA = 16.0/60.0*PI/180.0 + 2*SERR/1000
+  95       DELAL = ALPMAX/NAL
+  96       DELMIN = FOCAL*BETA
+  97       DELMAX = 2*FOCAL*BETA/COS(ALPMAX)/(1+COS(ALPMAX))
+  98       KOUNT = 0
+  99       KCRIT = 0
+ 100 C     NO SPILLOVER
+ 101       IF (DELMAX.LE.RAP) THEN
+ 102       KOUNT=1
+ 103       KCRIT=1
+ 104       END IF
+ 105 C     FULL RANGE SPILLOVER
+ 106       IF (DELMIN.GE.RAP) THEN
+ 107       KOUNT=2
+ 108       KCRIT=2
+ 109       END IF
+ 110       ALP(1) = DELAL/2.0
+ 111 C
+ 112       DO 100 I=2,NAL
+ 113       ALP(I)=ALP(I-1)+DELAL
+ 114  100  CONTINUE
+ 115       KHI = 0
+ 116       KLOW = 0
+ 117       DO 200 I=1,NAL
+ 118       ALPHA = ALP(I)
+ 119       CONANG = BETA
+ 120       KCRIT = 1
+RM/FORTRAN Compiler (V2.11)                                         Page     3
+Source File: FLCOSMO.FOR           Options: /L               08/29/88 10:18:12 
+ 
+ 121       G = L + 2.0*FOCAL*COS(ALPHA)/(1.0+COS(ALPHA))
+ 122       P = (G-L)*TAN(ALPHA)
+ 123 C
+ 124       IF (KOUNT.EQ.1) GO TO 1000
+ 125       MU = ATAN(RAP/2/FOCAL*(1+COS(ALPHA)))
+ 126       EPS = MU*COS(ALPHA)
+ 127       DELTA = 2*FOCAL*BETA/(1+COS(ALPHA))
+ 128       DELMAJ = DELTA/COS(ALPHA)
+ 129       IF (DELMAJ.GT.RAP) KCRIT = 2
+ 130  1000 CALL ZMINMAX(ZA,ZB)
+ 131       ZMIN(I)=ZA
+ 132       ZMAX(I)=ZB
+ 133       IF (ZMIN(I).GE.L) GO TO 200
+ 134       IF (ZMAX(I).LE.0.0) GO TO 200
+ 135 C     NO SPILLOVER
+ 136       IF (KOUNT.EQ.1) GO TO 1020
+ 137 C     FULL RANGE SPILLOVER
+ 138       IF (KOUNT.EQ.2) GO TO 1020
+ 139 C     PARTIAL SPILLOVER
+ 140       DZ = (ZMAX(I)-ZMIN(I))/NZ
+ 141       Z = ZMIN(I)
+ 142       IF (DELMAJ.LE.RAP) THEN
+ 143       KCRIT = 1
+ 144       GO TO 1020
+ 145       END IF
+ 146       IF (DELTA.GE.RAP) THEN
+ 147       KCRIT = 2
+ 148       GO TO 1020
+ 149       END IF
+ 150  1100 KCRIT = 1
+ 151       Z = Z+DZ
+ 152       CALL ROOT(Z,ZMIN(I),ZMAX(I),X1)
+ 153       KCRIT = 2
+ 154       CALL ROOT(Z,ZMIN(I),ZMAX(I),X2)
+ 155       IF (X1.GT.X2) GO TO 1100
+ 156       Z2(I) = Z
+ 157       Z = ZMAX(I)
+ 158  1200 KCRIT = 1
+ 159       Z = Z-DZ
+ 160       CALL ROOT(Z,ZMIN(I),ZMAX(I),X1)
+ 161       KCRIT = 2
+ 162       CALL ROOT(Z,ZMIN(I),ZMAX(I),X2)
+ 163       IF (X1.GT.X2) GO TO 1200
+ 164       Z3(I) = Z
+ 165       KCRIT = 2
+ 166       CALL SIMPS(ZMIN(I),Z2(I),AA)
+ 167       KCRIT = 1
+ 168       CALL SIMPS(Z2(I),Z3(I),AB)
+ 169       KCRIT = 2
+ 170       CALL SIMPS(Z3(I),ZMAX(I),AC)
+ 171       ARALP(I) = AA+AB+AC
+ 172       GO TO 200
+ 173  1020 CALL SIMPS(ZMIN(I),ZMAX(I),ARALP(I))
+ 174  200  CONTINUE
+ 175 C
+ 176 C ********************************************************************
+ 177 C
+ 178 C     FLUX VARIATION WITH DISTANCE FROM FOCAL PLANE
+ 179 C
+ 180       ZFP = 0.0
+RM/FORTRAN Compiler (V2.11)                                         Page     4
+Source File: FLCOSMO.FOR           Options: /L               08/29/88 10:18:12 
+ 
+ 181       Z = L
+ 182       DZ = L/NZCY
+ 183       WRITE (6,600)
+ 184       WRITE (1,600)
+ 185  600  FORMAT(//1X,'DISTANCE FROM',10X,'SIDEWALL FLUX')
+ 186       WRITE (6,605)
+ 187       WRITE (1,605)
+ 188  605  FORMAT(1X,'FOCAL PLANE',10X,'(SOLAR CONSTANTS)'//)
+ 189       DO 300 I=1,NZCY+1
+ 190       FLZ=0.0
+ 191       DO 400 J=1,NAL
+ 192       IF (ZMAX(J).LE.Z) GO TO 400
+ 193       IF (ZMIN(J).GE.Z) GO TO 400
+ 194       ALPHA = ALP(J)
+ 195       G = L+2.0*FOCAL*COS(ALPHA)/(1.0+COS(ALPHA))
+ 196       P = (G-L)*TAN(ALPHA)
+ 197       ZMN = ZMIN(J)
+ 198       ZMX = ZMAX(J)
+ 199 C     NO SPILLOVER
+ 200       IF (KOUNT.EQ.1) THEN
+ 201       KCRIT = 1
+ 202       FRAC = 1.0
+ 203       GO TO 3000
+ 204       END IF
+ 205 C     FULL RANGE SPILLOVER
+ 206       IF (KOUNT.EQ.2) THEN
+ 207       KCRIT = 2
+ 208       FRAC = ((RAP/2/FOCAL/BETA*(1+COS(ALPHA)))**2)*COS(ALPHA)
+ 209       GO TO 3000
+ 210       END IF
+ 211 C     PARTIAL SPILLOVER
+ 212       KCRIT = 1
+ 213       E1 = 2*FOCAL*BETA/(1+COS(ALPHA))
+ 214       E2 = E1/COS(ALPHA)
+ 215       IF (E1.GE.RAP) THEN
+ 216       KCRIT = 2
+ 217       FRAC = ((RAP/2/FOCAL/BETA*(1+COS(ALPHA)))**2)*COS(ALPHA)
+ 218       GO TO 3000
+ 219       END IF
+ 220       IF (E2.LE.RAP) THEN
+ 221       FRAC = 1.0
+ 222       GO TO 3000
+ 223       END IF
+ 224       YSTR = SQRT(RAP**2-E1**2)/SIN(ALPHA)
+ 225       XSTR = SQRT(RAP**2-YSTR**2)
+ 226       BRAC1 = YSTR*XSTR+(RAP**2)*ASIN(YSTR/RAP)
+ 227       BRAC2 = YSTR*SQRT(E2**2-YSTR**2)+(E2**2)*ASIN(YSTR/E2)
+ 228       AFP = PI*RAP**2-2*BRAC1+2*COS(ALPHA)*BRAC2
+ 229       FRAC = AFP/PI/E1/E2
+ 230       IF (Z.LT.Z2(J)) THEN
+ 231       KCRIT = 2
+ 232       ZMN = ZMIN(J)
+ 233       ZMX = Z2(J)
+ 234       GO TO 3000
+ 235       END IF
+ 236       IF (Z.GT.Z3(J)) THEN
+ 237       KCRIT = 2
+ 238       ZMN = Z3(J)
+ 239       ZMX = ZMAX(J)
+ 240       GO TO 3000
+RM/FORTRAN Compiler (V2.11)                                         Page     5
+Source File: FLCOSMO.FOR           Options: /L               08/29/88 10:18:12 
+ 
+ 241       END IF
+ 242       ZMN = Z2(J)
+ 243       ZMX = Z3(J)
+ 244  3000 CALL ROOT(Z,ZMN,ZMX,X)
+ 245       Y = SQRT(RCY**2-X**2)
+ 246       TERM1 = ATAN(ABS(X/Y))*SIN(ALPHA)/(1.0+COS(ALPHA))**2/ARALP(J)
+ 247  4000 FLZ = FLZ+TERM1*DELAL*8.0*GS*REFCONC*FRAC*FOCAL**2
+ 248       FZ(I) = FLZ
+ 249  400  CONTINUE
+ 250       WRITE (6,650) ZFP,FZ(I)
+ 251       WRITE (1,650) ZFP,FZ(I)
+ 252  650  FORMAT (6X,F6.4,10X,F10.4/)
+ 253  500  Z = Z-DZ
+ 254  510  ZFP = ZFP + DZ
+ 255  300  CONTINUE
+ 256       END
+
+
+
+NUMBER OF WARNINGS IN PROGRAM UNIT: 0
+NUMBER OF ERRORS   IN PROGRAM UNIT: 0
+
+
+
+ 257 C
+ 258 C --------------------------------------------------------------------
+ 259 C
+ 260 C     SIMPSON'S RULE FOR INTEGRATION
+ 261 C
+ 262       SUBROUTINE SIMPS(ZA,ZB,AREA)
+ 263       REAL L,MU
+ 264       COMMON PI,GS,NZCY,NZ,NAL,REFCONC,FOCAL,ALPMAX,BETA,
+ 265      *       DCY,DAP,L,RCY,ALPHA,G,P,CONANG,
+ 266      *       MU,KCRIT
+ 267       DELZ = (ZB-ZA)/NZ
+ 268 C
+ 269 C     COMPUTE SUMODD
+ 270 C
+ 271       SUMODD = 0.0
+ 272       Z = ZA+DELZ
+ 273       DO 100 I=2,NZ,2
+ 274       CALL ROOT(Z,ZA,ZB,X)
+ 275       Y=SQRT(RCY**2-X**2)
+ 276       ARC=RCY*2.0*ATAN(ABS(X/Y))
+ 277       SUMODD = SUMODD+ARC
+ 278  300  Z = Z+2.0*DELZ
+ 279  100  CONTINUE
+ 280 C
+ 281 C     COMPUTE SUMEVE
+ 282 C
+ 283       SUMEVE = 0.0
+ 284       Z = ZA+2.0*DELZ
+ 285       DO 200 I = 2,NZ-2,2
+ 286       CALL ROOT(Z,ZA,ZB,X)
+ 287       Y=SQRT(RCY**2-X**2)
+ 288       ARC=RCY*2.0*ATAN(ABS(X/Y))
+ 289       SUMEVE = SUMEVE+ARC
+ 290  400  Z = Z+2.0*DELZ
+ 291  200  CONTINUE
+ 292 C
+RM/FORTRAN Compiler (V2.11)                                         Page     6
+Source File: FLCOSMO.FOR           Options: /L               08/29/88 10:18:12 
+ 
+ 293       CALL ROOT(ZA,ZA,ZB,X)
+ 294       Y=SQRT(RCY**2-X**2)
+ 295       ARCA=RCY*2.0*ATAN(ABS(X/Y))
+ 296 C
+ 297       CALL ROOT(ZB,ZA,ZB,X)
+ 298       Y=SQRT(RCY**2-X**2)
+ 299       ARCB=RCY*2.0*ATAN(ABS(X/Y))
+ 300 C
+ 301 C     COMPUTE AREA
+ 302 C
+ 303       AREA = DELZ/3.0*(ARCA+4.0*SUMODD+2.0*SUMEVE+ARCB)
+ 304       RETURN
+ 305       END
+
+
+
+NUMBER OF WARNINGS IN PROGRAM UNIT: 0
+NUMBER OF ERRORS   IN PROGRAM UNIT: 0
+
+
+
+ 306 C
+ 307 C --------------------------------------------------------------------
+ 308 C
+ 309 C     ZMIN AND ZMAX CALCULATIONS
+ 310 C
+ 311       SUBROUTINE ZMINMAX(ZA,ZB)
+ 312       REAL L,MU
+ 313       COMMON PI,GS,NZCY,NZ,NAL,REFCONC,FOCAL,ALPMAX,BETA,
+ 314      *       DCY,DAP,L,RCY,ALPHA,G,P,CONANG,
+ 315      *       MU,KCRIT
+ 316       TERM1 = (G-L+RCY/TAN(ALPHA))*SIN(CONANG)
+ 317       TERM2 = SIN(ALPHA+CONANG)*COS(ALPHA)
+ 318       ZB = TERM1/TERM2+L-RCY/TAN(ALPHA)
+ 319       ZA = L-RCY/TAN(ALPHA)-TERM1/SIN(ALPHA-CONANG)/COS(ALPHA)
+ 320       IF (KCRIT.EQ.2) THEN
+ 321       ZB = G-(RCY+P)*(G-L)/(P+DAP/2)
+ 322       ZA = G-(RCY+P)*(G-L)/(P-DAP/2)
+ 323       END IF
+ 324       RETURN
+ 325       END
+
+
+
+NUMBER OF WARNINGS IN PROGRAM UNIT: 0
+NUMBER OF ERRORS   IN PROGRAM UNIT: 0
+
+
+
+ 326 C
+ 327 C --------------------------------------------------------------------
+ 328 C
+ 329 C     ROOTS OF EQUATION
+ 330 C
+ 331       SUBROUTINE ROOT(Z,ZA,ZB,XA)
+ 332       REAL L,MU
+ 333       COMMON PI,GS,NZCY,NZ,NAL,REFCONC,FOCAL,ALPMAX,BETA,
+ 334      *       DCY,DAP,L,RCY,ALPHA,G,P,CONANG,
+ 335      *       MU,KCRIT
+ 336 C
+RM/FORTRAN Compiler (V2.11)                                         Page     7
+Source File: FLCOSMO.FOR           Options: /L               08/29/88 10:18:12 
+ 
+ 337       NROOT = 50
+ 338       XA = 0.0
+ 339       DXA = (RCY+P)/(DAP/2+P)*DAP/2/NROOT
+ 340       FUNX = 0.0
+ 341       FUNXP = 0.0
+ 342       XP = 0.0
+ 343       RATIO = 1.0
+ 344       DO 1500 I=1,NROOT+1
+ 345  110  TERM1 = (SQRT(RCY**2-XA**2)+P)
+ 346       TERM2 = ((Z-G)*SIN(ALPHA)+TERM1*COS(ALPHA))**2
+ 347       IF (KCRIT.EQ.2) TERM2 = TERM2/(COS(ALPHA))**2
+ 348       TERM3 = (Z-G)*COS(ALPHA)-TERM1*SIN(ALPHA)
+ 349       TERM4 = (TERM3*TAN(BETA))**2
+ 350       IF (KCRIT.EQ.2) TERM4 = (TERM3*TAN(MU))**2
+ 351       FUNX  = TERM2-TERM4+XA**2
+ 352       IF (I.EQ.1) GO TO 2000
+ 353       RATIO = FUNX/FUNXP
+ 354  2000 IF (ABS(FUNX).LE.1.0E-3) GO TO 1600
+ 355       IF (RATIO.LT.0.0) THEN
+ 356       XA    = (XA+XP)/2.0
+ 357       GO TO 1600
+ 358       END IF
+ 359       FUNXP = FUNX
+ 360       XP = XA
+ 361       XA = XA+DXA
+ 362 1500  CONTINUE
+ 363 1600  RETURN
+ 364       END
+
+
+
+NUMBER OF WARNINGS IN PROGRAM UNIT: 0
+NUMBER OF ERRORS   IN PROGRAM UNIT: 0
+
+
+NUMBER OF WARNINGS IN COMPILATION : 0
+NUMBER OF ERRORS   IN COMPILATION : 0

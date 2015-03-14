@@ -1,0 +1,351 @@
+      SUBROUTINE READC
+      PARAMETER (MAXBUF=81,MAXTOK=40)
+**
+      COMMON / READC0 / CH, DONE, IBPTR, BUFF, LBUFF, TOKEN, EOF
+      CHARACTER *(MAXBUF) BUFF
+      CHARACTER *(MAXTOK) TOKEN
+      CHARACTER *1 CH
+      LOGICAL DONE, EOF
+C
+      DONE = .FALSE.
+      EOF  = .FALSE.
+5     READ(NIN,900,END=1000) BUFF
+      LBUFF = LENGTH(BUFF)+1
+      IF ( LBUFF .EQ. 1 ) GO TO 5
+      IBPTR = 1
+C
+10    CALL GETC0
+      IF (CH .EQ. ' ') GO TO 10
+C
+30    CALL GETOK0
+      CALL DOTOK0
+      IF (.NOT. DONE) GO TO 30
+      RETURN
+1000  CALL ERROR0('Unexpected end of file.')
+      RETURN
+900   FORMAT(A)
+      END
+C
+C---END READC
+C
+      SUBROUTINE GETOK0
+C
+C *** GET THE NEXT TOKEN FROM THE COMMON FILE
+C ***  A TOKEN IS THE ENTIRE FIELD UP TO THE NEXT COMMA OR '&'
+C
+      PARAMETER (MAXBUF=81,MAXTOK=40)
+**
+      COMMON / READC0 / CH, DONE, IBPTR, BUFF, LBUFF, TOKEN, EOF
+      CHARACTER *(MAXBUF) BUFF
+      CHARACTER *(MAXTOK) TOKEN
+      CHARACTER *1 CH
+      LOGICAL DONE, EOF
+C
+      TOKEN = ' '
+      ITOKE = 1
+10    IF (CH .NE. ' ') GO TO 20
+      CALL GETC0
+      GO TO 10
+C
+C --- CHECK TO SEE IF IT IS A SIGNAL CHARACTER
+C ---  IF SO, TOKEN ENDS AT NEXT SPACE
+C
+20    IF (CH .EQ. SIGNAL) THEN
+         TOKEN(ITOKE:ITOKE) = SIGNAL
+         ITOKE = ITOKE + 1
+30       CALL GETC0
+         IF (CH .EQ. ' ') GO TO 50
+         TOKEN(ITOKE:ITOKE) = CH
+         ITOKE = ITOKE + 1
+         GO TO 30
+      ELSE
+C
+C --- ASSIGNMENT TOKEN, TOKEN ENDS WITH NEXT COMMA OR SIGNAL CHARACTER
+C
+         TOKEN(ITOKE:ITOKE) = CH
+         ITOKE = ITOKE + 1
+40       CALL GETC0
+         IF (CH .EQ. ',') THEN
+            CALL GETC0
+            GO TO 50
+         ELSE IF (CH .EQ. SIGNAL) THEN
+            GO TO 50
+         ENDIF
+         TOKEN(ITOKE:ITOKE) = CH
+         ITOKE = ITOKE + 1
+         GO TO 40
+      ENDIF
+50    RETURN
+      END
+C
+C---END GETOK0
+C
+      SUBROUTINE DOTOK0
+C
+C *** INTERPRET THIS TOKEN
+C
+      PARAMETER (MAXBUF=81,MAXTOK=40)
+**
+      COMMON / READC0 / CH, DONE, IBPTR, BUFF, LBUFF, TOKEN, EOF
+      CHARACTER *(MAXBUF) BUFF
+      CHARACTER *(MAXTOK) TOKEN
+      CHARACTER *1 CH
+      LOGICAL DONE, EOF, INARR
+      CHARACTER *(MAXTOK) NAME, VALUE
+      CHARACTER *10 WORK
+      SAVE INARR,J,ISUB
+C
+C --- IF WE ARE IN AN ARRAY INITIALIZATION, USE THE SAME NAME AS BEFORE,
+C ---  BUT INCREMENT THE SUBSCRIPT POINTER
+C
+      IF ( INARR ) THEN
+         ISUB = ISUB + 1
+         I = INDEX(TOKEN,')')
+         IF ( I .NE. 0 ) THEN
+            INARR = .FALSE. 
+            VALUE = TOKEN(1:I-1)
+         ELSE
+            VALUE = TOKEN
+         ENDIF
+         GO TO 50
+      ENDIF
+C
+C --- NOT IN AN ARRAY, EITHER AN END OR A VARIABLE ASSIGNMENT
+C
+      IF (TOKEN(1:1) .EQ. SIGNAL) THEN
+C
+C ----- CHECK FOR END TOKEN, BUT ASSUME HE MISSPELLED IT, REGARDLESS
+C
+         IF (TOKEN .NE. SIGNAL//'END') 
+     $    CALL ERROR0('Illegal END token: '//TOKEN )
+         DONE = .TRUE.
+      ELSE
+C
+C  ----  VARIABLE ASSIGNMENT
+C
+         I = INDEX(TOKEN,'=')
+         IF (I .EQ. 0) THEN
+            CALL ERROR0('Invalid value assignment: '//TOKEN)
+            RETURN
+         ENDIF
+C
+C ----- CHECK FOR ARRAY
+C
+         K = INDEX(TOKEN,'(')
+         IF (K .EQ. 0) THEN
+            NAME = TOKEN(1:I-1)
+            ISUB = 1
+         ELSE
+            IF ( K .GT. I ) THEN
+C
+C ------ INITIALIZING AN ARRAY
+C
+               NAME = TOKEN(1:I-1)
+               INARR = .TRUE.
+               ISUB = 1
+               I = I + 1
+            ELSE
+C
+C --------- INITIALIZING ONE ELEMENT OF ARRAY
+C
+               NAME = TOKEN(1:K-1)
+               M    = INDEX(TOKEN,')')
+               WORK = TOKEN(K+1:M-1)
+               CALL RIGHT ( WORK )
+               READ(WORK,900) ISUB
+            ENDIF
+         ENDIF
+C
+C --- BINARY SEARCH FOR VARIABLE NAME
+C
+         K = 1
+         L = NUMALL
+30       M = ( L + K ) / 2
+         IF (NAME .LE. VNAMES(M)) L = M - 1
+         IF (NAME .GE. VNAMES(M)) K = M + 1
+         IF (K .LE. L) GO TO 30
+         IF (K-1 .LE. L) THEN
+            CALL ERROR0('Variable '//NAME(1:LENGTH(NAME))//
+     $      ' not in common.')
+            RETURN
+         ENDIF
+40       VALUE = TOKEN(I+1:MAXTOK)
+50       CALL ASIGN0 ( M, VALUE, ISUB )
+      ENDIF
+      RETURN
+900   FORMAT(I10)
+      END
+C
+C---END DOTOK0
+C
+      SUBROUTINE GETC0
+C
+C *** GET THE NEXT CHARACTER FROM THE COMMON FILE, IGNORING LINE BREAKS
+C ***  AND CHECKING FOR BLANK LINES AND COMMENTS
+C
+      PARAMETER (MAXBUF=81,MAXTOK=40)
+**
+      COMMON / READC0 / CH, DONE, IBPTR, BUFF, LBUFF, TOKEN, EOF
+      CHARACTER *(MAXBUF) BUFF
+      CHARACTER *(MAXTOK) TOKEN
+      CHARACTER *1 CH
+      LOGICAL DONE, EOF
+C
+5     IF (IBPTR .GT. LBUFF) THEN
+10       READ(NIN,900,END=1000) BUFF
+         LBUFF = LENGTH(BUFF)+1
+         IF (LBUFF .EQ. 1) GO TO 10
+         CALL CAPS ( BUFF )
+         IBPTR = 1
+      ENDIF
+      CH    = BUFF(IBPTR:IBPTR)
+      IBPTR = IBPTR + 1
+C
+C --- SKIP COMMENTS
+C
+      IF (CH .EQ. '!') THEN
+         IBPTR = LBUFF+1
+         GO TO 5
+      ENDIF
+      RETURN
+C
+C --- ATTEMPT TO GET A CHARACTER AFTER THE END-OF-FILE WAS REACHED
+C
+1000  IF ( EOF ) THEN
+         CALL ERROR0('Unexpected end of file.')
+         STOP
+C
+C --- ONE END-OF-FILE IS OK IN CASE '&END' IS THE LAST ENTRY IN THE FILE
+C
+      ELSE
+         CH = ' '
+         EOF = .TRUE.
+      ENDIF
+      RETURN
+900   FORMAT(A)
+      END
+C
+C---END GETC0
+C
+      SUBROUTINE ERROR0 ( TEXT )
+C
+C *** PRINT ERROR MESSAGE
+C
+**
+      CHARACTER *(*) TEXT
+      WRITE(NOUT,900)TEXT
+      RETURN
+900   FORMAT(' *** NAMEIO Error, ',A)
+      END
+C
+C---END ERROR0
+C
+      SUBROUTINE ASIGN0 ( J, VALUE, ISUB )
+C
+C *** ASSIGN THE VALUE 'VALUE' TO THE 'J'TH VARIABLE
+C
+      PARAMETER (MAXBUF=81,MAXTOK=40)
+**
+      COMMON / READC0 / CH, DONE, IBPTR, BUFF, LBUFF, TOKEN, EOF
+*1 --- THE USER'S COMMON BLOCKS ARE PLACED HERE BY THE NAMEIO PROGRAM
+      CHARACTER *(MAXBUF) BUFF
+      CHARACTER *(MAXTOK) TOKEN
+      CHARACTER *1 CH
+      LOGICAL DONE, EOF
+      CHARACTER *(*) VALUE
+      CHARACTER *20 VAL
+      LOGICAL LV
+      EQUIVALENCE (RV,IV,LV)
+C
+C --- CONVERT TO PROPER TYPE
+C
+      IF (VTYPES(J) .EQ. 'R') THEN
+         READ(VALUE,900,ERR=2000) RV
+      ELSE IF (VTYPES(J) .EQ. 'I') THEN
+         VAL = VALUE
+         CALL RIGHT(VAL)
+         READ(VAL,910,ERR=2000) IV
+      ELSE
+         READ(VALUE,920,ERR=2000) LV
+      ENDIF
+*2 --- THE ASSIGNMENT CODE IS PLACED HERE BY THE NAMEIO PROGRAM
+1000  RETURN
+2000  CALL ERROR0('Illegal value for variable '//VNAMES(J))
+      RETURN
+900   FORMAT(E20.5)
+910   FORMAT(I20)
+920   FORMAT(L20)
+      END
+C
+C---END ASIGN0
+C
+      SUBROUTINE WRITEV(NAME)
+**
+*1
+      CHARACTER *(*) NAME
+      CHARACTER *5 WORK
+      LOGICAL LV
+      EQUIVALENCE (RV,IV,LV)
+C
+      IN = INDEX(NAME,'(')
+      WORK = ' '
+      IF (IN .NE. 0) THEN
+         IM = INDEX(NAME,')')
+         IF (IM .LE. IN+1) THEN
+            CALL ERROR0('Illegal subscript.')
+            RETURN
+         ENDIF
+         WORK = NAME(IN+1:IM-1)
+         NAME = NAME(1:IN-1)
+      ENDIF
+C
+C --- BINARY SEARCH FOR VARIABLE NAME
+C
+      K = 1
+      L = NUMALL
+10    M = ( L + K ) / 2
+      IF (NAME .LE. VNAMES(M)) L = M - 1
+      IF (NAME .GE. VNAMES(M)) K = M + 1
+      IF (K .LE. L) GO TO 10
+      IF (K-1 .LE. L) THEN
+         CALL ERROR0('Variable '//NAME(1:LENGTH(NAME))//
+     $      ' not in common.')
+         RETURN
+      ENDIF
+C
+C --- FOUND THE NAME
+C
+      IF (WORK .NE. ' ') THEN
+C
+C --- SUBSCRIPT
+C
+         IF (VSIZES(M) .EQ. 1) THEN
+            CALL ERROR0('Not an array.')
+            RETURN
+         ENDIF
+         CALL RIGHT(WORK)
+         READ(WORK,900) K
+      ELSE IF (VSIZES(M) .EQ. 1) THEN
+         K = 1
+      ELSE
+C
+C --- PRINT ENTIRE ARRAY
+C
+      ENDIF
+*3
+40    IF (VTYPES(M) .EQ. 'R') THEN
+         WRITE(NOUT,910) NAME, RV
+      ELSE IF (VTYPES(M) .EQ. 'I') THEN
+         WRITE(NOUT,920) NAME, IV
+      ELSE
+         WRITE(NOUT,930) NAME, LV
+      ENDIF
+      RETURN
+900   FORMAT(I5)
+910   FORMAT(' ',A,'=',E12.5)
+920   FORMAT(' ',A,'=',I10)
+930   FORMAT(' ',A,'=',L3)
+      END
+C
+C---END WRITEV
+C

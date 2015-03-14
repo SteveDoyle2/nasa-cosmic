@@ -1,0 +1,238 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STANDARD',
+               'QLIBHOME:MATH',
+               'QLIBHOME:STRING',
+               'QLIBHOME:COLOR',
+               'QLIBHOME:FIG',
+               'QLIBHOME:TERM_VAX',
+               'QLIBHOME:TERM_ANSI',
+               'QLIBHOME:TERM_REGIS'),
+  ENVIRONMENT ('QLIBHOME:VT241.TEN') ]
+MODULE term_VT241;
+[ HIDDEN ] VAR
+   paneltoopen : boolean := false;
+   panelopen   : boolean := false;
+{=============================================================================}
+{-- PROCEDURES FOR TERMINAL TYPE VT241 ---------------------------------------}
+{=============================================================================}
+[ GLOBAL ]
+FUNCTION termname_VT241 (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0: termname_VT241 := '1';
+   1: termname_VT241 := 'VT241   ';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE colorsetup_VT241;
+{------------------------------}
+PROCEDURE bufferempty;
+BEGIN
+IF env.buffer <> ''
+ THEN
+  BEGIN
+  qiowwrite (env.buffer + ';');
+  env.buffer := '';
+  END;
+END;
+{------------------------------}
+BEGIN
+initpalette (termpalette,4,2,false);
+IF env.mode = M_TEXT
+ THEN
+  BEGIN
+  qiowwrite (ESC + 'Pp' + CRLF);
+  qiowwrite ('S(I0)' + CRLF);
+  getcolorindex_REGIS (termpalette,'TEXTBOX',bufferempty);
+  getcolorindex_REGIS (termpalette,'CURSOR_1',bufferempty);
+  getcolorindex_REGIS (termpalette,'TEXTCHAR',bufferempty);
+  qiowwrite ('W(I2)' + CRLF);
+  qiowwrite (ESC + '\' + ESC + '[1;24r' + ESC + '[24;1H' + CRLF);
+  env.mode := M_TEXT;
+  END
+ ELSE
+  BEGIN
+  qiowwrite ('S(I0)' + CRLF);
+  getcolorindex_REGIS (termpalette,'PLOTBACK',bufferempty);
+  END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE executecom_VT241;
+VAR
+   j    : integer;
+   hlsa : hlsa_type;
+{------------------------------}
+PROCEDURE bufferempty;
+BEGIN
+IF env.mode IN [M_TEXT,M_DUAL]
+ THEN 
+  BEGIN
+  qiowwrite (ESC + 'Pp');
+  env.mode := M_PLOT;
+  colorsetup_VT241;
+  END;
+IF env.buffer <> ''
+ THEN
+  BEGIN
+  qiowwrite (env.buffer + '' + CRLF);
+  env.buffer := '';
+  END;
+END;
+{------------------------------}
+BEGIN
+WITH plotitem DO CASE ins OF
+   I_col:  BEGIN
+           bufferempty;
+           j := getcolorindex_REGIS (termpalette,st,bufferempty);
+           IF env.visible THEN env.buffer := 'W(I' + strofi(j-1,1) + ')';
+           bufferempty;
+           END;
+   I_pan:  BEGIN
+           bufferempty;
+           j := getcolorindex_REGIS (termpalette,st,bufferempty);
+           IF env.visible THEN env.buffer := 'W(I' + strofi(j-1,1) + ')';
+           bufferempty;
+           hlsa := hlsaofcolor (st);
+           paneltoopen := hlsa.attribute <> 'C';
+           END;
+   I_clo:  BEGIN
+           IF panelopen
+            THEN
+             BEGIN
+             env.buffer := env.buffer + ');';
+             panelopen := false;
+             END;
+           bufferempty;
+           END;
+   I_pos:  BEGIN
+           bufferempty;
+           env.pos.ix := ix;
+           env.pos.iy := iy;
+           END;
+   I_dra:  BEGIN
+           IF paneltoopen
+            THEN 
+             BEGIN
+             env.buffer := env.buffer + 'P' + strofpos_REGIS + 'F(';
+             paneltoopen := false;
+             panelopen := true;
+             END;
+           draw_REGIS (ix,iy,bufferempty);
+           END;
+   I_siz:  ;
+   I_mar:  ;
+   I_pri:  IF env.visible AND (st <> '') 
+            THEN 
+             BEGIN
+             bufferempty;
+             env.pos.iy := env.pos.iy + config.ch.height
+                                      - config.ch.linespacing;
+             env.buffer := 'P' + strofpos_REGIS + 'T(S1)"' + st + '"';
+             env.pos.iy := env.pos.iy - config.ch.height
+                                      + config.ch.linespacing;
+             bufferempty;
+             END;
+   I_emp:  bufferempty;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE writeterm_VT241 (str : VARYING [l2] OF char);
+BEGIN
+IF env.mode = M_PLOT
+ THEN
+  BEGIN
+  env.mode := M_DUAL;
+  qiowwrite (ESC + '\' + ESC + '[21;24r' + ESC + '[24;1H' + CRLF);
+  {exit graphics mode}
+  END;
+qiowwritevirtual (str);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE readterm_VT241 (VAR outstr : VARYING [l2] OF char);  
+BEGIN
+readterm_vax (outstr);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screenerase_VT241;
+BEGIN
+screenerase_REGIS;
+env.mode := M_TEXT;
+colorsetup_VT241;
+paneltoopen := false;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screencopy_VT241;
+BEGIN
+screencopy_REGIS;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE gin_VT241 (VAR key : char;  VAR ipt : ipoint;  color : color_type);
+VAR
+   tbuffer,posstr : VARYING [80] OF char;
+BEGIN
+IF env.mode IN [M_TEXT,M_DUAL]
+ THEN qiowwrite (ESC + 'Pp');
+
+qiowwrite (ESC + '\' + ESC + '[2h' + ESC + 'Pp'); {Lock keyboard}
+env.mode := M_PLOT;
+tbuffer := '';
+qiowreadnoechopurge (tbuffer,0);
+qiowwrite ('P' + REGIS_control.ginpos); 
+qiowwrite (ESC + '\' + ESC + '[2l' + ESC + 'Pp'); {Unlock keyboard}
+qiowwrite ('R(P(I))'); 
+
+{ POSITION CURSOR; REPORT POSITION - INTERACTIVE MODE }
+posstr := '    ';
+qiowreadnoecho (posstr,4);
+REPEAT
+   tbuffer := ' ';
+   qiowreadnoecho (tbuffer,1);
+   posstr := posstr + tbuffer[1];
+   UNTIL (tbuffer[1] IN [']']) OR (length (posstr) > 24);
+
+key := posstr[1];
+ipt := posofstr_REGIS (substr (posstr,2,length(posstr)-1));
+REGIS_control.ginpos := '[' + strofi_REGIS
+                        (ipt.ix DIV REGIS_control.xresolution)
+                      + ',' + strofi_REGIS
+                        (ipt.iy DIV REGIS_control.yresolution) + ']';
+END;
+{-----------------------------------------------------------------------------}
+[GLOBAL]
+FUNCTION readmenu_VT241 (default : char;  toplevel : boolean;
+   helpprefix : anystring) : command_type;
+BEGIN
+readmenu_VT241 := readmenu_ansi (default,toplevel,helpprefix,true);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE termconfig_VT241 (configcontrol : configcontrol_type);
+BEGIN
+CASE configcontrol OF
+   CON:  BEGIN
+         config_REGIS (800,500);
+         qiowwrite (ESC + '>');
+         config.ch.width       := REGIS_control.xresolution * 10;
+         config.ch.height      := REGIS_control.yresolution * 20;
+         config.ch.charspacing := REGIS_control.xresolution * 3;
+         config.ch.linespacing := REGIS_control.yresolution * 6;
+         config.resolution     := imax (REGIS_control.xresolution,
+                                        REGIS_control.yresolution);
+         config.dotsize        := config.resolution;
+         config.starsize       := config.resolution*3;
+         config.ansi364        := true;
+         config.drawblack      := true;
+         END;
+   QUE:  ;
+   REP:  ;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+END.

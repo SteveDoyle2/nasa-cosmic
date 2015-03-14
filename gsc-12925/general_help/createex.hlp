@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+When creating a chart as an experienced user, after pressing the F4 key from
+the Main Menu the format menu is displayed.  The format options can be changed
+or any of the function keys can be pressed to continue creating the new chart.
+Pressing the F4 key from the Main Menu has the effect of not displaying the 
+sample chart, but continuing as if an F6 was pressed at the sample chart.
+This is only to save the experienced user the time of drawing the sample chart
+since he already knows what the chart looks like.
+
+To download a file from the database on the host, the F1 option from the Main
+Menu must be pressed.  This is also to save the experienced user the time of
+answering that prompt.
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

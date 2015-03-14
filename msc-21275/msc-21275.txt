@@ -1,0 +1,55 @@
+ VMACO-VARIABLE METRIC ALGORITHM FOR CONSTRAINED OPTIMIZATION
+
+( McDonnell Douglas Corp. )
+
+     VMACO, the Variable Metric Algorithm for Constrained Optimization, is
+a non-linear program developed to calculate the least value of a function
+of n variables subject to general constraints (both equality and inequal-
+ity). Generally, the first set of constraints is an equality (the target)
+and the remaining constraints are inequalities (boundaries). The VMACO
+program utilizes an iterative method in seeking the optimal solution. It
+can be "hooked" into a driver program (examples are provided) which can cal-
+culate the values for the real function, constraints, and their first order
+partials with respect to the controls.
+
+     It is assumed that the objective function is convex and unimodal in na-
+ture. The user should be familiar enough with his simulation so that local
+maxima and minima can be recognized.
+
+     The algorithm is based upon a variable metric method presented by M.
+J. D. Powell and a quadratic programming method by R. Fletcher. This im-
+plementation requires more overhead in calculating each new control vari-
+able, but fewer iterations are required for convergence. In comparison
+with other algorithms, it has been found that VMACO handles test cases with
+constraints particularly well, and that less execution time is necessary
+for convergence.
+
+     VMACO is completely written in ANSI Standard FORTRAN-77. The code is
+internally documented and modularly structured with rigid coding stan-
+dards. This program requires approximately 26K of 8-bit bytes of central
+memory and was first released in 1988.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN 77
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 5,697 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX FILES-11 Format Magnetic Tape
+
+PROGRAM NUMBER: MSC-21275
+
+DOMESTIC - DOCUMENTATION PRICE: $18.00    PROGRAM PRICE: $900.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $36.00   PROGRAM PRICE: $1800.00
+
+
+
+                                        1
+

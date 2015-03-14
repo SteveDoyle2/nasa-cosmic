@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+When creating a chart the sample chart will be displayed first.  This is just
+an example of what the chart will look like.  To skip the sample chart, use
+F4 from the Main Menu.  When viewing ths sample chart the keys which are not
+valid are ignored, so to continue from the sample chart, press F6 to change
+the format options or F2 to start entering the text.  When the Main Screen is
+redisplayed, the new chart will be shown.
+
+For the Earned Value Analysis, Trend Analysis, Progress and Level of Effort,
+and Travel and Training charts, the first thing that appears when creating a
+new chart is the prompt asking if you want to retrieve the data from the
+database on the host.  This is the database that is stored on the host for
+these charts and is not the same as the chartbase which is stored on the local
+diskette.  When using the Upload/Download option from the Main Menu, the
+chartbase is used.  If using the database is desired, answer Y to the prompt.
+The database file is converted to a chartbase file and downloaded into HOSTMAIL
+where it can be reviewed using F2 of the Main Menu.
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

@@ -1,0 +1,109 @@
+1 PROJECT   
+
+     When the INCA program is started, the user must select a
+particular PROJECT.  A project is a group of related transfer
+functions.  These functions are saved in the Project File for that
+particular project.  The project file has an extension of ".PRO", for
+example "BLANK.PRO". 
+
+     The project command allows the user to access the project data
+file.  INCA automatically maintains a project file for each project
+that the user has initiated.  This file has the same name as the
+project, and an extension of ".PRO".  It is written in binary format.
+As a protection against system crashes, the INCA program automatically
+rewrites this workfile whenever a function is newly defined, created,
+or modified.  The workfile is opened, rewriten with all currently
+defined functions, and then closed.  Thus if the system crashes during
+an INCA session, or even if you accidently delete a function, all one
+needs to do is restart INCA.  The contents of the workfile are
+automatically read whenever an INCA session is begun.  
+
+     A project name must contain less than nine characters, so as to 
+conform to the old VAX file naming conventions.
+
+     The project name may be entered in two different ways.  The 
+quickest way is to type the project name after the word "INCA" when 
+you begin an INCA session, for example "INCA TEST".  The users 
+directory will then be searched for the project workspace file.  If 
+the file is not found, the user will be asked to reenter the project
+name.
+
+     If the user does not use the above method, a list of current
+projects will be displayed and the user will be asked to make a
+selection.  Note that the name can be abbreviated.  If the name is not
+on the list, the user will be asked to reenter the name to confirm the
+creation of a new project. 
+
+     Format:     PROJECT  modifier  [project-name]
+
+2 AUDIT             
+
+     This modifier is used to place in the audit file a one line
+summary of all of the functions in the current project, as listed
+below: 
+
+          Function name
+Either
+          Function plane
+          Function gain
+          Numerator factors (real + complex)
+          Denominator factors (real + complex)
+          Comment
+Or
+          Expression string.
+
+     Format:     PROJECT  AUDIT
+
+2 CHANGE            
+
+     This modifier is used to change from one project to another.
+The functions currently defined will be discarded, and those in the 
+new project will be loaded into memory.  The directory can be changed 
+using the UTILITIES SET PATH command.
+
+     Format:     PROJECT  CHANGE  [project-name]
+
+2 LOAD              
+
+     This modifier is used to read a project file.  The functions
+defined in this file will overwrite those currently in memory.  This
+capability is most useful for merging projects together. 
+
+     Format:     PROJECT  LOAD  [project-name]
+
+2 OLD_INCA_LOAD      
+
+     This modifier is used to read the workspace (.WOR) files created 
+by INCA version 2.0x.  These workspace files served the same purpose 
+as the current project files, but were much larger and less flexible.  
+This command is provided to allow INCA 2.0x users to easily convert to 
+the present version.  Notice that all INCA 2.0x functions are STATIC!
+
+     Format:     PROJECT  OLD_INCA_LOAD  [workspace-name]
+
+2 SAVE              
+
+     This subcommand is used to write the project file.  This command 
+should be used at the end of a source file that creates new functions, 
+since the automatic save of the project file is not done during source 
+file operations.
+
+     Format:     PROJECT  SAVE
+
+2 VIEW              
+
+     This modifier is used to display a one line summary of all of the
+functions in the current project, as listed below:
+
+          Function name
+Either
+          Function plane
+          Function gain
+          Numerator factors (real + complex)
+          Denominator factors (real + complex)
+          Comment
+Or
+          Expression string.
+
+     Format:     PROJECT  VIEW
+

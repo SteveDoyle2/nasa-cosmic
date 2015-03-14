@@ -1,0 +1,94 @@
+ AIPP- ATMOSPHERIC INTERACTION PLUME PROGRAM
+
+( AEROCHEM RESEARCH LABS., INC. )
+
+     This computer program can be used to predict the gas dynamic and chem-
+ical properties of underexpanded rocket plumes from sea level to the al-
+titude above which the viscous continuum flow assumption, with distinct
+shocks, is no longer valid. The program computes the plume shock struc-
+ture while simultaneously accounting for turbulent mixing, nonequilibrium
+chemistry, and gas/particle nonequilibrium effects. The program also has
+the ability to calculate plume properties in the subsonic region downstream
+from the Mach disc, downstream of the shock reflected from the triple point,
+and in the far field. The program can readily be used to determine plume op-
+tical and electrical properties, which are necessary data for calculat-
+ing the infrared radiation pattern and radar cross section. This program
+was used to calculate deposition rate of various nitrogen oxides into the
+stratosphere caused by the Space Shuttle exhaust plumes.
+
+     The AIPP code is based on the Multitube code developed by Boyton (which
+incorporates the finite difference streamtube calculation technique) and
+has been expanded to treat particle/gas nonequilibrium, chemical kinetic,
+and turbulent mixing effects within exhaust plumes. For the gas flow up-
+stream of the Mach disc, the governing elliptic Navier-Stokes equations
+are reduced to a hyperbolic system (including lateral pressure gradients)
+by neglecting diffusion of mass, momentum, and energy along streamlines as
+compared with that across streamlines. The conservation equations are then
+written in a streamline oriented coordinated system. Shocks are treated as
+thin bounding surfaces of the flow across which the Rankine-Hugoniot rela-
+tions are applicable. In the subsonic region behind the Mach disc the in-
+viscid flow governing equations are taken to be elliptic. The equations of
+flow must be solved within the supersonic and subsonic regions, while si-
+multaneously maintaining the equality of pressure and flow direction along
+the dividing streamline. In meeting these boundary conditions several ap-
+proximations are employed to reduce the amount of computer time and storage
+required. For the condensed phases present within the flow a continuum par-
+ticle cloud assumption is made and field conservation equations for conti-
+nuity, momentum, and energy can be written for the particles.
+
+     A finite difference formulation of the gas phase and particle cloud
+governing equations is utilized on a grid which lies along and perpen-
+dicular to the streamlines. The gas flow equations are solved via an ex-
+plicit finite difference marching technique. The chemical production
+terms utilize an implicit finite difference formulation because an ex-
+plicit formulation leads to an impractically small integration step for
+near-equilibrium chemistry. The particle equations have no wave or diffu-
+sive nature and are solved explicitly via a finite difference formulation.
+Initially, all flow properties, streamline positions, and angles must be
+known along an orthogonal surface. The streamlines are extended an incre-
+mental distance forming a streamtube. The properties at the upstream sur-
+face are used, along with the governing equations, to determine all the nec-
+essary properties at the downstream surface. Below the Mach disc a similar
+procedure using assumed streamlines is performed.
+
+
+
+                                        1
+
+     The computer program is written so that only minimal judgment by the
+user is required to operate it. The input data required are nozzle exit con-
+ditions along a surface orthogonal to the exit streamlines, uniform su-
+personic external flow conditions, and a suitable reaction mechanism and
+rate coefficients. The output contains the results of all calculations in
+a highly readable format. Care must be taken that the program is not used to
+predict plume characteristics at altitudes above which the assumption of
+continuum flow ahead of the Mach disc starts to break down.
+
+     This program is written in FORTRAN IV to operate in the batch mode and
+has been implemented on a CDC CYBER 175 with a central memory requirement of
+approximately 40K 60 bit words.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC CYBER 70 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 5,950 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI CDC NOS Internal Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-12203
+
+DOMESTIC - DOCUMENTATION PRICE: $27.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $54.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

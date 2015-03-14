@@ -1,0 +1,61 @@
+ OPTIMAL NETWORK TOPOLOGY DESIGN
+
+( Cal Tech/Jet Propulsion Lab. )
+
+     This program was developed as part of a research study on the topology
+design and performance analysis for the Space Station Information System
+(SSIS) network. It uses an efficient algorithm to generate candidate net-
+work designs (consisting of subsets of the set of all network components)
+in increasing order of their total costs, and checks each design to see if
+it forms an acceptable network. This technique gives the true cost-optimal
+network, and is particularly useful when the network has many constraints
+and not too many components.
+
+     It is intended that this new design technique consider all important
+performance measures explicitly and take into account the constraints due
+to various technical feasibilities. In the current program, technical con-
+straints are taken care of by the user properly forming the starting set of
+candidate components (e.g. nonfeasible links are not included). As subsets
+are generated, they are tested to see if they form an acceptable network by
+checking that all requirements are satisfied. Thus the first acceptable
+subset encountered gives the cost-optimal topology satisfying all given
+constraints.
+
+     The user must sort the set of "feasible" link elements in increasing
+order of their costs. The program prompts the user for the following in-
+formation for each link: 1) cost, 2) connectivity (number of stations con-
+nected by the link), and 3) the stations connected by that link. Unless in-
+structed to stop, the program generates all possible acceptable networks in
+increasing order of their total costs. The program is written only to gen-
+erate topologies that are simply connected. Tests on reliability, delay,
+and other performance measures are discussed in the documentation, but have
+not been incorporated into the program.
+
+     This program is written in PASCAL for interactive execution and has
+been implemented on an IBM PC series computer operating under PC DOS. The
+disk contains source code only. This program was developed in 1985.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: PASCAL
+
+MACHINE REQUIREMENTS: IBM PC SERIES
+
+PROGRAM SIZE: APPROXIMATELY 520 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 5.25 Inch IBM PC DOS Format Diskette
+
+PROGRAM NUMBER: NPO-16809
+
+DOMESTIC - DOCUMENTATION PRICE: $17.00    PROGRAM PRICE: $50.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $34.00   PROGRAM PRICE: $100.00
+
+
+
+                                        1
+

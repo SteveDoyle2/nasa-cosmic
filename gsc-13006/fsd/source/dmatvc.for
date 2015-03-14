@@ -1,0 +1,15 @@
+      SUBROUTINE DMATVC(C,VI,VO)
+C
+      IMPLICIT REAL*8 (A-H,O-Z)
+C
+C   THIS ROUTINE IS TO MULTIPLY A 3 BY 3 MATRIX BY A VECTOR
+C
+      DIMENSION C(3,3),VI(3),VO(3)
+C
+      DO 10 I=1,3
+      VO(I)=0.0D0
+      DO 10 J=1,3
+      VO(I)=VO(I)+C(I,J)*VI(J)
+ 10   CONTINUE
+      RETURN
+      END

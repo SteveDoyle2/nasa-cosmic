@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+After the delete key is pressed, the prompt asks for the filename of the chart
+to be deleted.  To delete a chart enter the filename and the chart will be
+deleted.  To not delete a chart press return.  This will return to the previous
+screen.
+
+After deleting a chart if the directory was being displayed, the screen will
+clear and the directory will be redrawn without the deleted filename.
+
+
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

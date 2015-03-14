@@ -1,0 +1,133 @@
+/*****************************************************************************/
+/*                                                                           */
+/*  add_to_queue                                                             */
+/*                                                                           */
+/*  This subroutine adds a rule to the end of a queue.  The rule itself      */
+/*  specifies which queue to use.                                            */
+/*                                                                           */
+/*  Input: add_rule - pointer to the rule which is to be added to a queue.   */
+/*  Output: none.                                                            */
+/*                                                                           */
+/*  Method:  Get queue element from the free queue.                          */
+/*           Put the rule in the element.                                    */
+/*           Add the element to the end of a queue.                          */
+/*                                                                           */
+/*  Programmer: G R Goodrum, MDTSCO, June 1984                               */
+/*                                                                           */
+/*****************************************************************************/
+
+#include "structures.inc"
+
+
+add_to_queue ( add_rule )
+struct rule_info *add_rule;
+{
+    extern struct rule_queue free_queue;
+    struct rule_queue *q;
+    struct queue_element *new;
+
+    if  ( add_rule -> queue_posn  !=  NULL )
+    {
+        printf ( "*** Error: tried to add a rule to a queue twice:\n  %s\n",
+                add_rule -> ri_tag );
+        exit ( -1 );
+    }
+
+    q  =  add_rule -> queue_id;
+
+    new  =  free_queue.begin_elt.next;
+    new -> next -> previous  =  &free_queue.begin_elt;
+    free_queue.begin_elt.next  =  new -> next;
+
+    new -> rule  =  add_rule;
+    new -> previous  =  q -> end_elt.previous;
+    new -> next  =  &(q->end_elt);
+    new -> previous -> next  =  new;
+    q -> end_elt.previous  =  new;
+    add_rule -> queue_posn  =  new;
+}
+
+
+/*****************************************************************************/
+/*                                                                           */
+/*  take_from_queue                                                          */
+/*                                                                           */
+/*  This subroutine removes a rule from the queue it is on.                  */
+/*                                                                           */
+/*  Input:  take_rule - pointer to the rule to be removed.                   */
+/*  Output: none.                                                            */
+/*                                                                           */
+/*  Method:  Find the queue element which contains the rule.                 */
+/*           Remove the element from the queue.                              */
+/*           Add the element to the end of the free queue.                   */
+/*                                                                           */
+/*****************************************************************************/
+
+take_from_queue ( take_rule )
+struct rule_info *take_rule;
+{
+    extern struct rule_queue free_queue;
+    struct queue_element *old;
+
+    old  =  take_rule -> queue_posn;
+
+    if  (  old != NULL  )
+    {
+        count ( 6, 0 );                                         /* debug */
+        old -> previous -> next  =  old -> next;
+        old -> next -> previous  =  old -> previous;
+        old -> rule  =  NULL;
+
+        old -> next  =  &free_queue.end_elt;
+        old -> previous  =  free_queue.end_elt.previous;
+        old -> previous -> next  =  old;
+        free_queue.end_elt.previous  =  old;
+
+        take_rule -> queue_posn  =  NULL;
+    }
+    else count ( 6, 1 );                                        /* debug */
+}
+
+
+/*****************************************************************************/
+/*                                                                           */
+/*  get_first                                                                */
+/*                                                                           */
+/*  This functions returns a pointer to the rule in the first element in     */
+/*  a specified queue.                                                       */
+/*                                                                           */
+/*  Input:  q - pointer to a rule queue.                                     */
+/*  Output: function value - pointer to the rule in the first element.       */
+/*                                                                           */
+/*  Method:  Extract the rule pointer from the first element on the queue.   */
+/*                                                                           */
+/*****************************************************************************/
+
+struct rule_info *
+get_first ( q )
+struct rule_queue *q;
+{
+    return ( q -> begin_elt.next -> rule );
+}
+
+
+/*****************************************************************************/
+/*                                                                           */
+/*  not_empty                                                                */
+/*                                                                           */
+/*  This function returns true if the specified queue contains elements, and */
+/*  false if it contains no elements.                                        */
+/*                                                                           */
+/*  Input:  q - pointer to a rule queue.                                     */
+/*  Output: function value - true if not empty; false if empty.              */
+/*                                                                           */
+/*  Method:  If the beginning element points to the ending element, then the */
+/*           queue is empty.                                                 */
+/*                                                                           */
+/*****************************************************************************/
+
+not_empty ( q )
+struct rule_queue *q;
+{
+    return ( q -> begin_elt.next != &(q->end_elt) );
+}

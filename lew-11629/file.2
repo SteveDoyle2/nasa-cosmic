@@ -1,0 +1,184 @@
+$IBFTC SHISBR
+
+C                                                                              1
+
+C     TEST PROGRAM  PREPARES TABLES FOR EACH FLUID OVER A RANGE OF PVT         2
+
+C                                                                              3
+
+      COMMON/PROPTY/KU,   DL,DV,HL,HV,S,SL,SV,CV,CVL,CVV,CP,CPL,CPV            4
+
+     1,GAMMA,GAMMAL,GAMMAV,C,CL,CVP,MU,MUL,MUV,K,KL,KV,SIGMA,EXCL,             5
+
+     2EXCV,EXCESK                                                              6
+
+      REAL   MU,MUL,MUV,K,KL,KV                                                7
+
+      COMMON/CHECKS/DCH1,DCH2,PCH1,PCH2,PCH3,TCH1,TCH2,TCH3,DST,TST,H          8
+
+     1SCH1,HSCH2                                                               9
+
+      COMMON/PARTLS/PDT,PTV                                                   10
+
+      DIMENSION NAM%10<,TSTART%10<,TCHG%10<,P%7<,T%250<,YPL%250,7,7<,         11
+
+     1DT1%10<,DT2%10<                                                         12
+
+      DATA DT1/7*10.,.2,5.,2./                                                13
+
+      DATA DT2/10*50./                                                        14
+
+      DATA P%1<,P%5</1.,100./                                                 15
+
+      DATA TCHG/295.,200.,2*225.,420.,80.,200.,10.,200.,80./                  16
+
+      DATA NAM/3HCH4,2HN2,2HO2,2HAR,3HCO2,2HNE,2HCO,2HHE,2HF2,2HH2/           17
+
+      DATA TSTART/95.,65.,60.,85.,220.,25.,70.,3.,70.,16./                    18
+
+C                                                                             19
+
+C     THIS TEST PROGRAM FOR -GASP- IS A SHORTENED VERSION.......              20
+
+C     THE LIMITS OF THE TABLE ARE NOT NECESSARILY THE MAXIMUM RANGE OF G      21
+
+C      T, P, OR D.   THE RANGE IS REPRESENTATIVE AND IS MEANT TO BE OF H      22
+
+C     CHECKING OUT THE PROGRAM ON VARIOUS COMPUTERS.                          23
+
+C                                                                             24
+
+      KS#1                                                                    25
+
+      KU#1                                                                    26
+
+    1 FORMAT%1H1<                                                             27
+
+      DO 1000 L# 1,10                                                         28
+
+      WRITE%6,1<                                                              29
+
+      CALL SETUP%NAM%L<<                                                      30
+
+      P%3<#PCH2/.101325                                                       31
+
+      P%2<#P%3<*.5                                                            32
+
+      P%4<#P%3<*1.5                                                           33
+
+      DT#DT1%L<                                                               34
+
+      T%1< #  TSTART%L<                                                       35
+
+      KPT#0                                                                   36
+
+      DO 20 J#1,50                                                            37
+
+      KPT#J                                                                   38
+
+      IF%T%J<.GE.TCHG %L<<  DT#DT2%L<                                         39
+
+      T%J&1<# T%J<&DT                                                         40
+
+      IF%T%J&1<.GT.TCH3<  GO TO 25                                            41
+
+   20 CONTINUE                                                                42
+
+   25 DO 100 I#1,5                                                            43
+
+      Z# P%I<*.101325                                                         44
+
+      DO 50  J#1,KPT                                                          45
+
+      KR#0                                                                    46
+
+      KP#7                                                                    47
+
+      CALL GASP% KS,KP,T%J<,Z,D,H,KR<                                         48
+
+   30 IF%KR.EQ.1< GO TO 35                                                    49
+
+      YPL%J,I,1<  # D                                                         50
+
+      YPL%J,I,2<  # S                                                         51
+
+      YPL%J,I,3<  # H                                                         52
+
+      YPL%J,I,4<  # CP                                                        53
+
+      YPL%J,I,5<  # CV                                                        54
+
+      YPL%J,I,6<  # C/100.                                                    55
+
+      YPL%J,I,7<  # CP/CV                                                     56
+
+      GO TO 45                                                                57
+
+   35 YPL%J,I,1<  # DL                                                        58
+
+      YPL%J,I,2<  # SL                                                        59
+
+      YPL%J,I,3<  # HL                                                        60
+
+      YPL%J,I,4<  # CPL                                                       61
+
+      YPL%J,I,5<  # CVL                                                       62
+
+      YPL%J,I,6<  # CL /100.                                                  63
+
+      YPL%J,I,7<  # CPL/CVL                                                   64
+
+   45 ZSAV#Z                                                                  65
+
+   46 FORMAT%1H ,I6,6E14.6<                                                   66
+
+   50 CONTINUE                                                                67
+
+C                             TABLE    OF                                     68
+
+C           DENSITY, ENTROPY, ENTHALPY,  CP, CV, GAMMA, SONIC VELOCITY        69
+
+C                           FOR EACH  T P                                     70
+
+      WRITE%6,800< NAM%L<                                                     71
+
+  800 FORMAT%1H1 ,45X,34H THERMODYNAMIC PROPERTY TABLE --  ,A4 <              72
+
+      WRITE%6,801<  P%I<                                                      73
+
+  801 FORMAT%1H0 ,5X, F10.2 , 8H ISOBAR   <                                   74
+
+      WRITE%6,802<                                                            75
+
+  802 FORMAT%1H0,4H T-K,6X,99H DENSITY %GM/CC<  ENTROPY%J/G-K< ENTHALPY%      76
+
+     1J/GM  <  CP%J/GM-K<  CV%J/GM-K<   C% M/SEC<    GAMMA        <           77
+
+      DO 150 J#1,KPT                                                          78
+
+      WRITE %6,803<  T%J<,%YPL%J,I,N<,N#1,7<                                  79
+
+      IF %MOD%J,50<.NE.0< GO TO 150                                           80
+
+      IF % J.EQ. KPT< GO TO 150                                               81
+
+      WRITE%6,800< NAM%L<                                                     82
+
+      WRITE%6,801<  P%I<                                                      83
+
+      WRITE%6,802<                                                            84
+
+  803 FORMAT%1H , F6.1,5X,G12.5,2G15.4,3X,3G13.4,F8.2<                        85
+
+  150 CONTINUE                                                                86
+
+  100 CONTINUE                                                                87
+
+   51 FORMAT%12H  ISOBARS  #  5F10.3 <                                        88
+
+ 1000 CONTINUE                                                                89
+
+      RETURN                                                                  90
+
+      END                                                                     91
+

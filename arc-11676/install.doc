@@ -1,0 +1,51 @@
+               Installation of the FORTRAN Programming Tools
+
+
+1. Mount the distribution tape, eg :
+
+      MOUNT MTA0: FORTAP
+
+
+
+2. Copy all files to a directory, eg :
+
+      COPY  MTA0:*.*  DUA0:[TOOLS]*.*
+
+
+
+3. Define symbols for the programs as follows (with device names appropriate to
+   the system :
+
+      DEFINE/SYSTEM  MERLIB  DUA0:[TOOLS]MERLIB.OLB
+      BUGOUT    :== @DUA0:[TOOLS]BUGOUT
+      CAPITAL	:== @DUA0:[TOOLS]CAPITAL
+      CCLEAN    :== @DUA0:[TOOLS]CCLEAN
+      CHANGE	:== RUN DUA0:[TOOLS]CHANGE
+      CHECK72	:== $DUA0:[TOOLS]CHECK72
+      DOUBLE    :== @DUA0:[TOOLS]DOUBLE
+      EIGHTY	:== @DUA0:[TOOLS]EIGHTY
+      FLS       :== @DUA0:[TOOLS]FLS
+      FORTL*IST :== $DUA0:[TOOLS]FORTLIST
+      FORTVMS   :== @DUA0:[TOOLS]FORTVMS
+      FS        :== @DUA0:[TOOLS]FS
+      INCL*UDER	:== $DUA0:[TOOLS]INCLUDER
+      NAMEIO	:== @DUA0:[TOOLS]NAMEIO
+      SNAMEIO	:== @DUA0:[TOOLS]SNAMEIO
+      STRIP72   :== @DUA0:[TOOLS]STRIP72
+      STUB      :== @DUA0:[TOOLS]STUB
+      UNTAB     :== @DUA0:[TOOLS]UNTAB
+      VMSFORT   :== @DUA0:[TOOLS]VMSFORT
+
+
+
+4. Copy the help files into the system help library, eg :
+      LIBRARY/HELP/INSERT  SYS$HELP:HELPLIB  BUGOUT.HLP
+      .
+      .
+
+
+
+All instructions for use of the individual tools and library are included in
+seperate files on the distribution tape as 'specific_tool'.DOC and 
+'specific_tool'.HLP.  If the use of a tool is very straight forward, only the
+.HLP file is included.  

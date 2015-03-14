@@ -1,0 +1,1 @@
+cc -g main.c libspam.a -o spam -lm -lra

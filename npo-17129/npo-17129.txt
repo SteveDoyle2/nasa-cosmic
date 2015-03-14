@@ -1,0 +1,59 @@
+ NASA ARCH- A FILE ARCHIVAL SYSTEM FOR THE DEC VAX
+
+( Cal Tech/Jet Propulsion Lab. )
+
+     The function of the NASA ARCH system is to provide a permanent storage
+area for files that are infrequently accessed. The NASA ARCH routines were
+designed to provide a simple mechanism by which users can easily store and
+retrieve files. The user treats NASA ARCH as the interface to a black box
+where files are stored. There are only five NASA ARCH user commands, even
+though NASA ARCH employs standard VMS directives and the VAX BACKUP util-
+ity. Special care is taken to provide the security needed to insure file in-
+tegrity over a period of years.
+
+     The archived files may exist in any of three storage areas: a tempo-
+rary buffer, the main buffer, and a magnetic tape library. When the main
+buffer fills up, it is transferred to permanent magnetic tape storage and
+deleted from disk. Files may be restored from any of the three storage ar-
+eas. A single file, multiple files, or entire directories can be stored
+and retrieved. archived entities hold the same name, extension, version
+number, and VMS file protection scheme as they had in the user's account
+prior to archival. NASA ARCH is capable of handling up to 7 directory lev-
+els. Wildcards are supported. User commands include TEMPCOPY, DISKCOPY,
+DELETE, RESTORE, and DIRECTORY. The DIRECTORY command searches a direc-
+tory of savesets covering all three archival areas, listing matches ac-
+cording to area, date, filename, or other criteria supplied by the user.
+The system manager commands include 1) ARCHIVE- to transfer the main buffer
+to duplicate magnetic tapes, 2) REPORTto determine when the main buffer is
+full enough to archive, 3) INCREMENT- to back up the partially filled main
+buffer, and 4) FULLBACKUP- to back up the entire main buffer. On-line help
+files are provided for all NASA ARCH commands.
+
+     NASA ARCH is written in DEC VAX DCL for interactive execution and has
+been implemented on a DEC VAX computer operating under VMS 4.X. This program
+was developed in 1985.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: DEC VAX DCL
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 2,515 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX BACKUP Format Magnetic Tape
+
+PROGRAM NUMBER: NPO-17129
+
+DOMESTIC - DOCUMENTATION PRICE: $14.00    PROGRAM PRICE: $600.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $28.00   PROGRAM PRICE: $1200.00
+
+
+
+                                        1
+

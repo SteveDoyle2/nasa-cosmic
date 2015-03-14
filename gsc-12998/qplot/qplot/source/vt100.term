@@ -1,0 +1,510 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STANDARD',
+               'QLIBHOME:FIG',
+               'QLIBHOME:STRING',
+               'QLIBHOME:TERM_VAX',
+               'QLIBHOME:TERM_CHAR',
+               'QLIBHOME:TERM_ANSI'),
+  ENVIRONMENT ('VT100.TEN') ]
+MODULE term_VT100;
+[ HIDDEN ] CONST
+   rowsize         = 24;
+   maxcolsize      = 132;
+[ HIDDEN ] TYPE
+   iposition       = RECORD
+                     irow,icol : integer;
+                     END;
+   vary134         = VARYING [134] OF CHAR;  {max 132 columns + CRLF}
+   scrmode_type    = (c80,p80,c132,p132);
+   memscreen_array = ARRAY [0..rowsize] OF ARRAY [0..maxcolsize] OF CHAR; 
+   memscreen_type  = ARRAY [scrmode_type] OF memscreen_array; 
+[ HIDDEN ] VAR
+   memscreen       : ^memscreen_type := NIL;
+   dialog_area     : ARRAY [1..5] OF vary134 
+                   := (5 OF '');
+   curpos          : iposition    := (10,40);
+   colorchar       : char         := '#';
+   scrmode         : scrmode_type := c80;
+   dialog_on       : boolean      := false;
+{=============================================================================}
+{-- PROCEDURES FOR TERMINAL TYPE VT100 ---------------------------------------}
+{=============================================================================}
+[ HIDDEN ] PROCEDURE clearmemscreen;
+VAR
+  a,b : INTEGER;
+BEGIN
+FOR a := 1 TO rowsize DO 
+  FOR b := 1 TO maxcolsize DO 
+    BEGIN
+    memscreen^[c80,a,b] := ' ';
+    memscreen^[p80,a,b] := ' ';
+    memscreen^[c132,a,b] := ' ';
+    memscreen^[p132,a,b] := ' ';
+    END;
+END;
+{-----------------------------------------------------------------------------}
+[ HIDDEN ] FUNCTION strofpos(tpt : iposition) : vary134;
+VAR
+  xstr,ystr : vary134;
+BEGIN
+  xstr := strofi(tpt.irow,2);
+  IF xstr[1] = ' ' THEN xstr := SUBSTR(xstr,2,1);
+  ystr := strofi(tpt.icol,3);
+  IF ystr[1] = ' ' THEN ystr := SUBSTR(ystr,2,2);
+  IF ystr[1] = ' ' THEN ystr := SUBSTR(ystr,2,1);
+  strofpos := ESC + '[' + xstr + ';' + ystr + 'H';
+END;
+{-----------------------------------------------------------------------------}
+[ HIDDEN ] PROCEDURE write_to_dialog_area(str : vary134; new_line : BOOLEAN);
+VAR
+  a        : INTEGER;
+BEGIN
+  dialog_area[5] := dialog_area[5] + str;
+  IF new_line THEN
+  BEGIN
+    FOR a := 1 TO 4 DO
+      dialog_area[a] := dialog_area[a+1];
+    dialog_area[5] := '';
+  END;
+END;
+{-----------------------------------------------------------------------------}
+[ HIDDEN ] PROCEDURE write_dialog_area;
+VAR
+  a   : INTEGER;
+  tpt : iposition;
+BEGIN
+  qiowwrite(ESC + '[18;1H' + pad ('','_',80));
+  tpt.icol := 1;
+  tpt.irow := 19;
+  qiowwrite(ESC + '[19;1H');
+  FOR a := 1 TO 5 DO
+  BEGIN
+    qiowwrite(dialog_area[a]);
+    tpt.irow := tpt.irow + 1;
+    qiowwrite(strofpos(tpt));
+  END;
+END;
+{-----------------------------------------------------------------------------}
+[ HIDDEN ] PROCEDURE drawmemscreen(tscrmode : scrmode_type; 
+                     full_screen : BOOLEAN := TRUE);
+VAR
+  a,b,tcolsize,startrow : INTEGER;
+  tstr                  : vary134;
+  tpt                   : iposition;
+BEGIN
+  dialog_on := FALSE;
+  tpt.icol := 0;
+  tcolsize := 80;
+  IF tscrmode IN [c132,p132] THEN tcolsize := 132;
+  IF full_screen THEN startrow := 1 ELSE startrow := 18;
+  FOR a := startrow TO rowsize DO 
+  BEGIN
+    tpt.irow := a;
+    qiowwrite(strofpos(tpt)); 
+    tstr.length := tcolsize;
+    CASE tscrmode OF
+      c80 : FOR b := 1 to tcolsize DO tstr[b] := memscreen^[c80,a,b];
+      p80 : FOR b := 1 to tcolsize DO tstr[b] := memscreen^[p80,a,b];
+      c132 : FOR b := 1 to tcolsize DO tstr[b] := memscreen^[c132,a,b];
+      p132 : FOR b := 1 to tcolsize DO tstr[b] := memscreen^[p132,a,b];
+    END;
+    qiowwrite(tstr);
+  END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+FUNCTION termname_VT100 (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0: termname_VT100 := '1234567';
+   1: termname_VT100 := 'VT100   ';
+   2: termname_VT100 := 'VT102   ';
+   3: termname_VT100 := 'VT220   ';
+   4: termname_VT100 := 'VS100   ';
+   5: termname_VT100 := 'TV922   ';
+   6: termname_VT100 := 'ANSI364 ';
+   7: termname_VT100 := 'VT_EMUL ';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE colorsetup_VT100;
+BEGIN
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE executecom_VT100;
+VAR
+   j,a,b        : integer;
+   oldpos80,oldpos132,newpos80,newpos132 : iposition;
+   tstr         : vary134;
+{----------------------------------}
+FUNCTION vposofqpos(tcolsize : INTEGER) : iposition;
+VAR
+  tpos : iposition;
+BEGIN
+  tpos.irow := 24 - env.pos.iy DIV 2000; 
+  tpos.icol := env.pos.ix DIV (65535 DIV tcolsize); 
+  IF tpos.irow < 0 THEN tpos.irow := 0;
+  IF tpos.icol < 0 THEN tpos.icol := 0;
+  IF tpos.irow > rowsize THEN tpos.irow := rowsize;
+  IF tpos.icol > tcolsize THEN tpos.icol := tcolsize;
+  vposofqpos := tpos;
+END;
+{----------------------------------}
+PROCEDURE gentheline(tscrmode : scrmode_type; 
+                    pos1,pos2 : iposition;
+               VAR tmemscreen : memscreen_array;
+                     plotchar : CHAR);
+VAR
+  error,delta_x,delta_y : DOUBLE;
+  m,n,tcolsize          : INTEGER;
+  temp_pos,temp_pos1    : iposition;
+BEGIN
+tcolsize := 80;
+IF tscrmode IN [c132,p132] THEN tcolsize := 132;
+error := 0;
+m := 1;
+n := 1;
+delta_x := pos2.icol - pos1.icol;
+IF delta_x < 0 
+ THEN
+  BEGIN
+  m := -1; {x to left}
+  delta_x := - delta_x;
+  END
+ELSE IF delta_x = 0 
+ THEN error := -1; { assure vertical movement }
+delta_y := pos2.irow - pos1.irow;
+IF delta_y < 0 
+ THEN
+  BEGIN
+  n := -1; { y moves down }
+  delta_y := - delta_y;
+  END;
+WHILE NOT((pos2.icol = pos1.icol) AND
+            (pos2.irow = pos1.irow)) DO
+   BEGIN
+   temp_pos := pos1;
+   IF pos1.irow < 0 THEN temp_pos.irow := 0;
+   IF pos1.icol < 0 THEN temp_pos.icol := 0;
+   IF pos1.irow > rowsize THEN temp_pos.irow := rowsize;
+   IF pos1.icol > tcolsize THEN temp_pos.icol := tcolsize;
+   IF tmemscreen[temp_pos.irow,temp_pos.icol] <> plotchar 
+    THEN
+     BEGIN
+     tmemscreen[temp_pos.irow,temp_pos.icol] := plotchar; 
+     IF tscrmode = scrmode THEN qiowwrite(strofpos(temp_pos) + plotchar);
+     END;
+   IF error < 0 
+    THEN
+     BEGIN
+     pos1.irow := pos1.irow + n;
+     error := error + delta_x;
+     END
+    ELSE
+     BEGIN
+     pos1.icol := pos1.icol + m;
+     error := error - delta_y;
+     END;
+   END;      
+END;
+{----------------------------------}
+BEGIN
+IF env.mode = M_DUAL
+ THEN
+  BEGIN
+  qiowwrite (ESC + '[19;1H' + ESC + '[J');
+  drawmemscreen(scrmode,FALSE);
+  dialog_on := FALSE;
+  qiowwrite (ESC + '[1;24r' + strofpos(curpos));
+  END;
+env.mode := M_PLOT;
+WITH plotitem DO CASE ins OF
+   I_col:  colorchar := chofcolor (st);
+   I_pan:  ;
+   I_clo:  ; 
+   I_pos : BEGIN
+           env.pos.ix := ix;
+           env.pos.iy := iy;
+           END;
+   I_dra : IF NOT env.visible
+            THEN
+             BEGIN
+             env.pos.ix := ix;
+             env.pos.iy := iy;
+             END
+            ELSE
+             BEGIN
+             oldpos80 := vposofqpos(80);
+             oldpos132 := vposofqpos(132);
+             env.pos.ix := ix;
+             env.pos.iy := iy;
+             newpos80 := vposofqpos(80);
+             newpos132 := vposofqpos(132);
+             gentheline(c80,oldpos80,newpos80,memscreen^[c80],colorchar);
+             gentheline(p80,oldpos80,newpos80,memscreen^[p80],'.');
+             gentheline(c132,oldpos132,newpos132,memscreen^[c132],colorchar);
+             gentheline(p132,oldpos132,newpos132,memscreen^[p132],'.');
+             END;
+   I_siz:  ;
+   I_mar:  ;
+   I_pri:  IF env.visible AND (st <> '') 
+            THEN 
+             BEGIN
+             tstr := st;
+             newpos80 := vposofqpos(80);
+             newpos132 := vposofqpos(132);
+             { To terminal }
+             CASE scrmode OF
+                c80,p80 : qiowwrite(strofpos(newpos80) + tstr);
+                c132,p132 : qiowwrite(strofpos(newpos132) + tstr);
+                END;
+             { To memscreens }
+             b := newpos80.icol;
+             FOR a := 1 TO LENGTH(tstr) DO
+                BEGIN
+                IF (newpos80.icol + a < 80) THEN b := b + 1; 
+                memscreen^[c80,newpos80.irow,b] := tstr[a];
+                memscreen^[p80,newpos80.irow,b] := tstr[a];
+                END;
+             b := newpos132.icol;
+             FOR a := 1 TO LENGTH(tstr) DO
+                BEGIN
+                IF (newpos132.icol + a < 132) THEN b := b + 1; 
+                memscreen^[c132,newpos132.irow,b] := tstr[a];
+                memscreen^[p132,newpos132.irow,b] := tstr[a];
+                END;
+             END;
+   I_emp:  ; 
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE writeterm_VT100 (str : VARYING [l2] OF char);
+CONST
+  CR = chr(13);
+VAR
+  new_line : BOOLEAN;
+  a        : INTEGER;
+BEGIN
+IF env.mode = M_PLOT
+ THEN
+  BEGIN
+  qiowwrite (ESC + '[18;1H' + pad ('','_',80));
+  qiowwrite (ESC + '[19;24r' + ESC + '[19;1H' + ESC + '[0J');
+  write_dialog_area;
+  env.mode := M_DUAL;
+  END;
+qiowwritevirtual (str);
+new_line := index (str,CR) <> 0;
+write_to_dialog_area(str,new_line);
+END;
+{-----------------------------------------------------------------------------}
+[GLOBAL]
+PROCEDURE readterm_VT100 (VAR outstr : VARYING [l2] OF CHAR);
+BEGIN
+readterm_vax (outstr);
+write_to_dialog_area (outstr + CRLF,TRUE);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screenerase_VT100;
+VAR
+   i : integer;
+BEGIN
+IF memscreen = NIL THEN new (memscreen);
+screenerase_ansi;
+clearmemscreen;
+FOR i := 1 TO 5 DO dialog_area[i] := '';
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screencopy_VT100;
+BEGIN
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE gin_VT100 (VAR key : char;  VAR ipt : ipoint;  color : color_type);
+VAR
+   a,b              : integer;
+   vpos             : iposition;
+   tstr,trash,tbuff : vary134;
+{----------------------------------}
+FUNCTION readtoletter : vary134;
+VAR
+   tbuff,tstr : VARYING [8] OF CHAR;
+BEGIN
+tbuff := ' ';
+qiowreadnoecho(tbuff,1);
+tstr := tbuff[1];
+IF tstr[1] = ESC 
+ THEN 
+  REPEAT
+     tbuff := ' ';
+     qiowreadnoecho(tbuff,1);
+     tstr := tstr + tbuff[1];
+     UNTIL tbuff[1] IN ['A'..'Z','a'..'z',ESC];
+readtoletter := tstr;
+END;
+{----------------------------------}
+FUNCTION qposofvpos (vpos : iposition) : ipoint;
+VAR
+   tpos     : ipoint;
+   tcolsize : INTEGER;
+BEGIN
+IF scrmode IN [c132,p132] THEN tcolsize := 132 ELSE tcolsize := 80;
+tpos.ix := vpos.icol * (65535 DIV tcolsize); 
+tpos.iy := 48000 - (vpos.irow * 2000); 
+IF tpos.ix < 0 THEN tpos.ix := 0;
+IF tpos.iy < 0 THEN tpos.iy := 0;
+IF tpos.ix > 65535 THEN tpos.ix := 65535;
+IF tpos.iy > 48000 THEN tpos.iy := 48000;
+qposofvpos := tpos;
+END;
+{----------------------------------}
+FUNCTION cursorposition : iposition;
+VAR
+   tint1,tint2,tint3 : INTEGER;
+   vpos              : iposition;
+   tstr,rowstr,colstr,trash : vary134;
+BEGIN
+trash := '';
+qiowreadnoechopurge(trash,0);
+qiowwrite(ESC + '[6n');
+tstr := readtoletter;  
+tint1 := INDEX(tstr,'[');
+tint2 := INDEX(tstr,';');
+tint3 := INDEX(tstr,'R');
+IF (tint1 <> 0) AND (tint2 <> 0) AND (tint3 <> 0)
+ THEN
+  BEGIN
+  rowstr := SUBSTR(tstr,tint1+1,tint2-tint1-1);
+  colstr := SUBSTR(tstr,tint2+1,tint3-tint2-1);
+  vpos.irow := iofstr (rowstr);
+  vpos.icol := iofstr (colstr);
+  END
+ ELSE
+  BEGIN
+  vpos.irow := 1;
+  vpos.icol := 1;
+  END;
+cursorposition := vpos;
+END;
+{----------------------------------}
+BEGIN
+CASE env.mode OF
+   M_TEXT:  BEGIN
+            qiowwrite (ESC + '[H' + ESC + '[J');
+            drawmemscreen(scrmode);
+            END;
+   M_DUAL:  BEGIN
+            qiowwrite (ESC + '[19;1H' + ESC + '[J');
+            drawmemscreen(scrmode,FALSE);
+            dialog_on := FALSE;
+            qiowwrite (ESC + '[1;24r');
+            END;
+   END;
+env.mode := M_PLOT;
+qiowwrite(strofpos(curpos));
+trash := '';
+qiowreadnoechopurge(trash,0);
+
+REPEAT
+   tstr := readtoletter;
+   IF tstr[1] = ESC 
+    THEN 
+     BEGIN
+     IF (tstr = ESC+'[A') OR (tstr = ESC+'[B') OR
+        (tstr = ESC+'[C') OR (tstr = ESC+'[D')
+      THEN qiowwrite(tstr)
+     ELSE IF tstr = ESC+'O'
+      THEN
+       BEGIN
+       tbuff := ' ';
+       qiowreadnoecho(tbuff,1);
+       CASE tbuff[1] OF
+          'P':  BEGIN                       { PF1 key = toggles 80/132 }
+                CASE scrmode OF
+                   c80  : scrmode := c132;
+                   p80  : scrmode := p132;
+                   c132 : scrmode := c80;
+                   p132 : scrmode := p80;
+                   END;
+                CASE scrmode OF
+                   c80,p80   : qiowwrite(ESC + '[?3l');
+                   c132,p132 : qiowwrite(ESC + '[?3h');
+                   END;
+                drawmemscreen(scrmode);
+                qiowwrite(strofpos(curpos));  
+                END;
+          'Q':  BEGIN                        { PF2 key = char/period }
+                CASE scrmode OF 
+                   c80 : scrmode := p80;
+                   p80 : scrmode := c80;
+                   c132 : scrmode := p132;
+                   p132 : scrmode := c132;
+                   END;
+                CASE scrmode OF
+                   c80,p80 : qiowwrite(ESC + '[?3l');
+                   c132,p132 : qiowwrite(ESC + '[?3h');
+                   END;
+                drawmemscreen(scrmode);
+                qiowwrite(strofpos(curpos));  
+                END;
+          'R':  BEGIN                        { PF3 key = show dialog area }
+                curpos := cursorposition;
+                IF dialog_on 
+                 THEN
+                  BEGIN
+                  qiowwrite (ESC + '[19;1H' + ESC + '[J');
+                  drawmemscreen(scrmode,FALSE);
+                  dialog_on := FALSE;
+                  qiowwrite (ESC + '[1;24r' + strofpos(curpos));
+                  END
+                 ELSE
+                  BEGIN
+                  qiowwrite (ESC + '[19;1H' + ESC + '[J');
+                  write_dialog_area;
+                  dialog_on := TRUE;
+                  qiowwrite(strofpos(curpos));
+                  END;            
+                END;
+          'S':  ;                            { PF4 key = future }
+          OTHERWISE;
+          END;
+       END;
+     END;       
+   UNTIL tstr[1] <> ESC;
+
+key := tstr[1];
+curpos := cursorposition;
+ipt := qposofvpos(curpos);
+END;
+{-----------------------------------------------------------------------------}
+[GLOBAL]
+FUNCTION readmenu_VT100 (default : char;  toplevel : boolean;  
+   helpprefix : anystring) : command_type;
+BEGIN
+readmenu_VT100 := readmenu_ansi (default,toplevel,helpprefix,
+   terminal.name <> 'VT_EMUL ');
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE termconfig_VT100 (configcontrol : configcontrol_type);
+BEGIN
+CASE configcontrol OF
+   CON:  BEGIN
+         config.ch := ch_type (65536 DIV 80,2000,65536 DIV 320,600);
+         config.resolution := 2000;
+         config.dotsize    := 0;
+         config.starsize   := 64;
+         config.ansi364    := true;
+         config.drawblack  := false;
+         END;
+   QUE:  ;
+   REP:  ;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+END.

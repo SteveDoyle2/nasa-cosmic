@@ -1,0 +1,380 @@
+	.TITLE	SETERM - SETS TERMINAL CHARACTERISITICS
+	.SUBTITLE	SETERM - SETS TERMINAL CHARACTERISTICS
+
+;DM   These routines sets and resets the terminal characteristics
+;DME  CLRWRP  sets the terminal NOWRAP
+;DME  RESTRM  restores original terminal characterisitics
+;DME  SETERM  sets terminal characteristics
+;DME  SETNAR  sets a VT100 to 80 columns
+;DME  SETWID  sets a VT100 to 132 columns
+;DME  SETWRP  sets the terminal WRAP
+;DM
+;DM   Programmer - Jon Vavrus  31 MAR 1981
+;DM   Revised    - Jon vavrus  12 MAY 1981
+;DM   Revised    - Jon Vavrus  31 JUL 1981
+;DM   Revised    - Jon Vavrus  26 AUG 1981
+;DM   Revised    - Jon Vavrus   3 MAR 1982 (added SETWID/SETNAR)
+;DM   Revised    - Jon Vavrus   4 MAY 1982 (non-advanced video VT100's)
+;DM   Revised    - Jon Vavrus  15 JUL 1982 (Use FORM for <FF> fixing)
+;DM   Revised    - Jon Vavrus  27 JUL 1982 (Recognizes printer-ports)
+;DM   Revised    - Jon Vavrus  12 AUG 1982 (@# references changed to G^)
+;DM   Revised    - Jon Vavrus   2 SEP 1982
+;DM   Revised    - Jon Vavrus  29 SEP 1983
+;DM
+;DM   SETERM sets up the terminal with the appropriate characteristics.
+;DM   It also determines whether the terminal is a VT100 and (if so)
+;DM   whether it has the advanced video option installed.
+;M
+;M         The routines are called with the terminal channel number as
+;M    their first argument, and SETERM has a flag set to 0 for 132 char-
+;M    acter mode in the second argument, and a word set to -1 for WRAP
+;M    as the third argument.
+;M
+;M         SETERM sets the terminal to page=1,width=150 and then tries
+;M    to change the terminal to 132 character mode if terminal is a VT100
+;M    with advanced video and the low bit of the second argument is set.
+;M    If the low bit of the third argument is set the terminal is set up to
+;M    cause line wrapping.  The terminal channel number is filled in and
+;M    should not be provided by the calling routine.
+;
+;	COMMON AREAS
+;
+;S    DOITNM  contains the VT100 flag to be set or cleared
+;
+;	CALLED ROUTINES
+;
+;C    SETNAR  sets a VT100 to 80 columns
+;C    SETWID  sets a VT100 to 132 columns
+;
+		$DCDEF
+		$TTDEF
+
+		.PSECT	DOITNM,PIC,USR,OVR,REL,GBL,SHR,NOEXE,RD,WRT,LONG
+		.BLKB	53
+VT100:		.BLKB	1
+		.BLKL	1
+		.BLKW	1
+		.BLKL	1
+PAGLEN:		.BLKW	1
+COMLIN:		.BLKW	1
+VT100A:		.BLKB	1
+
+		.PSECT	SETDAT,LONG
+OLD_CHARS:	.QUAD
+NEW_CHARS:	.WORD
+		.WORD	150			; width=132
+		.LONG
+
+TERM_MODES:	.BYTE	27,^A\<\		; ANSI
+WRAP_MODE:	.BYTE	27
+		.ASCII	\[?7\			; nowrap
+WRAP_BYTE:	.ASCII	\l\
+		.BYTE	27
+		.ASCII	\[2J\			; erase screen
+		.BYTE	27
+LEDS_OFF:	.ASCII	\[0q\			; all LED's off
+	MODE_LEN=.-TERM_MODES
+WIDE:		.BYTE	27
+		.ASCII	\[?3h\			; 132 columns
+	WIDE_LEN=.-WIDE
+NARROW:		.BYTE	27
+		.ASCII	\[?3l\			; 80 columns
+	NARROW_LEN=.-NARROW
+BOTTOM:		.BYTE	27
+		.ASCII	\[24;1f\		; go to bottom
+		.BYTE	27
+		.ASCII	\[K\			; erase line
+		.BYTE	27
+		.ASCII	\[23;1f\		; Set at bottom - 1
+		.BYTE	27
+		.ASCII	\[0q\			; all LED's off
+	BOTTOM_LEN=.-BOTTOM
+FLAG:		.BYTE
+TEMP_STORAGE:	.LONG	1
+		.LONG
+TEST_BUF:	.BYTE	27			; Sets cursor to 13,120
+		.ASCII	\[13;120H\		; and then asks for pos-
+		.BYTE	27			; ition
+		.ASCII	\[6n\
+	TEST_BUF_LEN=.-TEST_BUF
+TEST_END:	.LONG	11,.+4
+		.BYTE	0[10],4
+TEST_IOSB:	.QUAD
+TEST_RET:	.BLKB	9
+AVO_BUF:	.BYTE	27			; Tests for advanced
+		.ASCII	\[0c\			; option
+	AVO_BUF_LEN=.-AVO_BUF
+AVO_END:	.LONG	13,.+4
+		.BYTE	0[12],8
+
+;
+;	SETERM
+;
+	.PSECT		SETERM,NOWRT
+	.ENTRY		SETERM,^M<R2>
+
+	$QIOW_S		CHAN=@4(AP),FUNC=#IO$_SENSEMODE,P1=OLD_CHARS
+;						  get old characteristics
+	CMPB		<OLD_CHARS+1>,#DT$_VT100
+	BEQL		5$
+	CMPW		#80,@12(AP)
+	BEQL		3$
+	CMPW		#-80,@12(AP)
+	BEQL		3$
+	TSTW		@12(AP)
+	BLSS		2$
+	MOVW		#80,@12(AP)
+	BRW		40$
+2$:	MOVW		#-80,@12(AP)
+3$:	BRW		40$
+5$:	MOVB		#-1,VT100		; set VT100 flag
+	MOVL		#10,R2
+10$:	SOBGEQ		R2,20$
+	CLRB		VT100
+	BRW		40$
+
+20$:	$QIOW_S		CHAN=@4(AP),-			; Check for AVO
+		FUNC=#IO$_READPROMPT!IO$M_NOECHO!IO$M_PURGE!IO$M_TIMED,-
+			IOSB=TEST_IOSB,P1=TEST_RET,P2=#8,P3=#2,-
+			P4=#AVO_END,P5=#AVO_BUF,P6=#AVO_BUF_LEN
+	CMPW		TEST_IOSB,#SS$_NORMAL
+	BNEQ		10$
+	MOVZWL		<TEST_IOSB+2>,R0
+	CMPW		#4,R0
+	BGTR		10$
+	CMPB		#27,TEST_RET
+	BNEQ		10$
+	CMPW		#^A\[?\,<TEST_RET+1>
+	BNEQ		10$
+	CMPB		L^TEST_RET-1(R0),#^A\2\
+	BEQL		30$
+	CMPB		L^TEST_RET-1(R0),#^A\3\
+	BEQL		30$
+	CMPB		L^TEST_RET-1(R0),#^A\6\
+	BEQL		30$
+	CMPB		L^TEST_RET-1(R0),#^A\7\
+	BEQL		30$
+	CMPW		L^TEST_RET-2(R0),#^A\11\
+	BEQL		30$
+	CMPW		L^TEST_RET-2(R0),#^A\15\
+	BEQL		30$
+	CLRB		VT100A
+	BRB		50$
+30$:	MOVB		#-1,VT100A
+	BRB		50$
+40$:	CLRB		VT100
+	MOVL		#1,<TEMP_STORAGE+4>	; top of page for non-VT100
+	PUSHAL		TEMP_STORAGE
+	PUSHAL		<TEMP_STORAGE+4>
+	CALLS		#2,G^SCR$ERASE_PAGE
+50$:	MOVW		OLD_CHARS,NEW_CHARS
+	TSTW		@12(AP)
+	BLSS		60$
+	BICL3		#TT$M_WRAP,<OLD_CHARS+4>,<NEW_CHARS+4>	; nowrap
+	BRB		70$
+60$:	BISL3		#TT$M_WRAP,<OLD_CHARS+4>,<NEW_CHARS+4>	; wrap
+	MOVB		#^A\h\,WRAP_BYTE
+70$:	BISL2		#TT$M_MECHFORM,<NEW_CHARS+4>
+	$QIOW_S		CHAN=@4(AP),FUNC=#IO$_SETMODE,P1=NEW_CHARS ; set char.
+	BLBC		VT100,90$
+	$QIOW_S		CHAN=@4(AP),FUNC=#IO$_WRITEVBLK,-	; term setup
+			P1=TERM_MODES,P2=#MODE_LEN
+	MOVB		@8(AP),FLAG
+	BEQL		80$
+	PUSHL		4(AP)
+	CALLS		#1,SETNAR
+	BRB		90$
+80$:	PUSHL		4(AP)
+	CALLS		#1,SETWID
+	BLBS		VT100A,90$
+	MOVW		#14,COMLIN
+	SUBW2		#10,PAGLEN
+90$:	RET
+
+	.SUBTITLE	RESTRM - RESTORES THE TERMINAL CHARACTERISTICS
+;
+;	RESTRM
+;
+;DM
+;DM   RESTRM is called to restore the terminal to the characteristics it
+;DM   had prior to the call to SETERM.
+;M
+;M         RESTRM sets the terminal back to what it was when SETERM was
+;M    called.  For VT100 terminals If the original width was > 80 then
+;M    the terminal is left in 132 character mode, otherwise it is put in
+;M    to 80 character mode, and the terminal is always left NOWRAP (second
+;M    bit of byte 3 off).  It is called with the terminal channel number
+;M    as its sole argument.
+;
+;	CALLED ROUTINES
+;
+;C    SETNAR  sets a VT100 to 80 columns
+;C    SETWID  sets a VT100 to 132 columns
+
+	.ENTRY		RESTRM,0
+
+	$QIOW_S		CHAN=@4(AP),FUNC=#IO$_SETMODE,P1=OLD_CHARS ; restore
+	BLBS		VT100,10$
+	MOVL		#24,<TEMP_STORAGE+4>
+	PUSHAL		TEMP_STORAGE
+	PUSHAL		<TEMP_STORAGE+4>
+	CALLS		#2,G^LIB$ERASE_LINE
+	MOVL		#23,<TEMP_STORAGE+4>
+	PUSHAL		TEMP_STORAGE
+	PUSHAL		<TEMP_STORAGE+4>
+	CALLS		#2,G^LIB$SET_CURSOR
+	RET
+
+10$:	CMPW		#80,<OLD_CHARS+2>
+	BGEQ		20$
+	TSTB		FLAG
+	BEQL		30$
+	PUSHL		4(AP)
+	CALLS		#1,SETWID			; back to wide
+	RET
+
+20$:	TSTB		FLAG
+	BEQL		40$
+30$:	$QIOW_S		CHAN=@4(AP),FUNC=#IO$_WRITEVBLK,P1=BOTTOM,-
+			P2=#BOTTOM_LEN			; go to bottom
+	RET
+
+40$:	PUSHL		4(AP)
+	CALLS		#1,SETNAR			; back to narrow
+	RET
+
+	.SUBTITLE	SETWRP - SETS THE TERMINAL /WRAP
+;
+;	SETWRP
+;
+;DM
+;DM   SETWRP sets the terminal characteristics to WRAP so that lines of
+;DM   output will be continued on subsequent lines of the screen, rather
+;DM   than truncated to fit on one.
+;M
+;M    SETWRP is called with the terminal channel number as its sole
+;M    argument.
+
+	.ENTRY		SETWRP,^M<>
+
+	BLBC		VT100,190$
+	MOVB		#^A\h\,WRAP_BYTE
+	$QIOW_S		CHAN=@4(AP),FUNC=#IO$_WRITEVBLK,P1=WRAP_MODE,-
+			P2=#5
+190$:	BISL2		#TT$M_WRAP,<NEW_CHARS+4>
+	$QIOW_S		CHAN=@4(AP),FUNC=#IO$_SETMODE,P1=NEW_CHARS
+	RET
+
+	.SUBTITLE	CLRWRP - SETS THE TERMINAL /NOWRAP
+;
+;	CLRWRP
+;
+;DM
+;DM   CLRWRP sets the terminal characteristics to NOWRAP so that lines of
+;DM   output will be truncated to fit on one line of the screen, rather
+;DM   continued on subsequent lines.
+;M
+;M    CLRWRP is called with the terminal channel number as its sole
+;M    argument.
+
+	.ENTRY		CLRWRP,^M<>
+
+	BLBC		VT100,200$
+	MOVB		#^A\l\,WRAP_BYTE
+	$QIOW_S		CHAN=@4(AP),FUNC=#IO$_WRITEVBLK,P1=WRAP_MODE,-
+			P2=#5
+200$:	BICL2		#TT$M_WRAP,<NEW_CHARS+4>
+	$QIOW_S		CHAN=@4(AP),FUNC=#IO$_SETMODE,P1=NEW_CHARS
+	RET
+
+	.SUBTITLE	SETNAR - SETS THE TERMINAL TO 80 COLUMN MODE
+;
+;	SETNAR
+;
+;DM
+;DM   SETNAR sets the terminal to narrow mode (80 columns).
+;M
+;M    SETNAR is called with the terminal channel number as its sole
+;M    argument.  It should only be called if the terminal in use is
+;M    a VT100 with advanced video.  The routine will check (by cursor
+;M    positioning) to see if the transition has been made (some VT100's
+;M    have been known to be flaky at 132<->80 column transitions).  If
+;M    it cannot successfully cause the transition after 10 tries it will
+;M    cause the program to exit with DEVCMDERR status.
+
+	.ENTRY		SETNAR,^M<R2>
+
+	MOVL		#10,R2
+10$:	SOBGEQ		R2,20$
+	PUSHL		4(AP)
+	CALLS		#1,RESTRM
+	$EXIT_S		CODE=#SS$_DEVCMDERR
+
+20$:	$QIOW_S		CHAN=@4(AP),FUNC=#IO$_WRITEVBLK,P1=NARROW,-
+			P2=#NARROW_LEN			; Set narrow
+	$QIOW_S		CHAN=@4(AP),-			; Check it
+		FUNC=#IO$_READPROMPT!IO$M_NOECHO!IO$M_PURGE!IO$M_TIMED,-
+			IOSB=TEST_IOSB,P1=TEST_RET,P2=#8,P3=#2,-
+			P4=#TEST_END,P5=#TEST_BUF,P6=#TEST_BUF_LEN
+	CMPW		#SS$_NORMAL,TEST_IOSB
+	BNEQ		10$
+	CMPW		#7,<TEST_IOSB+2>
+	BEQL		25$
+	BRW		10$
+25$:	CMPL		#^A\13;8\,<TEST_RET+2>
+	BNEQ		30$
+	CMPW		#^A\0R\,<TEST_RET+6>
+	BEQL		40$
+30$:	BRW		10$
+40$:	MOVL		#1,TEMP_STORAGE		; Move to top of screen
+	PUSHAL		TEMP_STORAGE
+	PUSHAL		TEMP_STORAGE
+	CALLS		#2,G^LIB$SET_CURSOR
+	RET
+
+	.SUBTITLE	SETWID - SETS THE TERMINAL TO 132 COLUMN MODE
+;
+;	SETWID
+;
+;DM
+;DM   SETWID sets the terminal to wide mode (132 columns).
+;M
+;M    SETWID is called with the terminal channel number as its sole
+;M    argument.  It should only be called if the terminal in use is
+;M    a VT100 with advanced video.  The routine will check (by cursor
+;M    positioning) to see if the transition has been made (some VT100's
+;M    have been known to be flaky at 132<->80 column transitions).  If
+;M    it cannot successfully cause the transition after 10 tries it will
+;M    cause the program to exit with DEVCMDERR status.
+
+	.ENTRY		SETWID,^M<R2>
+
+	MOVL		#10,R2
+10$:	SOBGEQ		R2,20$
+	PUSHL		4(AP)
+	CALLS		#1,RESTRM
+	$EXIT_S		CODE=#SS$_DEVCMDERR
+
+20$:	$QIOW_S		CHAN=@4(AP),FUNC=#IO$_WRITEVBLK,P1=WIDE,-
+			P2=#WIDE_LEN			; Set wide
+	$QIOW_S		CHAN=@4(AP),-			; Check it
+		FUNC=#IO$_READPROMPT!IO$M_NOECHO!IO$M_PURGE!IO$M_TIMED,-
+			IOSB=TEST_IOSB,P1=TEST_RET,P2=#9,P3=#2,-
+			P4=#TEST_END,P5=#TEST_BUF,P6=#TEST_BUF_LEN
+	CMPW		#SS$_NORMAL,TEST_IOSB
+	BNEQ		10$
+	CMPW		#8,<TEST_IOSB+2>
+	BEQL		25$
+	BRW		10$
+25$:	CMPL		#^A\13;1\,<TEST_RET+2>
+	BNEQ		30$
+	CMPL		#^A\120R\,<TEST_RET+5>
+	BEQL		40$
+30$:	BRW		10$
+40$:	MOVL		#1,TEMP_STORAGE		; Move to top of screen
+	PUSHAL		TEMP_STORAGE
+	PUSHAL		TEMP_STORAGE
+	CALLS		#2,G^LIB$SET_CURSOR
+	RET
+
+	.END

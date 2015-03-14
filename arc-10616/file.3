@@ -1,0 +1,219 @@
+  DATASET,FSTJSW,TST1DT
+TEST PROGRAM 1   GENERATES TRANSIENT USING EAT
+.01       .01       2.00
+F          3   3
+1.0       0.0       0.0
+0.0       2.0       0.0
+0.0       0.0       3.0
+G          3   3
+1.0       0.0       0.0
+0.0       1.0       0.0
+0.0       0.0       1.0
+H          2   3
+1.0       1.0       1.0
+0.0       1.0       0.0
+U          3   1
+1.0
+0.0
+0.0
+X0         3   1
+1.0
+2.0
+3.0
+%END
+  %ENDDS
+  DATASET,FSTJSW,TRNSDT
+TEST  PROGRAM     GENERATES TRANSIENT USING TRNSI
+F          5   5
+0.        0.        0.        0.        0.
+0.        .5        0.        0.        0.
+0.        0.        1.        1.        0.
+0.        0.        0.        1.        0.
+0.        0.        0.        0.        2.
+G          5   2
+1.        0.
+1.        1.
+0.        0.
+1.        0.
+0.        1.
+J          2   1
+0.
+0.
+R          1   1
+0.
+K          2   5
+1.        0.        .5        0.        2.
+0.        3.        0.        1.        0.
+H          7   5
+1.        0.        0.        0.        0.
+0.        1.        0.        0.        0.
+0.        0.        1.        0.        0.
+0.        0.        0.        1.        0.
+0.        0.        0.        0.        1.
+1.        0.        0.        0.        0.
+0.        1.        0.        1.        0.
+X          5   1
+1.
+1.
+1.
+0.
+1.
+T          4   1
+.5
+2.
+3.5
+0.
+%END
+  %ENDDS
+  DATASET,FSTJSW,TST2DT
+TEST PROGRAM 2A   GENERATES TRANSIENT USING  X(I+1)=EXP(F*T)*X(I)
+0.0       1.0       0.01      3.5
+F          3   3
+-0.2767   1.0       -0.0372
+-17.0872  -0.1785   -12.1983
+0.0       0.0       -6.67
+G          3   1
+0.0
+0.0
+6.67
+X0         3   1
+1.0
+0.0
+0.0
+H          3   3
+1.0       0.0       0.0
+0.0       1.0       0.0
+0.0       0.0       1.0
+Q          3   3
+0.2       0.0       0.0
+0.0       0.2       0.0
+0.0       0.0       0.0
+R          1   1
+1.0
+P0         3   3
+0.0       0.0       0.0
+0.0       0.0       0.0
+0.0       0.0       0.0
+%END
+  %ENDDS
+  DATASET,FSTJSW,SMPLDT
+TEST PROGRAM FOR SAMPL   CASE 1   FROM ASP MANUAL P234 AND P244
+PHI        3   3
+0         1.0
+0         0         0
+0         0         2.0
+H          2   3
+0.0       2.0       0.0
+0.0       0.0       1.0
+Q          3   3
+3.0       1.0       0.0
+1.0       1.0       0.0
+0         0         1.0
+R          2   2
+1.0       1.0
+1.0       2.0
+%END
+  %ENDDS
+  DATASET,FSTJSW,DECODT
+  TEST PROGRAM FOR DECGEN AND DECOM   CASE 1       2X2 RANK1
+ZL         2   2
+2.0       2.0
+1.0       1.0
+T          2   2
+
+
+EXR        1   1
+
+EXC        1   1
+
+  TEST PROGRAM FOR DECGEN AND DECOM   CASE 2     SYM 2X2   RANK2
+ZL         2   2
+1.
+          2.0
+T          2   2
+          .7
+
+EXR
+EXC
+  TEST PROGRAM FOR DECGEN AND DECOM   CASE 3    3X2 RANK2
+ZL         2   2
+1.
+          2.0
+T
+EXR        1   2
+2.        3.
+EXC
+  TEST PROGRAM FOR DECGEN AND DECOM   CASE 4     2X3 RANK2
+ZL         2   2
+1.
+          2.0
+T
+EXR        1   1
+
+EXC        2   1
+2.
+3.
+  TEST PROGRAM FOR DECGEN AND DECOM   CASE 5    4X4 RANK2
+ZL         4   4
+
+1.
+
+          2.
+T          4   4
+          .2        .3        .4
+                    .5        .6
+                              .7
+
+EXR        1   1
+
+EXC        1   1
+
+  TEST PROGRAM FOR DECGEN AND DECOM   CASE 6    4X4 RANK2   DIFF COLUMNS
+ZL         4   4
+
+1.0
+
+          2.
+T
+EXR
+EXC
+  TEST PROGRAM FOR DECGEN AND DECOM   CASE 7  ILL-COND 4X4 RANK3
+ZL         4   4
+1.
+          2.
+
+                                   1.D-6
+T
+EXR
+EXC
+  TEST PROGRAM FOR DECGEN AND DECOM   CASE 8   4X4  RANK4
+ZL         4   4
+1.
+          2.
+                    3.
+                              4.
+T
+EXR
+EXC
+%END
+  %ENDDS
+  DATASET,FSTJSW,PSEUDT
+ PSEUDO TEST PROGRAM   CASE 1           FROM ASP MANUAL PAGE 146
+B          3   4
+4.0       -1.0      -3.0      2.0
+-2.0      5.0       -1.0      -3.0
+2.0       13.0      -9.0      -5.0
+ PSEUDO TEST PROGRAM   CASE 2           FROM ASP MANUAL PAGE 137
+A          4   4
+2.0       1.0       -2.0      -2.0
+1.0       25.0      -8.0      6.0
+-2.0      -8.0      4.0       0.0
+-2.0      6.0       0.0       4.0
+ PSEUDO TEST PROGRAM   CASE 3
+C          4   2
+
+          -3.91
+.035
+-2.53     .31
+%END
+  %ENDDS

@@ -1,0 +1,194 @@
+$IBFTC SHTRAN  LIST
+
+C                                                                              1
+
+C     PREPARE TABLE AND PLOT TRANSPORT PROPERTIES FOR EACH GAS                 2
+
+C                                                                              3
+
+      COMMON/PROPTY/KU,  DL,DV,HL,HV,S,SL,SV,CV,CVL,CVV,CP,CPL,CPV,GAMMA       4
+
+     1,GAMMAL,GAMMAV,C,CL,CVP,MU,MUL,MUV,K,KL,KV,SIGMA,EXCL,EXCV,EXCESK        5
+
+      REAL MU,MUL,MUV,K,KL,KV                                                  6
+
+      COMMON/CHECKS/DCH1%1<,DCH2,PCH1,PCH2,PCH3,TCH1,TCH2,TCH3,DST,TST,H       7
+
+     1SCH1,HSCH2                                                               8
+
+      DIMENSION NAM%10<,TSTART%10<,TCHG%10<,P%7<,T%300<,YPL%300,7,2<,          9
+
+     1YSIG%200,10<,DT1%10<,DT2%10<,TSIG%200,10<,NPSIG%10<,XNAM%10<            10
+
+      DATA XNAM/3HCH4,2HN2,2HO2,2HAR,3HCO2,2HNE,2HCO,2HHE,2HF2,2HH2 /         11
+
+      DATA P%1<,P%5</1.,100./                                                 12
+
+      DIMENSION TITLA%10<                                                     13
+
+      DATA TSTART/95.,65.,60.,85.,220.,25.,70.,3.,70.,14./                    14
+
+      DATA NAM          /3HCH4,2HN2,2HO2,2HAR,3HCO2,2HNE,2HCO,2HHE,2HF2,      15
+
+     1 2HH2 /                                                                 16
+
+      DATA TCHG           / 295.,200.,225.,225.,420.,80.,200.,10.,200.,       17
+
+     1 80. /                                                                  18
+
+      DATA DT1 /5*10.,2.5,10.,.5,10.,2. /                                     19
+
+      DATA DT2/9*25.,25. /                                                    20
+
+      KS#1                                                                    21
+
+      KU#1                                                                    22
+
+      DO 1000L#8,10
+
+      WRITE%6,1<                                                              24
+
+    1 FORMAT%1H1<                                                             25
+
+      IF %L.EQ.8< P%7<#100.                                                   26
+
+      CALL SETUP%NAM%L<<                                                      27
+
+      P%3<#PCH2/.101325                                                       28
+
+      P%2<#.5*P%3<                                                            29
+
+      P%4<#1.5*P%3<                                                           30
+
+      DT#DT1%L<                                                               31
+
+      T%1< #  TSTART%L<                                                       32
+
+      KPT#0                                                                   33
+
+      DO 20 J#1,50                                                            34
+
+      KPT#J                                                                   35
+
+      IF%T%J<.GE.TCHG %L<<  DT#DT2%L<                                         36
+
+      T%J&1<# T%J<&DT                                                         37
+
+      IF%T%J&1<.GT.TCH3<  GO TO 25                                            38
+
+   20 CONTINUE                                                                39
+
+   25 DO 100 I#1,5                                                            40
+
+      Z# P%I<*.101325                                                         41
+
+      DO 50  J#1,KPT                                                          42
+
+      KR#0                                                                    43
+
+      KP#56                                                                   44
+
+      CALL GASP% KS,KP,T%J<,Z,D,H,KR<                                         45
+
+C     WRITE%6,806< T%J<,Z,D,H,S                                               46
+
+C 806 FORMAT%1H ,F8.1,F12.4,3E14.6<                                           47
+
+      IF %I.GT.1.OR.T%J<.GT.TCH2< GO TO 30                                    48
+
+      YSIG%J,L<#SIGMA                                                         49
+
+      TSIG%J,L<#T%J<                                                          50
+
+      NPSIG%L<#J                                                              51
+
+   30 IF%KR.EQ.1< GO TO 35                                                    52
+
+      YPL  %J,I,1<# MU                                                        53
+
+      YPL  %J,I,2<# K                                                         54
+
+      GO TO 50                                                                55
+
+   35 YPL  %J,I,1< # MUL                                                      56
+
+      YPL  %J,I,2<# KL                                                        57
+
+   50 CONTINUE                                                                58
+
+      WRITE%6,51< P%I<                                                        59
+
+  100 CONTINUE                                                                60
+
+   51 FORMAT%12H  ISOBARS  #  5F10.3 <                                        61
+
+C     WRITE   TABLE   FOR   VISCOSITY                                         62
+
+      WRITE%6,800< XNAM%L<                                                    63
+
+  800 FORMAT%1H1,27H VISCOSITY %MICROPOISE< FOR     ,A6<                      64
+
+      WRITE%6,801< %P%I<,I#1,5<                                               65
+
+  801 FORMAT%1H0, 4H ATM,5X,5%F8.2,6X<,/,5H0 T-K <                            66
+
+      DO 180  J#1,KPT                                                         67
+
+      DO 175 I#1,5                                                            68
+
+  175 YPL%J,I,1<# YPL%J,I,1<*10.**6                                           69
+
+      WRITE%6,802< T%J<,%YPL%J,I,1<,I#1,5<                                    70
+
+  802 FORMAT%1H ,F7.1,2X,5%F8.1,6X<<                                          71
+
+      IF% MOD%J,50< .NE.0< GO TO 180                                          72
+
+      WRITE%6,800< TITLA%1<, TITLA%2<,TITLA%3<                                73
+
+      WRITE%6,801< %P%I<,I#1,5<                                               74
+
+  180 CONTINUE                                                                75
+
+C     WRITE  TABLE  FOR  THERMAL  CONDUCTIVITY                                76
+
+      WRITE%6,803<XNAM%L<                                                     77
+
+  803 FORMAT%1H1,40X,42H THERMAL CONDUCTIVITY J/GM-K*10**6 FOR      ,A3<      78
+
+      WRITE%6,801<  %P%I<,I#1,5<                                              79
+
+      DO 200 J#1,KPT                                                          80
+
+      DO 190 I#1,5                                                            81
+
+  190 YPL%J,I,2<#YPL%J,I,2<*10.**6                                            82
+
+      WRITE%6,802< T%J<, %YPL%J,I,2<,I#1,5<                                   83
+
+      IF% MOD%J,50< .NE.0< GO TO 200                                          84
+
+      WRITE%6,803< XNAM%L<                                                    85
+
+      WRITE%6,801< %P%I<,I#1,5<                                               86
+
+  200 CONTINUE                                                                87
+
+C     TABLE  FOR  SURFACE  TENSION                                            88
+
+      WRITE%6,804<XNAM%L<                                                     89
+
+  804 FORMAT%1H1,40X, 40H SURFACE  TENSION  DYNE/CM              , A6 <       90
+
+      NROW#NPSIG%L<                                                           91
+
+      WRITE%6,805< %TSIG%J,L<,YSIG%J,L<,J#1,NROW<                             92
+
+  805 FORMAT%1H ,6%F6.1,F9.2,3X<<                                             93
+
+      WRITE%6,1<                                                              94
+
+ 1000 CONTINUE                                                                95
+
+      END                                                                     96
+

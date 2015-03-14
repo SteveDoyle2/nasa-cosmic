@@ -1,0 +1,198 @@
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        GETDEF                29-SEP-83      15:30:18      PAGE    1
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+    1              LOGICAL FUNCTION GETDEF(LINE,ISYM)                                                                               
+    2       C                                       C                                                                               
+    3       C                                       CDM   This routine translates a line into a symbol definition                   
+    4       C                                       CDM                                                                             
+    5       C                                       CDM   Programmer - Jon Vavrus   3 SEP 1981                                      
+    6       C                                       CDM   Revised    - Jon Vavrus   4 MAY 1982 (non-advanced video VT100's)         
+    7       C                                       CDM   Revised    - Jon Vavrus  18 AUG 1982 (bigger arrays)                      
+    8       C                                       CDM   Revised    - Jon Vavrus   9 SEP 1982                                      
+    9       C                                       CDM   Revised    - Jon Vavrus  28 MAY 1983                                      
+   10       C                                       CDM   Revised    - Jon Vavrus  17 AUG 1983                                      
+   11       C                                       CM                                                                              
+   12       C                                       CM         The routine is called with the line to be translated in the          
+   13       C                                       CM    character variable LINE.  The number of the symbol definition is          
+   14       C                                       CM    passed as ISYM.                                                           
+   15       C                                       C                                                                               
+   16       C                                       C***   CALLED ROUTINES                                                          
+   17       C                                       C                                                                               
+   18       C                                       CC    PRSCOM  Parses a command string                                           
+   19       C                                       C                                                                               
+   20       C                                       C***   COMMON AREAS                                                             
+   21       C                                       C                                                                               
+   22       C                                       CS    CHARS   Used to pass character variables; contains LINES a character      
+   23       C                                       CS            array of the output lines, and SRCHBF the search buffer, and      
+   24       C                                       CS            CRLF which contains <CR><LF>, and REVVID + REGVID which are       
+   25       C                                       CS            the VT100 control sequences to set/unset reverse video            
+   26       C                                       C                                                                               
+   27       C                                       CS    DOITNM  Contains information transferred from the main program:           
+   28       C                                       CS                 INCHAN - input channel of the terminal                       
+   29       C                                       CS                 TIME   - scrolling speed in -10000000*seconds/line           
+   30       C                                       CS                 SBFFLG - flag indicating whether there is a string           
+   31       C                                       CS                          in the search buffer                                
+   32       C                                       CS                 DIRECT - flag for reverse (-1 for reverse, else 1)           
+   33       C                                       CS                 EBK    - EBK of input file                                   
+   34       C                                       CS                 SBFLEN - length of string(s) in search buffer(s)             
+   35       C                                       CS                 RECBLK - number of bytes used per block in FIX-BLK files     
+   36       C                                       CS                 RANGE  - beginning and ending block numbers and pointers     
+   37       C                                       CS                          of the print range                                  
+   38       C                                       CS                 VT100  - flag set .TRUE. if terminal is VT100.               
+   39       C                                       CS                 LRL    - length of the longest record in input file.         
+   40       C                                       CS                 LENLMT - maximum output length (if <0 then WRAP set)         
+   41       C                                       CS                 PAGEND - line number of last line output to screen           
+   42       C                                       CS                 PAGLEN - number of lines per page                            
+   43       C                                       CS                 COMLIN - line number for command input (bottom of screen)    
+   44       C                                       CS                 VT100A - flag set .TRUE. if VT100 has advanced video option  
+   45       C                                       C                                                                               
+   46       C                                       CS    INPUTC  Contains the input character buffer INLINE and the defined        
+   47       C                                       CS            symbols SYMS and the definition search buffers DEFBUF             
+   48       C                                       C                                                                               
+   49       C                                       CS    INPUTN  Contains the input character buffer length LENSAV, and the        
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        GETDEF                29-SEP-83      15:30:18      PAGE    2
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+   50       C                                       CS            symbol definitions DEFS, the number of such definitions           
+   51       C                                       CS            (NDEFS), the definition flags DEFFLG, and the definition          
+   52       C                                       CS            numbers NUDMEF                                                    
+   53       C                                       C                                                                               
+   54       C                                       CS    PRSCHR  Contains the current symbol's search buffers (CURBUF)             
+   55       C                                       C                                                                               
+   56       C                                       CS    PRSNUM  Contains the current symbol's definitions (CUR), flags            
+   57       C                                       CS            (CURFLG), and associated numbers (NUMCUR)                         
+   58       C                                       C                                                                               
+   59              CHARACTER*(*) LINE                                                                                               
+   60              CHARACTER*132 LINES(600)                                                                                         
+   61              CHARACTER*128 INLINE                                                                                             
+   62              CHARACTER*30 DEFBUF(10,10,60),SRCHBF(10),HLDBUF(10),CURBUF(10,10)                                                
+   63              CHARACTER*4 REVVID,REGVID                                                                                        
+   64              CHARACTER*2 CRLF                                                                                                 
+   65              CHARACTER*1 SYMS(60)                                                                                             
+   66              REAL*4 NUMDEF(10,60),NUMCUR(10)                                                                                  
+   67              INTEGER*4 INCHAN,TIME,EBK,RANGE(2,2),PAGEND                                                                      
+   68              INTEGER*2 DIRECT,SBFLEN(10),RECBLK,DEFS(11,10,60),LENLMT,PAGLEN,                                                 
+   69            1       LENSAV,HLDLEN(10),CUR(11,10),COMLIN                                                                        
+   70              LOGICAL*1 SBFFLG,VT100,DEFFLG(3,10,60),HLDFLG,CURFLG(3,10),MINFLG,                                               
+   71            1       NUMFLG,VT100A,RESULT                                                                                       
+   72                                                                                                                               
+   73              COMMON /CHARS/LINES,SRCHBF,CRLF,REVVID,REGVID                                                                    
+   74              COMMON /DOITNM/INCHAN,TIME,SBFFLG,DIRECT,EBK,SBFLEN,RECBLK,RANGE,                                                
+   75            1       VT100,LRL,LENLMT,PAGEND,PAGLEN,COMLIN,VT100A                                                               
+   76              COMMON /INPUTC/INLINE,SYMS,DEFBUF                                                                                
+   77              COMMON /INPUTN/LENSAV,DEFS,NDEFS,DEFFLG,NUMDEF                                                                   
+   78              COMMON /PRSNUM/CUR,NUMCUR,CURFLG                                                                                 
+   79              COMMON /PRSCHR/CURBUF                                                                                            
+   80                                                                                                                               
+   81              RESULT = .TRUE.                                                                                                  
+   82       C                                       C                                                                               
+   83       C                                       C***   Store the current definition in case it is recursive                     
+   84       C                                       C                                                                               
+                  +-----------------------------------------------------------------------------------------------------------------
+   85     *       |DO FOR JJ=1,10                                                                                                   
+   86   1         |   CUR(1,JJ) = DEFS(1,JJ,ISYM)                                                                                   
+   87   1 *       |   UNDO IF (CUR(1,JJ) .EQ. 0)                                                                                    
+                  <----                                                                                                             
+   88   1         |   NUMCUR(JJ) = NUMDEF(JJ,ISYM)                                                                                  
+   89   1         |   CURFLG(1,JJ) = DEFFLG(1,JJ,ISYM)                                                                              
+   90   1         |   CURFLG(2,JJ) = DEFFLG(2,JJ,ISYM)                                                                              
+   91   1         |   CURFLG(3,JJ) = DEFFLG(3,JJ,ISYM)                                                                              
+                  |  +--------------------------------------------------------------------------------------------------------------
+   92   1 *       |  |DO FOR I=1,10                                                                                                 
+   93   2         |  |   CUR(1+I,JJ) = DEFS(1+I,JJ,ISYM)                                                                            
+   94   2 *       |  |   UNDO IF (CUR(1+I,JJ) .EQ. 0)                                                                               
+                  |  <----                                                                                                          
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        GETDEF                29-SEP-83      15:30:18      PAGE    3
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+   95   2         |  |   CURBUF(I,JJ) = DEFBUF(I,JJ,ISYM)                                                                           
+   96   1 *       |  |END DO FOR                                                                                                    
+                  |  +--------------------------------------------------------------------------------------------------------------
+   97     *       |END DO FOR                                                                                                       
+                  +-----------------------------------------------------------------------------------------------------------------
+   98              NCOM = 1                                                                                                         
+   99       C                                       C                                                                               
+  100       C                                       C***   Save search stuff                                                        
+  101       C                                       C                                                                               
+                  +-----------------------------------------------------------------------------------------------------------------
+  102     *       |DO FOR JJ=1,10                                                                                                   
+  103   1         |   HLDLEN(JJ) = SBFLEN(JJ)                                                                                       
+  104   1         |   HLDBUF(JJ) = SRCHBF(JJ)                                                                                       
+  105   1 *       |   UNDO IF (SBFLEN(JJ) .EQ. 0)                                                                                   
+                  <----                                                                                                             
+  106     *       |END DO FOR                                                                                                       
+                  +-----------------------------------------------------------------------------------------------------------------
+  107              HLDFLG = SBFFLG                                                                                                  
+  108              SBFFLG = .FALSE.                                                                                                 
+  109              LENBUF = LEN(LINE)                                                                                               
+                  +-----------------------------------------------------------------------------------------------------------------
+  110     *       |DO FOREVER                                                                                                       
+  111       C     |                                 C                                                                               
+  112       C     |                                 C***   Parse out a command                                                      
+  113       C     |                                 C                                                                               
+  114   1         |   CALL PRSCOM(LINE,LENBUF,ICOM,NUMFLG,ANUMB,MINFLG,NCOM,ISYM)                                                   
+  115   1 *       |   UNDO IF (NCOM .GT. 10)                                                                                        
+                  <----                                                                                                             
+  116   1 *       |   IF (ICOM .EQ. 0 .AND. LENBUF .GT. 0)                                                                          
+  117   2         |      RESULT = .FALSE.                                                                                           
+  118   2 *       |      UNDO                                                                                                       
+                  <-------                                                                                                          
+  119   1 *       |   ENDIF                                                                                                         
+  120   1         |   DEFS(1,NCOM,ISYM) = ICOM                                                                                      
+  121   1 *       |   UNDO IF (ICOM .EQ. 0)                                                                                         
+                  <----                                                                                                             
+  122   1         |   DEFFLG(1,NCOM,ISYM) = NUMFLG                                                                                  
+  123   1         |   NUMDEF(NCOM,ISYM) = ANUMB                                                                                     
+  124   1         |   DEFFLG(2,NCOM,ISYM) = MINFLG                                                                                  
+  125       C     |                                 C                                                                               
+  126       C     |                                 C***   Search stuff if command is ^                                             
+  127       C     |                                 C                                                                               
+  128   1 *       |   IF (DEFS(1,NCOM,ISYM) .EQ. 3)                                                                                 
+                  |     +-----------------------------------------------------------------------------------------------------------
+  129   2 *       |     |DO FOR JJ=1,10                                                                                             
+  130   3         |     |   DEFBUF(JJ,NCOM,ISYM) = SRCHBF(JJ)                                                                       
+  131   3         |     |   DEFS(1+JJ,NCOM,ISYM) = SBFLEN(JJ)                                                                       
+  132   2 *       |     |END DO FOR                                                                                                 
+                  |     +-----------------------------------------------------------------------------------------------------------
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        GETDEF                29-SEP-83      15:30:18      PAGE    4
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  133   2         |      DEFFLG(3,NCOM,ISYM) = SBFFLG                                                                               
+  134   1 *       |   ELSE                                                                                                          
+  135   2         |      DEFFLG(3,NCOM,ISYM) = .FALSE.                                                                              
+  136   1 *       |   ENDIF                                                                                                         
+  137   1         |   NCOM = NCOM + 1                                                                                               
+  138     *       |END DO FOREVER                                                                                                   
+                  +-----------------------------------------------------------------------------------------------------------------
+  139       C                                       C                                                                               
+  140       C                                       C***   Restore search stuff                                                     
+  141       C                                       C                                                                               
+                  +-----------------------------------------------------------------------------------------------------------------
+  142     *       |DO FOR JJ=1,10                                                                                                   
+  143   1         |   SBFLEN(JJ) = HLDLEN(JJ)                                                                                       
+  144   1         |   SRCHBF(JJ) = HLDBUF(JJ)                                                                                       
+  145     *       |END DO FOR                                                                                                       
+                  +-----------------------------------------------------------------------------------------------------------------
+  146              SBFFLG = HLDFLG                                                                                                  
+  147              GETDEF = RESULT                                                                                                  
+  148              RETURN                                                                                                           
+              <-----                                                                                                                
+  149              END                                                                                                              
+
+       0 DIAGNOSTICS GENERATED

@@ -1,0 +1,13 @@
+      SUBROUTINE ADDV(VI1,VI2,VO)
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      DIMENSION VI1(3),VI2(3),VO(3)
+C
+      DO 1 I=1,3
+      VO(I)=VI1(I)+VI2(I)
+    1 CONTINUE
+C
+      RETURN
+C
+      END

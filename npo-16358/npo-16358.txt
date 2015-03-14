@@ -1,0 +1,60 @@
+ LOOK- A TEXT FILE DISPLAY PROGRAM
+
+( Cal Tech/Jet Propulsion Lab. )
+
+     The LOOK program was developed to permit a user to examine a text file
+in a psuedo-random access manner. Many engineering and scientific pro-
+grams generate large amounts of printed output. Often this output needs
+to be examined in only a few places. On mini-computers (like the DEC VAX)
+high-speed printers are usually at a premium. One alternative is to save
+the output in a text file and examine it with a text editor. The slowness of
+a text editor, the possibility of inadvertently changing the output, and
+other factors make this an unsatisfactory solution. The LOOK program pro-
+vides the user with a means of rapidly examining the contents of an ASCII
+text file.
+
+     LOOK's basis of operation is to open the text file for input only and
+then access it in a block-wise fashion. LOOK handles the text formatting
+and displays the text lines on the screen. The user can move forward or
+backward in the file by a given number of lines or blocks. LOOK also pro-
+vides the ability to "scroll" the text at various speeds in the forward or
+backward directions. The user can perform a search for a string (or a com-
+bination of up to 10 strings) in a forward or backward direction. Also, user
+selected portions of text may be extracted and submitted to print or placed
+in a file. Additional features available to the LOOK user include: cancel-
+lation of an operation with a keystroke, user definable keys, switching
+mode of operation (e.g. 80/132 column), on-line help facility, trapping
+broadcast messages, and the ability to spawn a sub-process to carry out DCL
+functions without leaving LOOK.
+
+     The LOOK program is written in FORTRAN 77 and MACRO ASSEMBLER for in-
+teractive execution and has been implemented on a DEC VAX computer using
+VAX/VMS with a central memory requirement of approximately 430K of 8 bit
+bytes. LOOK operation is terminal independent but will take advantage of
+the features of the DEC VT100 terminal if available. LOOK was developed in
+1983.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN 77 ( 86 %); ASSEMBLER ( 14 %);
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 7,653 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX FILES-11 Format Magnetic Tape
+
+PROGRAM NUMBER: NPO-16358
+
+DOMESTIC - DOCUMENTATION PRICE: $14.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $28.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

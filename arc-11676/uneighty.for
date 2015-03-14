@@ -1,0 +1,103 @@
+      PROGRAM UNEIGHTY
+C*
+C* CONVERT A LISTING FILE FROM 80 COLUMNS (AS CREATED BY 'EIGHTY')
+C*  BACK TO THE LONG RECORD FORMAT
+C*
+C*
+C* RECORD FORMAT IS DEFINED AS :
+C*
+C*    3 BYTE LENGTH, FIRST RECORD, 3 BYTE LENGTH, SECOND RECORD...
+C*    PACKED INTO AN EIGHTY COLUMN OUTPUT FILE WITHOUT CARRIAGE CONTROL
+C*    -01 IN LENGTH SIGNIFIES END-OF-FILE
+C*
+C*
+C* VARIABLES IN COMMON :
+C*
+C*    IN   - 80 BYTE INPUT BUFFER
+C*    OUT  - 255 BYTE OUTPUT BUFFER
+C*    NOUT - LOCATION OF LAST BYTE PUT INTO 'OUT'
+C*    NIN  - LOCATION OF PRESENT BYTE IN 'IN'
+C*
+      CHARACTER *80 IN
+      CHARACTER *255 OUT
+      CHARACTER *3 CLEN
+      COMMON / IO / IN, OUT, NOUT, NIN
+C
+      IN   = ' '
+      OUT  = ' '
+      NOUT = 0
+      NIN  = 80
+C
+C --- WARNING ---
+C     "CARRIAGECONTROL='LIST'" IS VAX-SPECIFIC
+C
+      OPEN (UNIT=8, CARRIAGECONTROL='LIST', STATUS='NEW')
+C
+C --- REPEAT UNPACK LINES (UNTIL EOF)
+C
+C --- GET LENGTH OF CURRENT LINE
+C
+10    CALL UNPACK ( CLEN(1:1))
+      CALL UNPACK ( CLEN(2:2))
+      CALL UNPACK ( CLEN(3:3))
+C
+C --- IL IS THE LENGTH OF THE OUTPUT LINE
+C
+      READ ( CLEN, 910, ERR=2000 ) IL
+C
+C --- IF ( IL < 0 ) THEN END-OF-FILE HAS BEEN REACHED
+C
+      IF (IL .LT. 0) GO TO 3000
+C
+C --- IF ( IL = 0 ) THEN WRITE <RETURN> ONLY
+C
+      IF (IL .EQ. 0) THEN
+         WRITE(8,900)
+C
+C --- ELSE UNPACK LINE AND WRITE IT
+C
+      ELSE
+         DO 30 I = 1, IL
+            CALL UNPACK (OUT(I:I))
+30          CONTINUE
+         WRITE(8,900) OUT(1:IL)
+      ENDIF
+      GO TO 10
+C
+C --- UNTIL EOF OR ERROR
+C
+2000  WRITE(6,940)
+3000  STOP
+900   FORMAT(A)
+910   FORMAT(I3)
+940   FORMAT(' ***** Fatal error, incorrect record format',/,
+     $ ' ***** Are you sure this file was created with ''EIGHTY''?')
+      END
+C
+C---END UNEIGHTY
+C
+      SUBROUTINE UNPACK ( C )
+      CHARACTER *80 IN
+      CHARACTER *255 OUT
+      COMMON / IO / IN, OUT, NOUT, NIN
+      CHARACTER *1 C
+C
+      NIN = NIN + 1
+      IF ( NIN .GT. 80 ) THEN
+         READ ( 7, 900, END=1000, ERR=2000 ) IN
+         NIN = 1
+      ENDIF
+      C = IN(NIN:NIN)
+      RETURN
+1000  WRITE ( 6, 930 )
+      STOP
+2000  WRITE ( 6, 940 )
+      STOP
+900   FORMAT(A)
+930   FORMAT(' ***** Fatal error, unexpected end-of-file encountered.')
+940   FORMAT(' ***** Fatal error, incorrect record format',/,
+     $ ' ***** Are you sure this file was created with ''EIGHTY''?')
+      END
+C
+C---END UNPACK
+C

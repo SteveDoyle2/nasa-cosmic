@@ -1,0 +1,498 @@
+      PROGRAM DRIVER(INPUT,OUTPUT,TAPE5=INPUT,TAPE6=OUTPUT)              P5399
+C                                                                        P5399
+C     THIS IS THE MAIN PROGRAM FOR THE SOLUTION OF A TWO POINT BOUNDARY  P5399
+C     VALUE PROBLEM. SIMULTANEOUS NONLINEAR EQUATIONS ARE SOLVED BY      P5399
+C     THE NEWTON-RAPHSON METHOD.                                         P5399
+C                                                                        P5399
+      COMMON / STORE / S1(200),S2(200),S3(200),XM(200,3)                 ERG7/5/
+      COMMON / INPT / XL,T0,TL,X(50),XK(50),C(50),A(50),                 P5399
+     * Q(50),TE(50),SF(50),N(50),LTAB,E                                  P5399
+      COMMON / STO / Z(200),T(200),C1(200),C2(200),C3(200),C4(200),      P5399A
+     * C5(200),                                                          P5399A
+     * IFL(200),XKA(200),                                                P5399A
+     * S(200),INO,IS,ISM2                                                P5399A
+      COMMON / LGT / PRNUM, TSTART                                       P5399A
+C     IFL IS A VECTOR OF FLAGS FOR CONTROLLING THE RAMP CONSTRUCTION.    P5399
+C     IFL=1  MEANS AN ORDINARY POINT                                     P5399
+C     IFL=2  MEANS A RAMP POINT                                          P5399
+C     IFL=3  MEANS THE MIDDLE OF THE RAMP                                P5399
+C                                                                        P5399
+      DIMENSION B(200)                                                   ERG7/5/
+      DIMENSION PRNAME(3),  DVSN(4),     ENGGRP(4),     PRDOC(2)         P5399A
+      EQUIVALENCE (B,T)                                                  P5399
+      EXTERNAL EVAL                                                      P5399
+      PCT= .1                                                            P5399
+      SIG = .1714E-08                                                    P5399
+      DATA PRNUM /6HP5399A/, NCHAR /27/, NLINES /0/, CMPDT /8H07/05/79/  ERG7/5/
+     *, PRNAME /10HRADIATION ,10HFIN HEAT T,10HRANSFER   /               P5399A
+     *, PRDOC  /10H   GDCA-BT,10HD71-001   /                             P5399A
+     *, ENGGRP /10H          ,10HSTRUCTURAL,10H DYNAMICS ,10H          / P5399A
+     *, DVSN   /10H  GENERAL ,10HDYNAMICS /,10H CONVAIR D,10HIVISION   / P5399A
+      CALL LOGO(PRNUM,PRNAME,NCHAR,VSPECS,NWORDS,NLINES,CMPDT,DVSN,      P5399A
+     *ENGGRP,PRDOC,IDATE,NCORE,TSTART)                                   P5399A
+C                                                                        P5399A
+  100 CALL IN                                                            P5399
+C     CONSTRUCT Z VECTOR                                                 P5399
+      Z(1)=X(1)                                                          P5399
+      IS=2                                                               P5399
+      DO 300 I=2,LTAB                                                    P5399
+      IF (N(I).EQ.0) GO TO 250                                           P5399
+      IU=N(I)                                                            P5399
+      D=(X(I)-X(I-1))/FLOAT(IU)                                          P5399
+      IF (D.EQ.0.0)  GO TO 2000                                          P5399
+      SUM=X(I-1)                                                         P5399
+      DO 200 J=1,IU                                                      P5399
+      SUM=SUM+D                                                          P5399
+      Z(IS)=SUM                                                          P5399
+      IFL(IS)=1                                                          P5399
+      IS=IS+1                                                            P5399
+  200 CONTINUE                                                           P5399
+      GO TO 300                                                          P5399
+  250 IF (X(I)-X(I-1).NE.0.) GO TO 300                                   P5399
+C     CHECK FOR DISCONTINUITY IN K*A                                     P5399
+      S1(IS)=XK(I-1)*A(I-1)                                              P5399
+      S2(IS)=XK(I)*A(I)                                                  P5399
+      IF (ABS(S1(IS)-S2(IS)).LT.1.E-08) GO TO 300                        P5399
+C     ADD A POINT ON EACH SIDE OF THE POINT OF DISCONTINUITY             P5399
+      Z(IS)=X(I)                                                         P5399
+      D= (X(I-1)-X(I-2))/FLOAT(N(I-1))  *PCT                             P5399
+      Z(IS-1)=X(I)-D                                                     P5399
+      D= (X(I+1)-X(I))/FLOAT(N(I+1))*PCT                                 P5399
+      Z(IS+1)=X(I)+D                                                     P5399
+      IFL(IS)=3                                                          P5399
+      IFL(IS-1)=2                                                        P5399
+      IFL(IS+1)=2                                                        P5399
+      IS=IS+2                                                            P5399
+  300 CONTINUE                                                           P5399
+      IS=IS-1                                                            P5399
+C     IS IS THE NUMBER OF GRID POINTS.                                   P5399
+      IF (IS.GT.199) GO TO 3000                                          P5399A
+C     CONSTRUCT VECTORS OF CONSTANTS                                     P5399
+      XL2=XL*XL/12.                                                      P5399
+      DO 600 I=1,IS                                                      P5399
+      IF (IFL(I).EQ.3) GO TO 600                                         P5399
+      H=0.0                                                              P5399
+      T1=SLI(Z(I),LTAB,X,XK)                                             P5399
+      T3=SLI(Z(I),LTAB,X,A)                                              P5399
+      T2=SLI(Z(I),LTAB,X,C)                                              P5399
+      T4=SLI(Z(I),LTAB,X,Q)                                              P5399
+      T5=SLI(Z(I),LTAB,X,TE)                                             P5399
+      T6=SLI(Z(I),LTAB,X,SF)                                             P5399
+  350 CONTINUE                                                           P5399
+      IF (T6.GE.0.0) GO TO 400                                           P5399
+      H=-T6                                                              P5399
+      T6=0.0                                                             P5399
+  400 CONTINUE                                                           P5399
+      TEM1=T2*XL2/(T1*T3)                                                P5399
+      TEM2=SIG*T6                                                        P5399
+      C1(I)=-TEM2*TEM1                                                   P5399
+      C2(I)=TEM1*(T4+TEM2*T5**4+H*T5)                                    P5399
+      C5(I)= -H*TEM1                                                     P5399
+      XKA(I)=T1*T3                                                       P5399
+  600 CONTINUE                                                           P5399
+      IS1=IS-1                                                           P5399
+      DO 620 I=2,IS1                                                     P5399
+      IF (IFL(I).EQ.3) GO TO 620                                         P5399
+      QL1=Z(I)-Z(I-1)                                                    P5399
+      QL2=Z(I+1)-Z(I)                                                    P5399
+      QL3=QL2+QL1                                                        P5399
+      QL4=QL1/QL2                                                        P5399
+      IF (IFL(I+1).EQ.3) XKA(I+1)=S1(I+1)                                P5399
+      IF (IFL(I-1).EQ.3) XKA(I-1)=S2(I-1)                                P5399
+      B(I)=((XKA(I+1)*QL4-XKA(I-1)/QL4)/QL3+XKA(I)*(QL2-QL1)/(QL2*QL1))/ P5399
+     *XKA(I)                                                             P5399
+  620 CONTINUE                                                           P5399
+      ISM2=IS-2                                                          P5399
+      DO 640 I=1,ISM2                                                    P5399
+      IF (IFL(I+1).EQ.3) GO TO 630                                       P5399
+      QL1=Z(I+1)-Z(I)                                                    P5399
+      QL2=Z(I+2)-Z(I+1)                                                  P5399
+      QL3=QL1+QL2                                                        P5399
+      QL4=QL1/QL2                                                        P5399
+      C3(I+1)=(2.0/ QL2 +B(I+1)*QL4)/QL3                                 P5399
+      C4(I+1)= ( 2.0/QL1- B(I+1)/QL4)/QL3                                P5399
+      C5(I+1)= ( -2.0+B(I+1)*(QL2-QL1))/(QL1*QL2) +C5(I+1)               P5399
+      GO TO 640                                                          P5399
+  630 XKA(I)=2.*(Z(I+2)-Z(I+1))*(XKA(I)+S1(I+1))                         P5399
+      XKA(I+2)=2.*(Z(I+1)-Z(I))*(XKA(I+2)+S2(I+1))                       P5399
+      XKA(I+1)=XKA(I)+XKA(I+2)                                           P5399
+      XM(I,1)=-XKA(I+2)/XKA(I+1)                                         P5399
+      XM(I,3)=-XKA(I)/XKA(I+1)                                           P5399
+      XM(I,2)=1.                                                         P5399
+  640 CONTINUE                                                           P5399
+C     GUESS AT SOLUTION                                                  P5399
+      UP=TL                                                              P5399
+      IF (TL.EQ.E) UP=T0                                                 P5399
+      D=(UP-T0)/FLOAT(IS-1)                                              P5399
+      SUM=T0                                                             P5399
+      DO 700 I=2,IS                                                      P5399
+      SUM=SUM+D                                                          P5399
+      T(I)=SUM                                                           P5399
+  700 CONTINUE                                                           P5399
+      S(1)=T0                                                            P5399
+      S(IS)=TL                                                           P5399
+      T(1)=T0                                                            P5399
+      INO=IS-2                                                           P5399
+      IF (TL.EQ.E) INO=IS-1                                              P5399
+      NDIG=6                                                             P5399
+      ICON=50                                                            P5399
+      CALL NONLIN(INO,T(2),S(2),S1,S2,S3,XM,NDIG,ICON,EVAL)              P5399
+      WRITE (6,800)                                                      P5399
+  800 FORMAT(1H1//2H X,18X,2H T)                                         P5399
+      DO 900 I=1,IS                                                      P5399
+      IF (IFL(I).EQ.2)  GO TO 900                                        P5399
+      ZI=Z(I)*XL                                                         P5399
+      WRITE (6,850) ZI,S(I)                                              P5399
+  850 FORMAT (1PE15.6,5X,E15.6)                                          P5399A
+  900 CONTINUE                                                           P5399
+      ANS=XK(1)*A(1)*(S(2)-S(1))/(Z(2)-Z(1))/12./XL                      P5399
+      ANS1=XK(LTAB)*A(LTAB)*(S(IS)-S(IS-1))/(Z(IS)-Z(IS-1))/12./XL       P5399
+      WRITE (6,1000) ANS,ANS1,ICON                                       P5399
+ 1000 FORMAT (////14H HEAT TRANSFER/6H AT X1,1PE15.6/6H AT X2,E15.6/     P5399A
+     *11H ITERATIONS,I15)                                                P5399
+      GO TO 100                                                          P5399
+ 2000 PRINT 2010                                                         P5399
+ 2010 FORMAT(* INCORRECT GRID SPECIFIED IN DATA*)                        P5399
+      GO TO 100                                                          P5399
+ 3000 PRINT 3010                                                         P5399
+ 3010 FORMAT(* NUMBER OF GRID POINTS EXCEEDS PROGRAM DIMENSIONS*)        P5399
+      GO TO 100                                                          P5399
+      END                                                                P5399
+      SUBROUTINE IN                                                      P5399
+      COMMON / INPT / XL,T0,TL,X(50),XK(50),C(50),A(50),                 P5399
+     * Q(50),TE(50),SF(50),N(50),LTAB,E                                  P5399
+      COMMON / LGT / PRNUM, TSTART                                       P5399A
+   50 READ (5,100) XL,T0,TL,LTAB                                         P5399
+  100 FORMAT(3E10.0,I10)                                                 P5399A
+      IF (EOF(5)) 150, 175                                               P5399A
+  150 CALL LOGOUT(PRNUM,TSTART)                                          P5399A
+  175 CONTINUE                                                           P5399
+      WRITE (6,200) XL,T0,TL,LTAB                                        P5399
+  200 FORMAT (1H1/11H INPUT DATA/3H L= ,1PE12.4,5H  TO=,E12.4,5H  TL= ,  P5399A
+     *E12.4,5H  NC= ,I6)                                                 P5399A
+      IF (LTAB.GT.50) GO TO 450                                          P5399
+      READ (5,275) (X(I),XK(I),C(I),A(I),Q(I),TE(I),SF(I),N(I),I=1,LTAB) P5399A
+  275 FORMAT (7E10.0,I10)                                                P5399A
+  300 FORMAT(7E10.2,I10)                                                 P5399
+      WRITE (6,400)                                                      P5399
+  400 FORMAT(9X,1HX,9X,1HK,9X,1HC,9X,1HA,9X,1HQ,8X,2HTE,8X,2HSF,9X,1HN)  P5399
+      WRITE (6,300) (X(I),XK(I),C(I),A(I),Q(I),TE(I),SF(I),N(I),I=1,LTAB P5399
+     *)                                                                  P5399
+      DO 420 I=1,LTAB                                                    P5399
+  420 X(I)=X(I)/XL                                                       P5399
+      ONE=1.                                                             P5399
+      ONE=SIGN(ONE,TL)                                                   P5399
+      E=-1.E+10                                                          P5399
+      IF (ONE.LT.0.) TL=E                                                P5399
+      RETURN                                                             P5399
+  450 WRITE (6,500)                                                      P5399
+  500 FORMAT(49H0NUMBER OF INPUT CARDS EXCEEDS PROGRAM DIMENSIONS)       P5399
+      DO 600 I=1,LTAB                                                    P5399
+      READ (5,550) DTL                                                   P5399
+  550 FORMAT(A10)                                                        P5399
+  600 CONTINUE                                                           P5399
+      GO TO 50                                                           P5399
+      END                                                                P5399
+      SUBROUTINE EVAL(X,F)                                               P5399
+      DIMENSION X(1),F(1)                                                P5399
+      COMMON / INPT / XL,T0,TL,G(50),XK(50),C(50),A(50),                 P5399
+     * Q(50),TE(50),SF(50),N(50),LTAB,E                                  P5399
+      COMMON / STO / Z(200),T(200),C1(200),C2(200),C3(200),C4(200),      P5399A
+     * C5(200),                                                          P5399A
+     * IFL(200),XKA(200),                                                P5399A
+     * S(200),INO,IS,ISM2                                                P5399A
+      DO 100 I=1,ISM2                                                    P5399
+      IF (IFL(I+1).EQ.3) GO TO 50                                        P5399
+      F(I)=C3(I+1)*X(I+1) + C4(I+1)*X(I-1) + C5(I+1)*X(I) +C1(I+1)*      P5399
+     * X(I)**4 +C2(I+1)                                                  P5399
+      GO TO 100                                                          P5399
+   50 F(I)=X(I)-((X(I+1)*XKA(I+2)+X(I-1)*XKA(I))/XKA(I+1))               P5399
+  100 CONTINUE                                                           P5399
+      IF (TL.NE.E) GO TO 400                                             P5399
+C     WE HAVE A DERIVATIVE BOUNDARY CONDITION.                           P5399
+      F(INO)=(X(INO)-X(INO-1))/(Z(IS)-Z(IS-1))                           P5399
+  400 RETURN                                                             P5399
+      END                                                                P5399
+      FUNCTION SLI(ARG,NX,X,Y)                                           P5399
+      DIMENSION X(100),Y(100)                                            P5399
+C                                                                        P5399
+      XA=ARG                                                             P5399
+      I=I-1                                                              P5399
+      N3=NX                                                              P5399
+    5 IF (XA-X) 170,20,10                                                P5399
+   10 IF (I-1) 20,20,40                                                  P5399
+   20 I=2                                                                P5399
+   40 IF (I-N3) 80,60,60                                                 P5399
+   60 I=MAX0(2,N3/2)                                                     P5399
+   80 N2=I                                                               P5399
+      IF (X(I)) 100,100,90                                               P5399
+   90 IF (X(I)-XA) 140,250,100                                           P5399
+  100 DO 120 I=2,N2                                                      P5399
+      IF (X(I)-XA) 120,250,260                                           P5399
+  120 CONTINUE                                                           P5399
+  140 DO 160 I=N2,N3                                                     P5399
+      IF (X(I)-XA) 160,250,260                                           P5399
+  160 CONTINUE                                                           P5399
+  170 IF (NX) 180,180,200                                                P5399
+  180 IF (XA-X(N3)) 230,240,240                                          P5399
+  200 WRITE (6,210) XA                                                   P5399
+  210 FORMAT(14H0THE ARGUMENT 1P1E12.4,28HIS OUT OF RANGE OF THE TABLE)  P5399
+      IF (XA-X(I)) 212,212,213                                           P5399
+  212 IF (ABS((XA-X(1))/(.0000001+X(1)))-.05) 217,217,219                P5399
+  213 XMAX=X(1)                                                          P5399
+      DO 215 J=2,NX                                                      P5399
+      IF (XMAX-X(J)) 214,214,215                                         P5399
+  214 XMAX=X(J)                                                          P5399
+      K=J                                                                P5399
+  215 CONTINUE                                                           P5399
+      IF (ABS((XA-XMAX)/(.0000001+XMAX))-.05) 216,216,219                P5399
+  216 SLI=Y(K)                                                           P5399
+      RETURN                                                             P5399
+  217 SLI=Y(1)                                                           P5399
+      RETURN                                                             P5399
+  219 CALL PDUMP(X(1),X(NX),1)                                           P5399
+      CALL EXIT                                                          P5399
+  230 I=1                                                                P5399
+      GO TO 250                                                          P5399
+  240 I=N3                                                               P5399
+  250 SLI=Y(I)                                                           P5399
+      RETURN                                                             P5399
+  260 SLI=Y(I-1)+(XA-X(I-1))*(Y(I)-Y(I-1))/(X(I)-X(I-1))                 P5399
+      RETURN                                                             P5399
+      END                                                                P5399
+      SUBROUTINE NONLIN(N,GUES,ANS,X1,X2,X3,A,ITO ,ICON ,EVAL)           P5399
+C                                                                        P5399
+C     THIS IS THE NEWTON RAPHSON METHOD FOR A SYSTEM OF NONLINEAR EQUATI P5399
+C                                                                        P5399
+C     ARGUMENT LIST                                                      P5399
+C                                                                        P5399
+C     N    = NUMBER OF EQUATIONS AND UNKNOWNS. ALL OF THE FOLLOWING VECT P5399
+C            MUST BE AT LEAST N CELLS LONG.                              P5399
+C     GUES = VECTOR OF INITIAL GUESSES                                   P5399
+C     ANS  = VECTOR WHERE FINAL ANSWERS ARE STORED                       P5399
+C     X1   = STORAGE VECTOR                                              P5399
+C     X2   = STORAGE VECTOR                                              P5399
+C     X3   = STORAGE VECTOR                                              P5399
+C     A    = STORAGE MATRIX - MUST BE AT LEAST N*N CELLS LONG.           P5399
+C     ITO  = THE NUMBER OF SIGNIFICANT DECIMAL DIGITS ACCURACY DESIRED I P5399
+C     ICON  = THE NUMBER OF ITERATIONS DESIRED ON INPUT.  ON OUTPUT, IT  P5399
+C            IS THE ACTUAL NUMBER OF ITERATIONS NEEDED FOR CONVERGENCE.  P5399
+C            AN ABORT HAS OCCURRED IF THE VALUE IS 0 ON OUTPUT.          P5399
+C            IF THE VALUE IS NEGATIVE ON INPUT A HIGHER ORDER DERIVATIVE P5399
+C            IS CALCULATED.                                              P5399
+C     EVAL = EXTERNAL NAME OF THE USERS FUNCTIONAL EVALUATION SUBROUTINE P5399
+      EXTERNAL EVAL                                                      P5399
+      DIMENSION GUES(1),ANS(1),X1(1),X2(1),X3(1),A(200,3)                ERG7/5/
+      ICONV=IABS(ICON)                                                   P5399
+      ISTOP=ICONV                                                        P5399
+      IF (ICONV.EQ.0.OR.ICONV.GT.1000)  ISTOP=100                        P5399
+      ICONV=1                                                            P5399
+      IFLAG=0                                                            P5399
+      IF (ICON.LT.0)  IFLAG=1                                            P5399
+      ITOL=ITO                                                           P5399
+      IF (ITOL.LT.1.OR.ITOL.GT.14) ITOL=14                               P5399
+      TOL= 10.0**(-2*ITOL)                                               P5399
+      NN=N                                                               P5399
+      IF(NN.LT.1.OR.NN.GT.1000)GO TO 9000                                P5399
+  100 DO 200 I=1,NN                                                      P5399
+  200 ANS(I)=GUES(I)                                                     P5399
+C     X2=F(X)                                                            P5399
+  250 CALL EVAL(GUES,X2)                                                 P5399
+      CALL GRAD(GUES,A,N)                                                P5399
+      DO 300 I=1,NN                                                      P5399
+  300 X2(I)=-X2(I)                                                       P5399
+C     INVERT THE JACOBIAN OF THE SYSTEM                                  P5399
+      CALL TRIDAG(NN,A(1,3),A(1,2),A(1,1),X2,GUES,X1,X3)                 P5399
+      SF=1.0                                                             P5399
+      CALL EVAL(ANS,X2)                                                  P5399
+C     TEST FOR CONVERGENCE                                               P5399
+  750 CONTINUE                                                           P5399
+      SUM=0.0                                                            P5399
+      SUM1=0.0                                                           P5399
+      SUM2=0.0                                                           P5399
+      DO 800 I=1,NN                                                      P5399
+      SUM=SUM+GUES(I)**2                                                 P5399
+      ANS(I)=ANS(I)+GUES(I)*SF                                           P5399
+      SUM2=SUM2+X2(I)**2                                                 P5399
+  800 SUM1=SUM1+ ANS(I)**2                                               P5399
+      CALL EVAL(ANS,X1)                                                  P5399
+      SUM3=0.0                                                           P5399
+      DO 850 I=1,NN                                                      P5399
+  850 SUM3=SUM3+X1(I)**2                                                 P5399
+      IF (SUM3.LT.SUM2)  GO TO 870                                       P5399
+      SF=-ABS(SF/2.0)                                                    P5399
+      IF (ABS(SF).LT.1.0E-10)  GO TO 9300                                P5399
+      GO TO 750                                                          P5399
+  870 CONTINUE                                                           P5399
+      IF (SUM.EQ.0.0.AND.SUM1.EQ.0.0)   GO TO 10000                      P5399
+      IF (SUM/SUM1.LT.TOL) GO TO 10000                                   P5399
+      ICONV=ICONV+1                                                      P5399
+      IF (ICONV.GT.ISTOP) GO TO 9100                                     P5399
+      DO 900 I=1,NN                                                      P5399
+  900 GUES(I)=ANS(I)                                                     P5399
+      GO TO 250                                                          P5399
+C     ERROR MESSAGES                                                     P5399
+ 9000 PRINT 9010                                                         P5399
+ 9010 FORMAT(52H THE NUMBER N OF EQUATIONS IS 0, NEGATIVE OR GT 1000 )   P5399
+      GO TO 10000                                                        P5399
+ 9100 PRINT 9110,ISTOP                                                   P5399
+ 9110 FORMAT(38H THE NUMBER OF ITERATIONS HAS EXCEEDED , I6 )            P5399
+      GO TO 9900                                                         P5399
+ 9300 PRINT 9310                                                         P5399
+ 9310 FORMAT( 34H RESIDUAL VECTOR DOES NOT DECREASE  )                   P5399
+      GO TO 10000                                                        P5399
+ 9900 ICONV=0                                                            P5399
+10000 ICON=ICONV                                                         P5399
+      RETURN                                                             P5399
+      END                                                                P5399
+      SUBROUTINE TRIDAG(N,A,B,C,D,Z,W,G)                                 P5399
+C  SIMULTANEOUS LINEAR EQUATIONS SOLUTION OF TRIDIAGONAL COEFFICIENT     P5399
+C        MATRIX                                                          P5399
+C  N    ...MINIMUM LENGTH OF ARRAYS A,B,C,D,Z,W,G                        P5399
+C  A    ...LOWER DIAGONAL OF COEFFICIENT MATRIX IN A(2) TO A(N)          P5399
+C  B    ...DIAGONAL OF COEFFICIENT MATRIX IN B(1) GO B(N)                P5399
+C  C    ...UPPER DIAGONAL OF COEFFICIENT MATRIX IN C(1) TO C(N-1)        P5399
+C  D    ...RIGHT HAND SIDE                                               P5399
+C  Z    ...ANSWER                                                        P5399
+C  W,G  ...TEMPORARY STORAGE ARRAYS                                      P5399
+C  REF. SHARE PROGRAM SDA3382                                            P5399
+C     SOLUTION OF THE FOLLOWING SYSTEM OF EQUATIONS                      P5399
+C     A(K)*Z(K-1) + B(K)*Z(K) + C(K)*Z(K + 1) = D(K)        K = 1,...N   P5399
+C                      A(1) = 0.   C(N) = 0.                             P5399
+      DIMENSION A(1),B(1),C(1),D(1),Z(1),W(1),G(1)                       P5399
+                                                  W(1) = C(1)/B(1)       P5399
+                                                  G(1) = D(1)/B(1)       P5399
+      DO 1      I=2,N                                                    P5399
+        BAW = B(I) - A(I)*W(I-1)                                         P5399
+       W(I) =            C(I) / BAW                                      P5399
+    1  G(I) =(D(I) - A(I)*G(I-1))/ BAW                                   P5399
+                                                  Z(N) = G(N)            P5399
+                                                    N1 = N-1             P5399
+      DO 2      I=1,N1                                                   P5399
+          J = N-I                                                        P5399
+    2  Z(J) = G(J) - W(J)* Z(J+1)                                        P5399
+      RETURN                                                             P5399
+       END                                                               P5399
+      SUBROUTINE GRAD(GUES,A,N)                                          P5399
+      DIMENSION GUES(1),A(200,3)                                         ERG7/5/
+      COMMON / INPT / XL,T0,TL,G(50),XK(50),C(50),P(50),                 P5399
+     * Q(50),TE(50),SF(50),H(50),LTAB,E                                  P5399
+      COMMON / STO / Z(200),T(200),C1(200),C2(200),C3(200),C4(200),      P5399A
+     * C5(200),                                                          P5399A
+     * IFL(200),XKA(200),                                                P5399A
+     * S(200),INO,IS,ISM2                                                P5399A
+      DO 100 I=1,ISM2                                                    P5399
+      IF (IFL(I+1).EQ.3) GO TO 100                                       P5399
+      A(I,1)= C3(I+1)                                                    P5399
+      A(I,2)= C5(I+1)+4.0*C1(I+1)*GUES(I)**3                             P5399
+      A(I,3)= C4(I+1)                                                    P5399
+  100 CONTINUE                                                           P5399
+      A(1,3)=0.0                                                         P5399
+      IF (TL.NE.E) GO TO 400                                             P5399
+      A(INO,1)=0.0                                                       P5399
+      A(INO,2)= 1.0/(Z(IS)-Z(IS-1))                                      P5399
+      A(INO,3)= -A(INO,2)                                                P5399
+      GOTO 500                                                           P5399
+  400 A(ISM2,1)=0.0                                                      P5399
+  500 CONTINUE                                                           P5399
+      RETURN                                                             P5399
+      END                                                                P5399
+      SUBROUTINE LOGO (PRNUM,PRNAME,NCHAR,VSPECS,NWORDS,NLINES,CMPDT     P5399A
+     *,DVSN,ENGGRP,PRDOC,IDATE,NCORE,TSTART)                             P5399A
+C                                                                        P5399A
+C     LOGO DETERMINES CURRENT DATE AND CORE SIZE, PRINTS DAYFILE PROGRAM P5399A
+C     START MESSAGE, AND PRINTS FANFARE.                                 P5399A
+C     PRNUM IS LEFT JUSTIFIED, 5- OR 6-CHARACTER HOLLERITH PROGRAM NO.   P5399A
+C     PRNAME IS HOLLERITH PROGRAM NAME OF NCHAR CHARACTERS IN LENGTH.    P5399A
+C     NCHAR SHOULD NOT BE GREATER THAN 130.                              P5399A
+C     VSPECS IS AN OPTIONAL HOLLERITH PROGRAM SPECIFICATION MATRIX OF    P5399A
+C     NLINES LINES OF NWORDS WORDS EACH.                                 P5399A
+C     NLINES SHOULD NOT BE GREATER THAN 5 AND NWORDS SHOULD BE 6 OR LESS P5399A
+C     CMPDT IS AN 8-CHARACTER HOLLERITH DATE OF THE MOST RECENT PROGRAM  P5399A
+C     COMPILATION OF THE FORM MM/DD/YY.                                  P5399A
+C     DVSN IS A 40-CHARACTER HOLLERITH DIVISION OF GENERAL DYNAMICS,     P5399A
+C     CENTERED WITHIN THE 40 CHARACTERS.                                 P5399A
+C     ENGGRP IS A 40-CHARACTER HOLLERITH ENGINEERING GROUP NAME,         P5399A
+C     CENTERED WITHIN THE 40 CHARACTERS.                                 P5399A
+C     PRDOC IS A 20-CHARACTER PROGRAM DOCUMENTATION NUMBER, CENTERED     P5399A
+C     WITHIN THE 20 CHARACTERS.                                          P5399A
+C     THE CURRENT DATE WILL BE RETURNED IN IDATE.                        P5399A
+C     THE FIELD LENGTH OF THE PROGRAM WILL BE RETURNED IN NCORE.         P5399A
+C     THE START TIME FOR PROGRAM EXECUTION WILL BE RETURNED IN TSTART.   P5399A
+C                                                                        P5399A
+      DIMENSION PRNAME(1), VSPECS(NWORDS,NLINES), DVSN(4), ENGGRP(4)     P5399A
+     *, PRDOC(2), MESS(3), IFORM(5), ICHAR(6)                            P5399A
+      DATA MESS(3) /0/                                                   P5399A
+C                                                                        P5399A
+C     GET STARTING CP TIME                                               P5399A
+      CALL SECOND(TSTART)                                                P5399A
+      ENCODE (20,5,MESS) PRNUM                                           P5399A
+    5 FORMAT (1X,A6,11H ENTERED.::)                                      P5399A
+C     WRITE DAYFILE MESSAGE                                              P5399A
+      CALL REMARK (MESS)                                                 P5399A
+      IF (NLINES.EQ.0) PRINT 8                                           P5399A
+    8 FORMAT (1H1,6(/))                                                  P5399A
+      IF (NLINES.GT.0) PRINT 9                                           P5399A
+    9 FORMAT (1H1)                                                       P5399A
+C     PRINT DSS/WDSC HEADER                                              P5399A
+      PRINT 10                                                           P5399A
+   10 FORMAT (1H+,46X,38HGENERAL DYNAMICS DATA SYSTEMS SERVICES//        P5399A
+     *52X,27HWESTERN DATA SYSTEMS CENTER//59X,14HDESIGN SUPPORT,10(/))   P5399A
+C     DETERMINE SPACING FOR PROGRAM NAME.                                P5399A
+      IF (NCHAR.GT.130) NCHAR=130                                        P5399A
+      NSPACE=(131-NCHAR)/2                                               P5399A
+      NWORD=(NCHAR+9)/10                                                 P5399A
+      ENCODE (50,15,IFORM) NSPACE,NWORD                                  P5399A
+   15 FORMAT (1H(,I2,1HX,I2,40HA10//52X,A2,3A1,2A2,2X5HDATED,3XA8,5(/))) P5399A
+      DECODE (6,20,PRNUM) ICHAR                                          P5399A
+   20 FORMAT (6A1)                                                       P5399A
+C     PRINT PROGRAM NAME, NUMBER, AND DATE OF COMPILATION.               P5399A
+      PRINT IFORM, (PRNAME(I),I=1,NWORD), ICHAR, CMPDT                   P5399A
+      NSKIP=4                                                            P5399A
+      IF (NLINES.EQ.0) GO TO 40                                          P5399A
+C     PRINT PROGRAM VERSION SPECS.                                       P5399A
+      IF (NLINES.GT.5) NLINES=5                                          P5399A
+      NWORD=NWORDS                                                       P5399A
+      IF (NWORD.GT.6) NWORD=6                                            P5399A
+      NSPACE=1+5*(6-NWORD)                                               P5399A
+      ENCODE (30,25,IFORM) NSPACE,NWORD,NSPACE                           P5399A
+   25 FORMAT (7H(34X1H*,I2,1HX,I1,4HA10,I2,6HX1H*/))                     P5399A
+      PRINT 30                                                           P5399A
+   30 FORMAT (32X,22(2X,1H*)/)                                           P5399A
+      DO 35 J=1,NLINES                                                   P5399A
+   35 PRINT IFORM, (VSPECS(I,J),I=1,NWORDS)                              P5399A
+      PRINT 30                                                           P5399A
+      NSKIP=2*(5-NLINES)+3                                               P5399A
+   40 ENCODE (10,45,IFORM) NSKIP                                         P5399A
+   45 FORMAT (1H(,I2,4H(/)))                                             P5399A
+      PRINT IFORM                                                        P5399A
+C     GET CORE SIZE REQUESTED.                                           P5399A
+      CALL RDCMR (1,24B,ICP,1)                                           P5399A
+      NCORE=(ICP.AND.7777B)*100B                                         P5399A
+C     GET CURRENT DATE.                                                  P5399A
+      CALL DATE (IDATE)                                                  P5399A
+      PRINT 50, DVSN, ENGGRP, PRDOC, NCORE, IDATE                        P5399A
+   50 FORMAT (46X,4A10//46X,4A10,6(/),                                   P5399A
+     *43X,45HCURRENT APPLICABLE ENGINEERING/USERS DOCUMENT//56X,2A10,    P5399A
+     *6(/)44X,29HFIELD LENGTH FOR EXECUTION = ,O6,8H (OCTAL)//           P5399A
+     *53X,16HDATE OF ANALYSIS,A9)                                        P5399A
+      RETURN                                                             P5399A
+      END                                                                P5399A
+      SUBROUTINE LOGOUT (PRNUM,TSTART)                                   P5399A
+C                                                                        P5399A
+C     LOGOUT PRINTS DAYFILE PROGRAM STOP MESSAGE.                        P5399A
+C     PRNUM IS LEFT JUSTIFIED, 5- OR 6-CHARACTER HOLLERITH PROGRAM NO.   P5399A
+C     TSTART IS THE PROGRAM START TIME DEFINED IN LOGO.                  P5399A
+C                                                                        P5399A
+      DIMENSION MESS(5)                                                  P5399A
+C                                                                        P5399A
+      PRINT 55, PRNUM                                                    P5399A
+   55 FORMAT (9H1PROGRAM ,A6,16H IS TERMINATING.)                        P5399A
+C     GET ENDING CP TIME                                                 P5399A
+      CALL SECOND(TSTOP)                                                 P5399A
+      CPTIME = TSTOP-TSTART                                              P5399A
+      ENCODE (50,60,MESS) PRNUM,CPTIME                                   P5399A
+   60 FORMAT (1X,A6,23H TERMINATED.  CP TIME =,F10.3,10H SECONDS::)      P5399A
+      CALL REMARK (MESS)                                                 P5399A
+      STOP                                                               P5399A
+      END                                                                P5399A

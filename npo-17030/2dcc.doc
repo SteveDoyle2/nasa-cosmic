@@ -1,0 +1,20 @@
+
+     This two dimensional convolution code program is invoked
+by typing
+
+                2dcc  input_filename
+
+     It will generate an output file with file extention
+".lst".  The result of each stage is reported.
+
+
+     The input file contains the value of d1 and d2.  Then
+each element of arrays A and B is listed by row.  It is 
+free format, but it must be in order  A[0][0] A[0][1] ...
+A[0][d2] A[1][0] ... A[d1][d2]  B[0][0] B[0][1] ...
+B[d1][d2].
+
+     If the first column of a line is a "*", the whole line 
+is regarded as a comment.  It is free to put comments
+anywhere in the file.
+    

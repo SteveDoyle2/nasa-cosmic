@@ -1,0 +1,22 @@
+interface;
+    unit vdmgen ( vdminit, vdmline, vdmbar, vdmcir, vdmtext, vdmsymbol,
+                  vdmarc,vdmend,lclr,fclr,tclr,pclr,lt1,lt2,intst,tfli,
+                  cpath, mt1, mt2, msize, mclr, sl, version ) ;
+
+    var
+       lclr, fclr, tclr, lt1, lt2, intst, tfli, cpath : integer ;
+       mclr, pclr, msize, mt1, mt2 , version : integer ;
+       sl : array [1..4] of lstring(20) ;
+
+    procedure vdminit ;
+    procedure vdmline ( x1, y1, x2, y2, color, ndon, ndoff : integer );
+    procedure vdmbar ( x1, y1, x2, y2, color, fill, e : integer ) ;
+    procedure vdmcir ( cx, cy, radius, color, fill, e  : integer ) ;
+    procedure vdmtext ( x, y, size, color, dir, e : integer; 
+                        var atext : lstring ) ;
+    procedure vdmsymbol ( x, y, color, id1, id2, scale : integer ) ;
+    procedure vdmarc ( x1, y1, mx, my, x, y, color: integer ) ;
+    procedure vdmend;
+    begin
+    end ;
+

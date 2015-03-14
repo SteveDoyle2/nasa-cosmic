@@ -1,0 +1,1265 @@
+[  IDENT       ('COUNT'),
+   INHERIT     ('QLIBHOME:STANDARD',
+                'QLIBHOME:SYSTEM',
+                'QLIBHOME:STRING',
+                'QLIBHOME:DIRECTORY') ]
+PROGRAM count (infile,outfile,output);
+VAR
+   cnt,total              : integer;
+   infile,outfile         : text;
+   st                     : VARYING [20] OF char;
+   filename               : VARYING [50] OF char;
+   line                   : anystring;
+BEGIN
+total := 0;
+getforeign (st);
+IF st = '' THEN raise ('Argmument not given');
+open (outfile,st + '.OUT',NEW);
+rewrite (outfile);
+startfilesearch ('*.' + st);
+WHILE NOT endoffilesearch DO
+   BEGIN
+   filesearch (line);
+   filename := fs.name + fs.typ;
+   open (infile,filename,OLD);
+   reset (infile);
+   cnt := 0;
+   WHILE NOT eof (infile) DO
+      BEGIN
+      readln (infile,line);
+      cnt := cnt + 1;
+      END;
+   close (infile);
+   writeln (outfile,strfix (filename,30), cnt:5);
+   writeln (strfix (filename,30), cnt:5);
+   total := total + cnt;
+   END;
+writeln (outfile);
+writeln;
+writeln (outfile,strfix ('Total ' + st + ' Files',30), total:5);
+writeln (strfix ('Total ' + st + ' Files',30), total:5);
+close (outfile);
+END.
+
+
+
+
+
+
+
+
+
+
+
+COUNT.PAS;10                  Page   1
+
+[ INHERIT ('QLIBHOME:STANDARD',
+           'QLIBHOME:SYSTEM',
+           'QLIBHOME:STRING',
+           'QLIBHOME:DIRECTORY') ]
+PROGRAM dx (output);
+VAR
+   line      : anystring;
+   i,j,n,cn  : integer;
+   cname     : VARYING[10] OF char;
+   name      : VARYING[10] OF char;
+   typ       : VARYING[4] OF char;
+   outstr    : anystring;
+   stout     : anystring;
+BEGIN
+getforeign (line);
+IF line = ''
+ THEN startfilesearch ('*.*')
+ELSE IF index (line,'.') <> 0
+ THEN startfilesearch (line)
+ ELSE startfilesearch (line + '.*');
+n := 0;
+cname := '';
+WHILE NOT endoffilesearch DO
+   BEGIN
+   filesearch (outstr);
+   n := n + 1;
+   IF length (fs.name) > 9
+    THEN name := strfix (fs.name,9) + '-'
+    ELSE name := strfix (fs.name,10);
+   IF length (fs.typ) > 4
+    THEN typ := substr (strfix (fs.typ,4) + '-',2,4)
+    ELSE typ := substr (strfix (fs.typ,5),2,4);
+   IF cname <> name
+    THEN
+     BEGIN
+     IF cname <> '' THEN writeln (stout);
+     stout := name + '   ';
+     cname := name;
+     cn := n;
+     END;
+   stout := stout + ' ' + typ;
+   END;
+IF cname <> '' THEN writeln (stout);
+END.
+
+
+
+
+
+
+
+
+
+DX.PAS;18                     Page   2
+
+[ IDENT       ('FONT'),
+  INHERIT     ('QLIBHOME:STANDARD',
+               'QLIBHOME:SYSTEM',
+               'QLIBHOME:STRING',
+               'QLIBHOME:COLOR',
+               'QLIBHOME:MATH',
+               'QLIBHOME:FIG',
+               'QLIBHOME:IO',
+               'QLIBHOME:PLOT',
+               'QLIBHOME:READMATH')]
+PROGRAM font;
+TYPE
+   letter_line_type = RECORD
+                      x1,y1,x2,y2 : integer;
+                      END;
+   letter_type      = RECORD
+                      line        : ARRAY [1..10] OF letter_line_type;
+                      END;
+VAR
+   fontlim          : plotlimits := ((-50,-50),(110,110));
+   currfontlim      : plotlimits;
+   letter           : ARRAY [32..127] OF letter_type;
+   lset,uset        : boolean;
+   ich              : integer;
+{=============================================================================}
+PROCEDURE menu;
+BEGIN
+newline;  grprint('GRAPHICS MODE COMMANDS');
+newline;
+newline;  grprint('Use first letter of command to select');
+newline;
+newline;  grprint('BackZoom -- Return to previous zoom view');
+newline;  grprint('DeZoom   -- Replot in original scale');
+newline;  grprint('Exit     -- Return to main commands');
+newline;  grprint('Help     -- Display this menu');
+newline;  grprint('Keyboard -- Enter zoom coordinates from keyboard');
+newline;  grprint('Lower    -- Cursor at lower left coords. for zoom');
+newline;  grprint('Plot     -- Plot data again');
+newline;  grprint('Q-square -- Square zoom area');
+newline;  grprint('Redraw   -- Redraw plot with current scale');
+newline;  grprint('Upper    -- Cursor at upper right coord. for zoom');
+newline;  grprint('X-it     -- Return to main commands');
+newline;  grprint('Zoom     -- Zoom to coords. given by U, L, K');
+newline;  grprint('$VAX     -- Allows access to HELP and VAX');
+newline;  grprint('%        -- Hardcopy');
+newline;  grprint('^        -- Place colored label');
+newline;
+newline;  grprint('            3 BEEPS means command not executed');
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE plotfont;
+
+
+FONT.PAS;33                   Page   3
+
+VAR
+   i : integer;
+   x,y  : ARRAY [1..5] OF real;
+BEGIN
+clearscreen;
+
+setx (false,1,'FIRST NUMBER','',true,false);
+sety (false,1,'SECOND NUMBER','',true,false);
+xymapit (currfontlim,'PLOT OF "' + chr(ich) + '"    (' + strofi(ich,3) + ')');
+
+openpanel ('AREA','BORDER');
+x[1] :=  -0.5;  y[1] := -0.5;
+x[2] :=  60.5;  y[2] := -0.5;
+x[3] :=  60.5;  y[3] :=100.5;
+x[4] :=  -0.5;  y[4] :=100.5;
+x[5] :=  -0.5;  y[5] := -0.5;
+trace (x,y,1,5,true,0);
+closepanel;
+
+FOR i := 1 TO 10 DO
+   WITH letter[ich].line[i] DO
+      IF x1 <> -1
+       THEN
+        BEGIN
+        setcolor ('LETTER');
+        x[1] :=  x1;  y[1] := y1;
+        x[2] :=  x2;  y[2] := y2;
+        trace (x,y,1,2,true,0);
+        END;
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE read;
+VAR
+   i,j  : integer;
+   line : anystring;
+BEGIN
+ESTABLISH (handler);
+open (textfile,'SYMBOL.I',OLD);
+reset (textfile);
+FOR i := 32 TO 127 DO
+   BEGIN
+   readln (textfile,line);
+   FOR j := 1 TO 10 DO
+      WITH letter[i].line[j] DO
+         BEGIN
+         readln (textfile,line);
+         x1 := iofstr (substr (line,5,3));
+         IF NOT goodconvert
+          THEN raise ('BAD FORMAT IN LETTER "' + chr(i) + '"');
+         y1 := iofstr (substr (line,9,3));
+         IF NOT goodconvert
+
+
+FONT.PAS;33                   Page   4
+
+          THEN raise ('BAD FORMAT IN LETTER "' + chr(i) + '"');
+         x2 := iofstr (substr (line,13,3));
+         IF NOT goodconvert
+          THEN raise ('BAD FORMAT IN LETTER "' + chr(i) + '"');
+         y2 := iofstr (substr (line,17,3));
+         IF NOT goodconvert
+          THEN raise ('BAD FORMAT IN LETTER "' + chr(i) + '"');
+         END;
+   IF length(err) <> 0
+    THEN
+     BEGIN
+     writeerror;
+     IF NOT tohandle
+      THEN BEGIN  REVERT;  signal (sigargs[1]);  END;
+     err := '';
+     END;
+   END;
+REVERT
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE plot;
+VAR
+   firsttime   : boolean;
+   pt          : point;
+   j,i         : integer;
+   ix,iy       : integer;
+   key         : char;
+   string      : anystring;
+   templim     : plotlimits;
+BEGIN
+purgezoom;
+ESTABLISH (handler);
+firsttime := true;
+REPEAT
+   IF firsttime
+    THEN
+     BEGIN
+     currfontlim := fontlim;
+     plotfont;
+     firsttime := false;
+     key := NUL;
+     pt := point(0,0);
+     END
+    ELSE readcursor (key,pt);
+   CASE key OF
+      NUL:  ;
+      'B':  IF popzoom (currfontlim)
+             THEN plotfont
+             ELSE bell;
+      'D':  BEGIN
+            currfontlim := fontlim;
+
+
+FONT.PAS;33                   Page   5
+
+            purgezoom;
+            plotfont;
+            END;
+      'E':  ;
+      'H':  BEGIN
+            setcolor ('HELP');
+            scaleposition (pt);
+            grprint ('');
+            menu;
+            END;
+      'K':  BEGIN  readlimits (templim);  lset:=true;  uset:=true;  END;
+      'L':  BEGIN  templim.min := pt;  lset:=true;  END;
+      'P':  replot;
+      'Q':  IF lset AND uset
+             THEN samescale (templim)
+             ELSE bell;
+      'R':  plotfont;
+      'U':  BEGIN  templim.max := pt;  uset:=true;  END;
+      'X':  ;
+      'Z':  IF uset and lset
+             THEN
+              BEGIN
+              pushzoom (currfontlim);
+              currfontlim.min.x := rmin (templim.min.x,templim.max.x);
+              currfontlim.max.x := rmax (templim.min.x,templim.max.x);
+              currfontlim.min.y := rmin (templim.min.y,templim.max.y);
+              currfontlim.max.y := rmax (templim.min.y,templim.max.y);
+              plotfont;
+              END
+             ELSE bell;
+      '$':  readstring ('ENTER QPLOT COMMAND> ',string);
+      '%':  hardcopy;
+      '^':  BEGIN
+            readvary ('ENTER COLOR : ',string,'WHITE');
+            setcolor (string);
+            readlowervary ('ENTER LABEL : ',string,'');
+            scaleposition (pt);
+            grprint (string);
+            END;
+      OTHERWISE bell;
+      END;
+   IF lset AND uset THEN BEGIN  setcolor ('ZOOMBOX');  boxit(templim);  END;
+   IF length(err) <> 0
+    THEN
+     BEGIN
+     writeerror;
+     IF NOT tohandle
+      THEN BEGIN  REVERT;  signal (sigargs[1]);  END;
+     err := '';
+     END;
+   UNTIL key IN ['X','E'];
+
+
+FONT.PAS;33                   Page   6
+
+REVERT;
+setcolor ('WHITE');
+clearscreen;
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE main;
+BEGIN
+read;
+addobjectandqual ('HELP','RED');
+addobjectandqual ('ZOOMBOX','YELLOW');
+addobjectandqual ('BORDER','RED');
+addobjectandqual ('AREA','CLEAR');
+addobjectandqual ('LETTER','CYAN');
+ESTABLISH (handler);
+IF exist ('FONT.SOU') THEN opensourcefile ('FONT.SOU','SOU');
+REPEAT
+   readint ('ENTER LETTER CODE (0 to exit) : ',ich,0,127,1);
+   IF ich IN [32..127]
+    THEN plot
+   ELSE IF ich = 1
+    THEN clearscreen
+   ELSE IF ich = 0
+    THEN writeline (out,'GOOD BYE')
+    ELSE bell;
+   IF length(err) <> 0
+    THEN
+     BEGIN
+     writeerror;
+     IF NOT tohandle
+      THEN BEGIN  REVERT;  signal (sigargs[1]);  END;
+     err := '';
+     END;
+   UNTIL ich = 0;
+REVERT;
+clearscreen;
+END;
+{-----------------------------------------------------------------------------}
+BEGIN
+main;
+END.
+{=============================================================================}
+
+
+
+
+
+
+
+
+
+
+
+
+FONT.PAS;33                   Page   7
+
+
+PROGRAM manual (input,output,kontrol,data,bodfile,tocfile,existfile);
+CONST
+   MAXCOLUMN        = 132;
+   MAXLINE          = 52;
+TYPE
+   line             = VARYING [MAXCOLUMN] OF char;
+VAR
+   kontrol,data     : text;
+   bodfile,tocfile  : text;
+   existfile        : text;
+
+   konline,dataline : line;
+   blankline,tocline: line;
+   filename         : line;
+   count            : integer;
+
+   currpage         : ARRAY [1..MAXLINE] OF line := (MAXLINE OF '');
+   pageno           : integer := 0;
+   tocpageno        : integer := -2;
+   lineno           : integer := 0;
+   toclineno        : integer := -1;
+{-----------------------------------------------------------------------------}
+[EXTERNAL]
+PROCEDURE LIB$GET_FOREIGN
+   (%STDESCR forstring : PACKED ARRAY [l1..l2:integer] OF CHAR;
+    %IMMED i : integer;  VAR forlength : integer);
+EXTERN;
+{-------------------------------}
+[EXTERNAL]
+PROCEDURE LIB$SPAWN (%STDESCR str : PACKED ARRAY [l1..l2:integer] OF CHAR);
+EXTERN;
+{-------------------------------}
+FUNCTION exist (filename : VARYING [len] OF char) : boolean;
+BEGIN
+open (existfile,filename,OLD,ERROR:=CONTINUE);
+exist := status (existfile) = 0;
+close (existfile,ERROR:=CONTINUE);
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE page (VAR ff : text);
+BEGIN
+writeln (ff,chr(12));
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE clearpage;
+VAR
+   i : integer;
+BEGIN
+pageno := pageno + 1;
+lineno := 0;
+
+
+LISTER.PAS;11                 Page   8
+
+FOR i := 1 TO MAXLINE DO currpage[i] := '';
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE writepage;
+VAR
+   i : integer;
+BEGIN
+FOR i := 1 TO MAXLINE DO
+   writeln (bodfile,currpage[i]);
+writeln (bodfile,'');
+writeln (bodfile,filename + '            Page ',pageno:3);
+page (bodfile);
+clearpage;
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE tocpage;
+VAR
+   i : integer;
+BEGIN
+FOR i := toclineno+1 TO 53 DO writeln (tocfile);
+tocpageno := tocpageno + 1;
+toclineno := 0;
+CASE tocpageno OF
+    1:  writeln (tocfile,'                              Page  i');
+    2:  writeln (tocfile,'                              Page  ii');
+    3:  writeln (tocfile,'                              Page  iii');
+    4:  writeln (tocfile,'                              Page  iv');
+    5:  writeln (tocfile,'                              Page  v');
+    6:  writeln (tocfile,'                              Page  vi');
+    7:  writeln (tocfile,'                              Page  vii');
+    8:  writeln (tocfile,'                              Page  viii');
+    9:  writeln (tocfile,'                              Page  ix');
+   10:  writeln (tocfile,'                              Page  x');
+   11:  writeln (tocfile,'                              Page  xi');
+   12:  writeln (tocfile,'                              Page  xii');
+   13:  writeln (tocfile,'                              Page  xiii');
+   14:  writeln (tocfile,'                              Page  xiv');
+   15:  writeln (tocfile,'                              Page  xv');
+   16:  writeln (tocfile,'                              Page  xvi');
+   17:  writeln (tocfile,'                              Page  xvii');
+   18:  writeln (tocfile,'                              Page  xviii');
+   OTHERWISE writeln (tocfile);
+   END;
+page (tocfile);
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE puttocline;
+BEGIN
+writeln (tocfile,tocline);
+toclineno := toclineno + 1;
+IF toclineno >= MAXLINE THEN tocpage;
+
+
+LISTER.PAS;11                 Page   9
+
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE puteol;
+BEGIN
+lineno := lineno+1;
+IF lineno > MAXLINE-2 THEN writepage;
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE putstring  (string : VARYING [l1] OF char);
+VAR
+   i : integer;
+BEGIN
+currpage[lineno+1] := currpage[lineno+1] + string;
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE format (instring : VARYING [l1] OF char);
+VAR
+   i,j    : integer;
+   string : line;
+BEGIN
+{ REMOVE BLANKS FROM END OF LINE }
+j := 0;
+FOR i := 1 TO length(instring) DO IF instring[i] <> ' ' THEN j := i;
+string := '';
+FOR i := 1 TO j DO string := string + instring[i];
+
+{ PROCESS LINE, PLACING CHARACTERS IN CURRPAGE AS NEEDED. }
+putstring (string);
+puteol;
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE main;
+VAR
+   i           : integer;
+   str         : line;
+   command     : line;
+{------------------------------}
+PROCEDURE copyfiletotocfile (name : VARYING [LEN] OF char);
+BEGIN
+open (data,name,OLD);
+reset (data);
+WHILE NOT eof(data) DO
+   BEGIN
+   toclineno := toclineno + 1;
+   readln (data,dataline);
+   writeln (tocfile,dataline);
+   END;
+close (data);
+END;
+{------------------------------}
+BEGIN
+
+
+LISTER.PAS;11                 Page  10
+
+{ SET UP }
+LIB$GET_FOREIGN (command.body,0,i);
+command.length := i;
+LIB$SPAWN ('DIR/DATE/OUT=LISTER.KON ' + command);
+
+open (tocfile,'LISTER.TOC',NEW);
+rewrite (tocfile);
+
+writeln (tocfile,'                         TABLE OF CONTENTS');
+writeln (tocfile);
+writeln (tocfile);
+writeln (tocfile);
+toclineno := 4;
+
+pageno := 0;
+clearpage;
+open (bodfile,'LISTER.BOD',NEW);
+rewrite (bodfile);
+
+open (kontrol,'LISTER.KON',OLD);
+reset   (kontrol);
+WHILE NOT eof(kontrol) DO
+   BEGIN
+   readln (kontrol,konline);
+   IF length (konline) >= 18
+    THEN filename := substr (konline,1,18)
+    ELSE filename := '';
+   IF exist (filename)
+    THEN
+     BEGIN
+     { READ FILE AND COPY }
+     open (data,filename,OLD);
+     reset (data);
+     count := 0;
+     WHILE NOT eof(data) DO
+        BEGIN
+        count := count + 1;
+        readln (data,dataline);
+        format (dataline);
+        END;
+     close (data);
+     writepage;
+
+     { GENERATE LINE FOR TABLE OF CONTENTS }
+     writev (str,count:6);
+     tocline := filename + '(' + str + ') ';
+     WHILE length(tocline) < 70 DO
+        IF odd(length(tocline))
+         THEN tocline := tocline + ' '
+         ELSE tocline := tocline + '.';
+     writev (str,pageno:3);
+
+
+LISTER.PAS;11                 Page  11
+
+     tocline := tocline + str;
+     puttocline;
+     END;
+   END;
+close (kontrol,DISPOSITION:=DELETE);
+
+writepage;
+tocpage;
+
+close (tocfile);
+close (bodfile);
+LIB$SPAWN ('COPY LISTER.TOC,LISTER.BOD LISTER.TXT ');
+LIB$SPAWN ('DELETE LISTER.TOC;*');
+LIB$SPAWN ('DELETE LISTER.BOD;*');
+END;
+{-----------------------------------------------------------------------------}
+BEGIN
+main;
+END.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+LISTER.PAS;11                 Page  12
+
+
+PROGRAM manual (input,output,kontrol,data,bodfile,tocfile);
+CONST
+   MAXCOLUMN        = 80;
+   MAXLINE          = 52;
+TYPE
+   line             = VARYING [MAXCOLUMN] OF char;
+   pagekontype      = (top,bottom,none);
+VAR
+   kontrol,data     : text;
+   bodfile,tocfile  : text;
+   konline,dataline : line;
+   blankline,tocline: line;
+   currpage         : ARRAY [1..MAXLINE] OF line := (MAXLINE OF '');
+   depth            : integer := 1;
+   pageno           : integer := 0;
+   tocpageno        : integer := -2;
+   lineno           : integer := 0;
+   toclineno        : integer := -1;
+   levels           : ARRAY [1..9] OF integer := (9 OF 0);
+{-----------------------------------------------------------------------------}
+[EXTERNAL]
+PROCEDURE LIB$GET_FOREIGN
+   (%STDESCR forstring : PACKED ARRAY [l1..l2:integer] OF CHAR;
+    %IMMED i : integer;  VAR forlength : integer);
+EXTERN;
+{-------------------------------}
+[EXTERNAL]
+PROCEDURE LIB$SPAWN (%STDESCR str : PACKED ARRAY [l1..l2:integer] OF CHAR);
+EXTERN;
+{-----------------------------------------------------------------------------}
+PROCEDURE page (VAR ff : text);
+BEGIN
+writeln (ff,chr(12));
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE clearpage;
+VAR
+   i : integer;
+BEGIN
+pageno := pageno + 1;
+lineno := 0;
+FOR i := 1 TO MAXLINE DO currpage[i] := '';
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE writepage (pk : pagekontype := bottom);
+VAR
+   i : integer;
+BEGIN
+IF pk = top
+ THEN
+
+
+MANUAL.PAS;6                  Page  13
+
+  BEGIN
+  writeln (bodfile,'                              Page ',pageno:3);
+  writeln (bodfile,'');
+  END;
+FOR i := 1 TO MAXLINE DO
+   writeln (bodfile,currpage[i]);
+IF pk = bottom
+ THEN
+  BEGIN
+  writeln (bodfile,'');
+  writeln (bodfile,'                              Page ',pageno:3);
+  END;
+page (bodfile);
+clearpage;
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE tocpage;
+VAR
+   i : integer;
+BEGIN
+FOR i := toclineno+1 TO 53 DO writeln (tocfile);
+tocpageno := tocpageno + 1;
+toclineno := 0;
+CASE tocpageno OF
+    1:  writeln (tocfile,'                              Page  i');
+    2:  writeln (tocfile,'                              Page  ii');
+    3:  writeln (tocfile,'                              Page  iii');
+    4:  writeln (tocfile,'                              Page  iv');
+    5:  writeln (tocfile,'                              Page  v');
+    6:  writeln (tocfile,'                              Page  vi');
+    7:  writeln (tocfile,'                              Page  vii');
+    8:  writeln (tocfile,'                              Page  viii');
+    9:  writeln (tocfile,'                              Page  ix');
+   10:  writeln (tocfile,'                              Page  x');
+   11:  writeln (tocfile,'                              Page  xi');
+   12:  writeln (tocfile,'                              Page  xii');
+   13:  writeln (tocfile,'                              Page  xiii');
+   14:  writeln (tocfile,'                              Page  xiv');
+   15:  writeln (tocfile,'                              Page  xv');
+   16:  writeln (tocfile,'                              Page  xvi');
+   17:  writeln (tocfile,'                              Page  xvii');
+   18:  writeln (tocfile,'                              Page  xviii');
+   OTHERWISE writeln (tocfile);
+   END;
+page (tocfile);
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE puttocline;
+BEGIN
+writeln (tocfile,tocline);
+toclineno := toclineno + 1;
+
+
+MANUAL.PAS;6                  Page  14
+
+IF toclineno >= MAXLINE THEN tocpage;
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE puteol;
+BEGIN
+lineno := lineno+1;
+IF lineno > MAXLINE-2 THEN writepage;
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE putstring  (string : VARYING [l1] OF char);
+VAR
+   i : integer;
+BEGIN
+currpage[lineno+1] := currpage[lineno+1] + string;
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE format (instring : VARYING [l1] OF char);
+VAR
+   i,j,newdepth    : integer;
+   str,string      : line;
+BEGIN
+{ REMOVE BLANKS FROM END OF LINE }
+j := 0;
+FOR i := 1 TO length(instring) DO IF instring[i] <> ' ' THEN j := i;
+string := '';
+FOR i := 1 TO j DO string := string + instring[i];
+
+{ PROCESS LINE, PLACING CHARACTERS IN CURRPAGE AS NEEDED. }
+IF length(string) = 0
+THEN puteol
+ELSE CASE string[1] OF
+   '?':  CASE string[2] OF
+            'P':  writepage;
+            END;
+   '1','2','3','4','5','6','7','8','9',
+   '/':  BEGIN
+         IF lineno > MAXLINE - 7 THEN writepage;
+         IF string[1] = '/'
+          THEN BEGIN  string := '3' + string;  string[2] := ' ';  END;
+         newdepth := ord(string[1]) - ord('0');
+         FOR i := newdepth+1 TO depth DO levels[i] := 0;
+         depth := newdepth;
+         levels[depth] := levels[depth]+1;
+
+         { START NEW PAGE IF NECCESSARY }
+         IF ((depth = 1) OR (lineno + 7 > MAXLINE)) AND (lineno > 0)
+          THEN writepage;
+         IF lineno <> 0 THEN FOR i := 1 TO 3 DO puteol;
+
+         { MAKE AND PRINT TITLE LINE }
+         FOR i := 1 TO depth DO
+
+
+MANUAL.PAS;6                  Page  15
+
+            BEGIN
+            IF levels[i] >= 10
+             THEN putstring (chr(ord('0') + levels[i] DIV 10));
+            putstring (chr(ord('0') + levels[i] MOD 10));
+            IF (i<>depth) THEN putstring ('.');
+            END;
+         putstring ('   ');
+         putstring (substr(string,3,length(string)-2));
+         puteol;
+         IF depth = 1 THEN writeln (currpage[lineno]);
+         currpage[lineno+1] := currpage[lineno];
+         FOR i := 1 TO length (currpage[lineno+1])
+            DO currpage[lineno+1][i] := '-';
+         puteol;
+
+         { GENERATE LINE FOR TABLE OF CONTENTS }
+         tocline := '';
+         IF depth = 1 THEN puttocline;
+         FOR i := 1 TO depth DO
+            BEGIN
+            IF levels[i] >= 10
+             THEN tocline := tocline + chr(ord('0') + levels[i] DIV 10);
+            tocline := tocline + chr(ord('0') + levels[i] MOD 10);
+            IF (i<>depth) THEN tocline := tocline + '.';
+            END;
+         WHILE length (tocline) < 12 DO tocline := tocline + ' ';
+         tocline := tocline + substr(string,3,length(string)-2) + '  ';
+         WHILE length(tocline) < 70 DO
+            IF odd(length(tocline))
+             THEN tocline := tocline + ' '
+             ELSE tocline := tocline + '.';
+         writev (str,pageno:3);
+         tocline := tocline + str;
+         puttocline;
+         END;
+   OTHERWISE
+         BEGIN
+         putstring (string);
+         puteol;
+         END;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+PROCEDURE main;
+VAR
+   i           : integer;
+   filename    : line;
+{------------------------------}
+PROCEDURE copyfiletotocfile (name : VARYING [LEN] OF char);
+BEGIN
+open (data,name,OLD);
+
+
+MANUAL.PAS;6                  Page  16
+
+reset (data);
+WHILE NOT eof(data) DO
+   BEGIN
+   toclineno := toclineno + 1;
+   readln (data,dataline);
+   writeln (tocfile,dataline);
+   END;
+close (data);
+END;
+{------------------------------}
+BEGIN
+{ SET UP }
+LIB$GET_FOREIGN (filename.body,0,i);
+filename.length := i;
+writeln ('DOING ' + filename);
+
+open (tocfile,filename + '.TOC',NEW);
+rewrite (tocfile);
+
+{ WRITE TITLE PAGE TO TOCFILE }
+copyfiletotocfile (filename + '.TIT');
+tocpage;
+tocpage;
+
+{ GET ABSTRACT, ETC }
+copyfiletotocfile ('ABSTRACT.TXT');
+tocpage;
+tocpage;
+copyfiletotocfile ('PREFACE.TXT');
+tocpage;
+tocpage;
+copyfiletotocfile ('ACKNOWLED.TXT');
+tocpage;
+tocpage;
+
+writeln (tocfile,'                         TABLE OF CONTENTS');
+writeln (tocfile);
+writeln (tocfile);
+writeln (tocfile);
+toclineno := 4;
+
+depth := 1;
+FOR i := 1 TO 9 DO levels[i] := 0;
+pageno := 0;
+clearpage;
+open (bodfile,filename + '.BOD',NEW);
+rewrite (bodfile);
+open (kontrol,filename + '.KON',OLD);
+reset   (kontrol);
+WHILE NOT eof(kontrol) DO
+   BEGIN
+
+
+MANUAL.PAS;6                  Page  17
+
+   readln (kontrol,konline);
+   IF length (konline) = 0
+    THEN format (konline)
+   ELSE IF konline[1] <> '@'
+    THEN format (konline)
+    ELSE
+     BEGIN
+     open (data,substr(konline,2,length(konline)-1),OLD);
+     reset (data);
+     WHILE NOT eof(data) DO
+        BEGIN
+        readln (data,dataline);
+        format (dataline);
+        END;
+     close (data);
+     END;
+   END;
+writepage;
+IF odd (pageno-1) THEN writepage;
+tocpage;
+IF odd (tocpageno) THEN tocpage;
+
+close (kontrol);
+close (tocfile);
+close (bodfile);
+LIB$SPAWN ('COPY ' + filename + '.TOC,'
+                   + filename + '.BOD '
+                   + filename + '.TXT ');
+LIB$SPAWN ('DELETE ' + filename + '.TOC;*');
+LIB$SPAWN ('DELETE ' + filename + '.BOD;*');
+END;
+{-----------------------------------------------------------------------------}
+BEGIN
+main;
+END.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MANUAL.PAS;6                  Page  18
+
+[  IDENT       ('PASTRIM'),
+   INHERIT     ('QPLOTHOME:SYSTEM') ]
+PROGRAM pastrim (infile,outfile);
+VAR
+   infile,outfile : text;
+   st             : VARYING [20] OF char;
+   line           : VARYING [132] OF char;
+BEGIN
+getforeign (st);
+open (infile,st + '.LIS',OLD);
+reset (infile);
+open (outfile,st + '.LIS',NEW);
+rewrite (outfile);
+REPEAT
+   readln (infile,line);
+   writeln (outfile,line);
+   UNTIL index (line,'END.') <> 0;
+writeln (outfile,chr(12));
+close (infile);
+close (outfile);
+END.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+TRIM.PAS;5                    Page  19
+
+PROGRAM verv80 (output,vfile);
+CONST
+   IO$_PLOTMODE   = 112;
+   IO$_WRITEVBLK  = 48;
+   EFN            = 11;
+TYPE
+   short_integer  = [WORD] -32768..32767;
+TYPE
+   v_type         = PACKED ARRAY [1..264] OF char;
+VAR
+   ichan          : short_integer   := 0;
+   iosb           : ARRAY [1..2] OF integer;
+   devnam         : PACKED ARRAY [1..4] OF char := 'LPC0';
+   v              : v_type;
+   vfile          : FILE OF v_type;
+   i,stat         : integer;
+{-----------------------------------------------------------------------------}
+[ ASYNCHRONOUS, EXTERNAL ]
+FUNCTION SYS$alloc  (%STDESCR devnam : PACKED ARRAY [l1..u1 : integer] OF char;
+                     %IMMED   x1 : integer := 0;
+                     %IMMED   x2 : integer := 0;
+                     %IMMED   x3 : integer := 0) : integer;
+EXTERN;
+{-----------------------------------------------------------------------------}
+[ ASYNCHRONOUS, EXTERNAL ]
+FUNCTION SYS$assign (%STDESCR devnam : PACKED ARRAY [l1..u1 : integer] OF char;
+                     VAR      chan   : short_integer;
+                     %IMMED   acmode : integer := 0;
+                     %IMMED   mbxnam : integer := 0) : integer;
+EXTERN;
+{-----------------------------------------------------------------------------}
+[ ASYNCHRONOUS, EXTERNAL ]
+FUNCTION SYS$qio    (%IMMED   efn    : integer := 0;
+                     %IMMED   chan   : short_integer;
+                     %IMMED   func   : short_integer;
+                     %IMMED   iosb   : integer := 0;
+                     %IMMED   astadr : integer := 0;
+                     %IMMED   astprm : integer := 0;
+                     %REF     p1v    : PACKED ARRAY [l7..u7 : integer] OF char;
+                     %IMMED   p2     : integer;
+                     %IMMED   p3     : integer := 0;
+                     %IMMED   p4     : integer := 0;
+                     %IMMED   p5     : integer := 0;
+                     %IMMED   p6     : integer := 0) : integer;
+EXTERN;
+{-----------------------------------------------------------------------------}
+[ ASYNCHRONOUS, EXTERNAL(SYS$WAITFR) ]
+FUNCTION SYS$waitfr (%IMMED   efn    : integer := 0) : INTEGER;
+EXTERN;
+{-----------------------------------------------------------------------------}
+[ ASYNCHRONOUS, EXTERNAL ]
+
+
+VERV80.PAS;1                  Page  20
+
+FUNCTION SYS$dalloc (%STDESCR devnam : PACKED ARRAY [l1..u1 : integer] OF char;
+                     %IMMED   x1 : integer := 0) : integer;
+EXTERN;
+{-----------------------------------------------------------------------------}
+BEGIN
+open (vfile,'VERV80.PLT',old,ERROR:=CONTINUE);
+IF status (vfile) = 0
+ THEN
+  BEGIN
+  reset (vfile);
+  stat := SYS$alloc (devnam,,,);
+  IF stat <> 1
+   THEN writeln ('Unable to allocate Versatec , E= ',stat:8)
+   ELSE
+    BEGIN
+    SYS$assign (devnam,ichan,,);
+    IF stat <> 1
+     THEN writeln ('Unable to assign Versatec , E= ',stat:8)
+     ELSE
+      BEGIN
+      FOR i := 1 TO 264 DO v[i] := chr(0);
+      FOR i := 1 TO 100 DO
+         BEGIN
+         SYS$qio (1,ichan,IO$_PLOTMODE,,,,v,264,,,,);
+         SYS$waitfr(1);
+         END;
+      WHILE NOT eof(vfile) DO
+         BEGIN
+         read (vfile,v);
+         SYS$qio (1,ichan,IO$_PLOTMODE,,,,v,264,,,,);
+         SYS$waitfr(1);
+         END;
+      close (vfile,DISPOSITION:=DELETE);
+      SYS$qio (1,ichan,IO$_WRITEVBLK,,,,chr(12),1,,,,);
+      SYS$waitfr(1);
+      SYS$qio (1,ichan,IO$_WRITEVBLK,,,,chr(12),1,,,,);
+      SYS$waitfr(1);
+      stat := SYS$dalloc (devnam,);
+      END;
+    END;
+  END;
+END.
+
+
+
+
+
+
+
+
+
+
+
+VERV80.PAS;1                  Page  21
+
+[ INHERIT ('QLIBHOME:IO') ]
+PROGRAM vtt;
+BEGIN
+clearscreen;
+END.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+VTT.PAS;2                     Page  22
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            Page  23
+

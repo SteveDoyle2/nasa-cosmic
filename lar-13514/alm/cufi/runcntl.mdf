@@ -1,0 +1,198 @@
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+C
+C   RUNCNTL - Definitions for the Runtime Control Menu of CARE3MENU
+C
+C   VERSION:  1.1
+C   AUTHOR:  A. Roberts; Tesseract Systems, Inc.
+C   CREATION DATE:  05/29/83
+C   LAST REVISION DATE:  07/23/83
+C   LAST REVISED BY:  A. Roberts
+C
+C FUNCTION: Defintions and declarations for CARE3MENU command level
+C		menu.
+C
+C USEAGE:  included in CARE3MENU
+C
+C ARGUMENTS:  NA
+C
+C ERRORS:   NA
+C
+C NOTES:  Written in VAX/VMS FORTRAN.  This menu has default values,
+C		so it uses a duplicate set of tables to contain
+C		defaults.  Thus DEF tables should be copied to
+C		the active tables on subsequent inputs.  This
+C		file also contains range checking constants for
+C		menu items.
+C
+C PROCESS:  NA
+C
+C REVISION HISTORY:  0.0 - Created on 05/29/83 by A. Roberts;
+C				Tesseract Systems, Inc.
+C					------
+C		     1.0 - First release.  06/08/83, A. Roberts
+C					------
+C		     1.1 - Changes to menu and default values.
+C				07/23/83, A. Roberts
+C					------
+C		     1.2 - Added QPTRNC parameter. 02/14/84 J.Pierce
+C					------
+C		     1.3 - Added NPSBRN and CKDATA parameter, and changed
+C			   data type of TS from integer to character.
+C				19/04/85, s.mcbride <rti>
+C
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
+C
+C Menu parameters
+C
+	parameter RUN_MITEMS = 8		! Items in menu
+	parameter RUN_H_LOGNAME = 'run'		! Help logical name
+
+	parameter RUN_SDT1 = NO_DAT .or. BOLD	! Special datatype for 
+						! Title
+
+	parameter RUN_MT_PNTR = 2		! Data pointers
+	parameter RUN_TS_PNTR = 3
+	parameter RUN_TB_PNTR = 4
+	parameter RUN_MIN_PNTR = 5
+	parameter RUN_QPTRNC_PNTR = 6
+	parameter RUN_NPSBRN_PNTR = 7
+	parameter RUN_CKDATA_PNTR = 8
+
+	parameter RUN_MT_MIN = 1.0E-37		! Defaults & ranges
+	parameter RUN_MT_DEF = 1.0
+
+	parameter RUN_TS_MIN = '17'
+	parameter RUN_TS_MAX = '64'
+	parameter RUN_TS_DEF = 'LOGARITHMIC'
+
+	parameter RUN_TB_DEF = 'HOURS'
+
+	parameter RUN_QPTRNC_MIN = 1.0E-37
+	parameter RUN_QPTRNC_MAX = 1.0
+	parameter RUN_QPTRNC_DEF = 0.01
+
+	parameter RUN_MIN_MIN = 1.0E-37
+	parameter RUN_MIN_MAX = 0.1
+	parameter RUN_MIN_DEF = 1.0E-10
+
+	parameter RUN_NPSBRN_MIN = 1
+	parameter RUN_NPSBRN_MAX = 20
+	parameter RUN_NPSBRN_DEF = 20
+
+	parameter RUN_CKDATA_MIN = 'F'
+	parameter RUN_CKDATA_MAX = 'T'
+	parameter RUN_CKDATA_DEF = 'T'
+
+	parameter RUN_BAD_MT = ' *** Bad Mission Time, Reenter *** '
+	parameter RUN_BAD_TS = ' *** Invalid Integration Steps, Reenter *** '
+	parameter RUN_BAD_TB = ' *** Bad Timebase Scale, Reenter *** '
+	parameter RUN_BAD_MIN = '*** Invalid Cut Truncation, Reenter *** '
+	parameter RUN_BAD_QPTRNC = '*** Invalid QPTRNC Value, Reenter *** '
+	parameter RUN_BAD_NPSBRN='*** Invalid NPSBRN Value, 1<=NPSBRN<=20 ***'
+	parameter RUN_BAD_CKDATA = '*** Invalid CKDATA Value, (T/F) ***'
+
+	parameter RUN_TCODE1 = 1		! Lookup table codes
+	parameter RUN_TCODE2 = 2
+	parameter RUN_TCODE3 = 3
+	parameter RUN_TCODE4 = 4
+
+C
+C Menu tables
+C
+	character*(MAX_STRING) run_labs(RUN_MITEMS)	! Item labels
+	integer*4 run_lpos(2,RUN_MITEMS)		! Item Positions
+	integer*4 run_dtype(RUN_MITEMS)			! Item Datatypes
+	integer*4 run_idat(RUN_MITEMS)			! INTEGER Data
+	real*4 run_rdat(RUN_MITEMS)			! REAL Data
+	character*(MAX_STRING) run_sdat(RUN_MITEMS)	! STRING Data
+
+C
+C Default restore tables
+C
+	integer*4 run_idat_def(RUN_MITEMS)		! INTEGER Data
+	real*4 run_rdat_def(RUN_MITEMS)			! REAL Data
+	character*(MAX_STRING) run_sdat_def(RUN_MITEMS)	! STRING Data
+
+C
+C Anything in the menu that is hardwired
+C
+	data run_labs /'Runtime Control Options Input',
+	1		'Mission Time:',
+	2	    'Integration Steps (17<=NSTEPS<=64, or "Logarithmic"):',
+	3		'Timebase (Hours, MINutes, Seconds, MILliseconds):',
+	4		'Cut Truncation Value =',
+	5		'QPTRNC Value =',
+	6		'NPSBRN Value =',
+	7		'CKDATA (T/F): '/
+
+	data run_lpos /1,25,
+	1		8,10,			! Mission Time
+	2		9,10,			! Integration Steps
+	3		10,10,			! Timebase
+	4		13,10,			! Cut Truncation
+	5		14,10,			! QPTRNC
+	6		15,10,			! NPSBRN
+	7		16,10/			! CKDATA
+
+	data run_dtype /RUN_SDT1,
+	1			REAL_DAT,	! Mission Time
+	2			STR_DAT,	! Integration Steps
+	3			STR_DAT,	! Timebase
+	4			REAL_DAT,	! Cut Truncation
+	5			REAL_DAT,	! QPTRNC
+	6			INT_DAT,	! NPSBRN
+	7			STR_DAT/	! CKDATA
+
+C
+C Default values.  Coded in the active tables for the first call, and
+C the default follower tables for reload on secondary calls
+C
+	data run_idat /0, 0, 0, 0, 0, 0, RUN_NPSBRN_DEF, 0/
+	data run_idat_def /0, 0, 0, 0, 0, 0, RUN_NPSBRN_DEF, 0/
+
+	data run_rdat /0.0, RUN_MT_DEF, 0.0, 0.0, 
+	1	       RUN_MIN_DEF, RUN_QPTRNC_DEF, 0.0, 0.0/
+	data run_rdat_def /0.0, RUN_MT_DEF, 0.0, 0.0, RUN_MIN_DEF,
+	1		RUN_QPTRNC_DEF, 0.0, 0.0/
+
+	data run_sdat /' ', ' ', RUN_TS_DEF, RUN_TB_DEF, 
+	1		' ', ' ', ' ', RUN_CKDATA_DEF/
+	data run_sdat_def /' ', ' ', RUN_TS_DEF, RUN_TB_DEF,
+	1		' ', ' ', ' ', RUN_CKDATA_DEF/
+
+C
+C Timebase Code Lookup Table Defintions
+C
+C LIB$LOOKUP_KEY is used to determine what timebase code has been entered,
+C and return a numeric code which is used in the model.
+C
+C NOTE:  The keyword lookup table CANNOT be built entirely at
+C		compile time, since the keyword pointer table
+C		must be built with %LOC to point to the 
+C		keywords.  If you add keywords, be sure and
+C		modify the code just before the command menu
+C		call in CARE3MENU !!!
+C
+	parameter RUN_MAX_COMMANDS = 4		! Current maximum commands
+	parameter RUN_MAX_CMDSIZE = 12		! Current keyword max size
+
+	byte run_keywords(RUN_MAX_CMDSIZE + 1, RUN_MAX_COMMANDS)
+						! Keyword storage
+	integer*4 run_keytable(0:RUN_MAX_COMMANDS * 2)
+						! Keyword pointer table
+
+	integer*4 run_clen			! Command string length
+	integer*4 run_status			! Keyword Lookup Return
+	integer*4 run_ccode			! Command code
+
+	data run_keywords /
+	1	5,'H','O','U','R','S',' ',' ',' ',' ',' ',' ',' ',
+	2	7,'M','I','N','U','T','E','S',' ',' ',' ',' ',' ',
+	3	7,'S','E','C','O','N','D','S',' ',' ',' ',' ',' ',
+	4	12,'M','I','L','L','I','S','E','C','O','N','D','S'/
+						! Keywords in storage
+
+C
+C End of Menu Definition
+C

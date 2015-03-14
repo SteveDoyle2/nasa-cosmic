@@ -1,0 +1,14 @@
+  interface;
+  
+  unit piealtd ( alter_display_space );
+
+  USES getparam;
+
+  USES utility;
+
+
+  procedure alter_display_space ( var first : entity );
+
+  begin
+  end;
+

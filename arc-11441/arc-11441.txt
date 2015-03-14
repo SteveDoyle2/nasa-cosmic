@@ -1,0 +1,48 @@
+ A GENERAL ALGORITHM FOR THE CONSTRUCTION OF CONTOUR PLOTS
+
+( NASA Ames Research Center )
+
+     The graphical presentation of experimentally or theoretically gen-
+erated data sets frequently involves the construction of contour plots. A
+general computer algorithm has been developed for the construction of con-
+tour plots. The algorithm provides for efficient and accurate contouring
+with a modular approach which allows flexibility in modifying the algorithm
+for special applications. The algorithm accepts as input data values at a
+set of points irregularly distributed over a plane. The algorithm is based
+on an interpolation scheme in which the points in the plane are connected by
+straight line segments to form a set of triangles. In general, the data is
+smoothed using a least-squares-error fit of the data to a bivariate polyno-
+mial. To construct the contours, interpolation along the edges of the tri-
+angles is performed, using the bivariable polynomial if data smoothing was
+performed. Once the contour points have been located, the contour may be
+drawn.
+
+     This program is written in FORTRAN IV for batch execution and has been
+implemented on an IBM 360 series computer with a central memory requirement
+of approximately 100K of 8-bit bytes. This computer algorithm was devel-
+oped in 1981.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: IBM 360 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 1,161 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: ARC-11441
+
+DOMESTIC - DOCUMENTATION PRICE: $21.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $42.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

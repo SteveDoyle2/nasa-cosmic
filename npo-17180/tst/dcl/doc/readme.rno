@@ -1,0 +1,101 @@
+.left margin 4
+.right margin 70
+.blank 2;Spam (VMS DCL) Distribution Tape
+.break;--------------------------------
+.blank 2;Contents
+.break;--------
+.blank;
+Source Files (list attached)
+.break;spam.olb (object code library)
+.break;spam.exe (executable file)
+.break;makelabel.c (image label insertion/modification program)
+.break;makelabel.exe (executable for above)
+.break;unmakela.c (image label deletion program)
+.break;unmakela.exe (executable for above)
+.break;spam.h (global definition include file)
+.break;plot.h (include file for hardcopy routine)
+.break;com.com (sample command file for compiling)
+.break;link.com (sample command file for relinking)
+.break;spam.rno (Spam manual, runoff format)
+.break;readme.rno (this documentation, runoff format)
+.break;aisa. (sample image data with Spam label)
+.break;spamlib. (laboratory sample data for minerals)
+.blank 2;Tape Format
+.break;-----------
+.break;The tape was created using the VMS Backup utility. The log sheet is
+included and shows the save set file name as well as all the file copies
+which took place. Use Backup to read the files onto disk by
+switching the two arguments on the input line as shown in the log sheet.
+.blank 2;Setting Installation-Dependent Parameters
+.break;-----------------------------------------
+.break;Spam makes use of several installation-dependent parameters, each
+of which is defined in the spam.h include file.
+.blank;
+The first of these is the location of images and the master spectral library.
+To avoid duplication of image files and the master spectral library,
+they are generally kept in a system library whose pathname is given in the
+include file.
+Spam automatically searches the current directory
+first for images, so images may also be kept in user directories, but the
+master library should not, since Spam treats libraries in user directories as
+user libraries.
+.blank;
+The second parameter that may need to be changed is VT240LA50.  If Spam
+will normally be used on VT240 (or other VT125 emulating) terminals and an
+LA50 or compatible printer is attached, this should be set to 1 to enable
+use of the hardcopy command.
+.blank;
+Similarly, the QCR parameter should be set to 1 if a quick color recorder
+is available for the photo command.  Otherwise it should  be 0.
+.blank;
+See the spam.h include file for more information on these and other
+definitions which may be changed.
+.blank 2;Configuring Display Device and OS Interface Routines
+.break;----------------------------------------------------
+.break;The next step in the installation is making sure Spam is prepared to
+handle your display devices.  If you use a Raster Technologies Model One/25,
+Spam should work as distributed without any changes.  Otherwise, the virtual
+display routines in vdi.c must be rewritten for your particular display
+device; the existing Rastertech code may be used as an example.
+.blank;
+Similarly, Spam accesses the operating system through a set of routines
+defined in vos.c.  If your operating system is VMS and you're running Spam
+directly under DCL, the distributed
+routines should work without changes.  Otherwise, the virtual OS routines
+will need to be rewritten using the distributed code as an example.
+(Vos routines compatible with TAE/VICAR2 and UNIX are available
+separately.)
+.blank;
+Neither of these tasks is very difficult at all given a programmer familiar
+with the display device and basic operating system usage.  Spam has been
+designed to make the integration into a variety of environments as easy as
+possible.
+.blank 2;Installation
+.break;------------
+.break;Once spam.h, vdi.c, and vos.c have been modified for your installation,
+Spam may be built by typing
+"@com".  The Makelabel and Unmakela utilities will be made at the same time.
+.blank 2;Running Spam
+.break;------------
+.break;Type "r spam".
+After the Spam prompt READY appears on your terminal, load an image using
+the "get" command (explained in the Spam command manual). Now you are
+ready to experiment with the other commands listed in the manual.
+.page;What to do when a source module has been modified
+.break;-------------------------------------------------
+.list
+.break.list element;Compile the file to produce its object code.
+.break.list element;Replace the existing object module in spam.olb using
+the VMS Library utility.
+.break.list element;Relink libraries by typing "@link".
+.end list
+.blank 2;What to do when a new routine is written
+.break;----------------------------------------
+.list
+.break.list element;Add the new routine headings in the definition portion
+of main.c.
+.break.list element;Compile it to produce its object code.
+.break.list element;Insert the object code in the spam.olb library using the
+VMS Library utility.
+.break.list element;Relink libraries by typing "@link".
+.end list

@@ -1,0 +1,94 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STARLETQ',
+               'QLIBHOME:STANDARD',
+               'QLIBHOME:IO',
+               'QLIBHOME:STRING',
+               'QLIBHOME:FIG',
+               'QLIBHOME:TERM_VAX'),
+  ENVIRONMENT ('QLIBHOME:NONE.TEN') ]
+MODULE term_NONE (nonefile);
+[ HIDDEN ] VAR
+   nonefile : text;
+{=============================================================================}
+{-- PROCEDURES FOR TERMINAL TYPE NONE ----------------------------------------}
+{=============================================================================}
+[ GLOBAL ]
+FUNCTION termname_NONE (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0: termname_NONE := '1';
+   1: termname_NONE := 'NONE    ';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE colorsetup_NONE;
+BEGIN
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE executecom_NONE;
+BEGIN
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE writeterm_NONE (str : VARYING [l2] OF char);
+BEGIN
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE readterm_NONE (VAR outstr : VARYING [l2] OF char);  
+BEGIN
+readln (nonefile,outstr);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screenerase_NONE;
+BEGIN
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screencopy_NONE;
+BEGIN
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE gin_NONE (VAR key : char;  VAR ipt : ipoint;  color : color_type);
+VAR
+   line,s : anystring;
+   p      : parse_type;
+BEGIN
+readln (nonefile,line);
+startparse (p,line);
+s := parse (p,' ');
+IF s <> '' THEN key := s[1] ELSE key := ' ';
+s := parse (p,' ');
+ipt.ix := iofstr (s);
+s := parse (p,' ');
+ipt.iy := iofstr (s);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+FUNCTION readmenu_NONE (default : char;  toplevel : boolean;
+   helpprefix : anystring) : command_type;
+VAR
+   st : anystring;
+BEGIN
+readln (nonefile,st);
+readmenu_NONE := st;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE termconfig_NONE (configcontrol : configcontrol_type);
+BEGIN
+CASE configcontrol OF
+   CON:  BEGIN
+         open (nonefile,'SYS$INPUT');
+         reset (nonefile);
+         END;
+   QUE:  ;
+   REP:  ;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+END.

@@ -1,0 +1,12 @@
+;	CALL POKE (IADDR, IBYTE)
+; C Where IADDR is the memory address to poke, and IBYTE
+; C  is a BYTE value to be poked.
+;
+	.TITLE	POKE
+
+POKE::
+	.WORD	^M<R4>
+        MOVL    @4(AP),R4
+	MOVB	@8(AP),(R4)
+	RET
+	.END

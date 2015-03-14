@@ -1,0 +1,52 @@
+ PROPULSION SIZING PROGRAM
+
+( McDonnell Douglas Corp. )
+
+     This program was written to evaluate and define optimum design parame-
+ters and size of a low pressure auxiliary propulsion system (APS). The APS
+will provide attitude and translational control, using gaseous hydrogen
+and oxygen propellants for both the booster and orbiter elements of a NASA
+Space Shuttle Vehicle.
+
+     The program evaluates, for various space shuttle performance require-
+ments, the optimum subsystem design parameters such as engine chamber pres-
+sure, mixture ratio, expansion ratio, and component/subsystem weight and
+size. The APS design point, sensitivities to design parameters, and mis-
+sion requirements can be obtained quickly with the program.
+
+     The documentation consists of two volumes. Volume I contains a com-
+plete technical description of the APS including a description of subsystem
+operation; subsystem/assembly design descriptions; delineation of the en-
+gineering analysis equations, including substantiation of data; and sample
+cases showing program input/output. Volume II contains a program descrip-
+tion and internal program nomenclature including a description of variable
+names and a detailed flow chart.
+
+     The program could be revised to evaluate and optimize oxygen and hydro-
+gen subsystem concepts for fuel cell and environmental control on space ve-
+hicles.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC 6000 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 1,648 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: MSC-14016
+
+DOMESTIC - DOCUMENTATION PRICE: $27.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $54.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

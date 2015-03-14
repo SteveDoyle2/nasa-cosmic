@@ -1,0 +1,140 @@
+      SUBROUTINE QUIKVIS2F(IERR,IEND)
+      IMPLICIT REAL*8 (A-H,O-Z)
+C
+C THIS ROUTINE IS PART OF THE QUIKVIS PROGRAM.  IT IS THE ROUTINE BY
+C WHICH THE USER SETS THE OUTPUT OPTIONS.
+C
+C VARIABLE DIM TYPE I/O DESCRIPTION
+C -------- --- ---- --- -----------
+C
+C IERR      1   I*4  O  ERROR RETURN FLAG
+C                       =0, NO ERRORS.
+C                       = OTHERWISE, ERROR PRESENT.
+C
+C IEND      1   I*4  O  END-FILE FLAG
+C                       =0, NO END-FILE ENCOUNTERED DURING USER INPUT.
+C                       =1, END-FILE ENCOUNTERED.
+C
+C***********************************************************************
+C
+C BY C PETRUZZO/GFSC/742.   2/86.
+C       MODIFIED....  9/86. CJP. CHANGED THE FORMATS OF THE PROMPT
+C                                MESSAGE AND USER INPUT TO REFLECT NEWLY
+C                                ADDED DETAIL DATA FILE OPTION.
+C       MODIFIED....  3/87. CJP. MODS FOR LEVDETFILE VARIABLE AND ITS
+C                                PROMPT MESSAGE.
+C
+C***********************************************************************
+C
+      INCLUDE 'QUIKVIS.INC'
+C
+      CHARACTER*1 CHDUM
+      LOGICAL L4DUM
+C
+      IERR = 0
+      IEND = 1  ! WILL BE RESET TO ZERO IF READ IS DONE OK
+C
+C
+      CALL QUIKVIS999(-1,R8DATA,I4DATA,L4DATA)
+C
+C
+C ***********************************************
+C *  OUTPUT OPTIONS FOR INDIVIDUAL-TARGET RUNS  *
+C ***********************************************
+C
+C
+      WRITE(LUPROMPT,6756) '6'
+C
+C FOR NON-SURVEY RUNS, PROMPT FOR AND READ PARAMETERS APPROPRIATE FOR
+C RUNS WHERE INDIVIDUAL TARGETS ARE BEING PROCESSED.
+C
+      IF(.NOT.DOSURVEY) THEN
+        WRITE(LUPROMPT,7804) DOSUMMRY,DODETTABLE,DOBARS1,DOBARS2,
+     *          LUDETAIL,LEVDETFILE,
+     *          LUXYPLOT1,DOXYPLOT1,LUXYPLOT2,DOXYPLOT2,TOPRINT,TOPROMPT
+        READ(LUINPUT,*,END=9999)
+     *      DOSUMMRY,DODETTABLE,DOBARS1,DOBARS2,LEVDETFILE,
+     *      DOXYPLOT1,DOXYPLOT2,TOPRINT,TOPROMPT
+        LEVDETFILE = MAX(0,LEVDETFILE)
+        LEVDETFILE = MIN(4,LEVDETFILE)
+        DOXYPLOT = DOXYPLOT1 .OR. DOXYPLOT2
+        DODETAIL = DODETTABLE .OR. LEVDETFILE.NE.0 .OR.
+     *                 DOBARS1 .OR. DOBARS2
+        END IF
+C
+C FOR SURVEY RUNS, DO A DUMMY READ BECAUSE THE ABOVE PARAMETERS ARE USED
+C ONLY IN NON-SURVEY RUNS.
+C
+      IF(DOSURVEY) THEN
+        WRITE(LUPROMPT,7805)
+        READ(LUINPUT,*,END=9999) (L4DUM,I=1,4),K5,(L4DUM,I=6,9)
+        END IF
+C
+C
+C ****************************************
+C *  OUTPUT OPTIONS FOR SKY SURVEY RUNS  *
+C ****************************************
+C
+C
+      WRITE(LUPROMPT,6756) '7'
+C
+C FOR SURVEY RUNS, READ PARAMETERS APPROPRIATE FOR SURVEY RUNS.
+C
+      IF(DOSURVEY) THEN
+        WRITE(LUPROMPT,8804) KSVYFREQ,KSVYOUT1,KSVYOUT2
+        READ(LUINPUT,*,END=9999) KSVYFREQ,KSVYOUT1,KSVYOUT2
+        IF(KSVYFREQ.LE.0) KSVYFREQ = 9999
+        END IF
+C
+C
+C FOR NON-SURVEY RUNS, DO A DUMMY READ BECAUSE ABOVE PARAMETERS ARE USED
+C ONLY IN SURVEY RUNS.
+C
+      IF(.NOT.DOSURVEY) THEN
+        WRITE(LUPROMPT,7805)
+        READ(LUINPUT,*,END=9999) (KDUM,I=1,3)
+        END IF
+C
+      IEND = 0
+C
+ 9999 CONTINUE
+C
+C WRAP UP. STORE DATA IN QUIKVIS999 ARRAYS FOR RETRIEVAL ELSEWHERE.
+C
+      CALL QUIKVIS999(1,R8DATA,I4DATA,L4DATA)
+C
+      RETURN
+ 6756 FORMAT(//,
+     *   ' ***************** USER GUIDE TABLE ',A,' *****************'/)
+ 7804 FORMAT(//,
+     *    ' THIS RUN PROCESSES INDIVIDUAL TARGET LOCATIONS.'//,
+     *    '   SET OUTPUT OPTIONS.  DEFAULTS ARE --'//,
+     *    '     SUMMARY OUTPUT......................',L2/,
+     *    '     DETAIL OUTPUT:'/,
+     *    '       MEAN ANOMALY TABLE................',L3/,
+     *    '       BARS: AVAIL(EACH REQMT)...........',L3/,
+     *    '       BARS: AVAIL(COMPOSITE REQMT)......',L3/,
+     *    '       DATA FILE GENERATION(UNIT ',I2,').....',I3/,
+     *    '          0 = OFF'/,
+     *    '          1 = MIN DATA = GNTD AVAILABILITY FOR EACH DATE',
+     *       '(COMPOSITE, ALL NODES)'/,
+     *    '          2 = 1 + GNTD OK-NESS FOR EACH OBS REQMT',
+     *       '(COMPOSITE, ALL NODES)'/,
+     *    '          3 = 2 + AVAILABILITY FOR INDIVIDUAL RAANS'/,
+     *    '          4 = MAX DATA = 3 + OK-NESS FOR EACH OBS REQMT ',
+     *       'FOR EACH NODE'/,
+     *    '     GENERATE XYPLOT FILE:',/,
+     *    '       DUR -VS- RAAN (UNIT ',I2,')...........',L3/,
+     *    '       MIN/MAX DUR -VS-DATE (UNIT ',I2,')....',L3/,
+     *    '     PUT RESULTS ON PRINT UNIT...........',L2/,
+     *    '     PUT RESULTS ON PROMPT UNIT..........',L2//,
+     *    ' ENTER > ',$)
+ 7805 FORMAT(//,' DUMMY READ. ENTER SLASH(/).  > ',$)
+ 8804 FORMAT(//,
+     *  ' THE SKY SURVEY OPTION IS ON.'//,
+     *  '   SET CONTROLS.  DEFAULTS ARE --'//,
+     *  '     OUTPUT FREQUENCY(NUM TIME STEPS BETWEEN OUTPUT)....',I4/,
+     *  '     VISIB TIME FLAG (1=CURR,2=CUMM,ELSE=BOTH)..........',I4/,
+     *  '     FORMAT FLAG (1=GRID,2=MAP,ELSE=BOTH)...............',I4//,
+     *  ' ENTER > ',$)
+      END

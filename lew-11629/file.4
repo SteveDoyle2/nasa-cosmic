@@ -1,0 +1,86 @@
+$IBJOB
+
+$IBFTC SATPRP
+
+      COMMON/PROPTY/KU,   DL,DV,HL,HV,S,SL,SV,CV,CVL,CVV,CP,CPL,CPV            1
+
+     1,GAMMA,GAMMAL,GAMMAV,C,CL,CVP,MU,MUL,MUV,K,KL,KV,SIGMA,EXCL,             2
+
+     2EXCV,EXCESK                                                              3
+
+      REAL   MU,MUL,MUV,K,KL,KV                                                4
+
+      COMMON/CHECKS/DCH1%1<,DCH2,PCH1,PCH2,PCH3,TCH1,TCH2,TCH3,DST,TST,H       5
+
+     1SCH1,HSCH2                                                               6
+
+      DIMENSION NAM%10<, TSTART%10<                                            7
+
+      DATA NAM/3HCH4,2HN2,2HO2,2HAR,3HCO2,2HNE,2HCO,2HHE,2HF2,2HH2/            8
+
+      DATA TSTART/92.,65.,70.,84.,217.,25.,70.,3.,70.,15./                     9
+
+      DO 1000 I#1,10                                                          10
+
+      WRITE%6,169<                                                            11
+
+      CALL SETUP%NAM%I<<                                                      12
+
+      WRITE%6,101<                                                            13
+
+C                                                                             14
+
+C    TEST SATURATION PROPERTIES                                               15
+
+C                                                                             16
+
+      KU#1                                                                    17
+
+      T#TSTART%I<                                                             18
+
+      DO 100 J#1,50                                                           19
+
+      Z#0.0                                                                   20
+
+      KR#1                                                                    21
+
+      KS#1                                                                    22
+
+      KP#7                                                                    23
+
+      CALL GASP%KS,KP,T,Z,D,H,KR<                                             24
+
+      WRITE%6,168<T,Z                                                         25
+
+      WRITE%6,170< DL,HL,SL,CVL,CPL,GAMMAL,CL,DV,HV,SV,CVV,CPV,GAMMAV,CV      26
+
+     1P                                                                       27
+
+      T#T&5.                                                                  28
+
+      IF %T.GT.TCH2< GO TO 1000                                               29
+
+  100 CONTINUE                                                                30
+
+ 1000 CONTINUE                                                                31
+
+  169 FORMAT   %1H1<                                                          32
+
+  101 FORMAT %    23H0SATURATION PROPERTIES  /1X,16HDENSITY-G/CC     4X,      33
+
+     116HENTHALPY-J/GM    4X,16HENTROPY-J/GM-K   4X,16HCV-J/GM-K              34
+
+     2 4X,16HCP-J/GM-K         4X,16HGAMMA            4X,16HSONIC VEL-CM      35
+
+     3/SEC    <                                                               36
+
+  168 FORMAT % 4H0T # F9.3,1HK,5X,6HPSAT #   F10.4,5HMN/M2    <               37
+
+  170 FORMAT % 1H0,3%E16.8,4X<,3%E14.6,4X<,E14.6 /                            38
+
+     1          1X,3%E16.8,4X<,3%E14.6,4X<,E14.6 <                            39
+
+      STOP                                                                    40
+
+      END                                                                     41
+

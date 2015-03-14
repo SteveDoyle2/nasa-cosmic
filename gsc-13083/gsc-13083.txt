@@ -1,0 +1,70 @@
+ QUIKVIS- CELESTIAL TARGET AVAILABILITY INFORMATION
+
+( NASA Goddard Space Flight Center )
+
+     QUIKVIS computes the times during an Earth orbit when geometric re-
+quirements are satisfied for observing celestial objects. The observed ob-
+jects may be fixed (stars, etc.) or moving (sun, moon, planets). QUIKVIS is
+useful for preflight analysis by those needing information on the avail-
+ability of celestial objects to be observed. Two types of analyses are per-
+formed by QUIKVIS. One is used when specific objects are known, the other
+when targets are unknown and potentially useful regions of the sky must be
+identified. The results are useful in selecting candidate targets, examin-
+ing the effects of observation requirements, and doing gross assessments of
+the effects of the orbit's right ascension of the ascending node (RAAN). The
+results are not appropriate when high accuracy is needed (e.g. for schedul-
+ing actual mission operations).
+
+     The observation duration is calculated as a function of date, orbit
+node, and geometric requirements. The orbit right ascension of the ascend-
+ing node can be varied to account for the effects of an uncertain launch time
+of day. The orbit semimajor axis and inclination are constant throughout
+the run. A circular orbit is assumed, but a simple program modification
+will allow eccentric orbits. The geometric requirements that can be pro-
+cessed are: 1) minimum separation angle between the line of sight to the ob-
+ject and the earth's horizon; 2) minimum separation angle between the line
+of sight to the object and the spacecraft velocity vector; 3) maximum sep-
+aration angle between the line of sight to the object and the zenith direc-
+tion; and 4) presence of the spacecraft in the earth's shadow. The user must
+supply a date or date range, the spacecraft orbit and inclination, up to 700
+observation targets, and any geometric requirements to be met. The primary
+output is the time per orbit that conditions are satisfied, with options for
+sky survey maps, time since a user-specified orbit event, and bar graphs
+illustrating overlapping requirements. The output is printed in visually
+convenient lineprinter form but is also available on data files for use by
+postprocessors such as external XY plotters.
+
+     QUIKVIS is written in FORTRAN 77 for batch or interactive execution and
+has been implemented on a DEC VAX 11/780 operating under VMS with a central
+memory requirement of approximately 500K of 8 bit bytes. QUIKVIS was devel-
+oped in 1986 and revised in 1987.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: FORTRAN 77
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 24,848 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX FILES-11 Format Magnetic Tape
+
+PROGRAM NUMBER: GSC-13083
+
+DOMESTIC - DOCUMENTATION PRICE: $21.00    PROGRAM PRICE: $2500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $42.00   PROGRAM PRICE: $5000.00
+
+
+
+                                        2
+

@@ -1,0 +1,50 @@
+   interface;
+      unit graphpak ( supreal, matrix, recode, minmax,
+		      scale, sum, ticlabel, tic10,
+		      bars, ogive, byte4 );
+
+  USES getparam;
+
+   type
+	 supreal  = super array [1..*] of real;
+	 matrix   = super array [1..*] of ^supreal;
+	 tic10	 = array [1..11] of lstring(6);
+	 byte4	  = array [1..4] of byte;
+
+
+   procedure recode ( code : byte; var a : lstring; var b : real ) ;
+
+
+   procedure minmax(total : byte; var x : supreal;
+		    var max : real; var min : real;
+		    var error : boolean);
+
+   procedure scale(total : byte; var x : supreal;
+		   var y : supinteger; var height : integer;
+		   var z11 : lstring; var error : boolean);
+
+   procedure sum(mode : byte; total : byte; var x : supreal;
+		 var y : supreal; var error : boolean);
+
+   procedure ticlabel(total : byte; var x : supreal; var d : byte;
+		      var y : tic10; var error : boolean);
+
+
+   procedure bars(total: byte; var x: supinteger; n: byte;
+		  var p: byte; color: integer; fill: integer;
+		  xzero, yzero, boxhigh, boxwide : integer;
+		  width4, offset4 : byte4 );
+
+
+   procedure ogive(total : byte; var x : supinteger;
+		   color : integer; ndon,ndoff : integer; offset : integer;
+		   xzero, yzero, interval : integer);
+
+
+
+   begin
+   end;
+
+
+
+

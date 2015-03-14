@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+When pressing the delete in the Graphics Mode of the milestone chart, the
+prompt asks for the date of the symbol to be deleted.  The cursor must be on
+the line that the deletion is to occur, but this can be done before or after
+the delete key is pressed.  Instead of entering a date, the cursor can also be
+used to point at the symbol to be deleted.  If a bar and a triangle are at the
+same place, the triangle will be deleted, not the bar.  To stop the delete
+function once it has begun, press F1(Cancel).
+
+
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

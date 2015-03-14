@@ -1,0 +1,147 @@
+      SUBROUTINE SYMPDS (MAXN,N,A,NRHS,B,IOPT,IFAC,DETERM,ISCALE,P,IERR)
+C 
+C   PURPOSE:
+C      Solve the matrix equation, AX=B, where A is a symmetric positive
+C      definite matrix and B is a matrix of constant vectors.
+C 
+C   REFERENCES:
+C      Wilkinson, J.H.; and Reinsch, C.: Handbook for Automatic Compu-
+C        tation. Volume II - Linear Algebra. Springer-Verlag, 1971.
+C 
+C   Subroutines employed by SYMPDS: None
+C   Subroutines employing SYMPDS: RICNWT
+C 
+      IMPLICIT REAL*8 (A-H,O-Z)
+      DIMENSION A(MAXN,N),B(MAXN,NRHS),P(N)
+C 
+      DATA R1,R2/1,10/
+C 
+C             TEST FOR A SCALAR MATRIX (IF COEFFICIENT MATRIX IS A
+C             SCALAR-- SOLVE  AND COMPUTE DETERMINANT IF DESIRED)
+      IERR = 0
+      NM1 = N-1
+      IF (NM1 .GT. 0) GO TO 20
+C 
+      IF( A(1,1) .LE. 0.0 )  IERR = 1
+      ISCALE = 0
+      DETERM = A(1,1)
+      P(1) = 1.0/A(1,1)
+      DO 10 J=1,NRHS
+      B(1,J) = B(1,J)/DETERM
+   10 CONTINUE
+      RETURN
+C 
+C             TEST TO DETERMINE IF CHOLESKY DECOMPOSITION OF COEFFICIENT
+C             MATRIX IS DESIRED
+   20 IF (IFAC .EQ. 1) GO TO 160
+C 
+C             INITIALIZE DETERMINANT EVALUATION PARAMETERS
+      DETERM=1.0
+      ISCALE=0
+C 
+C              "LOOP" TO PERFORM CHOLESKY DECOMPOSTION ON THE COEF-
+C             FICIENT MATRIX A (I.E. MATRIX A WILL BE DECOMPOSED INTO
+C             THE PRODUCT OF A UNIT LOWER TRIANGULAR MATRIX (L), A
+C             DIAGONAL MATRIX (D), AND THE TRANSPOSE OF L (LTRANSPOSE).)
+C 
+   30 DO 150 I=1,N
+      IM1 = I-1
+C 
+      DO 150 J=1,I
+      X = A(J,I)
+C 
+C             DETERMINE IF ELEMENTS ARE ABOVE OR BELOW THE DIAGONAL
+      IF (I .GT. J) GO TO 110
+C 
+C             USING THE DIAGONAL ELEMENTS OF MATRIX A, THIS SECTION
+C             COMPUTES DIAGONAL MATRIX AND DETERMINES IF MATRIX A IS
+C             SYMMETRIC POSITIVE DEFINITE
+      IF (IM1 .EQ. 0) GO TO 50
+      DO 40 K=1,IM1
+      Y = A(I,K)
+      A(I,K) = Y*P(K)
+      X = X - Y*A(I,K)
+   40 CONTINUE
+C 
+C             TEST IF COEFFICIENT MATRIX IS POSITIVE DEFINITE
+   50 IF( X .LE. 0.0 )  IERR = 1
+C 
+C             COMPUTE INVERSE OF DIAGONAL MATRIX D**-1 = 1/P
+      P(I) = 1.0 / X
+C 
+C             TEST TO SEE IF DETERMINANT IS TO BE EVALUATED
+      IF (IOPT .EQ. 0) GO TO 150
+C 
+C 
+C             SCALE THE DETERMINANT (COMPUTE THE DETERMINANT EVALUATION
+C             PARAMETERS DETERM AND ISCALE)
+      DETERM = DETERM * X
+   60 IF(DABS(DETERM).LT.R1) GO TO 70
+      DETERM = DETERM*R2
+      ISCALE = ISCALE+1
+      GO TO 60
+   70 IF(DABS(DETERM).GT.R2) GO TO 150
+      DETERM = DETERM*R1
+      ISCALE = ISCALE-1
+      GO TO 70
+C 
+C 
+C             USING THE LOWER TRIANGULAR ELEMENTS OF MATRIX A, THIS
+C             SECTION COMPUTES THE UNIT LOWER TRIANGULAR MATRIX
+  110 JM1 = J-1
+      IF (JM1 .EQ. 0) GO TO 140
+      DO 120 K=1,JM1
+      X = X - A(I,K)*A(J,K)
+  120 CONTINUE
+C 
+  140 A(I,J) = X
+C 
+  150 CONTINUE
+C 
+C             SECTION TO APPLY BACK SUBSTITUTION TO SOLVE L*Y = B FOR
+C             UNIT LOWER TRIANGULAR MATRIX AND CONSTANT COLUMN VECTOR B
+C 
+  160 IF( IFAC .EQ. 2 )  RETURN
+      DO 180 I=2,N
+      IM1=I-1
+C 
+      DO 180 J=1,NRHS
+      X = B(I,J)
+C 
+      DO 170 K=1,IM1
+      X = X - A(I,K)*B(K,J)
+  170 CONTINUE
+C 
+      B(I,J) = X
+  180 CONTINUE
+C 
+C             SECTION TO SOLVE (LTRANSROSE)*X = (D**-1)*Y FOR TRANSPOSE
+C             OF UNIT LOWER TRIANGULAR MATRIX AND INVERSE OF DIAGONAL
+C             MATRIX
+C 
+      Y = P(N)
+      DO 190 J=1,NRHS
+      B(N,J) = B(N,J)*Y
+  190 CONTINUE
+C 
+  200 I = NM1+1
+      Y = P(NM1)
+C 
+      DO 220 J=1,NRHS
+      X = B(NM1,J)*Y
+C 
+      DO 210 K=I,N
+      X = X - A(K,NM1)*B(K,J)
+  210 CONTINUE
+C 
+      B(NM1,J) = X
+  220 CONTINUE
+C 
+C 
+C             TEST TO DETERMINE IF SOLUTIONS HAVE BEEN DETERMINED FOR
+C             ALL COLUMN VECTORS
+      NM1 = NM1-1
+      IF (NM1 .GT. 0) GO TO 200
+C 
+      RETURN
+      END

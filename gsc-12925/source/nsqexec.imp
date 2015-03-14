@@ -1,0 +1,382 @@
+{ $INCLUDE : 'compile.inc' }
+{ $INCLUDE : 'getparam.int' }
+{ $INCLUDE : 'vbpas.int' }
+{ $INCLUDE : 'sfpas.int' }
+{ $INCLUDE : 'dialog.int' }
+{ $INCLUDE : 'utility.int' }
+{ $INCLUDE : 'option.int' }
+{ $INCLUDE : 'execute.int' }
+{ $INCLUDE : 'alterl.int' }
+{ $INCLUDE : 'nsqdraw.int' }
+{ $INCLUDE : 'nsqetc.int' }
+{ $INCLUDE : 'nsqexec.int' }
+{ $INCLUDE : 'nsqalts.int' }
+
+implementation of nsqexec;
+
+
+     USES getparam;
+
+     USES vbpas;
+
+     USES sfpas;
+
+     USES dialog;
+
+     USES utility;
+
+     USES option;
+
+     USES execute;
+
+     USES alterl;
+
+     USES nsqetc;
+
+     USES nsqdraw;
+
+     USES nsqalts;
+
+  const
+      prompt_line = 22;
+
+  procedure exit;
+
+  begin
+    saveinfo (first);
+  end;
+
+  procedure enter;
+
+  begin
+    current := first^.up;
+    delete ( current );
+  end;
+
+  procedure redraw;
+
+  begin
+      draw2 (first) ;
+      rtype := 2;
+      reduce ( rtype, color );
+  end;
+
+  procedure sldredraw;
+
+  begin
+      color1  := 3;
+      current := first^.up ;
+      with current^ do begin
+	   funcnum := ( ord(field^[1])-48 )*10 + ord(field^[2]) - 48 ;
+	   form    :=	ord(field^[3])-48 ;
+	   color   :=	ord(field^[4])-48 ;
+	   symbol  :=	ord(field^[5])-48 ;
+      end;
+      delete ( current ) ;
+      boxsizes;
+      redraw ( 1, current, first ) ;
+   end;
+
+(**************************************************************************)
+
+  procedure perform2;
+
+    var
+      helppage	   : word;
+      i,length	   : byte;
+      connectx	   : integer;
+      connecty	   : integer;
+      connectxtext : integer;
+      connectytext : integer;
+      numclines    : byte;
+      buffer	   : lstring(127);
+      t 	   : entity;
+      status	   : mode;
+      n 	   : integer;
+      buf	   : lstring(80);
+
+    procedure what_level ( var current, first : entity );
+
+      var
+	temp : entity;
+
+    begin
+      temp := first;
+      irow:=0;
+      icol:=0;
+     if not ( current^.etype in [1,18] ) then
+       if current^.etype in [2..8,10] then
+	 repeat
+	     temp := temp^.down;
+	     if temp^.etype in [2,6] then [irow:=irow+1;icol:=icol+1;];
+	 until temp=current;
+	 else
+	  begin
+	   i := 0;
+	   icol := 1;
+	   irow := 1;
+	   repeat
+	       temp := temp^.down;
+	       if temp^.etype in [9,11,15,17] then [icol:=icol+1;i:=i+1];
+	       if (irow = icol)and(irow<>1) then icol := icol + 1;
+	       if i = funcnum then [icol:=1;irow:=irow+1;i:=1];
+	   until temp=current;
+	  end;
+    end;
+
+  procedure nsq_upd;
+
+    var
+      i,k : integer;
+
+  begin
+     size := node_data^[current^.etype].character_size;
+     if status = txt then inkey := 36;
+     if status <> fctkey then
+       if rtype < 4 then
+	     if length > 0 then
+	       begin
+		 with current^ do
+		   begin
+		     if buffer.len <> field^.len then
+		       saved := false
+		     else begin
+		       for i := 1 to buffer.len do
+			 if buffer[i] <> field^[i] then saved := false;
+		     end;
+		     k := 0;
+{		     if current^.etype = 1 then k := 1;}
+		     alter_entity_list ( current, buffer, length, k );
+		   end;
+	       end;
+      if inkey = 1 then current_node := 0;
+  end;
+
+  procedure inloop;
+
+    var
+      i : integer;
+      last_node : byte;
+
+    begin
+	last_node  := 0;
+	current_node  := current^.etype;
+	  while not ( inkey in [1,3..5,42] ) do
+	    begin
+	      if (node_data^[last_node].valid_key_set_id=
+		  node_data^[current_node].valid_key_set_id)and
+		 (node_data^[current_node].prtmsg=
+		  node_data^[last_node].prtmsg)and(promptupd=2)and
+		 (inkey in [0,22..28,36]) then
+		promptupd := 3 else last_node := current_node;
+	      inkey := 0;
+	      with current^ do
+		begin
+		  length := field^.len;
+		  buffer.len := length;
+		  for i := 1 to length do buffer[i] := field^[i];
+		end;
+	      with node_data^[current_node] do
+		incom(prompt_line,prtmsg,buf,-1,rtype,character_size,
+		      current^.xtext,current^.ytext,data_type,
+		      input_length,valid_key_set_id,esc,backspace,
+		      cursor_left,cursor_right,ins,del,status,buffer,
+		      length,inkey);
+	      nsq_upd;
+
+	      perform2 (first,current,current_node,inkey);
+	      perform  ( inkey, current, current_node, first );
+	    end;
+    end;
+
+    begin  { perform2 }
+      case inkey of
+
+	41: begin   { text }
+	      alter_screen ( first, current, 0 );
+	      buf := null;
+	      current := first;
+	      current_node := current^.etype;
+	      inloop;
+	      if not (inkey in [3,1,0]) then redraw(1,current,first);
+	      if inkey in [4,5] then inkey := 0;
+	    end;
+	    43 : if current^.etype = 9 then begin
+		   connectx := current^.x;
+		   connecty := current^.y;
+		   connectxtext := current^.xtext;
+		   connectytext := current^.ytext;
+		   buffer[1] := ' ';
+		   if delkey then
+		   with current^ do
+		    begin
+		     there ( xtext, ytext );
+		     write ( buffer[1] );
+		    end;
+		   delete ( current );
+		   current := current^.up;
+		   if form = 1 then
+		     begin
+		       add_node ( current, 17 );
+		       with current^ do
+			 begin
+			   x := connectx - 4;
+			   y := connecty;
+			   xtext := connectxtext;
+			   ytext := connectytext;
+			   copylst('x',field^);
+			   if delkey then
+			   begin
+			   there ( xtext, ytext );
+			   write ( field^[1] );
+			   end;
+			 end;
+		       current := current^.down;
+		   what_level(current,first);
+		  if delkey then
+		  if ((icol<leftnode)or(icol>leftnode+nmids-1)or
+		     (irow<topnode)or(irow>topnode+nlows-1))and
+		     (((icol<>0)and(irow<>0))) then
+		      alter_screen ( first, current, 1 );
+		     end
+		   else
+		    begin
+		     if funcnum < 7 then
+		       begin
+			 add_node ( current, 11 );
+			 numclines := 4;
+		       end
+		      else
+		       begin
+			 add_node ( current, 15 );
+			 numclines := 2;
+		       end;
+		     for i := 1 to numclines do
+		       begin
+			 with current^ do
+			   begin
+			     x:=connectx-(cbwidth div 2)+skeleton^[(10-funcnum)*3+1];
+			     y:=connecty-(cbheight div 2)+skeleton^[(10-funcnum)*3+2]+(i-1)*(skeleton^[(10-funcnum)*3+3]+cletheight);
+			     xtext := connectxtext;
+			     ytext := connectytext+i-1;
+			   end;
+			 current := current^.down;
+			end;
+		     for i := 1 to numclines do
+		       current := current^.up;
+		    end;
+		   current_node := current^.etype;
+		 end;
+	    44 : if current^.etype in [11..17] then begin
+		   case current^.etype of
+		     11 : numclines := 4;
+		     12 : [numclines := 4; current := current^.up;];
+		     13 : [numclines := 4; current := current^.up^.up];
+		     14 : [numclines:=4;current:=current^.up^.up^.up;];
+		     15 : numclines := 2;
+		     16 : [numclines := 2; current := current^.up;];
+		     17 : numclines := 1;
+		     otherwise
+		     end;
+		   connectx := current^.x;
+		   connecty := current^.y;
+		   connectxtext := current^.xtext;
+		   connectytext := current^.ytext;
+		   copylst('            ',buffer);
+		   t := current;
+		   for i := 1 to numclines do
+		    begin
+		    if delkey then
+		    with t^ do
+		      begin
+			 there ( xtext, ytext );
+			 write (buffer:node_data^[etype].input_length);
+		      end;
+		    t := t^.down;
+		    end;
+		   delete ( current );
+		   current := current^.up;
+		   add_node ( current, 9 );
+		   if form = 2 then
+		   with current^ do
+		     begin
+		       x:=connectx+(cbwidth div 2)-skeleton^[(10-funcnum)*3+1];
+		       y:=connecty+(cbheight div 2)-skeleton^[(10-funcnum)*3+2];
+		     end
+		   else
+		     with current^ do
+		       begin
+			 x := connectx + 4;
+			 y := connecty;
+		       end;
+		   with current^ do
+		     begin
+		       xtext := connectxtext;
+		       ytext := connectytext;
+		       copylst(' ',field^);
+		       if delkey then
+		       begin
+		       there ( xtext, ytext );
+		       write ( field^[1] );
+		       end;
+		     end;
+		   current := current^.down;
+		   current_node := current^.etype;
+		   what_level(current,first);
+		  if delkey then
+		  if ((icol<leftnode)or(icol>leftnode+nmids-1)or
+		     (irow<topnode)or(irow>topnode+nlows-1))and
+		     (((icol<>0)and(irow<>0))) then
+		      alter_screen ( first, current, 1 );
+		 end;
+(*	     36 : begin
+		    assign (f,'graph.hlp');
+		    f.trap := true;
+		    f.errs := 0;
+		    reset (f);
+		    if f.errs = 0 then
+		      begin
+			for i :=1 to 15 do
+			  read (f,helppage);
+			help (helppage);
+		      end
+		    else
+		      begin
+			there (0,23);
+			writeln ( 'Graph.hlp not found ... Press any key to continue                              ');
+			get_input (inchar);
+		      end;
+		    close (f);
+		    reduce (rtype,color)
+		  end;*)
+23,25,26,28,36: begin
+	       perform ( inkey, current, current_node, first );
+	       what_level ( current, first );
+		  if ((icol<leftnode)or(icol>leftnode+nmids-1)or
+		     (irow<topnode)or(irow>topnode+nlows-1))and
+		     (((icol<>0)and(irow<>0))or(inkey=36)) then
+		      alter_screen ( first, current, 1 );
+	     end;
+	22: if current <> first then
+	       begin  { move cursor home }
+		     current := first;
+		     irow := 0;
+		     icol := 0;
+		     leftnode := 1;
+		     topnode := 1;
+		     alter_screen( first, current, 1 );
+	       end;
+	27: if current <> first^.up then
+	       begin  { move cursor end }
+		 current := first^.up;
+		 while current^.etype in skipfield do current := current^.up;
+		 what_level ( current, first );
+		 alter_screen ( first, current, 1 );
+	       end;
+	otherwise
+	end;
+     if inkey in [0,22,23,25..28,36] then current_node:=current^.etype;
+    if inkey in [22,23,25..28,36] then inkey := 0;
+    end;
+end.
+

@@ -1,0 +1,35 @@
+sldc_r.hlp
+sldview.hlp
+slddir.hlp
+sldsend.hlp
+sldrec.hlp
+sldplot.hlp
+sldpnt.hlp
+
+cngdef.hlp
+
+The slide show menu is similar to the main menu, but it has unique functions
+for each of the selections.  Due to the differences, descriptions of each of
+the choices from the slide show menu can be recieved here by pressing the
+proper function key.  The CHANGE defaults choice is identical to the main menu,
+and more information about that choice can be obtained by pressing the F9 key.
+
+
+
+
+To obtain help for any of the following subjects,  press the function key next
+to the desired subject.
+
+        F1  CREATE/REVISE a Slide Show
+        F2  VIEW a Chart or Slide Show
+        F3  DIRECTORY of charts
+        F4  SEND a Chart or Slide Show to TELEMAIL
+        F5  RECIEVE a Chart or Slide Show from TELEMAIL
+        F6  PLOT a Chart or Slide Show
+        F7  PRINT a Chart or Slide Show
+        F8  Return to Previous Menu
+        F9  More Help
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

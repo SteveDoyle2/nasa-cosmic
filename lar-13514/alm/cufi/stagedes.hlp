@@ -1,0 +1,67 @@
+	Stage Description Input is the second task in entering a CARE III 
+	model with CARE3MENU.  Stages are the fundamental units of input 
+	into CARE III.  A stage is made up of a	number of identical modules 
+	(e.g. a collection of redundant	CPUs or memories).  The modules 
+	making up a stage are processed using failure models and connection
+	schemes which will be specified later in the input process.
+
+	The Stage Description Input menu is displayed on the screen with 
+	default values for those parameters which have defaults.  To use a 
+	default, merely enter carriage return (RETURN or CR on most 
+	terminals), and the default will be used.  If the stage entered is 
+	correct, the menu will be redrawn with the default values, ready to 
+	enter the next stage.  If the stage is incorrect, a message will 
+	appear briefly on the status line, then the menu will show the values 
+	entered.  The user should correct the bad value(s), leaving the 
+	others defaulted to the first input.
+
+	The stage input process continues until a stage name "END" is
+	entered.
+.page
+	The parameters on this menu should be largely self explaining.
+	The following help will provide the user with allowable
+	limits for each parameter, in case there is any question
+	about them:
+
+	STAGE NAME - A character string with a current maximum length
+		of 20 characters, used to identify the stage in later
+		processing.
+
+	NUMBER OF BEGINNING MODULES IN STAGE - Is the initial number
+		of redundant modules in a stage.  This is a 
+		positive integer, with a maximum value of 70.  This 
+		corresponds to the STAGES namelist variable N. The
+		default value is 1.  
+.page
+	MINIMUM NUMBER OF MODULES FOR STAGE OPERATION - A non-
+		negative integer which specifies the minimum number
+		of modules the stage needs for operation.  This
+		number can be no larger than the beginning number
+		of modules.  The minimum number of modules corresponds
+		to the STAGES namelist variable M.  The default value 
+		is 1.
+.page
+	SET(S) OF MODULES SUBJECT TO CRITICAL PAIR FAILURES - This
+		entry is an integer vector with a size from
+		1 to 5.  The elements of the vector must be 
+		non-negative integers in decending order, with the 
+		largest value being no larger than BEGINNING MODULES 
+		and the smallest being no smaller than MINIMUM MODULES.  
+		The default value (which is not shown since it is 
+		computed by CARE III) is (N, N-1, N-2, ... , M).  
+		This entry is used to assign values for the NOP
+                variable in the	STAGES namelist.  Values should be
+                seperated by commas.
+
+                This vector parameter is used to show how many
+                of the non-failed units of a stage are used at a
+                time.  The remainder of good units are treated
+                as active spares.
+.page
+	CRITICAL FAULT THRESHOLD - Yet another non-negative integer,
+		this entry can have a maximum value of (N - M).
+		This entry is used to assign a value to the LC
+                variable in the STAGES namelist.  This parameter
+                indicates how many units of the particular stage
+                have to fail before the stage is susceptible to
+                critical pair failures.

@@ -1,0 +1,354 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                      IBM Personal Computer
+                Owl-1200 Video Terminal Emulator
+                          User's Manual
+
+
+
+
+                          INTRODUCTION
+
+Thå  IBM-Personaì  Computeò  haó  thå  abilitù  tï  perforí  manù
+operations as a 'stand alone' processor.   Its  features  include
+dual  floppy  disk  drives  and  a   communications   capability.
+These features, along with some software,  give  the  IBM-PC  the
+added ability to perform as a "host processor"  user's  terminal.
+In this case, the Owl-1200.
+
+The Owl-1200 is a simple user terminal with some intelligent cap-
+abilities.  These  capabilities  include  screen  formatting  and 
+block transmission of data.  This unit was chosen since it is one
+of the terminals used to run  Systonetics'  VIS1ON  software  for 
+hierarchical scheduling.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Š
+
+                       PROBLEM EVALUATION
+
+1.1  DEFINITION
+
+Aô  thió facility¬  thå VIS1OÎ softwarå ió á welì useä managemenô 
+tool®   Therå existó á problem¬  however¬ whicè doesn'ô allo÷ alì 
+to access VIS1ON.  This is VIS1ON's harware dependency.
+
+Therå arå three(3© modeló oæ CRT'ó whicè havå thå abilitù tï  ruî 
+VIS1ON.  They are:    OWL-1200
+                      TAB
+                      VT-45
+
+Untiì now¬ á manageò woulä neeä tï havå accesó tï onå oæ theså tï 
+use VIS1ON.
+
+
+
+1.2  METHOD OF SOLUTION
+
+Thå  OWL120°  softwarå ió aî attempô aô givinç á manageò  anotheò 
+inpuô  devicå  tï VIS1ON®   Thå softwarå useó  thå  IBÍ  Personaì 
+Computeò aó thå processoò thaô makeó thå VIS1OÎ softwarå thinë iô 
+is receiving data from an OWL-1200.
+
+Thå  procesó ió basicallù á translatioî oæ OWÌ commandó intï  IBÍ 
+commandó  anä bacë again®   Thå IBM-PC'ó functioî keyó senä codeó 
+that the OWL's function keys send.
+
+Therå arå somå featureó whicè arå implementeä iî hardwarå oî  thå 
+OWL¬  thaô haä tï bå donå iî softwarå oî thå IBM®  Thió slowó thå 
+screeî  outpuô  á bit¬  buô haó nï effecô oî thå datá  integrity®  
+One example is screen formatting (i.e. - protected fields).  
+
+
+.PAŠ
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                           OPERATIONS
+
+2.1  GETTING STARTED
+
+The Owl-1200 emulation software is called OWL1200.  In  order  to
+enable OWL1200, slide the Owl1200 floppy diskette into  the  left
+disk drive slot and push the drive door closed (door must  become
+flush with the drive's front surface).  Now apply  power  to  the 
+monitor and IBM-PC.  The power switch for the IBM-PC is  the  red
+toggle switch on the right side of the IBM-PC box, near the back.
+
+After approximately 25 seconds,  the  system  will  ask  for  the 
+current date with the prompt:
+                 Current date is DDD  MM-DD-YY
+                 Enter new date: _
+
+Then the system will ask for the current time with the prompt:
+                 Current time is  HH:MM:SS.SS
+                 Enter new time: _
+
+Once the time and date are entered, the system is  ready  to  run 
+OWl1200.  When the system prompt ( 'A>' ) appears on the  screen, 
+enter:
+                 A>OWL1200
+
+After the program has been loaded, the screen will clear and  the 
+IBM-PC will operate as if it were an OWL-1200.
+
+
+
+
+
+
+
+
+
+
+
+
+Š
+
+
+
+2.2  OPERATIONS
+
+Physically, the OWL-1200 is not nearly  similar  to  the  IBM-PC.  
+Therefore, some concessions have been made to allow the  user  to 
+invoke all of the capabilities of  an  OWL-1200  through  a  dual 
+screen facility.
+
+The terminal mode is  the  same  as  the  normal  screen  of  the 
+OWL-1200.  The characters may be manipulated just as  if  an  OWL 
+were being used.  The  command  mode  is  used  to  simulate  the 
+presence of the switches on the keyboard of the OWL-1200.
+
+The user may go to command  mode  at  any  time  while  the  host 
+processoò ió idle®   Wheî  thå  useò  enteró  commanä  mode¬  all  
+characters on the CRT screen and the cursor  position  are  saved 
+and rebuilt upon return to terminal mode.
+
+
+
+2.21  TERMINAL MODE
+
+      When OWL1200 is initialized, it is in  terminal  mode.  
+      This is when all functions  and  capabilities  of  the 
+      OWL-1200 are enabled.  The IBM-PC may now be  operated 
+      as if it were an OWL-1200.
+
+      The command set for OWL1200 is identical  to  that  of 
+      the OWL-1200, with the  exception  of  the  OWL-1200's 
+      MULTICODE key.  OWL1200 uses the escape (Esc)  key  as 
+      the MULTICODE key.
+
+      Function keys-
+
+      The OWL-1200 has  16  special  function  keys  on  its 
+      keyboard.  They can be used with the SHIFT key to give 
+      a total of 32 separate functions.  The IBM-PC has only 
+      10 function keys.  These may be  used  in  conjunction 
+      with the SHIFT, CONTROL and ALTERNATE keys foò á totaì 
+      oæ 4° possiblå speciaì  functions®   Therefore¬  TABLE
+      2.1 shows  the  relationship  between  the  OWL-1200's 
+      function keys and the IBM-PC's function keys.
+
+      Disableä keys-
+
+      Somå keyó oî thå IBM-PC'ó keyboard¬ dï noô supporô anù 
+      OWL-120° functionó anä havå consequentlù beeî disableä 
+      bù OWL1200®  Theù arå thå HOMÅ anä ENÄ keys.
+
+
+
+Š
+
+
+
+                    OWL-1200           IBM-PC
+                    --------           ------
+                       F1                F1
+                       F2                F2
+                       F3                F3
+                       F4                F4
+                       F5                F5
+                       F6                F6
+                       F7                F7
+                       F8                F8
+                       F9                F9
+                       F10               F10
+                       F11             CTRL-F1
+                       F12             CTRL-F2
+                       F13             CTRL-F3
+                       F14             CTRL-F4
+                       F15             CTRL-F5
+                       F16             CTRL-F6
+                    SHIFT-F1          SHIFT-F1
+                    SHIFT-F2          SHIFT-F2
+                    SHIFT-F3          SHIFT-F3
+                    SHIFT-F4          SHIFT-F4
+                    SHIFT-F5          SHIFT-F5
+                    SHIFT-F6          SHIFT-F6
+                    SHIFT-F7          SHIFT-F7
+                    SHIFT-F8          SHIFT-F8
+                    SHIFT-F9          SHIFT-F9
+                    SHIFT-F10         SHIFT-F10
+                    SHIFT-F11           ALT-F1
+                    SHIFT-F12           ALT-F2
+                    SHIFT-F13           ALT-F3
+                    SHIFT-F14           ALT-F4
+                    SHIFT-F15           ALT-F5
+                    SHIFT-F16           ALT-F6
+
+                            TABLE 2.1
+
+
+
+
+2.22  COMMAND MODE
+
+      At any time while the host computer is idle, the  user
+      may change some switch settings that  normally  reside 
+      on the keyboard of the OWL-1200.  Since there  are  no 
+      corresponding switches on the IBM-PC,  the  screen  is 
+      used.  In  order  to  enter  command  mode,  hold  the 
+      control key (Ctrl) down, then hit  'F' (CTRL-F).   The 
+      screen shown in FIGURE 2.1 will appear:
+
+Š
+
+
+      
+----------------------------------------------------------------
+|                     IBM Personal Computer                    |
+|               OWL-1200 Emulation - Version 1.0               |
+|                                                              |
+|                                                              |
+|        Flags:                                                |
+|             A - Auto Line Feed            FALSE              |
+|             S - Scroll Enable             TRUE               |
+|             U - Upper Case Characters     FALSE              |
+|             N - New Line                  TRUE               |
+|                                                              |
+|        Commands:                                             |
+|            ^F - Exit Command Menu                            |
+|             I - Initialize program                           |
+|             R - Change Baud Rate                             |
+|             C - Clear the Screen                             |
+|             E - Exit the Program                             |
+|                                                              |
+|                                                              |
+|        Enter a Command: _                                    |
+|                                                              |
+|                                                              |
+|        BAUD RATE=9600                                        |
+----------------------------------------------------------------
+
+                           FIGURE 2.1
+
+
+
+(    In the Commands section, ^F is the same as the CTRL-F.     )
+
+      The upper menu is a list of switches and their current 
+      settings.  By entering the letter corresponding to the 
+      function, the value of that switch will toggle on  and 
+      off.
+
+      The lower menu is a list of commands that  are  unique 
+      to OWL1200.  They are functions that are handy in case 
+      problems arise.
+
+      Commands:
+          ^F - Returns the IBM-PC to terminal mode.   
+           I - Resets  all  switches  to  a  predefined 
+                 initial state and clears  the  screen.
+                 Equivalent to turning the OWL-1200 off 
+                 and the back on.
+           R - Enters a Baud Rate menu shown in  FIGURE
+                 2.2.
+
+
+Š
+
+
+
+----------------------------------------------------------------
+|                                                              |
+|        BAUD RATE:                                            |
+|                                                              |
+|          0)  110                                             |
+|          1)  150                                             |
+|          2)  300                                             |
+|          3)  600                                             |
+|          4) 1200                                             |
+|          5) 2400                                             |
+|          6) 4800                                             |
+|          7) 9600                                             |
+|                                                              |
+|                Select(0-7): _                                |
+----------------------------------------------------------------
+
+                           FIGURE 2.2
+
+
+
+                 Choose any number from 0 to 7, to  set 
+                 the baud rate.  If an illegal value is 
+                 entered,  the  current  baud  rate  is 
+                 maintained.
+           C - Clears the terminal mode screen.
+           E - Equivalent to turning the OWL-1200 off.
+
+
+.paŠ
+
+
+                            INQUIRIES
+
+Any questions about the operation of the OWL-1200 can be answered 
+by the OWL-1200 User's Manual.  
+
+Questions about OWL1200 or the IBM-PC may be directed toward:
+                     G. E. LEE
+                     Boeing Services International, Inc.
+                     Mail Stop FC-92
+                     Cocoa Beach, Florida 32931
+                     (305) 867-7201
+

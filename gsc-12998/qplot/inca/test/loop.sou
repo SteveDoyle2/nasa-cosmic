@@ -1,0 +1,6 @@
+$IF i=0 $THEN J V $ELSE F G S I=5
+1> V L
+x 0 0 
+F G S I=I+1
+$IF I=10 $THEN $GOTO 2 $ELSE $GOTO 1
+2>

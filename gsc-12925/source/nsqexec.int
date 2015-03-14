@@ -1,0 +1,21 @@
+interface;
+  unit nsqexec (perform2,exit,enter,redraw,sldredraw);
+
+  USES utility;
+
+  procedure exit  ( var current, first : entity );
+
+  procedure enter ( var current, first : entity );
+
+  procedure redraw ( code : integer;var current, first : entity );
+
+  procedure sldredraw ( var current, first : entity );
+
+  procedure perform2 (var first        : entity;
+		      var current      : entity;
+		      var current_node : byte;
+		      var inkey        : byte );
+
+  begin
+  end;
+

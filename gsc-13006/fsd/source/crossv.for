@@ -1,0 +1,13 @@
+      SUBROUTINE CROSSV(VI1,VI2,VO)
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      DIMENSION VI1(3),VI2(3),VO(3)
+C
+      VO(1)=VI1(2)*VI2(3)-VI1(3)*VI2(2)
+      VO(2)=VI1(3)*VI2(1)-VI1(1)*VI2(3)
+      VO(3)=VI1(1)*VI2(2)-VI1(2)*VI2(1)
+C
+      RETURN
+C
+      END

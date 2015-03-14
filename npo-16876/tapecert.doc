@@ -1,0 +1,240 @@
+
+TAPECERT.DOC
+07/10/85  S E F
+
+	        Tape Certification Using the TAPECERT Program
+
+The following contains a description of the TAPECERT tape certification program 
+and operator documentation for its use.  A  tape certification program tests 
+the usability of magnetic tape at different densities by writing test patterns 
+and re-reading them. The ability to certify tapes is important in environments 
+that do large amounts of  tape processing.  Many  such  environments  purchase 
+special tape certification machines. The advantage of certification machines is
+that the tape can be certified off-line. One  problem however, is that they 
+cost as much, or more than  a tape-drive but they cannot be used as a 
+tape-drive. A tape certification program is then a cost-effective alternative 
+to an expensive certification machine.
+
+TAPECERT is used to certify tapes at the Caltech Jet Propulsion Laboratory 
+Multi-Mission Image Processing Lab (MIPL).  MIPL has a library of 80,000 tapes 
+plus a large pool of scratch tapes which are continuously re-used. There are 8
+System Industries 1950 tri-density tape drives distributed among 2 DEC VAX 780s 
+running VMS 3.7 and 3 DEC TA78/TU77 dual-density tape drives on  a DEC VAX 8600 
+running VMS 4.2 at MIPL. MIPL performs image processing activities for projects 
+such as: SIR-B, Voyager, VRM and Galileo.
+
+The TAPECERT program functions in the following way: It first writes  64K test 
+pattern blocks to the tape - the maximum block-size is used to minimize the 
+number of inter-record gaps (approximately 2% of the tape will be inter-
+record gap). The tape is then rewound and the test pattern blocks are read back 
+and compared. The user may optionally select: the tape density, the 
+test-pattern to use, the number of retries to allow before an error becomes 
+"hard" and whether to allow "extended inter-record gaps" - VMS will write up to 
+16 IRGs to skip past a bad spot on the tape. In the MIPL environment, if the 
+"Total err=" count is greater than 0 on any certification run, the tape is 
+cleaned and re-certified; then if the error count is still greater than 0 it is 
+removed from use. Errors that occur when writing the last record on the tape 
+however, can be ignored.
+
+The TAPECERT program has been designed so that command procedures can be set up 
+to set defaults for different types of certification runs. Example 1 describes a
+procedure that uses no defaults. Examples 2 and 3 describe command procedures 
+that are currently being used to certify tapes successfully at MIPL for 1600
+and 6250 BPI tapes.
+
+
+Example 1, TAPECERT:
+
+The following example shows a complete tape certification run using the 
+TAPECERT proc. This proc requires the user to specify all options. There are 
+no defaults.
+
+The TAPECERT command procedure is invoked and the user is prompted for: the 
+tape drive, the name of the tape to be certified, the certification test to 
+pattern use, the number of retries to allow before the error becomes a "hard 
+error" and whether to allow extended IRGs.
+
+	$ @TU:TAPECERT
+	TAPE DRIVE: MTA0:
+	ENTER TAPE ID ( 9 CHARS MAX): SCR595
+	  _MTA0: allocated
+	Previous logical name assignment replaced
+	%MOUNT-I-MOUNTED, CERTFY mounted on _MTA0:
+	
+	       Certification Test Patterns
+	   1 - Write "11111111"B bytes "FF"X
+	   2 - Write "00000000"B bytes "00"X
+	   3 - Write "10101010"B bytes "AA"X
+	   4 - Write "01010101"B bytes "55"X
+	   5 - Write "10100101"B bytes "A5"X
+	   6 - Write "11100101"B bytes "E5"X
+	   7 - Cycle 1 thru 6
+	
+	Select TEST_PATTERN: 1
+	RETRIES (D= VMS Default) [D,0-99]: 10
+	ENABLE_EXTENDED_IRG? [Y/N]: N
+	 
+The program displays the options selected before writing the test patterns to 
+tape.
+
+	WRITING Test Patterns:
+	  Tape drive    =  _MTA0:
+	  Retries       =  10
+	  Extended IRG  =  N
+	  Density  =        6250
+	  Pattern  =           1
+
+The program displays error messages and record count information. Current totals
+are displayed every 1000 blocks. Here the program is attempting retries to 
+write block 231. It took a total of 3 retries to write record 231.
+	
+	Attempting to write Blk#   231  Retry count =  1
+	Attempting to write Blk#   231  Retry count =  2
+	Attempting to write Blk#   231  Retry count =  3
+	Attempting to write Blk#   617  Retry count =  1
+	Attempting to write Blk#   617  Retry count =  2
+	Attempting to write Blk#   617  Retry count =  3
+	Attempting to write Blk#   617  Retry count =  4
+	Attempting to write Blk#   617  Retry count =  5
+	Attempting to write Blk#   617  Retry count =  6
+	Attempting to write Blk#   617  Retry count =  7
+	Attempting to write Blk#   617  Retry count =  8
+	Attempting to write Blk#   617  Retry count =  9
+	Attempting to write Blk#   617  Retry count = 10
+
+
+
+If the number of retries exceeds the number allowed, the VMS error message is 
+displayed. Usually this will be a parity error. This is a "hard" error.
+
+	%SYSTEM-F-PARITY, parity error
+	    617 (65534 byte) Pattern 1 Blks,    40.4 MB, 6250 BPI, Total errs= 1
+	   1000 (65534 byte) Pattern 1 Blks,    65.5 MB, 6250 BPI, Total errs= 1
+	Attempting to write Blk#  1001  Retry count =  1
+	Attempting to write Blk#  1001  Retry count =  2
+	Attempting to write Blk#  1001  Retry count =  3
+	Attempting to write Blk#  1010  Retry count =  1
+	Attempting to write Blk#  1723  Retry count =  1
+	Attempting to write Blk#  1996  Retry count =  1
+	Attempting to write Blk#  1996  Retry count =  2
+	Attempting to write Blk#  1996  Retry count =  3
+	Attempting to write Blk#  1996  Retry count =  4
+	Attempting to write Blk#  1996  Retry count =  5
+	Attempting to write Blk#  1996  Retry count =  6
+	Attempting to write Blk#  1996  Retry count =  7
+	Attempting to write Blk#  1996  Retry count =  8
+	Attempting to write Blk#  1996  Retry count =  9
+	Attempting to write Blk#  1996  Retry count = 10
+	%SYSTEM-F-PARITY, parity error
+	   1996 (65534 byte) Pattern 1 Blks,   130.8 MB, 6250 BPI, Total errs= 2
+	   2000 (65534 byte) Pattern 1 Blks,   131.1 MB, 6250 BPI, Total errs= 2
+	   2579 (65534 byte) Pattern 1 Blks,   169.0 MB, 6250 BPI, Total errs= 2
+	 
+An error writing the last record on the tape can be ignored. There may not be 
+enough room left on the tape to write it out completely.
+
+After writing the test patterns to tape, they are then read back and checked 
+for differences. 
+
+	VERIFYING Test Patterns:
+	 
+	Attempting to read Blk#   617  Retry count =  1
+	Attempting to read Blk#   617  Retry count =  2
+	Attempting to read Blk#   617  Retry count =  3
+	Attempting to read Blk#   617  Retry count =  4
+	Attempting to read Blk#   617  Retry count =  5
+	Attempting to read Blk#   617  Retry count =  6
+	Attempting to read Blk#   617  Retry count =  7
+	Attempting to read Blk#   617  Retry count =  8
+	Attempting to read Blk#   617  Retry count =  9
+	Attempting to read Blk#   617  Retry count = 10
+	%SYSTEM-F-PARITY, parity error
+	    617 (65534 byte) Pattern 1 Blks,    40.4 MB, 6250 BPI, Total errs= 3
+
+A Fatal Certification read error indicates that there was a definite difference 
+between the test pattern and what was read back from the tape. Not all hard-
+errors will result in fatal certification read errors.
+
+	Attempting to read Blk#  1996  Retry count =  1
+	Attempting to read Blk#  1996  Retry count =  2
+	Attempting to read Blk#  1996  Retry count =  3
+	Attempting to read Blk#  1996  Retry count =  4
+	Attempting to read Blk#  1996  Retry count =  5
+	Attempting to read Blk#  1996  Retry count =  6
+	Attempting to read Blk#  1996  Retry count =  7
+	Attempting to read Blk#  1996  Retry count =  8
+	Attempting to read Blk#  1996  Retry count =  9
+	Attempting to read Blk#  1996  Retry count = 10
+
+
+
+	%SYSTEM-F-PARITY, parity error
+	Fatal Certification read error on Blk#  1996
+	   1996 (65534 byte) Pattern 1 Blks,   130.8 MB, 6250 BPI, Total errs= 4
+	   2000 (65534 byte) Pattern 1 Blks,   131.1 MB, 6250 BPI, Total errs= 4
+
+At the end of tape, totals and the options selected are printed out.
+
+	END_OF_TAPE Totals:
+	   2579 (65534 byte) Pattern 1 Blks,   169.0 MB, 6250 BPI, Total errs= 4
+	Certification read errors  = 1
+
+	  Tape drive    =  _MTA0:
+	  Retries       =  10
+	  Extended IRG  =  N
+	  Density  =        6250
+	  Pattern  =           1
+        ELAPSED: 00:12:09.72  CPU: 0:00:40.09  BUFIO: 32  DIRIO: 5291  FAULTS: 8
+
+
+Example 2, TCSCRATCH:
+
+This example shows the use of the TCSCRATCH  proc. This proc is  used to 
+certify a scratch tape for use on the MIPL VAXs. The main use of scratch tapes 
+at MIPL is to transfer black-and-white or color images from the VAXs to a 
+stand-alone film recorder system that has only a 1600 BPI tape-drive. The 
+defaults for this proc are: density=1600, test pattern=7, retries=12 and no 
+extended IRGs allowed.
+
+	$ @TU:TCSCRATCH
+	TAPE DRIVE: MTA0:
+	ENTER TAPE ID ( 9 CHARS MAX): SCR595
+		.
+		.
+		.
+
+Example 3, TCUSER:
+
+This example shows the use of the TCUSER proc. This proc is used to certify a 
+user tape for general use on the MIPL VAXs. The defaults are: density=6250, 
+test pattern=5, retries=12 and no extended IRGs allowed.
+
+
+	$ @TU:TCUSER
+	TAPE DRIVE: MTA0:
+	ENTER TAPE ID ( 9 CHARS MAX): SCR595
+		.
+		.
+		.
+
+
+
+			     NOTES and HINTS
+
+
+Clean the tape-drive before certifying tapes.
+
+If you get certification errors on a tape, clean it and then re-certify it.
+A MIPL study has shown that two-thirds of tapes with "hard" errors will be 
+error free after cleaning.
+
+A tape that is error free at 6250 BPI (GCR) may not necessarily be error free
+at 1600 BPI (PE) because of differences in coding formats. Therefore it is 
+recommended that a tape be certified at each density that it will be used.
+
+Errors writing the last record on the tape can be safely ignored. There may not 
+be enough room on the tape to finish writing the last 64K test pattern.
+
+
+
+

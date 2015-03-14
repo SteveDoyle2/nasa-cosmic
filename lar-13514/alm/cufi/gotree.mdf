@@ -1,0 +1,85 @@
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+C
+C   GOTREE - Definitions for the Tree Entry Help Menu of CARE3MENU
+C
+C   VERSION:  0.0
+C   AUTHOR:  A. Roberts; Tesseract Systems, Inc.
+C   CREATION DATE:  05/29/83
+C   LAST REVISION DATE:  ---
+C   LAST REVISED BY:  ---
+C
+C FUNCTION: Defintions and declarations for CARE3MENU command level
+C		menu.
+C
+C USEAGE:  included in CARE3MENU
+C
+C ARGUMENTS:  NA
+C
+C ERRORS:   NA
+C
+C NOTES:  Written in VAX/VMS FORTRAN.
+C
+C PROCESS:  NA
+C
+C REVISION HISTORY:  0.0 - Created on 05/29/83 by A. Roberts;
+C				Tesseract Systems, Inc.
+C
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
+C
+C Menu parameters
+C
+	parameter GTR_MITEMS = 10		! Items in menu
+	parameter GTR_H_LOGNAME = 'gtr'		! Help logical name
+
+	parameter GTR_DATA_PNTR = 10
+
+C
+C Menu tables
+C
+	character*(MAX_STRING) gtr_labs(GTR_MITEMS)	! Item labels
+	integer*4 gtr_lpos(2,GTR_MITEMS)		! Item Positions
+	integer*4 gtr_dtype(GTR_MITEMS)			! Item Datatypes
+	integer*4 gtr_idat(GTR_MITEMS)			! INTEGER Data
+	real*4 gtr_rdat(GTR_MITEMS)			! REAL Data
+	character*(MAX_STRING) gtr_sdat(GTR_MITEMS)	! STRING Data
+
+C
+C Anything in the menu that is hardwired
+C
+	data gtr_labs /'Ready to Begin Failure Configuration Input',
+	1	'The input of failure trees is currently done with scrolling',
+	2	'screens, as opposed to menus.  This allows you to see the',
+	3	'previously typed data for some time.  A disadvantage of the',
+	4	'scrolling input is the lack of online HELP for inputs.  To',
+	5	'offset this problem, this screen menu has been provided.',
+	6	'Enter the help prompt at the question below, and the help',
+	7	'available for tree input will be displayed.  Answer the',
+	8	'question to proceed to the failure tree input.',
+	9	'Continue to Tree Entry (Y or N):'/
+
+	data gtr_lpos /3,19,
+	1		6,10,
+	2		7,10,
+	3		8,10,
+	4		9,10,
+	5		10,10,
+	6		11,10,
+	7		12,10,
+	8		13,10,
+	9		16,24/
+
+	data gtr_dtype /NO_DAT,
+	1			NO_DAT,
+	2			NO_DAT,
+	3			NO_DAT,
+	4			NO_DAT,
+	5			NO_DAT,
+	6			NO_DAT,
+	7			NO_DAT,
+	8			NO_DAT,
+	9			STR_DAT/
+
+C
+C End of Menu Definition
+C

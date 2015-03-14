@@ -1,0 +1,56 @@
+ TRAJEC- NUMERICAL TRACING OF ELECTRON TRAJECTORIES
+
+( SCIENCE APPLICATIONS, INC. )
+
+     The TRAJEC computer program was developed as a tool to aid in the anal-
+ysis and design of various electron imaging systems. TRAJEC can integrate
+the path of a relativistic electron through a region of non-uniform, static
+electromagnetic fields to an accuracy of one micrometer in ten centimeters.
+A fourth-order Runge-Kutta method with error estimation (a Kutta-Merson
+procedure) is used for integration of the motion equations. The force eval-
+uation uses a third-order Legendre interpolation of the electrical poten-
+tial. The program is designed to easily interface with various forms of
+user defined electric potentials and magnetic fields. TRAJEC may be imple-
+mented interactively so that the analyst might freely experiment with com-
+binations of trajectories, thereby gaining insight into the aberrations
+inherent in the imaging system under study. Several methods are provided
+for analyzing the imaging properties of the device under study. The trajec-
+tory of a single electron injection from any point with arbitrary initial
+velocity may be studied. Lines of electrons may be studied to test system
+linear imaging properties. TRAJEC also allows for studies of Monte Carlo
+point sources of electrons to simulate the characteristic emmissive prop-
+erties of photo-cathode materials and their effect on the images produced.
+TRAJEC has been used to evaluate and modify designs for the Digicon image
+tube, an imaging device for use on the NASA Space Telescope.
+
+     The TRAJEC program is written in FORTRAN IV for batch or interactive
+execution and has been implemented on a PDP DEC-10 computer with a central
+memory requirement of approximately 14K of 36 bit words, and on a CDC 6000
+series machine in 37K (octal) of 60 bit words. TRAJEC has also been utilized
+on PDP-11, CYBER 70, and CYBER 170 series machines. TRAJEC was developed in
+1979.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC 6000 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 865 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: GSC-12535
+
+DOMESTIC - DOCUMENTATION PRICE: $16.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $32.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

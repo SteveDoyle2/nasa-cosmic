@@ -1,0 +1,53 @@
+ ESTIMATING PRESSURE SURGES IN CRYOGENIC LIQUID-VAPOR SYSTEMS
+
+( UNIVERSITY OF SOUTHERN CALIFORNIA )
+
+     This mathematical model has been developed for the prediction of pres-
+sure behavior in single- and two-phase cryogenic systems. A transient liq-
+uid flow analysis has been modified to incorporate the behavior of gas bub-
+bles and is used to predict maximum pressure in cryogenic transfer systems
+consisting of complex pipe and valve arrangements under both steady state
+and transient conditions. This simulation has compared favorably with data
+obtained during the transfer of liquid oxygen from ground storage tanks to
+the Shuttle Orbiter's external tanks.
+
+     Within cryogenic liquid transfer systems, vapor cavities can easily
+be formed if a localized reduction in pressure occurs. Any valve opening or
+closing may cause the cavities to form or collapse due to a pressure varia-
+tion. The collapse of an entrapped vapor cavity causes a waterhammer-type
+effect and the creation of high pressure waves, which may damage the piping
+system and associated instrumentation. To predict the magnitude of unde-
+sirable pressure surges, this model uses the method of characteristics and
+basic fluid mechanics equations, taking into account gas bubbles and vapor
+cavities. The program output includes maximum pressure at junctions, the
+pressure head and velocity at upstream and downstream ends, and the length
+of any vapor cavities in the piping system.
+
+     This program is written in FORTRAN 77 for batch execution and has been
+implemented on a DEC VAX series computer with a central memory requirement
+of approximately 105K of 8 bit bytes. This program was developed in 1983.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN 77
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 876 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX FILES-11 Format Magnetic Tape
+
+PROGRAM NUMBER: KSC-11312
+
+DOMESTIC - DOCUMENTATION PRICE: $35.00    PROGRAM PRICE: $400.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $70.00   PROGRAM PRICE: $800.00
+
+
+
+                                        1
+

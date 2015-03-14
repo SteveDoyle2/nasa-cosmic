@@ -1,0 +1,8 @@
+      SUBROUTINE MATVEC(AMAT,BVEC,L,M,CVEC)
+      DOUBLE PRECISION AMAT(L,M),BVEC(M),CVEC(L)
+      DO 1 I=1,L
+      CVEC(I)=0.D0
+      DO 1 J=1,M
+    1 CVEC(I)=CVEC(I)+AMAT(I,J)*BVEC(J)
+      RETURN
+      END

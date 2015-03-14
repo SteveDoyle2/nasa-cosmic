@@ -1,0 +1,52 @@
+ ANALYTICAL COMPARISONS OF ABLATIVE NOZZLE MATERIALS
+
+( GENERAL ELECTRIC CO. )
+
+     This program is designed to analytically predict the ablation perfor-
+mance of rocket nozzle heat protection materials. The program is based on
+the use of nonsymmetrical difference equations that are employed to solve
+systems of complex partial differential equations.
+
+     The program can be used to predict the thermal degradation of a wide va-
+riety of materials exposed to an external source of heat. It can be gener-
+ally adapted to the simulation of processes involving heat and mass trans-
+fer by substituting specific parameters into the basic equations. In the
+kiln drying of lumber, for example, profiles of temperature, humidity, and
+drying time for woods of different types can be simulated to predict minimum
+process cost and loss of material. The program could also be adapted to the
+simulation of the manufacture of ceramics, the casting of large concrete
+structures, and the propagation of forest fires (to determine optimum meth-
+ods of control).
+
+     The program also includes the effects of mass addition on heat trans-
+fer, the calculation of internal gas pressure and internal material
+stresses, and a number of other options for surface or char removal.
+
+     The program has previously been used to compare performance of pheno-
+lic nylon, phenolic graphite, and phenolic refrasil as rocket nozzle heat
+protection materials.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: IBM 7000 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 7,360 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LEW-00240
+
+DOMESTIC - DOCUMENTATION PRICE: $64.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $128.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

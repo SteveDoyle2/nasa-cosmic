@@ -1,0 +1,222 @@
+      SUBROUTINE CTPAKNEED(KEY,KTIME,KPOS,KVEL,KATT,KTOP,ATTSYS,
+     *       KSYS,KORIGIN,LUERR,IERR)
+      IMPLICIT REAL*8 (A-H,O-Z)
+C
+C THIS ROUTINE SIMPLIFIES USE OF THE TOSS COORDINATE TRANSFORMATION
+C PACKAGE, CTPAK.  IN SOME SITUATIONS, CTPAK NEEDS AUXILIARY PARAMETERS
+C SUPPLIED BY THE CALLER.  THE PARAMETERS HAVE ASSOCIATED FLAGS
+C INDICATING WHETHER THE PARAMETER VALUES ARE VALID OR JUST DUMMY
+C VALUES NOT PLANNED TO BE USED BY CTPAK.  THE ASSOCIATED FLAGS ARE
+C KTIME(TIME), KPOS(S/C POSITION), KVEL(S/C VELOCITY), KATT(S/C 
+C ATTITUDE), AND KTOP(TOPOCENTRIC COORDINATE PARAMETERS).  THIS ROUTINE
+C LETS THE CALLER CHECK THE FLAGS FOR CORRECTNESS OR SET THE FLAGS TO
+C INDICATE THE NEED TO SUPPLY VALID PARAMETER VALUES.
+C
+C THERE ARE TWO FUNCTIONS:
+C
+C   1. (KEY=1) BEFORE CALLING CTPAK, A PROGRAM CAN CALL THIS ROUTINE TO
+C      VERIFY THAT THE KTIME, KPOS, KVEL, KATT, AND KTOP VALUES THAT
+C      WILL BE PASSED TO CTPAK ARE OK.
+C
+C   2. (KEY=OTHERWISE) BEFORE CALLING CTPAK, A PROGRAM CAN CALL THIS
+C      ROUTINE TO SET THE KTIME, KPOS, KVEL, KATT, AND KTOP VALUES AND
+C      THEN USE THE RETURNED VALUES TO INDICATE THE NEED TO LOAD THE
+C      TIME, POSITION, VELOCITY, ATTITUDE, AND TOPOCENTRIC ARRAYS
+C      WITH VALID DATA.
+C
+C SINCE CTPAK HAS AN INPUT SYSTEM AND AN OUTPUT SYSTEM, THIS ROUTINE
+C SHOULD BE CALLED TWICE, ONCE FOR CTPAK INPUT SYSTEM ARGUMENTS KSPEC1,
+C KTIME1, KPOS1, KVEL1, KATT1 AND KTOP1, THEN AGAIN FOR OUTPUT ARGUMENTS
+C KSPEC2, KTIME2, KPOS2, KVEL2, KATT2, AND KTOP2. 
+C
+C VARIABLE  DIM  TYPE I/O DESCRIPTION
+C --------  ---  ---- --- -----------
+C
+C KEY        1    I*4  I  FLAG INDICATING WHETHER KTIME, KPOS, KVEL,
+C                         KATT, AND KTOP ARE BEING CHECKED FOR
+C                         CORRECTNESS OR BEING SET TO INDICATE NEED.
+C
+C                         = 1, CHECK FOR CORRECTNESS.
+C                         = OTHERWISE, SET TO INDICATE NEED.
+C                        
+C KTIME      1    I*4  I  (KEY=1) CALLER IS TELLING THIS ROUTINE WHETHER
+C                                 IT WILL INPUT A VALID TIME INTO CTPAK.
+C                                 KTIME=0, NO; ELSE, YES.
+C
+C                      O  (KEY=OTHERWISE) THIS ROUTINE TELLS THE CALLER
+C                                 WHETHER CTPAK NEEDS A VALID TIME.
+C                                 KTIME=0, NO; =1, YES.
+C                    
+C KPOS       1    I*4  I  (KEY=1) CALLER IS TELLING THIS ROUTINE WHETHER
+C                                 IT WILL INPUT A VALID S/C POSITION
+C                                 INTO CTPAK.
+C                                 KPOS=0, NO; ELSE, YES.
+C
+C                      O  (KEY=OTHERWISE) THIS ROUTINE TELLS THE CALLER
+C                                 WHETHER CTPAK NEEDS A VALID S/C POS.
+C                                 KPOS=0, NO; =1, YES.
+C                    
+C KVEL       1    I*4  I  (KEY=1) CALLER IS TELLING THIS ROUTINE WHETHER
+C                                 IT WILL INPUT A VALID S/C VELOCITY
+C                                 INTO CTPAK.
+C                                 KVEL=0, NO; ELSE, YES.
+C
+C                      O  (KEY=OTHERWISE) THIS ROUTINE TELLS THE CALLER
+C                                 WHETHER CTPAK NEEDS A VALID S/C VEL.
+C                                 KVEL=0, NO; =1, YES.
+C                    
+C KATT       1    I*4  I  (KEY=1) CALLER IS TELLING THIS ROUTINE WHETHER
+C                                 IT WILL INPUT A VALID S/C ATTITUDE
+C                                 INTO CTPAK.
+C                                 KATT=0, NO; ELSE, YES.
+C
+C                      O  (KEY=OTHERWISE) THIS ROUTINE TELLS THE CALLER
+C                                 WHETHER CTPAK NEEDS A VALID S/C ATT.
+C                                 KATT=0, NO; =1, YES.
+C                    
+C KTOP       1    I*4  I  (KEY=1) CALLER IS TELLING THIS ROUTINE WHETHER
+C                                 IT WILL INPUT VALID TOPOCENTRIC INFO
+C                                 INTO CTPAK.
+C                                 KTOP=0, NO; ELSE, YES.
+C
+C                      O  (KEY=OTHERWISE) THIS ROUTINE TELLS THE CALLER
+C                                 WHETHER CTPAK NEEDS VALID TOPO INFO.
+C                                 KTOP=0, NO; =1, YES.
+C
+C ATTSYS     1    R*8  I  FLAG INDICATING THE COORDINATE SYSTEM TO WHICH
+C                         S/C ATTITUDE IS REFERENCED. USED ONLY WHEN THE
+C                         KSYS=13(S/C BODY SYSTEM).
+C
+C                         = 1, SYSTEM IS LOCAL ORBITAL.
+C                         = OTHERWISE, SYSTEM IS MEAN OF 1950.0
+C
+C KSYS       1    I*4  I  INTEGER VALUE INDICATING THE ORIENTATION OF
+C                         THE COORDINATE SYSTEM IN WHICH CTPAK WILL
+C                         OUTPUT ITS INFORMATION. SEE CTPAK FOR
+C                         ASSIGNMENTS. VALID RANGE IS 1 THRU 14.
+C
+C KORIGIN    1    I*4  I  INTEGER VALUE INDICATING THE ORIGIN OF
+C                         THE COORDINATE SYSTEM IN WHICH CTPAK WILL
+C                         OUTPUT ITS INFORMATION. SEE CTPAK FOR
+C                         ASSIGNMENTS. VALID RANGE IS 1 THRU 4.
+C
+C LUERR      1    I*4  I  FORTRAN UNIT NUMBER FOR ERROR MESSAGES.
+C                         IF ZERO OR NEGATIVE, NO MESSAGES ARE GIVEN.
+C
+C IERR       1    I*4  O  ERROR RETURN FLAG.
+C
+C                         = 0, NO ERRORS; OTHERWISE, ERROR.
+C
+C                         =  10000. OCCURS FOR KEY=1. KTIME IS INVALID.
+C                         =   2000. OCCURS FOR KEY=1. KPOS IS INVALID.
+C                         =    300. OCCURS FOR KEY=1. KVEL IS INVALID.
+C                         =     40. OCCURS FOR KEY=1. KATT IS INVALID.
+C                         =      5. OCCURS FOR KEY=1. KTOP IS INVALID.
+C                             MULTIPLE ERRORS ARE INDICATED BY SUMMING.
+C                             EX:  IERR=2040 MEANS KPOS AND KATT ERROR.
+C                         =  99999. MAJOR ERROR. KSYS OR KORIGIN BAD.
+C
+C***********************************************************************
+C
+C BY C PETRUZZO. GSFC/742. 8/85
+C        MODIFIED...
+C
+C***********************************************************************
+C 
+C
+      LOGICAL NEED(5),ERRSET(5),OKSYS,OKORGN
+      INTEGER KPARMIN(5)
+C
+      IERR = 0
+C
+C ERROR CHECK. VERIFY COORD SYS IS OK.
+C
+      CALL SYSCHECK(KSYS,IOK1, KORIGIN,IOK2)
+      OKSYS =  IOK1.EQ.1
+      OKORGN = IOK2.EQ.1
+      IF( .NOT.(OKSYS.AND.OKORGN) ) THEN
+        IERR = 99999
+        IF(LUERR.GT.0) THEN
+          WRITE(LUERR,8225)
+          IF(.NOT.OKSYS)  WRITE(LUERR,8226) 'ORIENTATION',KSYS
+          IF(.NOT.OKORGN) WRITE(LUERR,8226) 'ORIGIN',KORIGIN
+          END IF
+        GO TO 9999
+        END IF
+C
+C INITIALIZE INTERNAL FLAGS.
+C
+      KPARMIN(1) = KTIME
+      KPARMIN(2) = KPOS
+      KPARMIN(3) = KVEL
+      KPARMIN(4) = KATT
+      KPARMIN(5) = KTOP
+      KPLANE =  KSYS
+      KORIGIN = KORIGIN
+      DO I=1,5
+        NEED(I) = .FALSE.
+        ERRSET(I) = .FALSE.
+        END DO
+C
+C SET FLAGS INDICATING WHETHER QUANTITIES ARE NEEDED FOR PROCESSING.
+C THE CODE FOR ASSIGNING NEED(I) PARALLELS THE DESCRIPTIONS FOR KTIME,
+C ETC, IN CTPAK.
+C
+      NEED(4) = KPLANE.EQ.13
+      KATTFLG = -1
+      IF(NEED(4)) KATTFLG = JIDNNT(ATTSYS)
+C
+      NEED(5) = (KPLANE.EQ.11)   .OR. 
+     *          (KORIGIN.EQ.4)
+C
+      NEED(2) = (KPLANE.EQ.12)                    .OR. 
+     *          (KPLANE.EQ.13 .AND. KATTFLG.EQ.1) .OR.
+     *          (KPLANE.EQ.14)                    .OR. 
+     *          (KORIGIN.EQ.3)
+C
+      NEED(3) = (KPLANE.EQ.12) .OR. 
+     *          (KPLANE.EQ.13 .AND. KATTFLG.EQ.1) .OR.
+     *          (KPLANE.EQ.14)
+C
+      NEED(1) = (KPLANE.EQ.2)  .OR. (KPLANE.EQ.3)   .OR. 
+     *          (KPLANE.EQ.6)  .OR. (KPLANE.EQ.7)   .OR. 
+     *          (KPLANE.EQ.10) .OR. (KPLANE.EQ.11)  .OR.
+     *          (KORIGIN.EQ.2) .OR. (KORIGIN.EQ.4)
+C
+C
+C
+C IF KEY=1, VERIFY THAT KTIME, KPOS,... ARE OK. WERE LOADED INTO KPARMIN
+C
+      IF(KEY.EQ.1) THEN
+        DO IPARM=1,5
+          IF(NEED(IPARM) .AND. KPARMIN(IPARM).EQ.0) THEN
+            IF(.NOT.ERRSET(IPARM)) THEN
+              ERRSET(IPARM) = .TRUE.
+              IERR = IERR + IPARM * 10**(5-IPARM)
+              END IF
+            END IF
+          END DO
+        END IF
+C
+C IF KEY= NOT 1, LOAD JTIME,.., JTOP INTO KTIME,... KTOP.
+C
+      IF(KEY.NE.1) THEN
+        KTIME = 0
+        KPOS =  0
+        KVEL =  0
+        KATT =  0
+        KTOP =  0
+        IF(NEED(1)) KTIME = 1
+        IF(NEED(2)) KPOS = 1
+        IF(NEED(3)) KVEL = 1
+        IF(NEED(4)) KATT = 1
+        IF(NEED(5)) KTOP = 1
+        END IF
+C
+C
+ 9999 CONTINUE
+      RETURN
+ 8225 FORMAT(/,
+     * ' CTPAKNEED ERROR. INVALID OUTPUT COORDINATE SYSTEM SPECIFIED.')
+ 8226 FORMAT(6X,A,' FLAG=',2I7)
+      END

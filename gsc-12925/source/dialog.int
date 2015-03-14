@@ -1,0 +1,51 @@
+  interface;
+
+  unit dialog ( incom, key_board_status, get_input, prompter1,
+                twobyte, mode, fctkey, txt, mixed, error,
+                escape, promptupd );
+
+  type
+      mode       = ( fctkey, txt, mixed, error );
+      twobyte    = array[1..2] of byte;
+
+  var 
+      escape : boolean;
+      promptupd:integer;
+
+  procedure get_input ( var inchar : twobyte );
+
+  function key_board_status: boolean;
+
+  procedure prompter1 ( mode              : byte;
+                        prompt_line       : integer;
+                        vars prompt1       : lstring;
+                        vars prompt2       : lstring;
+                        reverse           : integer;
+                        rtype             : integer;
+                        data_type         : integer;
+                        valid_key_set_id  : byte );
+
+  procedure incom ( prompt_line      : integer;
+                    vars prompt1     : lstring;
+                    vars prompt2     : lstring;
+                    reverse          : integer;
+                    rtype            : integer;
+                    character_size   : byte;
+                    x0, y0           : integer;
+                    data_type        : byte;
+                    max              : byte;
+                    valid_key_set_id : byte;
+                    esc              : byte;
+                    backspace        : byte;
+                    cursor_left      : byte;
+                    cursor_right     : byte;
+                    ins              : byte;
+                    del              : byte;
+                    var status       : mode;
+                    var buffer       : lstring;
+                    var length       : byte;
+                    var userkey      : byte );
+
+  begin
+  end;
+

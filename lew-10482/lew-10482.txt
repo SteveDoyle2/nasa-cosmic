@@ -1,0 +1,52 @@
+ PLOT3D- DRAWING THREE DIMENSIONAL SURFACES
+
+( NASA Lewis Research Center )
+
+     PLOT3D is a package of programs to draw three-dimensional surfaces of
+the form z = f(x,y). The function f and the boundary values for x and y are
+the input to PLOT3D. The surface thus defined may be drawn after arbitrary
+rotations.
+
+     However, it is designed to draw only functions in rectangular coordi-
+nates expressed explicitly in the above form. It cannot, for example, draw
+a sphere. Output is by off-line incremental plotter or online microfilm
+recorder. This package, unlike other packages, will plot any function of
+the form z = f(x,y) and portrays continuous and bounded functions of two in-
+dependent variables. With curve fitting; however, it can draw experimental
+data and pictures which cannot be expressed in the above form.
+
+     The method used is division into a uniform rectangular grid of the
+given x and y ranges. The values of the supplied function at the grid points
+(x, y) are calculated and stored; this defines the surface. The surface is
+portrayed by connecting successive (y,z) points with straight-line seg-
+ments for each x value on the grid and, in turn, connecting successive (x,z)
+points for each fixed y value on the grid. These lines are then projected by
+parallel projection onto the fixed yz-plane for plotting.
+
+     This program has been implemented on the IBM 360/67 with on-line CDC
+microfilm recorder.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: IBM 360 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 355 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LEW-10482
+
+DOMESTIC - DOCUMENTATION PRICE: $13.00    PROGRAM PRICE: $300.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $26.00   PROGRAM PRICE: $600.00
+
+
+
+                                        1
+

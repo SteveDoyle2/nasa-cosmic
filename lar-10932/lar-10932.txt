@@ -1,0 +1,50 @@
+ MISLIFT- AERODYNAMIC LIFT ON WING-BODY COMBINATIONS AT SMALL ANGLES OF
+ATTACK IN SUPERSONIC FLOW
+
+( NASA Langley Research Center )
+
+     Two separate and distinct theories are incorporated in this computer
+program to estimate the lift-induced pressures existent on a wing-body com-
+bination. These are (1) the second-order shock-expansion theory, which is
+used to obtain the lifting pressures on the body alone at small angles of at-
+tack, and (2) the linear-theory integral equations, which is used to evalu-
+ate the lifting pressures induced by the wing.
+
+     These equations relate the local surface slope at a point on the lift-
+ing surface to the pressure differential at the point and the influence of
+the pressures upstream of the point. The numerical solution of these equa-
+tions is effected by treating the wing-planform as a composite of elemental
+rectangles and applying summation techniques to satisfy the necessary in-
+tegral relations.
+
+     Most of the input required by this program is involved with the de-
+scription of the missile planform geometry. The output consists of the com-
+puted value of the lifting pressure slope (the differential pressure coef-
+ficient per degree angle of attack) for each of the elements in the planform
+array. A force and moment summary is presented for the configuration under
+consideration.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC 6000 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 638 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-10932
+
+DOMESTIC - DOCUMENTATION PRICE: $15.00    PROGRAM PRICE: $200.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $30.00   PROGRAM PRICE: $400.00
+
+
+
+                                        1
+

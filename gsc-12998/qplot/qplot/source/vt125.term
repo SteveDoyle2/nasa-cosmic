@@ -1,0 +1,190 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STANDARD',
+               'QLIBHOME:MATH',
+               'QLIBHOME:STRING',
+               'QLIBHOME:FIG',
+               'QLIBHOME:TERM_VAX',
+               'QLIBHOME:TERM_ANSI',
+               'QLIBHOME:TERM_REGIS'),
+  ENVIRONMENT ('QLIBHOME:VT125.TEN') ]
+MODULE term_VT125;
+[ HIDDEN ] VAR
+   quan          : integer   := 12;
+{=============================================================================}
+{-- PROCEDURES FOR TERMINAL TYPE VT125 ---------------------------------------}
+{=============================================================================}
+[ GLOBAL ]
+FUNCTION termname_VT125 (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0: termname_VT125 := '1';
+   1: termname_VT125 := 'VT125   ';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE colorsetup_VT125;
+BEGIN
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE executecom_VT125;
+BEGIN
+WITH plotitem DO CASE ins OF
+   I_col:  bufferempty_REGIS;
+   I_pan:  ;
+   I_clo:  ;
+   I_pos:  BEGIN
+           bufferempty_REGIS;
+           env.pos.ix := ix;
+           env.pos.iy := iy;
+           END;
+   I_dra:  draw_REGIS (ix,iy,bufferempty_REGIS);
+   I_siz:  ;
+   I_mar:  ;
+   I_pri:  IF env.visible AND (st <> '') 
+            THEN 
+             BEGIN
+             bufferempty_REGIS;
+             env.buffer := 'P' + strofpos_REGIS + 'T"' + st + '"';
+             bufferempty_REGIS;
+             END;
+   I_emp:  bufferempty_REGIS;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE writeterm_VT125 (str : VARYING [l2] OF char);
+BEGIN
+IF env.mode = M_PLOT
+ THEN
+  BEGIN
+  env.mode := M_DUAL;
+  qiowwrite (ESC + '\');
+  END;
+qiowwritevirtual (str);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE readterm_VT125 (VAR outstr : VARYING [l2] OF char);  
+BEGIN
+readterm_vax (outstr);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screenerase_VT125;
+BEGIN
+screenerase_REGIS;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screencopy_VT125;
+BEGIN
+screencopy_REGIS;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE gin_VT125 (VAR key : char;  VAR ipt : ipoint;  color : color_type);
+VAR
+   tbuffer,posstr,funcstr : VARYING [80] OF char;
+{----------------------------------}
+FUNCTION readtoletter : anystring;
+VAR
+  tbuff,tstr : VARYING [8] OF CHAR;
+BEGIN
+tbuff := ' ';
+qiowreadnoecho(tbuff,1);
+tstr := tbuff;
+IF tstr[1] = ESC 
+ THEN 
+  REPEAT
+    tbuff := ' ';
+    qiowreadnoecho(tbuff,1);
+    tstr := tstr + tbuff[1];
+  UNTIL ((tbuff[1] IN ['A'..'Z','a'..'z',ESC]) OR (length(tstr) > 10));
+readtoletter := tstr;
+END;
+{----------------------------------}
+BEGIN
+IF env.mode IN [M_TEXT,M_DUAL]
+ THEN qiowwrite (ESC + 'Pp');
+env.mode := M_PLOT;
+
+{ PUT CURSOR IN SAVED POSITION; AUTO-REPEAT DISABLED }
+qiowwrite('P' + REGIS_control.ginpos + ESC + '\' + ESC + '[?8l' + ESC + 'Pp'); 
+REPEAT
+   tbuffer := '';
+   qiowreadnoechopurge(tbuffer,0);
+   tbuffer := readtoletter;
+   key := tbuffer[1];
+   IF key = ESC 
+    THEN
+     BEGIN
+     IF (tbuffer = ESC+'[A') THEN qiowwrite ('P[,+' + strofi(quan,2) + ']');
+     IF (tbuffer = ESC+'[B') THEN qiowwrite ('P[,-' + strofi(quan,2) + ']');
+     IF (tbuffer = ESC+'[D') THEN qiowwrite ('P[-' + strofi(quan,2) + ']');
+     IF (tbuffer = ESC+'[C') THEN qiowwrite ('P[+' + strofi(quan,2) + ']');
+     IF (tbuffer = ESC+'O') 
+      THEN
+       BEGIN  
+       funcstr := ' ';
+       qiowreadnoecho(funcstr,1);
+       CASE funcstr[1] OF
+          'P' : qiowwrite (ESC + '\' + ESC + '[2J' + ESC + 'Pp');
+          'Q' : quan := 13 - quan;
+          END;
+       END;
+     END;
+   UNTIL (key <> ESC);
+
+{ LOCK KEYBOARD }
+qiowwrite (ESC + '\' + ESC + '[2h' + ESC + 'Pp'); 
+
+tbuffer := '';
+qiowreadnoechopurge(tbuffer,0);
+posstr := '';
+qiowwrite('R(P(I))');
+{Report graphics cursor position}
+REPEAT
+   tbuffer := ' ';
+   qiowreadnoecho (tbuffer,1);
+   posstr := posstr + tbuffer;
+   UNTIL (tbuffer[1] = ']') OR (length(posstr) > 10);
+{ UNLOCK KEYBOARD }
+qiowwrite (ESC + '\' + ESC + '[2l' + ESC + 'Pp');
+
+REGIS_control.ginpos := posstr;
+ipt := posofstr_REGIS (REGIS_control.ginpos);
+END;
+{-----------------------------------------------------------------------------}
+[GLOBAL]
+FUNCTION readmenu_VT125 (default : char;  toplevel : boolean;
+   helpprefix : anystring) : command_type;
+BEGIN
+readmenu_VT125 := readmenu_ansi (default,toplevel,helpprefix,true);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE termconfig_VT125 (configcontrol : configcontrol_type);
+BEGIN
+CASE configcontrol OF
+   CON:  BEGIN
+         config_REGIS (768,240);
+         qiowwrite (ESC + '>');
+         config.ch.width       := REGIS_control.xresolution * 10;
+         config.ch.height      := REGIS_control.yresolution * 10;
+         config.ch.charspacing := REGIS_control.xresolution * 3;
+         config.ch.linespacing := REGIS_control.yresolution;
+         config.resolution     := imax (REGIS_control.xresolution,
+                                        REGIS_control.yresolution);
+         config.dotsize        := config.resolution;
+         config.starsize       := config.resolution*3;
+         config.ansi364        := true;
+         config.drawblack      := false;
+         END;
+   QUE:  ;
+   REP:  ;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+END.

@@ -1,0 +1,74 @@
+ FLOWCHARTER- A UNIVERSAL STRUCTURED DESIGN DIAGRAMMER
+
+( HIGHER ORDER SOFTWARE, INC. )
+
+     The Universal Structured Design Diagrammer (FLOWCHARTER) was de-
+veloped as a tool for documenting and understanding computer programs.
+FLOWCHARTER is termed universal because it can produce flowcharts and con-
+cordances for any program written in virtually any language. FLOWCHARTER
+is termed a structured design diagrammmer because the generated flowcharts
+are presented in a concise tree-like format appropriate for representing
+the flow of control in a structured program. FLOWCHARTER can be used to pro-
+vide standardized documentation for any type of finished program. It can
+also be used in the development and debugging phase to clearly exhibit the
+structure of a program.
+
+     In order to flow chart a program in a given language, the user must pro-
+vide FLOWCHARTER with a description of the programming language grammar.
+Three sets of rules are needed to describe the grammar. The first set must
+be a list of syntax rules in Backus-Naur Form (BNF). These re-write rules
+allow FLOWCHARTER to do a bottom-up parse of the input program. The next
+set required is a list of sematic rules, in one-to-one correspondence with
+the syntactic rules, which specify how a particular construct is to be dia-
+grammed. Last is a set of concordance rules, again in one-to-one correspon-
+dence with the syntactic rules, which are used to isolate positions where
+identifiers may appear and to classify these identifiers as variables or as
+procedure names. The preparation of this list is a non-trivial task; how-
+ever, the list is only prepared once for each language. A grammar descrip-
+tion for PASCAL is included with the FLOWCHARTER distribution package.
+
+     Once the grammar description has been developed, the user need supply
+only the source code to be diagrammed. FLOWCHARTER automatically produces
+a flow diagram and a concordance. The diagram produced is quite different
+from traditional types of flow charts. The structured design diagram rep-
+resents the main flow of the program in the top-down format, with increas-
+ing levels of detail explicitly indicated. This structured design dia-
+gram approach is particularly appropriate for languages with higher level
+constructs such as case, iterative loops, or logical dependent execution
+blocks.
+
+     The source code for the FLOWCHARTER system is written for the PAS-
+CAL Release 2 compiler, as distributed by the University of Minnesota.
+FLOWCHARTER is intended for batch execution and has been implemented on a
+CDC 6000 series computer with a central memory requirement of approximately
+43K (octal) of 60 bit words. FLOWCHARTER was developed in 1979.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: PASCAL
+
+MACHINE REQUIREMENTS: CDC 6000 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 11,159 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI CDC NOS Internal Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-12548
+
+DOMESTIC - DOCUMENTATION PRICE: $40.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $80.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

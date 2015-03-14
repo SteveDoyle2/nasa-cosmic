@@ -1,0 +1,9 @@
+1 NAMEIO
+
+The NAMEIO and SNAMEIO packages provide a transportable sideset of the non- 
+standard FORTRAN feature, NAMELIST.  Both packages provide name-oriented 
+reading and writing of variables and arrays.  The NAMEIO package generates 
+code that uses COMMON block names to categorize IO.  The SNAMEIO package 
+can be used without knowledge of what COMMONs contain the variables.
+
+For full details, read NAMEIO.DOC and SNAMEIO.DOC.

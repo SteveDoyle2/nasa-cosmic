@@ -1,0 +1,53 @@
+ A FAST POLYNOMIAL TRANSFORM PROGRAM WITH A MODULARIZED STRUCTURE
+
+( Cal Tech/Jet Propulsion Lab. )
+
+     This program utilizes a fast polynomial transformation (FPT) al-
+gorithm applicable to two-dimensional mathematical convolutions. Two-
+dimensional convolution has many applications, particularly in image pro-
+cessing. Two-dimensional cyclic convolutions can be converted to a one-
+dimensional convolution in a polynomial ring. Traditional FPT methods de-
+compose the one-dimensional cyclic polynomial into polynomial convolu-
+tions of different lengths. This program will decompose a cyclic polyno-
+mial into polynomial convolutions of the same length. Thus, only FPTs and
+Fast Fourier Transforms of the same length are required. This modular ap-
+proach can save computational resources. To further enhance its appeal,
+the program is written in the transportable 'C' language.
+
+     The steps in the algorithm are: 1) formulate the modulus reduction
+equations, 2) calculate the polynomial transforms, 3) multiply the trans-
+forms using a generalized fast Fourier transformation, 4) compute the in-
+verse polynomial transforms, and 5) reconstruct the final matrices using
+the Chinese remainder theorem. Input to this program is comprised of the
+row and column dimensions and the initial two matrices. The matrices are
+printed out at all steps, ending with the final reconstruction.
+
+     This program is written in 'C' for batch execution and has been imple-
+mented on the IBM PC series of computers under DOS with a central memory re-
+quirement of approximately 18K of 8 bit bytes. This program was developed
+in 1986.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: C-LANGUAGE
+
+MACHINE REQUIREMENTS: IBM PC SERIES
+
+PROGRAM SIZE: APPROXIMATELY 693 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 5.25 Inch IBM PC DOS Format Diskette
+
+PROGRAM NUMBER: NPO-17030
+
+DOMESTIC - DOCUMENTATION PRICE: $16.00    PROGRAM PRICE: $50.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $32.00   PROGRAM PRICE: $100.00
+
+
+
+                                        1
+

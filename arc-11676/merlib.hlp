@@ -1,0 +1,16 @@
+1 MERLIB
+MERLIB is an object library containing useful subprograms that can be 
+called by FORTRAN programs.  The subprograms are general-purpose utilities
+that have been found to be useful.  It is hoped that the availability of
+these routines will encourage users to not waste time on redevelopment
+of existing capability.  Similarly, it is hoped that users will contribute
+their ideas to the library.
+
+To use MERLIB, link your program as follows:
+     LINK yourprogram,MERLIB/LIB
+
+To find out what is on the library, list the file MERLIN:MERLIB.DOC.
+
+To contribute to the library, get more information, or request that a
+subprogram be developed see your system manager.
+

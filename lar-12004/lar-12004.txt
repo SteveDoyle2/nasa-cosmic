@@ -1,0 +1,50 @@
+ AEROELASTIC DIVERGENCE CHARACTERISTICS OF UNGUIDED, SLENDER BODY, MULTI-
+STAGE LAUNCH VEHICLES
+
+( NASA Langley Research Center )
+
+     The primary function of this computer program is the calculation of the
+divergence dynamic pressure and associated divergence modal character-
+istics of unguided, slender-body, multistage launch vehicles. The diver-
+gence dynamic pressure is obtained as the non-trivial solution to a homoge-
+nous stability equation using matrix recurrence techniques. Provision is
+made for modulating the distributed lift curve coefficient slope function
+and the stiffness function. The program also includes an option for calcu-
+lating a generalized static margin which approximates the degeneration in
+rigid-body static margin due to aeroelasticity effects. Evaluated equa-
+tions are also programmed to allow for the exclusion of the effect of aero-
+dynamic crossflow resulting from vehicle angular velocities if desired.
+Other physical and aerodynamic properties calculated include total mass,
+center of mass, moments of inertia in pitch about the reference station, to-
+tal aerodynamic lift curve slope, static aerodynamic center of pressure,
+rigid body static margin, and short period frequency. Input to the program
+is via the Fortran NAMELIST option with output printed.
+
+     The program is written in CDC Fortran IV (Version 2.3) and has been im-
+plemented on a CDC 6600 computer under the SCOPE 3.2 monitor in central mem-
+ory field lengths less than 57K octal 60 bit words.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC 6000 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 1,551 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-12004
+
+DOMESTIC - DOCUMENTATION PRICE: $24.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $48.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

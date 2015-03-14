@@ -1,0 +1,23 @@
+
+This file contains a Revision History for the LONGLIB graphics library.
+
+Original Release:	March 1, 1985		DG Long
+
+Revision 5.0:		September, 1987		DG Long
+  Extensively revised package to provide near fortran-77 compatibility.
+  Longlib internal Meta-File format changed.  Current version
+   is not compatible with earlier revision.
+  Metafile conversion programs have been rewritten for Metafile
+    compatibility and to provide "stripping" of output plots.
+  GRAY and EASY routines are no longer supported.
+  Many new MASTER routines added to library.
+  Color terminal plotting incorporated.
+  Revised Line typing to provide better device independence.
+  Dropped support of some Selnar terminal types.  Only terminals
+    with Tektronics-type of location specification are now supported.
+    New terminals have been incorporated.
+  Most routines are unchanged.  However, a few have been changed.
+    Please refer to documentation.
+
+Revision 5.1:		March, 1987		DG Long
+  Corrected a number of minor bugs in documentation and code.

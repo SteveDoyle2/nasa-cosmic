@@ -1,0 +1,41 @@
+                            Abstract
+
+
+The program INCA (INteractive Controls Analysis) is primarily
+intended for the analysis and design of feedback control systems.
+Using the interactive graphics capability, the user can quickly
+plot a root locus, frequency response, or time response of either
+a continuous time system or a sampled data system.  The system
+configuration and parameters can be easily changed, allowing the
+user to design compensation networks and perform sensitivity
+analyses in a very convenient manner.
+
+INCA is designed to be an interactive program for use with both
+small and large order systems.  The user can do all transfer
+function manipulations and plotting without leaving INCA,
+although provisions are made to input transfer functions from
+data files.  By using a small set of commands, one can compute
+and edit transfer functions, and then examine these functions by
+using the ROOT_LOCUS, FREQUENCY_RESPONSE, and TIME_RESPONSE
+capabilities.  Long calculations can be done in batch mode and
+the results examined interactively.  If an analysis needs to be
+repeated several times, a journal file capability has been
+included in INCA.  This stores an entire sequence of commands,
+generated during an INCA session into a
+file which can be accessed later.
+
+The program is capable of working with both continuous time systems and
+sampled data systems.  For continuous time systems the Laplace transform
+is used, and for sampled data systems the Z-transform or  W-transform is
+used.  The capability of converting from a Laplace transform to a Z-
+transform and between Z-transform and W-transform is provided. 
+
+A zoom feature is provided to allow closer examination of plots, and a
+find feature allows the determination of the gain at a particular point on
+a root locus plot.  The graphics package can handle a variety of
+terminals, and the program can also be run in batch mode. 
+
+The current version is written for the VAX.  A number of non-standard
+features of the VAX Pascal compiler were used, and some effort will be
+required to convert the program to run on a different machine.  All
+features used have Ada equivalents, however. 

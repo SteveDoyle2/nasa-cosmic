@@ -1,0 +1,74 @@
+	The next step in entering model data is the input of the system	fault 
+	tree and the critical pair fault tree(s).  This phase of input 
+	is not done with screen-based menus for	each item.  Instead, 
+	the input will be entered in a line-by-line manner.  The top of 
+	the screen will contain a title showing the type of tree which 
+	is being input, and a "subtitle" that indicates the part of that 
+	tree which you are currently entering.  The center section of the 
+	screen is used as a scrolling region where input occurs.  The
+	bottom of the screen will be used to indicate any control options
+	which can be entered for the current section.
+
+	This process has the advantage of allowing you to see the most 
+	recent inputs while entering the tree.  On the other hand, there 
+	is no on-line help available at each input, as there has been up 
+	until now.  The following help text will attempt to provide all 
+	the information you might need during model entry.  There are two 
+	sections explained below:  System Fault Tree Entry and Critical
+	Pair Fault Tree Entry.
+.page
+			   System Fault Tree Entry
+
+	There are three sections in the entry of the system fault tree.
+	The first item entered is the label for the system tree. The label 
+	may extend over multiple lines if a continuation symbol, "c", is
+	present at the end. (The default for the System Fault Tree 
+	is entered by typing the word "DEFAULT" or carriage return.  The
+        default tree is an OR gate which represents system failure if any
+        stage fails.)  
+
+	The next section is a single line with four integer values,
+	seperated by blanks or commas.  The first two integers indicate 
+	the range of input event IDs.  The second two integers provide 
+	the range of output gate IDs.  Typically the first two numbers 
+	are supplied from the summary information that was displayed 
+	before this menu, and the second two depend on the logic block 
+	used in the system tree.
+.page
+	The last section is the logic block for the system tree.  The
+	logic block can consist of multiple lines of logic gates. A line
+	must contain a gate_output_number, a gate_type, and a least one
+	gate_input. Gate_inputs of a logic gate may be continued onto
+	multiple lines if a continuation symbol, "c", is present on the
+	end of the line. Entering "END" will stop this input.
+.page
+			Critical Pair Fault Tree Input
+
+	After the system tree is input, entry of Critical Pair Fault
+	Tree(s) can begin.  This input is very similar to the system tree
+	input, with the exception that four items are entered.  Also,
+	the range of input modules is checked, and the identifers for
+	the logic block are sequenced.  Also, after one critical pair
+	fault tree is entered, the process is repeated until an "END"
+	command is given on label input. (There is no default tree.)
+
+	Like the system tree, the first item entered is the label for
+	the tree.  The next item is the input output range which consists
+	of four numbers. The first two numbers specify the range of 
+	input module IDs.  This range must be less than 70 modules, i.e.
+	the difference of the two numbers. The second two numbers specify
+	the range for the logic block.  This range is used to sequence
+	the logic gates in the logic block entry.
+.page
+	The next menu is the Stage Number and Input Gate Range. Each entry 
+	in this menu consists of a stage number and the input module range
+	for the stage entered, i.e., three numbers per entry. There must be
+	less than 20 stages for each subrun.  The "END" command can be 
+	entered to stop the entry of stage numbers and input gate ranges.
+
+	The last section is the logic block for the critical tree.  The
+	logic block can consist of multiple lines of logic gates. A line
+	must contain a gate_output_number, a gate_type, and a least one
+	gate_input. Gate_inputs of a logic gate may be continued onto
+	multiple lines if a continuation symbol, "c", is present on the
+	end of the line. Entering "END" will stop this input.

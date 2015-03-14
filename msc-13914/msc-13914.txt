@@ -1,0 +1,49 @@
+ SSSP- SPACE SHUTTLE SYNTHESIS PROGRAM
+
+( GENERAL DYNAMICS CORP. )
+
+     The Space Shuttle Synthesis Program (SSSP) automates the trajectory ,
+weights and performance computations essential to predesign of the Space
+Shuttle system for earth-to-orbit operations. The two-stage Space Shut-
+tle system is a completely reusable space transportation system consisting
+of a booster and an orbiter element. The SSSP'S major parts are a detailed
+weight/volume routine, a precision three-dimensional trajectory simula-
+tion, and the iteration and synthesis logic necessary to satisfy the hard-
+ware and trajectory constraints.
+
+     The SSSP is a highly useful tool in conceptual design studies where the
+effects of various trajectory configuration and shuttle subsystem param-
+eters must be evaluated relatively rapidly and economically. The program
+furnishes sensitivity and tradeoff data for proper selection of configu-
+ration and trajectory predesign parameters. Emphasis is placed upon pre-
+design simplicity and minimum input preparation. Characteristic equations
+for describing aerodynamic and propulsion models and for computing weights
+and volumes are kept relatively simple. The synthesis program is designed
+for a relatively large number of two-stage Space Shuttle configurations and
+mission types, but avoids the complexity of a completely generalized com-
+puter program that would be unwieldy to use and/or modify.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: UNIVAC 1100 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 7,810 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: MSC-13914
+
+DOMESTIC - DOCUMENTATION PRICE: $92.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $184.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

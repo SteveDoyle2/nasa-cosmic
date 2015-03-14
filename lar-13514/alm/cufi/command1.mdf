@@ -1,0 +1,112 @@
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+C
+C   COMMAND1 - Definitions for the Command Menu of CARE3MENU
+C
+C   VERSION:  1.0
+C   AUTHOR:  A. Roberts; Tesseract Systems, Inc.
+C   CREATION DATE:  05/20/83
+C   LAST REVISION DATE:  06/08/83
+C   LAST REVISED BY:  A. Roberts
+C
+C FUNCTION: Defintions and declarations for CARE3MENU command level
+C		menu.
+C
+C USEAGE:  included in CARE3MENU
+C
+C ARGUMENTS:  NA
+C
+C ERRORS:   NA
+C
+C NOTES:  Written in VAX/VMS FORTRAN. 
+C
+C PROCESS:  NA
+C
+C REVISION HISTORY:  0.0 - Created on 05/20/83 by A. Roberts;
+C				Tesseract Systems, Inc.
+C					------
+C		     1.0 - Initial release version.  06/08/83,
+C				A. Roberts
+C
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
+C
+C Menu parameters
+C
+	parameter CMD1_MITEMS = 5		! Items in menu
+	parameter CMD1_H_LOGNAME = 'cmd1'	! Help logical name
+
+	parameter CMD1_SDT1 = NO_DAT .or. BOLD	! Special datatype for 
+						! Title
+
+	parameter CMD1_CPNTR = 5		! Location of command data
+	parameter CMD1_BAD = ' *** Invalid Command, Please Reenter *** '
+						! Bad response line
+
+	parameter CMD1_EN_CODE = 1		! Code for enter model
+	parameter CMD1_ST_CODE = 2		! Code for store model
+	parameter CMD1_EX_CODE = 3		! Code for leave program
+
+C
+C Menu tables
+C
+	character*(MAX_STRING) cmd1_labs(CMD1_MITEMS)	! Item labels
+	integer*4 cmd1_lpos(2,CMD1_MITEMS)		! Item Positions
+	integer*4 cmd1_dtype(CMD1_MITEMS)		! Item Datatypes
+	integer*4 cmd1_idat(CMD1_MITEMS)		! INTEGER Data
+	real*4 cmd1_rdat(CMD1_MITEMS)			! REAL Data
+	character*(MAX_STRING) cmd1_sdat(CMD1_MITEMS)	! STRING Data
+
+C
+C Anything in the menu that is hardwired
+C
+	data cmd1_labs /'CARE3MENU --- Menu-Based Data Input for CARE III',
+	1		'ENter - Enter CARE III Model',
+	2		'Store - Store Model In File',
+	3		'EXit - Exit CARE3MENU',
+	4		'Enter Desired Function:'/
+
+	data cmd1_lpos /1,16,
+	1		8,25,
+	2		9,25,
+	3		10,25,
+	4		20,25/
+
+	data cmd1_dtype /CMD1_SDT1,
+	1			NO_DAT,
+	2			NO_DAT,
+	3			NO_DAT,
+	4			STR_DAT/
+
+C
+C Command Looktable Defintions
+C
+C LIB$LOOKUP_KEY is used to determine what command has been entered,
+C and return a numeric code which is used in the command case code.
+C
+C NOTE:  The command lookup table CANNOT be built entirely at
+C		compile time, since the keyword pointer table
+C		must be built with %LOC to point to the 
+C		keywords.  If you add commands, be sure and
+C		modify the code just before the command menu
+C		call in CARE3MENU !!!
+C
+	parameter CMD1_MAX_COMMANDS = 3		! Current maximum commands
+	parameter CMD1_MAX_CMDSIZE = 5		! Current keyword max size
+
+	byte cmd1_keywords(CMD1_MAX_CMDSIZE + 1, CMD1_MAX_COMMANDS)
+						! Keyword storage
+	integer*4 cmd1_keytable(0:CMD1_MAX_COMMANDS * 2)
+						! Keyword pointer table
+
+	integer*4 cmd1_clen			! Command string length
+	integer*4 cmd1_status			! Keyword Lookup Return
+	integer*4 cmd1_ccode			! Command code
+
+	data cmd1_keywords /
+	1	5,'E','N','T','E','R',
+	2	5,'S','T','O','R','E',
+	3	4,'E','X','I','T',' '/		! Keywords in storage
+
+C
+C End of Menu Definition
+C

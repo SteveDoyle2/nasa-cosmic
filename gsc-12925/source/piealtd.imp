@@ -1,0 +1,278 @@
+  { $INCLUDE : 'compile.inc' }
+  { $INCLUDE : 'vbpas.int' }
+  { $INCLUDE : 'getparam.int' }
+  { $INCLUDE : 'utility.int' }
+  { $INCLUDE : 'sfpas.int' }
+  { $INCLUDE : 'dspas.int' }
+  { $INCLUDE : 'pieexec.int' }
+  { $INCLUDE : 'piealtd.int' }
+
+  implementation of piealtd;
+
+  USES vbpas;
+
+  USES getparam;
+
+  USES utility;
+
+  USES dspas;
+
+  USES sfpas;
+
+  USES pieexec;
+
+
+
+  procedure alter_display_space;
+
+  const
+      aratio = 0.84;
+      percent = 100.0;
+
+  var
+      i, j   : integer;
+      size   : integer;
+      color  : integer;
+      max    : integer;
+      width  : integer;
+      offset : integer;
+      x1, x2 : integer;
+      y1, y2 : integer;
+      yy     : integer;
+      l, k, m: integer;
+      num    : integer;
+      sangle : integer;
+      eangle : integer;
+      dangle : integer;
+      mangle : integer;
+      mangle2: real;
+      deltax : integer;
+      deltay : integer;
+      fact   : real;
+      temp   : entity;
+      temp2  : boolean;
+      buffer : lstring(8);
+      buffer2: lstring(9);
+      count  : array [1..11] of real;
+      total  : real;
+      erro   : boolean;
+
+  (*********************************************************)
+
+  begin
+
+    i := 1;
+    eangle := 0;
+	 fact := 4*arctan(1)/180;
+    for j := 1 to 11 do count[j] := 0;
+    total := 0. ;
+    if form=1 then num := 9
+	      else num := 12 ;
+
+    with node_data^[num+1] do
+       begin
+	 case character_size of
+	   0: width := 8;
+	   1: width := 6;
+	   2: width := 10;
+	   3: width := 14;
+	 otherwise
+	      width := 8;
+	 end;
+	 x1 := x + width * ( ord (input_length)+1 );
+	 y1 := y;
+       end; (* with node_data *)
+
+     screen ( 3 );
+     colors ( 0, skeleton^[1] );
+     there ( 0, 0 );
+     write ( 'Drawing in progress...' );
+     dsbar ( 0, 0, 638, 398, 3, 0 );
+     buffer[1] := chr ( 37 );
+     buffer.len := 1;
+     dstext ( x1+16, node_data^[7].y-8, 3, 3, buffer, 1, 0 );
+
+     temp := first;
+     repeat
+	  offset := 0;
+	  with temp^ do
+	     begin
+	       with node_data^[etype] do
+		  begin
+		    size  := character_size;
+		    color := text_color;
+		    max   := input_length;
+		  end;
+
+	       if etype in [1..4] then
+		  begin
+		    case size of
+		      0: width := 8;
+		      1: width := 6;
+		      2: width := 10;
+		      3: width := 14;
+		      otherwise
+			 size  := 0;
+			 width := 8;
+		    end;
+		    offset := (((max-ord(field^.len))*width) div 4)*2;
+		  end; (* if etype *)
+
+	       if not (etype in [9..15]) then
+		 begin
+		   dstext ( x+offset,y,size,color,field^,field^.len,0 );
+		   if etype = num then
+		      begin
+			temp2 := decode ( field^, count[i] );
+			i := i + 1;
+		      end
+		   else if etype = 15 then
+		       temp2 := decode (field^,total) ;
+		 end; (* if not etype in 9..15 *)
+	     end;     (* with temp^ *)
+	   temp := temp^.down;
+	 until temp = first;
+
+	 i := 1;
+	 k := 0;
+	 temp := first;
+	 repeat
+	   if temp^.etype = num then
+	      begin
+		temp2 := decode ( temp^.field^, count[i] );
+		if count[i] > 0 then k := k + 1 ;
+		i := i + 1;
+	      end
+	    else begin
+		  if temp^.etype = 15 then
+		     temp2 := decode ( temp^.field^, total )
+		  else
+		     [ if temp^.etype=17 then
+			  with temp^ do dstext(x,y,1,3,field^,field^.len,0); ];
+	    end; (* if temp^.etype *)
+
+	    temp := temp^.down;
+	 until temp = first;
+
+	 if k = 0 then l := 240 else
+	 l := ( ( 240 div k ) div 2 ) * 2 ;
+	 dscir ( 490, 210, 120, 0, 360, 3, 0);
+	 if symbol<>1 then dsymbol ( 596, 360, 3, 0, 0, 1 ) ;
+	 erro := false ;
+	 for j := 1 to 10 do count[11] := count[11] + count[j] ;
+
+	 if ( form=2 ) and ( count[11] > 100.0 ) then [ erro := true ; ]
+	 else if (count[11] <> 0) then
+		begin
+		  temp:=first;
+		  repeat temp:=temp^.down until temp^.etype=num;
+		  yy := temp^.y;
+		  for j := 1 to 10 do
+		    begin
+		      if count[j] > 0 then
+			 begin
+			   if form=1 then  begin
+			      count[j] := ( count[j] / count[11] )*100;
+			      temp2 := encode ( buffer, count[j]:5:1 ) ;
+			   end ;
+
+			   sangle := eangle;
+			   dangle := trunc ( 3.6*count[j] );
+			   eangle := sangle + dangle;
+
+			   if form=2 then begin
+			     x1 := 64 ;
+			     count[j] := count[j] * total / 100.0 ;
+			     temp2 := encode ( buffer, count[j]:8:1 ) ;
+			     if not temp2 then
+				copylst ( '        ', buffer ) ;
+			   end;
+
+			   dstext (x1,yy,0,3,buffer,buffer.len,0);
+			   if dangle <> 360 then
+			     begin
+			       x2 := round(120*cos(sangle*fact))+490;
+			       y2 := round(120*sin((sangle+180)*fact)*aratio)+210;
+			       dsline ( 490, 210, x2, y2, 3, 1, 0 );
+			     end;
+
+			  offset := -8;
+			  if dangle <= 10 then offset := 16;
+			  mangle := sangle + ( dangle div 2 );
+			  case mangle of
+			      0..90 : begin
+					deltax := -8;
+					deltay := 0;
+				      end;
+			    91..180 : begin
+					deltax := 0;
+					deltay := 0;
+				      end;
+			   181..270 : begin
+					deltax := 0;
+					deltay := -8;
+				      end;
+			   271..360 : begin
+					deltax := -8;
+					deltay := -8;
+				      end;
+			   end; (* case mnagle *)
+
+			  buffer[1] := chr ( 65 + j - 1 );
+			  mangle2 := fact*mangle; { deg/rad }
+			  x2 := trunc((120+offset)*cos(mangle2)+deltax)+490;
+			  x2 := ( x2 div 2 ) * 2;
+			  y2 := trunc((120+offset)*sin(mangle2+fact*180)*aratio+deltay)+210;
+			  y2 := (y2 div 2)*2;
+			  buffer.len := 1;
+			  dstext ( x2, y2, 0, 3, buffer, 1, 0 );
+
+			  with temp^ do begin
+			     dstext(48,yy,3,3,buffer,1,0);
+			     dstext(x, yy, 0, 3, field^, field^.len, 0);
+			     dstext(down^.x,yy,0,3,down^.field^,down^.field^.len,0);
+			     dstext(down^.down^.x,yy+8,0,3,
+				  down^.down^.field^,down^.down^.field^.len,0);
+			  end;
+			  yy:=yy + l;
+		      end;  (* if count[j] > 0 *)
+
+		   temp:=temp^.down^.down^.down ;
+	      end; (* for j = 1 to 10 *)
+
+	    if ( form = 2 ) and ( count[11] < 100.0 ) then
+		begin
+		   sangle := eangle ;
+		   x2 := round(120*cos(sangle*fact))+490;
+		   y2 := round(120*sin((sangle+180)*fact)*aratio)+210;
+		   dsline ( 490, 210, x2, y2, 3, 1, 0 ) ;
+		end ;
+	  end;	(* if count[11] <> 0 *)
+
+       if  not erro  then
+	  begin
+	    y1 := temp^.up^.y+12 ;
+	    if form = 1 then
+	       begin
+		  temp2 := encode ( buffer2, percent:5:1 ) ;
+		  dstext ( 304, y1, 0, 3, buffer2, buffer2.len, 0 ) ;
+		  temp2 := encode ( buffer2, count[11]:9:1 ) ;
+		  dstext ( 56, y1, 0, 3, buffer2, buffer2.len, 0 ) ;
+	       end
+	    else
+	       begin
+		  temp2 := encode ( buffer2, count[11]:5:1 ) ;
+		  dstext ( 304, y1, 0, 3, buffer2, buffer2.len, 0 ) ;
+		  temp2 := encode ( buffer2, total:9:1 );
+		  if not temp2 then
+		      copylst ( '        ', buffer2 ) ;
+		  dstext ( 56, y1, 0, 3, buffer2, buffer2.len, 0 ) ;
+	       end ;  (* if form = 1 *)
+
+	    buffer.len := 6
+	    buffer := 'TOTAL:' ;
+	    dstext ( 8, y1, 0, 3, buffer, 6, 0 ) ;
+	  end;	   (* if not erro *)
+  end;
+  end.
+

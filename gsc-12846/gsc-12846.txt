@@ -1,0 +1,77 @@
+ NBOD2- PROGRAM TO DERIVE AND SOLVE EQUATIONS OF MOTION FOR COUPLED N-BODY
+SYSTEMS
+
+( NASA Goddard Space Flight Center )
+
+     The analysis of the dynamic characteristics of a complex system, such
+as a spacecraft or a robot, is usually best accomplished through the study
+of a simulation model. The simulation model must have the same dynamic
+characteristics as the complex system, while lending itself to mathemati-
+cal quantification. The NBOD2 computer program was developed to aid in the
+analysis of spacecraft attitude dynamics. NBOD2 is a very general program
+that may be applied to a large class of problems involving coupled N-body
+systems. NBOD2 provides the dynamics analyst with the capability to auto-
+matically derive and numerically solve the equations of motion for any sys-
+tem that can be modeled as a topological tree of coupled rigid bodies, flex-
+ible bodies, point masses, and symmetrical momentum wheels.
+
+     NBOD2 uses a topological tree model of the dynamic system to derive
+the vector-dyadic equations of motion for the system. The user builds this
+topological tree model by using rigid and flexible bodies, point masses,
+and symmetrical momentum wheels with appropriate connections. To insure
+that the relative motion between contiguous bodies is kinematically con-
+strained, NBOD2 assumes that contiguous rigid and flexible bodies are con-
+nected by physically reliable 0, 1, 2, and 3-degrees-of-freedom gimbals.
+These gimbals prohibit relative translational motion, while permitting up
+to 3 degrees of relative rotational freedom at hinge points. Point masses
+may have 0, 1, 2, or 3-degrees of relative translational freedom, and sym-
+metric momentum wheels may have a single degree of rotational freedom rel-
+ative to the body in which they are imbedded. Flexible bodies may possess
+several degrees of vibrational freedom in addition to the degrees of free-
+dom associated with the connection gimbals. Data concerning the natural
+modes and vibrations of the flexible bodies must be supplied by the user.
+NBOD2 combines the best features of the discrete-body approach and the
+nested body approach to reduce the topological tree to a complete set of
+nonlinear equations of motion in vector-dyadic form for the system being
+analyzed. NBOD2 can then numerically solve the equations of motion.
+
+     Input to NBOD2 consists of a user-supplied description of the sys-
+tem to be modeled. The NBOD2 system includes an interactive, tutorial, in-
+put support program to aid the NBOD2 user in preparing input data. Output
+from NBOD2 consists of a listing of the complete set of nonlinear equations
+of motion in vector-dyadic form and any userspecified set of system state
+variables.
+
+     The NBOD2 program is written in FORTRAN 77 for batch execution and has
+been implemented on a DEC VAX-11/780 computer. The NBOD2 program was devel-
+oped in 1978 and last updated in 1982.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: FORTRAN 77
+
+MACHINE REQUIREMENTS: DEC VAX-11/780
+
+PROGRAM SIZE: APPROXIMATELY 9,965 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX FILES-11 Format Magnetic Tape
+
+PROGRAM NUMBER: GSC-12846
+
+DOMESTIC - DOCUMENTATION PRICE: $53.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $106.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

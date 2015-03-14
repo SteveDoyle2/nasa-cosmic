@@ -1,0 +1,111 @@
+1 0 0 30 1 Work Breakdown
+2 0 0 30 2 Structure Chart
+3 0 0 6 3 December 1, 1984
+4 0 0 34 3 K. Baldwin
+5 0 0 60 3 General Software
+6 0 0 -9 4 Main Menu
+7 0 0 -9 4 Choices
+8 0 0 -9 4 Create new
+9 0 0 -9 4 Chart
+8 0 0 -9 4 Review\revise
+9 0 0 -9 4 Existing Chart
+8 0 0 -9 4 Directory
+9 0 0 -9 4  
+8 0 0 -9 4 Upload
+9 0 0 -9 4 
+8 0 0 -9 5 Download
+9 0 0 -9 6 
+8 0 0 -9 8 Slide Show
+9 0 0 -9 9 
+8 0 0 -9 11 Exit
+9 0 0 -9 12 
+6 0 0 -8 4 Reduce Picture
+7 0 0 -8 4 Choices
+8 0 0 -8 4 Cancel
+9 0 0 -8 4 (for printing)
+8 0 0 -8 4 Text Mode
+9 0 0 -8 4 
+8 0 0 -8 4 Graphics Mode
+9 0 0 -8 4 (milestone only
+8 0 0 -8 4 Annotation
+9 0 0 -8 4 Mode
+8 0 0 -8 5 Window
+9 0 0 -8 6 
+8 0 0 -8 8 Format
+9 0 0 -8 9 Menu
+8 0 0 -8 11 Hardcopy
+9 0 0 -8 12 
+8 0 0 -8 14 Save
+9 0 0 -8 15 Chart
+8 0 0 -8 17 Help
+9 0 0 -8 18 
+8 0 0 -8 20 Exit
+9 0 0 -8 21 
+6 0 0 0 4 Text Mode
+7 0 0 0 4 Choices
+8 0 0 0 4 Delete
+9 0 0 0 4 (if applicable)
+8 0 0 0 4 Edit
+9 0 0 0 4 Mode
+8 0 0 0 4 Insert
+9 0 0 0 4 (if applicable)
+8 0 0 0 4 End Text
+9 0 0 0 4 
+8 0 0 0 5 Help
+9 0 0 0 6  
+8 0 0 0 8 Exit
+9 0 0 0 9 
+6 0 0 20 4 Annotation
+7 0 0 20 4 Choices
+8 0 0 20 4 Delete
+9 0 0 20 4 
+8 0 0 20 4 Edit
+9 0 0 20 4 Mode
+8 0 0 20 4 Insert
+9 0 0 20 4 
+8 0 0 20 4 Annotation
+9 0 0 20 4 Mode
+8 0 0 20 5 Window
+9 0 0 20 6 
+8 0 0 20 8 Revise
+9 0 0 20 9 
+8 0 0 20 11 Move
+9 0 0 20 12 
+8 0 0 20 14 End
+9 0 0 20 15 Annotation
+8 0 0 20 17 Help
+9 0 0 20 18 
+8 0 0 20 20 Exit
+9 0 0 20 21 
+6 0 0 40 4 Window
+7 0 0 40 4 Choices
+8 0 0 40 4 End Window
+9 0 0 40 4 
+8 0 0 40 4 Help
+9 0 0 40 4 
+8 0 0 40 4 Exit
+9 0 0 40 4 
+6 0 0 60 4 Saving
+7 0 0 60 4 Choices
+8 0 0 60 4 Cancel
+9 0 0 60 4 
+8 0 0 60 4 Edit
+9 0 0 60 4 Mode
+8 0 0 60 4 Directory
+9 0 0 60 4 
+8 0 0 60 4 Change Default
+9 0 0 60 4 Drive
+8 0 0 60 5 Delete
+9 0 0 60 6 
+8 0 0 60 8 Rename
+9 0 0 60 9 
+8 0 0 60 11 Update
+9 0 0 60 12 
+8 0 0 60 14 End Save
+9 0 0 60 15 
+8 0 0 60 17 Help
+9 0 0 60 18 
+8 0 0 60 20 Exit
+9 0 0 60 21 
+5 0 0 0 0  612212 0 0 0
+

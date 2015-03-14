@@ -1,0 +1,1714 @@
+      PROGRAM R1542(INPUT,OUTPUT,TAPE5=INPUT,TAPE6=OUTPUT,TAPE7)
+      INTEGER GTEST                                                     R1542003
+      COMMON WINGNO,CALCNO,MACH,BRL,UR,TANLEA,MSUBN,EPS,K1,D1K,D2K,D3K, R1542004
+     1NU,NV,WH(6), WA(6), GH(6), GA(6)                                  R1542005
+      COMMON MR,RA,XA,A, B,CLAN,ACN,ENT,JMAX,METHOD(10),H,DH,ALPH,DALPH,R1542006
+     1NC,UPPER,LOWER,ETA                                                R1542007
+      COMMON NOPT1,NOPT2, N,ETAC(6),UC(6),XC(6),AC(6),BC(6),HC(6,6),    R1542008
+     1ALPHC(6,6),US,WS,GS,ETAS,XS,HS(6),ALPHS(6),AS,BS,NPR1,NPR2,NPR3   R1542009
+     2,NPLOT                                                            R1542010
+      COMMON NOPTS,TABK(100),TABFG(100)                                 R1542011
+      COMMON XM1(10), XM2(10), IDEN1,IDEN2                              R1542012
+      COMMON/WWS/       ONE(6,6),TWO(6,6),THREE(6,6),FOUR(6,6),FIVE(6,6)R1542013
+     3,SIX(6,6),SEVEN(6,6),EIGHT(6,6),NINE(6,6),TEN(6,6),ELEVEN(6,6),   R1542014
+     4TWELVE(6,6),THIRT(6,6),FOURT(6,6),FIFT(6,6),SIXT(6,6),SEVENT(6,6),R1542015
+     5EIGHTT(6,6),NINET(6,6),TWENTY(6,6),TWENT1(6,6),TWENT2(6,6),       R1542016
+     6TWENT3(6,6)                                                       R1542017
+      DIMENSION H(51,6),DH(51,6),ALPH(51,6),DALPH(51,6),ETA(51),        R1542018
+     1BSQ(51),BCUBE(51),BF8A(51),CLB(51),CLBB(51),MRB(51),CA(51),CAA(51)R1542019
+     2,AMA(51),CAAA(51)                                                 R1542020
+     3           , MR(51),RA(51),XA(51),A(51),B(51),CLAN(51),ACN(51),   R1542021
+     7ENT(51)                                                           R1542022
+      DIMENSION R(13), THETA(13)                                        R1542023
+      DIMENSION X(12),Y(12)                                             R1542024
+      DIMENSION WHSQ(6),WASQ(6),BDIV(6,6),BR(6,6),BI(6,6),DDIV(6,6),    R1542025
+     1DR(6,6), DI(6,6), AIZ(6), ARZ(6), ADIVZ(6), AR(6,6), AI(6,6), ADIVR1542026
+     2(6,6), ERZ(6), EIZ(6), ER(6,6), EDIV(6,6), EI(6,6), BPSQ(6),      R1542027
+     3BPAR(6), ATOTR(13,13), ATOTI(13,13), DIVT(12,12), DDIAG(12),      R1542028
+     4ADIAGR(13),ADIAGI(13),DIVG(12,12)                                 R1542029
+      DIMENSION PLOT1(1000), PLOT2(1000), PLOT3(1000)                   R1542030
+      DIMENSION EDIVZ(6),AJ(6,1),F(6,1),G(1,6),AK(1,6),ANSR(13),ANSI(13)R1542031
+     1,NSAV(13)                                                         R1542032
+      DIMENSION RTR(12),RTI(12),DATE(2)                                 R1542033
+      DIMENSION DELTA(3),WWR(13),VBW  (13),LG(13)                       R1542034
+      EQUIVALENCE (D1K,DELTA)                                           R1542035
+      DIMENSION IRUN(12)                                                R1542036
+      EQUIVALENCE (IRUN,DDIAG)                                          R1542037
+      COMPLEX NUMER,VBRWR(12)                                           R1542038
+      COMPLEX DENOM,CCA(13,13),EX(13),VEC(13),EAX(13),ECK(13),EVK(13),  R1542039
+     1ASAVE(13,13),CKSAVE(208),VKSAVE(208),SEVAL(13),ANS(16,13),EB(13,13R1542040
+     2),P                                                               R1542041
+      REAL MR,MRB,NINE,NINET,MSUBN,MACH ,LOWER ,LG                      R1542042
+      REAL K1,KSQ,KCUBE                                                 R1542043
+      INTEGER CALCNO                                                    R1542044
+      DATA NUMER/(1.0,0.0) /                                            R1542045
+      DATA YM/1HG/                                                      R1542046
+      NAMELIST/NAM1/WINGNO,       MACH,BRL,UR,TANLEA,MSUBN,EPS,K1,D1K,  R1542047
+     1D2K,D3K,NU,NV,WH,WA,GH,GA,MR,RA,XA,A,B,CLAN,ACN,ENT,JMAX,         R1542048
+     2H,DH,ALPH,DALPH,NC,UPPER,LOWER,ETA,NOPT1,NOPT2,N,ETAC,UC,XC,AC,BC,R1542049
+     3HC,ALPHC,US,WS,GS,ETAS,XS,HS,ALPHS,AS,BS,NPR1,NPR2,NPR3,NPLOT,    R1542050
+     4NOPTS,TABK,TABFG,NEV,NN                                           R1542051
+ 9999 FORMAT(75H1MODIFIED STRIP ANALYSIS AND DIVERGENCE CALCULATION - GER1542052
+     1NERALIZED EQUATIONS/1H1)                                          R1542053
+      WRITE(6,1701)                                                     R1542054
+      ITAPE=5LTAPE7                                                     R1542055
+    1 READ(5,NAM1)                                                      R1542056
+      IF(EOF,5) 999,2                                                   R1542057
+  999 STOP                                                              R1542058
+    2 READ(5,10000) XM1                                                 R1542059
+      READ(5,10000)XM2                                                  R1542060
+      READ(5,10001)IDEN1,IDEN2                                          R1542061
+      READ(5,10000)METHOD                                               R1542062
+      READ(5,10003)CALCNO                                               R1542063
+10003 FORMAT(A6)                                                        R1542064
+10000 FORMAT(10A6)                                                      R1542065
+10001 FORMAT(2A6)                                                       R1542066
+C                                                                       R1542067
+C***********************************************************************R1542068
+C   IF NC IS NOT EQUAL TO ZERO, COMPUTE VIBRATION MODES                 R1542069
+C   IF NC IS EQUAL TO ZERO, VIBRATION MODES GIVEN AS INPUT              R1542070
+C                                                                       R1542071
+ 111  IF(NC.EQ.0) GO TO 311                                             R1542072
+      DO 302 I=1,NV                                                     R1542073
+      COF=1.5707963*FLOAT(2*I-1)                                        R1542074
+      DO 302 J=1,JMAX                                                   R1542075
+      ALPH(J,I)= (-1.)**(I-1)*SIN(COF*ETA(J))                           R1542076
+ 302  DALPH(J,I)=(-1.)**(I-1)*COF*COS(COF*ETA(J))                       R1542077
+      DO 303 I =1,NU                                                    R1542078
+      DO 303 J =1,JMAX                                                  R1542079
+ 303  CALL UCB(I,ETA(J),H(J,I),DH(J,I),EIG)                             R1542080
+C***********************************************************************R1542081
+C                                                                       R1542082
+C   PRINT INPUT                                                         R1542083
+C                                                                       R1542084
+ 311  CALL INP1                                                         R1542085
+      WRITE (6,2007) UPPER,LOWER                                        R1542086
+ 2007 FORMAT(*   UPPER LIMIT FOR K=*E18.8,*          LOWER LIMIT FOR K=*R1542087
+     1E18.8)                                                            R1542088
+      WRITE (6,2008) JMAX,METHOD                                        R1542089
+ 2008 FORMAT(6X6HJMAX =I4,10X9HMETHOD - 10A6)                           R1542090
+      WRITE(6,2197) NEV                                                 R1542091
+ 2197 FORMAT(*      NEV =*I3)                                           R1542092
+      IF(NEV.EQ.0) GO TO 2199                                           R1542093
+      WRITE(6,2198) NN                                                  R1542094
+ 2198 FORMAT(*      NN =*I3)                                            R1542095
+ 2199 CONTINUE                                                          R1542096
+      WRITE (6,2010)                                                    R1542097
+ 2010 FORMAT(39H0WING STRUCTURE AND INTEGRATING FACTORS/                R1542098
+     18X3HETA18X2HMR17X4HRASQ15X2HXA17X1HA17X1HB18X5HI. F.)             R1542099
+      DO 3000 I=1,JMAX                                                  R1542100
+ 3000 WRITE (6,2011) ETA(I),MR(I),RA(I),XA(I),A(I),B(I),ENT(I)          R1542101
+ 2011 FORMAT(E18.8,6E19.8)                                              R1542102
+      WRITE (6,2009)                                                    R1542103
+ 2009 FORMAT(16H0VIBRATION MODES/                                       R1542104
+     18X3HETA18X2HH118X2HH216X2HH316X2HH417X2HH517X2HH6)                R1542105
+      DO 3001 I=1,JMAX                                                  R1542106
+ 3001 WRITE (6,2011) ETA(I),(H(I,J),J=1,NU)                             R1542107
+      WRITE (6,4002)                                                    R1542108
+ 4002 FORMAT(1H0)                                                       R1542109
+      WRITE (6,2014)                                                    R1542110
+ 2014 FORMAT(                                                           R1542111
+     18X3HETA18X3HDH117X3HDH216X3HDH316X3HDH416X3HDH516X3HDH6)          R1542112
+      DO 3002 I=1,JMAX                                                  R1542113
+ 3002 WRITE (6,2011) ETA(I),(DH(I,J),J=1,NU)                            R1542114
+      WRITE (6,4002)                                                    R1542115
+      WRITE (6,2015)                                                    R1542116
+ 2015 FORMAT(8X3HETA14X6HALPHA114X6HALPHA214X6HALPHA314X6HALPHA414X6HALPR1542117
+     1HA512X6HALPHA6)                                                   R1542118
+      DO 3003 I=1,JMAX                                                  R1542119
+ 3003 WRITE (6,2011) ETA(I),(ALPH(I,J),J=1,NV)                          R1542120
+      WRITE (6,4002)                                                    R1542121
+      WRITE (6,2016)                                                    R1542122
+ 2016 FORMAT(8X3HETA13X7HDALPHA113X7HDALPHA213X7HDALPHA313X7HDALPHA413X7R1542123
+     1HDALPHA511X7HDALPHA6)                                             R1542124
+      DO 3004 I=1,JMAX                                                  R1542125
+ 3004 WRITE (6,2011) ETA(I),(DALPH(I,J),J=1,NV)                         R1542126
+      WRITE (6,2012)                                                    R1542127
+ 2012 FORMAT                                                            R1542128
+     1     (25H0AERODYNAMIC COEFFICIENTS/8X3HETA15X4HCLAN14X3HACN)      R1542129
+      DO 3005 I=1,JMAX                                                  R1542130
+ 3005 WRITE (6,2011) ETA(I),CLAN(I),ACN(I)                              R1542131
+      WRITE (6,4002)                                                    R1542132
+      IF(NOPT1.EQ.0) GO TO 4000                                         R1542133
+      WRITE (6,2020) N                                                  R1542134
+ 2020 FORMAT(9H0OPTION 110X2HN=I4/6X3HK =10X1H119X1H219X1H319X1H419X1H51R1542135
+     19X1H6)                                                            R1542136
+      WRITE (6,2021) (ETAC(I),I=1,N)                                    R1542137
+ 2021 FORMAT(2X7HETACK =6E20.8)                                         R1542138
+      WRITE (6,2120) (UC(I), I=1,N)                                     R1542139
+ 2120 FORMAT(4X5HUCK =6E20.8)                                           R1542140
+      WRITE (6,2022) (XC(I),I=1,N)                                      R1542141
+ 2022 FORMAT(4X5HXCK =6E20.8)                                           R1542142
+      WRITE (6,2023) (AC(I),I=1,N)                                      R1542143
+ 2023 FORMAT(4X5HACK =6E20.8)                                           R1542144
+      WRITE (6,2024) (BC(I),I=1,N)                                      R1542145
+ 2024 FORMAT(4X5HBCK =6E20.8)                                           R1542146
+      DO 3010 I=1,NU                                                    R1542147
+ 3010 WRITE(6,2025) (HC(K,I), K=1,N)                                    R1542148
+ 2025 FORMAT(4X5HHCK =6E20.8)                                           R1542149
+      DO 3011 I=1,NV                                                    R1542150
+ 3011 WRITE (6,2026) (ALPHC(K,I), K=1,N)                                R1542151
+ 2026 FORMAT(9H ALPHCK =6E20.8)                                         R1542152
+ 3009 FORMAT(6E20.8)                                                    R1542153
+ 4000 IF(NOPT2.EQ.0) GO TO 4001                                         R1542154
+      WRITE (6,2027) ETAS,XS,US,WS,GS,AS,BS                             R1542155
+ 2027 FORMAT(9H0OPTION 2/3X6HETAS =E20.8,10X4HXS =E20.8,6X4HUS =E20.8,6XR1542156
+     17HWS/WR =E20.8/5X4HGS =E20.8,10X4HAS =E20.8,6X4HBS =E20.8/6X3HI =1R1542157
+     20X1H119X1H219X1H319X1H419X1H519X1H6)                              R1542158
+      WRITE (6,2028)(HS(I),I=1,NU)                                      R1542159
+ 2028 FORMAT(5X4HHS =6E20.8)                                            R1542160
+      WRITE (6,2029)(ALPHS(I),I=1,NV)                                   R1542161
+ 2029 FORMAT(9H  ALPHS =6E20.8)                                         R1542162
+C                                                                       R1542163
+C***********************************************************************R1542164
+C                                                                       R1542165
+ 4001 DO 21 I= 1,NU                                                     R1542166
+  21  WHSQ (I) = WH(I)**2                                               R1542167
+      DO 211 I= 1,NV                                                    R1542168
+ 211  WASQ (I) = WA(I)**2                                               R1542169
+C                                                                       R1542170
+C***********************************************************************R1542171
+C                                                                       R1542172
+      IJ= 1                                                             R1542173
+      KOUNT = 0                                                         R1542174
+C                                                                       R1542175
+C***********************************************************************R1542176
+C  COMPUTE INTEGRALS                                                    R1542177
+C                                                                       R1542178
+      DO 10 I =1,JMAX                                                   R1542179
+      BSQ(I)=B(I)**2                                                    R1542180
+      BCUBE(I)=B(I)*BSQ(I)                                              R1542181
+      BF8A(I)=BSQ(I)**2*(.125+A(I)**2)                                  R1542182
+      CLB(I) = CLAN(I)*EPS*B(I)                                         R1542183
+      CLBB(I) = CLAN(I)*EPS*BSQ(I)                                      R1542184
+      MRB(I)=MR(I)*B(I)                                                 R1542185
+      CA(I) = (CLAN(I)*EPS)/6.2831853+ACN(I)                            R1542186
+      CAA(I)=CA(I)-A(I)                                                 R1542187
+      AMA(I)=A(I)-ACN(I)                                                R1542188
+  10  CAAA(I)=CAA(I)*AMA(I)                                             R1542189
+      DO 12 I=1,NU                                                      R1542190
+      DO 12 J=1,NU                                                      R1542191
+      ONE(I,J)=0.0                                                      R1542192
+      TWO(I,J)=0.0                                                      R1542193
+      THREE(I,J)=0.0                                                    R1542194
+      FOUR(I,J)=0.0                                                     R1542195
+      FIVE(I,J)=0.0                                                     R1542196
+      DO 12 K=1,JMAX                                                    R1542197
+      ONE(I,J)=ONE(I,J)+MR(K)*H(K,I)*H(K,J)*ENT(K)                      R1542198
+      TWO(I,J)=TWO(I,J)+BSQ(K)*H(K,I)*H(K,J)*ENT(K)                     R1542199
+      THREE(I,J)=THREE(I,J)+CLB(K)*H(K,I)*H(K,J)*ENT(K)                 R1542200
+      FOUR(I,J)=FOUR(I,J)+CLB(K)*DH(K,J)*H(K,I)*ENT(K)                  R1542201
+  12  FIVE(I,J)=FIVE(I,J)+BSQ(K)*DH(K,J)*H(K,I)*ENT(K)                  R1542202
+      DO 13 I=1,NU                                                      R1542203
+      DO 13 J=1,NV                                                      R1542204
+      SIX(I,J)=0.0                                                      R1542205
+      SEVEN(I,J)=0.0                                                    R1542206
+      EIGHT(I,J)=0.0                                                    R1542207
+      NINE(I,J)=0.0                                                     R1542208
+      TEN(I,J)=0.0                                                      R1542209
+      ELEVEN(I,J)=0.0                                                   R1542210
+      TWELVE(I,J)=0.0                                                   R1542211
+      THIRT(I,J)=0.0                                                    R1542212
+      FOURT(I,J)=0.0                                                    R1542213
+      FIFT(I,J)=0.0                                                     R1542214
+      DO 13 K=1,JMAX                                                    R1542215
+      SIX(I,J)=MRB(K)*XA(K)*H(K,I)*ALPH(K,J)*ENT(K)+SIX(I,J)            R1542216
+      SEVEN(I,J)=CLB(K)*H(K,I)*ALPH(K,J)*ENT(K)+SEVEN(I,J)              R1542217
+      EIGHT(I,J)=CLBB(K)*CAA(K)*H(K,I)*ALPH(K,J)*ENT(K)+EIGHT(I,J)      R1542218
+      NINE(I,J)=BCUBE(K)*A(K)*H(K,I)*ALPH (K,J)*ENT(K)+NINE(I,J)        R1542219
+      TEN(I,J)=BSQ(K)*H(K,I)*ALPH(K,J)*ENT(K)+TEN(I,J)                  R1542220
+      ELEVEN(I,J)=CLBB(K)*CAA(K)*DALPH(K,J)*H(K,I)*ENT(K)+ELEVEN(I,J)   R1542221
+      TWELVE(I,J)=BCUBE(K)*DALPH(K,J)*H(K,I)*A(K)*ENT(K)+TWELVE(I,J)    R1542222
+      THIRT(I,J)=CLBB(K)*AMA(K)*H(K,I)*ALPH(K,J)*ENT(K)+THIRT(I,J)      R1542223
+      FOURT(I,J)=CLBB(K)*AMA(K)*DH(K,I)*ALPH(K,J)*ENT(K)+FOURT(I,J)     R1542224
+  13  FIFT(I,J)=BCUBE(K)*A(K)*DH(K,I)*ALPH(K,J)*ENT(K)+FIFT(I,J)        R1542225
+      DO 14 I=1,NV                                                      R1542226
+      DO 14 J=1,NV                                                      R1542227
+      SIXT(I,J)=0.0                                                     R1542228
+      SEVENT(I,J)=0.0                                                   R1542229
+      EIGHTT(I,J)=0.0                                                   R1542230
+      NINET(I,J)=0.0                                                    R1542231
+      TWENTY(I,J)=0.0                                                   R1542232
+      TWENT1(I,J)=0.0                                                   R1542233
+      TWENT2(I,J)=0.0                                                   R1542234
+      TWENT3(I,J)=0.0                                                   R1542235
+      DO 14 K=1,JMAX                                                    R1542236
+      SIXT(I,J)=MR(K)*BSQ(K)*RA(K)*ALPH(K,I)*ALPH(K,J)*ENT(K)+SIXT(I,J) R1542237
+      SEVENT(I,J)=CLBB(K)*AMA(K)*ALPH(K,I)*ALPH(K,J)*ENT(K)+SEVENT(I,J) R1542238
+      EIGHTT(I,J)=BF8A(K)*ALPH(K,I)*ALPH(K,J)*ENT(K)+EIGHTT(I,J)        R1542239
+      NINET(I,J)=CLB(K)*BSQ(K)*CAAA(K)*ALPH(K,I)*ALPH(K,J)*ENT(K)       R1542240
+     1+NINET(I,J)                                                       R1542241
+      TWENTY(I,J)=BCUBE(K)*CAA(K)*ALPH(K,I)*ALPH(K,J)*ENT(K)+TWENTY(I,J)R1542242
+      TWENT1(I,J)=CLB(K)*BSQ(K)*CAAA(K)*DALPH(K,J)*ALPH(K,I)            R1542243
+     1*ENT(K)+TWENT1(I,J)                                               R1542244
+      TWENT2(I,J)=BCUBE(K)*CA(K)*DALPH(K,J)*ALPH(K,I)*ENT(K)+TWENT2(I,J)R1542245
+  14  TWENT3(I,J)=BF8A(K)*DALPH(K,J)*ALPH(K,I)*ENT(K)+TWENT3(I,J)       R1542246
+C                                                                       R1542247
+C***********************************************************************R1542248
+C                                                                       R1542249
+C   IF NPR1 IS NOT EQUAL TO ZERO, PRINT INTEGRALS                       R1542250
+C                                                                       R1542251
+      IF(NPR1.EQ.0) GO TO 140                                           R1542252
+      CALL SUBPR                                                        R1542253
+  140 RPI =1.0/3.1415926                                                R1542254
+      BLRPI=BRL*RPI                                                     R1542255
+      BRLTAN=BRL*TANLEA                                                 R1542256
+      BLPTAN=BLRPI*TANLEA                                               R1542257
+      FSUBI = 1.0                                                       R1542258
+      GSUBI = 0.0                                                       R1542259
+      NF1=1                                                             R1542260
+ 74   TRIG=-1.0                                                         R1542261
+      IJ=1                                                              R1542262
+      WRITE(6,8050) IJ                                                  R1542263
+  75  KSQ = K1*K1                                                       R1542264
+      KCUBE = KSQ*K1                                                    R1542265
+      IF(MSUBN . GT. 2.0 ) GO TO 44                                     R1542266
+C                                                                       R1542267
+C***********************************************************************R1542268
+C                                                                       R1542269
+C  COMPUTE REGULAR F AND G                                              R1542270
+      FSUBI=(1.0+8.65538*K1-.271169*KSQ)/(1.98936+24.7807*K1+103.774*   R1542271
+     1KSQ+107.048*KCUBE)+.5                                             R1542272
+      GSUBI=-(1.0+247.242*K1+855.885*KSQ)/(61.8236+930.649*K1+3791.55*  R1542273
+     1KSQ+6167.5*KCUBE)                                                 R1542274
+C                                                                       R1542275
+C***********************************************************************R1542276
+C                                                                       R1542277
+C IF  MSUBN =0, FC/FI = 1.0                                             R1542278
+C IF  MSUBN NOT EQUAL TO ZERO, GO TO TABLES FOR FC/FI                   R1542279
+C                                                                       R1542280
+      IF (MSUBN . EQ. 0.0) GO TO 3                                      R1542281
+      CALL FTLUP(K1,CORR,1,NOPTS,TABK,TABFG)                            R1542282
+      GO TO 4                                                           R1542283
+   3  CORR= 1.0                                                         R1542284
+   4  FSUBI=FSUBI*CORR                                                  R1542285
+      GSUBI=GSUBI*CORR                                                  R1542286
+C                                                                       R1542287
+C***********************************************************************R1542288
+C                                                                       R1542289
+C  COMPUTE A,B,D AND E MATRICES                                         R1542290
+  44  CONTINUE                                                          R1542291
+      GOK = GSUBI/K1                                                    R1542292
+      FOK= FSUBI/K1                                                     R1542293
+      FOKSQ=FSUBI/KSQ                                                   R1542294
+      GOKSQ=GSUBI/KSQ                                                   R1542295
+      DO 5 I=1,NU                                                       R1542296
+      DO 5 J=1,NV                                                       R1542297
+      TEM1 = (BRLTAN*ELEVEN(I,J)+SEVEN(I,J))*RPI                        R1542298
+      TEM2 = RPI*EIGHT(I,J)                                             R1542299
+      BR(I,J)=(-UR*SIX(I,J)+NINE(I,J))-TEM2*GOK+TEM1*FOKSQ              R1542300
+   5  BI(I,J)=((TEN(I,J)-BRLTAN*TWELVE(I,J))/K1)+TEM2*FOK+TEM1*GOKSQ    R1542301
+      DO 6 I=1,NV                                                       R1542302
+      DO 6 J=1,NU                                                       R1542303
+      TEM1 = RPI*THIRT(J,I)                                             R1542304
+      TEM2 = BLPTAN*FOURT(J,I)                                          R1542305
+      DR(I,J)=(-UR*SIX(J,I)+NINE(J,I))+TEM1*GOK -TEM2*FOKSQ             R1542306
+   6  DI(I,J)=(-BRLTAN*FIFT(J,I))/K1-TEM1*FOK-TEM2*GOKSQ                R1542307
+      DO 7 I= 1,NU                                                      R1542308
+      DO 7 J= 1,NU                                                      R1542309
+      TEMP = 0.0                                                        R1542310
+      TEM1 = RPI*THREE(I,J)                                             R1542311
+      TEM2 = BLPTAN*FOUR(I,J)                                           R1542312
+      IF (I.NE.J) GO TO 71                                              R1542313
+      TEMP = UR*ONE(I,J)                                                R1542314
+      ARZ(I) = TEMP * WHSQ(I)                                           R1542315
+      AIZ(I) = ARZ(I) * GH(I)                                           R1542316
+  71  AR(I,J)= - TEMP- TWO(I,J)- TEM1*GOK + TEM2*FOKSQ                  R1542317
+      ADIV(I,J) = TEM2                                                  R1542318
+   7  AI(I,J)=(BRLTAN*FIVE(I,J))/K1 +TEM1*FOK +TEM2*GOKSQ               R1542319
+      DO 8 I=1,NV                                                       R1542320
+      DO 8 J=1,NV                                                       R1542321
+      TEMP = 0.0                                                        R1542322
+      TEM1 = RPI*NINET(I,J)                                             R1542323
+      TEM2 =(SEVENT(I,J)+ BRLTAN*TWENT1(I,J))*RPI                       R1542324
+      IF (I.NE.J) GO TO 81                                              R1542325
+      TEMP= UR*SIXT(I,J)                                                R1542326
+      ERZ(I) = TEMP * WASQ(I)                                           R1542327
+      EIZ(I) = ERZ(I) * GA(I)                                           R1542328
+  81  ER(I,J) = -TEMP -EIGHTT(I,J)+ TEM1*GOK -TEM2*FOKSQ+(BRLTAN*TWENT2 R1542329
+     1(I,J))/KSQ                                                        R1542330
+   8  EI(I,J)=(TWENTY(I,J)+BRLTAN*TWENT3(I,J))/K1-TEM1*FOK -TEM2*GOKSQ  R1542331
+      NTOT= NU+NV                                                       R1542332
+      IF (NOPT1.EQ.0) GO TO 100                                         R1542333
+C                                                                       R1542334
+C OPTION 1                                                              R1542335
+C                                                                       R1542336
+  101 DO 104 K=1,N                                                      R1542337
+      BPAR(K)= BC(K)*(1.0+AC(K)+XC(K))                                  R1542338
+  104 BPSQ(K)= BPAR(K)**2                                               R1542339
+      DO 105 I=1,NU                                                     R1542340
+      DO 105 J=1,NU                                                     R1542341
+      SUM= 0.0                                                          R1542342
+      DO 1051K=1,N                                                      R1542343
+ 1051 SUM = UC(K)* HC(K,I) *HC(K,J)+SUM                                 R1542344
+      AR(I,J)= AR(I,J)-SUM                                              R1542345
+      IF(I.NE.J) GO TO 105                                              R1542346
+      TEMP = SUM *WHSQ(I)                                               R1542347
+      ARZ (I) = ARZ(I) +TEMP                                            R1542348
+      ADIVZ(I) = ADIVZ(I)+ TEMP                                         R1542349
+      AIZ(I)=AIZ(I)+TEMP*GH(I)                                          R1542350
+  105 CONTINUE                                                          R1542351
+      DO 106 I=1,NU                                                     R1542352
+      DO 106 J=1,NV                                                     R1542353
+      SUM= 0.0                                                          R1542354
+      DO 1061 K=1,N                                                     R1542355
+ 1061 SUM=UC(K)*BPAR(K)*HC(K,I)*ALPHC(K,J)+SUM                          R1542356
+  106 BR(I,J)= BR(I,J)+SUM                                              R1542357
+      DO 107 I=1,NV                                                     R1542358
+      DO 107 J=1,NU                                                     R1542359
+      SUM =0.0                                                          R1542360
+      DO 1071 K=1,N                                                     R1542361
+ 1071 SUM = UC(K)* BPAR(K)*HC(K,J)*ALPHC(K,I)+SUM                       R1542362
+  107 DR(I,J)=DR(I,J)+SUM                                               R1542363
+      DO 108 I=1,NV                                                     R1542364
+      DO 108 J=1,NV                                                     R1542365
+      SUM = 0.0                                                         R1542366
+      DO 1081 K=1,N                                                     R1542367
+ 1081 SUM = UC(K)*BPSQ(K)*ALPHC(K,I)*ALPHC(K,J)+SUM                     R1542368
+      ER(I,J)= ER(I,J)-SUM                                              R1542369
+      IF(I.NE.J) GO TO 108                                              R1542370
+      TEMP =SUM* WASQ (I)                                               R1542371
+      ERZ (I) = ERZ(I)+ TEMP                                            R1542372
+      EDIVZ (I) = EDIVZ (I)+ TEMP                                       R1542373
+      EIZ(I)=EIZ(I)+TEMP*GA(I)                                          R1542374
+  108 CONTINUE                                                          R1542375
+  100 IF (NOPT2.EQ.0) GO TO 5000                                        R1542376
+C                                                                       R1542377
+C OPTION 2                                                              R1542378
+C                                                                       R1542379
+  201 DO 204 I=1,NU                                                     R1542380
+      DO 204 J=1,NU                                                     R1542381
+      TEM1 = US* HS(I)* HS(J)                                           R1542382
+      AR(I,J)= AR(I,J)-TEM1                                             R1542383
+      IF(I.NE.J) GO TO 204                                              R1542384
+      TEM2 = TEM1*WHSQ(I)                                               R1542385
+      ARZ (I) = ARZ(I)+TEM2                                             R1542386
+      ADIVZ(I) = ADIVZ(I)+ TEM2                                         R1542387
+      AIZ(I)=AIZ(I)+TEM2*GH(I)                                          R1542388
+  204 CONTINUE                                                          R1542389
+      BPROD= BS*(1.0+AS+XS)                                             R1542390
+      DO 205 I=1,NU                                                     R1542391
+      DO 205 J=1,NV                                                     R1542392
+  205 BR(I,J) = BR(I,J)+ US*BPROD*HS(I)*ALPHS(J)                        R1542393
+      DO 206 I=1,NV                                                     R1542394
+      DO 206 J=1,NU                                                     R1542395
+  206 DR(I,J) = DR(I,J)+ US*BPROD*HS(J)*ALPHS(I)                        R1542396
+      DO 207 I=1,NV                                                     R1542397
+      DO 207 J=1,NV                                                     R1542398
+      TEM1 = US*BPROD**2*ALPHS(I)*ALPHS(J)                              R1542399
+      ER(I,J) = ER(I,J) - TEM1                                          R1542400
+      IF(I.NE.J) GO TO 207                                              R1542401
+      TEM2 = TEM1* WASQ(I)                                              R1542402
+      ERZ (I) = ERZ(I) +TEM2                                            R1542403
+      EDIVZ(I) = EDIVZ(I) +TEM2                                         R1542404
+      EIZ(I)=EIZ(I)+TEM2*GA(I)                                          R1542405
+  207 CONTINUE                                                          R1542406
+      DO 208 I= 1,NU                                                    R1542407
+  208 F(I,1) = -US* HS(I)                                               R1542408
+      DO 209 J= 1,NV                                                    R1542409
+  209 AJ(J,1) = US* BPROD*ALPHS(J)                                      R1542410
+      H11R =-US                                                         R1542411
+      H11RZ = US * WS**2                                                R1542412
+      H11IZ = H11RZ* GS                                                 R1542413
+      DO 210 J=1,NU                                                     R1542414
+ 210  G(1,J) = F(J,1)                                                   R1542415
+      DO1211 J=1,NV                                                     R1542416
+1211  AK(1,J) = AJ(J,1)                                                 R1542417
+C                                                                       R1542418
+C***********************************************************************R1542419
+C                                                                       R1542420
+C   IF NPR2 IS NOT EQUAL TO ZERO, PRINT ELEMENTS OF DETERMINANT         R1542421
+C                                                                       R1542422
+C                                                                       R1542423
+ 5000 IF(NPR2.EQ.0) GO TO 200                                           R1542424
+      WRITE (6,600)                                                     R1542425
+ 600  FORMAT(32H0ELEMENTS OF FLUTTER DETERMINANT/)                      R1542426
+      WRITE (6,601)                                                     R1542427
+ 601  FORMAT(8H  A(I,J))                                                R1542428
+      WRITE (6,602)                                                     R1542429
+ 602  FORMAT(7H   REAL)                                                 R1542430
+      DO 603 I=1,NU                                                     R1542431
+ 603  WRITE (6,3009) (AR(I,J),J=1,NU)                                   R1542432
+      WRITE (6,604)                                                     R1542433
+ 604  FORMAT(12H   IMAGINARY)                                           R1542434
+      DO 605 I=1,NU                                                     R1542435
+ 605  WRITE (6,3009) (AI(I,J),J=1,NU)                                   R1542436
+      WRITE (6,606)                                                     R1542437
+ 606  FORMAT(25H   COEFFICIENT OF UNKNOWN)                              R1542438
+      WRITE (6,602)                                                     R1542439
+      WRITE (6,3009) (ARZ(I),I=1,NU)                                    R1542440
+      WRITE (6,604)                                                     R1542441
+      WRITE (6,3009) (AIZ(I),I=1,NU)                                    R1542442
+      WRITE (6,607)                                                     R1542443
+ 607  FORMAT(8H  B(I,J))                                                R1542444
+      WRITE (6,602)                                                     R1542445
+      DO 608 I=1,NU                                                     R1542446
+ 608  WRITE (6,3009) (BR(I,J),J=1,NV)                                   R1542447
+      WRITE (6,604)                                                     R1542448
+      DO 609 I=1,NU                                                     R1542449
+ 609  WRITE (6,3009) (BI(I,J),J=1,NV)                                   R1542450
+      WRITE (6,610)                                                     R1542451
+ 610  FORMAT(8H  D(I,J))                                                R1542452
+      WRITE (6,602)                                                     R1542453
+      DO 611 I=1,NV                                                     R1542454
+ 611  WRITE (6,3009) (DR(I,J),J=1,NU)                                   R1542455
+      WRITE (6,604)                                                     R1542456
+      DO 612 I=1,NV                                                     R1542457
+ 612  WRITE (6,3009) (DI(I,J),J=1,NU)                                   R1542458
+      WRITE (6,613)                                                     R1542459
+ 613  FORMAT(8H  E(I,J))                                                R1542460
+      WRITE (6,602)                                                     R1542461
+      DO 614 I=1,NV                                                     R1542462
+ 614  WRITE (6,3009) (ER(I,J),J=1,NV)                                   R1542463
+      WRITE (6,604)                                                     R1542464
+      DO 615 I=1,NV                                                     R1542465
+ 615  WRITE (6,3009) (EI(I,J),J=1,NV)                                   R1542466
+      WRITE (6,606)                                                     R1542467
+      WRITE (6,602)                                                     R1542468
+      WRITE (6,3009) (ERZ(I),I=1,NV)                                    R1542469
+      WRITE (6,604)                                                     R1542470
+      WRITE (6,3009) (EIZ(I),I=1,NV)                                    R1542471
+      IF(NOPT2.EQ.0) GO TO 200                                          R1542472
+      WRITE(6,616) (F(I,1), I=1,NU)                                     R1542473
+ 616  FORMAT(8H  F(I,1)/6E20.8)                                         R1542474
+      WRITE (6,617) (G(1,I), I=1,NU)                                    R1542475
+ 617  FORMAT(8H  G(1,J)/6E20.8)                                         R1542476
+      WRITE (6,618) (AJ(I,1),I=1,NV)                                    R1542477
+ 618  FORMAT(8H  J(I,1)/6E20.8)                                         R1542478
+      WRITE (6,619) (AK(1,I),I=1,NV)                                    R1542479
+ 619  FORMAT(8H  K(1,I)/6E20.8)                                         R1542480
+      WRITE (6,620) H11R                                                R1542481
+ 620  FORMAT(5H  H11/E20.8)                                             R1542482
+      WRITE (6,606)                                                     R1542483
+      WRITE (6,602)                                                     R1542484
+      WRITE (6,3009) H11RZ                                              R1542485
+      WRITE (6,604)                                                     R1542486
+      WRITE (6,3009) H11IZ                                              R1542487
+C SET UP TOTAL FLUTTER  DETERMINANT                                     R1542488
+  200 DO 51 I=1,NU                                                      R1542489
+      DO 51 J=1,NU                                                      R1542490
+      ATOTR(I,J) = AR(I,J)                                              R1542491
+  51  ATOTI(I,J) = AI(I,J)                                              R1542492
+      DO 52 I=1,NV                                                      R1542493
+      NUV= NU+I                                                         R1542494
+      DO 52 J=1,NU                                                      R1542495
+      ATOTR (NUV,J) = DR(I,J)                                           R1542496
+  52  ATOTI (NUV,J) = DI(I,J)                                           R1542497
+      DO 53 I=1,NU                                                      R1542498
+      DO 53 J=1,NV                                                      R1542499
+      NUV= NU+J                                                         R1542500
+      ATOTR (I,NUV) = BR(I,J)                                           R1542501
+  53  ATOTI (I,NUV) = BI(I,J)                                           R1542502
+      DO 54 I=1,NV                                                      R1542503
+      NUV1 = NU+I                                                       R1542504
+      DO 54 J=1,NV                                                      R1542505
+      NUV2 = NU+J                                                       R1542506
+      ATOTR (NUV1,NUV2) = ER(I,J)                                       R1542507
+  54  ATOTI (NUV1,NUV2) =EI(I,J)                                        R1542508
+      DO 540 I=1,NU                                                     R1542509
+      ADIAGR (I) = ARZ(I)                                               R1542510
+ 540  ADIAGI (I) = AIZ(I)                                               R1542511
+      DO 541 J= 1,NV                                                    R1542512
+      NUV = NU+J                                                        R1542513
+      ADIAGR (NUV) = ERZ(J)                                             R1542514
+ 541  ADIAGI (NUV) = EIZ(J)                                             R1542515
+      IF(NOPT2 .EQ. 0) GO TO  300                                       R1542516
+      NTOT =NTOT+1                                                      R1542517
+      DO 55 I=1,NU                                                      R1542518
+      ATOTR(I,NTOT) =F(I,1)                                             R1542519
+      ATOTI(I,NTOT) = 0.0                                               R1542520
+      ATOTR(NTOT,I) =G(1,I)                                             R1542521
+  55  ATOTI(NTOT,I) = 0.0                                               R1542522
+      DO 56 J=1,NV                                                      R1542523
+      NUV = NU+1                                                        R1542524
+      ATOTR (NUV,NTOT) = AJ(J,1)                                        R1542525
+      ATOTI (NUV,NTOT) = 0.0                                            R1542526
+      ATOTR (NTOT,NUV) = AK(1,J)                                        R1542527
+  56  ATOTI (NTOT,NUV) = 0.0                                            R1542528
+      ATOTR (NTOT,NTOT) = H11R                                          R1542529
+      ATOTI (NTOT,NTOT) = 0.0                                           R1542530
+      ADIAGR (NTOT) =H11RZ                                              R1542531
+      ADIAGI (NTOT) =H11IZ                                              R1542532
+  300 DO 1600 I= 1,NTOT                                                 R1542533
+      DENOM = -CMPLX(ADIAGR(I),ADIAGI(I))                               R1542534
+      DO 1600 J= 1,NTOT                                                 R1542535
+ 1600 CCA(I,J) =  CMPLX(ATOTR(I,J),ATOTI(I,J))/DENOM                    R1542536
+      P=(0.0,0.0)                                                       R1542537
+      NK3 = NTOT+3                                                      R1542538
+      MP = NTOT*NK3                                                     R1542539
+      KCT = 1-NK3                                                       R1542540
+      IF(NPR3.EQ.0) GO TO 1750                                          R1542541
+      WRITE (6,9000) ((CCA(I,J), J=1,NTOT), I=1,NTOT)                   R1542542
+ 9000 FORMAT(31H0NORMALIZED DETERMINANT BY ROWS/(6E20.8))               R1542543
+ 1750 CALL EGNC(CCA,P,13,NTOT,NTOT,MP,NK3,EX,VEC,EAX,ECK,EVK,EB,ASAVE,  R1542544
+     1CKSAVE,VKSAVE,SEVAL,NSAV,ANS,NERR)                                R1542545
+      GO TO (700,701,702),NERR                                          R1542546
+  701 WRITE (6,622)                                                     R1542547
+  622 FORMAT(37H0 NON CONVERGENCE RETURN FROM LF-EGNC)                  R1542548
+      GO TO 1700                                                        R1542549
+  702 WRITE (6,623)                                                     R1542550
+  623 FORMAT(33H0 SINGULARITY RETURN FROM LF-EGNC)                      R1542551
+      GO TO 1700                                                        R1542552
+  700 DO 703 J=1,NTOT                                                   R1542553
+      KCT = KCT+NK3                                                     R1542554
+      IF = KCT+2                                                        R1542555
+      IL = IF+NTOT-1                                                    R1542556
+      IK = IL+1                                                         R1542557
+      L = 0                                                             R1542558
+      DO 7030 I=IF,IL                                                   R1542559
+      L = L+1                                                           R1542560
+ 7030 CCA(L,J) = ANS(I)                                                 R1542561
+      CCA(L+1,J) = ANS(IK)                                              R1542562
+      ANSR(J) = REAL(ANS(KCT))                                          R1542563
+      ANSI(J) = AIMAG(ANS(KCT))                                         R1542564
+      TEM1 = REAL(ANS(KCT+1))                                           R1542565
+      TEM2 = AIMAG(ANS(KCT+1))                                          R1542566
+      TEMP = ABS(ANSR(J))+ABS(ANSI(J))                                  R1542567
+      IF(ABS((TEMP-(ABS(TEM1)+ABS(TEM2)))/TEMP).LT. .001) GO TO 703     R1542568
+      WRITE (6,624) ANS(KCT), ANS(KCT+1)                                R1542569
+  624 FORMAT( 6H0ROOT=2E20.8,12H CHECK ROOT=2E20.8)                     R1542570
+  703 CONTINUE                                                          R1542571
+      IF(NPR3.EQ.0) GO TO 704                                           R1542572
+      WRITE (6,1704) (ANSR(I), ANSI(I), I=1,NTOT)                       R1542573
+ 1704 FORMAT(7H0X + IY/(2E20.8))                                        R1542574
+C                                                                       R1542575
+C***********************************************************************R1542576
+C    K QUESSER                                                          R1542577
+C NCT1 = COUNT OF REAL, POSITIVE G                                      R1542578
+C NCT2 = COUNT OF REAL, MINUS G                                         R1542579
+C                                                                       R1542580
+  704 NLG = 0                                                           R1542581
+      NCT1= 0                                                           R1542582
+      NCT2= 0                                                           R1542583
+      ENK = 1.0/K1                                                      R1542584
+      WRITE (6,1800)                                                    R1542585
+ 1800 FORMAT(7X1HK18X1HG16X4HW/WR13X10HVN/(BR*WR)11X5HFSUBI14X5HGSUBI14XR1542586
+     15HFC/FI/)                                                         R1542587
+      DO 8000 I=1,NTOT                                                  R1542588
+      IF (ANSR(I)) 801,801,802                                          R1542589
+ 801  WWR(I) = -1.0                                                     R1542590
+      VBW(I) = 0.0                                                      R1542591
+      LG(I)=ANSI(I)/ANSR(I)                                             R1542592
+      GO TO 800                                                         R1542593
+ 802  WWR(I)=1.0/SQRT(ANSR(I))                                          R1542594
+      VBW(I) = WWR(I)/K1                                                R1542595
+      LG(I)=ANSI(I)/ANSR(I)                                             R1542596
+      IF(LG(I)) 803,804,1805                                            R1542597
+ 803  NCT2=NCT2+1                                                       R1542598
+      GO TO 800                                                         R1542599
+1805  NCT1=NCT1+1                                                       R1542600
+      GO TO 800                                                         R1542601
+ 804  NLG=1                                                             R1542602
+ 800  WRITE (6,666)K1,LG(I),WWR(I),VBW  (I),FSUBI,GSUBI,CORR            R1542603
+      IF(NPLOT.EQ.0) GO TO 8000                                         R1542604
+      IF(KOUNT.GE.999) GO TO 8000                                       R1542605
+      KOUNT = KOUNT+1                                                   R1542606
+      PLOT1(KOUNT) = ENK                                                R1542607
+      PLOT2(KOUNT) = LG(I)                                              R1542608
+      PLOT3(KOUNT) = WWR(I)                                             R1542609
+ 8000 CONTINUE                                                          R1542610
+      IF(NEV.EQ.0) GO TO 8001                                           R1542611
+      NSUM= NTOT-1                                                      R1542612
+      GMIN= ABS(LG(1))                                                  R1542613
+      KG=1                                                              R1542614
+      DO 705 I=1,NSUM                                                   R1542615
+      ABSG= ABS(LG(I+1))                                                R1542616
+      IF(ABSG.GT.GMIN) GO TO 705                                        R1542617
+      GMIN= ABSG                                                        R1542618
+      KG= I+1                                                           R1542619
+ 705  CONTINUE                                                          R1542620
+      DO 706 I=1,NTOT                                                   R1542621
+      R(I)= CABS(CCA(I,KG))                                             R1542622
+ 706  THETA(I) =ATAN2(AIMAG(CCA(I,KG)),REAL(CCA(I,KG)))                 R1542623
+      RNORM = R(NN)                                                     R1542624
+      THETAN = THETA(NN)                                                R1542625
+      DO 707 I=1,NTOT                                                   R1542626
+      R(I) = R(I)/RNORM                                                 R1542627
+      THETA(I) = THETA(I)-THETAN                                        R1542628
+      X(I) = R(I)*COS(THETA(I))                                         R1542629
+  707 Y(I) = R(I)*SIN(THETA(I))                                         R1542630
+      WRITE(6,709) ((R(I),THETA(I),X(I),Y(I)), I=1,NTOT)                R1542631
+  709 FORMAT(*0          R                 THETA                 R1     R1542632
+     1              R2*/ (4E20.8))                                      R1542633
+ 8001 WRITE (6,621)                                                     R1542634
+  621 FORMAT(1H0)                                                       R1542635
+ 666  FORMAT(E17.8,6E19.8)                                              R1542636
+      GO TO (667,668), NF1                                              R1542637
+  667 GTEST = NCT1                                                      R1542638
+      NF1=2                                                             R1542639
+      GO TO 812                                                         R1542640
+  668 IF(NCT1.NE.GTEST) GO TO 807                                       R1542641
+      GO TO 812                                                         R1542642
+  807 TRIG=-TRIG                                                        R1542643
+      GTEST=NCT1                                                        R1542644
+      IJ=IJ+1                                                           R1542645
+      IF(IJ.GT.3) GO TO 6050                                            R1542646
+      WRITE(6,8050) IJ                                                  R1542647
+ 8050 FORMAT(*0          DELTA = DELK*I1//)                             R1542648
+      GO TO 812                                                         R1542649
+ 6050 WRITE(6,6100)                                                     R1542650
+ 6100 FORMAT(55H0******************************************************)R1542651
+      K1 = K1-DELTA(1)                                                  R1542652
+      IF(K1.LT.LOWER.OR.K1.GT.UPPER) GO TO 950                          R1542653
+      GO TO 74                                                          R1542654
+  812 K1=K1+TRIG*DELTA(IJ)                                              R1542655
+ 900  IF(K1.GE.LOWER .AND. K1.LE. UPPER) GO TO 75                       R1542656
+C                                                                       R1542657
+C***********************************************************************R1542658
+C                                                                       R1542659
+C   DIVERGENCE CALCULATION                                              R1542660
+C                                                                       R1542661
+  950 WRITE (6,635)                                                     R1542662
+ 635  FORMAT(23H1DIVERGENCE CALCULATION/)                               R1542663
+      DO 6000 I=1,NU                                                    R1542664
+      DO 6000 J=1,NV                                                    R1542665
+ 6000 BDIV(I,J) = (BRLTAN*ELEVEN(I,J)+SEVEN(I,J))*RPI                   R1542666
+      DO 6001 I=1,NV                                                    R1542667
+      DO 6001 J=1,NU                                                    R1542668
+ 6001 DDIV(I,J) = -BLPTAN*FOURT(J,I)                                    R1542669
+      DO 6002 I=1,NU                                                    R1542670
+      DO 6002 J=1,NU                                                    R1542671
+      IF(I.NE.J) GO TO 6002                                             R1542672
+      ADIVZ(I)=UR*ONE(I,J)*WHSQ(I)                                      R1542673
+ 6002 ADIV(I,J) = BLPTAN*FOUR(I,J)                                      R1542674
+      DO 6003 I=1,NV                                                    R1542675
+      DO 6003 J=1,NV                                                    R1542676
+      IF(I.NE.J) GO TO 6003                                             R1542677
+      EDIVZ(I) = UR*SIXT(I,J)*WASQ(I)                                   R1542678
+ 6003 EDIV(I,J) = -(SEVENT(I,J)+BRLTAN*(TWENT1(I,J)-3.1415926*TWENT2(I,JR1542679
+     1)))*RPI                                                           R1542680
+      IF(NOPT1.EQ.0) GO TO 6012                                         R1542681
+      DO 6005 I=1,NU                                                    R1542682
+      SUM=0.0                                                           R1542683
+      DO 6006 K=1,N                                                     R1542684
+ 6006 SUM=SUM+UC(K)*HC(K,I)**2                                          R1542685
+ 6005 ADIVZ(I) = ADIVZ(I)+SUM*WHSQ(I)                                   R1542686
+      DO 6007 I=1,NV                                                    R1542687
+      SUM = 0.0                                                         R1542688
+      DO 6008 K=1,N                                                     R1542689
+ 6008 SUM=SUM+UC(K)*BPSQ(K)*ALPHC(K,I)**2                               R1542690
+ 6007 EDIVZ(I)=EDIVZ(I)+SUM*WASQ(I)                                     R1542691
+ 6012 IF(NOPT2.EQ.0) GO TO 1616                                         R1542692
+      DO 6014 I=1,NU                                                    R1542693
+ 6014 ADIVZ(I) = ADIVZ(I) +US*HS(I)**2                                  R1542694
+      DO 6015 I=1,NV                                                    R1542695
+ 6015 EDIVZ(I) = US*BPROD**2*ALPHS(I)**2*WASQ(I)+EDIVZ(I)               R1542696
+ 1616 IF(NPR2.EQ.0) GO TO 6020                                          R1542697
+      WRITE (6,600)                                                     R1542698
+      DO 1603 I=1,NU                                                    R1542699
+ 1603 WRITE (6,3009) (ADIV(I,J),J=1,NU)                                 R1542700
+      WRITE (6,606)                                                     R1542701
+      WRITE (6,3009) (ADIVZ(I),I=1,NU)                                  R1542702
+      WRITE (6,607)                                                     R1542703
+      DO 1608 I=1,NU                                                    R1542704
+ 1608 WRITE (6,3009) (BDIV(I,J),J=1,NV)                                 R1542705
+      WRITE (6,610)                                                     R1542706
+      DO 1611 I=1,NV                                                    R1542707
+ 1611 WRITE (6,3009) (DDIV(I,J),J=1,NU)                                 R1542708
+      WRITE (6,613)                                                     R1542709
+      DO 1614 I=1,NV                                                    R1542710
+ 1614 WRITE (6,3009) (EDIV(I,J),J=1,NV)                                 R1542711
+      WRITE (6,606)                                                     R1542712
+      WRITE (6,3009) (EDIVZ(I),I=1,NV)                                  R1542713
+ 6020 DO 6021 I=1,NU                                                    R1542714
+      DDIAG(I) = ADIVZ(I)                                               R1542715
+      DO 6021 J=1,NU                                                    R1542716
+ 6021 DIVT(I,J) = ADIV(I,J)                                             R1542717
+      DO 6022 I=1,NV                                                    R1542718
+      NUV=NU+I                                                          R1542719
+      DO 6022 J=1,NU                                                    R1542720
+ 6022 DIVT(NUV,J) = DDIV(I,J)                                           R1542721
+      DO 6023 I=1,NU                                                    R1542722
+      DO 6023 J=1,NV                                                    R1542723
+      NUV=NU+J                                                          R1542724
+ 6023 DIVT(I,NUV) = BDIV(I,J)                                           R1542725
+      DO 6024 I=1,NV                                                    R1542726
+      NUV1=NU+I                                                         R1542727
+      DDIAG(NUV1) = EDIVZ(I)                                            R1542728
+      DO 6024 J=1,NV                                                    R1542729
+      NUV2 = NU+J                                                       R1542730
+ 6024 DIVT(NUV1,NUV2) = EDIV(I,J)                                       R1542731
+      NUV=NU+NV                                                         R1542732
+      NUVPL1 = NUV+1                                                    R1542733
+      DO 6025 I=1,NUV                                                   R1542734
+      DO 6025 J=1,NUV                                                   R1542735
+ 6025 DIVG(I,J) = -DIVT(I,J)/DDIAG(I)                                   R1542736
+      CALL REIG(DIVG,NUV,NUV,0,RTR,RTI,EB,12,NSAV,IRUN,ANSR,            R1542737
+     1NUVPL1,DIVT)                                                      R1542738
+      WRITE (6,636)                                                     R1542739
+ 636  FORMAT(18X4HZETA33X10HVN/(BR*WR)/9X4HREAL14X9HIMAGINARY/)         R1542740
+      DO 639 I= 1,NUV                                                   R1542741
+      IF(RTR(I)) 640,640,641                                            R1542742
+ 640  VBRWR(I) =(-1.0,0.0)                                              R1542743
+      GO TO 639                                                         R1542744
+ 641  DENOM = CMPLX(RTR(I),RTI(I))                                      R1542745
+      VBRWR(I)= CSQRT(NUMER/DENOM)                                      R1542746
+ 639  CONTINUE                                                          R1542747
+      DO 637 I =1,NUV                                                   R1542748
+ 637  WRITE (6,638) RTR(I),RTI(I),VBRWR(I)                              R1542749
+ 638  FORMAT(2E20.8,10X2E20.8)                                          R1542750
+C                                                                       R1542751
+C***********************************************************************R1542752
+C                                                                       R1542753
+ 1700 WRITE (6,1701)                                                    R1542754
+ 1701 FORMAT(1H1)                                                       R1542755
+      IF(NPLOT.EQ.0) GO TO 1                                            R1542756
+      KOUNT = KOUNT+1                                                   R1542757
+      PLOT1(KOUNT) = 0.0                                                R1542758
+      PLOT2(KOUNT)   = 0.0                                              R1542759
+      PLOT3(KOUNT) = 0.0                                                R1542760
+      CALL DDIPLT(1,IDEN1,KOUNT,PLOT1,PLOT2,0,0,0,0,10,XM1,1,YM,13,     R1542761
+     1ITAPE)                                                            R1542762
+      CALL DDIPLT(1,IDEN1,KOUNT,PLOT3,PLOT2,0,0,0,0,10,XM2,1,YM,13,     R1542763
+     1ITAPE)                                                            R1542764
+      GO TO 1                                                           R1542765
+      END                                                               R1542766
+      SUBROUTINE UCB(N,Y,Z,DZ,BN)                                       R1542768
+      DIMENSION B(6)                                                    R1542769
+      DATA(B(I),I=1,6)/1.8751041,4.69409113,7.85475743,10.995541,14.1371R1542770
+     1684,17.27876/                                                     R1542771
+      U=2.*Y-1.                                                         R1542772
+      IF(N.LE.6)BN=B(N)                                                 R1542773
+      IF(N.GT.6)BN=FLOAT(2*N-1)*1.57079633                              R1542774
+      P=BN/2.                                                           R1542775
+      A=P*U                                                             R1542776
+      S=((EXP(A)-EXP(-A))/(EXP(P)-EXP(-P))+COS(A)/COS(P))/2.            R1542777
+      T=((EXP(A)+EXP(-A))/(EXP(P)+EXP(-P))+SIN(A)/SIN(P))/2.            R1542778
+      IF(N-N/2*2)6,6,7                                                  R1542779
+    6 Z=S                                                               R1542780
+      DZ=-BN*T*SIN(P)/COS(P)                                            R1542781
+      RETURN                                                            R1542782
+    7 Z=T                                                               R1542783
+      DZ= BN*S*COS(P)/SIN(P)                                            R1542784
+      RETURN                                                            R1542785
+      END                                                               R1542786
+      SUBROUTINE SUBPR                                                  R1542789
+      COMMON WINGNO,CALCNO,MACH,BRL,UR,TANLEA,MSUBN,EPS,K1,D1K,D2K,D3K, R1542790
+     1NU,NV,WH(6), WA(6), GH(6), GA(6)                                  R1542791
+      COMMON/WWS/       ONE(6,6),TWO(6,6),THREE(6,6),FOUR(6,6),FIVE(6,6)R1542792
+     3,SIX(6,6),SEVEN(6,6),EIGHT(6,6),NINE(6,6),TEN(6,6),ELEVEN(6,6),   R1542793
+     4TWELVE(6,6),THIRT(6,6),FOURT(6,6),FIFT(6,6),SIXT(6,6),SEVENT(6,6),R1542794
+     5EIGHTT(6,6),NINET(6,6),TWENTY(6,6),TWENT1(6,6),TWENT2(6,6),       R1542795
+     6TWENT3(6,6)                                                       R1542796
+      KPR=1                                                             R1542797
+      CALL PRINT(KPR,ONE,NU,NU)                                         R1542798
+      KPR=KPR+1                                                         R1542799
+      CALL PRINT(KPR,TWO,NU,NU)                                         R1542800
+      KPR=KPR+1                                                         R1542801
+      CALL PRINT(KPR,THREE,NU,NU)                                       R1542802
+      KPR=KPR+1                                                         R1542803
+      CALL PRINT(KPR,FOUR,NU,NU)                                        R1542804
+      KPR=KPR+1                                                         R1542805
+      CALL PRINT(KPR,FIVE,NU,NU)                                        R1542806
+      KPR=KPR+1                                                         R1542807
+      CALL PRINT(KPR,SIX,NU,NV)                                         R1542808
+      KPR=KPR+1                                                         R1542809
+      CALL PRINT(KPR,SEVEN,NU,NV)                                       R1542810
+      KPR=KPR+1                                                         R1542811
+      CALL PRINT(KPR,EIGHT,NU,NV)                                       R1542812
+      KPR=KPR+1                                                         R1542813
+      CALL PRINT(KPR,NINE,NU,NV)                                        R1542814
+      KPR=KPR+1                                                         R1542815
+      CALL PRINT(KPR,TEN,NU,NV)                                         R1542816
+      KPR=KPR+1                                                         R1542817
+      CALL PRINT(KPR,ELEVEN,NU,NV)                                      R1542818
+      KPR=KPR+1                                                         R1542819
+      CALL PRINT(KPR,TWELVE,NU,NV)                                      R1542820
+      KPR=KPR+1                                                         R1542821
+      CALL PRINT(KPR,THIRT,NU,NV)                                       R1542822
+      KPR=KPR+1                                                         R1542823
+      CALL PRINT(KPR,FOURT,NU,NV)                                       R1542824
+      KPR=KPR+1                                                         R1542825
+      CALL PRINT(KPR,FIFT,NU,NV)                                        R1542826
+      KPR=KPR+1                                                         R1542827
+      CALL PRINT(KPR,SIXT,NV,NV)                                        R1542828
+      KPR=KPR+1                                                         R1542829
+      CALL PRINT(KPR,SEVENT,NV,NV)                                      R1542830
+      KPR=KPR+1                                                         R1542831
+      CALL PRINT(KPR,EIGHTT,NV,NV)                                      R1542832
+      KPR=KPR+1                                                         R1542833
+      CALL PRINT(KPR,NINET,NV,NV)                                       R1542834
+      KPR=KPR+1                                                         R1542835
+      CALL PRINT(KPR,TWENTY,NV,NV)                                      R1542836
+      KPR=KPR+1                                                         R1542837
+      CALL PRINT(KPR,TWENT1,NV,NV)                                      R1542838
+      KPR=KPR+1                                                         R1542839
+      CALL PRINT(KPR,TWENT2,NV,NV)                                      R1542840
+      KPR=KPR+1                                                         R1542841
+      CALL PRINT(KPR,TWENT3,NV,NV)                                      R1542842
+      RETURN                                                            R1542843
+      END                                                               R1542844
+      SUBROUTINE PRINT(K,A,NU,NV)                                       R1542847
+      DIMENSION A(6,6)                                                  R1542848
+      WRITE (6,1000) K                                                  R1542849
+ 1000 FORMAT(9H0INTEGRALI5)                                             R1542850
+      DO 6 I=1,NU                                                       R1542851
+   6  WRITE (6,2000) (A(I,J),J=1,NV)                                    R1542852
+ 2000 FORMAT (6E20.8)                                                   R1542853
+      RETURN                                                            R1542854
+      END                                                               R1542855
+      SUBROUTINE INP1                                                   R1542858
+      COMMON WINGNO,CALCNO,MACH,BRL,UR,TANLEA,MSUBN,EPS,K1,D1K,D2K,D3K, R1542859
+     1NU,NV,WH(6), WA(6), GH(6), GA(6)                                  R1542860
+      WRITE (6,2000) WINGNO,CALCNO,MACH,NU,NV,UR,EPS,MSUBN,BRL,TANLEA   R1542861
+ 2000 FORMAT(1X10HWING NO. =F10.3,14X11HCALC. NO. =A6 ,19X3HM =E18.8,   R1542862
+     17X3HU =I4/8X3HV =I4,27X4HUR =E18.8,7X3HE =E18.8,6X4HMN =E18.8     R1542863
+     2/5X6HBR/L =E18.8,9X8HTANLEA =E18.8)                               R1542864
+      WRITE (6,2001)                                                    R1542865
+ 2001 FORMAT(43H0MODAL FREQUENCIES AND DAMPING COEFFICIENTS)            R1542866
+      WRITE (6,2002)                                                    R1542867
+ 2002 FORMAT(6X3HI =10X1H119X1H219X1H319X1H419X1H519X1H6)               R1542868
+      WRITE (6,2003) (WH(I),I=1,NU)                                     R1542869
+ 2003 FORMAT(9H0WHI/WR = 6E20.8 )                                       R1542870
+      WRITE (6,2004) (GH(I),I=1,NU)                                     R1542871
+ 2004 FORMAT(4X5HGHI = 6E20.8 )                                         R1542872
+      WRITE (6,2005) (WA(I),I=1,NV)                                     R1542873
+ 2005 FORMAT(9H0WAI/WR = 6E20.8 )                                       R1542874
+      WRITE (6,2006) (GA(I),I=1,NV)                                     R1542875
+ 2006 FORMAT(4X5HGAI = 6E20.8 )                                         R1542876
+      WRITE (6,2007) K1,D1K,D2K,D3K                                     R1542877
+ 2007 FORMAT(6X3HK =E18.8,12X7HDELK1 =E18.8, 2X8H DELK2 =E18.8,2X8H DELKR1542878
+     13 =E18.8)                                                         R1542879
+      RETURN                                                            R1542880
+      END                                                               R1542881
+      SUBROUTINE DDIPLT(A,B,C,D,E,F,G,H,I,J,K,L,M,N,O)
+C
+C  DUMMY ROUTINE
+C
+      RETURN
+      END
+      SUBROUTINE REIG (A,M,NVAL,NVEC,ROOTR,ROOTI,VEC,MAX,IDX,IRN,P,NP,  REIG0010
+     1 SAVE)                                                            REIG0020
+C        PROGRAM TO CALL QR TRANSFORMATION, VARIABLE DIMENSION          REIG0030
+C        MAXIMUM ITER IS 50                                             REIG0040
+      DIMENSION A(MAX,MAX),ROOTR(MAX),ROOTI(MAX),VEC(MAX,MAX),IDX(MAX), REIG0050
+     1 IRN(MAX),P(MAX),SAVE(MAX,NP)                                     REIG0060
+      REAL IDX,IRN                                                      REIG0070
+C                                                                       REIG0080
+      N = M                                                             REIG0090
+C        SAVE ORIGINAL MATRIX,  RESTORE AT 200                          REIG0100
+      DO 5 I=1,M                                                        REIG0110
+      DO 5 J=1,M                                                        REIG0120
+    5 SAVE(J,I) = A(J,I)                                                REIG0130
+C        REDUCE MATRIX TO HESSENBERG FORM                               REIG0140
+      CALL HESSEN (A,M,MAX)                                             REIG0150
+      ZERO = 0.0                                                        REIG0160
+      JJ = 1                                                            REIG0170
+  177 XNN = 0.0                                                         REIG0180
+      XN2 = 0.0                                                         REIG0190
+      AA = 0.0                                                          REIG0200
+      B = 0.0                                                           REIG0210
+      C = 0.0                                                           REIG0220
+      DD = 0.0                                                          REIG0230
+      R = 0.0                                                           REIG0240
+      SIG = 0.0                                                         REIG0250
+      ITER=0                                                            REIG0260
+      IF (N-2) 13,14,12                                                 REIG0270
+   13 ROOTR(1) = A(1,1)                                                 REIG0280
+      ROOTI(1) = 0.0                                                    REIG0290
+      GO TO 200                                                         REIG0300
+   14 JJ= -1                                                            REIG0310
+   12 X = (A(N-1,N-1) - A(N,N))**2                                      REIG0320
+      S = 4.0*A(N,N-1)*A(N-1,N)                                         REIG0330
+      ITER = ITER + 1                                                   REIG0340
+      IF (X .EQ. 0.0) GO TO 15                                          REIG0350
+      IF (ABS(S/X) .GT. 1.0E-8) GO TO 15                                REIG0351
+      IF (ABS(A(N-1,N-1)) - ABS(A(N,N))) 32,32,31                       REIG0360
+   31 E = A(N-1,N-1)                                                    REIG0370
+      G = A(N,N)                                                        REIG0380
+      GO TO 33                                                          REIG0390
+   32 G = A(N-1,N-1)                                                    REIG0400
+      E = A(N,N)                                                        REIG0410
+   33 F = 0.0                                                           REIG0420
+      H = 0.0                                                           REIG0430
+      GO TO 24                                                          REIG0440
+   15 S = X + S                                                         REIG0450
+      X = A(N-1,N-1) + A(N,N)                                           REIG0460
+      SQ = SQRT(ABS(S))                                                 REIG0470
+      IF (S) 18,19,19                                                   REIG0480
+   19 F = 0.0                                                           REIG0490
+      H = 0.0                                                           REIG0500
+      IF (X) 21,21,22                                                   REIG0510
+   21 E = (X-SQ)/2.0                                                    REIG0520
+      G = (X+SQ)/2.0                                                    REIG0530
+      GO TO 24                                                          REIG0540
+   22 G = (X-SQ)/2.0                                                    REIG0550
+      E = (X+SQ)/2.0                                                    REIG0560
+      GO TO 24                                                          REIG0570
+   18 F = SQ/2.0                                                        REIG0580
+      E = X/2.0                                                         REIG0590
+      G = E                                                             REIG0600
+      H = -F                                                            REIG0610
+   24 IF (JJ .LT. 0) GO TO 28                                           REIG0620
+      D = 1.0E-10*(ABS(G) + F)                                          REIG0630
+      IF (ABS(A(N-1,N-2)) .GT. D) GO TO 26                              REIG0640
+   28 ROOTR(N) = E                                                      REIG0650
+      ROOTI(N) = F                                                      REIG0660
+      ROOTR(N-1) = G                                                    REIG0670
+      ROOTI(N-1) = H                                                    REIG0680
+      N = N-2                                                           REIG0690
+      IF (JJ) 200,177,177                                               REIG0700
+   26 IF(ABS(A(N,N-1)).GT. 1.0E-10*ABS(A(N,N))) GO TO 50                REIG0710
+   29 ROOTR(N) = A(N,N)                                                 REIG0720
+      ROOTI(N) = 0.0                                                    REIG0730
+      N = N-1                                                           REIG0740
+      GO TO 177                                                         REIG0750
+   50 IF (ABS(ABS(XNN/A(N,N-1))-1.0)-1.0E-6) 63,63,62                   REIG0760
+   62 IF (ABS(ABS(XN2/A(N-1,N-2))-1.0)-1.0E-6) 63,63,700                REIG0770
+   63 VQ = ABS(A(N,N-1)) - ABS(A(N-1,N-2))                              REIG0780
+      IF (ITER-15) 53,164,64                                            REIG0790
+  164 IF (VQ) 165,165,166                                               REIG0800
+  165 R = A(N-1,N-2)**2                                                 REIG0810
+      SIG = 2.0*A(N-1,N-2)                                              REIG0820
+      GO TO 60                                                          REIG0830
+  166 R = A(N,N-1)**2                                                   REIG0840
+      SIG = 2.0*A(N,N-1)                                                REIG0850
+      GO TO 60                                                          REIG0860
+   64 IF (VQ) 29,29,28                                                  REIG0870
+  700 IF (ITER .GT. 50) GO TO 63                                        REIG0880
+      IF (ITER .GT. 5 ) GO TO 53                                        REIG0890
+      Z1 = ((E-AA)**2+(F-B)**2)/(E*E+F*F)                               REIG0900
+      Z2 = ((G-C)**2+(H-DD)**2)/(G*G+H*H)                               REIG0910
+      IF (Z1-0.25) 51,51,52                                             REIG0920
+   51 IF (Z2-0.25) 53,53,54                                             REIG0930
+   53 R=E*G-F*H                                                         REIG0940
+      SIG =E+G                                                          REIG0950
+      GO TO 60                                                          REIG0960
+   54 R=E*E                                                             REIG0970
+      SIG =E+E                                                          REIG0980
+      GO TO 60                                                          REIG0990
+   52 IF (Z2-0.25) 55,55,601                                            REIG1000
+   55 R=G*G                                                             REIG1010
+      SIG=G+G                                                           REIG1020
+      GO TO 60                                                          REIG1030
+  601 R = 0.0                                                           REIG1040
+      SIG = 0.0                                                         REIG1050
+   60 XNN = A(N,N-1)                                                    REIG1060
+      XN2 = A(N-1,N-2)                                                  REIG1070
+      CALL QRT (A,N,R,SIG,D,MAX)                                        REIG1080
+      AA = E                                                            REIG1090
+      B = F                                                             REIG1100
+      C = G                                                             REIG1110
+      DD = H                                                            REIG1120
+      GO TO 12                                                          REIG1130
+C        RESTORE MATRIX                                                 REIG1140
+  200 DO 210 J=1,M                                                      REIG1150
+      DO 210 I=1,M                                                      REIG1160
+  210 A(I,J) = SAVE(I,J)                                                REIG1170
+C        TEST FOR COMPLEX ROOTS                                         REIG1180
+      N = 0                                                             REIG1190
+      NC = M+1                                                          REIG1200
+      DO 225 I=1,M                                                      REIG1210
+      IF (ROOTR(I) .EQ. 0.) GO TO 212                                   REIG1220
+      IF (ABS(ROOTI(I)/ROOTR(I)) .GE. 1.E-12) GO TO 215                 REIG1230
+  212 IF (ABS(ROOTI(I)) .LT. 1.E-12) GO TO 218                          REIG1240
+C        INDEX FOR COMPLEX (END OF ARRAYS)                              REIG1250
+  215 NC = NC-1                                                         REIG1260
+      JM = NC                                                           REIG1270
+      GO TO 220                                                         REIG1280
+C        INDEX FOR REAL ROOTS SAME, N = NO. REAL ROOTS                  REIG1290
+  218 N = N+1                                                           REIG1300
+      JM = N                                                            REIG1310
+  220 IRN(JM) = ROOTR(I)                                                REIG1320
+  225 IDX(JM) = ROOTI(I)                                                REIG1330
+C        REAL ROOTS IN DESCENDING ORDER BY MAGNITUDE                    REIG1340
+      DO 240 I=1,M                                                      REIG1350
+      IF (I .GE. N) GO TO 235                                           REIG1360
+      K = I+1                                                           REIG1370
+      DO 230 J=K,N                                                      REIG1380
+      IF (ABS(IRN(I)) .GE. ABS(IRN(J))) GO TO 230                       REIG1390
+      SIG = IRN(J)                                                      REIG1400
+      IRN(J) = IRN(I)                                                   REIG1410
+      IRN(I) = SIG                                                      REIG1420
+  230 CONTINUE                                                          REIG1430
+  235 ROOTR(I) = IRN(I)                                                 REIG1440
+      ROOTI(I) = IDX(I)                                                 REIG1450
+C        STORE ZERO IN VECTOR                                           REIG1460
+      DO 240 J=1,M                                                      REIG1470
+  240 VEC(J,I) = 0.0                                                    REIG1480
+      IF (NVEC .LT. N) N = NVEC                                         REIG1490
+      IF (N .LE. 0) GO TO 250                                           REIG1500
+      DO 245 I = 1,N                                                    REIG1510
+      K = N+1-I                                                         REIG1520
+      IF (ABS(ROOTR(K)/ROOTR(1)) .GT.1.E-14) GO TO 248                  REIG1530
+  245 ROOTR(K) =0.                                                      REIG1540
+  248 CONTINUE                                                          REIG1541
+C        CALL ROUTINE FOR N VECTORS                                     REIG1550
+      CALL VECTOR (IDX,IRN,ROOTR,A,VEC,M,SAVE,P,NP,MAX,N)               REIG1560
+  250 RETURN                                                            REIG1570
+      END                                                               REIG1580
+      SUBROUTINE QRT(A,N,R,SIG,D,MAX)                                   *QRT0001
+      DIMENSION  A(MAX,MAX),PSI(2),G(3)                                 *QRT0002
+      N1 = N - 1                                                        *QRT0003
+      IP = IA                                                           *QRT0005
+      IF(N-3) 101,10,60                                                 *QRT0006
+ 60   DO 12 J = 3,N1                                                    *QRT0007
+      J1 = N - J                                                        *QRT0008
+      IF(ABS(A(J1+1,J1))-D)    10,10,11                                 *QRT0009
+   11 DEN = A(J1+1,J1+1)*(A(J1+1,J1+1)-SIG)+A(J1+1,J1+2)*A(J1+2,J1+1)+R *QRT0010
+      IF(DEN) 61,12,61                                                  *QRT0011
+ 61   IF(ABS(A(J1+1,J1)*A(J1+2,J1+1)*(ABS(A(J1+1,J1+1)+A(J1+2,J1+2)     *QRT0012
+     1-SIG)+ABS(A(J1+3,J1+2)))/DEN)-D)  10,10,12                        *QRT0013
+ 12   IP=J1                                                             *QRT0014
+ 10   DO  14  J=1,IP                                                    *QRT0015
+      J1=IP-J+1                                                         *QRT0016
+      IF(ABS(A(J1+1,J1))-D)    13,13,14                                 *QRT0017
+ 14   IQ=J1                                                             *QRT0018
+ 13   DO  100  I=IP,N1                                                  *QRT0019
+      IF(I-IP)   16,15,16                                               *QRT0020
+ 15   G(1)=A(IP,IP)*(A(IP,IP)-SIG)+A(IP,IP+1)*A(IP+1,IP)+R              *QRT0021
+      G(2)=A(IP+1,IP)*(A(IP,IP)+A(IP+1,IP+1)-SIG)                       *QRT0022
+      G(3)=A(IP+1,IP)*A(IP+2,IP+1)                                      *QRT0023
+      A(IP+2,IP)=0.0                                                    *QRT0024
+      GO TO 19                                                          *QRT0025
+ 16   G(1)=A(I,I-1)                                                     *QRT0026
+      G(2)=A(I+1,I-1)                                                   *QRT0027
+      IF(I-IA)   17,17,18                                               *QRT0028
+ 17   G(3)=A(I+2,I-1)                                                   *QRT0029
+      GO TO 19                                                          *QRT0030
+ 18   G(3)=0.0                                                          *QRT0031
+   19 XK = SIGN(SQRT(G(1)**2 + G(2)**2 + G(3)**2), G(1))                *QRT0032
+ 22   IF(XK)   23,24,23                                                 *QRT0033
+ 23   AL=G(1)/XK+1.0                                                    *QRT0034
+      PSI(1)=G(2)/(G(1)+XK)                                             *QRT0035
+      PSI(2)=G(3)/(G(1)+XK)                                             *QRT0036
+      GO TO 25                                                          *QRT0037
+ 24   AL=2.0                                                            *QRT0038
+      PSI(1)=0.0                                                        *QRT0039
+      PSI(2)=0.0                                                        *QRT0040
+ 25   IF(I-IQ)   26,27,26                                               *QRT0041
+ 26   IF(I-IP)    29,28,29                                              *QRT0042
+ 28   A(I,I-1)=-A(I,I-1)                                                *QRT0043
+      GO TO 27                                                          *QRT0044
+ 29   A(I,I-1)=-XK                                                      *QRT0045
+ 27   DO 30  J=I,N                                                      *QRT0046
+      IF(I-IA)  31,31,32                                                *QRT0047
+ 31   C=PSI(2)*A(I+2,J)                                                 *QRT0048
+      GO TO 33                                                          *QRT0049
+ 32   C=0.0                                                             *QRT0050
+ 33   E=AL*(A(I,J)+PSI(1)*A(I+1,J)+C)                                   *QRT0051
+      A(I,J)=A(I,J)-E                                                   *QRT0052
+      A(I+1,J)=A(I+1,J)-PSI(1)*E                                        *QRT0053
+      IF(I-IA)   34,34,30                                               *QRT0054
+ 34   A(I+2,J)=A(I+2,J)-PSI(2)*E                                        *QRT0055
+ 30   CONTINUE                                                          *QRT0056
+      IF(I-IA)   35,35,36                                               *QRT0057
+ 35   L=I+2                                                             *QRT0058
+      GO TO  37                                                         *QRT0059
+ 36   L=N                                                               *QRT0060
+ 37   DO  40  J=IQ,L                                                    *QRT0061
+      IF(I-IA)  38,38,39                                                *QRT0062
+ 38   C=PSI(2)*A(J,I+2)                                                 *QRT0063
+      GO TO  41                                                         *QRT0064
+ 39   C=0.0                                                             *QRT0065
+ 41   E=AL*(A(J,I)+PSI(1)*A(J,I+1)+C)                                   *QRT0066
+      A(J,I)=A(J,I)-E                                                   *QRT0067
+      A(J,I+1)=A(J,I+1)-PSI(1)*E                                        *QRT0068
+      IF(I-IA)  42,42,40                                                *QRT0069
+ 42   A(J,I+2)=A(J,I+2)-PSI(2)*E                                        *QRT0070
+ 40   CONTINUE                                                          *QRT0071
+      IF(I-N+3)   43,43,100                                             *QRT0072
+ 43   E=AL*PSI(2)*A(I+3,I+2)                                            *QRT0073
+      A(I+3,I)=-E                                                       *QRT0074
+      A(I+3,I+1)=-PSI(1)*E                                              *QRT0075
+      A(I+3,I+2)=A(I+3,I+2)-PSI(2)*E                                    *QRT0076
+ 100  CONTINUE                                                          *QRT0077
+ 101  RETURN                                                            *QRT0078
+       END                                                              *QRT0079
+      SUBROUTINE HESSEN(A,M,MAX)                                        HESS0002
+C     SUBROUTINE TO PUT MATRIX IN UPPER HESSENBERG FORM.                HESS0001
+      DIMENSION A(MAX,MAX), B(99)                                       HESS0003
+      DOUBLE PRECISION SUM                                              HESS0004
+      IF (M - 2) 30,30,32                                               HESS0005
+   32 DO 40 LC = 3,M                                                    HESS0006
+      N = M - LC + 3                                                    HESS0007
+      N1 = N - 1                                                        HESS0008
+      N2 = N - 2                                                        HESS0009
+      NI = N1                                                           HESS0010
+      DIV = ABS(A(N,N-1))                                               HESS0011
+      DO 2 J = 1,N2                                                     HESS0012
+      IF(ABS(A(N,J))- DIV) 2,2,1                                        HESS0013
+    1 NI = J                                                            HESS0014
+      DIV = ABS(A(N,J))                                                 HESS0015
+    2 CONTINUE                                                          HESS0016
+      IF(DIV) 3,40,3                                                    HESS0017
+    3 IF(NI - N1) 4, 7,4                                                HESS0018
+    4 DO 5 J = 1,N                                                      HESS0019
+      IA = N - 2                                                        *QRT0004
+      DIV = A(J,NI)                                                     HESS0020
+      A(J,NI) = A(J,N1)                                                 HESS0021
+    5 A(J,N1) = DIV                                                     HESS0022
+      DO 6 J = 1,M                                                      HESS0023
+      DIV = A(NI,J)                                                     HESS0024
+      A(NI,J) = A(N1,J)                                                 HESS0025
+    6 A(N1,J) = DIV                                                     HESS0026
+    7 DO 26 K = 1, N1                                                   HESS0027
+   26 B(K) = A(N,K)/A(N,N-1)                                            HESS0028
+      DO 45 J = 1,M                                                     HESS0029
+      SUM = 0.0                                                         HESS0030
+      IF (J - N1) 46,43,43                                              HESS0031
+   46 IF(B(J))  41,43,41                                                HESS0032
+   41 A(N,J) = 0.0                                                      HESS0033
+      DO 42 K = 1,N1                                                    HESS0034
+      A(K,J) = A(K,J) - A(K,N1)*B(J)                                    HESS0035
+   42 SUM = SUM + A(K,J)*B(K)                                           HESS0036
+      GO TO 45                                                          HESS0037
+   43 DO 44 K = 1,N1                                                    HESS0038
+   44 SUM = SUM + A(K,J)*B(K)                                           HESS0039
+   45 A(N1,J) = SUM                                                     HESS0040
+   40 CONTINUE                                                          HESS0041
+   30 RETURN                                                            HESS0042
+       END                                                              HESS0043
+      SUBROUTINE VECTOR(X,XX,LAMBA,A,IGVECT,N,APRIME,BUM,NX,NMAX,NV)    VEC00010
+      REAL IGVECT,LAMBA                                                 VEC00020
+      DIMENSION X(NMAX), XX(NMAX),A(NMAX,NMAX),IGVECT(NMAX,NMAX),       VEC00030
+     C APRIME(NMAX,NX),LAMBA(NMAX),BUM(NMAX)                            VEC00040
+C                                                                       VEC00050
+      NY = N-1                                                          VEC00060
+      ZT = ABS(LAMBA(1))                                                VEC00070
+      BUM(N) = 1.0                                                      VEC00080
+      MAXIT =50                                                         VEC00090
+      CONST = 1.E-12                                                    VEC00100
+C                                                                       VEC00110
+      DO 300 II=1,NV                                                    VEC00120
+      ICONST = 0                                                        VEC00130
+      JON = 1                                                           VEC00140
+C        STORE 0 IN XX.  APRIME = A - LAMBA I.  LAST COL = 1.0          VEC00150
+      DO 5 J=1,N                                                        VEC00160
+    5 IGVECT(J,II) = FLOAT(J)                                           VEC00170
+      DO 20 K=1,N                                                       VEC00180
+      XX(K) = 0.0                                                       VEC00190
+      APRIME(K,NX) = 1.0                                                VEC00200
+      DO 10 I=1,N                                                       VEC00210
+   10 APRIME(I,K) = A(I,K)                                              VEC00220
+   20 APRIME(K,K) = A(K,K) - LAMBA(II)                                  VEC00230
+C        JPIV = ROW INDEX,  KPIV = COL. INDEX FOR PIVOTAL STRATEGY      VEC00240
+      DO 100 I=1,NY                                                     VEC00250
+      PIV = 0.0                                                         VEC00260
+      JPIV = I                                                          VEC00270
+      KPIV = I                                                          VEC00280
+      I2 = I                                                            VEC00290
+      DO 25 JX=I2,N                                                     VEC00300
+      DO 25 IK=I2,N                                                     VEC00310
+      IF (ABS(PIV) .GT. ABS(APRIME(JX,IK))) GO TO 25                    VEC00320
+      JPIV = JX                                                         VEC00330
+      KPIV = IK                                                         VEC00340
+      PIV = APRIME(JX,IK)                                               VEC00350
+   25 CONTINUE                                                          VEC00360
+      IF (JPIV .EQ. I2) GO TO 35                                        VEC00370
+      DO 30 JX=I2,NX                                                    VEC00380
+      SWAP = APRIME(I2,JX)                                              VEC00390
+      APRIME(I2,JX) = APRIME(JPIV,JX)                                   VEC00400
+   30 APRIME(JPIV,JX) = SWAP                                            VEC00410
+   35 IF (KPIV .EQ. I2) GO TO 50                                        VEC00420
+      DO 40 JX=1,N                                                      VEC00430
+      SWAP = APRIME(JX,I2)                                              VEC00440
+      APRIME(JX,I2) = APRIME(JX,KPIV)                                   VEC00450
+   40 APRIME(JX,KPIV) = SWAP                                            VEC00460
+      SWAP = IGVECT(I2,II)                                              VEC00470
+      IGVECT(I2,II) = IGVECT(KPIV,II)                                   VEC00480
+      IGVECT(KPIV,II) = SWAP                                            VEC00490
+C        TEST FOR MULTIPLE ROOTS                                        VEC00500
+   50 PIZ = ABS(PIV/ZT)                                                 VEC00510
+      IF (PIZ .GT. CONST ) GO TO 55                                     VEC00520
+      JON = 2                                                           VEC00530
+      MULT = N - I2                                                     VEC00540
+      DO 52 IK=1,N                                                      VEC00550
+   52 X(IK) = 0.0                                                       VEC00560
+      X(I2) = 1.0                                                       VEC00570
+      IF (I2 .EQ. 1) GO TO 155                                          VEC00580
+      NNN = NY - MULT                                                   VEC00590
+      DO 54 JX=1,NNN                                                    VEC00600
+      NN = I2 - JX                                                      VEC00610
+      DO 53 IX =1,I2                                                    VEC00620
+      JO = IX + NN                                                      VEC00630
+      X(NN) = X(NN) - X(JO)*APRIME(NN,JO)                               VEC00640
+      IF (JO .EQ. I2) GO TO 54                                          VEC00650
+   53 CONTINUE                                                          VEC00660
+   54 CONTINUE                                                          VEC00670
+      GO TO 155                                                         VEC00680
+C        GAUSSIAN ELIMINATION                                           VEC00690
+   55 SUM = 1./APRIME(I,I)                                              VEC00700
+      BUM(I) = SUM                                                      VEC00710
+      DO 60 J=I,NX                                                      VEC00720
+   60 APRIME(I,J) = APRIME(I,J)*SUM                                     VEC00730
+      NN = I+1                                                          VEC00740
+      DO 100 JJ=NN,N                                                    VEC00750
+      DO 70 IZ=NN,NX                                                    VEC00760
+   70 APRIME(JJ,IZ) = APRIME(JJ,IZ) - APRIME(JJ,I)*APRIME(I,IZ)         VEC00770
+  100 CONTINUE                                                          VEC00780
+      IF (LAMBA(II) .EQ. 0.) GO TO 105                                  VEC00790
+      IF (ABS(APRIME(N,N)/ZT) .GE. CONST ) GO TO 120                    VEC00800
+  105 DO 110 IK=1,N                                                     VEC00810
+  110 APRIME(IK,NX) = 0.0                                               VEC00820
+      JON = 2                                                           VEC00830
+C        BACK SUBSTITUTION                                              VEC00840
+  120 X(N) = 1.0                                                        VEC00850
+      IF (JON .NE. 2) X(N) = APRIME(N,NX)/APRIME(N,N)                   VEC00860
+      DO 130 JX=1,NY                                                    VEC00870
+  130 X(JX) = APRIME(JX,NX)                                             VEC00880
+      DO 150 JX=1,NY                                                    VEC00890
+      NN = N-JX                                                         VEC00900
+      DO 140 IK=1,N                                                     VEC00910
+      JO = IK + NN                                                      VEC00920
+      X(NN) = X(NN) - X(JO)*APRIME(NN,JO)                               VEC00930
+      IF (JO .EQ. N) GO TO 150                                          VEC00940
+  140 CONTINUE                                                          VEC00950
+  150 CONTINUE                                                          VEC00960
+C        NORMALIZE VECTOR                                               VEC00970
+  155 SUM = 0.0                                                         VEC00980
+      DO 160 IK=1,N                                                     VEC00990
+  160 SUM = X(IK)**2 + SUM                                              VEC01000
+      SUM = SQRT(SUM)                                                   VEC01010
+      DO 170 JX=1,N                                                     VEC01020
+  170 X(JX) = X(JX)/SUM                                                 VEC01030
+      IF (JON .EQ. 2) GO TO 210                                         VEC01040
+      RDIFF = 0.0                                                       VEC01050
+      DO 180 IK=1,N                                                     VEC01060
+      RDIFF = (ABS(X(IK))-ABS(XX(IK)))**2 + RDIFF                       VEC01070
+  180 XX(IK) = X(IK)                                                    VEC01080
+      RDIFF = SQRT(RDIFF)                                               VEC01090
+      IF (RDIFF .LT. CONST) GO TO 210                                   VEC01100
+      IF (ICONST .EQ. MAXIT) GO TO 500                                  VEC01110
+      ICONST = ICONST + 1                                               VEC01120
+      DO 190 IK =1,N                                                    VEC01130
+  190 APRIME (IK,NX) = X(IK)                                            VEC01140
+      DO 200 IZ=1,N                                                     VEC01150
+      APRIME(IZ,NX) = BUM(IZ)*APRIME(IZ,NX)                             VEC01160
+      JX = IZ+1                                                         VEC01170
+      IF (JX .GT. N) GO TO 200                                          VEC01180
+      DO 195 IK=JX,N                                                    VEC01190
+  195 APRIME(IK,NX) = APRIME(IK,NX) - APRIME(IZ,NX)*APRIME(IK,IZ)       VEC01200
+  200 CONTINUE                                                          VEC01210
+      GO TO 120                                                         VEC01220
+C        REARRANGE ELEMENTS IN X                                        VEC01230
+  210 DO 220 J=1,N                                                      VEC01240
+  215 I2 = IFIX(IGVECT(J,II))                                           VEC01250
+      IF (I2 .EQ. J) GO TO 220                                          VEC01260
+      SWAP = X(I2)                                                      VEC01270
+      X(I2) = X(J)                                                      VEC01280
+      X(J) = SWAP                                                       VEC01290
+      SWAP = IGVECT(I2,II)                                              VEC01300
+      IGVECT(I2,II) = IGVECT(J,II)                                      VEC01310
+      IGVECT(J,II) = SWAP                                               VEC01320
+      GO TO 215                                                         VEC01330
+  220 CONTINUE                                                          VEC01340
+C        COLUMN VECTOR                                                  VEC01350
+      DO 230 J=1,N                                                      VEC01360
+  230 IGVECT(J,II) = X(J)                                               VEC01370
+  300 CONTINUE                                                          VEC01380
+      RETURN                                                            VEC01390
+C        NON-CONVERGENCE                                                VEC01400
+  500 PRINT 602                                                         VEC01410
+  602 FORMAT (//10X40H NON CONVERGENCE VECTOR IN 50 ITERATIONS)         VEC01420
+      RETURN                                                            VEC01430
+      END                                                               VEC01440
+      SUBROUTINE  FTLUP(X,Y,M,N,VARI,VARD)                              FTLU0010
+      DIMENSION VARI(1),VARD(1),V(3),YY(2)                              FTLU0020
+      IF (M.EQ.0.AND.N.EQ.0) GO TO 1                                    FTLU0030
+      IF(M.EQ.0.AND.N.NE.0)GO TO 97                                     FTLU0040
+      IF(N.LE.IABS(M)) GO TO 97                                         FTLU0050
+      IF(M.GT.0)GO TO 31                                                FTLU0060
+C             M.LT.0                                                    FTLU0070
+      DO 44 IYY=1,N                                                     FTLU0080
+      I=IYY                                                             FTLU0090
+      IF(VARI(I)-X)800,119,44                                           FTLU0100
+   44 CONTINUE                                                          FTLU0110
+      I=N+M                                                             FTLU0120
+C          IF X.LT.X(N),EXTRAPOLATE                                     FTLU0130
+      IF(M.EQ.-1)GO TO 801                                              FTLU0140
+      GO TO 802                                                         FTLU0150
+C          IF X.GT.X(1),EXTRAPOLATE                                     FTLU0160
+  800 IF(I.EQ.1.AND.M.EQ.-1)GO TO 801                                   FTLU0170
+      IF(I.EQ.1.AND.M.EQ.-2)GO TO 802                                   FTLU0180
+      IF(M.NE.-1)GO TO 622                                              FTLU0190
+C          M=-1                                                         FTLU0200
+      I=I-1                                                             FTLU0210
+  801 IF(VARI(I).LE.VARI(I+1))GO TO 97                                  FTLU0220
+      GO TO 1701                                                        FTLU0230
+C          M=-2                                                         FTLU0240
+  622 IF(I.NE.N)GO TO 1622
+      I=N-2
+      GO TO 802
+C          COMPARE WITH NEXT                                            FTLU0250
+ 1622 IF(VARI(I+1)-X)803,97,97
+  803 I=I-1                                                             FTLU0270
+      IF(I.EQ.1)GO TO 802                                               FTLU0280
+C          SEE WHICH THREE                                              FTLU0290
+      IF((VARI(I-1)-X).LT.(X-VARI(I+2)))I=I-1                           FTLU0300
+  802 IF(VARI(I).LE.VARI(I+1).OR.VARI(I+1).LE.VARI(I+2))GO TO 97        FTLU0310
+      GO TO 1702                                                        FTLU0320
+C             M.GT.0                                                    FTLU0330
+   31 DO 4 IYY=1,N                                                      FTLU0340
+      I=IYY                                                             FTLU0350
+      IF(X-VARI(I))700,119,4                                            FTLU0360
+    4 CONTINUE                                                          FTLU0370
+      I=N-M                                                             FTLU0380
+C          IF X.GT.X(N),EXTRAPOLATE                                     FTLU0390
+      IF(M.EQ.1)GO TO 701                                               FTLU0400
+      GO TO 702                                                         FTLU0410
+C          IF X.LT.X(1),EXTRAPOLATE                                     FTLU0420
+  700 IF(I.EQ.1.AND.M.EQ.1)GO TO 701                                    FTLU0430
+      IF(I.EQ.1.AND.M.EQ.2)GO TO 702                                    FTLU0440
+      IF(M.NE.1)GO TO 222                                               FTLU0450
+C          M=1                                                          FTLU0460
+      I=I-1                                                             FTLU0470
+  701 IF(VARI(I+1).LE.VARI(I))GO TO 97                                  FTLU0480
+C          LINEAR                                                       FTLU0490
+ 1701 Y=(VARD(I)*(VARI(I+1)-X)-VARD(I+1)*(VARI(I)-X))/(VARI(I+1)-VARI(I)FTLU0500
+     C)                                                                 FTLU0510
+      RETURN                                                            FTLU0520
+C          M=2                                                          FTLU0530
+  222 IF(I.NE.N)GO TO 1222
+      I=N-2
+      GO TO 702
+C          COMPARE WITH NEXT                                            FTLU0540
+ 1222 IF(X-VARI(I+1))703,97,97
+  703 I=I-1                                                             FTLU0560
+      IF(I.EQ.1)GO TO 702                                               FTLU0570
+C          SEE WHICH THREE                                              FTLU0580
+      IF((X-VARI(I-1)).LT.(VARI(I+2)-X))I=I-1                           FTLU0590
+  702 IF(VARI(I+1).LE.VARI(I).OR.VARI(I+2).LE.VARI(I+1))GO TO 97        FTLU0600
+C          SECOND ORDER                                                 FTLU0610
+ 1702 V(1)=VARI(I)-X                                                    FTLU0620
+      V(2)=VARI(I+1)-X                                                  FTLU0630
+      V(3)=VARI(I+2)-X                                                  FTLU0640
+      K=I                                                               FTLU0650
+      DO 704 J=1,2                                                      FTLU0660
+      YY(J)=(VARD(K)*V(J+1)-VARD(K+1)*V(J))/(VARI(K+1)-VARI(K))         FTLU0670
+  704 K=K+1                                                             FTLU0680
+      Y=(YY(1)*V(3)-YY(2)*V(1))/(VARI(I+2)-VARI(I))                     FTLU0690
+      RETURN                                                            FTLU0700
+C             ZERO ORDER(Y=Y(1))                                        FTLU0710
+    1 Y =VARD(1)                                                        FTLU0720
+      RETURN                                                            FTLU0730
+C             Y=Y(I)                                                    FTLU0740
+  119 Y=VARD(I)                                                         FTLU0750
+      RETURN                                                            FTLU0760
+C                                                                       FTLU0770
+C          ERROR PRINT                                                  FTLU0780
+   97 PRINT 103                                                         FTLU0790
+  103 FORMAT( /31H ERROR WAS ENCOUNTERED IN FTLUP)                      FTLU0800
+      PRINT 1103,M,N,X                                                  FTLU0810
+ 1103 FORMAT(  1X,2HM=I5,5X,2HN=I5,5X,2HX=E20.8)                        FTLU0820
+      IF(N.EQ.0)STOP                                                    FTLU0830
+      IF(M.EQ.0)STOP                                                    FTLU0840
+      PRINT 1104                                                        FTLU0850
+ 1104 FORMAT( 19H TABLE OUT OF ORDER)                                   FTLU0860
+      STOP                                                              FTLU0870
+      END                                                               FTLU0880
+      SUBROUTINEEGNC(A,P,NK,NN,NEV,MP,NC,X,VEC,AX,CK,VK,B,ASAVE,CKSAVE, EGNC 001
+     1VKSAVE,SEVAL,NSAV,ANS,NERROR)                                     EGNC 002
+      COMPLEXA(NK,NK),X(NK),VEC(NK),XX,XVEC,P,AMUIP,                    EGNC 003
+     1VKEEP,VECMX,EVAL,CVAL,TEMP,CTEMP,DENOM,CVEC,B(NK,NK),AX(NK),C,D,  EGNC 004
+     1VK(NK),CK(NK),ASAVE(NK,NK),ANS(NC,NK),PEVAL,CKSAVE(MP),VKSAVE(MP) EGNC 005
+     2,SEVAL(NK),E,DIFF,EIGVL                                           EGNC 006
+      DIMENSIONNSAV(NK)                                                 EGNC 007
+      NERROR=0
+      KNEV=NEV                                                          EGNC 008
+      N=NN                                                              EGNC 009
+      KNN=N+2                                                           EGNC 010
+      KC=0                                                              EGNC 011
+      KEV=0                                                             EGNC 012
+      ISAV=0                                                            EGNC 013
+      DO112I=1,N                                                        EGNC 014
+      DO112J=1,N                                                        EGNC 015
+  112 ASAVE(I,J)=A(I,J)                                                 EGNC 016
+      NUM=1                                                             EGNC 017
+      NDEM=N+3                                                          EGNC 018
+C     WILKINSON VARIATION OF THE POWER METHOD                           EGNC 019
+  113 W=0.0                                                             EGNC 020
+      KD=3                                                              EGNC 021
+      KONT2=0                                                           EGNC 022
+      CVAL=(0.0,0.0)                                                    EGNC 023
+      KDELTA=0                                                          EGNC 024
+      KONT1=0                                                           EGNC 025
+      KONTD=0                                                           EGNC 026
+      IF(N-1)9000,9001,9000                                             EGNC 027
+ 9000 DO100I=1,N                                                        EGNC 028
+      CK(I)=(0.0,0.0)                                                   EGNC 029
+  100 X(I)=(1.0,0.0)                                                    EGNC 030
+      DO101I=1,N                                                        EGNC 031
+  101 A(I,I)=A(I,I)-P                                                   EGNC 032
+  200 DO103I=1,N                                                        EGNC 033
+      VEC(I)=(0.0,0.0)                                                  EGNC 034
+      DO103J=1,N                                                        EGNC 035
+  103 VEC(I)=A(I,J)*X(J)+VEC(I)                                         EGNC 036
+      XVEC=(0.0,0.0)                                                    EGNC 037
+      XX=(0.0,0.0)                                                      EGNC 038
+      TESTN=0.0                                                         EGNC 039
+      TESTD=0.0                                                         EGNC 040
+      DO104I=1,N                                                        EGNC 041
+      XVEC=X(I)*VEC(I)+XVEC                                             EGNC 042
+  104 XX=X(I)*X(I)+XX                                                   EGNC 043
+      AMUIP=XVEC/XX                                                     EGNC 044
+      CALLNORM(VEC,N,EIGVL,NE)                                          EGNC 045
+      DO109I=1,N                                                        EGNC 046
+      VECMX=VEC(I)-X(I)                                                 EGNC 047
+      TESTN=CABS(VECMX)+TESTN                                           EGNC 048
+  109 TESTD=CABS(X(I))+TESTD                                            EGNC 049
+      EPS=TESTN/TESTD                                                   EGNC 050
+      IF(W)415,105,415                                                  EGNC 051
+  105 EVAL=AMUIP+P                                                      EGNC 052
+      DO110I=1,N                                                        EGNC 053
+      AX(I)=CK(I)                                                       EGNC 054
+      CK(I)=X(I)                                                        EGNC 055
+      VK(I)=VEC(I)                                                      EGNC 056
+  110 X(I)=VEC(I)                                                       EGNC 057
+      IF(EPS-.1E-9)201,201,202
+  202 IF(KD)2000,2005,2000                                              EGNC 059
+ 2000 KD=KD-1                                                           EGNC 060
+ 2006 KONT1=KONT1+1                                                     EGNC 061
+      KONT2=KONT2+1                                                     EGNC 062
+      IF(KONT2-150)200,200,201                                          EGNC 063
+ 2005 IF(KDELTA)2007,203,2007                                           EGNC 064
+ 2007 IF(KONT1-10)2006,2006,204                                         EGNC 065
+  203 TESTD=CABS(EVAL)                                                  EGNC 066
+      IF(TESTD-.1E-11)201,201,208
+  208 TESTN=CABS(EVAL-CVAL)                                             EGNC 068
+      TEST=TESTN/TESTD                                                  EGNC 069
+      CVAL=EVAL                                                         EGNC 070
+      IF(TEST-.00390625)204,204,205                                     EGNC 071
+  205 IF(KONT1-20)2006,2006,204                                         EGNC 072
+C     AITKENS DELTA SQUARED ACCELERATION                                EGNC 073
+  204 DO300I=1,N                                                        EGNC 074
+      DENOM=AX(I)-2.0*CK(I)+VK(I)                                       EGNC 075
+      RTEST=REAL(DENOM)                                                 EGNC 076
+      IF(RTEST)301,300,301                                              EGNC 077
+  301 TEMP=AX(I)*VK(I)-(CK(I)**2)                                       EGNC 078
+      X(I)=TEMP/DENOM                                                   EGNC 079
+  300 CONTINUE                                                          EGNC 080
+      KONT1=0                                                           EGNC 081
+      KDELTA=1                                                          EGNC 082
+      GOTO200                                                           EGNC 083
+  201 W=1.0                                                             EGNC 084
+      KONT1=0                                                           EGNC 085
+C     WIELANDT METHOD                                                   EGNC 086
+  430 DO400I=1,N                                                        EGNC 087
+      DO401J=1,N                                                        EGNC 088
+  401 B(I,J)=A(I,J)                                                     EGNC 089
+  400 B(I,I)=A(I,I)-EVAL                                                EGNC 090
+      KN=N                                                              EGNC 091
+      IP=1                                                              EGNC 092
+      JP=1                                                              EGNC 093
+C     FIND LARGEST MODULUS IN ITH COL.                                  EGNC 094
+  413 BOX=0.0                                                           EGNC 095
+      DO402J=JP,N                                                       EGNC 096
+      TEST=CABS(B(J,IP))                                                EGNC 097
+      IF(TEST-BOX)402,404,404                                           EGNC 098
+  404 BOX=TEST                                                          EGNC 099
+      K=J                                                               EGNC 100
+  402 CONTINUE                                                          EGNC 101
+      IF(BOX-.1E-12)4080,4080,407
+  407 IF(IP-K)403,405,403                                               EGNC 103
+C     INTERCHANGE KTH AND ITH ROWS OF MATRIX                            EGNC 104
+  403 DO406KCR=JP,N                                                     EGNC 105
+      C=B(K,KCR)                                                        EGNC 106
+      D=B(IP,KCR)                                                       EGNC 107
+      B(IP,KCR)=C                                                       EGNC 108
+  406 B(K,KCR)=D                                                        EGNC 109
+C     INTERCHANGE KTH AND ITH ELEMENTS OF VECTOR                        EGNC 110
+      C=X(K)                                                            EGNC 111
+      D=X(IP)                                                           EGNC 112
+      X(K)=D                                                            EGNC 113
+      X(IP)=C                                                           EGNC 114
+C     REDUCE MATRIX TO TRIANGULAR FORM BY GAUSSIAN ELIMINATION          EGNC 115
+  405 JM=JP+1                                                           EGNC 116
+      J=0                                                               EGNC 117
+      DO409I=JM,N                                                       EGNC 118
+      J=J+1                                                             EGNC 119
+  409 AX(J)=B(I,JP)/B(JP,JP)                                            EGNC 120
+      M=IP                                                              EGNC 121
+      KN=KN-1                                                           EGNC 122
+      DO412I=1,KN                                                       EGNC 123
+      DO410J=JM,N                                                       EGNC 124
+  410 B(M+1,J)=B(M+1,J)-AX(I)*B(JP,J)                                   EGNC 125
+  412 M=M+1                                                             EGNC 126
+      JT=IP                                                             EGNC 127
+      DO411I=1,KN                                                       EGNC 128
+      JT=JT+1                                                           EGNC 129
+  411 X(JT)=X(JT)-AX(I)*X(JP)                                           EGNC 130
+      IP=IP+1                                                           EGNC 131
+      JP=JP+1                                                           EGNC 132
+      IF(IP-N)413,414,408                                               EGNC 133
+C     DO BACK SOLUTION FOR VECTOR                                       EGNC 134
+  414 K=0                                                               EGNC 135
+      IS=0                                                              EGNC 136
+      TEMP=(0.0,0.0)                                                    EGNC 137
+  602 K=K+1                                                             EGNC 138
+      TEST=CABS(B(IP,IP))                                               EGNC 139
+      KP=N+1                                                            EGNC 140
+      IF(TEST-.1E-13)601,601,600
+  600 IF(IS.EQ.1)X(IP)=(0.0,0.0)                                        EGNC 142
+      X(IP)=(X(IP)-TEMP)/B(IP,IP)                                       EGNC 143
+  423 IP=IP-1                                                           EGNC 144
+      IF(IP)408,604,424                                                 EGNC 145
+  424 TEMP=(0.0,0.0)                                                    EGNC 146
+      DO603I=1,K                                                        EGNC 147
+      KP=KP-1                                                           EGNC 148
+  603 TEMP=B(IP,KP)*X(KP)+TEMP                                          EGNC 149
+      GOTO602                                                           EGNC 150
+  601 IS=1                                                              EGNC 151
+      X(IP)=(1.0,0.0)                                                   EGNC 152
+      GOTO423                                                           EGNC 153
+  604 CALLNORM(X,N,EIGVL,NE)                                            EGNC 154
+      GOTO200                                                           EGNC 155
+  415 EVAL=AMUIP+P                                                      EGNC 156
+      IF(IS)700,417,700                                                 EGNC 157
+  417 TESTD=CABS(EVAL)                                                  EGNC 158
+      IF(TESTD-.1E-11)418,418,419
+  419 TESTN=CABS(EVAL-CVAL)                                             EGNC 160
+      TEST=TESTN/TESTD                                                  EGNC 161
+      CVAL=EVAL                                                         EGNC 162
+      IF(TEST-.1E-11)700,700,420
+  420 IF(EPS-.1E-11)700,700,421
+  421 KONT1=KONT1+1                                                     EGNC 165
+      IF(KONT1-20)430,422,422                                           EGNC 166
+  418 EVAL=(0.0,0.0)                                                    EGNC 167
+C     MATRIX DEFLATION AND VECTOR INFLATION                             EGNC 168
+  700 DO701I=1,N                                                        EGNC 169
+      X(I)=VEC(I)                                                       EGNC 170
+  701 CK(I)=VEC(I)                                                      EGNC 171
+      IF(N-NE)408,703,702                                               EGNC 172
+  702 C=CK(NE)                                                          EGNC 173
+      D=CK(N)                                                           EGNC 174
+      CK(NE)=D                                                          EGNC 175
+      CK(N)=C                                                           EGNC 176
+C     INTERCHANGE COLUMNS                                               EGNC 177
+      DO704I=1,N                                                        EGNC 178
+      C=A(I,NE)                                                         EGNC 179
+      D=A(I,N)                                                          EGNC 180
+      A(I,NE)=D                                                         EGNC 181
+  704 A(I,N)=C                                                          EGNC 182
+C     INTERCHANGE ROWS                                                  EGNC 183
+      DO705I=1,N                                                        EGNC 184
+      C=A(NE,I)                                                         EGNC 185
+      D=A(N,I)                                                          EGNC 186
+      A(NE,I)=D                                                         EGNC 187
+  705 A(N,I)=C                                                          EGNC 188
+  703 K=N-1                                                             EGNC 189
+      DO706I=1,K                                                        EGNC 190
+  706 VK(I)=A(N,I)                                                      EGNC 191
+      DO707I=1,K                                                        EGNC 192
+      DO707J=1,K                                                        EGNC 193
+  707 A(I,J)=A(I,J)-CK(I)*VK(J)                                         EGNC 194
+      DO852I=1,K                                                        EGNC 195
+      KC=KC+1                                                           EGNC 196
+      CKSAVE(KC)=CK(I)                                                  EGNC 197
+  852 VKSAVE(KC)=VK(I)                                                  EGNC 198
+ 9003 KEV=KEV+1                                                         EGNC 199
+      SEVAL(KEV)=EVAL                                                   EGNC 200
+      NSAV(KEV)=NE                                                      EGNC 201
+      KONT=N                                                            EGNC 202
+      IF(NN-N)408,900,800                                               EGNC 203
+  800 JEV=KEV                                                           EGNC 204
+      KNT=NN                                                            EGNC 205
+      L=K+1                                                             EGNC 206
+      IF(ISAV)8001,8000,8001                                            EGNC 207
+ 8000 KCU=1                                                             EGNC 208
+      KCUS=KCU                                                          EGNC 209
+      KCT=N                                                             EGNC 210
+      KCTS=KCT                                                          EGNC 211
+      ISAV=1                                                            EGNC 212
+      GOTO808                                                           EGNC 213
+ 8001 INEV=0                                                            EGNC 214
+      KCU=KCUS+N+1                                                      EGNC 215
+      KCUS=KCU                                                          EGNC 216
+      KCT=KCTS+N                                                        EGNC 217
+      KCTS=KCT                                                          EGNC 218
+  808 JEV=JEV-1                                                         EGNC 219
+      KNT=KNT-1                                                         EGNC 220
+      JNE=NSAV(JEV)                                                     EGNC 221
+      J=0                                                               EGNC 222
+      DO840I=KCU,KCT                                                    EGNC 223
+      J=J+1                                                             EGNC 224
+      CK(J)=CKSAVE(I)                                                   EGNC 225
+  840 VK(J)=VKSAVE(I)                                                   EGNC 226
+      PEVAL=SEVAL(JEV)                                                  EGNC 227
+C     INFLATION                                                         EGNC 228
+      INF=0                                                             EGNC 229
+      DIFF=EVAL-PEVAL                                                   EGNC 230
+      TEST=CABS(DIFF)                                                   EGNC 231
+      IF(TEST-.1E-11)801,801,802
+  801 INF=1                                                             EGNC 233
+  802 TEMP=(0.0,0.0)                                                    EGNC 234
+      DO803I=1,L                                                        EGNC 235
+  803 TEMP=VK(I)*X(I)+TEMP                                              EGNC 236
+      TEST=CABS(TEMP)                                                   EGNC 237
+      IF(TEST-.1E-11)807,807,804
+  807 INF=0                                                             EGNC 239
+      E=(0.0,0.0)                                                       EGNC 240
+  805 DO806I=1,KONT                                                     EGNC 241
+  806 X(I)=X(I)+E*CK(I)                                                 EGNC 242
+      KONT=KONT+1                                                       EGNC 243
+      X(KONT)=E                                                         EGNC 244
+      C=X(KONT)                                                         EGNC 245
+      D=X(JNE)                                                          EGNC 246
+      X(KONT)=D                                                         EGNC 247
+      X(JNE)=C                                                          EGNC 248
+      CALLNORM(X,KONT,EIGVL,NE)                                         EGNC 249
+      L=L+1                                                             EGNC 250
+      IF(KNT-N)408,900,8080                                             EGNC 251
+ 8080 INEV=INEV+1                                                       EGNC 252
+      KCU=KCU-N-INEV                                                    EGNC 253
+      KCT=KCT-K-INEV                                                    EGNC 254
+      GOTO808                                                           EGNC 255
+  804 IF(INF)809,810,809                                                EGNC 256
+  809 E=(1.0,0.0)                                                       EGNC 257
+      GOTO805                                                           EGNC 258
+  810 E=TEMP/DIFF                                                       EGNC 259
+      GOTO805                                                           EGNC 260
+ 9001 EVAL=A(1,1)                                                       EGNC 261
+      K=N-1                                                             EGNC 262
+      GOTO9003                                                          EGNC 263
+C     TEST EIGENVECTOR IN ORIGINAL MATRIX                               EGNC 264
+  900 DO901I=1,NN                                                       EGNC 265
+      VEC(I)=(0.0,0.0)                                                  EGNC 266
+      DO901J=1,NN                                                       EGNC 267
+  901 VEC(I)=ASAVE(I,J)*X(J)+VEC(I)                                     EGNC 268
+      CALLNORM(VEC,NN,EIGVL,NE)                                         EGNC 269
+      TESTN=0.0                                                         EGNC 270
+      TESTD=0.0                                                         EGNC 271
+      DO902I=1,NN                                                       EGNC 272
+      VECMX=VEC(I)-X(I)                                                 EGNC 273
+      TESTN=CABS(VECMX)+TESTN                                           EGNC 274
+  902 TESTD=CABS(X(I))+TESTD                                            EGNC 275
+      EPS=TESTN/TESTD                                                   EGNC 276
+      N=N-1                                                             EGNC 277
+      J=0                                                               EGNC 278
+      ANS(1,NUM)=EVAL                                                   EGNC 279
+      ANS(2,NUM)=EIGVL                                                  EGNC 280
+      DO903I=3,KNN                                                      EGNC 281
+      J=J+1                                                             EGNC 282
+      ANS(I,NUM)=VEC(J)                                                 EGNC 283
+  903 CONTINUE                                                          EGNC 284
+      ANS(NDEM,NUM)=EPS                                                 EGNC 285
+      NUM=NUM+1                                                         EGNC 286
+      NERROR=1                                                          EGNC 287
+      KNEV=KNEV-1                                                       EGNC 288
+      IF(KNEV)4082,4082,113                                             EGNC 289
+ 4082 DO 483 I=1,NN
+      DO 483 J=1,NN
+  483 A(I,J) = ASAVE(I,J)                                               EGNC 292
+      RETURN                                                            EGNC 293
+  422 NERROR=2                                                          EGNC 294
+      GOTO4082                                                          EGNC 295
+ 4080 NERROR=3                                                          EGNC 296
+      GOTO4082                                                          EGNC 297
+  408 STOP                                                              EGNC 298
+      END                                                               EGNC 299
+C     SUBROUTINE TO NORMALIZE VECTOR                                    EGNC 302
+      SUBROUTINENORM(Y,L,VKEEP,NE)                                      EGNC 303
+      COMPLEXY(1),VKEEP                                                 EGNC 304
+      SB=0.0                                                            EGNC 305
+      DO1005I=1,L                                                       EGNC 306
+      STEST=CABS(Y(I))                                                  EGNC 307
+      IF(STEST-SB)1005,1007,1007                                        EGNC 308
+ 1007 SB=STEST                                                          EGNC 309
+      VKEEP=Y(I)                                                        EGNC 310
+      NE=I                                                              EGNC 311
+ 1005 CONTINUE                                                          EGNC 312
+ 1006 DO1008J=1,L                                                       EGNC 313
+ 1008 Y(J)=Y(J)/VKEEP                                                   EGNC 314
+      RETURN                                                            EGNC 315
+      END                                                               EGNC 316

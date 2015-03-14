@@ -1,0 +1,17 @@
+                               Preface
+
+                     How to use the QPLOT manuals
+
+
+     There are several manuals that describe the QPLOT system.  A list
+of the subroutines and how they are called may be found in the QPLOT
+Reference Manual (Volume 1).  The QPLOT User's manual (Volume 2)
+describes the action of the commands that are implemented in the QPLOT
+user input handler.  This manual may be incorporated into manuals for
+application programs, either directly into the body, as an appendix,
+or perhaps as a separate manual. 
+
+     Additional manuals describing the various application programs
+that use QPLOT will also be produced as needed.  For example, the
+program WORM uses the QPLOT library to produce simple plots.  WORM
+is described in Volume W1.

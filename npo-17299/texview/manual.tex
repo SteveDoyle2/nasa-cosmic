@@ -1,0 +1,472 @@
+% These are some macros defined to make this viewgraph go more smoothly
+\def\texcmd#1{\relax{\tt$\backslash$#1}} % A TeX command
+\def\vcmd#1#2{{\tt$\backslash$#1}$\{${\it #2}$\}$} % a TeXVIEW command
+\def\texview{\TeX VIEW} % Our logo
+\def\closeup{\bgroup\parskip=1pt} % For closing up paragraphs
+\def\endcloseup{\egroup}          % in a list
+%
+% Now we start with the necessary constants for the viewgraph
+%
+\parindent=0pt
+\initials{PJS}
+\title{\largerfonts \texview\ -- Typesetting Viewgraphs}
+\headline{\ifnum\pageno>1\standardsizefonts\rm%
+\hfil\texview\ -- Viewgraph Production\fi\hfil}
+\maxpagenumber{15}
+
+\texview\ is a package of \TeX\ macros which speeds viewgraph production by
+taking care of page format and labelling, and providing a user-friendly
+interface for generating the usual elements of a viewgraph.  The input file is
+created using your favorite text editor, and consists of normal \TeX\ commands.
+A {\tt .DVI} file is generated in the usual way and the hard copy produced with
+an {\tt IMPRINT/LANDSCAPE} command.  It is easy to print directly on
+transparencies. 
+
+This manual is produced using \texview.  It does not use many of the features
+of \texview\ -- indeed, there are 84 combinations of fonts alone.  The user is
+liable to discover applications for the \texview\ macros that the author never
+designed into them.  As an aid to learning, the reverse of each page of this
+manual contains the \texview\ commands used to produce it. 
+
+The \texview\ macros are grouped into the following categories:
+
+\incindent\closeup
+
+Format control
+
+Indentation control
+
+Font control
+
+Spacing control
+
+Graphical control
+
+A category of `invisible' macros handling page layout via the output routines. 
+
+\endcloseup\decindent
+
+
+\gotoindent{0}\filbreak \autoindenton{0}{\bf}{1}{}{arabic}
+
+Format control
+
+\incindent\setmarker{1}{\ }
+
+\vcmd{initials}{initials} will set the identifying initials at the foot of the 
+page.  
+
+\vcmd{maxpagenumber}{number} defines the number {\it n} in the footing label
+``Page {\it p} of {\it n}''.  For this to take effect on the first page, this
+command must be invoked somewhere before the end of the first page. The same
+injunction applies to \texcmd{initials}. This document started with
+\vcmd{initials}{PJS} and \vcmd{maxpagenumber}{\the\viewmaxpageno}. 
+
+\vcmd{pagenoformat}{format} will set the format for printing the page number at
+the bottom of the page -- {\it format} is either {\tt arabic}, {\tt roman} or
+{\tt ROMAN} (case-sensitive).  The page number may be accessed via
+\texcmd{pageno} as usual.  If you wish to make further changes to the format
+the page number is printed in, you will have to redefine the macro
+\texcmd{makebottom} -- see me. The default format is {\tt arabic}. 
+
+\vcmd{bottomstyle}{style} and \vcmd{bottomsize}{size} are available
+for changing the font style and size used in the text at the bottom of
+the page (defaults are \texcmd{standardfamily} and \texcmd{standardsizefonts}).
+
+\filbreak \vcmd{title}{title} This starts a new page and outputs {\it title} in
+bold type, centered, followed by a \texcmd{bigskip}.  This is really the only
+macro provided for higher-level control; since users' tastes for formatting of
+section names, sub-section titles, {\it \&c} vary so much, the task of
+constructing macros for that purpose has been left to them.  The {\texview}
+macros serve merely as useful tools to build such macros from. 
+
+\filbreak \vcmd{moveleftmargin}{distance} will move the left margin by the
+specified {\it distance} (positive inwards).  There is a corresponding
+\texcmd{moverightmargin}.  Paragraph indentation is implemented by moving the
+left margin, so care should be taken in using this command at indentations
+other than the outer level. 
+
+\filbreak \texcmd{resetleftmargin} will move the left margin back to the default
+position.  There is a corresponding \texcmd{resetrightmargin}. 
+
+\incindent
+
+N.B.:  \texcmd{resetleftmargin} also sets the indentation level to 0 (see next
+page).  If this command is executed at any indentation level other than 0, it
+should therefore be followed by a \texcmd{gotoindent} command to restore the
+proper indentation level. 
+
+\decindent
+
+\texcmd{viewdate} and \texcmd{viewtime} typeset the current date and time in
+the formats {\it mm/dd/yy} and {\it hh:mm} respectively. 
+
+\decindent
+
+\filbreak Indentation control
+
+\incindent
+
+The viewgraph is treated as being composed of paragraphs set at various levels
+of indentation.  This paragraph is currently being set at the second level.  Up
+to 5 levels are possible, numbered from 0 at the outermost (initial or first)
+level.  Each level may have associated with it a marker, or an automatically
+incrementing counter with which to introduce each paragraph.  Each level is
+indented from the previous one by the distance \texcmd{leftindent}, which is
+defaults to the value of \texcmd{parindent} set by Plain \TeX.
+\filbreak 
+
+The following macros are available for changing the level of indentation:
+
+\incindent
+
+\texcmd{incindent} increases the current level of indentation by one.
+
+\texcmd{decindent} decreases the current level by one.
+
+\vcmd{gotoindent}{level} sets the current level of indentation to 
+{\it level}.  
+
+\decindent
+
+It is recommended that these commands be issued with blank lines separating
+them fore and aft from any paragraph material, since \TeX\ does not reference
+the indendation level for a paragraph until it has read the whole paragraph.
+This approach avoids having to think about how \TeX\ works. 
+
+\filbreak
+The following macros are available for setting the marker with which each 
+paragraph is introduced:
+
+\incindent
+
+\vcmd{setmarker}{level}$\{${\it symbol}$\}$ will set the marker for 
+paragraphs set at level {\it level} to {\it symbol}, which may be one of 
+the following:
+\medskip
+\incindent\closeup
+
+\texcmd{markbullet} -- \markbullet
+
+\texcmd{markthindash} -- \markthindash
+
+\texcmd{markthickdash} -- \markthickdash
+
+\texcmd{marknull} -- $\langle${\it nothing}$\rangle$
+
+\endcloseup\decindent
+
+or any other symbol or text the user cares to use.
+\filbreak
+The defaults are equivalent to:
+\medskip
+\incindent\closeup
+
+\vcmd{setmarker\tt0}{\texcmd{markbullet}}
+
+\vcmd{setmarker\tt1}{\texcmd{markbullet}}
+
+\vcmd{setmarker\tt2}{\texcmd{markthickdash}}
+
+\vcmd{setmarker\tt3}{\texcmd{markthindash}}
+
+\vcmd{setmarker\tt4}{\texcmd{marknull}}
+
+\endcloseup\decindent
+
+\decindent
+
+\filbreak
+The following macros are available for setting automatic numbering/let\-tering: 
+
+\incindent
+
+\vcmd{autoindenton}{level}$\{${\it fore}$\}\{${\it char}$\}\{${\it aft}%
+$\}\{${\it format}$\}$ will invoke automatic numbering/lettering for 
+paragraphs at level {\it level}, starting at character {\it char} and set 
+in a {\it format} of {\tt arabic} ({\it `1', `2', `3'\dots}, or letters),
+{\tt roman} ({\it
+`i', `ii', `iii'\dots}), or {\tt ROMAN} ({\it `I', `II', `III'\dots}).
+Each paragraph label will be set with the symbols {\it fore} in
+front and {\it aft} afterward.  Example:
+
+\incindent
+
+\vcmd{autoindenton}{\tt3}$\{${\tt %
+(}$\}\{${\tt A}$\}\{${\tt )}$\}\{${\tt arabic}$\}$ will label subsequent 
+paragraphs at level 3 {\bf (A)}, {\bf (B)}, {\bf(C)}, etc.
+
+\decindent
+
+If the 
+{\it format} is {\tt roman} or {\tt ROMAN}, {\it char} must be in the range
+1\dots9 and will be converted to lower or upper case roman numerals by
+\texview.   Example:
+
+\incindent
+
+\vcmd{autoindenton}{\tt0}$\{\!${\tt %
+\tt[}$\}\{${\tt 5}$\}\{${\tt ]}$\!\}\{${\tt ROMAN}$\}$ will number succeeding
+paragraphs at level 0 {\bf [V]}, {\bf [VI]}, {\bf [VII]}, etc.
+
+\decindent
+
+For various reasons the {\it char} parameter must be just that -- one character
+only.
+
+\filbreak
+
+Numbering in {\tt arabic} format is done by increasing ASCII codes and hence
+the maximum is 9; however, all that would be needed to go further would be to
+re-issue the \texcmd{autoindenton} command with {\it 1} as the last character
+in the {\it fore} string to take care of labels up to 19, etc.  Example:
+
+\incindent
+
+\vcmd{autoindenton}{\tt1}$\{${$<$\tt2.}$\}\{${\tt 0}$\}\{${$\tt>$}$\}\{${\tt
+arabic}$\}$ will number succeeding paragraphs at level 1 {$\bf<$2.0$>$}, 
+{$\bf<$2.1$>$}, {$\bf<$2.2$>$}, etc. 
+
+\decindent
+
+The maximum number in roman numeral format is 23; going past that limit is left
+as an exercise to the reader$\ldots$ 
+
+\incindent
+
+Note also that {\it fore} and {\it aft} may include \TeX\ commands.
+Thus the counters at the outermost level in this document are set in bold
+face by inserting \texcmd{bf} in {\it fore}: 
+\vcmd{autoindenton}{\tt0}$\{\backslash{\tt bf}\}\{{\tt1}\}\{{}\}\{{\tt
+arabic}\}$ .
+
+\decindent
+\filbreak
+
+\vcmd{autoindentoff}{level} The paragraph marking will revert to the previously
+set markers at level {\it level}.  When {\texview} starts, automatic 
+indentation is off at all levels.
+
+
+\gotoindent{0}
+
+\filbreak Font control
+
+\incindent
+
+The following commands are available for changing font sizes:
+
+\incindent\closeup
+
+\smallerfonts \texcmd{smallerfonts}
+
+\smallfonts \texcmd{smallfonts}
+
+\standardsizefonts \texcmd{standardsizefonts}
+
+\largefonts \texcmd{largefonts}
+
+\largerfonts \texcmd{largerfonts}
+
+\standardsizefonts\decindent\endcloseup
+
+Each level will change baseline height appropriately.
+
+\filbreak The following commands are available for changing font families:
+
+\incindent\closeup
+
+\sansserif \texcmd{}sansserif ({\it italics} and {\bf boldface} available)
+
+\smallcaps \texcmd{}smallcaps (Roman face only)
+
+\standardfamily \texcmd{}standardfamily
+
+\endcloseup\decindent
+
+\filbreak 
+The usual \texcmd{rm}, \texcmd{it}, \texcmd{bf}, \texcmd{tt}, \texcmd{sl}
+commands are available and act appropriately in each combination of font size
+and family; if you use a \texcmd{tt} or \texcmd{sl} command in
+\texcmd{sansserif} mode or a \texcmd{it}, \texcmd{bf}, \texcmd{tt} or
+\texcmd{sl} command in \texcmd{smallcaps} mode then the corresponding font from
+\texcmd{standardfamily} will be selected. 
+
+
+\gotoindent{0}
+\talllines
+\filbreak Spacing control
+
+\incindent
+
+The macros
+
+\incindent\closeup
+
+\texcmd{shortlines}
+
+\texcmd{standardlines}
+
+\texcmd{talllines}
+
+\endcloseup\decindent
+
+\filbreak 
+affect the distances between lines independently of the font size.
+\texcmd{short\-lines} squashes lines together, and \texcmd{talllines} makes
+them further apart than \texcmd{standardlines}.  This page was set using
+\texcmd{talllines}.
+
+\filbreak
+The command \texcmd{filbreak} (see The \TeX book, p.\thinspace111) is very
+useful for breaking pages at sensible places; see how it was used to control
+page breaks in the source code for this document.
+
+
+\standardlines\gotoindent{0}
+
+\filbreak Graphical control
+
+\incindent\shortlines
+
+\vcmd{boxit}{text} will set a box around the \boxit{\it text}.
+
+The \vcmd{horizontalbarchart}{scale}$\{${\it nbars}$\}\{${\it depth}$\}$ and
+{\tt$\backslash$verticalbarchart}\-$\{${\it scale}$\}$\-$\{${\it
+nbars}$\}\{${\it width}$\}$ commands set up the parameters for a barchart, each
+bar of which is defined by the command 
+
+\incindent
+
+\vcmd{chartbar}{length}$\{${\it title}$\}$, where {\it length} is in
+user-defined units, and the {\it title} is set on the left of the bar for
+horizontal charts, underneath for vertical charts.
+
+{\it scale} represents the width of the chart in user-defined units, and
+{\it depth} is the depth of the diagram (specify `true' units) on the page. 
+{\it nbars} is the number of bars in the diagram.  For vertical charts,
+{\it scale} represents the depth of the chart, and {\it width} the width.
+
+\texcmd{endchart}: you must put this command after the last \texcmd{chartbar}.
+
+There are other bar chart macro packages around; this is not the best, but
+it may well be perfectly adequate for most tasks.
+
+For horizontal barcharts, the width of the titles for each bar defaults
+to {\tt 1.2truein}, and the width of a 100\% bar defaults to {\tt 6.8truein}.
+Users may change the width of titles by changing \texcmd{bartitlewidth}
+and \texcmd{chartwidth} respectively; they must sum to {\tt 8truein}.  Note
+that \texcmd{chartwidth} is reset to {\tt 6.8truein} by \texcmd{endchart},
+so it must be explicitly reset before each new \texcmd{horizontalbarchart}
+to which it is to apply.
+
+
+\filbreak 
+For diagrams, it is recommended that users create their diagrams with {\sl
+NAVPLOT} or {\sl PGPLOT} (scaling them with the appropriate routine for the
+Imagen), or with MacDraw on the Macintosh (converting them to imPRESS files
+with the {\sl MACTOIMP} utility), and then include the diagram in the viewgraph
+with the \texcmd{special}$\{${\it insert filename}$\}$ command, and open up the
+required space with a \texcmd{vskip}. 
+
+\gotoindent{0}
+
+\TeX\ Arcana
+
+\incindent
+
+\texcmd{headline} and \texcmd{footline} work in the usual fashion; 
+\texcmd{headline} has been used in this document.  The JPL logo will be 
+inserted on each page in the correct position automatically.   Especial
+care must be taken to ensure that the headline is in the right style and
+size, since styles and sizes will change more frequently in a viewgraph
+than an ordinary document; it is wise to specify size, style and family
+in the \texcmd{headline} command using the \texview\ macros.
+
+\decindent                                                           
+
+Dvitype
+
+\incindent
+
+{\tt DVITYPE} on the Grinnell and Ramtek will display a {\texview} document 
+completely; on all other terminals display option 7 is required.
+
+\filbreak
+
+\decindent
+
+Implementation
+
+\incindent
+
+In order to use \texview, insert the following lines into your
+LOGIN.COM file, exactly as shown here:
+\medskip
+{\parskip1pt\tt\obeylines\qquad\$\ SET COMMAND NAVTXT:TEXVIEW
+\qquad\$\ TEXVIEW :== INTEX """\&tex\_inputs:texview
+}
+Then simply type
+
+{\tt \qquad\$\ TEXVIEW} {\it input\_file}
+
+where {\it input\_file} is the name of the document containing the
+text.  You need not \texcmd{input} any files as in previous versions
+of \texview.
+
+\decindent
+
+\standardlines\filbreak
+Examples
+
+\incindent
+
+The following pages contain examples of the bargraph macros and picture
+insertion: 
+
+\filbreak
+\centerline{\texcmd{horizontalbarchart}}
+\vfill
+\centerline{\bf Programming performance:}\medskip
+\horizontalbarchart{1000}{5}{2truein}
+\chartbar{50}{\hfill Mon}{\hfill The Monday morning blues$\ldots$}
+\chartbar{200}{\hfill Tue}
+\chartbar{800}{\hfill Wed}
+\chartbar{900}{\hfill Thu}
+\chartbar{300}{\hfill Fri}{\hfill get ready for the weekend$\ldots$}
+\endchart
+\vfill\bigskip\filbreak
+
+\centerline{\texcmd{verticalbarchart}}\vfill
+\centerline{\bf Shuttle launch date slippage}\smallskip
+\verticalbarchart{3200}{10}{6truein}
+\chartbar{50}{1/86}
+\chartbar{500}{3/86}
+\chartbar{700}{5/86}
+\chartbar{1200}{7/86}
+\chartbar{2500}{9/86}
+\chartbar{2600}{11/86}
+\chartbar{2600}{1/87}
+\chartbar{2800}{3/87}
+\chartbar{3000}{5/87}
+\chartbar{3100}{7/87}
+\endchart
+\bigskip\filbreak
+
+\noindent\special{insert resid.dat}
+
+\vbox to2truein{
+\moveleftmargin{3truein}
+There are always other ways of graphing data, such as by {\sl NAVPLOT}, {\sl
+PGPLOT}, or {\sl MacDraw} plots, which can easily be inserted wherever one
+wishes on the page. 
+
+If you use this feature, be sure that you are familiar with how to 
+manipulate boxes in {\TeX}.
+\vfill
+}
+
+\resetleftmargin\gotoindent{1}
+
+The rest is up to your imagination$\ldots$
+\bye

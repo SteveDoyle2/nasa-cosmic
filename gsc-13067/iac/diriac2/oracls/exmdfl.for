@@ -1,0 +1,203 @@
+      SUBROUTINE EXMDFL (A,NA,B,NB,H,NH,AM,NAM,HM,NHM,Q,NQ,R,NR,F,NF,P,
+     1NP,HIDENT,HMIDEN,DISC,NEWT,STABLE,FNULL,ALPHA,IOP,DUMMY)
+C 
+C   PURPOSE:
+C      Solve either the continuous or discrete time-invariant asymptotic
+C      explicit (model-in-the-system) model-following problem.
+C 
+C   REFERENCES:
+C      Anderson, Brian D.O.; and Moore, John B.: Linear Optimal Con-
+C        trol.  Prentice-Hall, Inc., c.1971.
+C      Armstrong, E.S.: Digital Explicit Model Following With Unstable
+C        Model Dynamics.  AIAA Paper No. 74-888, AIAA Mechanics and
+C        Control of Flight Conference, Aug. 1974.
+C 
+C   Subroutines employed by EXMDFL: ADD, ASYREG, BARSTW, DPOCO, DPOSL,
+C      EQUATE, LNCNT, MULT, PRNT, SCALE, SUBT, SUM, TRANP
+C   Subroutines employing EXMDFL: None
+C 
+      IMPLICIT REAL*8 (A-H,O-Z)
+      DIMENSION A(1),B(1),H(1),AM(1),HM(1),Q(1),R(1),F(1),P(1),DUMMY(1)
+      DIMENSION NA(2),NB(2),NH(2),NAM(2),NHM(2),NQ(2),NR(2),NF(2),NP(2),
+     1IOP(1),IOPT(5),NDUM1(2),NDUM2(2),NDUM3(2)
+      LOGICAL  HIDENT,HMIDEN,DISC,NEWT,STABLE,FNULL,SYM
+      COMMON/TOL/EPSAM,EPSBM,IACM
+C 
+      IF( IOP(1) .EQ. 0 ) GO TO 300
+      CALL LNCNT(6)
+      IF( DISC ) WRITE(6,25)
+      IF( .NOT. DISC ) WRITE(6,50)
+   25 FORMAT(/' PROGRAM TO SOLVE ASYMPTOTIC DISCRETE EXPLICIT MODEL-FOLL
+     1OWING PROBLEM'//' PLANT DYNAMICS'/)
+   50 FORMAT(/' PROGRAM TO SOLVE ASYMPTOTIC CONTINUOUS EXPLICIT MODEL-FO
+     1LLOWING PROBLEM'//' PLANT DYNAMICS'/)
+      CALL PRNT(A,NA,' A  ',1)
+      CALL PRNT(B,NB,' B  ',1)
+      IF( HIDENT ) GO TO 75
+      CALL PRNT(H,NH,' H  ',1)
+      GO TO 100
+   75 CONTINUE
+      CALL LNCNT(3)
+      WRITE(6,85)
+   85 FORMAT(/' H IS AN IDENTITY MATRIX'/)
+C 
+  100 CONTINUE
+      CALL LNCNT(4)
+      WRITE(6,125)
+  125 FORMAT(//' MODEL DYNAMICS'/)
+      CALL PRNT(AM,NAM,' AM ',1)
+      IF( HMIDEN ) GO TO 175
+      CALL PRNT(HM,NHM,' HM ',1)
+      GO TO 200
+  175 CONTINUE
+      CALL LNCNT(3)
+      WRITE(6,185)
+  185 FORMAT(/' HM IS AN IDENTITY MATRIX '/)
+C 
+  200 CONTINUE
+      CALL LNCNT(4)
+      WRITE(6,225)
+  225 FORMAT(//' WEIGHTING MATRICES '/)
+      CALL PRNT(Q,NQ,' Q  ',1)
+      CALL PRNT(R,NR,' R  ',1)
+C 
+  300 CONTINUE
+      IF( IOP(2) .EQ. 0 ) GO TO 400
+      NF(1) = NB(2)
+      NF(2) = NA(1)
+      NP(1) = NA(1)
+      NP(2) = NA(1)
+      IOPT(1) = IOP(3)
+      IOPT(2) = IOP(4)
+      IOPT(3) = IOP(5)
+      IOPT(4) =  0
+      IOPT(5) =  0
+      N1 = NA(1)*NA(2) + 1
+      CALL EQUATE(Q,NQ,DUMMY,NDUM1)
+      CALL ASYREG(A,NA,B,NB,H,NH,DUMMY,NDUM1,R,NR,F,NF,P,NP,HIDENT,DISC
+     1,NEWT,STABLE,FNULL,ALPHA,IOPT,DUMMY(N1))
+C 
+  400 CONTINUE
+      IF( IOP(1) .EQ. 0 ) GO TO 600
+      CALL LNCNT(4)
+      WRITE(6,425)
+  425 FORMAT(//' CONTROL LAW U = -F( COL.(X,XM) ),  F = (F11,F12)'/)
+      CALL LNCNT(3)
+      WRITE(6,450)
+  450 FORMAT(/' PART OF F MULTIPLYING  X '/)
+      CALL PRNT(F,NF,' F11',1)
+      IF( .NOT. DISC  .AND. IOP(2) .EQ. 0 ) GO  TO 600
+      CALL PRNT(P,NP,' P11',1)
+      IF(  IOP(2) .EQ. 0 ) GO TO 600
+      CALL LNCNT(2)
+      WRITE(6,475)
+  475 FORMAT(/' EIGENVALUES OF P11')
+      NDUM1(1) = NA(1)
+      NDUM1(2) = 1
+      CALL PRNT(DUMMY(N1),NDUM1,0,3)
+      N1 = N1 + NDUM1(1)
+      NDUM1(2) = NA(1)
+      CALL LNCNT(2)
+      WRITE(6,500)
+  500 FORMAT(/' PLANT CLOSED-LOOP RESPONSE MATRIX A - BF11')
+      CALL PRNT(DUMMY(N1),NDUM1,0,3)
+      CALL LNCNT(2)
+      WRITE(6,525)
+  525 FORMAT(/' EIGENVALUES OF CLOSED-LOOP RESPONSE MATRIX')
+      N1 = N1 + NDUM1(1)*NDUM1(2)
+      NDUM1(2) = 2
+      CALL PRNT(DUMMY(N1),NDUM1,0,3)
+C 
+  600 CONTINUE
+      NF(1)= NB(2)
+      NF(2)= NA(1)
+      CALL MULT(B,NB,F,NF,DUMMY,NA)
+      CALL SUBT(A,NA,DUMMY,NA,DUMMY,NA)
+      IF(  IOP(1).EQ. 0  .OR.  IOP(2) .NE. 0 ) GO TO 700
+      CALL LNCNT(2)
+      WRITE(6,500)
+      CALL PRNT(DUMMY,NA,0,3)
+C 
+  700 CONTINUE
+      N1 =  NA(1)**2 +1
+      CALL TRANP(DUMMY,NA,DUMMY(N1),NA)
+      CALL EQUATE(DUMMY(N1),NA,DUMMY,NA)
+      NF(2) = NA(1) + NAM(1)
+      NP(2) = NF(2)
+      IF( .NOT. DISC .AND. IOP(2).EQ. 0 ) NP(2) = NAM(2)
+      IOPTT = 0
+      SYM = .FALSE.
+      CALL EQUATE( Q,NQ,DUMMY(N1),NDUM2)
+      IF( HMIDEN ) GO TO 725
+      CALL MULT(Q,NQ,HM,NHM,DUMMY(N1),NDUM2)
+  725 CONTINUE
+      IF( HIDENT ) GO TO 750
+      N2 = N1 + NQ(1)*NHM(2)
+      CALL TRANP(H,NH,DUMMY(N2),NDUM1)
+      N3 = N2 + NH(1)*NH(2)
+      CALL MULT(DUMMY(N2),NDUM1,DUMMY(N1),NHM,DUMMY(N3),NDUM2)
+      CALL EQUATE(DUMMY(N3),NDUM2,DUMMY(N1),NDUM2)
+  750 CONTINUE
+      N2 = NA(1)**2 + NA(1)*NHM(2) + 1
+      N3 = NA(1)**2 + 1
+      IF( .NOT. DISC .AND. IOP(2) .EQ. 0 ) N3 = 1
+      CALL EQUATE(DUMMY(N1),NDUM2,P(N3),NDUM2)
+      IF( DISC ) GO TO 800
+      EPSA = EPSAM
+      CALL BARSTW(DUMMY,NA,AM,NAM,P(N3),NDUM2,IOPTT,SYM ,EPSA,EPSA,DUMMY
+     1(N2))
+      GO TO 900
+C 
+  800 CONTINUE
+      CALL SCALE(P(N3),NDUM2,P(N3),NDUM2,-1.0D0)
+      N4 = N2 +NAM(1)**2
+      CALL EQUATE(AM,NAM,DUMMY(N2),NAM)
+      CALL SUM(DUMMY,NA,P(N3),NDUM2,DUMMY(N2),NAM,IOPTT,SYM,DUMMY(N4))
+C 
+  900 CONTINUE
+      N2 = NB(2)*NA(1) + 1
+      CALL TRANP(B,NB,DUMMY,NDUM1)
+      CALL MULT(DUMMY,NDUM1,P(N3),NDUM2,F(N2),NDUM3)
+      IF( .NOT. DISC ) GO TO 1000
+      N1 = NB(1)*NB(2) + 1
+      CALL MULT(DUMMY,NDUM1,P,NA,DUMMY(N1),NDUM2)
+      CALL MULT(DUMMY(N1),NDUM2,B,NB,DUMMY,NR)
+      CALL ADD(R,NR,DUMMY,NR,DUMMY,NR)
+      GO TO 1100
+C 
+ 1000 CONTINUE
+      CALL EQUATE(R,NR,DUMMY,NR)
+C 
+ 1100 CONTINUE
+      N1 = NR(1)**2 + 1
+C 
+C   * * * CALL TO MATHLIB FUNCTIONS * * *
+      CALL DPOCO(DUMMY,NR(1),NR(1),RCOND,DUMMY(N1),IERR)
+      IF( IERR .EQ. 0 ) GO TO 1200
+      CALL LNCNT(3)
+      WRITE(6,1150)
+ 1150 FORMAT(/' IN EXMDFL, THE COEFFICIENT MATRIX FOR DPOCO IS NOT POSIT
+     1IVE DEFINITE'/)
+      RETURN
+C 
+ 1200 CONTINUE
+      NT = N2
+      DO 1250 M1 = 1,NHM(2)
+         CALL DPOSL(DUMMY,NR(1),NR(1),F(NT))
+         NT = NT + NR(1)
+ 1250 CONTINUE
+      IF( .NOT. DISC ) GO TO 1300
+      CALL MULT(F(N2),NDUM3,AM,NAM,DUMMY,NDUM1)
+      CALL EQUATE(DUMMY,NDUM1,F(N2),NDUM1)
+C 
+ 1300 CONTINUE
+      IF( IOP(1) .EQ. 0 ) RETURN
+      CALL LNCNT(3)
+      WRITE(6,1325)
+ 1325 FORMAT(/' PART OF F MULTIPLYING XM '/)
+      CALL PRNT(F(N2),NDUM3,' F12',1)
+      NDUM1(1) = NA(1)
+      NDUM1(2) = NAM(1)
+      CALL PRNT(P(N3),NDUM1,' P12',1)
+      RETURN
+      END

@@ -1,0 +1,284 @@
+      SUBROUTINE SECBD2(ITEST,ZML,ETA,NALP)
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      COMMON/CSECBD/SECM,SECI(3,3),ZBAR2(3),YI02(3),ZZ2(3,3),ZZ2Y(3,3)
+     1             ,YZ2(3),YZT(3),ZB(3),YIZ02(3)
+C
+      COMMON/DEBUG2/IOUT,JOUT,KLUGE
+C
+      COMMON/ISECBD/I2BDY,NDOF2,IRAST,NDEP2,IARST(3),IRSCY(3)
+C
+      COMMON/RPOOL1/DUM1(39),OMEG(3)
+C
+      COMMON/SBDOUT/ANG2(3),ANG2D(3),ANG2DD(3),B(3,3),B0B(3,3)
+     1             ,OM2(3),SALP,CALP,SBET,CBET,H2B(3)
+C
+      COMMON/SECBDW/GAMMA2(3,6),DELTA2(3,3),DELT2(3,3),DELT2I(3,3)
+     1             ,COMQ(3,3),QGAM(3,6),DIQGM(3,6),DALP(6,6)
+     2             ,VP(3),VPS(6)
+C
+      COMMON/VARBLS/DEP(150),DER(150)
+C
+C
+      DIMENSION ZML(7,7),ETA(7)
+      DIMENSION OMY2(3),BD2F(3),BD2M(3)
+      DIMENSION V1(3),V2(3),V3(3),V4(3)
+      DIMENSION OM2D(3)
+      DIMENSION TRKS(3),TRKD(3)
+      DIMENSION RT2(3),DIR2(3)
+      DIMENSION ADER(3)
+C
+      DIMENSION U1(3),U2(3),U3(3),U4(3)
+      DIMENSION OO(3,3),O2O(3,3),ZY(3,3),SBDM(3)
+C
+      EQUIVALENCE (ANG2DD(1),GAM2DD),(ANG2DD(2),ALP2DD)
+      EQUIVALENCE (ANG2DD(3),BET2DD)
+      EQUIVALENCE (ANG2D(1),GAM2D),(ANG2D(2),ALP2D),(ANG2D(3),BET2D)
+C
+      IF(I2BDY.EQ.0) RETURN
+C
+      IF(ITEST.EQ.2) GO TO 120
+C
+C
+C     CALCULATE INERTIA TERMS DUE TO SECONDARY BODY MOTION
+C
+C     SYSTEM TRANSLATION
+C
+C     TRANSFORM SECONDARY BODY RATES INTO MAIN BODY FRAME
+C
+      CALL MATV(1,B0B,OM2,OMY2)
+C
+      DO 5 I=1,3
+      V1(I)=SECM*YZ2(I)
+    5 CONTINUE
+C
+      CALL CROSSV(OMY2,V1,V4)
+      CALL ADDV(OMEG,OMY2,V2)
+      CALL ADDV(OMEG,V2,V3)
+      CALL CROSSV(V3,V4,BD2F)
+C
+C     SYSTEM ROTATION
+C
+      O11=V3(1)*OMY2(1)
+      O12=V3(1)*OMY2(2)
+      O13=V3(1)*OMY2(3)
+      O21=V3(2)*OMY2(1)
+      O22=V3(2)*OMY2(2)
+      O23=V3(2)*OMY2(3)
+      O31=V3(3)*OMY2(1)
+      O32=V3(3)*OMY2(2)
+      O33=V3(3)*OMY2(3)
+C
+      BD2M(1)= O13*(YI02(2)*V1(1)+ZZ2Y(2,1))
+     1        +O23*(YI02(2)*V1(2)+ZZ2Y(2,2))
+     2        -(O11+O22)*(YI02(2)*V1(3)+ZZ2Y(2,3))
+C
+     3        -O12*(YI02(3)*V1(1)+ZZ2Y(3,1))
+     4        +(O33+O11)*(YI02(3)*V1(2)+ZZ2Y(3,2))
+     5        -O32*(YI02(3)*V1(3)+ZZ2Y(3,3))
+C
+      BD2M(2)=-(O22+O33)*(YI02(3)*V1(1)+ZZ2Y(3,1))
+     1        +O21*(YI02(3)*V1(2)+ZZ2Y(3,2))
+     2        +O31*(YI02(3)*V1(3)+ZZ2Y(3,3))
+C
+     3        -O13*(YI02(1)*V1(1)+ZZ2Y(1,1))
+     4        -O23*(YI02(1)*V1(2)+ZZ2Y(1,2))
+     5        +(O11+O22)*(YI02(1)*V1(3)+ZZ2Y(1,3))
+C
+      BD2M(3)= O12*(YI02(1)*V1(1)+ZZ2Y(1,1))
+     1        -(O33+O11)*(YI02(1)*V1(2)+ZZ2Y(1,2))
+     2        +O32*(YI02(1)*V1(3)+ZZ2Y(1,3))
+C
+     3        +(O22+O33)*(YI02(2)*V1(1)+ZZ2Y(2,1))
+     4        -O21*(YI02(2)*V1(2)+ZZ2Y(2,2))
+     5        -O31*(YI02(2)*V1(3)+ZZ2Y(2,3))
+C
+      IF(IRAST.EQ.0) GO TO 50
+C
+C     CALCULATE FORCES AND MOMENTS DUE TO PRESCRIBED ACCELERATION
+C     OF SECONDARY BODY
+C
+      OM2D(1)=-GAM2DD*CALP*SBET+ALP2DD*CBET-ALP2D*BET2D*SBET
+     1        +GAM2D*(ALP2D*SALP*SBET-BET2D*CALP*CBET)
+      OM2D(2)=BET2DD+GAM2DD*SALP+GAM2D*ALP2D*CALP
+      OM2D(3)=GAM2DD*CALP*CBET+ALP2DD*SBET+ALP2D*BET2D*CBET
+     1        -GAM2D*(ALP2D*SALP*CBET+BET2D*CALP*SBET)
+C
+C     ANGULAR ACCELERATION TERM FOR SYSTEM TRANSLATION
+C
+      CALL MATV(1,B0B,OM2D,V2)
+      CALL CROSSV(V2,V1,V4)
+C
+      DO 20 I=1,3
+      BD2F(I)=BD2F(I)+V4(I)
+   20 CONTINUE
+C
+C     ANGULAR ACCELERATION TERMS FOR SYSTEM ROTATION
+C
+      BD2M(1)=BD2M(1)+V2(1)*(YI02(2)*V1(2)+YI02(3)*V1(3)
+     1                     +ZZ2Y(2,2)+ZZ2Y(3,3))
+     2                -V2(2)*(YI02(2)*V1(1)+ZZ2Y(2,1))
+     3                -V2(3)*(YI02(3)*V1(1)+ZZ2Y(3,1))
+C
+      BD2M(2)=BD2M(2)-V2(1)*(YI02(1)*V1(2)+ZZ2Y(1,2))
+     1                +V2(2)*(YI02(3)*V1(3)+YI02(1)*V1(1)
+     2                     +ZZ2Y(3,3)+ZZ2Y(1,1))
+     3                -V2(3)*(YI02(3)*V1(2)+ZZ2Y(3,2))
+C
+      BD2M(3)=BD2M(3)-V2(1)*(YI02(1)*V1(3)+ZZ2Y(1,3))
+     1               -V2(2)*(YI02(2)*V1(3)+ZZ2Y(2,3))
+     2               +V2(3)*(YI02(1)*V1(1)+YI02(2)*V1(2)
+     3                      +ZZ2Y(1,1)+ZZ2Y(2,2))
+C
+C
+   50 CONTINUE
+C
+      IF(IOUT.EQ.1) GO TO 52
+      WRITE(6,5999) ITEST
+ 5999 FORMAT('0',10X,'DEBUGGING OUTPUT FROM SECBD2 ITEST =',I2,/)
+      WRITE(6,6000) BD2F,BD2M,OM2
+ 6000 FORMAT(' ',1P10E13.5)
+   52 CONTINUE
+C
+      IF(NDOF2.EQ.0) GO TO 100
+C
+C     CALCULATE SECONDARY BODY INERTIAL TERMS
+C
+      CALL MATV(2,B0B,OMEG,U1)
+C
+      DO 25 I=1,3
+      U3(I)=2.0D0*U1(I)+OM2(I)
+      DO 25 J=1,3
+      OO(I,J)=U1(I)*U1(J)
+      O2O(I,J)=U3(I)*OM2(J)+OO(I,J)
+      ZY(I,J)=ZB(I)*YIZ02(J)
+   25 CONTINUE
+C
+      OTR=OO(1,1)+OO(2,2)+OO(3,3)
+C
+      SBDM(1)= OO(1,3)*ZY(2,1)+O2O(1,3)*ZZ2(2,1)
+     1        +OO(2,3)*ZY(2,2)+O2O(2,3)*ZZ2(2,2)
+     2        +OO(3,3)*ZY(2,3)+O2O(3,3)*ZZ2(2,3)
+C
+     3        -OO(1,2)*ZY(3,1)-O2O(1,2)*ZZ2(3,1)
+     4        -OO(2,2)*ZY(3,2)-O2O(2,2)*ZZ2(3,2)
+     5        -OO(3,2)*ZY(3,3)-O2O(3,2)*ZZ2(3,3)
+C
+     6        -OTR*(ZY(2,3)-ZY(3,2))
+C
+      SBDM(2)= OO(1,1)*ZY(3,1)+O2O(1,1)*ZZ2(3,1)
+     1        +OO(2,1)*ZY(3,2)+O2O(2,1)*ZZ2(3,2)
+     2        +OO(3,1)*ZY(3,3)+O2O(3,1)*ZZ2(3,3)
+C
+     3        -OO(1,3)*ZY(1,1)-O2O(1,3)*ZZ2(1,1)
+     4        -OO(2,3)*ZY(1,2)-O2O(2,3)*ZZ2(1,2)
+     5        -OO(3,3)*ZY(1,3)-O2O(3,3)*ZZ2(1,3)
+C
+     6        -OTR*(ZY(3,1)-ZY(1,3))
+C
+      SBDM(3)= OO(1,2)*ZY(1,1)+O2O(1,2)*ZZ2(1,1)
+     1        +OO(2,2)*ZY(1,2)+O2O(2,2)*ZZ2(1,2)
+     2        +OO(3,2)*ZY(1,3)+O2O(3,2)*ZZ2(1,3)
+C
+     3        -OO(1,1)*ZY(2,1)-O2O(1,1)*ZZ2(2,1)
+     4        -OO(2,1)*ZY(2,2)-O2O(2,1)*ZZ2(2,2)
+     5        -OO(3,1)*ZY(2,3)-O2O(3,1)*ZZ2(2,3)
+C
+     6        -OTR*(ZY(1,2)-ZY(2,1))
+C
+      CALL SBDINF(ANG2,ANG2D,TRKS,TRKD)
+C
+      TGAM=TRKS(1)+TRKD(1)
+      TALP=TRKS(2)+TRKD(2)
+      TBET=TRKS(3)+TRKD(3)
+C
+      TGC=TGAM*CALP
+      SBDM(1)=SBDM(1)+TALP*CBET-TGC*SBET
+      SBDM(2)=SBDM(2)+TBET+TGAM*SALP
+      SBDM(3)=SBDM(3)+TALP*SBET+TGC*CBET
+C
+      DO 30 I=1,3
+      WS=0.0D0
+      DO 29 J=1,3
+      WS=WS+COMQ(I,J)*SBDM(J)
+   29 CONTINUE
+      RT2(I)=-WS-VP(I)
+   30 CONTINUE
+C
+      DO 35 I=1,NDOF2
+      WS=0.0D0
+      DO 34 J=1,NDOF2
+      WS=WS+DELT2I(I,J)*RT2(J)
+   34 CONTINUE
+      DIR2(I)=WS
+   35 CONTINUE
+C
+      DO 40 I=1,6
+      WS=0.0D0
+      DO 38 J=1,NDOF2
+      WS=WS+QGAM(J,I)*DIR2(J)
+   38 CONTINUE
+      ETA(I)=ETA(I)-VPS(I)-WS
+      DO 39 K=1,6
+      ZML(I,K)=ZML(I,K)-DALP(I,K)
+   39 CONTINUE
+   40 CONTINUE
+C
+C
+      IF(IOUT.EQ.1) GO TO 26
+      WRITE(6,6000) TRKS,TRKD,TGAM,TALP,TBET
+      WRITE(6,6000) SBDM
+      WRITE(6,6000) RT2,ETA
+   26 CONTINUE
+C
+C
+C
+  100 CONTINUE
+C
+C
+      DO 105 I=1,3
+      I3=I+3
+      ETA(I)=ETA(I)-BD2F(I)
+      ETA(I3)=ETA(I3)-BD2M(I)
+  105 CONTINUE
+C
+C
+  110 CONTINUE
+C
+      RETURN
+C
+  120 CONTINUE
+C
+      IF(NDOF2.EQ.0) GO TO 150
+C
+      DO 130 I=1,NDOF2
+      WS=0.0D0
+      DO 129 J=1,6
+      WS=WS+DIQGM(I,J)*ETA(J)
+  129 CONTINUE
+      ADER(I)=DIR2(I)-WS
+  130 CONTINUE
+C
+      I1=NDEP2
+      I2=NDEP2+NDOF2
+      DER(I1)=DEP(I2)
+      DER(I2)=ADER(1)
+      IF(NDOF2.EQ.1) GO TO 150
+      I1=I1+1
+      I2=I2+1
+      DER(I1)=DEP(I2)
+      DER(I2)=ADER(2)
+      IF(NDOF2.EQ.2) GO TO 150
+      I1=I1+1
+      I2=I2+1
+      DER(I1)=DEP(I2)
+      DER(I2)=ADER(3)
+C
+  150 CONTINUE
+C
+C
+C
+      RETURN
+C
+      END

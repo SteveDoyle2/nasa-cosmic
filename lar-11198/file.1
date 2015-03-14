@@ -1,0 +1,2973 @@
+USER.WEIGEL, BARBARA L              000940568N 11160
+JOB,1,0400,110000,10000.       D1290   10200T     100219        2048 - COSMIC
+RUN(S)
+LINECNT(10000)
+SETINDF.
+LGO.
+
+      PROGRAM D1290 (INPUT=1001,OUTPUT=1001,TAPE5=INPUT,TAPE6=OUTPUT,          1
+     1 TAPE8,TAPE9,TAPE10,TAPE11,TAPE12,TAPE13)                                2
+C                                                                              3
+C     TAPE8  TO SAVE DERIVATIVE OF PRESSURE AT EACH X FOR EACH PSI             4
+C     TAPE9  TO SAVE PRESSURE AT EACH X FOR EACH PSI                           5
+C     TAPE10 TO SAVE X AND CORRESPONDING ZS,RS,RC,COST,SINT                    6
+C     TAPE11 TO SAVE TS,ES,PS,RHOS,US,PSIS,HS,(EVIS(I),I=1,IMAX)               7
+C     TAPE12 TO SAVE PHYSICAL SPACE DATA                                       8
+C     TAPE13 TO SAVE COMMON FOR PICKUP TAPE                                    9
+C                                                                             10
+C     BL WEIGEL FOR WILLIAM L GROSE,APD,GAS PHYSICS SECTION                   11
+C        INVERSE TECHNIQUE FOR DETERMINING THE FLOW FIELD IN A SHOCK          12
+C        LAYER ABOUT A SMOOTH SYMMETRIC BODY TRAVELING AT HYPERSONIC          13
+C        SPEEDS                                                               14
+C        PHASE 3, A DIRECT NON-EQUILIBRIUM CALCULATION                        15
+C                                                                             16
+C        CALINTH,INTEGRATION ROUTINE                                          17
+C        THE NUMERICAL INTEGRATION ALGORITHM USED IS FOUND IN -A METHOD       18
+C        FOR THE NUMERICAL INTEGRATION OF COUPLED FIRST ORDER                 19
+C        DIFFERENTIAL EQUATIONS WITH GREATLY DIFFERENT TIME CONSTANTS-        20
+C        BY CHARLES E. TREANOR,CONTRACT NO.NASR-119,CAL REPORT NO.            21
+C        AG-1729-A-4,JANUARY 1964. CORNELL AERONAUTICAL LABORATORY,INC.       22
+C        CORNELL UNIVERSITY, BUFFALO,N.Y.                                     23
+C                                                                             24
+C        ITR1 - NEWTON-RAPHSON ITERATION METHOD                               25
+C        FTLUP - INTERPOLATION ROUTINE                                        26
+C                                                                             27
+C                            R         .SHOCK                                 28
+C                                    .                                        29
+C                            1     .                                          30
+C     B SHOCK GEOMETRY       1           .                                    31
+C                            1 X.    .     BODY                               32
+C                            1 /   .                                          33
+C                            1.                                               34
+C                            1   .                                            35
+C                            .  . . .  .  .  . .  Z                           36
+C                            1   .                                            37
+C                            1.                                               38
+C                            1 .   .                                          39
+C                            1  .    .                                        40
+C                            1          .                                     41
+C                            1     .                                          42
+C         INPUT                                                               43
+C     READ IN 1 CARD, 80 COLUMNS, BY FORMAT(8A10) FOR CASE ID                 44
+C          INPUT DEFINITIONS --- NAMELIST INPUT                               45
+C                                                                             46
+C     $NAM1                                                                   47
+C     DELX  = INCREMENT ALONG SHOCK                                           48
+C     ZSTERM= LENGTH OF SYMMETRY AXIS ,Z                                      49
+C     IMAX  = MAXIMUM NUMBER OF I-S,SPECIES,  LESS THAN OR = 25               50
+C     JMAX  = MAXIMUM NUMBER OF J-S,REACTIONS,LESS THAN OR = 50               51
+C     IBUG  = 0  DEBUG PRINT OUTS                                             52
+C           = 1,NO DEBUG PRINT OUTS, 1 UNLESS INPUT OTHERWISE                 53
+C     MJ    = CODE INDICATING WHICH SPECIES, I, TO USE TO CALCULATE           54
+C             COUPLING FACTOR, PHI SUB J, FOR REACTION J                      55
+C     M     = 1 FOR VIBRATIONAL NON-EQUILIBRIUM                               56
+C          = 0 FOR VIBRATIONAL EQUILIBRIUM                                    57
+C     R     = UNIVERSAL GAS CONSTANT, ERG/MOLE DEG K                          58
+C     GAMMA = RATIO OF SPECIFIC HEATS                                         59
+C     CIINF = FREE STREAM MASS FRACTION FOR EACH SPECIES                      60
+C     PINF  = FREE STREAM PRESSURE, DYNES/ CM**2                              61
+C     TINF  = FREE STREAM TEMPERATURE, DEG.K                                  62
+C     VINF  = FREE STREAM VELOCITY, CM/SEC                                    63
+C     MUI   = MOLECULAR WEIGHT FOR EACH SPECIES, GM/MOLE                      64
+C     THETAI= CHARACTERISTIC VIBRATIONAL TEMPERATURE,DEG.K                    65
+C     DGENI = FUDGE FACTOR TO PERMIT APPROXIMATING POLYATOMIC MOLECULE        66
+C            BY DIATOMIC MOLECULE                                             67
+C     FI    = 0 FOR MONATOMIC SPECIES                                         68
+C          = 1 FOR ALL OTHERS                                                 69
+C     DELHI = HEAT OF FORMATION,ERGS/MOLE                                     70
+C     DELI  = DISSOCIATION ENERGY OF SPECIES                                  71
+C     EVI   = VIBRATIONAL  ENERGY OF SPECIES                                  72
+C     LI    = NUMBER OF ELECTRONIC LEVELS FOR EACH SPECIES    LI.LE.20        73
+C     GIL   = DEGENERACY OF L-TH ELECTRONIC LEVEL FOR I-TH SPECIES            74
+C     EPSIIL= L-TH ELECTRONIC ENERGY LEVEL FOR I-TH SPECIES                   75
+C     AJ    = FREQUENCY FACTOR IN ARRHENIUS TYPE RATE EQ.                     76
+C     BJ    = TEMPERATURE EXPONENT IN ARRHENIUS TYPE RATE EQ.                 77
+C     EJ    =                      IN ARRHENIUS TYPE RATE EQ.                 78
+C     AIJ   = FACTOR TO ALLOW USE OF GENERAL SPECIES IN REACTION EQS IF       79
+C             DESIRED, =1.0 OR =0.0                                           80
+C     NUIJ  = STOICHIOMETRIC COEFFICIENTS OF I-IH REACTANT IN J-TH            81
+C             REACTION                                                        82
+C     NUPIJ = STOICHIOMETRIC COEFFICIENT  FOR I-TH PRODUCT IN J-TH            83
+C             REACTION                                                        84
+C     ALPIK = FACTORS IN EQ. FOR VIBRATIONAL RELAXATION TIME                  85
+C     BETAIK= FACTORS IN EQ. FOR VIBRATIONAL RELAXATION TIME                  86
+C     SIGIK = FACTORS IN EQ. FOR VIBRATIONAL RELAXATION TIME                  87
+C     XI    = INITIAL COMPUTING INTERVAL, 1.52587890625E-5                    88
+C     ELE1  = (2*IMAX+1) VALUES USED BY INTEGRATION SCHEME                    89
+C              NORMALLY .1,.5 OR .05                                          90
+C     ELE2  = (2*IMAX+1) VALUES USED BY INTEGRATION SCHEME                    91
+C              NORMALLY .05,.1 OR .01  AND.LT.ELE1                            92
+C     XPST   = 99 OR LESS X-S AT WHICH PHYSICAL SPACE CALCULATIONS ARE        93
+C              DESIRED. THEY MUST BE MULTIPLES OF DELX IN ORDER TO            94
+C              HAVE RS,COST,ZS AND SINT VALUES                                95
+C              AND LAST MUST BE .GT.X AT ZSTERM                               96
+C              THEREFORE, XPST(NXPST) SET = X AT ZSTERM + 100.0 IN            97
+C              PROGRAM                                                        98
+C             XPST(1) MAY NOT BE 0.0                                          99
+C              THEREFORE, XPST(1) SET = DELX IN PROGRAM                      100
+C     NXPST  = NUMBER OF X-S AT WHICH PHYSICAL SPACE CALCULATIONS ARE        101
+C              DESIRED                                                       102
+C     IPF   = PRINT FREQUENCY, 5 UNLESS INPUT OTHERWISE                      103
+C             IPF NOT IN COMMON THEREFORE IT MAY BE VARIED ON PICKUP RUN     104
+C     CIMAX = MAXIMUM CJ OR COMPUTING INTERVAL                               105
+C             0.0625 UNLESS INPUT OTHERWISE                                  106
+C             CIMAX NOT IN COMMON THEREFORE IT MAY BE VARIED ON PICKUP       107
+C             RUNS                                                           108
+C     TIMER =  TIME,IN DECIMAL SECONDS, REQUESTED ON JOB CARD                109
+C              IF THE JOB DOES NOT TERMINATE IN THE TIME ESTIMATED ON        110
+C              THE JOB CARD, DATA FOR PICKUP WILL BE STORED ON TAPE 13.      111
+C             IT IS = 3600.0 OR 1 HOUR UNLESS INPUT OTHERWISE                112
+C              TIMER NOT IN COMMON THEREFORE IT MAY BE VARIED ON PICKUP      113
+C              RUNS                                                          114
+C     IPICKUP = 0 UNLESS INPUT                                               115
+C             = 1 TO PICKUP CASE FROM TAPE 13                                116
+C     HCHECKT = CONTROL ON SIZE OF COMPUTING INTERVAL IN CHECK               117
+C               IF(ABS(HPREV-H)/H.GT.HCHECK) REDUCE INTERVAL                 118
+C     TCHECKT = CONTROL ON SIZE OF COMPUTING INTERVAL IN CHECK               119
+C                IF(ABS(TPREV-T)/T.GE.TCHECK) REDUCE INTERVAL                120
+C     PHMAX   = CONTROL ON COMPUTING INTERVAL .LE.65.0                       121
+C     $                                                                      122
+C                                                                            123
+C        AFTER READING IN NAM1, READ IN THE IMAX SPECIES BY FORMAT(8A10)     124
+C        10 SPACES PER SPECIES                                               125
+C        THEN READ IN THE JMAX REACTIONS BY THE SAME FORMAT USING 20         126
+C        SPACES PER REACTION                                                 127
+C        IF THE SPECIES AND REACTIONS ARE NOT READ IN,                       128
+C        IMAX/8 PLUS JMAX/4  BLANK CARDS MUST BE PUT IN THE DECK             129
+C                                                                            130
+C                  STOPS                                                     131
+C     STOP 1 INCORRECT INPUT                                                 132
+C     STOP 6  EOF 10 IN MAIN                                                 133
+C     STOP 13  IN SHOCKG                                                     134
+C     STOP 30 IN CHECK WHEN COMPUTING INTERVAL.LT.1.0E-15                    135
+C     STOP 50 EOF 9 IN FDPDX                                                 136
+C     STOP 66  IN BASIC WHEN NO CONVERGENCE ON E ITERATION                   137
+C     STOP 301 IN MAIN FOR ERROR IN XPST ARRAY  OR  IZTERM.GT.500            138
+C     STOP 321 ITR1 STOP IN MAIN                                             139
+C     STOP 422 IN MAIN AFTER PICKUP TAPE WRITTEN                             140
+C     STOP 663 IN MAIN WHEN X.NE.VARI(IPSI)                                  141
+C     STOP 665 IN MAIN AFTER AN INTEGRATION ATTEMPT                          142
+C     STOP 670  IN MAIN WHEN A CI NEGATIVE                                   143
+C                                                                            144
+      COMMON M,IX,IMAX,IPSI,IBUG(15)                                         145
+      COMMON P( 500),DPDX( 500),VARI( 500)                                   146
+C         FOLLOWING 7 VARIABLES DIMENSIONED BY IMAX                          147
+      COMMON EVIINF(25),THETAI(25),MUI(25),FI(25),DELHI(25),CIINF(25),       148
+     1       LI(25)                                                          149
+      COMMON R,MUINF,DELTA,LAMSQ,OMEGSQ,OMEGA,MU,T,U                         150
+C         FOLLOWING 2 VARIABLES DIMENSIONED BY (LMAX IN LI,IMAX)             151
+      COMMON EPSIIL(20,25),GIL(20,25)                                        152
+      COMMON VAR(52),CUVAR(52),DER(51)                                       153
+C                                                                            154
+      COMMON ZS,RS,RC,SINT,COST,PS,US,PSIS                                   155
+C         FOLLOWING 4 VARIABLES DIMENSIONED BY JMAX                          156
+      COMMON MJ(50),EJ(50),AJ(50),BJ(50)                                     157
+C         FOLLOWING 3 VARIABLES DIMENSIONED BY IMAX                          158
+      COMMON TVI(25),NI(25),DGENI(25)                                        159
+C         FOLLOWING 3 VARIABLES DIMENSIONED BY (IMAX+1,JMAX) OR              160
+C                                              (IMAX  ,JMAX)                 161
+      COMMON NUIJ(26,50),AIJ(25,50),NUPIJ(25,50)                             162
+C         FOLLOWING 3 VARIABLES DIMENSIONED BY (IMAX,IMAX)                   163
+      COMMON SIGIK(25,25),ALPIK(25,25),BETAIK(25,25)                         164
+      COMMON KSTAG,IMAXP2,IMAXL,N,IG,ISTAG,LPS2,LPS1,IMAXP1                  165
+      COMMON X,TS,ES,RHOS,HS,RHOURT,PHMAX,AAAAA,PREPSIS,PREX,PRERU           166
+C            EVIS(IMAX)                                                      167
+      COMMON EVIS(25),XPST(99),NXPST                                         168
+      COMMON IGC,IGE,CIG(25,6),EIG(25,6),CIT(6),EIT(6),PSIG(6),EG(6),        169
+     1 TG(6),HG(6)                                                           170
+C                                                                            171
+      COMMON /LAB2/ DELX,ZSTERM,IZTERM                                       172
+      COMMON /LAB3/ EINF,PINF,RHOINF,VINF,E,JMAX,KEYINT,RHO,HSTAG            173
+      COMMON /LAB4/ PFTL,KITR1,EITR1                                         174
+      COMMON /LAB5/ IUNEG                                                    175
+      COMMON /LAB6/ ELB,SPEC,CJ,TPREV,HPREV,HCHECK,TCHECK                    176
+      COMMON /LAB7/ ITNEG,IEXP                                               177
+      COMMON /LAB8/ ELE1(51),ELE2(51),NERR                                   178
+C               SPECIE(IMAX),REACT(JMAX),DELI(IMAX)                          179
+      DIMENSION SPECIE(25),REACT(100),IN(8),DELI(25)                         180
+C                                                                            181
+      DOUBLE PRECISION VAR,XVAR,H,CI,EVI                                     182
+C                                                                            183
+      DIMENSION  RUT(200),PSISTG(200)                                        184
+      DIMENSION ENG(11),ENGI(11)                                             185
+                                                                             186
+C               CM(IMAX),CI(IMAX),EVI(IMAX)                                  187
+      DIMENSION CM(25  ),CI(25  ),EVI(25  )                                  188
+      DIMENSION XX(3),XXX(3)                                                 189
+C        XX AND XXX ARE TOKEN DIMENSIONS WHICH WILL CHANGE AS THE            190
+C        DIMENSION STATEMENTS ARE CHANGED...THEY ARE USED FOR PICKUP RUN     191
+C                                                                            192
+      EQUIVALENCE (VAR(1),XVAR),(VAR(2),H),(VAR(3),CI(1))                    193
+C                  VAR(2+IMAX+1)=EVI(1)                                      194
+      EQUIVALENCE(M,XX(1)),(DELX,XXX(1))                                     195
+C                                                                            196
+      REAL MUI,LAMSQ,MUINF,MU                                                197
+      REAL NI                                                                198
+      REAL MINF,MINFSQ,LAMBDA                                                199
+      REAL NUIJ,NUPIJ                                                        200
+C                                                                            201
+C     INPUT                                                                  202
+C                                                                            203
+      NAME LIST/NAM1/ DELX,ZSTERM,IMAX,JMAX,IBUG,MJ,M,R,GAMMA,               204
+     1 CIINF,PINF,TINF,VINF,MUI,THETAI,DGENI,FI,DELHI,DELI,EVI,LI,           205
+     2 GIL,EPSIIL,AJ,BJ,EJ,AIJ,NUIJ,NUPIJ,ALPIK,BETAIK,SIGIK,XI,CIMAX,       206
+     3 ELE1,ELE2,XPST,NXPST,IPF,TIMER,IPICKUP,HCHECKT,TCHECKT,PHMAX          207
+C                                                                            208
+      EXTERNAL FOFTS                                                         209
+C                  INITIALIZE                                                210
+      REWIND 8                                                               211
+      REWIND 9                                                               212
+      REWIND 10                                                              213
+      REWIND 11                                                              214
+      REWIND 12                                                              215
+      REWIND 13                                                              216
+      NERR=0                                                                 217
+C                                  TIMER= ONE HOUR                           218
+      TIMER=3600.0                                                           219
+      DO 5 I=1,15                                                            220
+5     IBUG(I)=1                                                              221
+      NXPST=2                                                                222
+      IPICKUP=0                                                              223
+      ICHEK=0                                                                224
+      ITNEG=0                                                                225
+      IEXP=0                                                                 226
+      NEG=0                                                                  227
+      IGK=0                                                                  228
+      IUNEG=0                                                                229
+      DELZS=.001952125                                                       230
+      DELX=.015625                                                           231
+      XI=1.52587890625E-5                                                    232
+      CIMAX=.0625                                                            233
+      IPF=5                                                                  234
+      DO 10 I=1,52                                                           235
+      VAR(I)=0.                                                              236
+      CUVAR(I)=0.                                                            237
+      IF (I.EQ.52) GO TO 10                                                  238
+      DER(I)=0.                                                              239
+      ELE1(I)=0.                                                             240
+      ELE2(I)=0.                                                             241
+10    CONTINUE                                                               242
+C                  READ INPUT                                                243
+      READ (5,15) (IN(I),I=1,8)                                              244
+15    FORMAT (8A10)                                                          245
+      READ (5,NAM1)                                                          246
+      IF (IPICKUP.EQ.0) GO TO 60                                             247
+      PRINT 70                                                               248
+      PRINT 15, (IN(I),I=1,8)                                                249
+C     READ PICKUP FROM TAPE13                                                250
+C                 THIS SHOULD PICKUP ALL COMMON AND LABELED COMMON           251
+C                 PLEASE CHECK DIMENSIONS IF THERE ARE PICKUP PROBLEMS       252
+C                                                                            253
+CCC                AND        REMEMBER -- 2 SPACES FOR DOUBLE PRECISION      254
+      READ(13) (XX(I),I=1,9351),(XXX(I),I=1,128)                             255
+      DO 20 I=1,IZTERM                                                       256
+      READ (13) X,ZS,RS,RC,COST,SINT                                         257
+      CALL RECOUT (10,1,0,X,ZS,RS,RC,COST,SINT)                              258
+      READ (13) (DPDX(J),J=I,IZTERM)                                         259
+      CALL RECOUT (8,2,0,DPDX,I,IZTERM,1)                                    260
+      READ (13) IX,TS,ES,PS,RHOS,US,PSIS,HS                                  261
+      READ (13) (EVIS(J),J=1,IMAX)                                           262
+      CALL RECOUT (11,1,0,IX,TS,ES,PS,RHOS,US,PSIS,HS)                       263
+      CALL RECOUT (11,2,0,EVIS,1,IMAX,1)                                     264
+      READ (13) X                                                            265
+      READ (13) (P(J),J=I,IZTERM)                                            266
+      CALL RECOUT (9,1,0,X)                                                  267
+      CALL RECOUT (9,2,0,P,I,IZTERM,1)                                       268
+20    CONTINUE                                                               269
+      IF (KSTAG.EQ.0) GO TO 30                                               270
+      DO 25 I=1,KSTAG                                                        271
+      READ (13) K,RHOURT,VAR(1),PSIS                                         272
+      PRINT 21,K,RHOURT,VAR(1),PSIS                                          273
+   21 FORMAT(1X,*K=*I3,2X,*RHOURT=*E15.8,2X,*VAR(1)=*D15.8,2X,               274
+     1 *PSIS=*E15.8)                                                         275
+      CALL RECOUT (12,1,0,K,RHOURT,VAR(1),PSIS)                              276
+25    CONTINUE                                                               277
+30    REWIND 8                                                               278
+      REWIND 9                                                               279
+      REWIND 10                                                              280
+      REWIND 11                                                              281
+      REWIND 13                                                              282
+      IREAD=IPSI                                                             283
+      IF (IPSI.EQ.6.AND.ISTAG.EQ.1) IREAD=IPSI-1                             284
+      DO 35 I=1,IREAD                                                        285
+      CALL RECIN (11,1,IRECIN,IX,TS,ES,PS,RHOS,US,PSIS,HS)                   286
+      CALL RECIN (11,2,IRECIN,EVIS,1,IMAX,1)                                 287
+35    CONTINUE                                                               288
+      DO 40 I=1,IREAD                                                        289
+      CALL RECIN (9,1,IRECIN,X)                                              290
+      CALL RECIN (9,2,IRECIN,P,I,IZTERM,1)                                   291
+      CALL RECIN (8,2,IRECIN,DPDX,I,IZTERM,1)                                292
+40    CONTINUE                                                               293
+                                                                             294
+      READ (13) (XX(I),I=1,9351),(XXX(I),I=1,128)                            295
+      REWIND 13                                                              296
+      PRINT 45                                                               297
+   45 FORMAT(//23H----- PICKUP CASE -----//)                                 298
+      PRINT 50,EIT,NERR,PSIG,EG,TG,HG                                        299
+   50 FORMAT(/1X,*EIT=*E15.8,5E17.8/1X,*NERR=*I2/1X,*PSIG=*6E17.8/           300
+     1 3X,*EG=*6E17.8/   3X,*TG=*6E17.8/3X,*HG=*6E17.8///)                   301
+      PRINT 600, IPSI,IX,XVAR,H,MU,PFTL,RHO,U,T,E,SPEC,SUMCI                 302
+      IMAXP2=IMAX+2                                                          303
+      PRINT 605,(VAR(I),I=3,IMAXP2)                                          304
+      PRINT 610, (CM(I),I=1,IMAX)                                            305
+      IMAXP3=2+IMAX+1                                                        306
+      PRINT 615, (VAR(I),I=IMAXP3,IMAXL)                                     307
+      SPEC=0                                                                 308
+      IX=IX-1                                                                309
+      IBUG(11)=0                                                             310
+      KEYINT=0                                                               311
+      KIPF=0                                                                 312
+      HCHECK=HCHECKT                                                         313
+      TCHECK=TCHECKT                                                         314
+      PRINT 95                                                               315
+      PRINT 130,IPF                                                          316
+      PRINT 135,HCHECKT,TCHECKT,PHMAX                                        317
+      NXPSTP1=NXPST+1                                                        318
+      PRINT 140,XI,CIMAX,ELE1,ELE2,NXPST,(XPST(I),I=1,NXPSTP1)               319
+      PRINT 145,DELX,ZSTERM,TIMER,IPICKUP                                    320
+      PRINT 150,IMAX,JMAX,M,R,GAMMA,PINF,TINF,VINF                           321
+      PRINT 415, IZTERM                                                      322
+      PRINT 95                                                               323
+      IPICKPR=0                                                              324
+CCC        ON PICKUP PRINT FIRST 3 INTERVALS COMPUTED                        325
+      GO TO 560                                                              326
+60    CONTINUE                                                               327
+C                                                                            328
+      IF (IBUG(1).EQ.1) GO TO 65                                             329
+      WRITE (6,NAM1)                                                         330
+65    PRINT 70                                                               331
+70    FORMAT (1H1)                                                           332
+      PRINT 15, (IN(I),I=1,8)                                                333
+C                                                                            334
+C        SUM OF CIINF SHOULD BE 1.0                                          335
+      SUM=0.                                                                 336
+      DO 75 I=1,IMAX                                                         337
+75    SUM=SUM+CIINF(I)                                                       338
+      IF (SUM.EQ.1.0) GO TO 85                                               339
+      PRINT 80, SUM,(CIINF(I),I=1,IMAX)                                      340
+80    FORMAT (34H SUM OF CIINF SHOULD BE 1.0. IT IS,E17.8,8H  CIINF=/5(5     341
+     1E17.8/))                                                               342
+      STOP 1                                                                 343
+C                                                               STOP 1       344
+85    CONTINUE                                                               345
+      HCHECK=HCHECKT                                                         346
+      TCHECK=TCHECKT                                                         347
+C        READ IN SPECIES AND REACTIONS                                       348
+      READ (5,90) (SPECIE(I),I=1,IMAX)                                       349
+90    FORMAT (8A10)                                                          350
+      PRINT 95                                                               351
+95    FORMAT (//)                                                            352
+      PRINT 100                                                              353
+100   FORMAT (12H     SPECIES/)                                              354
+      DO 110 I=1,IMAX                                                        355
+  105 FORMAT(I5,2X,A10)                                                      356
+110   PRINT 105, I,SPECIE(I)                                                 357
+      PRINT 95                                                               358
+      JMAX2=2*JMAX                                                           359
+      READ (5,90) (REACT(I),I=1,JMAX2)                                       360
+      PRINT 115                                                              361
+115   FORMAT (14H     REACTIONS/)                                            362
+      J=0                                                                    363
+      DO 120 I=1,JMAX2,2                                                     364
+      J=J+1                                                                  365
+120   PRINT 125, J,REACT(I),REACT(I+1)                                       366
+  125 FORMAT(I5,2X,2A10)                                                     367
+      PRINT 95                                                               368
+C                  PRINT INPUT                                               369
+      PRINT 130, IPF                                                         370
+130   FORMAT (17H PRINT FREQUENCY=I3)                                        371
+      PRINT 135, HCHECKT,TCHECKT,PHMAX                                       372
+135   FORMAT (10H  HCHECKT=E15.8,10H  TCHECKT=E15.8,10H    PHMAX=E15.8)      373
+      NXPSTP1=NXPST+1                                                        374
+      PRINT 140, XI,CIMAX,ELE1,ELE2,NXPST,(XPST(I),I=1,NXPSTP1)              375
+140   FORMAT (4H XI=E15.8/7H CIMAX=E15.8/6H ELE1=2E17.8/7(7E17.8/)/6H EL     376
+     1E2=2E17.8/7(7E17.8/)/7H NXPST=I3/6H XPST=/15(7E17.8/)/)                377
+      PRINT 145, DELX,ZSTERM,TIMER,IPICKUP                                   378
+145   FORMAT (6H DELX=E15.8/8H ZSTERM=E15.8/7H TIMER=E15.8/9H IPICKUP=I1     379
+     1//)                                                                    380
+      PRINT 150, IMAX,JMAX,M,R,GAMMA,PINF,TINF,VINF,IBUG                     381
+  150 FORMAT(6H IMAX=I2,8H   JMAX=I2,20X2HM=I1/3H R=E15.8/7H GAMMA=E15.      382
+     18/6H PINF=E15.8/6H TINF=E15.8/6H VINF=E15.8/6H IBUG=I1,14I5/)          383
+      PRINT 155                                                              384
+155   FORMAT (5X,3HMUI12X,6HTHETAI9X,5HDGENI10X,2HFI13X,5HDELHI10X,4HDEL     385
+     1I11X,5HCIINF10X,3HEVI12X,2HLI/)                                        386
+      DO 165 I=1,IMAX                                                        387
+160   FORMAT (7E15.6,D15.6,I5)                                               388
+165   PRINT 160, MUI(I),THETAI(I),DGENI(I),FI(I),DELHI(I),DELI(I),CIINF(     389
+     1I),EVI(I),LI(I)                                                        390
+      PRINT 170                                                              391
+170   FORMAT (/6X,2HMJ6X,2HAJ16X,2HBJ16X,2HEJ/)                              392
+      DO 180 J=1,JMAX                                                        393
+175   FORMAT (I8,3E18.8)                                                     394
+180   PRINT 175, MJ(J),AJ(J),BJ(J),EJ(J)                                     395
+      PRINT 95                                                               396
+      IMAXP1=IMAX+1                                                          397
+      DO 225 I=1,IMAX                                                        398
+      PRINT 185, I,(GIL(L,I),L=1,IMAXP1)                                     399
+  185 FORMAT(4H  I=I5,23H  (GIL(L,I),L=1,IMAX+1)/(4(7E18.8/)))               400
+      PRINT 190, I,(EPSIIL(L,I),L=1,IMAXP1)                                  401
+  190 FORMAT(4H  I=I5,26H  (EPSIIL(L,I),L=1,IMAX+1)/4(7E18.8/))              402
+      PRINT 195, I,(AIJ(I,J),J=1,JMAX)                                       403
+  195 FORMAT(4H  I=I5,21H  (AIJ(I,J),J=1,JMAX)/8(7E18.8/))                   404
+      PRINT 200, I,(ALPIK(K,I),K=1,IMAX)                                     405
+  200 FORMAT(4H  I=I5,23H  (ALPIK(K,I),K=1,IMAX)/4(7E18.8/))                 406
+      PRINT 205, I,(BETAIK(K,I),K=1,IMAX)                                    407
+  205 FORMAT(4H  I=I5,24H  (BETAIK(K,I),K=1,IMAX)/4(7E18.8/))                408
+      PRINT 210, I,(SIGIK(K,I),K=1,IMAX)                                     409
+  210 FORMAT(4H  I=I5,23H  (SIGIK(K,I),K=1,IMAX)/4(7E18.8/))                 410
+      PRINT 215, I,(NUIJ(I,J),J=1,JMAX)                                      411
+  215 FORMAT(4H  I=I5,22H  (NUIJ(J,I),J=1,JMAX)/8(7E18.8/))                  412
+      PRINT 220, I,(NUPIJ(I,J),J=1,JMAX)                                     413
+  220 FORMAT(4H  I=I5,23H  (NUPIJ(J,I),J=1,JMAX)/8(7E18.8/))                 414
+      PRINT 95                                                               415
+225   CONTINUE                                                               416
+      IM=IMAX+1                                                              417
+      PRINT 215, IM,(NUIJ(IM,J),J=1,JMAX)                                    418
+      PRINT 230                                                              419
+230   FORMAT (2X,9HEND INPUT//)                                              420
+      PRINT 95                                                               421
+C                                                                            422
+C         DEFINE SHOCK GEOMETRY                                              423
+C         AT EACH X FIND ZS,RS,RC,COST,SINT AND STORE ON TAPE 10             424
+C                                                                            425
+      CALL SHOCKG (DELX,ZSTERM,IZTERM)                                       426
+C                                                                            427
+C         IZTERM=NUMBER OF DELTA X INCREMENTS AS GENERATED IN SHOCKG         428
+      IF (NXPST-1.GT.IZTERM) PRINT 235                                       429
+235   FORMAT (84H NXPST-1.GT.IZTERM,IT MUST BE .LE. FOR PHYSICAL SPACE C     430
+     1ALCULATIONS - SEE DO 700 LOOP/)                                        431
+      IF (NXPST-1.GT.IZTERM) STOP 301                                        432
+      PRINT 415, IZTERM                                                      433
+      IF (IZTERM.GT.500) PRINT 240                                           434
+240   FORMAT (1X,50HIZTERM.GT.500 CHANGE DIMENSION OF P,DPDX AND VARI )      435
+      IF(IZTERM.GT.500) STOP 301                                             436
+C                                                              STOP 301      437
+C              FREESTREAM QUANTITIES                                         438
+      SUM=0                                                                  439
+      DO 245 I=1,IMAX                                                        440
+245   SUM=SUM+CIINF(I)/MUI(I)                                                441
+      MUINF=1./SUM                                                           442
+      RHOINF=MUINF*PINF/(R*TINF)                                             443
+      AINF=SQRT(GAMMA*R*TINF/MUINF)                                          444
+      MINF=VINF/AINF                                                         445
+C              FOR EACH I, SPECIE                                            446
+      EINF=0                                                                 447
+      DO 275 I=1,IMAX                                                        448
+      TEM=EXP(THETAI(I)/TINF)                                                449
+      EVIINF(I)=(R*THETAI(I))/(MUI(I)*(TEM-1.0))*FI(I)*DGENI(I)              450
+C              FOR EACH L, REACTION LEVEL                                    451
+      GSUM=0                                                                 452
+      GESUM=0                                                                453
+      LII=LI(I)                                                              454
+      IF (LII.LE.20) GO TO 255                                               455
+      PRINT 250, LII                                                         456
+250   FORMAT (1X,4HLII=,I3,2X,28HA LEVEL IN LI ARRAY IS GT 20/2X,43HNEED     457
+     1 TO CHANGE DIMENSION OF EPSIIL AND GIL )                               458
+255   CONTINUE                                                               459
+      DO 265 L=1,LII                                                         460
+      TEM1=EXP(-EPSIIL(L,I)/TINF)                                            461
+      GSUM=GSUM+GIL(L,I)*TEM1                                                462
+      GESUM=GESUM+GIL(L,I)*EPSIIL(L,I)*TEM1                                  463
+      IF (IBUG(1).NE.0) GO TO 265                                            464
+      PRINT 260, I,L,GSUM,GESUM,TEM1,EPSIIL(L,I),TINF,GIL(L,I)               465
+260   FORMAT (36H I,L,GSUM,GESUM,TEM1,EPSIIL,TINF,GIL/2I5,6E18.8/)           466
+265   CONTINUE                                                               467
+      EEIINF=R/MUI(I)*(GESUM/GSUM)                                           468
+      EIINF=1.5*R*TINF/MUI(I)+FI(I)*R*TINF/MUI(I)+EVIINF(I)+EEIINF+DELHI     469
+     1(I)/MUI(I)                                                             470
+      EINF=EINF+EIINF*CIINF(I)                                               471
+      IF (IBUG(2).NE.0) GO TO 275                                            472
+      PRINT 270, I,EINF,TEM,THETAI(I),TINF,MUI(I),EVIINF(I),GSUM,GESUM,E     473
+     1EIINF,EIINF,FI(I),DELHI(I)                                             474
+270   FORMAT (34H I,EINF,TEM,THETAI,TINF,MUI,EVIINF/I5,6E18.8/33H GSUM,G     475
+     1ESUM,EEIINF,EIINF,FI,DELHI/6E18.8/)                                    476
+275   CONTINUE                                                               477
+      PRINT 280, MUINF,RHOINF,AINF,MINF,EIINF,EINF,EEIINF                    478
+280   FORMAT (31H  +++ FREESTREAM QUANTITIES +++/8H  MUINF=E15.8,10H   R     479
+     1HOINF=E15.8,8H   AINF=E15.8,8H   MINF=E15.8,9H   EIINF=E15.8/7H  E     480
+     2INF=E15.8/9H  EEIINF=/(8E18.8/))                                       481
+      PRINT 285, (EVIINF(I),I=1,IMAX)                                        482
+285   FORMAT (9H  EVIINF=/(6E18.8))                                          483
+C                                  END FREESTREAM QUANTITIES                 484
+C                                  BEGIN QUANTITIES BEHIND SHOCK             485
+C                                  FOR RANGE OF X                            486
+      PRINT 290                                                              487
+290   FORMAT (//33H  +++ QUANTITIES BEHIND SHOCK +++/6X,2HTS16X,2HES16X,     488
+     12HPS16X,4HRHOS14X,2HUS16X,4HPSIS14X,2HHS)                              489
+      IEOF=10                                                                490
+      IF (NXPST.EQ.2) PRINT 310                                              491
+      IF (NXPST.EQ.2) STOP 2                                                 492
+      NXPSTM1=NXPST-1                                                        493
+      ITK=0                                                                  494
+      DO 385 IX=1,IZTERM                                                     495
+C                                                                            496
+C      USE RECOUT  TO  WRITE                                                 497
+C      USE RECIN  TO  READ                                                   498
+C                                                                            499
+      CALL RECIN (10,1,IRECIN,X,ZS,RS,RC,COST,SINT)                          500
+      IF (ENDFILE 10) 295,305                                                501
+295   PRINT 300, IEOF                                                        502
+300   FORMAT (14H  IN MAIN EOF I3)                                           503
+      STOP 6                                                                 504
+C                                                                STOP 6      505
+305   CONTINUE                                                               506
+310   FORMAT (78H NXPST=2 - SURELY SOME PHYSICAL SPACE VALUES ARE DESIRE     507
+     1D -- MAKE IT 3 AT LEAST)                                               508
+      DO 315 IT=2,NXPSTM1                                                    509
+      IF (ABS(XPST(IT)-X).GT.0.000001) GO TO 315                             510
+      ITK=ITK+1                                                              511
+315   CONTINUE                                                               512
+      TEM=SINT**2                                                            513
+      LAMBDA=RHOINF*VINF*SINT                                                514
+      OMEGA=PINF+RHOINF*VINF**2*TEM                                          515
+      DELTA=EINF+PINF/RHOINF+(VINF**2*TEM)/2.                                516
+      LAMSQ=LAMBDA**2                                                        517
+      OMEGSQ=OMEGA**2                                                        518
+      MINFSQ=MINF**2                                                         519
+      TEM=TEM*MINFSQ                                                         520
+      TG=(TINF*(2.*GAMMA*TEM-(GAMMA-1.0))*((GAMMA-1.0)*TEM+2.))/((GAMMA+     521
+     11.)**2*TEM)                                                            522
+      IF (IBUG(5).NE.0) GO TO 325                                            523
+      PRINT 320, X,SINT,LAMBDA,OMEGA,DELTA,TEM,TG                            524
+320   FORMAT (39H X, SINT, LAMBDA, OMEGA, DELTA, TEM, TG/7E17.8/)            525
+C                                                                            526
+C                                  C5.002 LF-ITR1                            527
+325   CONTINUE                                                               528
+      DELTTS=10.                                                             529
+      E1=.0001                                                               530
+      E2=.001                                                                531
+      MAXI=50                                                                532
+      CALL ITR1 (TG,DELTTS,FOFTS,E1,E2,MAXI,ICODE)                           533
+      IF (ICODE.EQ.1) PRINT 330                                              534
+330   FORMAT (34H  MAXIMUM ITERATION EXCEEDED *****//)                       535
+      IF (ICODE.EQ.2) PRINT 335                                              536
+335   FORMAT (30H  DERIVATIVE =0. IN ITR1 *****//)                           537
+      IF (ICODE.EQ.1.OR.ICODE.EQ.2) STOP 321                                 538
+C                                                               STOP 321     539
+      TS=TG                                                                  540
+      ES=0.                                                                  541
+      DO 360 I=1,IMAX                                                        542
+      IF (M.EQ.1) EVIS(I)=EVIINF(I)                                          543
+      IF (M.EQ.1) GO TO 345                                                  544
+      TEM=EXP(THETAI(I)/TS)                                                  545
+      EVIS(I)=(R*THETAI(I))/(MUI(I)*(TEM-1.0))*FI(I)*DGENI(I)                546
+      IF (IBUG(5).NE.0) GO TO 345                                            547
+      PRINT 340, IX,I,TEM,EVIS(I)                                            548
+340   FORMAT (19H  IX,I,TEM,EVIS(I)=2I5,2E18.8)                              549
+345   SUMG=0.                                                                550
+      SUMGE=0.                                                               551
+      LII=LI(I)                                                              552
+      DO 350 L=1,LII                                                         553
+      TEM1=EXP(-EPSIIL(L,I)/TS)                                              554
+      SUMG=SUMG+TEM1*GIL(L,I)                                                555
+350   SUMGE=SUMGE+TEM1*GIL(L,I)*EPSIIL(L,I)                                  556
+      EEIS=(R/MUI(I))*(SUMGE/SUMG)                                           557
+      EIS=(1.5*R*TS)/MUI(I)+(FI(I)*R*TS)/MUI(I)+1.0*EVIS(I)+EEIS+DELHI(I     558
+     1)/MUI(I)                                                               559
+      IF (IBUG(5).NE.0) GO TO 360                                            560
+      PRINT 355, EEIS,EIS,SUMG,SUMGE                                         561
+355   FORMAT (22H  EEIS,EIS,SUMG,SUMGE=4E18.8)                               562
+360   ES=ES+EIS*CIINF(I)                                                     563
+      PS=SQRT(OMEGSQ-2.*LAMSQ*(DELTA-ES))                                    564
+      RHOS=(MUINF*PS)/(R*TS)                                                 565
+      US=VINF*COST                                                           566
+      PSIS=(RHOINF*VINF*RS**2)/2.                                            567
+      HS=PS/RHOS+ES                                                          568
+C                                                                            569
+C          WRITE ON TAPE 11 AT EACH X                                        570
+      CALL RECOUT (11,1,0,IX,TS,ES,PS,RHOS,US,PSIS,HS)                       571
+      CALL RECOUT (11,2,0,EVIS,1,IMAX,1)                                     572
+C                                                                            573
+      PRINT 365, TS,ES,PS,RHOS,US,PSIS,HS                                    574
+365   FORMAT (/7E18.8)                                                       575
+      PRINT 370, IX,(EVIS(I),I=1,IMAX)                                       576
+370   FORMAT (5H  IX=I3,7H  EVIS=/4(7E18.8/)/)                               577
+      IF (IBUG(5).NE.0) GO TO 385                                            578
+      PRINT 375                                                              579
+375   FORMAT (50H  /////////////////////////////////////////////////)        580
+      PRINT 380, IX,TS,PS,RHOS,US,PSIS,HS,ES                                 581
+380   FORMAT (29H  IX,TS,PS,RHOS,US,PSIS,HS,ES/I4,7E18.8/)                   582
+385   CONTINUE                                                               583
+      REWIND 10                                                              584
+      END FILE 11                                                            585
+      REWIND 11                                                              586
+      PRINT 390, ITK,NXPST                                                   587
+390   FORMAT (//2X,10HXXXXX ITK=I3,2X,6HNXPST=I3,2X,5HXXXXX//)               588
+      IF (ITK.GE.3*NXPST/4) GO TO 400                                        589
+      PRINT 395                                                              590
+395   FORMAT (89H  NUMBER OF X-S IN XPST ARRAY,ITK,IS .LT. 3*NXPST/4 - R     591
+     1EEXAMINE DELX,NXPST AND XPST ARRAY)                                    592
+C                                                    SECOND   STOP 301       593
+      STOP 301                                                               594
+400   CONTINUE                                                               595
+C                   END COMPUTATION OF QUANTITIES BEHIND SHOCK               596
+C                                                                            597
+      CALL FDPDX                                                             598
+C               FIND PRESSURE,P,AT EACH X FOR EACH STREAMLINE AND            599
+C               STORE ON TAPE 9                                              600
+C               FIND P DOT, DPDX, AT EACH X FOR EACH STREAMLINE AND          601
+C               STORE ON TAPE 8                                              602
+C                                                                            603
+C                   INTEGRATE ALONG EACH STREAMLINE PSI                      604
+C                                                                            605
+C         VAR(1) = XVAR                                                      606
+C         VAR(2)= H,ENTHALPY      VAR(2) MUST BE H,WHICH MAY BE + OR -       607
+C                            CONCENTRATION OF SPECIE                         608
+C         VAR(3) = CI(1)                                                     609
+C       -         -                                                          610
+C         VAR(2+IMAX)=CI(IMAX)                                               611
+C                       EQUILIBRIUM VIBRATIONAL ENERGY                       612
+C         VAR(2+IMAX+1)=EVI(1)                                               613
+C       -         -                                                          614
+C         VAR(2+IMAX+IMAX)=EVI(IMAX)                                         615
+C                                                                            616
+      DO 410 I=1,IMAX                                                        617
+      Y=FI(I)*(DELI(I)/THETAI(I)+1.0)                                        618
+C        TRUNCATE                                                            619
+      NI(I)=AINT(Y)                                                          620
+C                                                                            621
+      IF (IBUG(5).NE.0) GO TO 410                                            622
+      PRINT 405, I,Y,NI(I)                                                   623
+405   FORMAT (12H  I,Y,NI(I)=I5,2E18.8/)                                     624
+410   CONTINUE                                                               625
+C                                                                            626
+      MU=0.                                                                  627
+      N=1+2*IMAX                                                             628
+      IF (M.EQ.0) N=N-IMAX                                                   629
+C                             INITIALIZE                                     630
+      PRINT 415, IZTERM                                                      631
+415   FORMAT (9H  IZTERM=I3)                                                 632
+      KSTAG=0                                                                633
+      ISTAG=0                                                                634
+      XPST(1)=DELX                                                           635
+      XPST(NXPST)=VARI(IZTERM)+100.0                                         636
+      SUMCI=0.                                                               637
+      PRINT 95                                                               638
+      IZTM1=IZTERM-1                                                         639
+      LPS1=1                                                                 640
+C                                                                            641
+      IPSI=0                                                                 642
+      ITIME=0                                                                643
+C                  BEGIN EACH STREAMLINE COMPUTATION HERE                    644
+420   IPSI=IPSI+1                                                            645
+      IF (IPSI.EQ.IZTERM) GO TO 735                                          646
+425   CONTINUE                                                               647
+      KIPF=0                                                                 648
+      IEOF=11                                                                649
+C     ISTAG = 2 FOR STREAMLINE  DELX                                         650
+      IF (ISTAG.EQ.1) ISTAG=2                                                651
+      CALL RECIN (11,1,IRECIN,IX,TS,ES,PS,RHOS,US,PSIS,HS)                   652
+      CALL RECIN (11,2,IRECIN,EVIS,1,IMAX,1)                                 653
+      IF (ENDFILE 11) 430,440                                                654
+430   PRINT 435, IEOF,IPSI                                                   655
+435   FORMAT (5H  EOFI4,57H  IN MAIN, TRY TO COMPUTE PHYSICAL SPACE VALU     656
+     1ES --- IPSI=I3//)                                                      657
+      GO TO 735                                                              658
+440   CONTINUE                                                               659
+C                                                                            660
+      IF (IPSI.EQ.1) HSTAG=HS                                                661
+C                                                                            662
+      CJ=XI                                                                  663
+      SPEC=0.0                                                               664
+C         EVALUATE DERIVATIVES WHEN SPEC=0.0                                 665
+      II=0                                                                   666
+C        USE SHOCK VALUES FOR INITIAL COMPUTATION ON EACH STREAMLINE         667
+      KEYINT=0                                                               668
+      IX=0                                                                   669
+      T=TS                                                                   670
+      IF (M.EQ.0) GO TO 450                                                  671
+      DO 445 I=1,IMAX                                                        672
+445   TVI(I)=TINF                                                            673
+      GO TO 460                                                              674
+450   DO 455 I=1,IMAX                                                        675
+455   TVI(I)=TS                                                              676
+460   RHO=RHOS                                                               677
+      MU=MUINF                                                               678
+      U=US                                                                   679
+      DO 465 I=1,IMAX                                                        680
+      MM=2+I                                                                 681
+      K=IMAX+MM                                                              682
+      VAR(MM)=0.                                                             683
+      VAR(MM)=CIINF(I)                                                       684
+      VAR(K)=0.                                                              685
+      IF (M.EQ.0) VAR(K)=EVIS(I)                                             686
+      IF (M.EQ.1) VAR(K)=EVIINF(I)                                           687
+      EVI(I)=VAR(K)                                                          688
+465   CONTINUE                                                               689
+      E=ES                                                                   690
+      H=HS                                                                   691
+      IF (IPSI.EQ.6.AND.ISTAG.EQ.0) GO TO 635                                692
+C                                                                            693
+      IEOF=9                                                                 694
+      CALL RECIN (9,1,IRECIN,X)                                              695
+      CALL RECIN (9,2,IRECIN,P,IPSI,IZTERM,1)                                696
+      IF (ENDFILE 9) 430,470                                                 697
+C                                                                            698
+470   IEOF=8                                                                 699
+      CALL RECIN (8,2,IRECIN,DPDX,IPSI,IZTERM,1)                             700
+      IF (ENDFILE 8) 430,475                                                 701
+475   IF (IBUG(3).NE.0) GO TO 485                                            702
+      PRINT 480, (VARI(IT),DPDX(IT),P(IT),IT=IPSI,IZTERM)                    703
+480   FORMAT (33H  (DPDX(IT),P(IT),IT=IPSI,IZTERM)/(6E17.8))                 704
+485   CONTINUE                                                               705
+      VAR(1)=X                                                               706
+C      OMIT PSI=0.0 STREAMLINE FOR NOW --- PICK IT UP LATER                  707
+      IF (X.NE.0.) GO TO 490                                                 708
+      IG=0                                                                   709
+      PRINT 725                                                              710
+      GO TO 730                                                              711
+C                                                                            712
+490   CONTINUE                                                               713
+      IF(ABS(X-VARI(IPSI)).LT.1.0E-7) GO TO 500                              714
+C                                                                            715
+      PRINT 495, IPSI,X,VARI(IPSI)                                           716
+495   FORMAT (6H IPSI=I4,4H  X=E15.8,13H  VARI(IPSI)=E15.8,34H  X AND VA     717
+     1RI(IPSI) SHOULD BE EQUAL/63H  EXAMINE GENERATION OF X,ON TAPE 9,AN     718
+     2DVARI IN FDPDX SUBROUTINE)                                             719
+      STOP 663                                                               720
+C                                                               STOP 663     721
+500   CONTINUE                                                               722
+C          INITIALIZE                                                        723
+C                                                                            724
+      ELB=0                                                                  725
+      SPEC=0                                                                 726
+      IF (VAR(1).GT.XPST(LPS1)) LPS1=LPS1+1                                  727
+      LPS2=LPS1                                                              728
+505   CONTINUE                                                               729
+C                                                      CHECK ON PICKUP       730
+      CALL SECOND (CHECKT)                                                   731
+      CALL JPARAMS(SPECIE)                                                   732
+      CALL SSWTCH(4,JS)                                                      733
+      IF(JS.EQ.1) GO TO 515                                                  734
+CC     JS=1=ON        WHEN 16 SEC LEFT                                       735
+      IF (IX.NE.1) GO TO 515                                                 736
+      PRINT 510, CHECKT                                                      737
+510   FORMAT (20H ------------CHECKT=E15.8)                                  738
+      PRINT 507,SPECIE(5),SPECIE(6),SPECIE(7),SPECIE(9),SPECIE(12) ,         739
+     1 SPECIE(11),SPECIE(20)                                                 740
+  507 FORMAT(1X,*CPUT=*F6.1,2X,*PPUT=*F6.1,2X,*TLIMIT=*F6.1,2X,              741
+     1 *DEADSTART=*F10.1,2X,*O/S=*I5,2X,*CURRENT T=*A10,2X,*ARRAY(20)=*      742
+     2 I3)                                                                   743
+515   IF (ICHEK.EQ.1) GO TO 540                                              744
+      IF(JS.EQ.1) ITIME=0                                                    745
+      IF(TIMER-CHECKT.GT.15.0) GO TO 560                                     746
+                                                                             747
+525   CONTINUE                                                               748
+      PRINT 526,CHECKT,JS                                                    749
+  526 FORMAT(1X,*CHECKT=*F6.1,2X,*SS4=*I1,2X,*SS4=1 WHEN 16 SEC OR 100       750
+     1O/S CALLS LEFT*/)                                                      751
+      KIPF=0                                                                 752
+      IPF=1                                                                  753
+C                                                     WRITE PICKUP TAPE      754
+      WRITE(13) (XX(I),I=1,9351),(XXX(I),I=1,128)                            755
+      PRINT 530, TIMER,CHECKT                                                756
+530   FORMAT (30H PICKUP TAPE WRITTEN -- TIMER=E15.8,10H   CHECKT=E15.8/     757
+     1)                                                                      758
+      ICHEK=1                                                                759
+      PRINT 600, IPSI,IX,XVAR,H,MU,PFTL,RHO,U,T,E,SPEC,SUMCI                 760
+      PRINT 605, (VAR(I),I=3,IMAXP2)                                         761
+      PRINT 610, (CM(I),I=1,IMAX)                                            762
+      PRINT 531                                                              763
+  531 FORMAT(//5X*CM-S AND SUMCI NOT VALID ON PICKUP TAPE*//)                764
+      IMAXP3=2+IMAX+1                                                        765
+      PRINT 615, (VAR(I),I=IMAXP3,IMAXL)                                     766
+      PRINT 620                                                              767
+      PRINT 535                                                              768
+535   FORMAT (/93H -----------     -----     -----     -----     -----       769
+     1    -----     -----     -----     -----//)                             770
+      ITEST=0                                                                771
+  540 ITIME=ITIME+1                                                          772
+      IF(JS.EQ.1.AND.ITIME.LT.3) GO TO 560                                   773
+      IF(TIMER-CHECKT.GT.5.0) GO TO 560                                      774
+      REWIND 8                                                               775
+      REWIND 9                                                               776
+      REWIND 10                                                              777
+      REWIND 11                                                              778
+      REWIND 12                                                              779
+      DO 545 I=1,IZTERM                                                      780
+C                                  READ                                      781
+      CALL RECIN (10,1,IRECIN,X,ZS,RS,RC,COST,SINT)                          782
+C                                  WRITE ON 13 TO SAVE FOR PICKUP            783
+      WRITE (13) X,ZS,RS,RC,COST,SINT                                        784
+      CALL RECIN (8,2,IRECIN,DPDX,I,IZTERM,1)                                785
+      WRITE (13) (DPDX(J),J=I,IZTERM)                                        786
+      CALL RECIN (11,1,IRECIN,IX,TS,ES,PS,RHOS,US,PSIS,HS)                   787
+      CALL RECIN (11,2,IRECIN,EVIS,1,IMAX,1)                                 788
+      WRITE (13) IX,TS,ES,PS,RHOS,US,PSIS,HS                                 789
+      WRITE (13) (EVIS(J),J=1,IMAX)                                          790
+      CALL RECIN (9,1,IRECIN,X)                                              791
+      CALL RECIN (9,2,IRECIN,P,I,IZTERM,1)                                   792
+      WRITE (13) X                                                           793
+      WRITE (13) (P(J),J=I,IZTERM)                                           794
+545   CONTINUE                                                               795
+      DO 550 I=1,KSTAG                                                       796
+      CALL RECIN (12,1,IRECIN,IPSI,RHOURT,VAR(1),PSIS)                       797
+      WRITE (13) IPSI,RHOURT,VAR(1),PSIS                                     798
+550   CONTINUE                                                               799
+      PRINT 50,EIT,NERR,PSIG,EG,TG,HG                                        800
+      PRINT 555                                                              801
+555   FORMAT (25H  --- DATA ON TAPE 13 ---/)                                 802
+      CALL JPARAMS(SPECIE)                                                   803
+      PRINT 507,SPECIE(5),SPECIE(6),SPECIE(7),SPECIE(9),SPECIE(12) ,         804
+     1 SPECIE(11),SPECIE(20)                                                 805
+      PRINT 140,XI,CIMAX,ELE1,ELE2                                           806
+      STOP 422                                                               807
+C                        PICKUP DATA ON TAPE 13                STOP 422      808
+560   CONTINUE                                                               809
+      IX=IX+1                                                                810
+C                                                                            811
+C        CALINTH,  MODIFIED RUNGE-KUTTA                                      812
+      CALL CALINTH (VAR,DER,ELE1,ELE2,CJ,SPEC,N,CUVAR,ELB,CIMAX,NERR,PHM     813
+     1AX)                                                                    814
+C                                                                            815
+      TPREV=T                                                                816
+      IF (NERR.EQ.0) GO TO 575                                               817
+      IF (NERR.EQ.1) PRINT 565, CJ,N                                         818
+565   FORMAT (16H BAD INPUT,CJ,N=E17.8,I5)                                   819
+      IF (NERR.EQ.2) PRINT 570, ELE1,ELE2                                    820
+570   FORMAT (1X,21HEXAMINE ELE1 AND ELE2/10(7E17.8/))                       821
+      IF (NERR.EQ.1.OR.NERR.EQ.2) STOP 665                                   822
+C                                                               STOP 665     823
+575   CONTINUE                                                               824
+      IF (IX.EQ.1) GO TO 580                                                 825
+      IF (IPSI.EQ.6.AND.IX.EQ.6) GO TO 580                                   826
+      IF (VAR(1).GE.VARI(IZTERM)) GO TO 580                                  827
+      IF (IPSI.LT.6.AND.VAR(1).GE.DELX) GO TO 580                            828
+      KIPF=KIPF+1                                                            829
+      IPICKPR=IPICKPR+1                                                      830
+      IF(IPICKUP.EQ.1.AND.IPICKPR.LT.6) GO TO 580                            831
+      IF (KIPF.NE.IPF) GO TO 625                                             832
+      KIPF=0                                                                 833
+C                                                                            834
+580   CONTINUE                                                               835
+      IMAXP2=IMAX+2                                                          836
+      SUMCI=0.                                                               837
+      DO 590 ISUM=3,IMAXP2                                                   838
+      IF (VAR(ISUM).LT.0.) NEG=-1                                            839
+      IF (VAR(ISUM).LT.0.) PRINT 585                                         840
+585   FORMAT (/5X,21H-----NEGATIVE CI-----/)                                 841
+590   SUMCI=SUMCI+VAR(ISUM)                                                  842
+      DO 595 ICM=1,IMAX                                                      843
+595   CM(ICM)=VAR(ICM+2)*MU/MUI(ICM)                                         844
+C                                                                            845
+C                  PRINT ANSWERS                                             846
+      PRINT 600, IPSI,IX,XVAR,H,MU,PFTL,RHO,U,T,E,SPEC,SUMCI                 847
+600   FORMAT (2XI2,I5,8X,2HX=D15.8,7X,2HH=D15.8,6X,3HMU=E15.8,7X,2HP=E15     848
+     1.8,5X,4HRHO=E15.8/17X,2HU=E15.8,7X,2HT=E15.8,7X,2HE=E15.8,6X,3HCI=     849
+     2E15.8,1X,8HSUM(CI)=E15.8)                                              850
+      PRINT 605, (VAR(I),I=3,IMAXP2)                                         851
+605   FORMAT (10X,9H  CI( 1)=D15.8,9H  CI( 2)=D15.8,9H  CI( 3)=D15.8,9H      852
+     1 CI( 4)=D15.8,9H  CI( 5)=D15.8/10X,9H  CI( 6)=D15.8,9H  CI( 7)=D15     853
+     2.8,9H  CI( 8)=D15.8,9H  CI( 9)=D15.8,9H  CI(10)=D15.8/10X,9H  CI(1     854
+     31)=D15.8,9H  CI(12)=D15.8,9H  CI(13)=D15.8,9H  CI(14)=D15.8,9H  CI     855
+     4(15)=D15.8/10X,9H  CI(16)=D15.8,9H  CI(17)=D15.8,9H  CI(18)=D15.8,     856
+     59H  CI(19)=D15.8,9H  CI(20)=D15.8/10X,9H  CI(21)=D15.8,9H  CI(22)=     857
+     6D15.8,9H  CI(23)=D15.8,9H  CI(24)=D15.8,9H  CI(25)=D15.8)              858
+      PRINT 610, (CM(I),I=1,IMAX)                                            859
+610   FORMAT (10X,9H  CM( 1)=E15.8,9H  CM( 2)=E15.8,9H  CM( 3)=E15.8,9H      860
+     1 CM( 4)=E15.8,9H  CM( 5)=E15.8/10X,9H  CM( 6)=E15.8,9H  CM( 7)=E15     861
+     2.8,9H  CM( 8)=E15.8,9H  CM( 9)=E15.8,9H  CM(10)=E15.8/10X,9H  CM(1     862
+     31)=E15.8,9H  CM(12)=E15.8,9H  CM(13)=E15.8,9H  CM(14)=E15.8,9H  CM     863
+     4(15)=E15.8/10X,9H  CM(16)=E15.8,9H  CM(17)=E15.8,9H  CM(18)=E15.8,     864
+     59H  CM(19)=E15.8,9H  CM(20)=E15.8/10X,9H  CM(21)=E15.8,9H  CM(22)=     865
+     6E15.8,9H  CM(23)=E15.8,9H  CM(24)=E15.8,9H  CM(25)=E15.8)              866
+      IMAXL=2+IMAX+IMAX                                                      867
+      IMAXP3=2+IMAX+1                                                        868
+      PRINT 615, (VAR(I),I=IMAXP3,IMAXL)                                     869
+615   FORMAT (10X,9H EVI( 1)=D15.8,9H EVI( 2)=D15.8,9H EVI( 3)=D15.8,9H      870
+     1EVI( 4)=D15.8,9H EVI( 5)=D15.8/10X,9H EVI( 6)=D15.8,9H EVI( 7)=D15     871
+     2.8,9H EVI( 8)=D15.8,9H EVI( 9)=D15.8,9H EVI(10)=D15.8/10X,9H EVI(1     872
+     31)=D15.8,9H EVI(12)=D15.8,9H EVI(13)=D15.8,9H EVI(14)=D15.8,9H EVI     873
+     4(15)=D15.8/10X,9H EVI(16)=D15.8,9H EVI(17)=D15.8,9H EVI(18)=D15.8,     874
+     59H EVI(19)=D15.8,9H EVI(20)=D15.8/10X,9H EVI(21)=D15.8,9H EVI(22)=     875
+     6D15.8,9H EVI(23)=D15.8,9H EVI(24)=D15.8,9H EVI(25)=D15.8)              876
+      PRINT 620                                                              877
+620   FORMAT (/)                                                             878
+C                                                                            879
+      IF (IBUG(11).EQ.0) IBUG(11)=1                                          880
+      ITIME=ITIME+1                                                          881
+      IF(ITIME.NE.5) GO TO 625                                               882
+      ITIME=0                                                                883
+      PRINT 507,SPECIE(5),SPECIE(6),SPECIE(7),SPECIE(9),SPECIE(12),          884
+     1 SPECIE(11),SPECIE(20)                                                 885
+625   CONTINUE                                                               886
+      IF (NEG.EQ.-1) PRINT 630                                               887
+630   FORMAT (31H    A NEGATIVE CONCENTRATION,CI)                            888
+      IF (NEG.EQ.-1) STOP 670                                                889
+C                                                               STOP 670     890
+C                                                                            891
+C     WHEN IPSI=6, DELX AND STAGNATION STREAMLINES WILL BE COMPUTED          892
+C                                                                            893
+C        IUNEG = 1 IF U**2 NEG. IN BASIC                                     894
+      IF (IUNEG.EQ.1) GO TO 735                                              895
+      IF (IPSI.LT.6.AND.VAR(1).LT.XPST(1)) GO TO 505                         896
+      IF (ISTAG.EQ.1.OR.ISTAG.EQ.2) GO TO 690                                897
+C        ISTAG=0 UNTIL AFTER EXTRAPOLATION FOR PSI=0. STREAMLINE             898
+C        ISTAG=1 FOR PSI =0.0 STREAMLINE                                     899
+C        ISTAG=2 FOR DELX STREAMLINE AND THEREAFTER                          900
+C                                                                            901
+635   CONTINUE                                                               902
+      IG=IG+1                                                                903
+      IGC=0                                                                  904
+      IGE=IMAX+2                                                             905
+      PSIG(IG)=PSIS                                                          906
+      DO 640 IG1=3,IMAXP2                                                    907
+      IGC=IGC+1                                                              908
+      CIG(IGC,IG)=VAR(IG1)                                                   909
+      IGE=IGE+1                                                              910
+      EIG(IGC,IG)=VAR(IGE)                                                   911
+640   CONTINUE                                                               912
+C                                                                            913
+      EG(IG)=E                                                               914
+      TG(IG)=T                                                               915
+      HG(IG)=H                                                               916
+      PRINT 641,IG,E,T,H,PSIS,EG,TG,HG,PSIG,HSTAG                            917
+  641 FORMAT(1X,*IG=*I1,2X,*E=*E15.8,2X,*T=*E15.8,2X,*H=*D15.8,2X,           918
+     1 *PSIS=*E15.8/1X,*EG=*6E17.8/1X,*TG=*6E17.8/1X,*HG=*6E17.8/            919
+     2 1X,*PSIG=*6E17.8/1X,*HSTAG=*E17.8/)                                   920
+      IF (IPSI.LT.6) PRINT 725                                               921
+      IF (IPSI.LT.6) GO TO 730                                               922
+C              IPSI=6    STAGNATION STREAMLINE                               923
+C                             AT  DELX EXTRAPOLATE FOR PSI=0. VALUES         924
+      PSI=0.                                                                 925
+      MG=1                                                                   926
+      CALL FTLUP (PSI,E,MG,IG,PSIG,EG)                                       927
+      CALL FTLUP (PSI,T,MG,IG,PSIG,TG)                                       928
+      CALL FTLUP (PSI,H,MG,IG,PSIG,HG)                                       929
+C                                                                            930
+      PRINT 641,IG,E,T,H,PSIS,EG,TG,HG,PSIG,HSTAG                            931
+      DO 650 IG2=1,IMAX                                                      932
+      DO 645 IG1=1,6                                                         933
+      CIT(IG1)=CIG(IG2,IG1)                                                  934
+645   EIT(IG1)=EIG(IG2,IG1)                                                  935
+      CALL FTLUP (PSI,CI(IG2),MG,IG,PSIG,CIT)                                936
+      IF (CI(IG2).LT.0.0) CI(IG2)=0.00000001                                 937
+      CALL FTLUP (PSI,EVI(IG2),MG,IG,PSIG,EIT)                               938
+      I3=2+IMAX+IG2                                                          939
+      PRINT 646,IG,I3,CIT,CI(IG2),EIT,EVI(IG2),PSIG                          940
+  646 FORMAT(2I5/(6E17.8,D17.8))                                             941
+650   VAR(2+IMAX+IG2)=EVI(IG2)                                               942
+      DO 655 IG1=1,6                                                         943
+      CALL RECIN (10,1,IRECIN,X,ZS,RS,RC,COST,SINT)                          944
+655   CONTINUE                                                               945
+C              INITIALIZE FOR PSI=0. STREAMLINE                              946
+      CJ=XI                                                                  947
+      SPEC=0.0                                                               948
+      II=0                                                                   949
+      KEYINT=0                                                               950
+      IX=0                                                                   951
+      SUM=0                                                                  952
+      DO 660 I=1,IMAX                                                        953
+      SUM=SUM+CI(I)/MUI(I)                                                   954
+      IF (EVI(I).EQ.0.) TVI(I)=0.                                            955
+      IF (EVI(I).EQ.0.) GO TO 660                                            956
+      XL=((DGENI(I)*R*THETAI(I))/(MUI(I)*EVI(I))+1.0)                        957
+      ALN=ALOG(XL)                                                           958
+      TVI(I)=THETAI(I)/ALN                                                   959
+660   CONTINUE                                                               960
+      PRINT 661,(EVI(I),TVI(I),I=1,IMAX)                                     961
+  661 FORMAT(5X,D17.8,E17.8)                                                 962
+C                                                                            963
+      U=SQRT(2.0*(HSTAG-H))                                                  964
+C                                                                            965
+      VAR(1)=DELX                                                            966
+C                   COMPUTE P AND DPDX AT IPSI=6                             967
+      PRINT 665                                                              968
+665   FORMAT (24H  PSI=0.000 STREAMLINE--)                                   969
+      P(6)=PS+US/(RC*RS)*(-PSIS)                                             970
+      RHO=P(6)/(H-E)                                                         971
+      PRINT 671,U,P(6),PS,US,RHO,RC,RS,PSIS,HSTAG,E,H                        972
+  671 FORMAT(1X,*U=*E15.8,5X,*P(6)=*E15.8,2X,*PS=*E15.8,4X,*US=*E15.8,       973
+     1 4X,*RHO=*E15.8/1X,*RC=*E15.8,4X,*RS=*E15.8,4X,*PSIS=*E15.8/           974
+     2 1X,*HSTAG=*E15.8,3X,*E=*E15.8,3X,*H=*D15.8/)                          975
+      DO 670 I=7,IZTERM                                                      976
+      CALL RECIN (11,1,IRECIN,IX,TS,ES,PS,RHOS,US,PSIS,HS)                   977
+      CALL RECIN (11,2,IRECIN,EVIS,1,IMAX,1)                                 978
+      CALL RECIN (10,1,IRECIN,X,ZS,RS,RC,COST,SINT)                          979
+670   P(I)=PS+US/(RC*RS)*(-PSIS)                                             980
+      REWIND 10                                                              981
+      REWIND 11                                                              982
+      MG=1                                                                   983
+      NPG=IZTERM-5                                                           984
+      DO 675 I=7,IZTERM                                                      985
+      LG=I-6                                                                 986
+675   DPDX(I)=DIF(LG,MG,NPG,VARI(6),P(6))                                    987
+      DO 680 I=1,5                                                           988
+      CALL RECIN (11,1,IRECIN,IX,TS,ES,PS,RHOS,US,PSIS,HS)                   989
+      CALL RECIN (11,2,IRECIN,EVIS,1,IMAX,1)                                 990
+680   CONTINUE                                                               991
+      ISTAG=1                                                                992
+      PSIS=0.                                                                993
+      CALL SECOND (CHECKT)                                                   994
+      PRINT 685, CHECKT                                                      995
+685   FORMAT (14H ----- CHECKT=E15.8,6H -----/)                              996
+      PRINT 686,(EVI(I),I=1,IMAX)                                            997
+  686 FORMAT(7D17.8)                                                         998
+      PRINT 671,U,P(6),PS,US,RHO,RC,RS,PSIS,HSTAG,E,H                        999
+      GO TO 500                                                             1000
+C                                                                           1001
+690   CONTINUE                                                              1002
+C                                                                           1003
+C     AT EACH X WHERE PHYSICAL SPACE CALCULATIONS ARE DESIRED SAVE          1004
+C         1./(RHO*U) ON EACH STREAMLINE                                     1005
+C                                                                           1006
+      IF (VAR(1).LT.XPST(LPS2)) GO TO 720                                   1007
+      IF (VAR(1).GT.XPST(LPS2)) GO TO 705                                   1008
+C        VAR(1) =  XPST(LPS2)                                               1009
+      RHOURT=1./(RHO*U)                                                     1010
+      IF (IBUG(13).NE.0) GO TO 700                                          1011
+      PRINT 695, IPSI,RHOURT                                                1012
+695   FORMAT (7H  IPSI=I3,9H  RHOURT=E15.8)                                 1013
+700   CONTINUE                                                              1014
+      CALL RECOUT (12,1,0,IPSI,RHOURT,VAR(1),PSIS)                          1015
+      GO TO 715                                                             1016
+  705 IF(VAR(1)-PREX.NE.0.) GO TO 706                                       1017
+      PRINT 707                                                             1018
+  707 FORMAT(//1X,*DIVISOR,VAR(1)-PREX, IS =0.*//)                          1019
+      PRINT 710,LPS1,LPS2,VAR(1),XPST(LPS2),PREPSIS,PSIS,PRERU,PREX         1020
+      GO TO 720                                                             1021
+  706 YPSIS=PREPSIS+(XPST(LPS2)-PREX)*((PSIS-PREPSIS)/(VAR(1)-PREX))        1022
+      RHOURT=PRERU+(XPST(LPS2)-PREX)*((RHO*U-PRERU)/(VAR(1)-PREX))          1023
+      RHOURT=1./RHOURT                                                      1024
+      CALL RECOUT (12,1,0,IPSI,RHOURT,XPST(LPS2),YPSIS)                     1025
+      IF (IBUG(13).NE.0) GO TO 715                                          1026
+      PRINT 695, IPSI,RHOURT                                                1027
+      PRINT 710, LPS1,LPS2,VAR(1),XPST(LPS2),PREPSIS,PSIS,PRERU,PREX        1028
+710   FORMAT (12H  LPS1,LPS2=2I4,33H  X,XPST,PREPSIS,PSIS,PRERU,PREX=/D1    1029
+     17.8,5E17.8)                                                           1030
+715   CONTINUE                                                              1031
+      LPS2=LPS2+1                                                           1032
+      KSTAG=KSTAG+1                                                         1033
+720   CONTINUE                                                              1034
+      PREX=VAR(1)                                                           1035
+      PRERU=RHO*U                                                           1036
+      PREPSIS=PSIS                                                          1037
+      IF (VAR(1).LT.VARI(IZTERM)) GO TO 505                                 1038
+C                  END OF A STREAMLINE                                      1039
+      PRINT 725                                                             1040
+725   FORMAT (/20H  XXXXXXXXXXXXXXXXXX/)                                    1041
+      IF (IPSI.EQ.6.AND.ISTAG.EQ.1) GO TO 425                               1042
+730   CONTINUE                                                              1043
+      GO TO 420                                                             1044
+C                                                                           1045
+C              COMPUTE PHYSICAL SPACE VALUES                                1046
+C                                                                           1047
+735   CONTINUE                                                              1048
+      CALL SECOND (CHECKT)                                                  1049
+      PRINT 685, CHECKT                                                     1050
+      REWIND 8                                                              1051
+      REWIND 9                                                              1052
+      REWIND 10                                                             1053
+      REWIND 11                                                             1054
+      PRINT 740, KSTAG                                                      1055
+740   FORMAT(37H BEGIN PHYSICAL SPACE CALCULATIONS AT,I5,10H LOCATIONS/)    1056
+C                                                                           1057
+      DO 840 LPS=1,NXPST                                                    1058
+      REWIND 12                                                             1059
+      IK=0                                                                  1060
+745   CALL RECIN (10,1,IRECIN,X,ZS,RS,RC,COST,SINT)                         1061
+      IF (ENDFILE 10) 845,750                                               1062
+750   CONTINUE                                                              1063
+      IF (IBUG(13).NE.0) GO TO 760                                          1064
+      PRINT 755, LPS,X,XPST(LPS)                                            1065
+755   FORMAT (18H  LPS,X,XPST(LPS) I5,2E30.15/)                             1066
+760   CONTINUE                                                              1067
+      IF (ABS(X-XPST(LPS)).GT.1.0E-8) GO TO 745                             1068
+      IF (IBUG(13).NE.0) GO TO 765                                          1069
+      PRINT 755, LPS,X,XPST(LPS)                                            1070
+C                                                                           1071
+765   CONTINUE                                                              1072
+      DO 780 IPS=1,KSTAG                                                    1073
+      CALL RECIN (12,1,IRECIN,IPSI,RHOURT,VAR(1),PSIS)                      1074
+      VARMX=VAR(1)-XPST(LPS)                                                1075
+      IF (ABS(VARMX).GT.1.0E-8) GO TO 780                                   1076
+      IK=IK+1                                                               1077
+      IF (IK.GT.200) PRINT 770, IK                                          1078
+770   FORMAT (1X,50HIK.GT.200, CHANGE DIMENSION OF RUT AND PSISTG, IK=,I    1079
+     13)                                                                    1080
+      RUT(IK)=RHOURT                                                        1081
+      PSISTG(IK)=PSIS                                                       1082
+      IF (IBUG(13).NE.0) GO TO 780                                          1083
+      PRINT 775, PSIS,RHOURT                                                1084
+775   FORMAT (14H  PSIS,RHOURT=2E17.8)                                      1085
+780   CONTINUE                                                              1086
+C                   FIND SMALLEST DELTA PSI                                 1087
+      SMALL=200.                                                            1088
+      DO 785 I=2,IK                                                         1089
+      IF (PSISTG(I)-PSISTG(I-1).LT.SMALL) SMALL=PSISTG(I)-PSISTG(I-1)       1090
+785   CONTINUE                                                              1091
+      XDEL=PSISTG(IK)/SMALL                                                 1092
+C              TRUNCATE                                                     1093
+      L=INT(XDEL+1.)                                                        1094
+C              REMAINDERING        M=0 FOR EVEN, M=1 FOR ODD                1095
+      M=MOD(L,2)                                                            1096
+C                                  MAKE L EVEN                              1097
+      IF (M.NE.0) L=L+1                                                     1098
+C         FIND INTEGRAL 1./(RHO*U) DELTA PSI FROM BODY TO SHOCK             1099
+C         SIMPSON-S RULE   L INCREMENTS, L+1 POINTS                         1100
+      FL=L                                                                  1101
+      DPSIS=PSISTG(IK)/FL                                                   1102
+      PSII=0.                                                               1103
+      RB=RUT(1)+RUT(IK)                                                     1104
+      LM1=L-1                                                               1105
+      IF (IBUG(13).NE.0) GO TO 795                                          1106
+      PRINT 790, L,M,SMALL,XDEL,DPSIS,RB                                    1107
+790   FORMAT (25H  L,M,SMALL,XDEL,DPSIS,RB/2I5,4E17.8)                      1108
+795   CONTINUE                                                              1109
+      DO 800 I=2,L,2                                                        1110
+      PSII=PSII+DPSIS                                                       1111
+      CALL FTLUP (PSII,RU1,1,IK,PSISTG,RUT)                                 1112
+      IF (I.EQ.L) RB=RB+4.*RU1                                              1113
+      IF (I.EQ.L) GO TO 800                                                 1114
+      PSII=PSII+DPSIS                                                       1115
+      CALL FTLUP (PSII,RU2,1,IK,PSISTG,RUT)                                 1116
+      RB=RB+4.*RU1+2.*RU2                                                   1117
+800   CONTINUE                                                              1118
+C                                                                           1119
+      RB=RB*DPSIS/3.                                                        1120
+      IF (IBUG(13).NE.0) GO TO 810                                          1121
+      PRINT 805, RB,RS,COST,RB,SINT                                         1122
+805   FORMAT (21H  RB,RS,COST,RB,SINT=5E17.8)                               1123
+810   CONTINUE                                                              1124
+      ARR=SQRT(RS**2-2.*COST*RB)                                            1125
+      YI=(RS-ARR)/COST                                                      1126
+      ZE=ZS+YI*SINT                                                         1127
+      PRINT 815, X,ARR,YI,ZE,PSISTG(1)                                      1128
+815   FORMAT (3H X=E15.8,5H   R=E15.8,5H   Y=E15.8,5H   Z=E15.8,7H   PSI    1129
+     1=E15.8)                                                               1130
+C                                                                           1131
+      DO 830 I=2,IK,1                                                       1132
+      DPSI=PSISTG(I)-PSISTG(I-1)                                            1133
+C              TRAPEZOIDAL RULE                                             1134
+      TR=(DPSI/2.)*(RUT(I)+RUT(I-1))                                        1135
+      RB=RB-TR                                                              1136
+      IF (IBUG(13).NE.0) GO TO 825                                          1137
+      PRINT 820, TR,RB                                                      1138
+820   FORMAT (5HTR,RB,2E17.8)                                               1139
+825   CONTINUE                                                              1140
+      ARR=SQRT(RS**2-2.*COST*RB)                                            1141
+      YI=(RS-ARR)/COST                                                      1142
+      ZE=ZS+YI*SINT                                                         1143
+      PRINT 815, X,ARR,YI,ZE,PSISTG(I)                                      1144
+830   CONTINUE                                                              1145
+      PRINT 835                                                             1146
+835   FORMAT (/)                                                            1147
+C                                                                           1148
+840   CONTINUE                                                              1149
+845   CONTINUE                                                              1150
+      PRINT 850                                                             1151
+850   FORMAT (29H    END THIS CASE, HALLELUJAH)                             1152
+      STOP                                                                  1153
+      END                                                                   1154
+      SUBROUTINE BASIC                                                      1155
+C      BASIC CALLED BY CALINTH TO EVALUATE DERIVATIVES H DOT,               1156
+C                              C SUB I DOT AND EV SUB I DOT                 1157
+C      DERIVATIVES START IN DER(1)                                          1158
+C                                                                           1159
+      COMMON M,IX,IMAX,IPSI,IBUG(15)                                        1160
+      COMMON P( 500),DPDX( 500),VARI( 500)                                  1161
+      COMMON EVIINF(25),THETAI(25),MUI(25),FI(25),DELHI(25),CIINF(25),      1162
+     1       LI(25)                                                         1163
+      COMMON R,MUINF,DELTA,LAMSQ,OMEGSQ,OMEGA,MU,T,U                        1164
+      COMMON EPSIIL(20,25),GIL(20,25)                                       1165
+      COMMON VAR(52),CUVAR(52),DER(51)                                      1166
+C                                                                           1167
+      COMMON ZS,RS,RC,SINT,COST,PS,US,PSIS                                  1168
+      COMMON MJ(50),EJ(50),AJ(50),BJ(50)                                    1169
+      COMMON TVI(25),NI(25),DGENI(25)                                       1170
+      COMMON NUIJ(26,50),AIJ(25,50),NUPIJ(25,50)                            1171
+      COMMON SIGIK(25,25),ALPIK(25,25),BETAIK(25,25)                        1172
+C                                                                           1173
+      COMMON /LAB2/ DELX,ZSTERM,IZTERM                                      1174
+      COMMON /LAB3/ EINF,PINF,RHOINF,VINF,E,JMAX,KEYINT,RHO,HSTAG           1175
+      COMMON /LAB4/ PFTL,KITR1,EITR1                                        1176
+      COMMON /LAB5/ IUNEG                                                   1177
+      COMMON /LAB7/ ITNEG,IEXP                                              1178
+C                                                                           1179
+      DOUBLE PRECISION VAR                                                  1180
+C                                                                           1181
+      DIMENSION PHI(50),KJ(50),SJ(50)                                       1182
+      DIMENSION CI(25),EVI(25),DCIDX(25),DEVIDX(25),EVIBAR(25)              1183
+C                                                                           1184
+      EQUIVALENCE (CUVAR(2),H),(CUVAR(3),CI(1))                             1185
+      EQUIVALENCE (DER(1),DHDX),(DER(2),DCIDX(1))                           1186
+C                                                                           1187
+      REAL KJ,LAMSQ,MU,MUI,MUINF,NI,NUIJ,NUPIJ                              1188
+C                                                                           1189
+C      DER(1)=DHDX           MUST BE DHDX AS H MAY BE + OR -                1190
+C      DER(2)= DCIDX(1)                                                     1191
+C         -      -                                                          1192
+C      DER(1+IMAX     )=DCIDX(IMAX)                                         1193
+C      DER(1+IMAX+1   )=DEVIDX(1)                                           1194
+C      DER(1+IMAX+IMAX)=DEVIDX(IMAX)                                        1195
+C                                                                           1196
+C     CUVAR(1) = X                                                          1197
+C     CUVAR(2) = H,ENTHALPY - IT MUST BE H WHICH MAY BE + OR -              1198
+C     CUVAR(3) = CI(1)                                                      1199
+C         -       -                                                         1200
+C     CUVAR(2+IMAX     )=CI(IMAX)                                           1201
+C     CUVAR(2+IMAX+1   )=EVI(1)                                             1202
+C     CUVAR(2+IMAX+IMAX)=EVI(IMAX)                                          1203
+C                                                                           1204
+      EXTERNAL FOFE                                                         1205
+C                  KEYINT=1 AT END OF 1ST INTERVAL                          1206
+CC            ITNEG=1 WHEN E.GT.H AND T NEG.                                1207
+CC             IEXP=1 WHEN EXP ERROR ENCOUNTERED                            1208
+      IF (ITNEG.EQ.1.OR.IEXP.EQ.1) RETURN                                   1209
+      IF (M.NE.0) GO TO 10                                                  1210
+      DO 5 I=1,IMAX                                                         1211
+      J1=I+IMAX+2                                                           1212
+5     CUVAR(J1)=VAR(J1)                                                     1213
+10    CONTINUE                                                              1214
+C        INTERPOLATE FOR P ACROSS INTEGRATION INTERVAL                      1215
+      DO 15 I=1,IMAX                                                        1216
+15    EVI(I)=CUVAR(2+IMAX+I)                                                1217
+      MFTL=1                                                                1218
+      NFTL=IZTERM-IPSI+1                                                    1219
+      CALL FTLUP (CUVAR(1),PFTL,MFTL,NFTL,VARI(IPSI),P(IPSI))               1220
+C        INTERPOLATE FOR DPDX                                               1221
+      CALL FTLUP (CUVAR(1),DPFTL,MFTL,NFTL,VARI(IPSI),DPDX(IPSI))           1222
+      IF (IBUG(10).NE.0) GO TO 30                                           1223
+      PRINT 20, E,PFTL,P(IPSI),P(IPSI+1),CUVAR(1),DPFTL,DPDX(IPSI)          1224
+20    FORMAT (25H  E,PFTL,P(IT  ),P(IT  +1/7E17.8)                          1225
+      PRINT 25, (CI(IU),IU=1,IMAX),(EVI(IU),IU=1,IMAX)                      1226
+25    FORMAT (5E18.8)                                                       1227
+30    CONTINUE                                                              1228
+      IF (KEYINT.EQ.0) GO TO 95                                             1229
+      SUM=0.                                                                1230
+C                  COMPUTE TVI                                              1231
+      DO 45 I=1,IMAX                                                        1232
+      SUM=SUM+CI(I)/MUI(I)                                                  1233
+C        USE SHOCK VALUES FOR INITIAL COMPUTATION ON EACH STREAMLINE        1234
+      IF (EVI(I).EQ.0.) TVI(I)=0.                                           1235
+      IF (EVI(I).EQ.0.) GO TO 35                                            1236
+      XL=((DGENI(I)*R*THETAI(I))/(MUI(I)*EVI(I))+1.0)                       1237
+      ALN=ALOG(XL)                                                          1238
+      TVI(I)=THETAI(I)/ALN                                                  1239
+35    CONTINUE                                                              1240
+      IF (IBUG(10).GT.0) GO TO 45                                           1241
+      PRINT 40, I,DGENI(I),R,THETAI(I),MUI(I),EVI(I),XL,ALN,TVI(I)          1242
+40    FORMAT (26H  I,DGENI,R,THETAI,MUI,EVI/I5,6E17.8/11H XL,ALN,TVI/3E1    1243
+     18.8/)                                                                 1244
+45    CONTINUE                                                              1245
+      MU=1.0/SUM                                                            1246
+C                                                                           1247
+      U2=2.0*(HSTAG-H)                                                      1248
+C                                                                           1249
+      IF(U2.GE.0.) GO TO 51                                                 1250
+      PRINT 50,U2,HSTAG,H                                                   1251
+   50 FORMAT(/1X,*U SQUARED IS NEGATIVE, END STREAMLINE INTEGRATION*/1X,    1252
+     1 *U2=2.0 (HSTAG-H)=*E15.8,2X,*HSTAG=*E15.8,2X,*H=*E15.8, 2X,          1253
+     2 *IN BASIC*)                                                          1254
+      IUNEG=1                                                               1255
+      RETURN                                                                1256
+                                                                            1257
+   51 CONTINUE                                                              1258
+      U=SQRT(U2)                                                            1259
+C                        ITERATE FOR E                                      1260
+      KCODE=0                                                               1261
+55    CONTINUE                                                              1262
+      KITR1=0                                                               1263
+      DELTE=100000.                                                         1264
+      E1=.00001                                                             1265
+      E2=.001                                                               1266
+      MAXI=10                                                               1267
+                                                                            1268
+CC            MAXI = MAXIMUM ITERATION COUNT                                1269
+C                                                                           1270
+      CALL ITR1 (E,DELTE,FOFE,E1,E2,MAXI,ICODE)                             1271
+C                        C5.002  LF-ITR1                                    1272
+      IF (ICODE.EQ.0) GO TO 75                                              1273
+      IF (ICODE.EQ.1) PRINT 60                                              1274
+60    FORMAT (38H  FOFE, MAXIMUM ITERATION EXCEEDED ***/)                   1275
+      IF (ICODE.EQ.2) PRINT 65                                              1276
+65    FORMAT (25H  FOFE, DERIVATIVE=0 ****/)                                1277
+      PRINT 70, ICODE                                                       1278
+70    FORMAT (13H  ITR1,ICODE=I2)                                           1279
+      IF (ICODE.NE.1) STOP 66                                               1280
+C                                                               STOP 66     1281
+C        WHEN ICODE=1, TRY A NEW STARTING E. DO THIS 2 TIMES                1282
+      IF (KCODE.EQ.3) STOP 66                                               1283
+C                                                               STOP 66     1284
+      E=EITR1                                                               1285
+      KCODE=KCODE+1                                                         1286
+      GO TO 55                                                              1287
+75    CONTINUE                                                              1288
+      IF (IEXP.NE.1) GO TO 85                                               1289
+      E=EITR1                                                               1290
+      KCODE=1+KCODE                                                         1291
+      IEXP=0                                                                1292
+      PRINT 80, KCODE                                                       1293
+80    FORMAT (8H  KCODE=I2)                                                 1294
+      IF (KCODE.EQ.1) GO TO 55                                              1295
+      IF (KCODE.GT.2) RETURN                                                1296
+      E=H-0.00001*H                                                         1297
+      GO TO 55                                                              1298
+85    CONTINUE                                                              1299
+      RHO=PFTL/(H-E)                                                        1300
+      T=(PFTL*MU)/(RHO*R)                                                   1301
+      IF (T.GT.0.0) GO TO 95                                                1302
+      PRINT 90, T,RHO,PFTL,H,E,MU                                           1303
+90    FORMAT (14H  T NEGATIVE =E15.8,2X,4HRHO=E15.8,2X,5HPFTL=E15.8,2X,2    1304
+     1HH=E15.8,2X,2HE=E15.8,2X,3HMU=E15.8)                                  1305
+      E=H-0.000001*H                                                        1306
+      ITNEG=1                                                               1307
+      RETURN                                                                1308
+C                                                                           1309
+95    CONTINUE                                                              1310
+      KEYINT=1                                                              1311
+      IF (IBUG(9).NE.0) GO TO 110                                           1312
+      PRINT 100, IX,IPSI,RHO,T,MU,U,H                                       1313
+100   FORMAT (16H  IX,IPSI,RHO,T=2I4,4E17.8,E17.8/)                         1314
+      PRINT 105, E                                                          1315
+105   FORMAT (4H  E=E18.8/)                                                 1316
+110   CONTINUE                                                              1317
+C               COMPUTE DCIDX AND DEVIDX FOR EACH SPECIE                    1318
+      DO 210 I=1,IMAX                                                       1319
+      DCIDX(I)=0.                                                           1320
+C        FOR EACH REACTION                                                  1321
+      DO 190 J=1,JMAX                                                       1322
+C        SELECTED SPECIE FOR THIS REACTION                                  1323
+      II=MJ(J)                                                              1324
+      IF (M.EQ.0) GO TO 115                                                 1325
+      IF (FI(II).NE.0.) GO TO 120                                           1326
+115   PHI(J)=1.0                                                            1327
+      GO TO 125                                                             1328
+120   CONTINUE                                                              1329
+      A=THETAI(II)/TVI(II)                                                  1330
+      B=THETAI(II)/T                                                        1331
+      C=A-B                                                                 1332
+      IF(IBUG(9).NE.0) GO TO 121                                            1333
+      PRINT 122,I,J,II,KEYINT,M,THETAI(II),TVI(II),T,NI(II),EJ(J),AJ(J),    1334
+     1 BJ(J)                                                                1335
+  122 FORMAT(1X,*I,J,II,KEYINT,M=*5I5/1X,*THETAI=*E15.8,2X,*TVI=*E15.8,     1336
+     1 2X,*T=*E15.8,2X,*NI=*E15.8/1X,*EJ=*E15.8,2X,*AJ=*E15.8,2X,*BJ=*      1337
+     2 E15.8/)                                                              1338
+  121 TEM=EXP(A)                                                            1339
+      TEM1=EXP(B)                                                           1340
+      TEM2=EXP(-NI(II)*C)                                                   1341
+      TEM3=EXP(C)                                                           1342
+      IF (TEM3.EQ.1.0) PHI(J)=1.0                                           1343
+      IF (TEM3.EQ.1.0) GO TO 125                                            1344
+C     PHI=COUPLING COEFFICIENT, VIBRATION AND DISSOCIATION INTERACTION      1345
+      PHI(J)=((1.0-TEM2)/(TEM3-1.0)*(TEM-1.0)/(TEM1-1.0))/NI(II)            1346
+125   TEM4=EXP(-EJ(J)/T)                                                    1347
+C        KJ = RATE CONSTANT                                                 1348
+      KJ(J)=AJ(J)*T**BJ(J)*TEM4                                             1349
+      IF (NUIJ(IMAX+1,J).EQ.0.) SJ(J)=1.0                                   1350
+      IF (NUIJ(IMAX+1,J).EQ.0.) GO TO 140                                   1351
+      SUM=0.                                                                1352
+      DO 135 ISUM=1,IMAX                                                    1353
+      SUM=SUM+AIJ(ISUM,J)*CI(ISUM)/MUI(ISUM)                                1354
+C                                                                           1355
+      IF (IBUG(7).NE.0) GO TO 135                                           1356
+      PRINT 130, I,J,ISUM,SUM,AIJ(ISUM,J),CI(ISUM),MUI(ISUM)                1357
+130   FORMAT (25H  I,J,ISUM,SUM,AIJ,CI,MUI/3I5,5E17.8/)                     1358
+C                                                                           1359
+135   CONTINUE                                                              1360
+      SJ(J)=RHO*SUM                                                         1361
+140   CONTINUE                                                              1362
+      IF (IBUG(7).NE.0) GO TO 150                                           1363
+C                                                                           1364
+      PRINT 145, I,J,FI(II),PHI(J),TEM,TEM1,TEM2,TEM3,TEM4,AJ(J),BJ(J),T    1365
+     1,KJ(J),SUM,RHO,SJ(J)                                                  1366
+145   FORMAT (26H  I,J,FI,PHI,TEM,TEM1,TEM2/2I5,5E18.8/22H  TEM3,TEM4,AJ    1367
+     1,BJ,T,KJ/6E18.8/12H  SUM,RHO,SJ/3E18.8/)                              1368
+C                                                                           1369
+150   CONTINUE                                                              1370
+      PROD=1.0                                                              1371
+      DO 180 IPROD=1,IMAX                                                   1372
+      IF (NUIJ(IPROD,J).EQ.0.0) GO TO 170                                   1373
+      TEM=RHO*CI(IPROD)/MUI(IPROD)                                          1374
+      IF (TEM.GE.0.) GO TO 165                                              1375
+C             LET PROBLEM COMPUTE THRU DERSUB WHEN CI NEG,                  1376
+C              MAKE DECISION IN MAIN ABOUT ACCEPTING NEG CI                 1377
+      ABW=AMOD(NUIJ(IPROD,J),2.0)                                           1378
+      IF (IBUG(8).NE.0) GO TO 160                                           1379
+      IF (TEM.LT.0.) PRINT 155, I,J,IX,IPROD,TEM,RHO,MUI(IPROD),NUIJ(IPR    1380
+     1OD,J),CI(IPROD),PROD,ABW                                              1381
+155   FORMAT (2X,32HI,J,IX,IPROD,TEM,RHO,MUI,NUIJ,CI/4I3,7E17.8)            1382
+160   CONTINUE                                                              1383
+C             ABW=0.0 FOR EVEN NUIJ,  ABW=1.0 FOR ODD NUIJ                  1384
+      IF (ABW.EQ.0.0) PROD=PROD*(-TEM)**NUIJ(IPROD,J)                       1385
+      IF (ABW.EQ.1.0) PROD=-1.0*PROD*(-TEM)**NUIJ(IPROD,J)                  1386
+      GO TO 170                                                             1387
+165   CONTINUE                                                              1388
+      PROD=PROD*TEM**NUIJ(IPROD,J)                                          1389
+C                                                                           1390
+170   CONTINUE                                                              1391
+      IF (IBUG(8).NE.0) GO TO 180                                           1392
+      IF (IX.LT.3) GO TO 180                                                1393
+      PRINT 175, I,J,IPROD,TEM,PROD,RHO,CI(IPROD),NUIJ(IPROD,J)             1394
+175   FORMAT (48H  I,J,IPROD,TEM,PROD,RHO,CI(IPROD),NUIJ(IPROD,J)/3I5,6E    1395
+     117.8/)                                                                1396
+180   CONTINUE                                                              1397
+      DCIJDX=PHI(J)*KJ(J)*SJ(J)*(MUI(I)/(RHO*U))*(NUPIJ(I,J)-NUIJ(I,J))*    1398
+     1PROD                                                                  1399
+C                                                                           1400
+C         DCIDX = RATE OF APPEARANCE AND DISAPPEARANCE OF CONCENTRATION     1401
+C                 OF SPECIE                                                 1402
+      DCIDX(I)=DCIDX(I)+DCIJDX                                              1403
+C                                                                           1404
+      IF (IBUG(8).NE.0) GO TO 190                                           1405
+      PRINT 185, I,J,DCIJDX,PHI(J),KJ(J),SJ(J),MUI(I),RHO,U,NUPIJ(I,J),N    1406
+     1UIJ(I,J),PROD,DCIDX(I)                                                1407
+185   FORMAT (25H I,J,DCIJDX,PHI,KJ,SJ,MUI/2I5,5E18.8/29H  RHO,U,NUPIJ,N    1408
+     1UIJ,PROD,DCIDX/6E18.8/)                                               1409
+190   CONTINUE                                                              1410
+      TEM=EXP(THETAI(I)/T)                                                  1411
+      TEM1=(FI(I)*DGENI(I)*R*THETAI(I))/MUI(I)                              1412
+      EVIBAR(I)=TEM1/(TEM-1.0)                                              1413
+      IF (M.NE.0) GO TO 195                                                 1414
+      VAR(I+IMAX+2)=EVIBAR(I)                                               1415
+      DEVIDX(I)=0.                                                          1416
+      GO TO 210                                                             1417
+195   CONTINUE                                                              1418
+      TAUSUM=0.                                                             1419
+      IF (FI(I).EQ.0.) GO TO 210                                            1420
+      DO 205 K=1,IMAX                                                       1421
+      TEM3=EXP(-THETAI(I)/T)                                                1422
+      TEM4=EXP(SIGIK(K,I)*T**(-1./3.))                                      1423
+      TEM5=(FI(I)*ALPIK(K,I))/PFTL                                          1424
+      TAUIK=TEM5*(T**BETAIK(K,I)*TEM4)/(1.0-TEM3)                           1425
+      TEM6=CI(K)*(EVIBAR(I)-EVI(I))                                         1426
+      TAUSUM=TAUSUM+TEM6/(TAUIK*U)                                          1427
+C                                                                           1428
+      IF (IBUG(9).NE.0) GO TO 205                                           1429
+      PRINT 200, I,K,TEM3,TEM4,TEM5,TAUIK,TAUSUM,SIGIK(K,I),ALPIK(K,I),B    1430
+     1ETAIK(K,I),U,EVI(I),EVIBAR(I),TEM,TEM1,TEM2,TEM6,TEM6                 1431
+200   FORMAT (33H  I,K,TEM3,TEM4,TEM5,TAUIK,TAUSUM/2I5,5E18.8/33H  SIGIK    1432
+     1,ALPIK,BETAIK,U,EVI,EVIBAR/6E17.8/22H  TEM,TEM1,TEM2,TEM6  /4E18.8    1433
+     2,O22/)                                                                1434
+205   CONTINUE                                                              1435
+C                                                                           1436
+C        DEVIDX = EQUILIBRIUM VIBRATIONAL ENERGY                            1437
+      DEVIDX(I)=TAUSUM                                                      1438
+      DER(1+IMAX+I)=DEVIDX(I)                                               1439
+210   CONTINUE                                                              1440
+C                  COMPUTE  DHDX                                            1441
+      DHDX=DPFTL/RHO                                                        1442
+      IF (IBUG(10).NE.0) RETURN                                             1443
+      PRINT 215, DEVIDX(I)                                                  1444
+215   FORMAT (9H  DEVIDX=E22.14)                                            1445
+      PRINT 220, DPFTL,DHDX                                                 1446
+220   FORMAT (12H  DPDX,DHDX=2E18.8,16H       END BASIC////)                1447
+      RETURN                                                                1448
+      END                                                                   1449
+      FUNCTION  FOFE(DUM)                                                   1450
+C                                                                           1451
+C     CALLED BY ITR1 IN BASIC TO EVALUATE E                                 1452
+C                                                                           1453
+      COMMON M,IX,IMAX,IPSI,IBUG(15)                                        1454
+      COMMON P( 500),DPDX( 500),VARI( 500)                                  1455
+      COMMON EVIINF(25),THETAI(25),MUI(25),FI(25),DELHI(25),CIINF(25),      1456
+     1       LI(25)                                                         1457
+      COMMON R,MUINF,DELTA,LAMSQ,OMEGSQ,OMEGA,MU,T,U                        1458
+      COMMON EPSIIL(20,25),GIL(20,25)                                       1459
+      COMMON VAR(52),CUVAR(52),DER(51)                                      1460
+C                                                                           1461
+      COMMON ZS,RS,RC,SINT,COST,PS,US,PSIS                                  1462
+      COMMON MJ(50),EJ(50),AJ(50),BJ(50)                                    1463
+      COMMON TVI(25),NI(25),DGENI(25)                                       1464
+      COMMON NUIJ(26,50),AIJ(25,50),NUPIJ(25,50)                            1465
+C                                                                           1466
+      COMMON /LAB4/ PFTL,KITR1,EITR1                                        1467
+      COMMON /LAB7/ ITNEG,IEXP                                              1468
+C                                                                           1469
+      DOUBLE PRECISION VAR                                                  1470
+C                                                                           1471
+      DIMENSION CI(25)                                                      1472
+C                                                                           1473
+      EQUIVALENCE (CUVAR(3),CI(1)),(CUVAR( 2),H)                            1474
+C                                                                           1475
+      REAL MUI,LAMSQ,MUINF,MU                                               1476
+C                                                                           1477
+      IF (ITNEG.EQ.1.OR.IEXP.EQ.1) RETURN                                   1478
+      KITR1=KITR1+1                                                         1479
+      IF (KITR1.EQ.3) EITR1=DUM                                             1480
+      PORHO=H-DUM                                                           1481
+      E=0                                                                   1482
+      EDUM=DUM                                                              1483
+      T=PORHO*MU/R                                                          1484
+      IF (IBUG(11).NE.0) GO TO 10                                           1485
+      PRINT 5, EDUM,MU,T,RHO,PFTL,H                                         1486
+5     FORMAT (1X,5HEDUM=E15.8,2X,3HMU=E15.8,2X,2HT=E15.8,2X,4HRHO=E15.8,    1487
+     12X,5HPFTL=E15.8,2X,2HH=E15.8)                                         1488
+10    CONTINUE                                                              1489
+C                                                                           1490
+      DO 55 I=1,IMAX                                                        1491
+      IF (TVI(I).EQ.0.) TEM1=(1.5*R*T)/MUI(I)+(FI(I)*R*T)/MUI(I)            1492
+      IF (TVI(I).EQ.0.) GO TO 15                                            1493
+      TEM=EXP(THETAI(I)/TVI(I))                                             1494
+      TEM1=(1.5*R*T)/MUI(I) + (FI(I)*R*T)/MUI(I) +                          1495
+     1 (FI(I)*DGENI(I)*R*THETAI(I))/(MUI(I)*(TEM-1.0))                      1496
+15    CONTINUE                                                              1497
+      SUMG=0.                                                               1498
+      SUMGE=0.                                                              1499
+C                                                                           1500
+      LII=LI(I)                                                             1501
+      DO 35 L=1,LII                                                         1502
+      TEM3=-EPSIIL(L,I)/T                                                   1503
+      IF (TEM3.LT.741.67) GO TO 25                                          1504
+      PRINT 20, TEM3,EPSIIL(L,I),T,EDUM,L,I,H,MU,KITR1                      1505
+20    FORMAT (56H EXP(TEM3), TEM3.GT.741.67, TEM3,EPSIIL(L,I),T,EDUM,L,I    1506
+     1=/4E17.8,2I5,13H  H,MU,KITR1=2E17.8,I5)                               1507
+      IEXP=1                                                                1508
+C      SET IEXP=1 TO TRIGGER REDUCTION IN COMPUTING INTERVAL                1509
+C      AND A NEW E ESTIMATE                                                 1510
+      RETURN                                                                1511
+25    TEM2=EXP(TEM3)                                                        1512
+      SUMG=SUMG+GIL(L,I)*TEM2                                               1513
+      SUMGE=SUMGE+GIL(L,I)*EPSIIL(L,I)*TEM2                                 1514
+      IF (SUMGE.GT.10.E300) IBUG(11)=0                                      1515
+C                                                                           1516
+      IF (IBUG(11).NE.0) GO TO 35                                           1517
+      PRINT 30, I,L,TEM2,EPSIIL(L,I),T,SUMG,GIL(L,I),SUMGE                  1518
+30    FORMAT (34H  I,L,TEM2,EPSIIL,T,SUMG,GIL,SUMGE/2I5,6E18.8/)            1519
+35    CONTINUE                                                              1520
+      IF (SUMGE.LT.10.E300) GO TO 45                                        1521
+      PRINT 40                                                              1522
+C                                                                           1523
+40    FORMAT (56H IN FOFE,SUMGE.GT.10.E300, SET IEXP=1 TO REDUCE INTERVA    1524
+     1L/)                                                                   1525
+C                                                                           1526
+      IBUG(11)=1                                                            1527
+      IEXP=1                                                                1528
+      RETURN                                                                1529
+45    CONTINUE                                                              1530
+      EI=TEM1+R/MUI(I)*(SUMGE/SUMG)+DELHI(I)/MUI(I)                         1531
+      E=E+EI*CI(I)                                                          1532
+      IF (IBUG(11).NE.0) GO TO 55                                           1533
+      PRINT 50, I,L,IX,IPSI,PORHO,E,EDUM,H,RHO,T,TEM,TEM1,SUMG,SUMGE,EI,    1534
+     1E                                                                     1535
+50    FORMAT (32H  I,L,IX,IPSI,PORHO,E,EDUM,H,RHO/4I4,6E18.8/23H  T,TEM,    1536
+     1TEM1,SUMG,SUMGE/7E18.8//)                                             1537
+55    CONTINUE                                                              1538
+      FOFE=E                                                                1539
+      IF (E.GT.H) PRINT 60, E,H                                             1540
+60    FORMAT (26H  IN ITR1-FOFE, E.GT.H, E=E15.8,6H    H=E15.8,5X,17H  R    1541
+     1EDUCE INTERVAL)                                                       1542
+      IF (E.GT.H) ITNEG=1                                                   1543
+C                                                                           1544
+      RETURN                                                                1545
+      END                                                                   1546
+      FUNCTION   FOFTS(DUM)                                                 1547
+C                                                                           1548
+C     CALLED BY ITR1 IN MAIN PROGRAM TO EVALUATE TS                         1549
+C                                                                           1550
+      COMMON M,IX,IMAX,IPSI,IBUG(15)                                        1551
+      COMMON P( 500),DPDX( 500),VARI( 500)                                  1552
+      COMMON EVIINF(25),THETAI(25),MUI(25),FI(25),DELHI(25),CIINF(25),      1553
+     1       LI(25)                                                         1554
+      COMMON R,MUINF,DELTA,LAMSQ,OMEGSQ,OMEGA,MU,T,U                        1555
+      COMMON EPSIIL(20,25),GIL(20,25)                                       1556
+      COMMON VAR(52),CUVAR(52),DER(51)                                      1557
+      COMMON ZS,RS,RC,SINT,COST,PS,US,PSIS                                  1558
+      COMMON MJ(50),EJ(50),AJ(50),BJ(50)                                    1559
+      COMMON TVI(25),NI(25),DGENI(25)                                       1560
+C                                                                           1561
+      DOUBLE PRECISION VAR                                                  1562
+C                                                                           1563
+      DIMENSION CI(25)                                                      1564
+C                                                                           1565
+      EQUIVALENCE (CUVAR(3),CI(1))                                          1566
+C                                                                           1567
+      REAL MUI,LAMSQ,MUINF,MU                                               1568
+C                                                                           1569
+      ES=0                                                                  1570
+      DO 25 I=1,IMAX                                                        1571
+      IF (M.EQ.1) EVIS=EVIINF(I)                                            1572
+      IF (M.EQ.1) GO TO 5                                                   1573
+C                                                                           1574
+      TEM=EXP(THETAI(I)/DUM)                                                1575
+C                                                                           1576
+      EVIS=(R*THETAI(I))/(MUI(I)*(TEM-1.0))*FI(I)*DGENI(I)                  1577
+5     SUMG=0                                                                1578
+      SUMGE=0                                                               1579
+C                                                                           1580
+      LII=LI(I)                                                             1581
+      DO 10 L=1,LII                                                         1582
+      TEM1=EXP(-EPSIIL(L,I)/DUM)                                            1583
+      SUMG=SUMG+TEM1*GIL(L,I)                                               1584
+10    SUMGE=SUMGE+TEM1*GIL(L,I)*EPSIIL(L,I)                                 1585
+      EEIS=(R/MUI(I))*(SUMGE/SUMG)                                          1586
+      EIS=(1.5*R*DUM)/MUI(I)+(FI(I)*R*DUM)/MUI(I)+EVIS+EEIS+DELHI(I)/MUI    1587
+     1(I)                                                                   1588
+      ES=ES+EIS*CIINF(I)                                                    1589
+      IF (IBUG(4).NE.0) GO TO 20                                            1590
+      T=DUM                                                                 1591
+      PRINT 15, IX,I,M,EVIS,TEM,T,SUMG,SUMGE,TEM1,EEIS,EIS,ES,CIINF(I)      1592
+15    FORMAT (32H  IX,I,M,EVIS,TEM,DUM,SUMG,SUMGE/3I5,5E18.8/30H  TEM1,E    1593
+     1EIS,EIS(I),ES,CIINF(I)/5E18.8/)                                       1594
+C                                                                           1595
+20    CONTINUE                                                              1596
+25    CONTINUE                                                              1597
+C                                                                           1598
+      FAC=SQRT(OMEGSQ-2.*LAMSQ*(DELTA-ES))                                  1599
+      FIN=(2.*MUINF*(DELTA-ES)*FAC)/(R*(OMEGA+FAC))                         1600
+      FOFTS=FIN                                                             1601
+      IF (IBUG(4).NE.0) RETURN                                              1602
+      PRINT 30, OMEGSQ,LAMSQ,DELTA,ES,MUINF,FAC,R,OMEGA,FIN                 1603
+30    FORMAT (44H OMEGSQ,LAMSQ,DELTA,ES,MUINF,FAC,R,OMEGA,FIN/2(5E18.8/)    1604
+     1)                                                                     1605
+      RETURN                                                                1606
+      END                                                                   1607
+      SUBROUTINE FDPDX                                                      1608
+C                                                                           1609
+C     TO COMPUTE P AND DPDX                                                 1610
+C     AND SAVE ON TAPES 9 AND 8                                             1611
+C                                                                           1612
+      COMMON M,IX,IMAX,IPSI,IBUG(15)                                        1613
+      COMMON P( 500),DPDX( 500),VARI( 500)                                  1614
+      COMMON EVIINF(25),THETAI(25),MUI(25),FI(25),DELHI(25),CIINF(25),      1615
+     1       LI(25)                                                         1616
+      COMMON R,MUINF,DELTA,LAMSQ,OMEGSQ,OMEGA,MU,T,U                        1617
+      COMMON EPSIIL(20,25),GIL(20,25)                                       1618
+      COMMON VAR(52),CUVAR(52),DER(51)                                      1619
+C                                                                           1620
+      COMMON ZS,RS,RC,SINT,COST,PS,US,PSIS                                  1621
+      COMMON MJ(50),EJ(50),AJ(50),BJ(50)                                    1622
+      COMMON TVI(25),NI(25),DGENI(25)                                       1623
+      COMMON NUIJ(26,50),AIJ(25,50),NUPIJ(25,50)                            1624
+      COMMON SIGIK(25,25),ALPIK(25,25),BETAIK(25,25)                        1625
+      COMMON KSTAG,IMAXP2,IMAXL,N,IG,ISTAG,LPS2,LPS1,IMAXP1                 1626
+      COMMON X,TS,ES,RHOS,HS,RHOURT,PHMAX,CIMAX,PREPSIS,PREX,PRERU          1627
+      COMMON EVIS(25),XPST(100)                                             1628
+C                                                                           1629
+      COMMON /LAB2/ DELX,ZSTERM,IZTERM                                      1630
+C                                                                           1631
+      DOUBLE PRECISION VAR                                                  1632
+C                                                                           1633
+C                   BEGIN PRESSURE DISTRIBUTION                             1634
+C                   FOR EACH PSI FIND RANGE OF X                            1635
+C                                                                           1636
+      DO 20 IPSI=1,IZTERM                                                   1637
+      DO 15 IX=1,IZTERM                                                     1638
+      IEOF=10                                                               1639
+      CALL RECIN (10,1,IRECIN,X,ZS,RS,RC,COST,SINT)                         1640
+      IF (ENDFILE 10) 65,5                                                  1641
+5     CONTINUE                                                              1642
+      IF (IX.EQ.IPSI) XX=X                                                  1643
+      IEOF=11                                                               1644
+      CALL RECIN (11,1,IRECIN,IXT,TS,ES,PS,RHOS,US,PSIS,HS)                 1645
+      CALL RECIN (11,2,IRECIN,EVIS,1,IMAX,1)                                1646
+      IF (ENDFILE 11) 65,10                                                 1647
+10    CONTINUE                                                              1648
+      IF (IXT.LT.IPSI) GO TO 15                                             1649
+      IF (IXT.EQ.IPSI) PSISHK=PSIS                                          1650
+      IF (IPSI.EQ.IX) P(IX)=PS                                              1651
+      IF (IPSI.EQ.IX) GO TO 15                                              1652
+      P(IX)=PS+US/(RC*RS)*(PSISHK-PSIS)                                     1653
+C                                                                           1654
+15    CONTINUE                                                              1655
+      REWIND 10                                                             1656
+      REWIND 11                                                             1657
+C                                                                           1658
+      CALL RECOUT (9,1,0,XX)                                                1659
+      CALL RECOUT (9,2,0,P,IPSI,IZTERM,1)                                   1660
+C                                                                           1661
+20    CONTINUE                                                              1662
+      REWIND 9                                                              1663
+      N=1                                                                   1664
+      IEOF=9                                                                1665
+      DO 55 IPSI=1,IZTERM                                                   1666
+      CALL RECIN (9,1,IRECIN,X)                                             1667
+      CALL RECIN (9,2,IRECIN,P,IPSI,IZTERM,1)                               1668
+      IF (ENDFILE 9) 65,25                                                  1669
+25    CONTINUE                                                              1670
+      ITHIS=0                                                               1671
+      DO 30 IX=IPSI,IZTERM                                                  1672
+      IF (IX.EQ.IPSI) XT=X                                                  1673
+      IF (IX.GT.IPSI.AND.IPSI.LT.7) XT=XT+DELX/5.                           1674
+      IF (IX.GT.IPSI.AND.IPSI.GT.6) XT=XT+DELX                              1675
+      IF (IX.EQ.IZTERM-1) P(IX+2)=0.0                                       1676
+      ITHIS=ITHIS+1                                                         1677
+      VARI(ITHIS)=XT                                                        1678
+30    CONTINUE                                                              1679
+      IHERE=0                                                               1680
+C                                                                           1681
+      DO 50 IX=IPSI,IZTERM                                                  1682
+      IF (IX.EQ.IZTERM) P(IX+1)=0.                                          1683
+      IF (IX.EQ.IZTERM) P(IX+2)=0.0                                         1684
+      IHERE=IHERE+1                                                         1685
+C                  DIFFERENTIATE                                            1686
+      IF (IX.NE.IPSI) GO TO 35                                              1687
+      DPDX(IX)=(-3.*P(IX)+4.*P(IX+1)-P(IX+2))/(2.*DELX)                     1688
+      GO TO 40                                                              1689
+35    CONTINUE                                                              1690
+      DPDX(IX)=(-P(IX-1)+P(IX+1))/(2.*DELX)                                 1691
+      IF (IX.NE.IZTERM) GO TO 40                                            1692
+      DPDX(IX)=(P(IX-2)-4.*P(IX-1)+3.*P(IX))/(2.*DELX)                      1693
+40    CONTINUE                                                              1694
+      IF (IBUG(1).NE.0) GO TO 50                                            1695
+      PRINT 45, IPSI,IX,A,DPDX(IX),P(IX)                                    1696
+45    FORMAT (2I5,3E18.8)                                                   1697
+50    CONTINUE                                                              1698
+C                                                                           1699
+      CALL RECOUT (8,2,0,DPDX,IPSI,IZTERM,1)                                1700
+C                                                                           1701
+55    CONTINUE                                                              1702
+      DO 60 IX=1,IZTERM                                                     1703
+      IF (IX.EQ.1) VARI(1)=0.                                               1704
+      IF (IX.EQ.1) GO TO 60                                                 1705
+      IF (IX.LT.7) VARI(IX)=VARI(IX-1)+DELX/5.                              1706
+      IF (IX.GT.6) VARI(IX)=VARI(IX-1)+DELX                                 1707
+60    CONTINUE                                                              1708
+      REWIND 9                                                              1709
+      REWIND 8                                                              1710
+      REWIND 10                                                             1711
+      REWIND 11                                                             1712
+      RETURN                                                                1713
+65    PRINT 70, IEOF                                                        1714
+70    FORMAT (7H  EOF  I5,13H     IN FDPDX)                                 1715
+      STOP 50                                                               1716
+C                                                                STOP 50    1717
+      END                                                                   1718
+      SUBROUTINE CHECK                                                      1719
+C                                                                           1720
+C     CHECK CALLED BY CALINTH TO MAKE DECISION TO ACCEPT ANSWERS            1721
+C        IF ACCEPTABLE, SET ELB=0 AND RETURN                                1722
+C        IF NOT ACCEPTABLE MODIFY SPEC AND CI. SET ELB=1.0 AND RETURN       1723
+C                                                                           1724
+      COMMON M,IX,IMAX,IPSI,IBUG(15)                                        1725
+      COMMON P( 500),DPDX( 500),VARI( 500)                                  1726
+      COMMON EVIINF(25),THETAI(25),MUI(25),FI(25),DELHI(25),CIINF(25),      1727
+     1       LI(25)                                                         1728
+      COMMON R,MUINF,DELTA,LAMSQ,OMEGSQ,OMEGA,MU,T,U                        1729
+      COMMON EPSIIL(20,25),GIL(20,25)                                       1730
+      COMMON VAR(52),CUVAR(52),DER(51)                                      1731
+C                                                                           1732
+      COMMON /LAB6/ ELB,SPEC,CJ,TPREV,HPREV,HCHECK,TCHECK                   1733
+      COMMON /LAB7/ ITNEG,IEXP                                              1734
+C                                                                           1735
+      EQUIVALENCE (CUVAR( 2),H)                                             1736
+C                                                                           1737
+      DOUBLE PRECISION VAR                                                  1738
+C                                                                           1739
+      IF (IEXP.NE.1) GO TO 5                                                1740
+      GO TO 30                                                              1741
+C         REDUCE COMPUTING INTERVAL TO TRY TO AVOID EXP ERROR STOP          1742
+5     CONTINUE                                                              1743
+      IF (ITNEG.EQ.0) GO TO 10                                              1744
+C        E.GT.H LEADS TO NEG T SOMETIMES---LETS REDUCE INTERVAL TO TRY      1745
+C        TO AVOID INSTABILITY                                               1746
+      GO TO 30                                                              1747
+10    CONTINUE                                                              1748
+      IMAXP1=IMAX+1                                                         1749
+      DO 20 I=3,IMAXP1                                                      1750
+C              CUVAR(2)=H   MAY BE NEG                                      1751
+      IF (CUVAR(I).LT.0.) PRINT 15, I,IX,CUVAR(I)                           1752
+15    FORMAT (24H  NEG CI, I,IX,CUVAR(I)=2I5,E17.8)                         1753
+      IF (CUVAR(I).LT.0.) GO TO 30                                          1754
+20    CONTINUE                                                              1755
+      IF (IX.LT.3) GO TO 50                                                 1756
+      IF (IPSI.EQ.6.AND.IX.LT.8) GO TO 50                                   1757
+      IF (ABS(TPREV-T)/T.LT.TCHECK) GO TO 40                                1758
+      PRINT 25                                                              1759
+25    FORMAT (33H  CHECK-ABS(TPREV-T)/T.GE.TCHECKT)                         1760
+30    CONTINUE                                                              1761
+      IF (SPEC.LT.1.0E-15) STOP 30                                          1762
+C                                                                STOP 30    1763
+C        REDUCE INTERVAL                                                    1764
+      SPEC=SPEC/4.                                                          1765
+      CJ=SPEC                                                               1766
+      ELB=1.0                                                               1767
+                                                                            1768
+CC       ALWAYS PRINT CONDITION WHEN REDUCING COMPUTING INTERVAL            1769
+C        IEXP=1 WHEN EXP ERROR ENCOUNTERED                                  1770
+C        ITNEG=1 WHEN E.GT.H AND T NEGATIVE                                 1771
+C        ALSO CONTROLS ON PERCENT CHANGE IN T AND H                         1772
+                                                                            1773
+      PRINT 35, SPEC,IPSI,IX,T,TPREV,H,HPREV,IEXP,ITNEG                     1774
+35    FORMAT (14H REDUCED SPEC=E15.8,10H  IPSI,IX=2I5,18H  T,TPREV,H,HPR    1775
+     1EV=4E16.7/13H  IEXP,ITNEG=2I3)                                        1776
+      ITNEG=0                                                               1777
+      IEXP=0                                                                1778
+      RETURN                                                                1779
+40    CONTINUE                                                              1780
+      IF (ABS((HPREV-H)/H).GT.HCHECK) PRINT 45                              1781
+45    FORMAT (35H  CHECK,ABS((HPREV-H)/H).GT.HCHECKT)                       1782
+      IF (ABS((HPREV-H)/H).GT.HCHECK) GO TO 30                              1783
+50    CONTINUE                                                              1784
+C                   ACCEPTABLE                                              1785
+      HPREV=H                                                               1786
+      ELB=0.                                                                1787
+      RETURN                                                                1788
+      END                                                                   1789
+      SUBROUTINE SHOCKG (DELX,ZSTERM,IZTERM)                              G   1
+C     SUBROUTINE SHOCKG CALLED BY MAIN                                    G   2
+C                                                                         G   3
+C     SHOCKG SUBROUTINE MUST BE SUPPLIED BY USER. IT SHOULD DEFINE THE    G   4
+C     SHOCK GEOMETRY AND STORE ON TAPE 10,X,ZS,RS,RC,COST,SINT FOR EACH   G   5
+C     X FROM 0.0 TO X AT ZSTERM IN INCREMENTS OF DELX/5.0 TO DELX AND     G   6
+C     INCREMENTS OF DELX THEREAFTER                                       G   7
+C         X=DISTANCE ALONG SHOCK                                          G   8
+C        ZS=DISTANCE ALONG SHOCK AXIS OF SYMMETRY                         G   9
+C        RS=RADIUS OF SHOCK                                               G  10
+C        RC=RADIUS OF CURVATURE OF SHOCK                                  G  11
+C      COST=COS OF ANGLE OF ATTACK                                        G  12
+C      SINT=SIN OF ANGLE OF ATTACK                                        G  13
+C                                                                         G  14
+C     USER MUST STORE THE NUMBER OF X VALUES IN IZTERM                    G  15
+C     USE STOP 13 FOR ERROR STOPS IN SHOCKG                               G  16
+C                                                                         G  17
+C                                                                         G  18
+      DIMENSION ZDUM(750),RSDUM(750),RCDUM(750),SIDUM(750),CODUM(750),
+     1 XC(750)
+C                                                                         G  21
+C                                                                         G  22
+C        NEQ A    12-16-68                                                G  23
+C        Z/L=COSH(R/L)-1.0                                                G  24
+C        L=2.109211 CM                                                    G  25
+C        NEQ2 INPUT                                                       G  26
+C                                                                         G  27
+C                                                                         G  28
+      EL=2.109216                                                         G  29
+      X=0.                                                                G  30
+      DRS=.0078125                                                        G  31
+      NRS=0                                                               G  32
+5     NRS=NRS+1                                                           G  33
+      IF(NRS.LT.751) GO TO 6
+      PRINT 7,NRS,ZDUM(750),ZSTERM,RSDUM(750),DRS
+    7 FORMAT(//1X,*IN SHOCKG,  NEED TO  INCREASE DIMENSIONS.  NRS=*I3/
+     1 1X,*ZDUM(750)=*E15.8/ 1X,*ZSTERM=*E15.8/ 1X,*RSDUM(750)=*E15.8/
+     2 1X,*DRS=*E15.8)
+      STOP 13
+    6 CONTINUE
+      IF (NRS.EQ.1) RSDUM(1)=0.                                           G  34
+      IF (NRS.NE.1) RSDUM(NRS)=RSDUM(NRS-1)+DRS                           G  35
+      ZDUM(NRS)=COSH(RSDUM(NRS))-1.0                                      G  36
+      XC(NRS)=SQRT(2.*ZDUM(NRS)+ZDUM(NRS)**2)                             G  37
+      CODUM(NRS)=XC(NRS)/SQRT(XC(NRS)**2+1.0)                             G  38
+      RCDUM(NRS)=1.0+XC(NRS)**2                                           G  39
+      SIDUM(NRS)=SQRT(1.0-CODUM(NRS)**2)                                  G  40
+      RCDUM(NRS)=EL*RCDUM(NRS)                                            G  41
+      XC(NRS)=EL*XC(NRS)                                                  G  42
+      RSDUM(NRS)=EL*RSDUM(NRS)                                            G  43
+      ZDUM(NRS)=EL*ZDUM(NRS)                                              G  44
+      IF (ZDUM(NRS).LT.ZSTERM) GO TO 5                                    G  45
+      X=0.                                                                G  46
+      NOX=0                                                               G  47
+      PRINT 10                                                            G  48
+10    FORMAT (5X,1HX,16X,2HZS,15X,2HRS,15X,2HRC,15X,4HCOST,13X,4HSINT/)   G  49
+15    NOX=NOX+1                                                           G  50
+      IF (NOX.LT.7) X=X+DELX/5.                                           G  51
+      IF (NOX.EQ.1) X=0.                                                  G  52
+      IF (NOX.GT.6) X=X+DELX                                              G  53
+      CALL FTLUP (X,ZS,1,NRS,XC,ZDUM)                                     G  54
+      CALL FTLUP (X,RS,1,NRS,XC,RSDUM)                                    G  55
+      CALL FTLUP (X,RC,1,NRS,XC,RCDUM)                                    G  56
+      CALL FTLUP (X,COST,1,NRS,XC,CODUM)                                  G  57
+      CALL FTLUP (X,SINT,1,NRS,XC,SIDUM)                                  G  58
+      PRINT 20, X,ZS,RS,RC,COST,SINT,NOX                                  G  59
+20    FORMAT (6E17.8,I5)                                                  G  60
+      CALL RECOUT (10,1,0,X,ZS,RS,RC,COST,SINT)                           G  61
+      IF (ZS.LT.0.0) PRINT 25                                             G  62
+25    FORMAT (16H  ZS IS NEGATIVE)                                        G  63
+      IF (ZS.LT.0.0) STOP 13                                              G  64
+C                                                 STOP 13       STOP 13   G  65
+      IF (ZS.LT.ZSTERM) GO TO 15                                          G  66
+      IZTERM=NOX                                                          G  67
+      END FILE 10                                                         G  68
+      REWIND 10                                                           G  69
+      RETURN                                                              G  70
+      END                                                                 G  71-
+      SUBROUTINE CALINTH (VAR,DER,ELE1,ELE2,CI,SPEC,N,CUVAR,ELT,CIMAX,NE    1918
+     1RR,PHMAX)                                                             1919
+C     ----- IN THE CALINTH VERSION OF CALINT THE VARIABLE IN VAR(2) AND     1920
+C     ----- CUVAR(2) MAY BE + OR -.VALUES OF OTHER DEPENDENT VARIABLES      1921
+C     ----- ARE EXPECTED TO BE PLUS.              10-69                     1922
+      DOUBLE PRECISION VAR                                                  1923
+      DIMENSION VAR(52),DER(51),ELE1(51),ELE2(51),CUVAR(52),F1(51),         1924
+     1F2(51),F3(51),CAPF1(51),CAPF2(51),CAPF3(51),P(51),PH(51),             1925
+     2DELTY(51),Y3(51),Y4(51),F4(51),Y2(51)                                 1926
+C                                                                           1927
+C     NERR=1           CI OR N IS EQUAL TO ZERO                             1928
+C                                                                           1929
+C     NERR=2           ELE1 LESS THAN OR EQUAL TO ELE2                      1930
+C                                                                           1931
+C                                                                           1932
+C        TEST INPUT                                                         1933
+C                                                                           1934
+      FN=N                                                                  1935
+      TEST=CI*FN                                                            1936
+      IF (TEST) 10,5,10                                                     1937
+5     NERR=1                                                                1938
+      RETURN                                                                1939
+10    IF (ELE1-ELE2) 15,15,20                                               1940
+15    NERR=2                                                                1941
+      RETURN                                                                1942
+20    IF (SPEC) 45,25,45                                                    1943
+C                                                                           1944
+C        SECTION FOR INITIALIZATION COMPUTATION OF DERIVATIVES              1945
+C                                                                           1946
+25    SPEC=CI                                                               1947
+      ICONT=1                                                               1948
+30    N1=N+1                                                                1949
+      DO 35 I=1,N1                                                          1950
+35    CUVAR(I)=VAR(I)                                                       1951
+C                                                                           1952
+      CALL BASIC                                                            1953
+C                                                                           1954
+C        RETURN WITH DERIVATIVES IN DER                                     1955
+C                                                                           1956
+      DO 40 I=1,N                                                           1957
+40    F1(I)=DER(I)                                                          1958
+C                                                                           1959
+      RETURN                                                                1960
+C                                                                           1961
+C        COMPUTE Y2,X2                                                      1962
+C                                                                           1963
+45    CUVAR(1)=VAR(1)+CI/2.                                                 1964
+      DO 50 I=1,N                                                           1965
+      I1=I+1                                                                1966
+      Y2(I)=VAR(I1)+CI/2.*F1(I)                                             1967
+      IF (I.EQ.1) GO TO 50                                                  1968
+      IF (Y2(I)) 55,50,50                                                   1969
+50    CUVAR(I1)=Y2(I)                                                       1970
+      GO TO 60                                                              1971
+55    SPEC=CI                                                               1972
+      CI=CI/2.                                                              1973
+      GO TO 45                                                              1974
+C                                                                           1975
+C        CALL BASIC TO EVALUATE F2                                          1976
+C                                                                           1977
+60    CALL BASIC                                                            1978
+C                                                                           1979
+C        RETURN                                                             1980
+C                                                                           1981
+      DO 65 I=1,N                                                           1982
+      I1=I+1                                                                1983
+      F2(I)=DER(I)                                                          1984
+C                                                                           1985
+C        COMPUTE Y3                                                         1986
+C                                                                           1987
+      Y3(I)=VAR(I1)+CI/2.*F2(I)                                             1988
+      IF (I.EQ.1) GO TO 65                                                  1989
+      IF (Y3(I)) 55,65,65                                                   1990
+65    CUVAR(I1)=Y3(I)                                                       1991
+C                                                                           1992
+C        CALL BASIC TO EVALUATE F3                                          1993
+C                                                                           1994
+      CALL BASIC                                                            1995
+C        RETURN                                                             1996
+C                                                                           1997
+      DO 110 I=1,N                                                          1998
+      F3(I)=DER(I)                                                          1999
+C                                                                           2000
+C        COMPUTE P,PH AND CAP F TERMS                                       2001
+C                                                                           2002
+      IF (Y3(I)-Y2(I)) 75,70,75                                             2003
+70    P(I)=0.                                                               2004
+      GO TO 80                                                              2005
+75    P(I)=-((F3(I)-F2(I))/(Y3(I)-Y2(I)))                                   2006
+80    PH(I)=P(I)*CI                                                         2007
+      IF (PH(I)) 85,85,90                                                   2008
+85    PH(I)=0.                                                              2009
+      P(I)=0.                                                               2010
+      GO TO 95                                                              2011
+90    IF (ABS(Y3(I)-Y2(I))/((ABS(Y3(I))+ABS(Y2(I)))/2.)-.5E-4) 85,85,95     2012
+95    IF (PH(I)-.1) 100,100,105                                             2013
+100   CAPF1(I)=1.-PH(I)/2.+(PH(I)**2)/6.-(PH(I)**3)/24.                     2014
+      CAPF2(I)=.5-PH(I)/6.+(PH(I)**2)/24.-(PH(I)**3)/120.                   2015
+      CAPF3(I)=1./6.-PH(I)/24.+(PH(I)**2)/120.-(PH(I)**3)/720.              2016
+      GO TO 110                                                             2017
+105   CAPF1(I)=(EXP(-PH(I))-1.)/(-PH(I))                                    2018
+      CAPF2(I)=(CAPF1(I)-1.)/(-PH(I))                                       2019
+      CAPF3(I)=(CAPF2(I)-.5)/(-PH(I))                                       2020
+110   CONTINUE                                                              2021
+C                                                                           2022
+C        IS PH BETWEEN ELE2 AND ELE1                                        2023
+C                                                                           2024
+      IF (ICONT-1) 120,120,115                                              2025
+115   ICONT=ICONT-1                                                         2026
+      SPEC=CI                                                               2027
+      GO TO 165                                                             2028
+120   DO 125 I=1,N                                                          2029
+      IF (ABS(PH(I))-ELE1(I)) 125,125,130                                   2030
+125   CONTINUE                                                              2031
+C                                                                           2032
+      SPEC=CI                                                               2033
+      GO TO 150                                                             2034
+C                                                                           2035
+C        HALVE INTERVAL AND DOUBLE PH RANGE                                 2036
+C                                                                           2037
+130   DO 145 I=1,N                                                          2038
+      ELE1(I)=ELE1(I)*2.                                                    2039
+      IF (ELE1(I)-PHMAX) 135,135,140                                        2040
+135   ELE2(I)=ELE2(I)*2.                                                    2041
+      GO TO 145                                                             2042
+140   ELE1(I)=ELE1(I)/2.                                                    2043
+145   CONTINUE                                                              2044
+      SPEC=CI                                                               2045
+      CI=CI/2.                                                              2046
+      ICONT=3                                                               2047
+      GO TO 45                                                              2048
+C                                                                           2049
+C     RETURN TO RECOMPUTE INTERVAL                                          2050
+C                                                                           2051
+C                                                                           2052
+C        RETURN TO RECOMPUTE INTERVAL                                       2053
+C                                                                           2054
+150   DO 155 I=1,N                                                          2055
+      IF (ABS(PH(I))-ELE2(I)) 155,165,165                                   2056
+155   CONTINUE                                                              2057
+C                                                                           2058
+C        DOUBLE INTERVAL                                                    2059
+C                                                                           2060
+      CI=2.*CI                                                              2061
+      IF (CI-CIMAX) 165,165,160                                             2062
+160   CI=CIMAX                                                              2063
+165   CONTINUE                                                              2064
+C                                                                           2065
+C        COMPUTE Y4,X4                                                      2066
+C                                                                           2067
+      DO 175 I=1,N                                                          2068
+      I1=I+1                                                                2069
+      CUVAR(I1)=VAR(I1)+SPEC*(F3(I)*(2.*CAPF2(I))+F1(I)*(CAPF1(I)-2.*CAP    2070
+     1F2(I))+F2(I)*PH(I)*CAPF2(I))                                          2071
+      IF (I.EQ.1) GO TO 175                                                 2072
+      IF (CUVAR(I1)) 170,175,175                                            2073
+170   CI=SPEC                                                               2074
+      CI=CI/2.                                                              2075
+      GO TO 45                                                              2076
+175   Y4(I)=CUVAR(I1)                                                       2077
+C                                                                           2078
+      CUVAR(1)=VAR(1)+SPEC                                                  2079
+C                                                                           2080
+C        CALL BASIC TO EVALUATE F4                                          2081
+C                                                                           2082
+      CALL BASIC                                                            2083
+C        RETURN                                                             2084
+C                                                                           2085
+      DO 180 I=1,N                                                          2086
+      I1=I+1                                                                2087
+      F4(I)=DER(I)                                                          2088
+C                                                                           2089
+C        COMPUTE DELTA Y                                                    2090
+C                                                                           2091
+      DELTY(I)=SPEC*(F1(I)*CAPF1(I)+(-3.*(F1(I)+P(I)*VAR(I1))+2.*(F2(I)+    2092
+     1P(I)*Y2(I))+2.*(F3(I)+P(I)*Y3(I))-F4(I)-P(I)*Y4(I))*CAPF2(I)+4.*((    2093
+     2F1(I)+P(I)*VAR(I1))-(F2(I)+P(I)*Y2(I))-(F3(I)+P(I)*Y3(I))+(F4(I)+P    2094
+     3(I)*Y4(I)))*CAPF3(I))                                                 2095
+C                                                                           2096
+C        COMPUTE Y+DELTA Y                                                  2097
+C                                                                           2098
+180   CUVAR(I1)=VAR(I1)+DELTY(I)                                            2099
+C                                                                           2100
+C        CALL CHECK FOR DECISION TO ACCEPT OR RECOMPUTE                     2101
+C          INTERVAL                                                         2102
+      CALL CHECK                                                            2103
+      IF (ELT) 185,185,45                                                   2104
+C        GO TO 45  TO  RETURN TO RECOMPUTE INTERVAL                         2105
+C        UPDATE Y VALUES                                                    2106
+C                                                                           2107
+185   N1=N+1                                                                2108
+      DO 190 I=2,N1                                                         2109
+      I1=I-1                                                                2110
+190   VAR(I)=VAR(I)+DELTY(I1)                                               2111
+      VAR(1)=VAR(1)+SPEC                                                    2112
+C                                                                           2113
+C        RETURN TO COMPUTE DERIVATIVES AT Y+DELTA Y                         2114
+C                                                                           2115
+      GO TO 30                                                              2116
+      END                                                                   2117
+C   1C5.1   0                                          ITR1
+      SUBROUTINE ITR1 (X,DELTX,FOFX,E1,E2,MAXI,ICODE)
+********* DOCUMENT DATE 08-01-68   SUBROUTINE REVISED 08-01-68 *********
+      USED=FOFX(X)
+      IF(X-USED)1,6,1
+    1 XBACK =X
+      X=X+DELTX
+      USED1=USED
+      USED= FOFX(X)
+      DO 7 I= 1,MAXI
+      IF(ABS(USED)-E1)2,3,3
+    3 IF(ABS((USED-X)/USED)-E1)6,6,8
+    2 IF(ABS(USED-X)-E2)6,6,8
+    8 A=(USED - USED1)/(X-XBACK)
+      IF (A.EQ.1.0)GO TO 9
+      Q= A/(A-1.0)
+      XBACK=X
+      X = Q*X+ (1. -Q)*USED
+      USED1 = USED
+      USED = FOFX(X)
+    7 CONTINUE
+      ICODE = 1
+      GO TO 11
+    9 ICODE = 2
+      GO TO 11
+    6 ICODE = 0
+   11 CONTINUE
+      RETURN
+      END
+C   1D4.1   0                                          DIF
+      FUNCTION DIF(L,M,NP,VARI,VARD)
+********* DOCUMENT DATE 08-01-68   SUBROUTINE REVISED 08-01-68 *********
+C        THIS FUNCTION SUBPROGRAM FINDS THE DERIVATIVE AT A GIVEN POINT,
+C        L, FOR THE DESIRED X AND Y IN A GIVEN TABLE.  THE N-POINT
+C        LAGRANGIAN FORMULA IS USED WHERE N IS ODD.
+C
+C        L = INTEGER, THE POINT OF X AND Y AT WHICH DERIVATIVE IS FOUND
+C        M = INTEGER, 1-5, TO DETERMINE THE POINT FORMULA, N.  N=2*M+1
+C        NP= INTEGER, THE NUMBER OF POINTS IN TABLE OF VARIABLES
+C        VARI = ARRAY OF INDEPENDENT VARIABLE, X.  VARI(NP)
+C        VARD = ARRAY OF DEPENDENT VARIABLE, Y.    VARD(NP)
+C
+      DIMENSION VARI(NP), VARD(NP), X(11), Y(11)
+C
+      DIF=O17770000000000000000
+      IF (M .LT. 1) RETURN
+      N = 2*M+1
+      IF (M.GT. 5 .OR. N .GT. NP) RETURN
+      M1 = M+1
+      M2 = NP-M+1
+      K = L
+      IF (L .LE. M1 .OR. N .EQ. NP) GO TO 30
+      K = M1
+      IF (L .LT. M2) GO TO 30
+      K = L - (NP-N)
+   30 MX = L-K
+      DO 50 J=1,N
+      MJ = MX+J
+      X(J) = VARI(MJ)
+   50 Y(J) = VARD(MJ)
+      A = 1.
+      B = 0.
+      C = 0.
+      DO 70 J=1,N
+      IF (J .EQ. K) GO TO 70
+      P = 1.
+      DO 60 I=1,N
+      IF (I .EQ. J) GO TO 60
+      P = P*(X(J)-X(I))
+   60 CONTINUE
+      T = X(K) - X(J)
+      B = B + Y(J)/(P*T)
+      A = A*T
+      C = C + 1./T
+   70 CONTINUE
+      DIF = A*B + Y(K)*C
+      RETURN
+      END
+      SUBROUTINE FTLUP (X,Y,M,N,VARI,VARD)
+*********DOCUMENT DATE  7/7/69     SUBROUTINE REVISED  7/7/69  *********
+*        MODIFICATION OF LIBRARY INTERPOLATION SUBROUTINE  FTLUP
+      DIMENSION VARI(1),VARD(1),V(3),YY(2)
+      DIMENSION II(43)
+*
+*      INITIALIZE ALL INTERVAL POINTERS TO -1.0   FOR MONOTONICITY CHECK
+      DATA (II(J),J=1,43)/43*-1/
+      MA=IABS(M)
+*
+*            ASSIGN INTERVAL POINTER FOR GIVEN VARI TABLE
+*      THE SAME POINTER WILL BE USED ON A GIVEN VARI TABLE EVERY TIME
+      LI=MOD(LOCF(VARI(1)),43)+1
+      I=II(LI)
+      IF (I.GE.0) GO TO 10
+      IF (N.LT.2) GO TO 10
+*
+* MONOTONICITY CHECK
+      IF (VARI(2)-VARI(1)) 1,1,3
+*  ERROR IN MONOTONICITY
+    2 K=LOCF (VARI(1))
+      PRINT 102,J,K,(VARI(J),J=1,N),(VARD(J),J=1,N)
+  102 FORMAT (1H1,* TABLE BELOW OUT OF ORDER FOR FTLUP  AT POSITION  *
+     1,I5,/* X TABLE IS STORED IN LOCATION *,O6,//(8G15.8))
+      STOP
+*  MONOTONIC DECREASING
+    1 DO 5 J=2,N
+      IF (VARI(J)-VARI(J-1))5,2,2
+    5 CONTINUE
+      GO TO 10
+*  MONOTONIC INCREASING
+    3 DO 6 J=2,N
+      IF (VARI(J)-VARI(J-1))2,2,6
+    6 CONTINUE
+*
+* INTERPOLATION
+   10 IF (I.LE.0) I=1
+      IF (I.GE.N) I=N-1
+      IF (N.LE.1) GO TO 8
+      IF (MA.NE.0) GO TO 99
+*  ZERO ORDER
+    8 Y=VARD(1)
+      GO TO 800
+*  LOCATE I INTERVAL (X(I).LE.X.LT.X(I+1))
+   99 IF ((VARI(I)-X)*(VARI(I+1)-X)) 61,61,40
+*  IN GIVES DIRECTION FOR SEARCH OF INTERVALS
+   40 IN=SIGN(1.0,(VARI(I+1)-VARI(I))*(X-VARI(I)))
+*  IF X OUTSIDE ENDPOINTS, EXTRAPOLATE FROM END INTERVAL
+   41 IF ((I+IN).LE.0) GO TO 61
+      IF ((I+IN).GE.N) GO TO 61
+      I=I+IN
+      IF ((VARI(I)-X)*(VARI(I+1)-X)) 61,61,41
+   61 IF (MA.EQ.2) GO TO 200
+*
+* FIRST ORDER
+      Y=(VARD(I)*(VARI(I+1)-X)-VARD(I+1)*(VARI(I)-X))/(VARI(I+1)-VARI(I)
+     1   )
+      GO TO 800
+*
+* SECOND ORDER
+  200 IF (N.EQ.2) GO TO 2
+      IF (I.EQ.(N-1)) GO TO 209
+      IF (I.EQ.1) GO TO 201
+*  PICK THIRD POINT
+      SK= VARI(I+1)-VARI(I)
+      IF ((SK*(X-VARI(I-1))).LT.(SK*(VARI(I+2)-X))) GO TO 209
+  201 L=I
+      GO TO 702
+  209 L=I-1
+  702 V(1)=VARI(L)-X
+      V(2)=VARI(L+1)-X
+      V(3)=VARI(L+2)-X
+      YY(1)=(VARD(L)*V(2)-VARD(L+1)*V(1))/(VARI(L+1)-VARI(L))
+      YY(2)=(VARD(L+1)*V(3)-VARD(L+2)*V(2))/(VARI(L+2)-VARI(L+1))
+      Y=(YY(1)*V(3)-YY(2)*V(1))/(VARI(L+2)-VARI(L))
+  800 II(LI)=I
+      RETURN
+      END
+          IDENT RECIN
+          ENTRY  RECIN
+*        **********                                   REVISED   08/01/68
+*
+* BLOCKED INPUT ROUTINE
+* M.DECH, CONTROL DATA AT NASA-LRC
+*
+*CALLING SEQUENCE IS
+*    CALL RECIN(LUN,1,K,L1,,LN)   OR
+*    CALL RECIN(LUN,2,K,ARR,FIRST,LAST,INCREMENT)
+*
+ PARAMS   BSS    57
+ NANE     VFD    42/0HRECIN,18/63
+ RECIN    DATA   0
+          SA1    B2
+          SB2    -1
+          SX2    X1+B2
+          ZR     X2,TYPE1
+          SX2    X2+B2
+          ZR     X2,TYPE2
+          SA0    MSGA             TYPE NOT 1 OR 2
+          JP     ERROR
+ TYPE1    SA1    RECIN
+          AX1    30
+          SA2    X1+B2            FETCH CALL
+          MX4    54
+          AX2    18
+          BX6    -X4*X2
+          SX6    X6-3             FETCH ITEMS IN LIST
+          SA6    NUMBPAR          STORE IT
+          RJ     GETFET           RETURNS WITH FET ADDRESS IN B2
+          RJ     READ
+          SA1    FETADDR
+          SA2    X1+3             GET OUT
+          SA3    X2               X3=LENGTH THIS RECORD
+          SX3    X3-1
+          SA4    NUMBPAR
+          IX6    X3-X4
+          PL     X6,MOVEA
+          BX4    X3               SET SHORTER VALUE IN X4
+ MOVEA    SA5    A2+1             X5=LIMIT
+*FIRST THE PARAMETERS WITH ADDRESSES IN THE B-REGISTERS
+*MUST BE MOVED
+          SX7    X2
+          SX5    X5               MAKE SURE WE HAVE 18 BITS
+          RJ     ADVOUT           OUT TO X7
+          SA3    X7
+          BX6    X3
+          SA6    B4               STORE 1ST
+          SX4    X4-1
+          ZR     X4,OUT           JUMP ON LIST END
+          RJ     ADVOUT
+          SA3    X7
+          BX6    X3
+          SA6    B5               STORE 2ND
+          SX4    X4-1
+          ZR     X4,OUT
+          RJ     ADVOUT
+          SA3    X7
+          BX6    X3
+          SA6    B6               STORE 3RD
+          SX4    X4-1
+          ZR     X4,OUT
+*LIST LONGER THAN 3 WORDS SO LOOP TO END
+          SB1    1
+          SB2    PARAMS
+ LOOPA    RJ     ADVOUT
+          SA3    X7
+          SA2    B2
+          BX6    X3
+          SA6    X2
+          SB2    B2+B1
+          SX4    X4-1
+          NZ     X4,LOOPA
+*MUST NOW REPOSITION OUT AND EXIT
+ OUT      SA1    FETADDR
+          SA2    X1+3
+          SX2    X2
+          SA3    X2               X3=TOTAL LENGTH
+          IX6    X3+X2            X6=OUT+LENGTH
+          IX0    X6-X5
+          NG     X0,SETOUT
+          SA2    X1+1             FETCH FIRST
+          SX2    X2
+          IX6    X0+X2            NEW OUT
+ SETOUT   SA6    X1+3             STORE NEW OUT
+          SX7    X3-1             WORD COUNT TO X7
+          MX2    0
+ SETK     SA7    B3
+          PL       X2,RECIN       EXIT IF NOT EOF
+          SA1      FETADDR
+          SA2      X1+14
+          MX6    2
+          SA6      A2
+          MX3    42
+          BX6    X3*X4
+          SX3    13B
+          BX6    X6+X3
+          SA6    X1
+          JP     RECIN            EXIT
+ GETFET   DATA   0
+          SB2    B0-B1
+          RJ     =XGETBA
+          GE     B2,B0,CHECK
+          SA0    MSGC             UNASSIGNED MEDIUM
+          JP     ERROR
+ CHECK    SA1    B2
+          SX7    B2
+          SA7    FETADDR          STORE IT
+          LX1      57
+          PL       X1,NOWRT
+          SA0      MSGE
+          JP       ERROR
+ NOWRT    LX1      3
+          MX2    54
+          BX3    -X2*X1           SEE IF UNUSED
+          NZ     X3,TEOF     TEST EOF IF USED
+          SB7      B6
+          SX1      B2
+          SX2    120B        OPEN ALTER
+          RJ       =XOPEN.
+          SB6      B7
+          SA2    X1
+          MX0    45
+          BX2    X2*X0
+          AX0    14
+          IX6    X2-X0
+          SA6    X1
+          JP     GETFET
+ TEOF     SA1    B2+14
+          PL     X1,GETFET   EXIT IF OK
+          SA0    MSGD        ERROR - UNCHECKED EOF
+          JP     ERROR
+ READ     DATA   0
+          SA1    FETADDR
+          SA2    X1
+          LX2    54
+          NG     X2,FURTHER   NOT EOR OR EOF
+          LX2    1
+          PL     X2,FURTHER       NO EOR STATUS
+          SA3    X1+2             FETCH IN
+          SA4    X1+3             FETCH OUT
+          SX4    X4
+          IX7    X3-X4
+          NZ     X7,FURTHER        JUMP IF STILL DATA
+          RJ    CIOCALL
+ RAHEAD   SA1    FETADDR
+          SA4    X1
+          LX4    59
+          NG     X4,GOGO
++         SA2    1
+          NZ     X2,*
+          SX6    3RRCL
+          LX6    42
+          SA6    A2
+          XJ
+          EQ     RAHEAD
+ GOGO     LX4    1
+          BX2    X4
+          LX2    55
+          PL     X2,SETK     NOT EOR OR EOF
+          LX2    1           POSITION EOF BIT FOR TESTING
+          JP     SETK        K = (X7) = 0
+ FURTHER  SA1    FETADDR
+          SA2    X1+2             GET IN
+          SX2    X2               CUT TO 18 BITS
+          SA3    X1+3             GET OUT
+          SX3    X3
+          IX6    X3-X2            OUT-IN
+          PL     X6,QFIT          GO CHECK FIT
+          SA4    X1+1             GET FIRST
+          SA5    X1+4             GET LIMIT
+          SX4    X4
+          SX5    X5
+          IX4    X5-X4            BUFFER SIZE
+          IX6    X4+X6            ADJUST ROOM IN BUFFER
+ QFIT     ZR     X6,CANCALL       GO CALL ON BUFFER EMPTY
+          SX6    X6-1000B
+          NG     X6,NOCALL
+          SA1    FETADDR
+          SA2    X1
+          LX2    55
+          NG     X2,NOCALL        DONT CALL ON EOR
+          LX2    4
+          PL     X2,NOCALL
+ CANCALL  RJ     CIOCALL
+*AT THIS POINT WE MUST SEE IF A FULL RECORD IS PRESENT
+ NOCALL   SA1    FETADDR
+          SA2    X1+2             SET IN
+          SA3    X1+3             OUT
+          SX3    X3
+          IX6    X2-X3            IN-OUT
+          PL     X6,QGET
+          SA4    X1+1             FIRST
+          SA5    X1+4             LIMIT
+          SX4    X4
+          SX5    X5
+          IX7    X5-X4
+          IX6    X6+X7
+ QGET     ZR     X6,RECALL
+          SA3    X3
+          IX7    X6-X3            EXIT IF RECORD PRESENT
+          PL     X7,READ
+ RECALL   SX6    3RRCL
+          LX6    42
+ WAITA    SA2    1
+          NZ     X2,WAITA
+          SA6    A2               STORE RCL
+ WAITB    SA2    A6               AND WAIT TILL
+          NZ     X2,WAITB         PICKED UP,THEN
+         SA2       X1
+         LX2       59
+          NG        X2,READ+1      RESTART IF EOR
+          JP     NOCALL           RECHECK
+ CIOCALL  DATA   0
+ WAITC    SA1    FETADDR
+          SA2    X1
+          LX2    59
+          NG       X2,GO
+          SX6      3RRCL
+          LX6      42             IF
++         SA1      1              BUSY
+          NZ       X1,*           RECALL
+          SA6      A1
++         SA1      A6
+          NZ       X1,*
+          JP     CIOCALL
+GO        MX3      48
+          LX2    1
+          SX4    12B
+          BX5    X2*X3
+          IX6    X4+X5
+          SA6    X1               STORE BINARY READ REQUEST
+          SX4    3RCIO
+          LX4    42
+          IX6    X4+X1            X6=REQUEST
+ WAITD    SA2    1
+          NZ     X2,WAITD         WAIT RA+1.BUSY
+          SA6    A2               STORE REQUEST
+          JP     CIOCALL          AND EXIT
+*NEXT ROUTINE IS USED
+*TO ADVANCE OUT
+ ADVOUT   DATA   0
+*X5=LIMIT
+*X7=OUT
+*DESTROYS A1,X1
+          SX7    X7+1
+          IX1    X7-X5
+          NZ     X1,ADVOUT        EXIT IF NOT REACHED
+          SA1    FETADDR
+          SA1    X1+1
+          SX7    X1
+          JP     ADVOUT
+ TYPE2    RJ     GETFET
+          RJ     READ
+          SA2    B5
+          SB7    X2-1
+          SB7    B7+B4            B7=1ST STORE ADDRESS
+          SA2    B6
+          SB6    X2-1
+          SB6    B6+B4            B6=LAST
+          SA2    PARAMS
+          SA3    X2
+          SB4    X3               B4=INCREMENT
+          SA1    FETADDR
+          SA2    X1+3
+          SX7    X2
+          SA5    X1+4             X5=LIMIT
+          SX5    X5
+          SA3    X7
+          SB2    X3-1             B2=NUMBER OF WORDS THIS RECORD
+          SB1    1
+ TLOOP    RJ     ADVOUT
+          SA3    X7               LOAD DATA
+          BX6    X3
+          SA6    B7               STORE IT
+          SB7    B7+B4            NEXT ADDRESS
+          LT     B6,B7,OUT        JUMP IF FINISHED
+          SB2    B2-B1
+          NE     B2,B0,TLOOP      STILL DATA
+          JP     OUT
+ ERROR    BX7    X3
+          SA7    FNAME
+          SX2    A0
+          SX1    ERRNUM
++         RJ     =XSYSTEM
+-         LT     B0,NANE
++         RJ     =XABNORML
+-         LT     B0,NANE
+ MSGA     DATA   10H BAD TYPE
+          DATA   0
+ MSGB     DATA   20H LIST EXCEEDS DATA
+          DATA   0
+MSGC      DATA   30H UNASSIGNED FILE MEDIUM FILE
+ FNAME    BSS    1
+MSGD      DIS      ,* UNCHECKED END FILE*
+          DATA     0
+MSGE      DIS      ,* READ/WRITE SEQUENCE ERROR*
+          DATA     0
+ERRNUM    EQU    92
+ FETADDR  DATA   0
+ NUMBPAR  DATA   0
+          END
+          IDENT  RECOUT
+          ENTRY  RECOUT
+*        **********                                   REVISED   08/01/68
+*
+*BLOCKED OUTPUT ROUTINE
+*M.DECH,CONTROL DATA AT NASA-LRC
+*
+*CALLING SEQUENCE IS
+*    CALL RECOUT(LUN,1,K,L1,..,LN) OR
+*    CALL RECOUT(LUN,2,K,ARRAY,FIRST,LAST,INCREMENT)
+*
+ PARAMS   BSS    57
+ NANE     VFD    42/0HRECOUT,18/63
+ RECOUT   DATA   0
+          SA1    B2               GET TYPE
+          SB2    -1
+          SX2    X1+B2
+          ZR     X2,TYPE1
+          SX2    X2+B2
+          ZR     X2,TYPE2
+          SA0    MSGA
+          JP     ERROR
+ TYPE1    RJ     GETNPAR
+          RJ     GETFET
+          RJ     TESTY            WONT RETURN UNTIL THERE IS ROOM
+* MUST NOW STORECOUNT AND HANDLE B REGISTERS
+          SA1    FETADDR
+          SA2    X1+2
+          BX7    X2               X7=IN
+          SA5    X1+4             X5=LIMIT
+          SX5    X5
+          SA3    NUMBPAR
+          SX6    X3+1
+          SA6    X7               STORE COUNT
+          RJ     ADVIN            BUMP IN
+          SA4    B4               LOAD ELEMENT 1
+          BX6    X4
+          SA6    X7               STORE
+          RJ     ADVIN
+          SX3    X3-1
+          ZR     X3,CLEANUP       EXIT ON LIST END
+          SA4    B5               SAME FOR SECOND
+          BX6    X4
+          SA6    X7
+          RJ     ADVIN
+          SX3    X3-1
+          ZR     X3,CLEANUP
+          SA4    B6               AND THIRD
+          BX6    X4
+          SA6    X7
+          RJ     ADVIN
+          SX3    X3-1
+          ZR     X3,CLEANUP
+*NOW TO REST OF LIST
+          SB1    1
+          SB2    PARAMS
+ LOOPE    SA2    B2               LOAD ADDRESS
+          SA4    X2               GET IT
+          BX6    X4
+          SA6    X7               STORE IT
+          RJ     ADVIN
+          SB2    B2+B1            SET FOR NEXT
+          SX3    X3-1
+          NZ     X3,LOOPE
+*MUST NOW POSITION IN, CALL WRITE AND EXIT
+ CLEANUP  SA1    FETADDR
+          SA2    NUMBPAR
+          SA3    X1+2             IN
+          SX2    X2+1             RECORD LENGTH
+          SA4    X1+4             LIMIT
+          SX4    X4
+          IX7    X3+X2            IN+ LENGTH
+          IX6    X7-X4
+          NG     X6,SETIN         LT LIMIT IS OK
+          SA4    BSIZE            ELSE SUBTRACT
+          IX7    X7-X4            BSIZE
+ SETIN    SA7    A3               STORE NEW IN
+          SB7    16B              SET OP CODE
+          SA1    B3               GET EOF INDICATOR
+          ZR     X1,MDCALL        NO EOF
+          SB7    B7+10B           SET LOGICAL EOF
+ MDCALL   RJ     WRITE
+          JP     RECOUT           AND EXIT
+ TYPE2    RJ     GETNPAR
+          SA1    NUMBPAR
+          SX2    X1-4
+          SA0    MSGE
+          NZ     X2,ERROR
+          RJ     COUNT
+          RJ     GETFET
+          RJ     TESTY
+          SA2    B5
+          SB7    X2-1
+          SB7    B7+B4            FIRST PICKUP ADDRESS
+          SA2    B6
+          SB6    X2-1
+          SB6    B6+B4
+          SA2    PARAMS
+          SA3    X2
+          SB4    X3               B4=INC
+          SA1    FETADDR
+          SA2    X1+2
+          BX7    X2               X7=IN
+          SA5    X1+4             X5=LIMIT
+          SX5    X5
+          SA1    NUMBPAR
+          SX6    X1+1
+          SA6    X7
+          RJ     ADVIN            READY FOR TRANSFERS
+ QLOOP    SA3    B7
+          BX6    X3
+          SA6    X7
+          RJ     ADVIN
+          SB7    B7+B4
+          GE     B6,B7,QLOOP
+          JP     CLEANUP
+ COUNT    DATA   0
+          SX7    0
+          SA2    B5
+          SB7    X2-1
+          SX5    B7+B4            F
+          SA2    B6
+          SX6    X2-1             L
+          SX6    X6+B4
+          SA2    PARAMS
+          SA3    X2             X3=INC
+ LOOPF    SX7    X7+1
+          IX5    X5+X3
+          IX2    X6-X5
+          PL     X2,LOOPF
+          SA7    NUMBPAR
+          JP     COUNT
+ WRITE    DATA   0
+          SA1    FETADDR
+          SA2    X1+2             IN
+          SA3    X1+3             OUT
+          IX0    X2-X3
+          PL     X0,QQCHECK
+          SA2    BSIZE
+          IX0    X0+X2
+ QQCHECK  SX0    X0-512
+          PL     X0,BCALL
+          SX7    B7
+          LX7    55
+          PL     X7,WRITE
+ BCALL    SB2    59               WAIT BUFFER BUSY
+          SA1    FETADDR
+          SA1    X1
+          LX5    B2,X1
+          NG       X5,GO
+          SX6      3RRCL          IF
+          LX6      42             BUSY
++         SA1      1              RECALL
+          NZ       X1,*
+          SA6      A1
++         SA1      A6
+          NZ       X1,*
+          JP       WRITE+1
+ GO       MX5    42
+          BX6    X5*X1
+          SX0    B7
+          IX6    X0+X6
+          SA6    A1
+          SX6    3RCIO
+          LX6    42
+          SX1    A1
+          IX6    X6+X1
+ WAITA    SA1    1
+          NZ     X1,WAITA
+          SA6    A1
+          JP     WRITE
+ ERROR    BX7    X3
+          SA7    FNAME
+          SX2    A0
+          SX1    ERRNUM
++         RJ     =XSYSTEM
+-         LT     B0,NANE
++         RJ     =XABNORML
+-         LT     B0,NANE
+ MSGA     DATA   10H BAD TYPE
+          DATA   0
+MSGC      DATA   30H UNASSIGNED FILE MEDIUM FILE
+ FNAME    BSS    1
+ERRNUM    EQU    92
+ MSGD     DATA   20H BUFFER TOO SMALL
+          DATA   0
+ MSGE     DATA   20H BAD PARAM COUNT
+          DATA   0
+ MSGF     DIS       ,* WRITE/READ SEQUENCE ERROR*
+          DATA      0
+ FETADDR  BSS    1
+ BSIZE    DATA   0
+ NUMBPAR  DATA   0
+ TESTY    DATA   0
+ LOOP     SA1    FETADDR          MUST SEE IF ENOUGH ROOM
+          SA2    X1+2             IN
+          SA3    X1+3             OUT
+          IX0    X3-X2
+          SA4    NUMBPAR          FETCH COUNT
+          PL     X0,QFIT          DOESNT NEED ADJUSTMENT
+          SA5    BSIZE
+          IX0    X0+X5
+ QFIT     ZR     X0,TESTY         JUMP IF BUFFER EMPTY
+          SX0    X0-1             ALLOW FOR POINTER
+          IX6    X4-X0
+          NG     X6,TESTY         ENOUGH ROOM
+          RJ     TWRITE           GO MAKE ROOM
+          JP     LOOP
+ TWRITE   DATA   0
+ LOOPA    SA1    FETADDR
+          SA2    X1               LOAD STATUS
+          LX2    59
+          NG     X2,CALLIT
+          SX6    3RRCL            RECALL CODE
+          LX6    42
+ LOOPB    SA1    1                CHECK RA+1
+          NZ     X1,LOOPB         WAIT BUSY
+          SA6    A1
+ LOOPC    SA1    A6
+          NZ     X1,LOOPC         WAIT CLEAR
+          JP     TWRITE           GO BACK WITHOUT CALLING
+ CALLIT   SB7    16B
+          RJ     WRITE            CIO CALL
+          JP     LOOPA            AND LOOP
+*ADVIN KEEPS IN IN X7,NEEDS LIMIT IN X5 ,DESTROYS A1,X1
+ ADVIN    DATA   0
+          SX7    X7+1             BUMP
+          IX1    X7-X5            EXIT IF
+          NZ     X1,ADVIN         LIMIT NOT REACHED
+          SA1    FETADDR          FETCH FIRST
+          SA1    X1+1             INTO
+          BX7    X1               X7
+          JP     ADVIN
+ GETNPAR  DATA   0
+          SA1    RECOUT
+          AX1    30
+          SA2    X1+B2            FETCH CALL
+          MX4    54
+          AX2    18
+          BX6    -X4*X2
+          SX6    X6-3             FOR TYPE1 THIS
+          SA6    NUMBPAR          IS THE NUMBER OF LIST ITEMS
+          JP     GETNPAR
+ GETFET   DATA   0
+          SB2    B0-B1
+          RJ     =XGETBA
+          GE     B2,B0,CHECK      GOT FET
+          SA0    MSGC             UNASSIGNED MEDIUM
+          JP     ERROR
+ CHECK    SA1    B2
+          MX2    54
+          BX3    -X2*X1           SEE IF UNUSED
+          NZ     X3,MCHECK
+          SB7      B6
+          SX2    106B
+          SX1      B2
+          RJ       =XOPEN.
+          SB6      B7
+          SA1    B2
+          MX2    42
+          BX3    X2*X1
+          SX2    17B
+          IX7    X3+X2
+          SA7    B2
+ MCHECK   SX7    B2
+          SA7    FETADDR
+          SA1       B2             CHECK LAST STATUS
+          LX1       57             CHECK WRITE BIT
+          NG        X1,SEQOK       JUMP IF LAST OP WRITE
+          LX1       3              RESTORE
+          SX2    50B
+          BX1       X1*X2
+          BX1       X1-X2
+          ZR     X1,RWD           JUMP IF REWIND
+          SA1       B2
+          SX2       60B
+          BX1       X1*X2
+          BX1       X1-X2
+          ZR        X1,RWD          JUMP IF UNLOAD
+          SA0       MSGF
+          JP        ERROR
+ RWD      SA1    B2
+          LX1    59
+         NG     X1,RWDGO         JUMP IF COMPLETE
+ +        SA1    1
+          NZ     X1,*
+          SX6    3RRCL
+          LX6    42
+          SA6    A1
++         SA1    A1
+          NZ     X1,*
+          EQ     RWD              GO CHECK DONE
+ RWDGO    LX1    1
+          MX2    48
+          SX6    17B              SET BINARY WRITE
+          BX1    X2*X1            SET STATUS COMPLETE
+         IX6    X6+X1
+          SA6    B2
+SEQOK     SA1    B2
+          LX1    55
+          PL     X1,SEQOK1   JUMP IF LAST OP NOT = EOR
+SEQOK0    SA1    B2          IF SO
+          LX1    59          WAIT NOT BUSY
+          NG     X1,SEQOK1
++         SA1    1
+          NZ     X1,*
+          SX6    3RRCL
+          LX6    42
+          SA6    A1
++         SA1    A1
+          NZ     X1,*
+          EQ     SEQOK0
+SEQOK1    BSS    0
+          SA1    X7+1             FIRST
+          SA2    X7+4             LIMIT
+          MX3    42
+          BX1    -X3*X1
+          BX2    -X3*X2
+          IX7    X2-X1
+          SA7    BSIZE            STORE BUFFER SIZE
+          SX6    X7-2000B
+          PL     X6,GETFET        EXIT IF OK
+          SA0    MSGD             INSUFFICIENT BUFFER
+          JP     ERROR
+          END
+
+     SHOCK SHAPE NEQA    GROSE,12-17-68  7 SPECIES,14 REACTIONS             0000
+ $NAM1
+ M=0,
+ MUI(1)= 28.016,32.000,14.008,16.000,30.008,30.008,5.4862E-4,
+ CIINF(1)=0.768,.232,.0,.0,.0,.0,.0,
+  PINF=1.98E2,
+ TINF = 253.8,
+ VINF = 7.02E5,
+ R    = 8.31469E7,
+ GAMMA= 1.4,
+ THETAI(1)= 3392.14,2275.0,1.0,1.0,2739.0,3421.0,1.0,
+ GIL(1,1 )= 1.0,3.0,6.0,2.0,4*0.,
+ GIL(1,2 )= 3.0,2.0,1.0,3.0,1.0,3.0,2*0.,
+ GIL(1,3 )= 4.,6.,4.,6.,4*0.,
+ GIL(1,4 )= 5.,3.,1.,5.,1.,3*0.,
+ GIL(1,5 )= 2.,2.,2.,4.,2.,4.,2.,4.,
+ GIL(1,6 )= 1.,6.,3.,5*0.,
+ GIL(1,7 )= 1.,7*0.,
+ DGENI(1)= 20*1.0,
+ EPSIIL(1, 1)= 0.,71592.,85343.,99212., 4*0.,
+ EPSIIL(1, 2)= 0.,11342.,18879.,51385.,52104.,71026., 2*0.,
+ EPSIIL(1, 3)= 0.,27659.,27670.,41496., 4*0.,
+ EPSIIL(1, 4)= 0.,  228.,  326.,22831.,48622., 3*0.,
+ EPSIIL(1, 5)= 0.,  174.,63597.,65381.,76676.,75361.,87568.,86359.,
+ EPSIIL(1, 6)= 0.,57528.,84205., 5*0.,
+ EPSIIL(1, 7)= 8*0.,
+ LI(1)= 4,6,4,5,8,3,1,
+ FI(1)= 1.,1.,0.,0.,1.,1.,0.,
+ DELHI(1)=0.,0.,4.707E12,2.4681E12,9.0073E11,1.0826E13,0.,
+ DELI(1)= 114981.,60500.,0.,0.,76883.,127698.,0.,
+ MJ(1)= 2,4,5,3,1,3,2,5,1,5,1,5,6,3,
+  MJ(11)= 6,3,0,0,
+ AJ(1)= 1.2E21,1.0E18,5.2E21,1.3E21,3.0E21,1.67E20,1.0E12,2.38E11,5.0E13,
+        1.11E13,9.1E24,4.79E23,1.8E21,2.17E11,
+  AJ(11)= 1.8E21,2.17E11,0,0,
+ BJ(1)= -1.5,-1.0,-1.5,-1.5,-1.5,-1.5,0.5,0.5,0.,0.,-2.5,-2.5,-1.5,0.12,
+  BJ(11)= -1.5,0.12,0,0,
+ EJ(1)=  59380.,0., 75490.,0., 113260.,0., 3120., 19130., 38000.,0.,
+  EJ(11)= 0.,31858.,0,0,
+ NUIJ(1, 1)= 0,1,0,0,0,0,0,1,
+ NUIJ(1, 2)= 0,0,0,2,0,0,0,1,
+ NUIJ(1, 3)= 0,0,0,0,1,0,0,1,
+ NUIJ(1, 4)= 0,0,1,1,0,0,0,1,
+ NUIJ(1, 5)= 1,0,0,0,0,0,0,1,
+ NUIJ(1, 6)= 0,0,2,0,0,0,0,1,
+ NUIJ(1, 7)= 0,1,1,0,0,0,0,0,
+ NUIJ(1, 8)= 0,0,0,1,1,0,0,0,
+ NUIJ(1, 9)= 1,0,0,1,0,0,0,0,
+ NUIJ(1,10)= 0,0,1,0,1,0,0,0,
+ NUIJ(1,11)= 0,0,0,0,0,1,1,0,
+ NUIJ(1,12)= 0,0,1,1,0,0,0,0,
+ NUPIJ(1, 1)= 0,0,0,2,0,0,0,
+ NUPIJ(1, 2)= 0,1,0,0,0,0,0,
+ NUPIJ(1, 3)= 0,0,1,1,0,0,0,
+ NUPIJ(1, 4)= 0,0,0,0,1,0,0,
+ NUPIJ(1, 5)= 0,0,2,0,0,0,0,
+ NUPIJ(1, 6)= 1,0,0,0,0,0,0,
+ NUPIJ(1, 7)= 0,0,0,1,1,0,0,
+ NUPIJ(1, 8)= 0,1,1,0,0,0,0,
+ NUPIJ(1, 9)= 0,0,1,0,1,0,0,
+ NUPIJ(1,10)= 1,0,0,1,0,0,0,
+ NUPIJ(1,11)= 0,0,1,1,0,0,0,
+ NUPIJ(1,12)= 0,0,0,0,0,1,1,
+ AIJ(1, 1)= 6*1,0,
+ AIJ(1, 2)= 6*1,0,
+ AIJ(1, 3)= 6*1,0,
+ AIJ(1, 4)= 6*1,0,
+ AIJ(1, 5)= 6*1,0,
+ AIJ(1, 6)= 6*1,0,
+ AIJ(1, 7)= 7*0,
+ AIJ(1, 8)= 7*0,
+ AIJ(1, 9)= 7*0,
+ AIJ(1,10)= 7*0,
+ AIJ(1,11)= 7*0,
+ AIJ(1,12)= 7*0,
+ ALPIK(1, 1)= 7*5.675E-4,
+ ALPIK(1, 2)= 7*1.443E-7,
+ ALPIK(1, 3)= 7*0,
+ ALPIK(1, 4)= 7*0,
+ ALPIK(1, 5)= 7*1.513E-4,
+ ALPIK(1, 6)= 7*1.513E-4,
+ ALPIK(1, 7)= 7*0.,
+ BETAIK(1, 1)=7*-.09952,
+ BETAIK(1, 2)=7*0.37177,
+ BETAIK(1, 3)=7*0.,
+ BETAIK(1, 4)=7*0.,
+ BETAIK(1, 5)=7*-.2226,
+ BETAIK(1, 6)=7*-.2226,
+ BETAIK(1, 7)=7*0,
+ SIGIK(1, 1)= 7*163.63,
+ SIGIK(1, 2)= 7*179.32,
+ SIGIK(1, 3)= 7*0,
+ SIGIK(1, 4)= 7*0,
+ SIGIK(1, 5)= 7*135.3,
+ SIGIK(1, 6)= 7*135.3,
+ SIGIK(1, 7)= 7*0,
+  IMAX=7,
+ JMAX=12,
+ CIMAX=.5,
+ ELE1(1)=42*64.,
+ ELE2(1)=42*1.0,
+ XI=.0625,
+ ZSTERM=1.145,
+ DELX=0.06,   TCHECKT=0.3,   HCHECKT=0.01,   PHMAX=65.0,
+ EVI(1)=20*0.0,
+ NXPST=15, XPST(1)=.06,.12,.18,.24,.3,.36,.42,.48,.54,.6,.66,.72,.78,.84,10.,
+  IPF=5,  TIMER=240.,  IPICKUP=0,
+ $
+        N2        O2         N         O        NO       NO+        E-
+     O2 + M = 2O + M     2O + M = O2 + M  NO + M = N + O + M  N + O + M = NO + M
+     N2 + M = 2N + M     2N + M = N2 + M     N + O2 = NO + O     NO + O = N + O2
+     N2 + O = NO + N     NO + N = N2 + 0    NO+ + E- = N + 0    N + O = NO+ + E-
+                                                                               
+                                                                                

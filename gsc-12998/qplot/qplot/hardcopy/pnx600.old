@@ -1,0 +1,185 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STARLETQ',
+               'QLIBHOME:STANDARD',
+               'QLIBHOME:IO',
+               'QLIBHOME:STRING',
+               'QLIBHOME:FIG',
+               'QLIBHOME:TERM_VAX',
+               'QLIBHOME:HARD_RAST'),
+  ENVIRONMENT ('QLIBHOME:HARD03.TEN') ]
+MODULE hard03 (vfile);
+{=============================================================================}
+{-- PROCEDURES FOR HARDCOPY TYPE 03 ------------------------------------------}
+{=============================================================================}
+[ HIDDEN ] TYPE
+   v_type        = VARYING [133] OF char;
+[ HIDDEN ] VAR
+   v             : v_type;
+   vfile         : FILE of v_type;
+   hardfig       : RECORD
+                   comfile       : VARYING [30] OF char;
+                   format        : char;
+                   x             : integer;
+                   y             : integer;
+                   END 
+                 := ('QPLOTHOME:PNX600.COM','P',1040,780);
+{=============================================================================}
+[ HIDDEN ] PROCEDURE setraster;
+BEGIN
+raster.landscape := hardfig.format = 'L';
+CASE hardfig.format OF
+   'P':  BEGIN
+         raster.xsize := hardfig.x;
+         raster.ysize := hardfig.y;
+         END;
+   'L':  BEGIN
+         raster.xsize := hardfig.y;
+         raster.ysize := hardfig.x;
+         END;
+   END;
+raster.yblocks := (raster.ysize + 7) DIV 8;
+END;
+{=============================================================================}
+[ GLOBAL ]
+FUNCTION hardname03 (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0:  hardname03 := '1';
+   1:  hardname03 := 'PNX600  ';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE hardmake03;
+VAR
+   oldpos  : ipoint;
+{------------------------------}
+PROCEDURE fillpicture;
+VAR
+   i,j     : shortunsigned;
+   h,l,s   : integer;
+   a       : char;
+BEGIN
+FOR i := 1 TO plotfig.commax DO WITH plotfig.com^[i] DO CASE ins OF
+   I_col:  setvisible (i);
+   I_pan:  ;
+   I_clo:  ;
+   I_pos:  BEGIN
+           env.pos.ix := ix;
+           env.pos.iy := iy;
+           END;
+   I_dra:  BEGIN
+           IF NOT env.visible
+            THEN 
+             BEGIN
+             env.pos.ix := ix;
+             env.pos.iy := iy;
+             END
+            ELSE 
+             BEGIN
+             bresenham (env.pos.ix,env.pos.iy,ix,iy);
+             env.pos.ix := ix;
+             env.pos.iy := iy;
+             END;
+           END;
+   I_siz:  BEGIN
+           env.curch.width  := ix;
+           env.curch.height := iy;
+           END;
+   I_mar:  BEGIN
+           env.curch.charspacing := ix;
+           env.curch.linespacing := iy;
+           END;
+   I_pri:  IF env.visible AND (ix <= iy) 
+            THEN rasterprint (env.pos.ix,env.pos.iy,comchastring(i));
+   I_emp:  ;
+   END;
+END;
+{------------------------------}
+PROCEDURE writefile;
+VAR
+   i,j,k,l,m,b,offset : integer;
+BEGIN
+offset := (130 - raster.ysize DIV 6) DIV 2;
+open (vfile,'PNX600.PLT',new);
+rewrite (vfile);
+v.length := 133;
+FOR i := 0 TO raster.xsize-1 DO
+   BEGIN
+   v[131] := ' ';
+   v[132] := ' ';
+   v[133] := chr(5);
+   FOR j := 0 TO 129 DO
+      IF j < offset
+       THEN v[j] := chr(0)
+      ELSE IF j < offset + raster.ysize DIV 2
+       THEN 
+        BEGIN
+        k := 64;
+        FOR l := 0 TO 5 DO
+           BEGIN
+           m := (j-offset) * 6 DIV 8;
+           b := (j-offset) * 6 MOD 8;
+           IF b IN pix^[i*raster.yblocks+m] THEN k := k + 2 ** (l+1);
+           END;
+        v[j+1] := chr(k);
+        END
+       ELSE v[j] := chr(0);
+   write (vfile,v);
+   END;
+close (vfile);
+END;
+{------------------------------}
+BEGIN
+setraster;
+env.curch := config.ch;
+openplane;
+fillpicture;
+writefile;
+closeplane;
+LIB$SPAWN ('@' + hardfig.comfile);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE hardconfig03 (configcontrol : configcontrol_type);
+BEGIN
+WITH hardfig DO CASE configcontrol OF
+   CON:  BEGIN
+         setraster;
+         config.resolution := 49152 DIV raster.ysize * 4;
+         config.dotsize    := config.resolution * 2;
+         config.ch.width   := config.resolution * 6;
+         config.ch.height  := config.resolution * 10;
+         config.ch.charspacing := config.resolution * 2;
+         config.ch.linespacing := config.resolution * 4;
+         config.starsize   := config.resolution * 4;
+         END;
+   QUE:  BEGIN
+         readvary ('ENTER COMMAND FILE NAME  : ',comfile,comfile);
+         writeline (out,'L=LANDSCAPE, P=PORTRAIT');
+         readch  ('ENTER FORMAT             : ',format,'LPC',format);
+         CASE format OF
+            'L':  BEGIN
+                  readint ('ENTER X SIZE IN PIXELS   : ',x,200,780,x);
+                  readint ('ENTER Y SIZE IN PIXELS   : ',y,200,9000,y);
+                  END;
+            'P':  BEGIN
+                  readint ('ENTER X SIZE IN PIXELS   : ',x,200,9000,x);
+                  readint ('ENTER Y SIZE IN PIXELS   : ',y,200,780,y);
+                  END;
+            END;
+         END;
+   REP:  BEGIN
+         writeline (out,'Command file name is ' + comfile);
+         CASE format OF
+            'L':  writeline (out,'Format is landscape');
+            'P':  writeline (out,'Format is portrait');
+            'C':  writeline (out,'Format is not changed');
+            END;
+         writeline (out,'Number of X pixels is ' + strofi (x,4));
+         writeline (out,'Number of Y pixels is ' + strofi (y,4));
+         END;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+END.

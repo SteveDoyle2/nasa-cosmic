@@ -1,0 +1,197 @@
+		.TITLE	PRTOUT - OUTPUT ROUTINES FOR PRINTER OUTPUT
+	.SUBTITLE	PRTOUT - PRINTER OUTPUT ROUTINE
+
+;DM   This module consists of routines to write out files for the & command
+;DM        PRTOPN - Opens the output file.
+;DM        PRTOUT - Outputs a record.
+;DM        PRTCLS - Closes the file.
+;DM
+;DM   Programmer - Jon Vavrus  12 NOV 1980
+;DM   Revised    - Jon Vavrus  18 AUG 1982 (bigger arrays)
+;DM
+;DM   PRTOUT outputs a record.
+;M
+;M         The routine PRTOUT prints one record to the file opened in
+;M    PRTOPN.  It is called with two values, the first is an longword
+;M    containing the number of bytes to be transfered, and the second is
+;M    the address of the start of the data.
+;
+;	ENTRY POINTS
+;
+;E    BLKCLS  Closes the output file.
+;E    BLKOPN  Opens the file for output.
+;E    BLKOUT  Outputs one record to the file.
+;
+;	OUTPUT FILES
+;
+;W    PRTFAB  The file LOOKPRINT.LIS or LOOKTEMP.LIS .
+;
+;	COMMON AREAS
+;
+;S    LNCN    Used to transfer the FSZ, RFM, and RAT of the file.
+
+		.PSECT	LNCN,PIC,USR,OVR,REL,GBL,SHR,NOEXE,RD,WRT,LONG
+		.BLKB	4970				; COMMON LNCN
+FSZ:		.BLKL	2
+RFM:		.BLKL	1
+RAT:		.BLKL	1
+
+		.PSECT	PRTDAT,LONG
+PRTFAB:		$FAB	FAC=PUT,FOP=<CBT,MXV,SQO>,NAM=PRTNAM,ORG=SEQ
+PRTNAM:		$NAM	ESA=ESA,ESS=255,RSA=RSA,RSS=255
+PRTRAB:		$RAB	FAB=PRTFAB,MBC=1,MBF=2,RAC=SEQ,ROP=WBH
+ESA:		.BLKB	255
+RSA:		.BLKB	255
+RFA:		.BLKW	3			; storage for first RFA
+FILE_OPEN:	.BYTE				; flag for previous file
+APPEND:		.BYTE				; flag for append
+PRINT:		.BYTE				; flag for printing
+LOOKTEMP_LIS:	.ASCII	/LOOKTEMP.LIS/
+LOOKPRINT_LIS:	.ASCII	/LOOKPRINT.LIS/
+
+;
+;	PRTOUT
+;
+	.PSECT		PRTOUT,NOWRT
+	.ENTRY		PRTOUT,^M<R2,R3,R4,R5>
+
+	CMPB		#FAB$C_VFC,<PRTFAB+FAB$B_RFM>	; VFC ?
+	BNEQ		10$
+	MOVL		8(AP),<PRTRAB+RAB$L_RHB>	; if so: set header
+	ADDL3		8(AP),FSZ,<PRTRAB+RAB$L_RBF>	; set buffer
+	SUBW3		FSZ,@4(AP),<PRTRAB+RAB$W_RSZ>
+	BRB		20$
+10$:	MOVL		8(AP),<PRTRAB+RAB$L_RBF>	; set buffer
+	MOVW		@4(AP),<PRTRAB+RAB$W_RSZ>
+20$:	$PUT		RAB=PRTRAB			; output record
+	CMPL		#0,RFA				; first output ?
+	BNEQ		30$
+	CMPW		#0,<RFA+4>
+	BNEQ		30$
+	MOVC3		#6,<PRTRAB+RAB$W_RFA>,RFA	; if so: save RFA
+30$:	RET
+
+	.SUBTITLE	PRTOPN - OPENS THE OUTPUT FILE
+;
+;	PRTOPN
+;
+;DM
+;DM   PRTOPN opens or creates the output file.  If it is supposed to be
+;DM   queued for printing the correct characteristics will be assigned to
+;DM   it.
+;M
+;M         The routine PRTOPN requires one argument an integer*4 variable
+;M    with the value -1 for printer output, 0 for output appended to file
+;M    LOOKPRINT.LIS in the default directory (a new file is created if
+;M    no previous call to PRTOPN was made, or the previous call was made
+;M    with a value of 1), and 1 for output to a new file named LOOKPRINT.LIS
+;M    in the default directory.  If the open was unsuccessful the value
+;M    47 is returned.
+
+	.PSECT		PRTOPN,NOWRT
+	.ENTRY		PRTOPN,^M<R7>
+
+	BICL2		#FAB$M_SPL,<PRTFAB+FAB$L_FOP>	; clear print bit
+	BBC		#1,@4(AP),10$			; check for print
+	MOVAL		LOOKTEMP_LIS,<PRTFAB+FAB$L_FNA>	; if so: move name
+	MOVB		#12,<PRTFAB+FAB$B_FNS>
+	BISL2		#FAB$M_DLT,<PRTFAB+FAB$L_FOP>	; set delete bit
+	MOVB		#1,PRINT			; set print flag
+	BRB		20$
+10$:	MOVAL		LOOKPRINT_LIS,<PRTFAB+FAB$L_FNA> ; move name
+	MOVB		#13,<PRTFAB+FAB$B_FNS>
+	BICL2		#FAB$M_DLT,<PRTFAB+FAB$L_FOP>	; clear delete bit
+	CLRB		PRINT				; clear print flag
+	BLBS		@4(AP),20$			; check for new file
+	BISB2		#1,APPEND			; if not: set app. flg.
+	BISL2		#RAB$M_EOF,<PRTRAB+RAB$L_ROP>	; set EOF bit
+	BRB		30$
+20$:	CLRB		APPEND				; clear append flag
+	BICL2		#RAB$M_EOF,<PRTRAB+RAB$L_ROP>	; clear EOF bit
+30$:	MOVB		RFM,<PRTFAB+FAB$B_RFM>		; set record format
+	CMPB		#FAB$C_FIX,RFM			; FIX file ?
+	BNEQ		33$
+	MOVW		FSZ,<PRTFAB+FAB$W_MRS>		; if so: set MRS
+	BRB		35$
+33$:	CLRW		<PRTFAB+FAB$W_MRS>		; clear MRS
+35$:	BBS		#7,RAT,40$			; figure out RAT
+	MOVB		RAT,R7
+	BRB		50$
+40$:	MNEGB		RAT,R7
+50$:	CMPB		#1,R7
+	BNEQ		60$
+	MOVB		#FAB$M_CR,<PRTFAB+FAB$B_RAT>	; set CR
+	BRB		80$
+60$:	CMPB		#2,R7
+	BNEQ		70$
+	MOVB		#FAB$M_FTN,<PRTFAB+FAB$B_RAT>	; set FTN
+	BRB		80$
+70$:	MOVB		#FAB$M_PRN,<PRTFAB+FAB$B_RAT>	; set PRN
+80$:	CMPB		#FAB$C_VFC,<PRTFAB+FAB$B_RFM>	; VFC ?
+	BNEQ		81$
+	MOVB		FSZ,<PRTFAB+FAB$B_FSZ>		; if so: set FSZ
+	BRB		82$
+81$:	CLRB		<PRTFAB+FAB$B_FSZ>		; clear FSZ
+82$:	BLBS		@4(AP),83$			; new file ?
+	BLBC		FILE_OPEN,83$			; if not: prev. file ?
+	BISL2		#FAB$M_NAM,<PRTFAB+FAB$L_FOP>	; if so: use NAM
+	$OPEN		FAB=PRTFAB			; open
+	BRB		84$
+83$:	BICL2		#FAB$M_NAM,<PRTFAB+FAB$L_FOP>	; don't use NAM
+	$CREATE		FAB=PRTFAB			; create
+84$:	CMPL		#RMS$_NORMAL,R0			; OK ?
+	BNEQ		90$
+	$CONNECT	RAB=PRTRAB			; if so: connect RAB
+	CMPL		#RMS$_NORMAL,R0			; OK ?
+	BNEQ		85$
+	CLRL		RFA				; if so: clear RFA stor.
+	CLRW		<RFA+4>
+	RET
+85$:	$CLOSE		FAB=PRTFAB			; not OK: clean up
+	$REMOVE		FAB=PRTFAB
+90$:	MOVL		#47,@4(AP)
+	RET
+
+	.SUBTITLE	PRTCLS - CLOSES THE OUTPUT FILE
+;
+;	PRTCLS
+;
+;DM
+;DM   PRTCLS Closes the file previously opened by PRTOPN.
+;M
+;M         The routine PRTCLS closes the file opened by PRTPN.  If an
+;M    argument list is present the file is deleted (for appended files
+;M    the new records are stripped off), otherwise the file is closed and
+;M    queued for printing if necessary.
+
+	.PSECT		PRTCLS,NOWRT
+	.ENTRY		PRTCLS,^M<R2,R3,R4,R5>
+
+	$DISCONNECT	RAB=PRTRAB			; disconnect RAB
+	CMPL		#0,(AP)				; argument list ?
+	BEQL		10$
+	BLBC		APPEND,3$			; if not: append ?
+	MOVB		#RAB$C_RFA,<PRTRAB+RAB$B_RAC>	; if so: set RAC to RFA
+	$CONNECT	RAB=PRTRAB			; reconnect RAB
+	MOVC3		#6,RFA,<PRTRAB+RAB$W_RFA>	; set RFA
+	$FIND		RAB=PRTRAB			; find and truncate
+	$TRUNCATE	RAB=PRTRAB
+	$DISCONNECT	RAB=PRTRAB			; disconnect RAB
+	MOVB		#RAB$C_SEQ,<PRTRAB+RAB$B_RAC>	; reset RAC to SEQ
+	$CLOSE		FAB=PRTFAB			; close file
+	RET
+
+3$:	$CLOSE		FAB=PRTFAB			; close file
+	$REMOVE		FAB=PRTFAB			; delete file
+	RET
+
+10$:	BLBC		PRINT,20$			; print file ?
+	BISL2		#FAB$M_SPL,<PRTFAB+FAB$L_FOP>	; if so:set SPL bit
+20$:	$CLOSE		FAB=PRTFAB			; close file
+	BLBS		PRINT,30$			; print file ?
+	MOVB		#1,FILE_OPEN			; if not: set prev. flag
+	RET
+30$:	CLRB		FILE_OPEN			; clear prev. flag
+	RET
+
+	.END

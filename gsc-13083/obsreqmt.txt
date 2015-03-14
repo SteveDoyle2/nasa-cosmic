@@ -1,0 +1,448 @@
+OBSREQMT.TXT                           CJP/GSFC/742      APRIL 18, 1986
+------------
+
+
+
+
+
+
+
+
+
+
+                ***********************************
+                *                                 *
+                *            FORMAT               *
+                *                                 *
+                *              OF                 *
+                *                                 *
+                *     OBSERVATION REQUIREMENTS    *
+                *                                 *
+                *             FILE                *
+                *                                 *
+                ***********************************
+
+
+
+
+******************
+*  INTRODUCTION  *
+******************
+
+
+
+The TOSS library of mission analysis programs is concerned, in part, 
+with the problem of determining when targets are available for
+observation.  A data file has been defined that specifies the
+requirements that must be considered in determining availability.
+
+
+
+Note the distinction between the visibility of a target and its
+availability for observation.  A target is visible if it is not occulted
+by the earth, sun, moon, planet, or spacecraft hardware.  A target is
+available if it is visible and satisfies other specific reqirements
+(for example, whether the spacecraft is in orbit day or night). 
+
+
+The following requirements are used by TOSS programs to determine the
+availability of a target for observation: 
+
+      - target to be observed
+
+      - orbit day/night status of the spacecraft
+
+      - TDRS visibility
+
+      - South Atlantic Anomaly passage
+
+      - minimum angle between the sun and target
+
+      - minimum angle between the moon and target
+
+      - minimum angle between the bright earth limb and celestial target
+
+      - minimum angle between the dark earth limb and celestial target
+
+      - minimum angle between the velocity vector and the target
+
+      - max angle between the zenith direction and the target
+
+      - occultation of target by the spacecraft body
+
+
+
+
+TOSS has a reader, RDREQMT, that reads this file.  The remainder of
+this document assumes that RDREQMT will be used.
+
+
+Even if the requirements file conforms to this document, your program
+must use the data correctly.  This file just tells your program what is
+required.  For instance, if you require orbit night for observations,
+your program must check the orbit night requirement flag and, if
+necessary, determine when orbit night occurs. 
+
+
+TOSS will contain a constraints package, <TBD>, that reads and stores
+the requirements internally and returns availability info for a given
+time. Using this package frees you from coding the tests yourself. 
+
+
+
+************
+*  FORMAT  *
+************
+
+
+The file format is given below.  The file can be created and manipulated
+by a text editor.  RDREQMT reads the file in a list-directed manner. 
+
+
+The file consists of one or more groups of records, each group being
+associated with a single experiment.  Within each group, the following
+holds: 
+
+    record 1 is a comment line(possibly blank);
+
+    record 2 identifies the experiment by name;
+
+    the next several records form a subgroup of records that define
+    requirements associated with the experiment; these requirements
+    are true for all targets of that experiment;
+
+    the next record identifies a target;
+
+    the next record identifies another target;
+
+                        :
+                        :
+                        :
+
+    the last record has its first value as -9999; no other use is made
+    of this record;
+
+
+
+              ***** SAMPLE DATA FILE *****
+
+                COLUMN 1
+                       V
+
+   exp1, record 1 ->   THIS IS A COMMENT LINE FOR EXPERIMENT 1
+                       'EXPNAME1'/
+      subgroup starts  'TDRS',      2/
+                       'SAA',       23,35/
+                       'DAYNIGHT',  1/
+                       'SUNAVOID',  45., 1/
+                       'MOONAVOID', 20., 1/
+                       'VELAVOID',  60./
+                       'ZENITH', 75./
+                       'BRIGHTERT'  17./
+                       'DARKERT',   5./
+                       'BODYBLOCK', 19/
+                       'ENDREQ'/
+     first target      472/
+     second target     7020/
+     third target      5221/
+     end of targets    -9999/
+   exp2, record 1 ->   THIS IS A COMMENT LINE FOR EXPERIMENT 2
+                       'EXPNAME2'/
+                           :
+                           :
+     end of targets    -9999/
+
+
+
+
+
+RECORD 1 FOR EACH EXPERIMENT
+----------------------------
+
+   Record 1 is a comment line, so its contents may be anything
+   convenient.  Except for listing it with the rest of the file,
+   RDREQMT reads and ignores this record.
+
+   This record is directly behind the -9999 record of the preceeding
+   experiment's data, if one is present.
+
+
+
+
+RECORD 2 FOR EACH EXPERIMENT
+----------------------------
+
+   Record 2 identifies the experiment by name.
+
+
+     Parameter 1. (character)  Experiment name
+
+       1 to 8 characters;
+
+       the name must be non-blank and enclosed in single quotes;
+
+   Example:  'NAME1'/
+
+
+
+   
+RECORDS 3ff. EXPERIMENT-DEPENDENT REQUIREMENTS
+----------------------------------------------
+
+  Several requirements can be specified here, one per record.  Each
+  requirement has a keyword by which the reader knows what kind of
+  requirement is being specified.  Each record consists of a keyword
+  and one or two parameter values associated with that keyword.  If a
+  keyword is permitted but not present in the file, the reader routine,
+  RDREQMT, will assign a value which, when applied to that requirement,
+  gives the same target availability as though the requirement did not
+  exist.  The keywords may appear in any order(except 'ENDREQ').
+
+  In general, this set of records look like:
+
+       'keyworda', valuea1, valuea2 /
+       'keywordb', valueb1, valueb2 /
+       'keywordc', valuec1, valuec2 /
+       'ENDREQ'/
+
+        example of one record:   'ZENITH', 45./
+
+
+
+
+                      ( CONTINUED )
+
+  KEYWORD   PARAM  KEYWORD FUNCTION AND PARAMETER DESCRIPTION
+             NUM
+  -------   -----  ------------------------------------------
+
+  TDRS             TDRS requirement
+
+              1    flag identifying the TDRS's that must be visible
+                   during an observation
+
+                   = 0, ignore TDRS
+                   = 1, need only TDRS1(east)
+                   = 2, need only TDRS2(west)
+                   =12, need at least one
+                   = otherwise, error
+
+                   DEFAULT = 0.D0 WHEN REQ'MT IS PERMITTED BY THE
+                   PROGRAM AND THIS KEYWORD IS NOT ON THE FILE
+
+
+  DAYNIGHT         orbit night requirement
+
+              1    =0, ignore day/night status
+                   =1, observations occur only during orbit night
+                   =2, observations occur only during orbit day
+                   =otherwise, error condition in RDREQMT
+
+                   DEFAULT = 0.D0 WHEN REQ'MT IS PERMITTED BY THE
+                   PROGRAM AND THIS KEYWORD IS NOT ON THE FILE
+
+
+  SAA              South Atlantic Anomaly requirement flag and models
+
+              1    if positive, observations occur only outside of the
+                   SAA and this is the model number
+
+                   DEFAULT = 0.D0 WHEN REQ'MT IS PERMITTED BY THE
+                   PROGRAM AND THIS KEYWORD IS NOT ON THE FILE
+
+              2    if positive, observations occur only outside of the
+                   SAA and this is a second model number
+
+                   DEFAULT = 0.D0 WHEN REQ'MT IS PERMITTED BY THE
+                   PROGRAM AND THIS KEYWORD IS NOT ON THE FILE
+
+                   note: if both are zero or negative, then SAA is
+                         ignored; if both are positive, observations
+                         occur when s/c is within neither SAA region;
+                         if only one is positive, s/c must be outside
+                         that region
+
+
+  BODYBLOCK        body blockage flag and blockage mask number
+
+              1    if positive, body blockage is to be considered and
+                   this is the mask number; if zero or negative,
+                   blockage is to be ignored
+
+                   DEFAULT = 0.D0 WHEN REQ'MT IS PERMITTED BY THE
+                   PROGRAM AND THIS KEYWORD IS NOT ON THE FILE
+
+
+
+                       ( CONTINUED )
+
+
+  SUNAVOID         sun avoidance requirement
+
+              1    the minimum angle between the line of sight to the
+                   target and the line of sight to the sun center(ie,
+                   the sun avoidance angle); in degrees;
+
+                   if the separation is less than this angle, target
+                   is not available for observation;
+
+                   if the separation is equal to or greater than this
+                   angle, availability is not precluded by this
+                   requirement, but not assured either;
+
+                   using a zero value is equivalent to having no
+                   requirement present;
+
+                   DEFAULT = 0.D0 WHEN REQ'MT IS PERMITTED BY THE
+                   PROGRAM AND THIS KEYWORD IS NOT ON THE FILE
+
+              2    tells when to apply the sun avoidance requirement
+
+                   =0, requirement is always in force
+                   =1, in force only during orbit day; ignored during
+                       night(ie, as though zero minimum separation were
+                       specified);
+                   =otherwise, error condition in RDREQMT
+
+                   DEFAULT = 0.D0 WHEN REQ'MT IS PERMITTED BY THE
+                   PROGRAM AND THIS KEYWORD IS NOT ON THE FILE
+
+    
+  MOONAVOID        moon avoidance requirement
+
+              1    the minimum angle between the line of sight to the
+                   target and the line of sight to the moon center(ie,
+                   the moon avoidance angle); in degrees
+
+                   description is similar to that for the sun avoidance
+                   angle in keyword 'SUNAVOID'
+
+                   DEFAULT = 0.D0 WHEN REQ'MT IS PERMITTED BY THE
+                   PROGRAM AND THIS KEYWORD IS NOT ON THE FILE
+
+
+              2    tells when to apply the moon avoidance requirement
+
+                   =0, requirement is always in force
+                   =1, in force only when the moon is not occulted by
+                       the earth; ignored when the moon is occulted(ie,
+                       as though zero minimum separation were specified)
+                   =otherwise, error condition in RDREQMT
+
+                   DEFAULT = 0.D0 WHEN REQ'MT IS PERMITTED BY THE
+                   PROGRAM AND THIS KEYWORD IS NOT ON THE FILE
+
+
+  BRIGHTERT        bright earth requirement
+
+              1    the minimum angle between the line of sight to a
+                   celestial target and the line of sight to the nearest
+                   point on the bright horizon(ie, the avoidance angle
+                   for the sunlit horizon); in degrees
+
+                   if the whole horizon is in shadow, the requirement
+                   is ignored by <TBD>;
+
+                   = 0.D0
+
+
+
+                         ( CONTINUED )
+
+
+  DARKERT          dark earth requirement
+
+              1    the minimum angle between the line of sight to a
+                   celestial target and the line of sight to the nearest
+                   point on the dark horizon(ie, the avoidance angle
+                   for the shadowed horizon); in degrees
+
+                   if the whole horizon is sunlit, the requirement is
+                   ignored by <TBD>
+
+                   DEFAULT = 0.D0 WHEN REQ'MT IS PERMITTED BY THE
+                   PROGRAM AND THIS KEYWORD IS NOT ON THE FILE
+
+
+  VELAVOID         velocity vector avoidance requirement
+
+              1    the minimum angle between the velocity vector and the
+                   line of sight to the target; in degrees
+
+                   description is similar to that for the sun avoidance
+                   angle in keyword 'SUNAVOID'
+
+                   DEFAULT = 0.D0 WHEN REQ'MT IS PERMITTED BY THE
+                   PROGRAM AND THIS KEYWORD IS NOT ON THE FILE
+
+
+  ZENITH           zenith direction requirement
+
+              1    the maximum angle between the instantaneous zenith
+                   direction and the line of sight to the target;
+                   in degrees
+
+                   DEFAULT = 0.D0 WHEN REQ'MT IS PERMITTED BY THE
+                   PROGRAM AND THIS KEYWORD IS NOT ON THE FILE
+
+
+  ENDREQ           signals the end of keyword input for this experiment;
+                   it must be present, even if it is the only keyword
+                   in the subgroup;
+
+RECORDS 4ff. TARGET-DEPENDENT REQUIREMENTS
+------------------------------------------
+
+Several targets may be defined here, one target per record.  The
+reader, RDREQMT, expects the first parameter to be the target ID.
+
+If your program needs more than just the ID, see the reader routine
+for more info(see description for the variable REQTGT).
+
+This set of records is in the form:
+
+      id1/
+      id2/
+      id3/
+      -9999/
+
+     example of one record:  420/   (equivalent: 420.D0/)
+
+ID = -9999 ends the set of target records. It must be present, even if
+there is only one experiment on the file or there are no other target
+records present. 
+
+Zero and negative(except -9999) ID's are ignored by the reader.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                     ***********************
+                     *                     *
+                     *      END OF         *
+                     *                     *
+                     *        THE          *
+                     *                     *
+                     *  REQUIREMENTS FILE  *
+                     *                     *
+                     *       FORMAT        *
+                     *                     *
+                     *     DEFINITION      *
+                     *                     *
+                     ***********************

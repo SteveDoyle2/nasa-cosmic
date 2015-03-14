@@ -1,0 +1,146 @@
+
+LONGLIB graphics library installation notes
+
+***********************************************************************
+
+The entire library source is contained in one directory.
+
+Use LONGLIB.COM to create the longlib.olb graphics library and its associated
+libraries.  You may wish to edit this command file to create only the
+desired libraries.  Three similar object libraries are created:
+
+	1. LONGLIB.OLB (includes Ramtek communication routines)
+	2. LONGLIB2.OLB (does not include any Ramtek routines)
+	3. LONGLIBR.OLB (includes Ramtek emulation routines)
+
+A help library LONGLIB.HLB is also created as well as the documentation
+file LONGLIB.DOC.  This command file also compiles some of the most used
+auxilary programs.
+
+The library supports a large number of graphics terminals.
+It should be possible to adapt this code to other terminal graphics
+devices.
+
+A backup tape has been created from VMS version 4.0.
+To install the package from tape create a directory [LONGLIB] then:
+
+	$ allocate mta0: tape:		! mta0: is the input tape device
+	$ mount/foreign tape
+	$ backup tape:*.*/save [longlib]
+	$ dismount tape
+	$ deallocate tape
+
+After copying the LONGLIB files from tape to disk, assign the logical name
+LONGLOC to the directory location of the longlib routines. This logical
+name should be assigned as a system name.  It is used by various routines
+and command files in the library.
+
+	$ assign/system disk_name:[longlib] LONGLOC:
+
+Create the libraries by executing the command file LONGLIB.COM. (see
+note below)  All told, the LONGLIB graphics package occupies the better
+part of 10k blocks (additional space is needed while creating the libraries).
+
+	$ set def [longlib]
+	$ @LONGLIB.COM
+
+The LONGLIB2 library contains dummy routines for the Ramtek routines.
+If you desire only the non-Ramtek portion of library then
+after executing LONGLIB.COM, delete LONGLIB.OLB and rename LONGLIB2.OLB
+to be LONGLIB.OLB.  A second option is to use LONG2.COM which will create
+a library named LONGLIB.OLB which does not contain the ramtek routines
+(i.e. is equivalent to LONGLIB2.OLB).  Normally, LONGLIBR (the REF routine
+subpackage) should be kept.
+
+LONGLIB.COM also compiles and links various executable programs such
+as REPLOT (for plotting a printer file to a screen device) and the
+metafile converstion program.  It also creates the LONGLIB.HLP on-line
+help library.
+
+
+
+Documentation is in LONGLIB.DOC.  Source text for the documentation is in
+LONGLIB.RNO.  Use DOC.COM to generate a printable copy.  DOC.COM will
+need to edited to identify the directory location of the library if not
+contained in LONGLOC:.  Use the programs SYMBOLS.FOR, LINETYPE.FOR,
+PLOTTESTS.FOR, etc. to create the appendix to the documentation.
+
+For VAX VMS Version 3.x use DOCV3.COM to create the printable documentation.
+
+Help library source text is in LONGLIB.HLP.  A user library pointer
+should be defined to access this help library.
+
+	$define/system hlp$library_1 LONGLOC:LONGLIB
+
+A program called PLOTTESTS may be used to verify the library.  It is not
+an extensive test but is a good check of the plot package.  See
+also CURTEST and the other example programs.
+
+It will be convenient to globally define "longlib" to contain the
+disk device and directory name.  Thus linking to the longlib can
+be accomplished easily.  The system help library definitions should
+also include the longlib help library.
+
+	$ define/system LONGLIB disk_name:[longlib]LONGLIB
+	$ define/system LONGLIB disk_name:[longlib]LONGLIBR
+
+	$ link file_name,LONGLIB/lib
+
+A compile/link/run command file is available in PLOAD.COM.
+
+The system operator may also wish to make commonly used commands
+available as system commands.
+
+
+
+Shareable Image Library 
+
+A shareable image library has been added to the package.
+To create the shareable image library, execute LONGSHR.COM after
+establishing the regular library system and system names.  Then execute
+the LONGSHR.COM command file.
+
+	$ @LONGSHR.COM
+
+To make the most of the shareable image file the image file must
+be installed (requiring system privledges) using the following set
+of commands after the system names have been set up:
+
+	$ RUN SYS$SYSTEM:INSTALL
+	LONGLOC:LONGLIB.EXE /OPEN /SHARE
+
+Other graphics devices
+
+Hardcopy graphics devices can be accomodated by creating a version of
+metafile processing programs such as REPLOT, LASER, TRILGLO, etc.
+Note that metafile processing programs use OPEN statements for opening
+files, etc.  These can be commented out to permit out-of-program assign
+statements to be used.  This is useful for specification of scratch
+area files.
+
+
+
+Machine Dependent Notes:
+
+This software was developed on a VAX 780 using the VMS operating
+systems and the VAX FORTRAN.  Every attempt has been made to make
+the code FORTRAN-77 compatible but there are exceptions (see source
+code and documentation.
+
+It should be possible to adapt this software to other VAX operating
+systems and/or machines.  For use on other than VAX machines consider
+see the following notes:
+
+ Note: source code uses "BYTE" and "INTEGER*2" data types in some
+ areas (notably the Ramtek stuff).  Handling the string variables
+ uses the VAX FORTRAN BYTE (see documentation).
+ Some other machine dependent structures (such as %loc and %ref) are
+ also used (see documentation and source code)
+
+ Note: additional plotting devices can be added to library by modifying
+ the device dependent subroutines in section one of the source code file
+ LONGLIB.FOR.  Examples of both linked list vector plotting (where a starting
+ point, a set of intermediate points, and an end point are
+ given -- used by the ramtek and vt100) or single vector
+ (where only one line segment -- start point, end point -- are plotted at
+ a time -- used for the meta file) subroutines are in source code.

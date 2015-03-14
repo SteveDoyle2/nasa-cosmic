@@ -1,0 +1,32 @@
+#3[1m     EXTRA, EXTRA, NEWS [5mFLASH[0m
+#4[1m     EXTRA, EXTRA, NEWS [5mFLASH[0m
+
+#6       BUGOUT has bugs!!!!!
+
+Confidential sources today reported that earlier versions of BUGOUT have had 
+several BUGS in them!  The developer is reported in good condition today from 
+county general hospital were he was rushed after collapsing from what one 
+doctor reported to be, "the worst case of embarrasment I've ever seen".  An 
+informed insider has leaked the news that in addition to correcting the bugs, 
+the developer has also added the long-awaited variable checking and 
+cross-reference feature.
+
+In a related story, new subprograms have been added to MERLIB.  Film at 11:00.
+Newcomers to the FORTRAN tools package are EIGHTY and UNEIGHTY (transportable 
+FORTRAN programs which enable the exchange of files with record lengths 
+greater than eighty bytes even with devices or software that only supports 
+card-image data) and CHECK72 (a program to verify that no source code was 
+typed beyond column 80 of a source file).  These programs purportedly 
+accomplish this feat by squeezing the file down to eighty byte records while 
+maintaining the actual record length internally.  Since the programs are 
+written in ANSI-standard FORTRAN 77 they can readily be transported to any 
+new system that supports FORTRAN 77.  A new option in FORTLIST allows the
+source code form included files to be expanded in the printout.
+
+Information has been obtained from an unnamed person (the proverbial reliable 
+source) that there are also two new NAMELIST-like IO packages which are easy to 
+use and unusually transportable.  These packages were, reputedly, developed to 
+enable transporting Vax FORTRAN programs to an IBM PC.
+
+For more details see BUGOUT.DOC, MERLIB.DOC, CHECK72.HLP, FORTLIST.HLP, 
+NAMEIO.DOC, SNAMEIO.DOC, and [UN]EIGHTY.HLP.

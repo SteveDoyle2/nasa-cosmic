@@ -1,0 +1,1142 @@
+C                                                                           0007
+C.....COMPOSITE MATERIAL POINT STRESS AND ALLOWABLES ANALYSIS               0008
+C                                                                           0009
+C.....10 MATERIALS AND 97 LAMINA MAXIMUM.                                   0010
+C                                                                           0011
+      DIMENSION E11(97),E22(97),G12(97),MU12(97),MU21(97),Q11(97)           0012
+     1,Q22(97),Q12(97),Q66(97),NMTL(97),H(99),TH(97),QB11(97),QB22(97)      0013
+     1,P1(10),P2(10),P3(10),P4(10),P5(10),P6(97)                            0014
+     1,QB12(97),QB66(97),QB16(97),QB26(97),A(3,3),B(3,3),D(3,3),G(6,6)      0015
+     1,GG(6),C(36),ZU(97),EXU(97),EYU(97),GAMXYU(97),ZL(97),EXL(97)         0016
+     1,EYL(97),GAMXYL(97),SIGXU(97),SIGYU(97),TAUXYU(97),SIGXL(97)          0017
+     1,SIGYL(97),TAUXYL(97),T(97,3,3),E1U(97),E2U(97),GAM12U(97),E1L(97)    0018
+     1,E2L(97),GAM12L(97),SIG1U(97),SIG2U(97),TAU12U(97),SIG1L(97)          0019
+     1,SIG2L(97),TAU12L(97),DELT(97),NPLY(300),DELTM(97),TITLE(20)          0020
+     1,E1T(10),E1C(10),E2T(10),E2C(10),GAM12(10),NP7(10),NM(97)             0021
+     1,SIG1T(10),SIG1C(10),SIG2T(10),SIG2C(10),TAU12(10),R(97,6)            0022
+     1,GGG(6,6),L(6),M(6)                                                   0023
+     1,IMXF(97)                                                             0024
+      DIMENSION P8(10),P9(10),ALPH1(97),ALPH2(97),ALPHX(97),ALPHY(97)       0025
+     1,ALPHXY(97),EXUT(97),EYUT(97),EXYUT(97),EXLT(97),EYLT(97)             0026
+     1,EXYLT(97)                                                            0027
+     2,TSIG1U(97),TSIG1L(97),TSIG2U(97),TSIG2L(97),TTU12U(97),TTU12L(97)    0028
+     2,TE1U(97),TE1L(97),TE2U(97),TE2L(97),TGAMU(97),TGAML(97)              0029
+      REAL NX,NY,NXY,MX,MY,MXY,MU12,MU21,KX,KY,KXY,MUXY,MUYX                0030
+      REAL NXF,NYF,NXYF,MXF,MYF,MXYF,LMAX,LMAY,LMAXY                        0031
+      REAL NXF1,NYF1,NXYF1,MXF1,MYF1,MXYF1                                  0032
+      REAL NXFL,NYFL,NXYFL,MXFL,MYFL,MXYFL                                  0033
+      DATA BLANK/4H    /                                                    0034
+C                                                                           0035
+C.....READ DATA AND DO PRELIMINARY CALCULATIONS                             0036
+C                                                                           0037
+      READ(5,1)NMTLMX                                                       0038
+    1 FORMAT(3I12)                                                          0039
+C.....NM(I)IS 1 FOR TAPE AND 2 FOR CLOTH                                    0040
+      READ(5,2)(P1(I),P2(I),P3(I),P4(I),      NP7(I),P8(I),P9(I)            0041
+     1,I=1,NMTLMX)                                                          0042
+    2 FORMAT(4E12.5,12X,I12/2E12.5)                                         0043
+      READ(5,6)(SIG1T(I),SIG1C(I),SIG2T(I),SIG2C(I),TAU12(I),I=1,NMTLMX)    0044
+      READ(5,6)(E1T(I),E1C(I),E2T(I),E2C(I),GAM12(I),I=1,NMTLMX)            0045
+    6 FORMAT(5E12.5)                                                        0046
+      READ(5,6)AMS                                                          0047
+      DO 101 I=1,NMTLMX                                                     0048
+  101 P5(I)=P2(I)*P4(I)/P1(I)                                               0049
+      PRINT 21                                                              0050
+      PRINT 240                                                             0051
+  240 FORMAT(2X,'MATERIAL PROPERTIES',//12X3HE11,9X3HE22,9X3HG12,           0052
+     1 8X4HMU12,8X4HMU21, 9X6HALPHA1,10X6HALPHA2,8X2HNM,/)                  0053
+C     PRINT 22                                                              0054
+      WRITE(6,24)(I,P1(I),P2(I),P3(I),P4(I),P5(I),      P8(I),P9(I),NP7(    0055
+     1I),I=1,NMTLMX)                                                        0056
+   24 FORMAT(I6,3F12.0,2F12.6,4X,E12.5,4X,E12.5,I6)                         0057
+      PRINT 22                                                              0058
+      PRINT 22                                                              0059
+      PRINT 45                                                              0060
+   45 FORMAT(2X,'ALLOWABLE STRESSES AND STRAINS FOR EACH MATERIAL')         0061
+      PRINT 6011                                                            0062
+ 6011 FORMAT(/11X5HFTU11,7X5HFCU11,7X5HFTU22,7X5HFCU22,7X5HFSL12,/)         0063
+C     PRINT 22                                                              0064
+      WRITE(6,43)(I,SIG1T(I),SIG1C(I),SIG2T(I),SIG2C(I),TAU12(I),I=1,NMT    0065
+     WLMX)                                                                  0066
+   43 FORMAT(I6,5F12.0)                                                     0067
+      PRINT 6012                                                            0068
+ 6012 FORMAT(/11X5HETU11,7X5HECU11,7X5HETU22,7X5HECU22,7X5HESL12,/)         0069
+C     PRINT 22                                                              0070
+      WRITE(6,44)(I,E1T(I),E1C(I),E2T(I),E2C(I),GAM12(I),I=1,NMTLMX)        0071
+   44 FORMAT(I6,5F12.6)                                                     0072
+      PRINT 22                                                              0073
+      WRITE(6,6010)AMS                                                      0074
+ 6010 FORMAT(2X,'LAMINATE ALLOWABLE LOADS WILL BE DETERMINED USING A FS=    0075
+     1',F5.2)                                                               0076
+      GO TO 1004                                                            0077
+ 1001 IF(NCASE.GE.NCASES)GO TO 1004                                         0078
+      NC=0                                                                  0079
+      ISTR=0                                                                0080
+      GO TO 1005                                                            0081
+ 1004 READ(5,4)TITLE                                                        0082
+    4 FORMAT(20A4)                                                          0083
+      IF(TITLE(1).EQ.BLANK)GO TO 1002                                       0084
+      READ(5,1)NLAMNA,NCASES,NALLOW                                         0085
+      ISTR=0                                                                0086
+      NC=0                                                                  0087
+      NCASE=0                                                               0088
+      READ(5,3)(NPLY(I),NMTL(I),TH(I),P6(I),I=1,NLAMNA)                     0089
+    3 FORMAT(2I12,F12.1,E12.5)                                              0090
+      DO 703 I=1,NLAMNA                                                     0091
+      J=NPLY(I)                                                             0092
+  703 DELT(I)=P6(J)                                                         0093
+      THICK = 0                                                             0094
+      DO 701 I=1,NLAMNA                                                     0095
+  701 THICK=THICK+DELT(I)                                                   0096
+      H(1)=-THICK/2.                                                        0097
+      DO 702 I=1,NLAMNA                                                     0098
+  702 H(I+1)=H(I)+DELT(I)                                                   0099
+C                                                                           0100
+C.....PRINT DATA AND PRELIMINARY CALCULATIONS                               0101
+C                                                                           0102
+      PRINT 21                                                              0103
+      WRITE(6,4)TITLE                                                       0104
+      PRINT 23                                                              0105
+   23 FORMAT(1H0,35X,'MATERIAL +LAYUP DATA')                                0106
+      PRINT 22                                                              0107
+      PRINT 11                                                              0108
+   11 FORMAT(2X,'CONTROL NUMBERS')                                          0109
+      PRINT 22                                                              0110
+      PRINT 1, NLAMNA,NCASES,NALLOW                                         0111
+      PRINT 22                                                              0112
+      PRINT 250                                                             0113
+  250 FORMAT(2X,'LAMINA DESCRIPTIONS',//20X4HNPLY,8X4HNMTL,4X4HDELT,        0114
+     X 11X5HTHETA,/)                                                        0115
+      WRITE(6,25)(I,NPLY(I),NMTL(I),DELT(I),TH(I),I=1,NLAMNA)               0116
+   25 FORMAT(3I12,F12.6,F12.1)                                              0117
+C     PRINT 21                                                              0118
+C     PRINT 2440                                                            0119
+ 2440 FORMAT(2E12.5, 46X, I2)                                               0120
+C     PRINT 22                                                              0121
+      NHVAL=NLAMNA+1                                                        0122
+C     WRITE(6,244)(I,H(I),I=1,NHVAL)                                        0123
+  244 FORMAT(I12,F12.5)                                                     0124
+C                                                                           0125
+C.....ASSIGN MATERIALS PROPERTIES TO LAMINA                                 0126
+C                                                                           0127
+ 1005 DO 704 I=1,NLAMNA                                                     0128
+      IMXF(I)=0                                                             0129
+      J=NMTL(I)                                                             0130
+      E11(I)=P1(J)                                                          0131
+      E22(I)=P2(J)                                                          0132
+      G12(I)=P3(J)                                                          0133
+      MU12(I)=P4(J)                                                         0134
+      MU21(I)=P5(J)                                                         0135
+      DELTM(I)=P6(J)                                                        0136
+      ALPH1(I)=P8(J)                                                        0137
+      ALPH2(I)=P9(J)                                                        0138
+  704 NM(I)=NP7(J)                                                          0139
+      NFAIL=0                                                               0140
+      NMTXFL=0                                                              0141
+      NXF=0                                                                 0142
+      NYF=0                                                                 0143
+      NXYF=0                                                                0144
+      MXF=0                                                                 0145
+      MYF=0                                                                 0146
+      MXYF=0                                                                0147
+      NXFL=0                                                                0148
+      NYFL=0                                                                0149
+      NXYFL=0                                                               0150
+      MXFL=0                                                                0151
+      MYFL=0                                                                0152
+      MXYFL=0                                                               0153
+   53 CONTINUE                                                              0154
+      ITC=0                                                                 0155
+      TNX=0.                                                                0156
+      TNY=0.                                                                0157
+      TNXY=0.                                                               0158
+      TMX=0.                                                                0159
+      TMY=0.                                                                0160
+      TMXY=0.                                                               0161
+      IF(NC.GT.0) GO TO 404                                                 0162
+      IF(NCASE.GT.0) GO TO 404                                              0163
+C     PRINT 21                                                              0164
+C     PRINT 46                                                              0165
+C  46 FORMAT(2X,'LAMINA MATERIAL PROPERTIES(E11,E22,G12,MU12,MU21,DELTM,    0166
+C    1ALPHA1,ALPHA2,NM)')                                                   0167
+      PRINT 21                                                              0168
+      WRITE(6,4) TITLE                                                      0169
+      PRINT 22                                                              0170
+  404 CONTINUE                                                              0171
+C                                                                           0172
+C.....DERIVE LAMINA STIFFNESS ELEMENTS FOR EACH LAMINA                      0173
+C                                                                           0174
+      DO 102 I=1,NLAMNA                                                     0175
+      DENOM=1.-MU12(I)*MU21(I)                                              0176
+      Q11(I)=E11(I)/DENOM                                                   0177
+      Q12(I)=MU21(I)*Q11(I)                                                 0178
+      Q22(I)=E22(I)/DENOM                                                   0179
+  102 Q66(I)=G12(I)                                                         0180
+C                                                                           0181
+C.....COMPUTE QBAR MATRIX FOR EACH LAMINA                                   0182
+C                                                                           0183
+      DO 201 I=1,NLAMNA                                                     0184
+      J=I                                                                   0185
+      X=TH(I)*3.1415927/180.                                                0186
+      X1=COS(X)**4                                                          0187
+      X2=SIN(X)**2*COS(X)**2                                                0188
+      X3=SIN(X)**4                                                          0189
+      X4=SIN(X)*COS(X)**3                                                   0190
+      X5=SIN(X)**3*COS(X)                                                   0191
+      QB11(I)=Q11(J)*X1+2.*(Q12(J)+2.*Q66(J))*X2+Q22(J)*X3                  0192
+      QB12(I)=(Q11(J)+Q22(J)-4.*Q66(J))*X2+Q12(J)*(X1+X3)                   0193
+      QQ1=(Q11(J)-Q12(J)-2.*Q66(J))                                         0194
+      QQ2=(Q12(J)-Q22(J)+2.*Q66(J))                                         0195
+      QB16(I)=QQ1*X4 + QQ2*X5                                               0196
+      QB22(I)=Q11(J)*X3+2.*(Q12(J)+2.*Q66(J))*X2+Q22(J)*X1                  0197
+      QB26(I)=QQ1*X5 + QQ2*X4                                               0198
+  201 QB66(I)=(Q11(J)+Q22(J)-2.*Q12(J)-2.*Q66(J))*X2+Q66(J)*(X1+X3)         0199
+C                                                                           0200
+C.....COMPUTE A,B, AND D MATRICES                                           0201
+C                                                                           0202
+      A11=0                                                                 0203
+      B11=0                                                                 0204
+      D11=0                                                                 0205
+      A12=0                                                                 0206
+      B12=0                                                                 0207
+      D12=0                                                                 0208
+      A16=0                                                                 0209
+      B16=0                                                                 0210
+      D16=0                                                                 0211
+      A22=0                                                                 0212
+      B22=0                                                                 0213
+      D22=0                                                                 0214
+      A26=0                                                                 0215
+      B26=0                                                                 0216
+      D26=0                                                                 0217
+      A66=0                                                                 0218
+      B66=0                                                                 0219
+      D66=0                                                                 0220
+      DO 301 I=1,NLAMNA                                                     0221
+      A11 = A11+ QB11(I)*(H(I+1)-H(I))                                      0222
+      A12 = A12+ QB12(I)*(H(I+1)-H(I))                                      0223
+      A16 = A16+ QB16(I)*(H(I+1)-H(I))                                      0224
+      A22 = A22+ QB22(I)*(H(I+1)-H(I))                                      0225
+      A26 = A26+ QB26(I)*(H(I+1)-H(I))                                      0226
+      A66 = A66+ QB66(I)*(H(I+1)-H(I))                                      0227
+      B11=B11+QB11(I)*(H(I+1)**2-H(I)**2)/2.                                0228
+      B12=B12+QB12(I)*(H(I+1)**2-H(I)**2)/2.                                0229
+      B16=B16+QB16(I)*(H(I+1)**2-H(I)**2)/2.                                0230
+      B22=B22+QB22(I)*(H(I+1)**2-H(I)**2)/2.                                0231
+      B26=B26+QB26(I)*(H(I+1)**2-H(I)**2)/2.                                0232
+      B66=B66+QB66(I)*(H(I+1)**2-H(I)**2)/2.                                0233
+      D11=D11+QB11(I)*(H(I+1)**3-H(I)**3)/3.                                0234
+      D12=D12+QB12(I)*(H(I+1)**3-H(I)**3)/3.                                0235
+      D16=D16+QB16(I)*(H(I+1)**3-H(I)**3)/3.                                0236
+      D22=D22+QB22(I)*(H(I+1)**3-H(I)**3)/3.                                0237
+      D26=D26+QB26(I)*(H(I+1)**3-H(I)**3)/3.                                0238
+  301 D66=D66+QB66(I)*(H(I+1)**3-H(I)**3)/3.                                0239
+      IF(NC.GT.0) GO TO 7901                                                0240
+      IF(NCASE.GT.0) GO TO 7901                                             0241
+      PRINT 280                                                             0242
+  280 FORMAT(2X,'A-MATRIX',//7X3HA11,9X3HA12,9X3HA16,9X3HA22,               0243
+     X 9X3HA26,9X3HA66,/)                                                   0244
+      PRINT 28,A11,A12,A16,A22,A26,A66                                      0245
+   28 FORMAT(6F12.0)                                                        0246
+      PRINT 22                                                              0247
+      PRINT 290                                                             0248
+  290 FORMAT(2X,'B-MATRIX',//7X3HB11,9X3HB12,9X3HB16,9X3HB22,               0249
+     X 9X3HB26,9X3HB66,/)                                                   0250
+      PRINT 29,B11,B12,B16,B22,B26,B66                                      0251
+   29 FORMAT(6F12.4)                                                        0252
+      PRINT 22                                                              0253
+      PRINT 300                                                             0254
+  300 FORMAT(2X,'D-MATRIX',//7X3HD11,9X3HD12,9X3HD16,9X3HD22,               0255
+     X 9X3HD26,9X3HD66,/)                                                   0256
+      PRINT 30,D11,D12,D16,D22,D26,D66                                      0257
+   30 FORMAT(1H0,6F12.2)                                                    0258
+      PRINT 22                                                              0259
+C                                                                           0260
+C.....PREPARE INPUT DATA FOR ASKA                                           0261
+C                                                                           0262
+      PRINT 3010                                                            0263
+ 3010 FORMAT(2X,'ASKA INPUT DATA',//11X4HEE11,7X4HEE12,7X4HEE22,            0264
+     X 7X4HEE13,7X4HEE23,7X4HEE33,/)                                        0265
+ 7901 CONTINUE                                                              0266
+      EE11=A11/THICK                                                        0267
+      EE12=A12/THICK                                                        0268
+      EE22=A22/THICK                                                        0269
+      EE13=A16/THICK                                                        0270
+      EE23=A26/THICK                                                        0271
+      EE33=A66/THICK                                                        0272
+      IF (NC.GT.0) GO TO 7902                                               0273
+      IF(NCASE.GT.0) GO TO 7902                                             0274
+      WRITE(6,303)EE11,EE12,EE22,EE13,EE23,EE33                             0275
+  303 FORMAT(6X,'1',2X,6E11.4)                                              0276
+      PRINT 22                                                              0277
+      PRINT 3011                                                            0278
+ 3011 FORMAT(2X,'ASKA INPUT DATA(THICK)')                                   0279
+      PRINT 22                                                              0280
+      WRITE(6,302)THICK,THICK,THICK,THICK                                   0281
+  302 FORMAT(7X,'01',4F10.4)                                                0282
+      PRINT 22                                                              0283
+ 7902 CONTINUE                                                              0284
+C                                                                           0285
+C.....FORM COEFFICIENT MATRIX FROM A,B AND D MATRICES                       0286
+C                                                                           0287
+      G(1,1)=A11                                                            0288
+      G(1,2)=A12                                                            0289
+      G(1,3)=A16                                                            0290
+      G(1,4)=B11                                                            0291
+      G(1,5)=B12                                                            0292
+      G(1,6)=B16                                                            0293
+      G(2,1)=A12                                                            0294
+      G(2,2)=A22                                                            0295
+      G(2,3)=A26                                                            0296
+      G(2,4)=B12                                                            0297
+      G(2,5)=B22                                                            0298
+      G(2,6)=B26                                                            0299
+      G(3,1)=A16                                                            0300
+      G(3,2)=A26                                                            0301
+      G(3,3)=A66                                                            0302
+      G(3,4)=B16                                                            0303
+      G(3,5)=B26                                                            0304
+      G(3,6)=B66                                                            0305
+      G(4,1)=B11                                                            0306
+      G(4,2)=B12                                                            0307
+      G(4,3)=B16                                                            0308
+      G(4,4)=D11                                                            0309
+      G(4,5)=D12                                                            0310
+      G(4,6)=D16                                                            0311
+      G(5,1)=B12                                                            0312
+      G(5,2)=B22                                                            0313
+      G(5,3)=B26                                                            0314
+      G(5,4)=D12                                                            0315
+      G(5,5)=D22                                                            0316
+      G(5,6)=D26                                                            0317
+      G(6,1)=B16                                                            0318
+      G(6,2)=B26                                                            0319
+      G(6,3)=B66                                                            0320
+      G(6,4)=D16                                                            0321
+      G(6,5)=D26                                                            0322
+      G(6,6)=D66                                                            0323
+C                                                                           0324
+C.....COMPUTE LAMINATE ELASTIC CONSTANTS                                    0325
+C                                                                           0326
+      DO 333 I=1,6                                                          0327
+      DO 333 J=1,6                                                          0328
+  333 GGG(I,J)=G(I,J)                                                       0329
+      CALL MINV(GGG,6,D,L,M)                                                0330
+      EX=1./THICK/GGG(1,1)                                                  0331
+      EY=1./THICK/GGG(2,2)                                                  0332
+      GXY=1./THICK/GGG(3,3)                                                 0333
+      MUXY=-GGG(1,2)/GGG(1,1)                                               0334
+      MUYX=-GGG(1,2)/GGG(2,2)                                               0335
+      IF(NC.GT.0) GO TO 7903                                                0336
+      IF(NCASE.GT.0) GO TO 7903                                             0337
+C     PRINT 22                                                              0338
+C     PRINT 336                                                             0339
+C 336 FORMAT(2X,'INVERTED COEFFICIENT MATRIX')                              0340
+C     PRINT 22                                                              0341
+C     DO 334 I=1,6                                                          0342
+C 334 WRITE(6,335)(GGG(I,J),J=1,6)                                          0343
+  335 FORMAT(6E12.4)                                                        0344
+      PRINT 22                                                              0345
+      PRINT 331                                                             0346
+  331 FORMAT(2X,'LAMINATE ELASTIC CONSTANTS',//7X2HEX,10X2HEY,9X3HGXY,      0347
+     X 8X4HMUXY,8X4HMUYX,/)                                                 0348
+      WRITE(6,332)EX,EY,GXY,MUXY,MUYX                                       0349
+  332 FORMAT(3F12.0,2F12.6)                                                 0350
+ 7903 CONTINUE                                                              0351
+C                                                                           0352
+C.....EVALUATE T-MATRICES FOR TRANSFORMATION FROM X-Y TO 1-2 PLANES         0353
+C                                                                           0354
+      DO 501 I=1,NLAMNA                                                     0355
+      TH(I)=TH(I)*3.1415927/180.                                            0356
+      T(I,1,1)= COS(TH(I))**2                                               0357
+      T(I,1,2)= SIN(TH(I))**2                                               0358
+      T(I,1,3)= 2.*SIN(TH(I))*COS(TH(I))                                    0359
+      T(I,2,1)= T(I,1,2)                                                    0360
+      T(I,2,2)= T(I,1,1)                                                    0361
+      T(I,2,3)=-T(I,1,3)                                                    0362
+      T(I,3,1)=-SIN(TH(I))*COS(TH(I))                                       0363
+      TH(I)=180.*TH(I)/3.1415927                                            0364
+      T(I,3,2)=-T(I,3,1)                                                    0365
+  501 T(I,3,3)= T(I,1,1)**2-T(I,1,2)**2                                     0366
+C                                                                           0367
+C.....COMPUTE LAMINA THERMAL EXPANSION PROPERTIES                           0368
+C                                                                           0369
+      DO 7001 I=1,NLAMNA                                                    0370
+      ALPHX(I)=ALPH1(I)*T(I,1,1)+ALPH2(I)*T(I,1,2)                          0371
+      ALPHY(I)=ALPH1(I)*T(I,1,2)+ALPH2(I)*T(I,1,1)                          0372
+ 7001 ALPHXY(I)=T(I,1,3)*(ALPH1(I)-ALPH2(I))                                0373
+      IF (NC.GT.0) GO TO 7904                                               0374
+      IF(NCASE.GT.0) GO TO 7904                                             0375
+C     PRINT 21                                                              0376
+C     PRINT 7601                                                            0377
+C7601 FORMAT(2X,'LAMINA THERMAL EXPANSION PROPERTIES(ALPHAX,ALPHAY,ALPHA    0378
+C    1XY)')                                                                 0379
+C     PRINT 22                                                              0380
+C     WRITE(6,7602)(ALPHX(I),ALPHY(I),ALPHXY(I),I=1,NLAMNA)                 0381
+ 7602 FORMAT(3E17.5)                                                        0382
+ 7904 CONTINUE                                                              0383
+C                                                                           0384
+C.....APPLY SPECIFIC LOADS TO LAMINATE                                      0385
+C                                                                           0386
+      IF(NC.GT.0)GO TO 321                                                  0387
+      READ(5,5)NX,NY,NXY,MX,MY,MXY                                          0388
+    5 FORMAT(6F12.2)                                                        0389
+      READ(5,2440)TOP,TLAM, IOP                                             0390
+      TDEL=TOP-TLAM                                                         0391
+      PRINT 31                                                              0392
+   31 FORMAT(1H1,25X,'SPECIFIC LOAD CASE')                                  0393
+      PRINT 22                                                              0394
+      WRITE(6,4) TITLE                                                      0395
+      PRINT 22                                                              0396
+      PRINT 320                                                             0397
+  320 FORMAT(2X,'LOADS AND MOMENTS',//10X2HNX,10X2HNY,9X3HNXY,10X2HMX,      0398
+     X 10X2HMY,9X3HMXY,/)                                                   0399
+      PRINT 32,NX,NY,NXY,MX,MY,MXY                                          0400
+   32 FORMAT(6F12.2)                                                        0401
+      PRINT 22                                                              0402
+      PRINT 7603                                                            0403
+ 7603 FORMAT(2X,'OPERATING TEMPERATURE,LAMINATION TEMPERATURE,DELTA-TEMP    0404
+     1ERATURE')                                                             0405
+      PRINT 22                                                              0406
+      WRITE(6,7604)TOP,TLAM,TDEL                                            0407
+ 7604 FORMAT(5X,3F10.1)                                                     0408
+      PRINT 22                                                              0409
+  321 CONTINUE                                                              0410
+C                                                                           0411
+C.....DETERMINE DELTA TEMPERATURE LOADS IN LAMINATE                         0412
+      TD = TDEL                                                             0413
+      IF(TDEL .EQ. 0.0) TD =  1.0E-06                                       0414
+      DO 7002 I=1,NLAMNA                                                    0415
+      TNX=TNX+TD  *(H(I+1)-H(I))*(QB11(I)*ALPHX(I)+QB12(I)*ALPHY(I)+        0416
+     1QB16(I)*ALPHXY(I))                                                    0417
+      TNY=TNY+TD  *(H(I+1)-H(I))*(QB12(I)*ALPHX(I)+QB22(I)*ALPHY(I)+        0418
+     1QB26(I)*ALPHXY(I))                                                    0419
+      TNXY=TNXY+TD  *(H(I+1)-H(I))*(QB16(I)*ALPHX(I)+QB26(I)*ALPHY(I)+      0420
+     1QB66(I)*ALPHXY(I))                                                    0421
+      TMX=TMX+(TD  /2.)*(H(I+1)**2-H(I)**2)*(QB11(I)*ALPHX(I)+              0422
+     1QB12(I)*ALPHY(I)+QB16(I)*ALPHXY(I))                                   0423
+      TMY=TMY+(TD  /2.)*(H(I+1)**2-H(I)**2)*(QB12(I)*ALPHX(I)+              0424
+     1QB22(I)*ALPHY(I)+QB26(I)*ALPHXY(I))                                   0425
+      TMXY=TMXY+(TD  /2.)*(H(I+1)**2-H(I)**2)*(QB16(I)*ALPHX(I)+            0426
+     1QB26(I)*ALPHY(I)+QB66(I)*ALPHXY(I))                                   0427
+ 7002 CONTINUE                                                              0428
+      IF(NC.GT.0) GO TO 7908                                                0429
+      PRINT 7605                                                            0430
+ 7605 FORMAT(2X,'LAMINATE LOADS DUE TO DELTA-TEMPERATURE',//9X3HTNX,        0431
+     X 9X3HTNY,8X4HTNXY,9X3HTMX,9X3HTMY,8X4HTMXY,/)                         0432
+C     PRINT 22                                                              0433
+      PRINT 32,TNX,TNY,TNXY,TMX,TMY,TMXY                                    0434
+      PRINT 22                                                              0435
+C                                                                           0436
+C.....COMPUTE LAMINATE COEFFICIENTS OF EXPANSION                            0437
+      LMAX = (1.0/TD  )*(GGG(1,1)*TNX + GGG(1,2)*TNY + GGG(1,3)*TNXY + G    0438
+     1GG(1,4)*TMX + GGG(1,5)*TMY + GGG(1,6)*TMXY)                           0439
+      LMAY = (1.0/TD  )*(GGG(2,1)*TNX + GGG(2,2)*TNY + GGG(2,3)*TNXY + G    0440
+     1GG(2,4)*TMX + GGG(2,5)*TMY + GGG(2,6)*TMXY)                           0441
+      LMAXY= (1.0/TD  )*(GGG(3,1)*TNX + GGG(3,2)*TNY + GGG(3,3)*TNXY + G    0442
+     1GG(3,4)*TMX +GGG(3,5)*TMY + GGG(3,6)*TMXY)                            0443
+      PRINT 7701                                                            0444
+ 7701 FORMAT(2X,'LAMINATE COEFFICIENTS OF THERMAL EXPANSION',               0445
+     1 //7X6HALPHAX,11X6HALPHAY,10X7HALPHAXY,/)                             0446
+      PRINT 22                                                              0447
+      PRINT 7602,LMAX,LMAY,LMAXY                                            0448
+      PRINT 22                                                              0449
+ 7908 CONTINUE                                                              0450
+C                                                                           0451
+C.....FORM COLUMN MATRIX OF CONSTANTS                                       0452
+C                                                                           0453
+      GG(1)=NX+TNX                                                          0454
+      GG(2)=NY+TNY                                                          0455
+      GG(3)=NXY+TNXY                                                        0456
+      GG(4)=MX+TMX                                                          0457
+      GG(5)=MY+TMY                                                          0458
+      GG(6)=MXY+TMXY                                                        0459
+C                                                                           0460
+C.....SOLVE FOR MIDPLANE STRAINS AND LAMINATE CURVATURES                    0461
+C                                                                           0462
+ 7910 CONTINUE                                                              0463
+      DO 3020 I=1,6                                                         0464
+      DO 3020 J=1,6                                                         0465
+      K=J+6*(I-1)                                                           0466
+ 3020 C(K)=G(J,I)                                                           0467
+      CALL SIMQ(C,GG,6,K)                                                   0468
+      IF(K.GT.0)PRINT 707                                                   0469
+  707 FORMAT('******SOLUTION OF SIMULTANEOUS EQUATIONS NOT ACHIEVED')       0470
+      EX0 = GG(1)                                                           0471
+      EY0 = GG(2)                                                           0472
+      GAMXY0= GG(3)                                                         0473
+      KX  = GG(4)                                                           0474
+      KY  = GG(5)                                                           0475
+      KXY = GG(6)                                                           0476
+C                                                                           0477
+C.....COMPUTE UPPER STRAINS BY LAMINA IN X-Y PLANE                          0478
+C                                                                           0479
+      DO 401 I=1,NLAMNA                                                     0480
+      ZU(I)=H(I)                                                            0481
+      EXU(I)=EX0+ZU(I)*KX                                                   0482
+      EYU(I)=EY0+ZU(I)*KY                                                   0483
+  401 GAMXYU(I)=GAMXY0+ZU(I)*KXY                                            0484
+C                                                                           0485
+C                                                                           0486
+C.....COMPUTE LOWER STRAINS BY LAMINA IN X-Y PLANE                          0487
+C                                                                           0488
+      DO 402 I=1,NLAMNA                                                     0489
+      ZL(I)=H(I+1)                                                          0490
+      EXL(I)=EX0+ZL(I)*KX                                                   0491
+      EYL(I)=EY0+ZL(I)*KY                                                   0492
+  402 GAMXYL(I)=GAMXY0+ZL(I)*KXY                                            0493
+C                                                                           0494
+C.....COMPUTE STRAINS WITH THERMAL EFFECTS                                  0495
+C                                                                           0496
+      DO 7003 I=1,NLAMNA                                                    0497
+      EXUT(I)=EXU(I)-ALPHX(I)*TDEL                                          0498
+      EYUT(I)=EYU(I)-ALPHY(I)*TDEL                                          0499
+      EXYUT(I)=GAMXYU(I)-ALPHXY(I)*TDEL                                     0500
+      EXLT(I)=EXL(I)-ALPHX(I)*TDEL                                          0501
+      EYLT(I)=EYL(I)-ALPHY(I)*TDEL                                          0502
+      EXYLT(I)=GAMXYL(I)-ALPHXY(I)*TDEL                                     0503
+ 7003 CONTINUE                                                              0504
+C                                                                           0505
+C.....COMPUTE UPPER STRESSES BY LAMINA IN X-Y PLANE                         0506
+C                                                                           0507
+      DO 403 I=1,NLAMNA                                                     0508
+      SIGXU(I)=QB11(I)*EXUT(I)+QB12(I)*EYUT(I)+QB16(I)*EXYUT(I)             0509
+      SIGYU(I)=QB12(I)*EXUT(I)+QB22(I)*EYUT(I)+QB26(I)*EXYUT(I)             0510
+      TAUXYU(I)=QB16(I)*EXUT(I)+QB26(I)*EYUT(I)+QB66(I)*EXYUT(I)            0511
+C                                                                           0512
+C.....COMPUTE LOWER STRESSES BY LAMINA IN X-Y PLANE                         0513
+C                                                                           0514
+      SIGXL(I)=QB11(I)*EXLT(I)+QB12(I)*EYLT(I)+QB16(I)*EXYLT(I)             0515
+      SIGYL(I)=QB12(I)*EXLT(I)+QB22(I)*EYLT(I)+QB26(I)*EXYLT(I)             0516
+      TAUXYL(I)=QB16(I)*EXLT(I)+QB26(I)*EYLT(I)+QB66(I)*EXYLT(I)            0517
+  403 CONTINUE                                                              0518
+C                                                                           0519
+C.....COMPUTE UPPER STRAINS IN 1-2 PLANE                                    0520
+C                                                                           0521
+      DO 502 I=1,NLAMNA                                                     0522
+      TE1U(I)=T(I,1,1)*EXUT(I)+T(I,1,2)*EYUT(I)+T(I,1,3)*EXYUT(I)/2.        0523
+      TE2U(I)=T(I,2,1)*EXUT(I)+T(I,2,2)*EYUT(I)+T(I,2,3)*EXYUT(I)/2.        0524
+      TGAMU(I)=(T(I,3,1)*EXUT(I)+T(I,3,2)*EYUT(I))*2.+T(I,3,3)*EXYUT(I)     0525
+      E1U(I)=T(I,1,1)*EXU(I)+T(I,1,2)*EYU(I)+T(I,1,3)*GAMXYU(I)/2.          0526
+      E2U(I)=T(I,2,1)*EXU(I)+T(I,2,2)*EYU(I)+T(I,2,3)*GAMXYU(I)/2.          0527
+  502 GAM12U(I)=(T(I,3,1)*EXU(I)+T(I,3,2)*EYU(I))*2.+T(I,3,3)*GAMXYU(I)     0528
+C                                                                           0529
+C.....COMPUTE LOWER STRAINS IN 1-2 PLANE                                    0530
+C                                                                           0531
+      DO 503 I=1,NLAMNA                                                     0532
+      TE1L(I)=T(I,1,1)*EXLT(I)+T(I,1,2)*EYLT(I)+T(I,1,3)*EXYLT(I)/2.        0533
+      TE2L(I)=T(I,2,1)*EXLT(I)+T(I,2,2)*EYLT(I)+T(I,2,3)*EXYLT(I)/2.        0534
+      TGAML(I)=(T(I,3,1)*EXLT(I)+T(I,3,2)*EYLT(I))*2.+T(I,3,3)*EXYLT(I)     0535
+      E1L(I)=T(I,1,1)*EXL(I)+T(I,1,2)*EYL(I)+T(I,1,3)*GAMXYL(I)/2.          0536
+      E2L(I)=T(I,2,1)*EXL(I)+T(I,2,2)*EYL(I)+T(I,2,3)*GAMXYL(I)/2.          0537
+  503 GAM12L(I)=(T(I,3,1)*EXL(I)+T(I,3,2)*EYL(I))*2.+T(I,3,3)*GAMXYL(I)     0538
+C                                                                           0539
+C.....COMPUTE UPPER STRESSES IN 1-2 PLANE                                   0540
+C                                                                           0541
+      DO 504 I=1,NLAMNA                                                     0542
+      SIG1U(I)=T(I,1,1)*SIGXU(I)+T(I,1,2)*SIGYU(I)+T(I,1,3)*TAUXYU(I)       0543
+      SIG2U(I)=T(I,2,1)*SIGXU(I)+T(I,2,2)*SIGYU(I)+T(I,2,3)*TAUXYU(I)       0544
+  504 TAU12U(I)=T(I,3,1)*SIGXU(I)+T(I,3,2)*SIGYU(I)+T(I,3,3)*TAUXYU(I)      0545
+C                                                                           0546
+C.....COMPUTE LOWER STRESSES IN 1-2 PLANE                                   0547
+C                                                                           0548
+      DO 505 I=1,NLAMNA                                                     0549
+      SIG1L(I)=T(I,1,1)*SIGXL(I)+T(I,1,2)*SIGYL(I)+T(I,1,3)*TAUXYL(I)       0550
+      SIG2L(I)=T(I,2,1)*SIGXL(I)+T(I,2,2)*SIGYL(I)+T(I,2,3)*TAUXYL(I)       0551
+  505 TAU12L(I)=T(I,3,1)*SIGXL(I)+T(I,3,2)*SIGYL(I)+T(I,3,3)*TAUXYL(I)      0552
+      IF(NALLOW.GT.1) GO TO 7905                                            0553
+      IF(NC.GT.0) GO TO 7906                                                0554
+      IF(ITC.NE.0) GO TO 7905                                               0555
+      PRINT 330                                                             0556
+  330 FORMAT(2X,'DERIVED MIDPLANE STRAINS AND LAMINATE CURVATURES',         0557
+     X //7X3HEXO,9X3HEYO,6X6HGAMXYO,10X2HKX,10X2HKY,9X3HKXY,/)              0558
+C     PRINT 22                                                              0559
+      PRINT 33,EX0,EY0,GAMXY0,KX,KY,KXY                                     0560
+   33 FORMAT(6E12.4)                                                        0561
+      PRINT 21                                                              0562
+      WRITE(6,4) TITLE                                                      0563
+      PRINT 22                                                              0564
+      PRINT 340                                                             0565
+  340 FORMAT(2X,'UPPER STRAINS',//17X1HZ,10X2HEX,10X2HEY,9X5HGAMXY,/)       0566
+C     PRINT 22                                                              0567
+      WRITE(6,34)(I,ZU(I),EXU(I),EYU(I),GAMXYU(I),I=1,NLAMNA)               0568
+   34 FORMAT(I12,4F12.6)                                                    0569
+      PRINT 21                                                              0570
+      WRITE(6,4) TITLE                                                      0571
+      PRINT 22                                                              0572
+      PRINT 341                                                             0573
+  341 FORMAT(2X,'LOWER STRAINS',//17X1HZ,10X2HEX,10X2HEY,9X5HGAMXY,/)       0574
+C     PRINT 22                                                              0575
+      WRITE(6,34)(I,ZL(I),EXL(I),EYL(I),GAMXYL(I),I=1,NLAMNA)               0576
+      PRINT 21                                                              0577
+      WRITE (6,4) TITLE                                                     0578
+      PRINT 22                                                              0579
+      PRINT 350                                                             0580
+  350 FORMAT(2X,'UPPER STRESSES',//17X1HZ,13X4HSIGX,8X4HSIGY,               0581
+     X 7X5HTAUXY,/)                                                         0582
+      WRITE(6,35)(I,ZU(I),SIGXU(I),SIGYU(I),TAUXYU(I),I=1,NLAMNA)           0583
+   35 FORMAT(I12,F12.6,3F12.0)                                              0584
+      PRINT 21                                                              0585
+      WRITE(6,4) TITLE                                                      0586
+      PRINT 22                                                              0587
+      PRINT 351                                                             0588
+  351 FORMAT(2X,'LOWER STRESSES',//17X1HZ,13X4HSIGX,8X4HSIGY,               0589
+     X 7X5HTAUXY,/)                                                         0590
+      WRITE(6,35)(I,ZL(I),SIGXL(I),SIGYL(I),TAUXYL(I),I=1,NLAMNA)           0591
+      PRINT 21                                                              0592
+      WRITE (6,4) TITLE                                                     0593
+      PRINT 22                                                              0594
+C                                                                           0595
+C.....PRINT STRAINS IN 1-2 PLANE                                            0596
+C                                                                           0597
+      IF(TDEL.EQ.0.0) GO TO 5502                                            0598
+      PRINT 5503                                                            0599
+ 5503 FORMAT(2X,'*****STRAINS IN THE 1-2 PLANE WITH FREE THERMAL EXPANSI    0600
+     1ON REMOVED*****')                                                     0601
+      PRINT 22                                                              0602
+      PRINT 708                                                             0603
+      PRINT 22                                                              0604
+      WRITE(6,233)(I,TE1U(I),TE1L(I),TE2U(I),TE2L(I),TGAMU(I),TGAML(I),I    0605
+     1,I=1,NLAMNA)                                                          0606
+      PRINT 21                                                              0607
+      WRITE(6,4) TITLE                                                      0608
+      PRINT 22                                                              0609
+ 5502 CONTINUE                                                              0610
+      PRINT 41                                                              0611
+   41 FORMAT(    '*****STRAINS IN UPPER AND LOWER SURFACES OF LAMINA IN     0612
+     1THE 1-2 PLANE*****')                                                  0613
+      PRINT 22                                                              0614
+      PRINT 708                                                             0615
+  708 FORMAT(X,'LAYER',4X,'E1U',7X,'E1L',7X,'E2U',7X,'E2L',5X,'GAM12U',     0616
+     14X,'GAM12L',2X,'LAYER')                                               0617
+      PRINT 22                                                              0618
+      DO 601 I=1,NLAMNA                                                     0619
+  601 WRITE(6,233)I,E1U(I),E1L(I),E2U(I),E2L(I),GAM12U(I),GAM12L(I),I       0620
+  233 FORMAT(2X,I2,6F10.6,2X,I2)                                            0621
+      PRINT 21                                                              0622
+      WRITE (6,4) TITLE                                                     0623
+      PRINT 22                                                              0624
+C                                                                           0625
+C.....PRINT STRESSES IN 1-2 PLANE                                           0626
+C                                                                           0627
+      PRINT 42                                                              0628
+   42 FORMAT(    '*****STRESSES FOR UPPER AND LOWER SURFACES OF LAMINA I    0629
+     1N THE 1-2 PLANE*****')                                                0630
+      PRINT 22                                                              0631
+      PRINT 709                                                             0632
+  709 FORMAT(X,'LAYER',2X,'SIG1U',5X,'SIG1L',5X,'SIG2U',5X,'SIG2L',4X,      0633
+     1'TAU12U',4X,'TAU12L',2X,'LAYER')                                      0634
+      PRINT 22                                                              0635
+      DO 602 I=1,NLAMNA                                                     0636
+  602 WRITE(6,245)I,SIG1U(I),SIG1L(I),SIG2U(I),SIG2L(I),TAU12U(I),          0637
+     1TAU12L(I),I                                                           0638
+  245 FORMAT(2X,I2,6F10.0,2X,I2)                                            0639
+ 7906 IF(NALLOW.EQ.1) GO TO 7905                                            0640
+      NCASE=NCASE+1                                                         0641
+      GO TO 1001                                                            0642
+ 7905 CONTINUE                                                              0643
+      IF(ISTR.EQ.1) GO TO 5601                                              0644
+C                                                                           0645
+C.....FORM MATRIX OF STRESS RATIOS                                          0646
+C                                                                           0647
+      IF(ITC.NE.0) GOTO 7912                                                0648
+      GG(1)=TNX                                                             0649
+      GG(2)=TNY                                                             0650
+      GG(3)=TNXY                                                            0651
+      GG(4)=TMX                                                             0652
+      GG(5)=TMY                                                             0653
+      GG(6)=TMXY                                                            0654
+      DO 7911 I=1,NLAMNA                                                    0655
+      TSIG1U(I)=SIG1U(I)                                                    0656
+      TSIG1L(I)=SIG1L(I)                                                    0657
+      TSIG2U(I)=SIG2U(I)                                                    0658
+      TSIG2L(I)=SIG2L(I)                                                    0659
+      TTU12U(I)=TAU12U(I)                                                   0660
+      TTU12L(I)=TAU12L(I)                                                   0661
+ 7911 CONTINUE                                                              0662
+      ITC=1                                                                 0663
+      GO TO 7910                                                            0664
+ 7912 CONTINUE                                                              0665
+      NC=1                                                                  0666
+      DO 603 I=1,NLAMNA                                                     0667
+      J=NMTL(I)                                                             0668
+      SIG1TT=SIG1T(J)-SIG1U(I)                                              0669
+      IF(SIG1TT.LE.0.0) GO TO 7920                                          0670
+      SIG1CC=SIG1C(J)+SIG1U(I)                                              0671
+      IF(SIG1CC.LE.0.0) GO TO 7920                                          0672
+      SIG1U(I)=TSIG1U(I)-SIG1U(I)                                           0673
+      IF(SIG1U(I).LT.0.0) GO TO 604                                         0674
+      R(I,1)=SIG1U(I)/SIG1TT                                                0675
+      GO TO 605                                                             0676
+  604 R(I,1)=SIG1U(I)/SIG1CC                                                0677
+  605 CONTINUE                                                              0678
+      SIG1TT=SIG1T(J)-SIG1L(I)                                              0679
+      IF(SIG1TT.LE.0.0) GO TO 7920                                          0680
+      SIG1CC=SIG1C(J)+SIG1L(I)                                              0681
+      IF(SIG1CC.LE.0.0) GO TO 7920                                          0682
+      SIG1L(I)=TSIG1L(I)-SIG1L(I)                                           0683
+      IF(SIG1L(I).LT.0.0) GO TO 606                                         0684
+      R(I,2)=SIG1L(I)/SIG1TT                                                0685
+      GO TO 607                                                             0686
+  606 R(I,2)=SIG1L(I)/SIG1CC                                                0687
+  607 CONTINUE                                                              0688
+      SIG2TT=SIG2T(J)-SIG2U(I)                                              0689
+      IF(SIG2TT.LE.0.0) GO TO 7920                                          0690
+      SIG2CC=SIG2C(J)+SIG2U(I)                                              0691
+      IF(SIG2CC.LE.0.0) GO TO 7920                                          0692
+      SIG2U(I)=TSIG2U(I)-SIG2U(I)                                           0693
+      IF(SIG2U(I).LT.0.0) GO TO 608                                         0694
+      R(I,3)=SIG2U(I)/SIG2TT                                                0695
+      GO TO 609                                                             0696
+  608 R(I,3)=SIG2U(I)/SIG2CC                                                0697
+  609 CONTINUE                                                              0698
+      SIG2TT=SIG2T(J)-SIG2L(I)                                              0699
+      IF(SIG2TT.LE.0.0) GO TO 7920                                          0700
+      SIG2CC=SIG2C(J)+SIG2L(I)                                              0701
+      IF(SIG2CC.LE.0.0) GO TO 7920                                          0702
+      SIG2L(I)=TSIG2L(I)-SIG2L(I)                                           0703
+      IF(SIG2L(I).LT.0.0) GO TO 610                                         0704
+      R(I,4)=SIG2L(I)/SIG2TT                                                0705
+      GO TO 611                                                             0706
+  610 R(I,4)=SIG2L(I)/SIG2CC                                                0707
+  611 CONTINUE                                                              0708
+      TAUM=TTU12U(I)-TAU12U(I)                                              0709
+      IF(TAUM.LE.0.0) GO TO 7914                                            0710
+      TAU12T=TAU12(J)-TAU12U(I)                                             0711
+      GO TO 7915                                                            0712
+ 7914 CONTINUE                                                              0713
+      TAU12T =TAU12(J)+TAU12U(I)                                            0714
+ 7915 CONTINUE                                                              0715
+      IF(TAU12T.LE.0.0) GO TO 7920                                          0716
+      R(I,5)=ABS(TAUM/TAU12T)                                               0717
+      TAUM=TTU12L(I)-TAU12L(I)                                              0718
+      IF(TAUM.LE.0.0) GO TO 7916                                            0719
+      TAU12T=TAU12(J)-TAU12L(I)                                             0720
+      GO TO 7917                                                            0721
+ 7916 CONTINUE                                                              0722
+      TAU12T=TAU12(J)+TAU12L(I)                                             0723
+ 7917 CONTINUE                                                              0724
+      IF(TAU12T.LE.0.0) GO TO 7920                                          0725
+      R(I,6)=ABS(TAUM/TAU12T)                                               0726
+  603 CONTINUE                                                              0727
+      IF(IOP .EQ. 0) GO TO 5000                                             0728
+      PRINT 21                                                              0729
+      WRITE(6,4) TITLE                                                      0730
+      PRINT 616                                                             0731
+  616 FORMAT(//2X,'MATRIX OF RATIOS OF STRESS/ALLOWABLE STRESS',//,         0732
+     X 9X6HSIG11U,14X6HSIG11L,14X6HSIG22U,14X6HSIG22L,14X6HTAU12U,          0733
+     X 14X6HTAU12L,//)                                                      0734
+      GO TO 5000                                                            0735
+ 7920 WRITE(6,613)I                                                         0736
+  613 FORMAT(10X,'FAILURE OCCURS IN PLY NO.',I3,' DUE TO THERMAL LOADS O    0737
+     1NLY')                                                                 0738
+      GO TO 1007                                                            0739
+C                                                                           0740
+C.....FORM MATRIX OF STRAIN RATIOS                                          0741
+C                                                                           0742
+ 5601 NC=1                                                                  0743
+      DO 5603 I=1,NLAMNA                                                    0744
+      J=NMTL(I)                                                             0745
+      IF(E1U(I).LT.0.0) GO TO 5604                                          0746
+      R(I,1)=E1U(I)/E1T(J)                                                  0747
+      GO TO 5605                                                            0748
+ 5604 R(I,1)=E1U(I)/E1C(J)                                                  0749
+ 5605 IF(E1L(I).LT.0.0) GO TO 5606                                          0750
+      R(I,2)=E1L(I)/E1T(J)                                                  0751
+      GO TO 5607                                                            0752
+ 5606 R(I,2)=E1L(I)/E1C(J)                                                  0753
+ 5607 IF(E2U(I).LT.0.0) GO TO 5608                                          0754
+      R(I,3)=E2U(I)/E2T(J)                                                  0755
+      GO TO 5609                                                            0756
+ 5608 R(I,3)=E2U(I)/E2C(J)                                                  0757
+ 5609 IF(E2L(I).LT.0.0) GO TO 5610                                          0758
+      R(I,4)=E2L(I)/E2T(J)                                                  0759
+      GO TO 5611                                                            0760
+ 5610 R(I,4)=E2L(I)/E2C(J)                                                  0761
+ 5611 IF(GAM12U(I).LT.0.0) GO TO 5612                                       0762
+      R(I,5)=GAM12U(I)/GAM12(J)                                             0763
+      GO TO 5613                                                            0764
+ 5612 R(I,5)=ABS(GAM12U(I)/GAM12(J))                                        0765
+ 5613 IF(GAM12L(I).LT.0.0) GO TO 5614                                       0766
+      R(I,6)=GAM12L(I)/GAM12(J)                                             0767
+      GO TO 5603                                                            0768
+ 5614 R(I,6)=ABS(GAM12L(I)/GAM12(J))                                        0769
+ 5603 CONTINUE                                                              0770
+      IF(IOP .EQ. 0) GO TO 2000                                             0771
+      PRINT 21                                                              0772
+      WRITE(6,4) TITLE                                                      0773
+      PRINT 22                                                              0774
+      PRINT 5616                                                            0775
+ 5616 FORMAT(2X,'MATRIX OF RATIOS OF STRAIN/ALLOWABLE STRAIN'//,            0776
+     X 9X3HE1U,17X3HE1L,17X3HE2U,17X3HE2L,17X6HGAM12U,14X6HGAM12L,//)       0777
+ 2000 CONTINUE                                                              0778
+      IF(NMTXFL.EQ.0) GO TO 5000                                            0779
+      DO 5700 K=1,NMTXFL                                                    0780
+      KK=IMXF(K)                                                            0781
+      IF(NM(KK).EQ.1) GO TO 5701                                            0782
+      DO 5702 N=5,6                                                         0783
+ 5702 R(KK,N)=0.0                                                           0784
+      GO TO 5700                                                            0785
+ 5701 DO 5700 N=3,6                                                         0786
+      R(KK,N)=0                                                             0787
+ 5700 CONTINUE                                                              0788
+ 5000 CONTINUE                                                              0789
+      IF(IOP .EQ. 0) GO TO 2010                                             0790
+      DO 615 I = 1, NLAMNA                                                  0791
+  615 PRINT 7, R(I,1), R(I,2), R(I,3), R(I,4), R(I,5), R(I,6)               0792
+    7 FORMAT (6F20.10)                                                      0793
+      PRINT 21                                                              0794
+C                                                                           0795
+C.....DETERMINE FAILURE PLY AND MODE                                        0796
+C                                                                           0797
+ 2010 I=NLAMNA                                                              0798
+      J=6                                                                   0799
+      CALL MAXVAL(R,I,J,VMAX)                                               0800
+      IF (VMAX.EQ.0.0) GO TO 1007                                           0801
+      IF (IOP .EQ. 0) GO TO 2020                                            0802
+      WRITE(6,4) TITLE                                                      0803
+      PRINT 22                                                              0804
+      PRINT 6001                                                            0805
+ 6001 FORMAT(7X3HPLY,6X4HMODE,8X6HR(I,J),//)                                0806
+      PRINT 202, I, J, VMAX                                                 0807
+  202 FORMAT(2I10, 5X, E12.5, //)                                           0808
+ 2020 NXF=NX/VMAX                                                           0809
+      NYF=NY/VMAX                                                           0810
+      NXYF=NXY/VMAX                                                         0811
+      MXF =MX/VMAX                                                          0812
+      MYF =MY/VMAX                                                          0813
+      MXYF =MXY/VMAX                                                        0814
+      IF(IOP .EQ. 0) GO TO 2030                                             0815
+      PRINT 6002                                                            0816
+ 6002 FORMAT(2X,'FAILURE LOADS',//8X2HNX,10X2HNY,9X3HNXY,10X2HMX,           0817
+     X 10X2HMY,9X3HMXY,//)                                                  0818
+      PRINT 5, NXF, NYF, NXYF, MXF, MYF, MXYF                               0819
+      PRINT 22                                                              0820
+ 2030 IF(NM(I).EQ.1)GO TO 51                                                0821
+      IF(IOP .GT. 0) PRINT 9                                                0822
+    9 FORMAT(10X, 'CLOTH FAILURE',//)                                       0823
+      IF(J.LE.4)GO TO 52                                                    0824
+      IF(IOP .GT. 0) PRINT 10                                               0825
+   10 FORMAT(10X, 'MATRIX FAILURE',//)                                      0826
+      IF(NFAIL.GT.0)GO TO 205                                               0827
+      NXF1=NXF                                                              0828
+      NYF1=NYF                                                              0829
+      NXYF1=NXYF                                                            0830
+      MXF1=MXF                                                              0831
+      MYF1=MYF                                                              0832
+      MXYF1=MXYF                                                            0833
+      NXFL=NXF1                                                             0834
+      NYFL=NYF1                                                             0835
+      NXYFL=NXYF1                                                           0836
+      MXFL=MXF1                                                             0837
+      MYFL=MYF1                                                             0838
+      MXYFL=MXYF1                                                           0839
+      IF(IOP .EQ. 0) GO TO 2040                                             0840
+      PRINT 22                                                              0841
+      PRINT 204                                                             0842
+  204 FORMAT(2X, 'INITIAL MATRIX FAILURE LOADS',//8X2HNX,10X2HNY,           0843
+     X 9X3HNXY, 10X2HMX, 10X2HMY, 9X3HMXY,//)                               0844
+      PRINT 5, NXF1, NYF1, NXYF1, MXF1, MYF1, MXYF1                         0845
+      PRINT 22                                                              0846
+ 2040 NFAIL=NFAIL+1                                                         0847
+  203 G12(I)=0.0                                                            0848
+      GO TO 56                                                              0849
+  205 IF(ABS( NXF).GT.ABS( NXFL)) NXFL= NXF                                 0850
+      IF(ABS( NYF).GT.ABS( NYFL)) NYFL= NYF                                 0851
+      IF(ABS(NXYF).GT.ABS(NXYFL))NXYFL=NXYF                                 0852
+      IF(ABS( MXF).GT.ABS( MXFL)) MXFL= MXF                                 0853
+      IF(ABS( MYF).GT.ABS( MYFL)) MYFL= MYF                                 0854
+      IF(ABS(MXYF).GT.ABS(MXYFL))MXYFL=MXYF                                 0855
+      IF(NM(I).EQ.1) GO TO 68                                               0856
+      GO TO 203                                                             0857
+   51 CONTINUE                                                              0858
+      IF(IOP .GT. 0) PRINT 8                                                0859
+    8 FORMAT(10X, 'TAPE FAILURE',//)                                        0860
+      IF(J.GT.2) GO TO 59                                                   0861
+   52 CONTINUE                                                              0862
+      IF(IOP .GT. 0) PRINT 12                                               0863
+   12 FORMAT(10X, 'FIBER FAILURE', //)                                      0864
+      IF(NFAIL.GT.0)GO TO 55                                                0865
+   66 ISTR=ISTR+1                                                           0866
+      IF(ISTR .EQ. 2) GO TO 67                                              0867
+      PRINT 21                                                              0868
+      WRITE(6,4) TITLE                                                      0869
+      PRINT 22                                                              0870
+      WRITE(6,69)AMS                                                        0871
+   69 FORMAT(2X,'ALLOWABLE LOAD DETERMINATION FOR A FS=',F5.2)              0872
+   67 PRINT 22                                                              0873
+      PRINT 22                                                              0874
+      PRINT 6003                                                            0875
+ 6003 FORMAT(2X,'ULTIMATE FAILURE LOADS',//10X2HNX,10X2HNY,9X3HNXY,         0876
+     X 10X2HMX,10X2HMY,9X3HMXY,/)                                           0877
+      PRINT 5,NXF,NYF,NXYF,MXF,MYF,MXYF                                     0878
+      PRINT 22                                                              0879
+      IF(ISTR.EQ.2) GO TO 6004                                              0880
+      PRINT 6005                                                            0881
+ 6005 FORMAT(2X,'LOADS BASED ON STRESS CRITERIA')                           0882
+      GO TO 6007                                                            0883
+ 6004 PRINT 6006                                                            0884
+ 6006 FORMAT(2X,'LOADS BASED ON STRAIN CRITERIA')                           0885
+ 6007 CONTINUE                                                              0886
+      IF(TDEL.NE.0) GO TO 1007                                              0887
+      IF(ISTR.EQ.1) GO TO 1005                                              0888
+ 1007 NCASE=NCASE+1                                                         0889
+      GO TO 1001                                                            0890
+   55 IF(ABS( NXFL).GT.ABS( NXF)) NXF=NXFL                                  0891
+      IF(ABS( NYFL).GT.ABS( NYF)) NYF=NYFL                                  0892
+      IF(ABS(NXYFL).GT.ABS(NXYF))NXYF=NXYFL                                 0893
+      IF(ABS( MXFL).GT.ABS( MXF)) MXF=MXFL                                  0894
+      IF(ABS(MYFL ).GT.ABS( MYF)) MYF=MYFL                                  0895
+      IF(ABS(MXYFL).GT.ABS(MXYF))MXYF=MXYFL                                 0896
+      IF(ABS( NXF).GT.ABS( NXF1*AMS)) GO TO 58                              0897
+      IF(ABS( NYF).GT.ABS( NYF1*AMS)) GO TO 58                              0898
+      IF(ABS(NXYF).GT.ABS(NXYF1*AMS)) GO TO 58                              0899
+      IF(ABS( MXF).GT.ABS( MXF1*AMS)) GO TO 58                              0900
+      IF(ABS( MYF).GT.ABS( MYF1*AMS)) GO TO 58                              0901
+      IF(ABS(MXYF).GT.ABS(MXYF1*AMS)) GO TO 58                              0902
+      GO TO 66                                                              0903
+   56 NMTXFL=NMTXFL+1                                                       0904
+      IMXF(NMTXFL)=I                                                        0905
+      IF(NMTXFL.LT.NLAMNA)GO TO 53                                          0906
+      IF(ABS(NXFL).GT.ABS(NXF1*AMS)) GO TO 65                               0907
+      IF(ABS(NYFL).GT.ABS(NYF1*AMS)) GO TO 65                               0908
+      IF(ABS(NXYFL).GT.ABS(NXYF1*AMS)) GO TO 65                             0909
+      IF(ABS(MXFL).GT.ABS(MXF1*AMS)) GO TO 65                               0910
+      IF(ABS(MYFL).GT.ABS(MYF1*AMS)) GO TO 65                               0911
+      IF(ABS(MXYFL).GT.ABS(MXYF1*AMS)) GO TO 65                             0912
+      NXF=NXFL                                                              0913
+      NYF=NYFL                                                              0914
+      NXYF=NXYFL                                                            0915
+      MXF=MXFL                                                              0916
+      MYF=MYFL                                                              0917
+      MXYF=MXYFL                                                            0918
+      GO TO 66                                                              0919
+   58 NXF =AMS*NXF1                                                         0920
+      NYF =AMS*NYF1                                                         0921
+      NXYF=AMS*NXYF1                                                        0922
+      MXF =AMS*MXF1                                                         0923
+      MYF =AMS*MYF1                                                         0924
+      MXYF=AMS*MXYF1                                                        0925
+      GO TO 66                                                              0926
+   59 CONTINUE                                                              0927
+      IF(IOP .GT. 0) PRINT 10                                               0928
+      IF(NFAIL.GT.0) GO TO 205                                              0929
+   64 NXF1=NXF                                                              0930
+      NYF1=NYF                                                              0931
+      NXYF1=NXYF                                                            0932
+      MXF1=MXF                                                              0933
+      MYF1=MYF                                                              0934
+      MXYF1=MXYF                                                            0935
+      NXFL=NXF1                                                             0936
+      NYFL=NYF1                                                             0937
+      NXYFL=NXYF1                                                           0938
+      MXFL=MXF1                                                             0939
+      MYFL=MYF1                                                             0940
+      MXYFL=MXYF1                                                           0941
+      NFAIL=NFAIL+1                                                         0942
+      IF(IOP .EQ. 0) GO TO 68                                               0943
+      PRINT 22                                                              0944
+      PRINT 204                                                             0945
+      PRINT 5, NXF1, NYF1, NXYF1, MXF1, MYF1, MXYF1                         0946
+      PRINT 22                                                              0947
+   68 G12(I)=0                                                              0948
+      E22(I)=0                                                              0949
+      MU12(I)=0                                                             0950
+      MU21(I)=0                                                             0951
+      GO TO 56                                                              0952
+   65 NXF=AMS*NXF1                                                          0953
+      NYF=AMS*NYF1                                                          0954
+      NXYF=AMS*NXYF1                                                        0955
+      MXF=AMS*MXF1                                                          0956
+      MYF=AMS*MYF1                                                          0957
+      MXYF=AMS*MXYF1                                                        0958
+      GO TO 66                                                              0959
+ 1002 PRINT 1003                                                            0960
+ 1003 FORMAT(1H1,35X,'*****END OF JOB*****')                                0961
+   21 FORMAT(1H1)                                                           0962
+   22 FORMAT(1H0)                                                           0963
+      STOP                                                                  0964
+      END                                                                   0965
+      SUBROUTINE SIMQ(A,B,N,KS)                                             0966
+      DIMENSION A(1),B(1)                                                   0967
+C                                                                           0968
+C        FORWARD SOLUTION                                                   0969
+C                                                                           0970
+      TOL=0.0                                                               0971
+      KS=0                                                                  0972
+      JJ=-N                                                                 0973
+      DO 65 J=1,N                                                           0974
+      JY=J+1                                                                0975
+      JJ=JJ+N+1                                                             0976
+      BIGA=0                                                                0977
+      IT=JJ-J                                                               0978
+      DO 30 I=J,N                                                           0979
+C                                                                           0980
+C        SEARCH FOR MAXIMUM COEFFICIENT IN COLUMN                           0981
+C                                                                           0982
+      IJ=IT+I                                                               0983
+      IF(ABS(BIGA)-ABS(A(IJ))) 20,30,30                                     0984
+   20 BIGA=A(IJ)                                                            0985
+      IMAX=I                                                                0986
+   30 CONTINUE                                                              0987
+C                                                                           0988
+C        TEST FOR PIVOT LESS THAN TOLERANCE (SINGULAR MATRIX)               0989
+C                                                                           0990
+      IF(ABS(BIGA)-TOL) 35,35,40                                            0991
+   35 KS=1                                                                  0992
+      RETURN                                                                0993
+C                                                                           0994
+C        INTERCHANGE ROWS IF NECESSARY                                      0995
+C                                                                           0996
+   40 I1=J+N*(J-2)                                                          0997
+      IT=IMAX-J                                                             0998
+      DO 50 K=J,N                                                           0999
+      I1=I1+N                                                               1000
+      I2=I1+IT                                                              1001
+      SAVE=A(I1)                                                            1002
+      A(I1)=A(I2)                                                           1003
+      A(I2)=SAVE                                                            1004
+C                                                                           1005
+C        DIVIDE EQUATION BY LEADING COEFFICIENT                             1006
+C                                                                           1007
+   50 A(I1)=A(I1)/BIGA                                                      1008
+      SAVE=B(IMAX)                                                          1009
+      B(IMAX)=B(J)                                                          1010
+      B(J)=SAVE/BIGA                                                        1011
+C                                                                           1012
+C        ELIMIATE NEXT VARIABLE                                             1013
+C                                                                           1014
+      IF(J-N) 55,70,55                                                      1015
+   55 IQS=N*(J-1)                                                           1016
+      DO 65 IX=JY,N                                                         1017
+      IXJ=IQS+IX                                                            1018
+      IT=J-IX                                                               1019
+      DO 60 JX=JY,N                                                         1020
+      IXJX=N*(JX-1)+IX                                                      1021
+      JJX=IXJX+IT                                                           1022
+   60 A(IXJX)=A(IXJX)-(A(IXJ)*A(JJX))                                       1023
+   65 B(IX) =B(IX)-(B(J)*A(IXJ))                                            1024
+C                                                                           1025
+C        BACK SOLUTION                                                      1026
+C                                                                           1027
+   70 NY=N-1                                                                1028
+      IT=N*N                                                                1029
+      DO 80 J=1,NY                                                          1030
+      IA=IT-J                                                               1031
+      IB=N-J                                                                1032
+      IC=N                                                                  1033
+      DO 80 K=1,J                                                           1034
+      B(IB)=B(IB)-A(IA)*B(IC)                                               1035
+      IA=IA-N                                                               1036
+   80 IC=IC-1                                                               1037
+      RETURN                                                                1038
+      END                                                                   1039
+      SUBROUTINE MINV(A,N,D,L,M)                                        MINV1040
+      DIMENSION A(1),L(1),M(1)                                          MINV1041
+      D=1.0                                                             MINV1042
+      NK=-N                                                             MINV1043
+      DO 80 K=1,N                                                       MINV1044
+      NK=NK+N                                                           MINV1045
+      L(K)=K                                                            MINV1046
+      M(K)=K                                                            MINV1047
+      KK=NK+K                                                           MINV1048
+      BIGA=A(KK)                                                        MINV1049
+      DO 20 J=K,N                                                       MINV1050
+      IZ=N*(J-1)                                                        MINV1051
+      DO 20 I=K,N                                                       MINV1052
+      IJ=IZ+I                                                           MINV1053
+   10 IF( ABS(BIGA)- ABS(A(IJ))) 15,20,20                               MINV1054
+   15 BIGA=A(IJ)                                                        MINV1055
+      L(K)=I                                                            MINV1056
+      M(K)=J                                                            MINV1057
+   20 CONTINUE                                                          MINV1058
+      J=L(K)                                                            MINV1059
+      IF(J-K) 35,35,25                                                  MINV1060
+   25 KI=K-N                                                            MINV1061
+      DO 30 I=1,N                                                       MINV1062
+      KI=KI+N                                                           MINV1063
+      HOLD=-A(KI)                                                       MINV1064
+      JI=KI-K+J                                                         MINV1065
+      A(KI)=A(JI)                                                       MINV1066
+   30 A(JI) =HOLD                                                       MINV1067
+   35 I=M(K)                                                            MINV1068
+      IF(I-K) 45,45,38                                                  MINV1069
+   38 JP=N*(I-1)                                                        MINV1070
+      DO 40 J=1,N                                                       MINV1071
+      JK=NK+J                                                           MINV1072
+      JI=JP+J                                                           MINV1073
+      HOLD=-A(JK)                                                       MINV1074
+      A(JK)=A(JI)                                                       MINV1075
+   40 A(JI) =HOLD                                                       MINV1076
+   45 IF(BIGA) 48,46,48                                                 MINV1077
+   46 D=0.0                                                             MINV1078
+      RETURN                                                            MINV1079
+   48 DO 55 I=1,N                                                       MINV1080
+      IF(I-K) 50,55,50                                                  MINV1081
+   50 IK=NK+I                                                           MINV1082
+      A(IK)=A(IK)/(-BIGA)                                               MINV1083
+   55 CONTINUE                                                          MINV1084
+      DO 65 I=1,N                                                       MINV1085
+      IK=NK+I                                                           MINV1086
+      HOLD=A(IK)                                                        MINV1087
+      IJ=I-N                                                            MINV1088
+      DO 65 J=1,N                                                       MINV1089
+      IJ=IJ+N                                                           MINV1090
+      IF(I-K) 60,65,60                                                  MINV1091
+   60 IF(J-K) 62,65,62                                                  MINV1092
+   62 KJ=IJ-I+K                                                         MINV1093
+      A(IJ)=HOLD*A(KJ)+A(IJ)                                            MINV1094
+   65 CONTINUE                                                          MINV1095
+      KJ=K-N                                                            MINV1096
+      DO 75 J=1,N                                                       MINV1097
+      KJ=KJ+N                                                           MINV1098
+      IF(J-K) 70,75,70                                                  MINV1099
+   70 A(KJ)=A(KJ)/BIGA                                                  MINV1100
+   75 CONTINUE                                                          MINV1101
+      D=D*BIGA                                                          MINV1102
+      A(KK)=1.0/BIGA                                                    MINV1103
+   80 CONTINUE                                                          MINV1104
+      K=N                                                               MINV1105
+  100 K=(K-1)                                                           MINV1106
+      IF(K) 150,150,105                                                 MINV1107
+  105 I=L(K)                                                            MINV1108
+      IF(I-K) 120,120,108                                               MINV1109
+  108 JQ=N*(K-1)                                                        MINV1110
+      JR=N*(I-1)                                                        MINV1111
+      DO 110 J=1,N                                                      MINV1112
+      JK=JQ+J                                                           MINV1113
+      HOLD=A(JK)                                                        MINV1114
+      JI=JR+J                                                           MINV1115
+      A(JK)=-A(JI)                                                      MINV1116
+  110 A(JI) =HOLD                                                       MINV1117
+  120 J=M(K)                                                            MINV1118
+      IF(J-K) 100,100,125                                               MINV1119
+  125 KI=K-N                                                            MINV1120
+      DO 130 I=1,N                                                      MINV1121
+      KI=KI+N                                                           MINV1122
+      HOLD=A(KI)                                                        MINV1123
+      JI=KI-K+J                                                         MINV1124
+      A(KI)=-A(JI)                                                      MINV1125
+  130 A(JI) =HOLD                                                       MINV1126
+      GO TO 100                                                         MINV1127
+  150 RETURN                                                            MINV1128
+      END                                                               MINV1129
+      SUBROUTINE MAXVAL(A,I,J,VMAX)                                         1130
+C                                                                           1131
+C.....THIS SUBROUTINE FINDS THE ELEMENT WITH THE MAXIMUM ABSOLUTE VALUE IN A1132
+C     MATRIX AND IDENTIFIES ITS COLUMN AND ROW                              1133
+C                                                                           1134
+C.....MUST ADJUST DIMENSION OF A TO CONFORM TO THAT OF CALLING PROGRAM      1135
+      DIMENSION A(97,6)                                                     1136
+      VMAX=1.0E-70                                                          1137
+      DO 1 K=1,I                                                            1138
+      DO 1 L=1,J                                                            1139
+      IF(ABS(A(K,L)).LE.VMAX)GO TO 1                                        1140
+      KK=K                                                                  1141
+      LL=L                                                                  1142
+      VMAX=ABS(A(KK,LL))                                                    1143
+    1 CONTINUE                                                              1144
+      I=KK                                                                  1145
+      J=LL                                                                  1146
+      RETURN                                                                1147
+      END                                                                   1148

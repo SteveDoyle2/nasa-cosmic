@@ -1,0 +1,47 @@
+      SUBROUTINE CORREL(R,ISOLV,SIG,ILAB,W)
+C
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+C
+      DIMENSION R(1),SIG(ISOLV),ILAB(ISOLV),W(ISOLV)
+C
+C SUBROUTINE CORR TO COMPUTE THE CORRELATION MATRIX FROM (R-INVERSE VECTOR).
+C
+      ONE = 1.0D0
+      Z = 0.0D0
+      ITOT = ISOLV
+C
+      DO 50 J=1,ITOT
+      SIG(J)= ONE / SIG(J)
+   50 CONTINUE
+C
+      JJ=0
+      NM1 = ITOT - 1
+      DO 100 J=1,NM1
+      JJ= JJ + J
+      JK= JJ + J
+      JP1= J + 1
+      DO 150 K=JP1,ITOT
+      W(K)= R(JK)
+  150 JK=JK+K
+C
+      JK= JJ + J
+      DO 200 K=JP1,ITOT
+      R(JK)= Z
+      JKOL = JK + K - J
+C
+      DO 250 KOL= K,ITOT
+      R(JK)= R(JK) + W(KOL) * R(JKOL)
+  250 JKOL= JKOL + KOL
+C
+      R(JK) = R(JK) * SIG(J) * SIG(K)
+C
+  200 JK= JK + K
+      R(JJ)= ONE / SIG(J)
+C
+  100 CONTINUE
+      R(JJ + ITOT)= ONE / SIG(ITOT)
+C
+      CALL DUMP(R,ISOLV,ILAB)
+C
+      RETURN
+      END

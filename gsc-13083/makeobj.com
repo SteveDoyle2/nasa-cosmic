@@ -1,0 +1,66 @@
+$! ///// THIS IS THE FIRST LINE OF MAKEOBJ.COM
+$!
+$!                FILENAME = MAKEOBJ.COM
+$!
+$!        **************************************************
+$!        *  THIS COMMAND FILE CREATES THE OBJECT LIBRARY  *
+$!        *                QUIKVIS.OLB                     *
+$!        *     BY COMPILING ALL SOURCE ROUTINES(*.FOR)    *
+$!        *    ONE AT A TIME AND USING THE LIBR COMMAND    *
+$!        *             TO LOAD THE LIBRARY                *
+$!        **************************************************
+$!
+$!
+$!
+$!      THIS COMMAND FILE IS EXECUTED INTERACTIVELY BY TYPING....
+$!
+$!          $ @MAKEOBJ
+$!
+$!      IT IS EXECUTED IN BATCH MODE BY SUBMITTING.....
+$!
+$!          $ SUBMIT MAKEOBJ
+$!
+$!
+$!
+$ DIREC = "[NQCJP.COSMIC.TEST]"
+$!
+$ SET DEFAULT 'DIREC'
+$!
+$ WRITE SYS$OUTPUT " THE DEFAULT SUBDIRECTORY IS ......."
+$ SHOW DEFAULT
+$ WRITE SYS$OUTPUT " "
+$!
+$!
+$ DELETE QUIKVIS.OLB;*   ! housekeeping
+$ CLOSE NAMESFILE         ! ditto
+$!
+$ DIRECTORY/OUTPUT=NAMESFILE.LIS/NOHEAD/NOTRAIL   *.FOR;0
+$ OPEN/READ  NAMESFILE NAMESFILE.LIS
+$!
+$!
+$ COUNT = 0
+$!
+$ READLOOP:
+$!
+$   READ/END_OF_FILE=FINI  NAMESFILE  NOWNAME
+$!
+$   COUNT = COUNT + 1
+$   WRITE SYS$OUTPUT " ''COUNT'  PROCESSING ''NOWNAME'"
+$!
+$   FOR/NOLIST/NOOPT/DEBUG/OBJECT=TEMP.OBJ  'NOWNAME'
+$!
+$   IF(COUNT.EQ.1) THEN LIBRARY/CREATE  QUIKVIS.OLB TEMP.OBJ
+$   IF(COUNT.GT.1) THEN LIBRARY/REPL    QUIKVIS.OLB TEMP.OBJ
+$!
+$   DELETE TEMP.OBJ;*
+$   GOTO READLOOP
+$!
+$ FINI:
+$   CLOSE NAMESFILE
+$   DELETE NAMESFILE.LIS;*
+$!
+$   LIBR/LIST QUIKVIS.OLB
+$   DIRECTORY/SIZE/DATE QUIKVIS.OLB
+$   EXIT
+$!
+$! ///// THIS IS THE LAST LINE OF MAKEOBJ.COM

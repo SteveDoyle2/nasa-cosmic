@@ -1,0 +1,16 @@
+ interface;
+   unit nsqetc ( format, boxsizes, elist, saveinfo ) ;
+   
+   USES utility;
+
+   procedure format ( var inkey : byte; var current, first : entity );
+
+   procedure boxsizes ;
+
+   procedure elist  ( var first : entity ) ;
+
+   procedure saveinfo ( var first : entity ) ;
+
+   begin
+   end;
+

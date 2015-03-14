@@ -1,0 +1,358 @@
+   (* $INCLUDE : 'compile.inc' *)
+   (* $INCLUDE : 'getparam.int' *)
+   (* $INCLUDE : 'utility.int' *)
+   (* $INCLUDE : 'graphpak.int' *)
+   (* $INCLUDE : 'vbpas.int' *)
+   (* $INCLUDE : 'dspas.int' *)
+   (* $INCLUDE : 'evaexec.int' *)
+   (* $INCLUDE : 'evapict.int' *)
+
+   implementation of evapict;
+
+      uses getparam;
+
+      uses utility;
+
+      uses graphpak;
+
+      uses vbpas;
+
+      uses dspas;
+
+      uses evaexec;
+
+
+
+   function mxsrqq ( consts a, b : real ): real; extern;
+
+   procedure date (var s : string ); extern;
+
+   procedure format; extern;
+   procedure chartinfo; extern;
+   procedure get_list; extern;
+   procedure skeleeva; extern;
+
+(*------------------------------------------------------------*)
+   function zero1 ( num : real ) : boolean;
+   begin
+       if (num < 0.000001) and (num > -0.000001) then zero1 := true
+						 else zero1 := false;
+   end; (* zero1 *)
+(*------------------------------------------------------------*)
+
+   procedure picture;
+
+   var
+	xzero,yzero : integer;
+	size	    : byte;
+	bac	    : real;
+	cum	    : ^matrix;
+	cum1	    : array [1..3] of ^supinteger;
+	current     : entity;
+	data	    : ^matrix;
+	day	    : string(8);
+	error	    : boolean;
+	i,j,k,n     : byte;
+	line,pix    : integer;
+	l,m	    : integer;
+	max	    : real;
+	offset3     : byte4;
+	width3	    : byte4;
+	t	    : lstring(6);
+	temp	    : ^supreal;
+	temp1	    : ^supinteger;
+	tics2	    : tic10;
+	total1	    : byte;
+	d,shade     : byte;
+	ctr	    : array[1..3] of byte;
+	newnode     : entity;
+	oldy	    : integer;
+	tem	    : real;
+	ndon,ndoff  : integer;
+	eac	    : real;
+	calc_eac    : boolean;
+
+
+
+   begin
+      if plotchoice <> 2 then begin
+	 there(0,24);
+	 write('Calculating and Drawing...       ');
+      end;
+      total1 := total + 1;
+      new(data,3);
+      new(data^[1],total1);
+      new(data^[2],total1);
+      new(data^[3],total1);
+      new(cum,3);
+      new(cum^[1],total1);
+      new(cum^[2],total1);
+      new(cum^[3],total1);
+      new(cum1[1],total1);
+      new(cum1[2],total1);
+      new(cum1[3],total1);
+      new(temp,4);
+      new(temp1,4);
+
+      (***** alter display space and get data *****)
+
+      dsbar (xy[11]+1,xy[6]+1,xy[3]-1,xy[17]-1,0,9); (* erasing old *)
+      current := first;
+      for i := 1 to 3 do ctr[i] := 0;
+      i := 1; j := 1;
+      oldy := 0;
+      calc_eac := false;
+      t[1] := ' ';
+      repeat
+	 with current^ do
+	    begin
+	       size := node_data^[etype].character_size;
+	       case etype of
+		  7 : if (field^ = null) or (field^ = '        ') then
+			 begin
+			    date(day);
+			    field^.len := 8;
+			    field^[1] := day[1];
+			    field^[2] := day[2];
+			    field^[3] := '/';
+			    field^[4] := day[4];
+			    field^[5] := day[5];
+			    field^[6] := '/';
+			    field^[7] := day[7];
+			    field^[8] := day[8];
+			 end;
+		 9 : begin
+		       recode (1,field^,bac);
+		      end;
+		10 : begin
+		       recode ( 1, field^, eac );
+		       if eac = 0 then calc_eac := true;
+		     end;
+		11 : if i <= 3 then
+		       if j <= total1 then
+			  begin
+			     if enter_mode = 1 then
+				recode (1,field^,data^[i]^[j])
+			     else
+				recode (1,field^,cum^[i]^[j]);
+			     if oldy = 0 then oldy := y;
+
+			     if (field^ = null) or (field^ = '      ') then
+				 ctr[i] := ctr[i] + 1
+			     else
+				 ctr[i] := 0;
+
+			     j := j + 1;
+			     if j > total1 then
+				begin
+				   j := 1;
+				   i := i + 1;
+				   oldy := current^.down^.y;
+				end
+			      else
+				 if oldy <> down^.y then
+				    begin
+				       create (newnode, etype);
+				       newnode^.x := x + xy[40];
+				       newnode^.y := y;
+				       copylst ('      ',newnode^.field^);
+				       link (current, newnode);
+				       current := current^.up;
+				    end;
+			    end;   (* if j <= total1 *)
+		  otherwise begin end; end;
+
+	      if (enter_mode <> 0) or (j <> 2) then
+		  dstext(x,y,size,color1,field^,field^.len,0);
+	    end;
+	  current := current^.down;
+       until current = first;
+
+      xzero := xy[11] ; yzero := xy[17];
+      newnode := first^.up;
+      while newnode^.etype <> 11 do newnode := newnode ^.up;
+      pix := newnode^.x - (total - 1) * xy[40];
+
+      width3[1] := 20; width3[2] := 10; width3[3] := 10;
+      offset3[1] := 0; offset3[2] := 16; offset3[3] := 12;
+      max   := 0;
+      for i := 1 to 3 do
+	 begin
+	    if enter_mode = 1 then
+	       sum(1,total1,data^[i]^,cum^[i]^,error)
+	    else
+	       sum(2,total1,data^[i]^,cum^[i]^,error);
+	    for j := 1 to total1 do max := mxsrqq ( cum^[i]^[j], max );
+	 end;
+
+      max := mxsrqq(max,bac);
+      if (max > 0) and (ctr[1] < total1) then
+	begin
+	  temp^[1] := cum^[1]^[1];
+	  temp^[2] := cum^[2]^[1];
+	  temp^[3] := cum^[3]^[1];
+	  temp^[4] := max;
+
+	  ticlabel(4,temp^,d,tics2,error);
+	  temp^[4] := bac;
+	  scale(4,temp^,temp1^,height,tics2[d],error);
+	  temp1^[4] := yzero - temp1^[4];
+	  dsline(xy[11]+1,temp1^[4],xy[3]-1,temp1^[4],color1,1,0);
+	  dsline(xy[11]+1,temp1^[4]+1,xy[3]-1,temp1^[4]+1,color1,1,0);
+
+	  (***** ticmark labels *****)
+
+	  t := '-';
+	  line := yzero - height - 2;
+	  for i := d downto 2 do
+	    begin
+	      dstext (xzero + 1, line , 1, color1, t, 1, 0);
+	      dstext (xzero + 4, line, 1, color1, tics2[i], 6, 0);
+	      line := line + (height div (d - 1));
+	    end;
+
+	  line := newnode^.y + 2;
+
+	  for i := 1 to 3 do
+	    begin
+		if ctr[i] < total then begin
+		   scale(total1,cum^[i]^,cum1[i]^,height,tics2[d],error);
+		   for n := 1 to total do
+		      if n <= (total - ctr[i]) then
+			 begin
+			   cum1[i]^[n] := cum1[i]^[n+1];
+			   cum^[i]^[n] := cum^[i]^[n+1];
+			 end; (* if n *)
+		end; (* if ctr *)
+
+		if enter_mode = 1 then
+		   begin
+		       for n := 1 to total do
+			 begin
+			   if ord(n) <= ( ord(total) - ord(ctr[i]) ) then
+			     begin
+			       recode(2,t,cum^[i]^[n]);
+			       t.len := 6;
+			     end
+			   else
+				copylst ( '      ', t );
+			   l := pix + ((n-1)* xy[40]);
+			   m := line + (i * xy[14]);
+			   dstext(l,m,1,color1,t,t.len,0);
+			 end;  (* for n *)
+		    end       (* if enter_mode = 1 *)
+		 else  begin
+		       for n := 1 to total1 do
+			  begin
+			      if ord(n) <= ( ord(total1) - ord(ctr[i]) ) then
+				 begin
+				   recode(2,t,data^[i]^[n]);
+				   t.len := 6;
+				 end
+			      else
+				  copylst ('      ', t);
+			      l := node_data^[11].x + ((n-1) * xy[40]);
+			      m := line - 32  + (i * xy[14]);
+			      dstext(l, m-32, 1, color1, t, t.len, 0);
+			  end;	(* for n *)
+		  end;		(* if enter_mode = 0 *)
+
+		  if pattern3[i] = 2 then [ ndon := 3; ndoff := 8 ]
+		  else if pattern3[i] = 1 then [ ndon := 2; ndoff := 2 ]
+		       else [ ndon := 1; ndoff := 0 ];
+		  dsline (pix - 42, m + 4, pix - 20, m + 4, color3[i], ndon, ndoff);
+		  if ctr[i] < total then
+		     ogive(total-ctr[i],cum1[i]^,color3[i],ndon,ndoff,temp1^[i],xzero,yzero,xy[40]);
+	    end; (* for i *)
+
+	  (***** variables *****)
+
+	  (* temp^[1] := eac	*)
+	  (* temp^[2] := acv	*)
+	  (* temp^[3] := bcws	*)
+	  (* temp^[4] := acwp	*)
+	  (* temp^[5] := bcwp	*)
+	  (* temp^[6] := cv	*)
+	  (* temp^[7] := %cv	*)
+	  (* temp^[8] := sv($)	*)
+	  (* temp^[9] := %sv	*)
+	  (* temp^[10]:= sv(m)	*)
+	  (* temp^[11]:= cpi	*)
+	  (* temp^[12]:= spi	*)
+	  (* temp^[13]:= %cpl	*)
+	  (* temp^[14]:= %spt1	*)
+	  (* temp^[15]:= %spt2	*)
+	  (* temp^[16]:= tcpi	*)
+
+	  tem := temp^[3];
+	  dispose (temp);
+	  new (temp, 17);
+	  temp^[17]:= ord ( total - ctr[3]);
+	  temp^[3] := cum^[1]^[ total-ctr[3] ];
+	  temp^[4] := cum^[2]^[ total-ctr[3] ];
+	  temp^[5] := cum^[3]^[ total-ctr[3] ];
+	  temp^[6] := temp^[5] - temp^[4];
+
+	  if zero1(temp^[5]) then temp^[7] := 0
+			     else temp^[7] := ( temp^[6] / temp^[5] ) * 100;
+
+	  temp^[8] := temp^[5] - temp^[3];
+	  if zero1(temp^[3]) then temp^[9] := 0
+			     else temp^[9] := ( temp^[8] / temp^[3] ) * 100;
+
+	  if zero1(temp^[5]-tem) then temp^[10] := 0
+			    else temp^[10] := temp^[8]*temp^[17]/(temp^[5]-tem);
+
+	  if zero1(temp^[4]) then temp^[11] := 0
+			     else temp^[11] := temp^[5] / temp^[4];
+
+	  if zero1(temp^[3]) then temp^[12] := 0
+			     else temp^[12]:= temp^[5] / temp^[3];
+
+	  if zero1(bac) then [ temp^[13] := 0; temp^[14] := 0; ]
+			else [ temp^[13] := ( temp^[5] / bac ) * 100;
+			       temp^[14] := ( temp^[4] / bac ) * 100;];
+
+	  if calc_eac then
+	     [	if zero1(temp^[11]) then
+		   temp^[1] := 0
+		else
+		   temp^[1] := temp^[4] + ( (bac - temp^[5]) / temp^[11] ) ]
+	  else temp^[1] := eac;
+
+	  temp^[2] := bac - temp^[1];
+	  if zero1(temp^[1]) then temp^[15] := 0
+			     else temp^[15]:= ( temp^[4] / temp^[1] ) * 100;
+
+	  if zero1( temp^[1]-temp^[4] ) then
+	       temp^[16] := 0
+	  else
+	       temp^[16]:= (bac - temp^[5]) / (temp^[1] - temp^[4]);
+
+
+	  l := xy[31] + 10;
+	  m := xy[32] + 2;
+	  for i := 1 to 16 do
+	    begin
+	      m := m + xy[14];
+	      recode ( 2, t, temp^[i] );
+	      dstext ( l, m, 1, color1, t, t.len, 0 );
+	    end;
+
+	  (***** total vertical line *****)
+	  if ctr[3] < total then
+	    dsline (xzero+(total-ctr[3])*xy[40], yzero, xzero+(total-ctr[3])*xy[40], yzero-height-10, color1, 1, 0);
+
+
+	end;
+	dispose (temp1);  dispose (temp);
+	for i := 3 downto 1 do dispose( cum1[i] );
+	for i := 3 downto 1 do dispose( cum^[i] );
+	dispose( cum );
+	for i := 3 downto 1 do dispose( data^[i]);
+	dispose( data );
+   end;
+   end.
+
+
+

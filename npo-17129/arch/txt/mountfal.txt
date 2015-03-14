@@ -1,0 +1,4 @@
+RESTORE failed:  No one mounted the archive tape
+
+Call an operator to inquire as to why your tape was not mounted.
+

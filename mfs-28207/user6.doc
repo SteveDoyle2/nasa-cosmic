@@ -1,0 +1,299 @@
+
+
+                        P R O G R A M M E R ' S   M A N U A L
+ 
+   
+              Chapters 6 through 9 present information relevant to the 
+         maintenance or enhancement of SCAT.  The following chapters de- 
+         scribe in detail why SCAT evolved into its present configuration, 
+         how the software works and how to modify the existing software.  
+         All information is written for the software maintainer and not the 
+         SCAT user.  It is not necessary to know the information in chap- 
+         ters 6 through 9 to operate SCAT. 
+     
+              The maintenance manual assumes the reader has knowledge of 
+         and/or access to documentation on VAX VMS DCL, VAX FORTRAN, Boeing 
+         RIM, MS-DOS, Microsoft FORTRAN,  MicroRIM R:base 5000, and the 
+         R:base 5000 Program Interface package. 
+     
+
+
+ 
+           
+            
+             
+              
+               
+                
+                 
+                  
+                                         
+                       
+                        
+                                                                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                       6 - 1 
+                                              
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                  (THIS PAGE WAS INTENTIONALLY LEFT BLANK)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                       6 - 2                           
+
+                                  C H A P T E R   6 
+                           D E S I G N   P A R A M E T E R S       
+     
+              Certain restrictions were placed on SCAT because of NASA re- 
+         quirements and the developer's goals.  These restrictions and 
+         goals shaped SCAT into the software package that it has become.  
+         The following sections will explain the design decisions, the rea- 
+         soning behind them and the effect they have had on the software 
+         development. 
+      
+              6.1   SCAT ENVIRONMENT GOALS
+-
+         
+              SCAT was designed and developed to aid system engineers in 
+         performing commonality analysis on space items.  SCAT is intended 
+         to be used initially on the design and development of the space 
+         station, but not limited to the Space Station in use or 
+         application. 
+          
+              The following design goals were the basis for SCAT and dic- 
+         tated or influenced all decisions regarding the execution and pro- 
+         gram structure of SCAT. 
+           
+          1)  Utilization of Vendor Software:  Whenever possible commer- 
+              cially available software was to be used.  The development 
+              effort was to be directed at commonality analysis and not in 
+              duplicating capabilities that exist in commercially avail- 
+              able packages. 
+            
+          2)  Flexible:  SCAT must be able to accommodate a wide variety of     
+                 
+              items, limited in scope only by the creativity of the user. 
+             
+          3)  Interactive:  A user must be able to sit at a terminal and 
+              receive information on the commonality potential of space 
+              items. 
+              
+          4)  Quick response time:  SCAT must provide responses quickly, to 
+              hold the attention of the user. 
+              
+          5)  Easy to use:  Non-computer oriented individuaof the file to store your data in.  It can not
+  be the same name as the file being processed.
+
+       Filenames are from 1-8 characters in length, and can be followed
+  a file name extension.  The following characters can be used for
+  file names:
+
+
+  PC  :          A-Z 0-9 $ & # @ ! % ' ` ( ) - { } _ / \
+
+
+  VAX :          A-Z 0-9 _
+
+  Any other characters are invalid.
+
+  For more information see Section 4.9 of the SCAT User Manual.
+*
+  *** WARNING *** THE FILE YOU HAVE SELECTED ALREADY E
+          8)  On-line help:  SCAT must have a facility that would answer 
+              the most common questions a user might have without forcing 
+              him to go to a secondary reference source. 
+    
+          9)  User friendly:  SCAT should trap all invalid inputs, inform 
+              the user that an invalid input has been entered, indicate 
+              what the allowable inputs are and re-prompt the user for a 
+              valid input.  Should the user enter a correct but inappropri- 
+              ate input, the user must have the capability to backtrack  
+              and re-enter the desired value.  
+     
+         10)  Robust:  Execution of SCAT should never terminate unexpect- 
+              edly. 
+      
+         11)  Two versions:  A mainframe (VAX) and a microcomputer (PC) 
+              version of SCAT were to be developed.  Both versions should 
+              execute as identically as possible.  A user of one system 
+              should not have to be retrained to use the other system. 
+       
+         
+              6.2   SOFTWARE RESTRICTIONS
+                      
+              In order to remain compatible with existing and planned space 
+         station data bases at NASA MSFC in Huntsville, Alabama, certain 
+         software packages were dictated.  Other software packages were re- 
+         quired to interface with these specified packages. 
+            
+              Dictated Packages:  Boeing RIM (Relational Information            
+              
+         Management) was to be used by the VAX version for the data base 
+         functions.  MicroRIM R:base 5000 (which is compatible with RIM) 
+         was to be used by the microcomputer version for the data base 
+         functions. 
+             
+              Required Packages:  The MicroRIM Program Interface Package 
+         (PI) was required to interface to R:base 5000.  Microsoft Fortran 
+         was required because MicroRIM's PI is supplied as a Microsoft For- 
+         tran library.  On the mainframe Fortran was thus required to 
+         minimize differences between the two versions. 
+              
+              Additional restrictions were placed on the Fortran code de- 
+         veloped to ease program development and maintenance.  The code in 
+         the two versions was to be as identical as possible.  Standard 
+         Fortran 77 syntax and structures were to be used over specialized 
+
+                 
+                                       6 - 4
+
+         features of either system.  Features or capabilities that exist in 
+         only one of the operating systems, data base packages or Fortran 
+         compilers were to be avoided.  Code that required specific hard- 
+         ware (i.e. specific plotters, printers, terminals, etc.) was to be 
+         avoided whenever possible. 
+
+              It should be noted that while the above restrictions greatly 
+         simplified the development effort and maintainability issues, they 
+         also very effectively prevented the utilization of any of the 
+         unique capabilities of either system.  Consequently, experienced 
+         programmers may question why certain system functions which would 
+         make the program more efficient and simpler to understand were 
+         omitted from SCAT.  On closer inspection they will see that only 
+         one of the versions had that particular function available to it.  
+   
+              For example, the mainframe data base package (RIM) has the 
+         capability of storing large numbers of attributes in a given table 
+         but has limited I/O features while the micro data base package 
+         (R:base 5000) limits the size of rows of data in tables to 1530 
+         characters and has elaborate I/O capabilities.  The mentioned con- 
+         tradictions dictated that the width of tables in SCAT would be 
+         limited in both versions, and the I/O capabilities of R:base 5000 
+         could not be utilized. 
+    
+        ö     >
+3ocIM   ATTINFO PARTINFO                                                                                                                                                                                                                                                                                                                #<ocIM#<ocIM#<ocIM#<ocIM#<ocIM#<ocIM#<ocIM#<ocIM#<ocIM#<ocIM#<ocIM#<ocIM#<ocIM#<ocIM#<ocIM#<ocIM#<ocIM#<ocIM#<ocIM#<ocIM#<ocIMersions of SCAT were designed for specific computers 
+         with definite hardware configurations and capacities.  These hard- 
+         ware configurations are commonly found in industry and coincide 
+         with configurations of hardware used at NASA MSFC.  The hardware 
+         requirements are: 
+          
+               Mainframe:  Digital Equipment Corporation (DEC) VAX 11/780 
+         operating under VMS.  The terminal control software was developed 
+         for a DEC VT100 or VT220, but any terminal that can operate in VT100 
+         or VT220 mode should suffice.  The printer must have 132 character
+         width capability.  No other special devices (plotters, mouse, light 
+         pen, etc.) are required or supported. 
+
+
+                                       6 - 5
+
+               Microcomputer:  IBM PC/XT with 640K of RAM, fixed hard disk 
+         with a 10MB or larger hard disk storage device.  SCAT uses 
+         standard ANSI control sequences for clearing the screen and 
+         placing the cursor in the upper left corner of the screen.  The 
+         printer should accept standard IBM control sequences for condensed 
+         print (char 15), 132 character width (char 27, 'Q', char 132), 
+         form feed (char 12), and reset parameters to default (char 27, 
+         '@').  No other special devices (plotters, mouse, light pen, etc.) 
+         are required or supported.   
+            
+
+         Summary Main Frame:     VAX 11/780,  
+                                 VT100 or VT220 compatible terminal, 
+                                 132 character width printer. 
+ 
+  
+         Summary Microcomputer:  IBM PC/XT or compatible with: 
+                                     10 MB hard disk 
+                                     640k memory 
+                                 132 character width printer which accepts 
+                                 standard IBM control sequences.  
+   
+    
+                           
+                            
+                                                  
+                                       
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
+                                                    
+                                       6 - 6
+                                                        
+ 
+ 

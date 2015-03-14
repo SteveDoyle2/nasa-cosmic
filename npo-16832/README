@@ -1,0 +1,66 @@
+						  May 8, 1986
+
+     This directory contains source code for the SUN/UNIX
+distribution of the STAR interpreter.  The code is divided among
+several files, summarized briefly below.  Following this, a set
+of guidelines is given for compiling and linking the files into
+an executable module for the STAR interpreter.
+
+  stardefs.h  -- definitions used throughout an application,
+  starcomm.h  -- definitions used locally within the interpreter,
+
+  starcode.c  -- main source code for the STAR interpreter,
+  starbifs.c  -- definitions for most built-in functions in STAR,
+  starplus.c  -- built-in functions which are machine-dependent,
+  starhack.c  -- machine-dependent initialization code for STAR,
+
+  starini1.c  -- initialization data for the STAR knowledge base,
+  starini2.c  --   "
+  starini3.c  --   "
+  starini4.c  --   "
+  starini5.c  --   "
+  starini6.c  --   "
+
+  starlink.c  -- tables for linking external functions into STAR,
+  starutil.c  -- utility routines for accessing & altering UNITs,
+
+  samplec.c   -- sample external routines defined in C,
+  samplef.f   -- sample external routines defined in FORTRAN,
+  samplep.p   -- sample external routines defined in PASCAL.
+
+----------
+
+     The following commands may be used to compile the source
+files.  Each compilation produces an object file of the same
+name as the source file, but with the trailing label replaced
+with ".o".  ("%" indicates the SUN/UNIX prompt).
+
+      % cc -c starcode.c
+      % cc -c starbifs.c
+      % cc -c starplus.c
+      % cc -c starhack.c
+
+      % cc -c starini1.c
+      % cc -c starini2.c
+      % cc -c starini3.c
+      % cc -c starini4.c
+      % cc -c starini5.c
+      % cc -c starini6.c
+
+      % cc -c starlink.c
+      % cc -c starutil.c
+
+      % cc -c samplec.c
+      % f77 -c samplef.f
+      % pc -c samplep.p
+
+     Following this, the command file "LINK" may be invoked
+to link the object files together into a single executable
+file.
+
+      % LINK
+
+     The executable file produced is called "star" and may
+be called directly from the system level as follows.
+
+      % star

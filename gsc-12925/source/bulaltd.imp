@@ -1,0 +1,794 @@
+  { $INCLUDE : 'compile.inc' }
+  { $INCLUDE : 'getparam.int' }
+  { $INCLUDE : 'sfpas.int' }
+  { $INCLUDE : 'utility.int' }
+  { $INCLUDE : 'dspas.int' }
+  { $INCLUDE : 'display.int' }
+  { $INCLUDE : 'vbpas.int' }
+  { $INCLUDE : 'execute.int' }
+  { $INCLUDE : 'bulalts.int' }
+  { $INCLUDE : 'bulexec.int' }
+  { $INCLUDE : 'bulaltd.int' }
+
+  implementation of bulaltd;
+
+  USES getparam;
+
+  USES utility;
+
+  USES sfpas;
+
+  USES display;
+
+  USES vbpas;
+
+  USES dspas;
+
+  USES execute;
+
+  USES bulexec;
+
+
+  var
+       size	     : array[0..3, 1..2] of integer;
+       base1, base2  : integer;
+      gf      : integer;
+      gh      : integer;
+      gw      : integer;
+      luse    : integer;
+      luse2   : integer;
+      nlines  : integer;
+      spixb   : integer;
+      spixs   : integer;
+      spixbl  : integer;
+      spixsl  : integer;
+      npix    : integer;
+      filler  : integer;
+      filler2 : integer;
+      height  : integer;
+      width   : integer;
+      i       : byte;
+      x0, x1  : integer;
+      sline2  : integer;
+      buffer  : lstring(127);
+      symbol  : lstring(1);
+      cont    : boolean;
+      end_draw: boolean;
+      line_length	     : integer;
+      total_length	     : integer;
+      start, stop	     : integer;
+      tcolor, tsize	     : byte;
+      temp, temp2  : entity;
+      ipage	    : integer;
+
+  value
+       size[0,1] := 8;
+       size[0,2] := 8;
+       size[1,1] := 6;
+       size[1,2] := 8;
+       size[2,1] := 10;
+       size[2,2] := 12;
+       size[3,1] := 14;
+       size[3,2] := 16;
+
+  (********************************************************)
+
+  procedure determine_size ( var node	: entity;
+			     var width	: integer;
+			     var height : integer;
+			     index	: integer );
+
+  var
+      empty : boolean;
+      i     : integer;
+
+  begin
+    width := 0;
+    height := 0;
+    empty  := true;
+    i := 1;
+    with node^ do
+      while empty and ( i <= field^.len ) do
+	if field^[i] <> ' ' then empty := false
+			    else i := i + 1;
+    if not empty then
+       begin
+	 i := skeleton^[index];
+	 width	:= size[i,1];
+	 height := size[i,2];
+       end;
+  end;
+
+  (********************************************************)
+
+  function determine_nlines ( var width : integer;
+			      length : integer ): integer;
+
+  var
+      total_length   : integer;
+      line_length    : integer;
+      i, start, stop : integer;
+      count	     : integer;
+
+  begin
+    count := 1;
+    with temp^ do
+      begin
+	total_length := field^.len;
+	line_length  := length;
+	if etype = 7 then line_length := length - 14;
+	line_length := line_length div width;
+	start := 1 + ord ( field^[1]='-' );
+	stop := start + line_length - 1;
+	while stop < total_length do
+	   begin
+	     i := stop;
+	     while (field^[i]<>' ') and (i>start) and (stop<total_length) do
+	       i := i - 1;
+	     if i=start then start := stop + 1
+			else start := i + 1;
+	     stop := line_length + start - 1;
+	     count := count + 1;
+	   end;
+      end;
+      determine_nlines := count;
+  end;
+
+  procedure countloop;
+
+    begin
+	   luse := 0;
+	   if temp^.etype = 7 then
+	     begin
+	       temp2 := temp;
+	       while temp2^.etype <> 6 do
+		 temp2 := temp2^.up;
+	       if skeleton^[6]=2 then npix := 310 else npix := 640;
+	       nlines := determine_nlines ( bw, npix-16 );
+	       if nlines = 1 then
+		  with temp^ do
+		       npix := (field^.len - ord(field^[1]='-'))*bw + 16;
+	       if npix > maxpix then maxpix := npix;
+	       luse := luse + bf + nlines * ( bh + lf );
+	     end;
+	   while (temp^.etype in [6,7])and(luse<lava)and(temp<>top_page) do
+	     begin
+	       if temp^.etype = 6 then
+		  begin
+		    filler := bf;
+		    width  := bw;
+		    height := bh;
+		  end
+		    else
+		  begin
+		    filler := sf;
+		    width  := sw;
+		    height := sh;
+		 end;
+	       if skeleton^[6]=2 then npix := 310 else npix := 640;
+	       nlines := determine_nlines ( width, npix-16 );
+	       if nlines = 1 then
+		  with temp^ do
+		       npix := (field^.len - ord(field^[1]='-'))*width + 16;
+	       if npix > maxpix then maxpix := npix;
+	       bottom_page := temp;
+	       luse := luse + filler + nlines * ( height + lf );
+	       temp := temp^.down;
+	     end;
+    end;
+
+  procedure paging;
+
+    begin
+      if mode=1 then if top_page=nil then npage=1
+	  else
+	    begin
+	      npage := 1;
+	      temp:=first^.down^.down^.down^.down^.down;
+	      while (top_page<>temp)and(temp^.etype in [6,7]) do
+		begin
+		  countloop;
+		  npage:=npage+1;
+		end;
+	    end
+       else
+	if npage < 2 then top_page:=nil
+	  else
+	    begin
+	      top_page:=first^.down^.down^.down^.down^.down;
+	      if not (top_page^.etype in [6,7]) then top_page:=nil
+	       else
+		begin
+		  ipage := 1;
+		  top_page := nil;
+		  while ipage < npage do
+		    begin
+		      dscreen := false;
+		      alter_display_space ( first );
+		      if not (top_page^.etype in [6,7]) then ipage:=npage
+		       else
+			 begin
+			   ipage := ipage+1;
+			 end;
+		    end;
+		end;
+	    end;
+      end;
+
+  (********************************************************)
+
+  procedure alter_display_space;
+
+
+  (********************************************************)
+
+  procedure dswrite;
+
+  var
+      j,l	 : integer;
+      underline  : boolean;
+
+  begin
+    with temp^ do
+    begin  { *** with temp^ *** }
+    if skeleton^[etype+1] = 4  then
+       symbol[1] := chr ( base + count[etype-5] )
+     else
+       symbol[1] := symbols[i-ord(field^[1]='-')];
+    total_length := field^.len ;
+    if etype = 6 then sline2 := sline2 + bf else sline2 := sline2 + sf;
+    symbol.len := 1;
+    if dscreen then dstext ( x0, sline2, 0, tcolor, symbol, 1, 0 );
+    start := 1 + ord ( field^[1]= '-' );
+    stop  := start + line_length -1;
+    if stop > total_length then stop := total_length;
+    l := 0;
+    underline := false;
+    buffer.len := 1;
+    while stop <= total_length do
+      begin
+	i := stop;
+	while (field^[i]<>' ') and (i>start) and (stop<total_length) do
+	  i := i - 1;
+	if i <> start then stop := i;
+	if dscreen then
+	for j := start to stop do
+	  begin
+	    if field^[j]='\' then
+		underline := not underline;
+	     else
+	      begin
+		buffer[1] := field^[j];
+		if underline then
+		  dstext(x1+l*size[skeleton^[etype-3],1],sline2,tsize,-tcolor,buffer,1,0)
+		 else dstext(x1+l*size[skeleton^[etype-3],1],sline2,tsize,tcolor,buffer,1,0);
+		l := l + 1;
+	      end;
+	   end;
+	l := 0;
+	if etype = 6 then j := bh else j := sh;
+	sline2 := sline2 + j + lf;
+	if stop < total_length then
+	   begin
+	     start := stop + 1;
+	     stop  := start + line_length - 1;
+	     if stop > total_length then stop := total_length;
+	   end
+	else
+	   stop := 255;
+      end;
+    end; { *** with temp^ *** }
+  end;
+
+  (********************************************************)
+
+  begin
+
+
+    if top_page = nil then
+       begin
+	 count[1] := 0;
+	 determine_size ( first, tw, th, 1 );
+	 determine_size ( first^.down, uw, uh, 2 );
+	 temp := first^.down^.down;
+	 repeat
+	   determine_size ( temp, dw, dh, 5 );
+	   temp := temp^.down;
+	 until (dw<>0) or (temp^.etype in [1,6..8]);
+	 slined := 400 - dh;
+	 bw := size[skeleton^[3], 1];
+	 bh := size[skeleton^[3], 2];
+	 sw := size[skeleton^[4], 1];
+	 sh := size[skeleton^[4], 2];
+	 bullet_item_length	:= 624 div bw;
+	 sub_bullet_item_length := 608 div sw;
+	 tf	:= skeleton^[11];
+	 uf	:= skeleton^[12];
+	 bf	:= skeleton^[13];
+	 sf	:= skeleton^[14];
+	 df	:= skeleton^[15];
+	 lf	:= skeleton^[16];
+	 gf	:= skeleton^[17];
+	 gh	:= skeleton^[18];
+	 gw	:= skeleton^[19];
+	 if skeleton^[9]=0 then
+	    begin
+	      gf := 0;
+	      gh := 0;
+	      gw := 0;
+	    end;
+	 spixd	:= skeleton^[20];
+	 spixl	:= 640 - gw;
+	 slinel := 400 - gh;
+	 spixo	:= spixl - 20*dw;
+	 spixn	:= spixo - 21*dw;
+
+	 bullet_symbol	   := skeleton^[7]*2 ;
+	 sub_bullet_symbol := skeleton^[8]*2 ;
+	 symbols[1] := chr ( skeleton^[21] );
+	 symbols[2] := chr ( skeleton^[22] );
+	 symbols[3] := chr ( skeleton^[23] );
+	 symbols[4] := chr ( skeleton^[24] );
+	 symbols[5] := chr ( skeleton^[25] );
+	 symbols[6] := chr ( skeleton^[26] );
+
+	 lava := df + dh;
+	 if lava < gf + gh then lava := gf + gh;
+	 lava := 400 - lava;
+	 if th <> 0 then
+	   if uf <> 0 then yturn := tf+th+4*lf+uf+uh
+		      else yturn := tf+th+4*lf;
+	 lava := lava - yturn;
+	 if skeleton^[6]=2 then
+	    begin
+	      lava := 2*lava;
+	      bullet_item_length      := 294 div bw;
+	      sub_bullet_item_length  := 278 div sw;
+	    end;
+
+	luse := 0;
+	sline := 0;
+	temp := first^.down^.down^.down^.down^.down;
+	if temp^.etype in [6,7] then
+	 begin
+	   countloop;
+	   if luse < lava then
+	      if skeleton^[6]=1 then
+		  begin
+		    sline := ( (lava-luse) div 4 ) * 2 - 16;
+		    if sline < 0 then sline := 0;
+		  end
+		    else
+		  begin
+		    luse2 := 0;
+		    luse  := luse div 2;
+		    temp  := first^.down^.down;
+		    while luse2 < luse do
+		      begin
+			if temp^.etype = 6 then
+			   begin
+			     filler := bf;
+			     height := bh;
+			     width  := bw;
+			   end
+			     else
+			   begin
+			     filler := sf;
+			     height := sh;
+			     width  := sw;
+			   end;
+			nlines := determine_nlines ( width, 294 );
+			luse2  := luse2+filler+nlines*(height+lf);
+			temp   := temp^.down;
+		      end;
+		    sline := ( ( (lava div 2) - luse2 ) div 4 )*2 - 16;
+		    if sline < 0 then sline := 0;
+		  end;
+	 end;
+       end;
+
+    { second pass }
+
+   sline2 := sline;
+   if th <> 0 then
+      begin  { title }
+	sline2 := sline2 + tf;
+	x0 := ( ( 640 - ord ( first^.field^.len )*tw ) div 4 ) * 2;
+	if dscreen then
+	with first^ do
+	   dstext ( x0,sline2,skeleton^[1],3,field^,field^.len,0 );
+	sline2 := sline2 + th;
+      end;
+   if uh <> 0 then
+      begin  { subtitle }
+	sline2 := sline2 + uf;
+	x0 := ( ( 640 - ord(first^.down^.field^.len)*uw ) div 4 ) * 2;
+	if dscreen then
+	with first^.down^ do
+	   dstext ( x0,sline2,skeleton^[2],3,field^,field^.len,0 );
+	sline2 := sline2 + uh;
+      end;
+   if dh <> 0 then
+      begin  { date, name, organization }
+	temp := first^.down^.down;
+	repeat
+	  with temp^ do
+	    begin
+	      case etype of
+		3: x0 := spixd;
+		4: x0 := spixn;
+		5: x0 := spixo;
+	      end;
+	      x0 := x0 + (ord(node_data^[etype].input_length-field^.len )*dw) div 2;
+	      if dscreen then
+	      dstext ( x0,slined,skeleton^[5],3,field^,field^.len,0);
+	    end;
+	 temp := temp^.down;
+       until not (temp^.etype in [3..5]);
+      end;
+
+
+    if sline2 <> sline then sline2 := sline2 + 4*lf;
+
+    if plotchoice <> 2 then
+     if top_page=nil then top_page:=first^.down^.down^.down^.down^.down
+			else if bottom_page^.down^.etype in [6,7] then
+			       top_page := bottom_page^.down;
+    temp := top_page;
+    if skeleton^[6]=1 then
+       begin
+	 spixb := 640;
+       (*if maxpix > 624 then maxpix := 624;*)
+       end
+	 else
+       begin
+	 spixb := 310;
+       (*if maxpix > 294 then maxpix := 294;*)
+       end;
+    spixb := ( (spixb-maxpix) div 4 ) * 2;
+    spixs  := spixb + 16{2*bw};
+    spixbl := spixb + 16{2*bw};
+    spixsl := spixs + 16{2*sw};
+    end_draw := false;
+    cont     := temp^.etype=7;
+    if temp^.etype in [6,7] then
+       repeat
+	 case temp^.etype of
+	   6: begin
+		tsize  := skeleton^[3];
+		tcolor := 3;
+		line_length := bullet_item_length;
+		i := bullet_symbol;
+		height := bh;
+		filler := bf;
+		x0     := spixb;
+		x1     := spixbl;
+		count[2] := 0;
+		count[1] := count[1] + 1;
+		if count[1] > 26  then	count[1] := 1;
+		base1 := ord('A') - 1;
+		base := base1;
+	      end;
+	   7: begin
+		if cont then
+		   begin
+		     cont := false;
+		     while temp^.etype<>6 do temp := temp^.up;
+		     temp2 := temp;
+		     new ( temp );
+		     i := temp2^.field^.len + 7;
+		     new ( temp^.field, i );
+		     for i := 1 to temp2^.field^.len do
+			 temp^.field^[i] := temp2^.field^[i];
+		     temp^.field^.len := temp2^.field^.len;
+		     with temp^ do
+			  begin
+			    field^[field^.len + 1] := ' ';
+			    field^[field^.len + 2] := '(';
+			    field^[field^.len + 3] := 'c';
+			    field^[field^.len + 4] := 'o';
+			    field^[field^.len + 5] := 'n';
+			    field^[field^.len + 6] := 't';
+			    field^[field^.len + 7] := ')';
+			    tsize := skeleton^[3];
+			    tcolor := 3;
+			    i := bullet_symbol;
+			    x0 := spixb;
+			    x1 := spixbl;
+			    line_length := bullet_item_length;
+			    height := bh;
+			    filler := bf;
+			    field^.len := field^.len + 7;
+			    etype := 6;
+			    base := base1;
+			    dswrite;
+			  end;
+			  dispose ( temp );
+			  dispose ( temp^.field );
+		     temp := top_page;
+		   end;
+		count[2] := count[2] + 1;
+		if count[2] > 9  then  count[2] := 0;
+		base2 := ord('0');
+		base := base2;
+		tsize := skeleton^[4];
+		tcolor := 3;
+		line_length := sub_bullet_item_length;
+		i := sub_bullet_symbol;
+		height := sh;
+		filler := sf;
+		x0     := spixs;
+		x1     := spixsl;
+	     end;
+	   otherwise with temp^ do writeln ( etype, ' ', field^ );
+
+	 end;
+	 bottom_page := temp;
+	 if temp^.etype = 6 then
+	    nlines := determine_nlines ( bw, 624-(skeleton^[6]-1)*330 )
+	   else nlines := determine_nlines(sw,624-(skeleton^[6]-1)*330)
+	 filler2 := nlines * ( height + lf ) + filler;
+	 temp := temp^.down;
+	 if temp^.etype = 6 then
+	    begin
+	      filler := bf;
+	      height := bh;
+	      width  := bw;
+	    end
+	      else
+	    begin
+	      filler := sf;
+	      height := sh;
+	      width  := sw;
+	    end;
+	    if skeleton^[6]=1 then
+	       begin
+		 nlines := determine_nlines ( width, 624 );
+		 end_draw := sline2+filler2+filler+nlines*(height+lf) > lava+yturn;
+		 temp := temp^.up;
+		 if (not end_draw)or(temp^.etype<>6)or(temp^.down^.etype<>7) then
+		   [dswrite; temp := temp^.down;]
+		  else [ bottom_page := bottom_page^.up;
+			 count[1] := count[1] - 1; ];
+	       end
+		 else
+	       begin
+		 nlines := determine_nlines ( width, 294 );
+		 end_draw := sline2+filler2+filler+nlines*(height+lf) > (lava div 2)+yturn;
+		 if end_draw and (spixb<330) then
+		    begin
+		      temp := temp^.up;
+		      dswrite;
+		      temp := temp^.down;
+		      sline2 := sline;
+		      if th <> 0 then sline2 := sline2 + tf + th;
+		      if uh <> 0 then sline2 := sline2 + uf + uh;
+		      if sline2 <> sline then sline2 := sline2 + 4*lf;
+		      spixb  := spixb + 330;
+		      spixs  := spixb + 16{2*bw};
+		      spixbl := spixb + 16{2*bw};
+		      spixsl := spixs + 16{2*sw};
+		      end_draw := false;
+{		      if temp^.up^.etype=7 then sline2:=sline2+bf-sf;}
+		    (*cont     := temp^.etype=7;
+		      top_page := temp;*)
+		    end
+		   else
+		    begin
+		      temp := temp^.up;
+		      if (not end_draw)or(temp^.etype<>6)or(temp^.down^.etype<>7) then
+			[dswrite; temp := temp^.down;]
+		       else [ bottom_page := bottom_page^.up;
+			      count[1] := count[1] - 1; ];
+		    end;
+		 end_draw := end_draw and (spixb>=330);
+	       end;
+       until end_draw or not (temp^.etype in [6,7]);
+
+  if dscreen then
+   if skeleton^[9] = 1 then
+      begin
+	dsymbol ( 608, 366, 3, 0, 0, 1 );
+      end;
+    dscreen := true;
+  end;
+
+(*********************************************************************)
+
+ procedure format;
+
+ var
+   msg		: suplstring(25);
+   def		: suplstring2(10);
+   x, y 	: supinteger(10);
+   range	: supset(20);
+   i, j, n	: integer;
+   buf		: lstring(10);
+   current_node : byte;
+
+ begin
+
+   (* set up messages, prompters, and valid function keys *)
+
+   msg[1] := '                         BULLET CHART FORMAT OPTIONS';
+   msg[2] := '                                     ';
+   msg[3] := '                              DEFAULT                                  DEFAULT';
+   msg[4] := '                                     ';
+   msg[5] := 'Character size option (see below)    ';
+   msg[6] := ' t =thin small                       ';
+   msg[7] := ' s =small                            ';
+   msg[8] := ' m =medium                           ';
+   msg[9] := ' l =large                            ';
+   msg[10]:= '                                     ';
+   msg[11]:= '                                     ';
+   msg[12]:= 'Title   (option t, s, m, or l):      ';
+   msg[13]:= '                                     ';
+   msg[14]:= 'Sub-title      (t, s, m, or l):      ';
+   msg[15]:= '                                     ';
+   msg[16]:= 'Bullet         (t, s, m, or l):      ';
+   msg[17]:= '                                     ';
+   msg[18]:= 'Sub-bullet     (t, s, m, or l):      ';
+   msg[19]:= '                                     ';
+   msg[20]:= 'Date/Name/Org. (t, s, or m):         ';
+   msg[21]:= '                                     ';
+   msg[22]:= '  Modify default options as needed - press return key for next option.';
+   msg[23]:= '  Select F2 to begin creating chart  ';
+   msg[24]:= '                                     ';
+   msg[25]:= null;
+   buf.len := 1;
+   for i := 1 to 10 do
+     if fctn_map^[1][i] <> 0 then
+       begin
+	 if i < 10 then [buf[1]:=chr(i+48);concat(msg[25],buf);]
+	   else concat(msg[25],'10');
+	 if fctn_map^[1][i] = 7 then concat(msg[25],'End ');
+	 concat ( msg[25], fctn_tag^[fctn_map^[1][i]] );
+	 if i < 10 then concat ( msg[25], ' ' );
+	 if i = 2 then
+	   while msg[25].len < 31 do
+	     concat ( msg[25], ' ' );
+	 if i = 7 then
+	   while msg[25].len < 60 do
+	     concat ( msg[25], ' ' );
+       end;
+   for i := 4 to 20  do  concat ( msg[i], chr(219) );
+
+   concat ( msg[5],'  Number of columns (1 OR 2):          ');
+   concat ( msg[7],'  Bullet symbol:                       ');
+   concat ( msg[8],'   1 =           3 = no symbol         ');
+   concat ( msg[9],'   2 =           4 = A..Z              ');
+   concat ( msg[10],'  Sub-bullet symbol:                   ');
+   concat ( msg[11],'   1 =           3 = no symbol         ');
+   concat ( msg[12],'   2 =           4 = 1..9              ');
+   concat ( msg[14],'  GSFC symbol (N = no, Y = yes):       ');
+   concat ( msg[16],'  Background color:                    ');
+   concat ( msg[17],'   x =black    w =white                ');
+   concat ( msg[18],'   r =red      m =magenta              ');
+   concat ( msg[19],'   b =blue     c =cyan                 ');
+   concat ( msg[20],'   g =green    y =yellow               ');
+  msg[8][46] := chr (skeleton^[22]);
+  msg[8][48] := chr (skeleton^[21]);
+  msg[9][46] := chr (skeleton^[24]);
+  msg[9][48] := chr (skeleton^[23]);
+  msg[11][46] := chr (skeleton^[22]);
+  msg[11][48] := chr (skeleton^[21]);
+  msg[12][46] := chr (skeleton^[24]);
+  msg[12][48] := chr (skeleton^[23]);
+
+  (* Assign default values *)
+
+  for i := 1 to 10  do	def[i][1] := ' ';
+  for i := 1 to 4   do
+    case skeleton^[i] of
+	0 : def[i][2] := 's';
+	1 : def[i][2] := 't';
+	2 : def[i][2] := 'm';
+	3 : def[i][2] := 'l';
+    end;
+  case skeleton^[5] of
+	0 : def[5][2] := 's';
+	1 : def[5][2] := 't';
+	2 : def[5][2] := 'm';
+  end;
+  for i := 6 to 8  do  def[i][2] := chr((skeleton^[i] mod 10) + 48);
+  case skeleton^[9] of
+	0 : def[9][2] := 'n';
+	1 : def[9][2] := 'y';
+  end;
+  case skeleton^[10] of
+	0 : def[10][2] := 'x';
+	1 : def[10][2] := 'b';
+	2 : def[10][2] := 'g';
+	3 : def[10][2] := 'c';
+	4 : def[10][2] := 'r';
+	5 : def[10][2] := 'm';
+	6 : def[10][2] := 'y';
+	7 : def[10][2] := 'w';
+  end;
+  for i := 1 to 10  do	def[i].len := 2;
+  for i := 1 to 5  do [x[i] := 33; y[i] := 9+i*2;];
+  for i := 6 to 10 do  x[i] := 74;
+  y[6] := 4;
+  y[7] := 6;
+  y[8] := 9;
+  y[9] :=13;
+  y[10]:=15;
+  i := 1;
+  while i < 20	do [range[i] := [' ']; i := i + 2; ];
+  range[2] := ['t','T','s','S','m','M','l','L'] ;
+  range[4] := ['t','T','s','S','m','M','l','L'] ;
+  range[6] := ['t','T','s','S','m','M','l','L'] ;
+  range[8] := ['t','T','s','S','m','M','l','L'] ;
+  range[10] := ['t','T','s','S','m','M'];
+  range[12] := ['1','2'];
+  range[14] := ['1','2','3','4'];
+  range[16] := ['1','2','3','4'];
+  range[18] := ['n','N','y','Y'];
+  range[20]:= ['x','X','b','B','g','G','c','C','r','R','m','M','y','Y','w','W'];
+  color := skeleton^[10];
+
+  multimenu ( msg, 25, 0, 10, def, x, y, range, inkey, 2 );
+
+  for n := 1 to 10  do
+    case n of
+	1..4  : case def[n][2] of
+		  't','T' : skeleton^[n] := 1;
+		  's','S' : skeleton^[n] := 0;
+		  'm','M' : skeleton^[n] := 2;
+		  'l','L' : skeleton^[n] := 3;
+		  otherwise  begin end;
+		end;
+	   5  : case def[5][2] of
+		  't','T' : skeleton^[5] := 1;
+		  's','S' : skeleton^[5] := 0;
+		  'm','M' : skeleton^[5] := 2;
+		  otherwise  begin end;
+		end;
+	6..8  : begin
+		  if def[n][1] = ' '  then
+			      skeleton^[n] := ord(def[n][2]) - 48
+		  else
+			      skeleton^[n] := (ord(def[n][1])-48)*10
+					       + ord(def[n][2])-48;
+		end;
+	   9  : case def[9][2] of
+		  'n','N' : skeleton^[9] := 0;
+		  'y','Y' : skeleton^[9] := 1;
+		  otherwise  begin end;
+		end;
+	  10  : case def[10][2] of
+		  'x','X' : [ skeleton^[10]:=0; color:=0; ];
+		  'b','B' : [ skeleton^[10]:=1; color:=1; ];
+		  'g','G' : [ skeleton^[10]:=2; color:=2; ];
+		  'c','C' : [ skeleton^[10]:=3; color:=3; ];
+		  'r','R' : [ skeleton^[10]:=4; color:=4; ];
+		  'm','M' : [ skeleton^[10]:=5; color:=5; ];
+		  'y','Y' : [ skeleton^[10]:=6; color:=6; ];
+		  'w','W' : [ skeleton^[10]:=7; color:=7; ];
+		  otherwise  begin end;
+		end;
+	otherwise  begin end;
+      end; (* case n *)
+    maxpix := 0;
+    sline := 0;
+    bottom_page := nil;
+    top_page := nil;
+    screen (3); colors (0,color);
+    inkey := fctn_map^[1][inkey-58];
+    current := first;
+
+    if inkey in [1,4,5] then current_node := 0
+			else current_node := current^.etype;
+    if inkey = 7 then inkey := 3;
+
+    if not ( inkey in [1,2,4,5,7,41] )	then
+       [  there (0,0); write ( 'Drawing in progress...' );
+	 redraw ( 1, current, first ); ];
+
+    perform2 ( inkey, current, current_node, first );
+    perform  ( inkey, current, current_node, first );
+
+    if inkey in [4,5] then redraw (1, current, first );
+  end; (* format *)
+  end.
+

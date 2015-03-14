@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+The N-square Format Menu consists of the following options :
+
+        Number of functions : The number of functions determines the number of
+                              characters in each function and connector,
+                              therefore increasing the number of functions may
+                              truncate existing text entries
+        Connector options   : Connector can be box or circle with the boxes
+                              allowing text to be entered in them and the
+                              circles numbering themself for later reference
+                              Changing from box to circle connections will
+                              delete any text which was entered in the box
+        GSFC Symbol         : Display the GSFC symbol on the chart
+        Background Color    : Color of background in Window Mode
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

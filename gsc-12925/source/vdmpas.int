@@ -1,0 +1,106 @@
+  interface;
+unit vdmpas(begin_metafile, end_metafile,
+            color_specification_mode,
+            line_color, fill_color, text_color, marker_color,
+            marker_size, perimeter_width,
+            line_type, perimeter_type, marker_type,
+            interior_style, text_font_list_index, character_path,
+            polyline, polygon, polymarker, circle, vtext, arc,
+            color_table, background_color, text_alignment,
+            vdm_version,
+            maximum_color_index,integer_precision,real_precision,
+            color_precision, color_index_precision, index_precision,
+            font_list, line_width_specification_mode,
+            marker_size_specification_mode,
+            perimeter_width_specification_mode,clip_rectangle,
+            clip_indicator,vdc_precision_for_integer_points,scaling_mode,
+            begin_picture,end_picture,vdc_extent) ;
+
+
+  procedure begin_metafile(var s : lstring);
+
+  procedure end_metafile;
+
+  procedure color_specification_mode(e : integer);
+
+  procedure line_color(ci :integer);
+
+  procedure fill_color(ci : integer);
+ 
+  procedure text_color(ci : integer);
+
+  procedure marker_color(ci : integer);
+
+  procedure marker_size(scale : integer);
+
+  procedure perimeter_width(vdc : integer);
+
+  procedure line_type(ix1, ix2 : integer);
+
+  procedure perimeter_type(ix1, ix2 : integer);
+
+  procedure marker_type(ix1, ix2 : integer);
+
+  procedure interior_style(ix, e : integer);
+
+  procedure text_font_list_index(ix : integer);
+
+  procedure character_path(e : integer);
+
+  procedure polyline(x1, y1, x2, y2 : integer);
+
+  procedure polygon(x1, y1, x2, y2 : integer);
+
+  procedure polymarker(x1, y1 : integer);
+
+  procedure circle(x1, y1, r : integer);
+
+  procedure vtext(x1, y1, e : integer; var s : lstring);
+
+  procedure arc(x1, y1, x2, y2, x3, y3 : integer);
+
+  procedure color_table(start, c1, c2, c3, c4 : integer);
+ 
+  procedure background_color(ci : integer);
+
+  procedure text_alignment(he, ve  : integer ; hr, vr : real);
+
+  procedure vdm_version( version : integer);
+
+  procedure maximum_color_index ( mi : integer ) ;
+
+  procedure integer_precision ( i : integer ) ;
+
+  procedure real_precision ( r1, r2 : integer ) ;
+
+  procedure color_precision ( ci : integer ) ;
+
+  procedure color_index_precision ( i : integer ) ;
+
+  procedure index_precision ( ix : integer ) ;
+
+  procedure font_list ( var f1, f2, f3, f4 : lstring);
+
+  procedure line_width_specification_mode ( li : integer ) ;
+
+  procedure marker_size_specification_mode ( mi : integer ) ;
+
+  procedure perimeter_width_specification_mode ( pi : integer ) ;
+
+  procedure clip_rectangle ( xmin, xmax, ymin, ymax : integer ) ;
+
+  procedure clip_indicator ( ci : integer ) ;
+
+  procedure vdc_precision_for_integer_points ( vi : integer ) ;
+
+  procedure begin_picture ( var s : lstring; i : integer ) ;
+
+  procedure end_picture ;
+
+  procedure vdc_extent ( x1, y1, x2, y2 : integer);
+
+  procedure scaling_mode ( i : integer; r : real ) ;
+
+  begin
+  end;
+

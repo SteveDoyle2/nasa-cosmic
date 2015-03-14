@@ -1,0 +1,484 @@
+1 PLOT              
+
+     The plot command will plot one or more of the existing curves.
+If no curves are given, the last curves plotted will be plotted again.
+
+     The curves are generated using the FREQUENCY_RESPONSE, 
+ROOT_LOCUS, or TIME_RESPONSE commands, or may be read from an external 
+file using the LOAD /CURVE command.
+
+     Format:       PLOT  [modifier]
+
+2 EMPTY             
+
+     This modifier will cause an empty plot to be generated.  Any 
+plots desired must be added using the "O" command.
+
+     Format:       PLOT  EMPTY
+
+2 NEW               
+
+     This modifier will cause the user to be prompted for the curves 
+to be plotted, as well as additional information concerning the plot 
+type.  This is the default modifier.
+
+     Format:       PLOT  [NEW]
+
+2 OLD               
+
+     This modifier will redraw the last plot(s) used, as they were 
+before the graphics mode was exited.
+
+     Format:       PLOT  OLD
+
+2 subcommand        
+
+     After completion of a plot, INCA will enter the graphics input
+mode.  In this mode one-key commands are available to inspect and
+manipulate the plot.  While not all of the cursor mode commands are
+available at all times, the same key will usually initiate a
+consistent operation.  
+
+     INCA specific commands are described below.  More information and 
+commands are available under the GIN_mode topic, at the main help 
+level.
+
+3 Summary           
+
+     This table summarizes the cursor_mode commands.  The availability 
+columns indicate for which of the plot types the command is valid.  
+Whether input is needed or the cursor position is significant is also 
+indicated.  
+
+          COMMAND:                 AVAILABLILTY      INPUT  CURSOR
+          ------------------      - - - - - - - -     -----  ------
+          C-Curve label           R T M P N C V S       -       Y
+          F-Find                  R T M P N C V S       -       Y
+          G-Gfind                 R T M P N C V S       -       Y
+          H-Help                  R T M P N C V S       -       Y
+          I-ID label              R T M P N C V S     label     Y
+          M-Margins                   M P N C V S       -       Y
+          O-Open                  R T M P N C V S      many     -
+          S-Select                R T M P N C V S   curve(opt)  -
+          T-Type function         R T M P N C V S       -       Y
+          S-Value                 R   M P N C V S     k or w    -
+          ------------------      - - - - - - - -     -----  ------
+
+3 C-curve label     
+
+     This command can be used to label the Various curves by means of
+a legend to the side of the plot, or perhaps in an empty space on the
+plot.  A line segment with the dot pattern/color of each curve will be
+drawn along with the label for that curve. 
+
+     Additional input :     None
+     Cursor position :      Curve label location.
+
+3 F-Find            
+
+     This command computes the value at a specific point on a plotted
+curve.  The value and the coordinates of the point are then written to
+the graphics screen. Occasionally, the value at a requested point is
+not found, and three BELLs will be heard.  The exact items displayed
+depend upon the type of plot.
+
+     Additional input :     None.
+     Cursor position :      Point for which the value is to be found.
+
+3 G-Gfind           
+
+     This command computes the value at a specific point on a plotted
+curve.  The value of the point is then written to the graphics
+screen.  Occasionally, the value at a requested point is not found, and
+three BELLs will be heard. The exact item displayed depend upon the
+type of plot.
+
+     Additional input :     None.
+     Cursor position :      Point for which the value is to be found.
+
+3 H-Help            
+
+     This command will display a menu of the active and available
+graphics mode commands at the cursor location. 
+
+     Additional input :     None
+     Cursor position :      Menu location
+
+3 I-ID label        
+
+     This command is used to change the labels assigned to the various 
+curves.  
+
+     Additional input :     Label to be used.
+     Cursor position :      No effect. 
+
+3 M-Margins         
+
+     This command will generate a list of crossings of the stability 
+boundary.  In a frequency response plot this is the zero dB and 180 degree 
+lines.  In a root locus plot this is the imaginary axis.
+
+     Additional input :     None.
+     Cursor position :      Margin List Location.
+
+3 O-Open            
+
+     This command will allow a new window to be added to the plot. 
+The user is asked to enter curve name[s] for the new window.  The plot
+is redrawn with the new window added. 
+
+     Additional input :     Zoom window must have been created in 
+                            base frame using the L, U, and K commands.  
+     Cursor position :      No effect. 
+
+3 S-Select          
+
+     This command is used to select a different method of display.
+Exactly which methods are available depends upon the type of
+calculation done (ROOT_LOCUS, etc.).  However, this command can always
+be used to select one curve if many are visible, and sometimes can be
+used to change the scaling of the axes or to switch from one type of
+plot to another (for example, from Bode to Nyquist).  There are
+defaults for the scalings and plot types that can be changed by this
+commands.  These defaults can be changed by the set command. 
+
+     The select command by itself does nothing; the next key pressed 
+does the action.  In this respect it resembles the function key of a 
+calculator or the gold key of EDT.  Unless the ESCape option is used, 
+the select command always results in the plot being redrawn.
+
+     Additional input :     Select mode command, described below.
+     Cursor position :      No effect.
+
+4 Summary   
+
+     This table summarizes the select_mode commands.  The availability 
+columns indicate for which of the plot types the command is valid.  
+Whether input is needed or the cursor position is significant is also 
+indicated.  
+
+          COMMAND:                  AVAILABLILTY        INPUT  CURSOR
+          ------------------      - - - - - - - - -     -----  ------
+          A-Amplitude Scale           B M P N C V S       -       -
+          B-Bode Plot                 B M P N C V S       -       -
+          C-Nichols Plot              B M P N C V S       -       -
+          D-dB Scale                  B M P N C V S       -       -
+          F-Frequency Scale           B M P N C V S       -       -
+          H-Hz Scale                  B M P N C V S       -       -
+          I-Infinity Circle Scale     B M P N C V S     scale     -
+          L-Log Frequency Scale       B M P N C V S       -       -
+          M-Magnitude Plot            B M P N C V S       -       -
+          N-Nyquist Plot              B M P N C V S       -       -
+          O-Origin                          N           origin    -
+          P-Phase Plot                B M P N C V S       -       -
+          R-RPS Scale                 B M P N C V S       -       -
+          S-Strip Bode Plot           B M P N C V S       -       -
+          V-Popov Plot                B M P N C V S       -       -
+          W-Wrapping                  B M P N C V S       -       -
+          ESC-ESCape              R T B M P N C V S       -       -
+          ------------------      - - - - - - - - -     -----  ------
+
+4 A-Amplitude Scale
+
+     This command is used to change the scaling of the magnitude axis
+to absolute amplitude.  This command is only valid for a frequency
+response plot.  
+
+     Additional input :     None 
+     Cursor position :      No effect.
+
+4 B-Bode Plot      
+
+     This command is used to draw a combined Bode Magnitude and Bode
+Phase plot when another type of plot is currently displayed.  This
+command is only valid for a frequency response plot.  This is the
+default plot type. 
+
+     Additional input :     None 
+     Cursor position :      No effect.
+
+4 C-Nichols Plot   
+
+     This command is used to draw a Nichols plot when another type of
+plot is currently displayed.  A Nichols plot is a plot of phase
+(horizontal) versus magnitude (vertical). 
+
+     Additional input :     None 
+     Cursor position :      No effect.
+
+4 D-dB Scale       
+
+     Additional input :     None 
+     Cursor position :      No effect.
+
+     This command is used to change the scaling of the magnitude axis
+to dB.  This command is only valid inside the FREQUENCY_RESPONSE
+command.  The command will not work when a Bode Phase plot is
+currently displayed.  This is the default scaling for the magnitude 
+axis.
+
+     Additional input :     None 
+     Cursor position :      No effect.
+
+4 F-Frequency Scale
+
+     This command is used to change the scaling of the frequency axis
+to linear.  This command is only valid inside the FREQUENCY_RESPONSE
+command.  The command will not work when a Nyquist, Nichols, or Popov
+plot is currently displayed. 
+
+     Additional input :     None 
+     Cursor position :      No effect.
+
+4 H-Hz Scale       
+
+     This command is only valid for a frequency response plot.  This
+command is used to change the scaling of the frequency axis to Hertz. 
+The scaling can be either Hertz or radians per second. 
+
+     Additional input :     None 
+     Cursor position :      No effect.
+
+4 I-Infinity Cir. Scale
+
+     This command is used to change the scaling of the infinity circle
+visible on Nyquist plots .  This circle appears when a pole lies
+exactly on the imaginary axis.  The default value is 200 dB. This
+means that the circle is drawn 200 dB outside of the largest dB value
+of one of the approaches to the infinite value.  If there is a double
+pole, the circle would be drawn at 400dB.  The circle at zero
+magnitude (encountered when crossing a zero) is drawn about 200 dB
+below the smallest dB value approaching the pole.  This command is
+only valid inside the FREQUENCY_RESPONSE command. 
+
+     Additional input :     Scale value in dB.
+     Cursor position :      No effect.
+
+4 L-Log Freq. Scale
+
+     This command is used to change the scaling of the frequency axis
+to logarithmic.  This command is only valid inside the
+FREQUENCY_RESPONSE command.  The command will not work when a Nyquist,
+Nichols, or Popov plot is currently displayed.  This is the default
+scaling for the magnitude axis. 
+
+     Additional input :     None.
+     Cursor position :      No effect.
+
+4 M-Magnitude Plot 
+
+     This command is used to draw a Bode Magnitude plot when another
+type of frequency response plot is currently displayed.  A Bode
+magnitude plot is a plot of frequency (horizontal) versus magnitude
+(vertical, in either log or dB scale). 
+
+     Additional input :     None.
+     Cursor position :      No effect.
+
+4 N-Nyquist Plot   
+
+     This command is used to draw a Nyquist plot when another type of
+frequency response plot is currently displayed.  A Nyquist plot is a
+plot of magnitude (radial direction) versus phase (azimuthal
+direction). 
+
+     Additional input :     None.
+     Cursor position :      No effect.
+
+4 O-Origin          
+
+     This command allows the user to change the origin of a Nyquist
+plot.  The value is entered by the user and the curves recalculated.
+The portion of a curve that has a magnitude less than the selected
+origin disappears. 
+
+     Additional input :     Origin value in dB.
+     Cursor position :      No effect.
+
+4 P-Phase Plot     
+
+     This command is used to draw a Bode Phase plot when another type
+of frequency response plot is currently displayed.  A Bode phase plot
+is a plot of frequency (horizontal) versus phase (vertical). 
+
+     Additional input :     None.
+     Cursor position :      No effect.
+
+4 R-RPS Scale      
+
+     This command is only valid for a frequency response plot.  This
+command is used to change the scaling of the frequency axis to radians
+per second.  The scaling can be either Hertz or radians per second. 
+This is the default scaling for the frequency axis. 
+
+     Additional input :     None.
+     Cursor position :      No effect.
+
+4 S-Strip Bode Plot
+
+     This command is used to draw a combined Bode Magnitude and Bode
+Phase plot when another type of plot is currently displayed.  This
+command is only valid for a frequency response plot.  Unlike the 
+regular Bode plot type, in the Bode strip plot, the magnitude and 
+phase plots are drawn one above the other, and not overlaid.
+
+     Additional input :     None 
+     Cursor position :      No effect.
+
+4 V-PopovPlot/Value
+
+     This command has two meanings, depending upon whether a Frequency 
+Response or Time Response plot is being examined.
+
+     In frequency response plots, this command is used to draw a Popov
+plot when another type of frequency response plot is currently
+displayed. A Popov plot is a plot of real part (horizontal) versus the
+product of imaginary part times frequency (vertical). 
+
+     Additional input :     None.
+     Cursor position :      No effect.
+
+     In time response plots this command will allow the user to
+relabel the vertical axis in Time Response plots.  The plot will be
+redrawn after this command is given. 
+
+     Additional input :     New label for vertical axis.
+     Cursor position :      No effect.
+
+4 W-Wrapping        
+
+     This command allows the user to change the origin of the phase
+scale.  The value is entered by the user and the plot redrawn.
+
+     Additional input :     Wrapping value (phase origin) in degrees.
+     Cursor position :      No effect.
+
+4 ESC-ESCape
+
+     This command will cancel the Select command, returning to the 
+graphics mode.
+
+     Additional input :     None.
+     Cursor position :      No effect.
+
+3 T-Type function  
+
+     This command will write a brief description of the function used
+at the cursor position.  All numbers are displayed with only a few
+digits of precision. The following items are displayed: 
+
+          Function name.
+          Function plane.
+          Function numerator gain.
+          Function sample period (if in Z or W plane).
+          Number of distinct numerator factors.
+          List of distinct numerator factors and their orders.
+          Number of distinct denominator factors.
+          List of distinct denominator factors and their orders.
+
+     Additional input :     None
+     Cursor position :      Position at which function description is 
+                            to be written.
+
+3 V-Value           
+
+     This command computes the points on the plotted curves that are
+associated with a certain value.  These points are then marked with a
+polygonal or star-shaped symbol, and a key to the right of the plot
+shows the associated value. The points are found by searching an array
+of values versus coordinates until the values are found that bracket
+the requested value.  A linear interpolation is then done.  If the
+value entered is not in the range contained in the array, three BELLs
+will be heard. The values and point coordinates used depends on the
+type of plot: 
+
+                   Root Locus         Nyquist           Nichols
+  ------------   --------------   ---------------   ---------------
+  Value               Gain           Frequency         Frequency 
+  ------------   --------------   ---------------   ---------------
+
+     Additional input :     Value for which coordinates are to be found.
+     Cursor position :      No effect.
+
+3 W-Window          
+
+     This command is used to change the characteristics of a currently 
+displayed plotting window.  The window selected by the W command is 
+outlined (including legend and label area) in the GIN_WINDOW color, 
+and the cursor is changed to that color.
+
+     The window command by itself does nothing; the next key pressed 
+does the action.  In this respect it resembles the function key of a 
+calculator or the gold key of EDT.  Unless the ESCape option is used, 
+the window command always results in the plot being redrawn.
+
+     Additional input :     Window mode command, described below.
+     Cursor position :      No effect.
+
+4 Summary   
+
+     This table summarizes the window_mode commands. Whether input is
+needed or the cursor position is significant is also indicated. 
+
+          COMMAND:                INPUT  CURSOR
+          ------------------      -----  ------
+          B-send to Back            -       -
+          D-Delete                  -       -
+          F-send to Front           -       -
+          I-create Inset window     -       -
+          Z-Zoom window             -       -
+          ESC-ESCape                -       -
+          ------------------      -----  ------
+
+4 B-send to Back    
+
+     This command makes the selected window the first one drawn, so 
+that it lies in back of all other windows.
+
+     Additional input :     None.
+     Cursor position :      No effect.
+
+4 D-Delete          
+
+     This command deletes the selected window.  It may be recreated 
+using the "O" command.
+
+     Additional input :     None.
+     Cursor position :      No effect.
+
+4 F-send to Front   
+
+     This command makes the selected window the last one drawn, so 
+that it lies in front of all other windows.
+
+     Additional input :     None.
+     Cursor position :      No effect.
+
+4 I-Inset           
+
+     This command will duplicate the current window, and give it the
+title "INSET".  Both windows may now be manipulated independently.
+The plot is redrawn with the new window added. 
+
+     Additional input :     Zoom window must have been created in 
+                            base frame using the L, U, and K commands.  
+     Cursor position :      No effect.
+
+4 Z-Zoom window     
+
+     This command changes the size of the selected window to match the 
+zoom box in the base or background frame.  If that zoom box has not 
+been selected, there is no effect and a warning bell is sounded.
+
+     Additional input :     Zoom window must have been created in 
+                            base frame using the L, U, and K commands.  
+     Cursor position :      No effect.
+
+4 ESC-ESCape
+
+     This command will cancel the Window command, returning to the 
+graphics mode.
+
+     Additional input :     None.
+     Cursor position :      No effect.
+

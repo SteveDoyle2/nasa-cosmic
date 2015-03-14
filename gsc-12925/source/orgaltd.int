@@ -1,0 +1,15 @@
+  interface;
+  
+  unit orgaltd ( alter_display_space, format );
+
+  USES getparam;
+
+  USES utility;
+
+  procedure alter_display_space ( var first       : entity );
+
+  procedure format ( var inkey : byte; var current, first : entity );
+
+  begin
+  end;
+

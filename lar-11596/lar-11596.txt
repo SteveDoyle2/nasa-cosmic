@@ -1,0 +1,46 @@
+ ANALYSIS OF THREE-DIMENSIONAL SUPERSONIC NOZZLE EXHAUST FLOW FIELDS
+
+( ADVANCED TECHNOLOGY LABS. )
+
+     A second order numerical method employing reference plane character-
+istics has been developed for the calculation of geometrically complex
+three dimensional nozzle-exhaust flow fields, heretofore uncalculable by
+existing methods. The nozzles may have irregular cross sections with swept
+throats and may be stacked in modules using the vehicle undersurface for ad-
+ditional expansion. The nozzles may have highly nonuniform entrance con-
+ditions, the medium considered being an equilibrium hydrogen-air mixture.
+The program calculates and carries along the underexpansion shock and con-
+tact as discrete discontinuity surfaces, for a nonuniform vehicle external
+flow. Additionally, shock formation due to coalescence is detected. A wide
+variety of geometric problems may be considered since the reference plane
+method has been developed for three separate coordinate systems, all incor-
+porated into a single program.
+
+     This program is written in FORTRAN IV for batch execution and has been
+implemented on a CDC 6000 Series computer. This program was developed in
+1972.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC 6000 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 6,283 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-11596
+
+DOMESTIC - DOCUMENTATION PRICE: $53.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $106.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

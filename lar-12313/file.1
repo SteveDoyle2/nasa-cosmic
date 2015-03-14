@@ -1,0 +1,6604 @@
+      SUBROUTINE RDTITL
+C
+C
+      COMMON/LINES/NLP,LIN,TITLE(8),TIL(2)
+      COMMON/FORM/NEPR,FMT1(6),FMT2(6)
+      COMMON/TOL/EPSAM,EPSBM,IACM
+      COMMON/CONV/SUMCV,MAXSUM,RICTCV,SERCV
+C     NLP = NO. LINES/PAGE VARIES WITH THE INSTALLATION
+      DATA LIN,NLP/1,44/
+      DATA NEPR,FMT1/7,10H(1P7E16.7)/
+      DATA TIL/10H     ORACL,10HS  PROGRAM/
+      DATA FMT2/10H(3X,1P7E16,10H.7)        /
+      DATA EPSAM/1.E-10/
+      DATA EPSBM/1.E-10/
+      DATA IACM/12/
+      DATA SUMCV/1.E-8/
+      DATA RICTCV/1.E-8/
+      DATA SERCV/1.E-8/
+      DATA MAXSUM/50/
+      READ(5,100) TITLE
+      IF(EOF(5))90,91
+   90 CONTINUE
+      STOP 1
+   91 CONTINUE
+  100 FORMAT(8A10)
+      CALL LNCNT(100)
+      RETURN
+      END
+      SUBROUTINE LNCNT  (N)
+C
+C
+      COMMON/LINES/NLP,LIN,TITLE(8),TIL(2)
+      LIN=LIN+N
+      IF  (LIN.LE.NLP)   GO TO 20
+      WRITE(6,1010) TITLE,TIL
+ 1010 FORMAT(1H1,8A10,2A10/)
+      LIN=2+N
+      IF  (N.GT.NLP)  LIN=2
+   20 RETURN
+      END
+      SUBROUTINE READ(I,A,NA,B,NB,C,NC,D,ND,E,NE)
+C
+C
+      DIMENSION A(1),B(1),C(1),D(1),E(1)
+      DIMENSION NA(2),NB(2),NC(2),ND(2),NE(2),NZ(2)
+      READ(5,100) LAB,            NZ(1), NZ(2)
+      CALL READ1(A, NA,NZ,  LAB)
+      IF(I .EQ. 1) GO TO 999
+      READ(5,100) LAB,            NZ(1), NZ(2)
+      CALL READ1(B, NB,NZ,  LAB)
+      IF(I .EQ. 2) GO TO 999
+      READ(5,100) LAB,            NZ(1), NZ(2)
+      CALL READ1(C,NC,NZ,LAB)
+      IF(I .EQ. 3) GO TO 999
+      READ(5,100) LAB,            NZ(1), NZ(2)
+      CALL READ1(D, ND,NZ,  LAB)
+      IF(I .EQ. 4) GO TO 999
+      READ(5,100) LAB,            NZ(1), NZ(2)
+      CALL READ1(E, NE,NZ,  LAB)
+  100 FORMAT(A4,4X,2I4)
+  999 RETURN
+      END
+      SUBROUTINE  PRNT(A,NA,NAM,IOP)
+C
+C
+      DIMENSION A(1),NA(2)
+      COMMON  /FORM/NEPR,FMT1(6),FMT2(6)
+      COMMON/LINES/NLP,LIN,TITLE(8),TIL(2)
+C- NOTE NLP NO. LINES/PAGE VARIES WITH THE INSTALLATION.
+      DATA KZ,KW,KB /1H0,1H1,1H /
+      NAME = NAM
+      II = IOP
+      NR = NA(1)
+      NC = NA(2)
+      NLST = NR * NC
+      IF( NLST .LT. 1 .OR. NR .LT. 1 ) GO TO 16
+      IF(NAME  .EQ. 0) NAME = KB
+C- SKIP HEADLINE IF REQUESTED.
+      GO TO (11,10,132,12),       II
+   10 CALL LNCNT(100)
+   11 CALL LNCNT(2)
+    3 WRITE(6,177) KZ,NAME,NR,NC
+177   FORMAT(A1,5X,A4,8H  MATRIX,5X,I3,5H ROWS,5X,I3,8H COLUMNS)
+      GO TO 13
+   12 CALL LNCNT(100)
+      GO TO 13
+  132 CALL LNCNT(2)
+      WRITE (6,891)
+  891 FORMAT (1H0)
+C- BELOW COMPUTE NR OF LINES/ ROW --DECIDE IF 1 EXTRA BLANK LINE
+   13 J=(NC-1)/NEPR+1
+C- WHY ALWAYS ADD 1 LINE- BECAUSE IF MULTIPLE, USE 1 BLK LINE EXTRA.
+      NLPW = J
+      JST = 1
+C- COMPUTE LAST ROW POSITION -1 BELOW
+      NLST = NLST -NR
+      MN=NC
+      IF  (NC.GT.NEPR)   MN=NEPR
+      KLST=NR*(MN-1)
+91    CONTINUE
+      DO 912 J = JST, NR
+      CALL LNCNT(NLPW)
+      KLST = KLST +1
+      WRITE (6,FMT1) (A(N), N=J,KLST,NR)
+      IF  (NC.LE.NEPR)   GO TO 912
+      NLST = NLST +1
+      KNR=KLST+NR
+      WRITE (6,FMT2) (A(N), N=KNR,NLST,NR)
+912   CONTINUE
+      RETURN
+   16 CALL LNCNT(1)
+      WRITE (6,916) NAM,NA
+  916 FORMAT  (* ERROR IN PRNT  MATRIX *A4,* HAS NA=*,2I6)
+      RETURN
+      END
+      SUBROUTINE EQUATE(A,NA,B,NB)
+C
+C
+      DIMENSION A(1),B(1),NA(2),NB(2)
+      NB(1) = NA(1)
+      NB(2) =NA(2)
+      L=NA(1)*NA(2)
+      IF( NA(1) .LT. 1 .OR. L .LT. 1 ) GO TO 999
+      DO 300 I=1,L
+  300 B(I)=A(I)
+ 1000 RETURN
+  999 CALL LNCNT (1)
+      WRITE  (6,50)  NA
+   50 FORMAT  (* DIMENSION ERROR IN EQUATE  NA=*2I6)
+      RETURN
+      END
+      SUBROUTINE TRANP(A,NA,B,NB)
+C
+C
+      DIMENSION A(1),B(1),NA(2),NB(2)
+      NB(1)=NA(2)
+      NB(2)=NA(1)
+      NR=NA(1)
+      NC=NA(2)
+      L=NR*NC
+      IF( NR .LT. 1 .OR. L .LT. 1  )  GO TO 999
+      IR=0
+      DO 300 I=1,NR
+      IJ=I-NR
+      DO 300 J=1,NC
+      IJ=IJ+NR
+      IR=IR+1
+  300 B(IR)=A(IJ)
+      RETURN
+  999 CALL LNCNT(1)
+      WRITE  (6,50)  NA
+   50 FORMAT  (* DIMENSION ERROR IN TRANP   NA=*2I6)
+      RETURN
+      END
+      SUBROUTINE SCALE (A, NA, B, NB, S)
+C
+C
+      DIMENSION A(1),B(1),NA(2),NB(2)
+      NB(1) = NA(1)
+      NB(2) =NA(2)
+      L = NA(1)*NA(2)
+      IF( NA(1) .LT. 1 .OR. L .LT. 1 ) GO TO 999
+      DO 300 I=1,L
+  300 B(I)=A(I)*S
+ 1000 RETURN
+  999 CALL LNCNT(1)
+      WRITE  (6,50) NA
+   50 FORMAT  (* DIMENSION ERROR IN SCALE   NA=*2I6)
+      RETURN
+      END
+      SUBROUTINE UNITY(A,NA)
+C
+C
+      DIMENSION A(1),NA(2)
+      IF(NA(1).NE.NA(2) .OR. NA(1).LT.1) GO TO 999
+      L=NA(1)*NA(2)
+      DO 100 IT=1,L
+  100 A(IT)=0.0
+      J = - NA(1)
+      NAX = NA(1)
+      DO 300 I=1,NAX
+      J=NAX +J+1
+  300 A(J)=1.
+      GO TO 1000
+  999 CALL LNCNT (1)
+      WRITE(6, 50)(NA(I),I=1,2)
+   50 FORMAT  (* DIMENSION ERROR IN UNITY   NA=*2I6)
+ 1000 RETURN
+      END
+      SUBROUTINE NULL(A,NA)
+C
+C
+      DIMENSION A(1)
+      DIMENSION NA(2)
+      N=NA(1)*NA(2)
+      IF( NA(1) .LT. 1 .OR.  N .LT. 1 )  GO TO 999
+      DO 10I=1,N
+   10 A(I) = 0.0
+      RETURN
+C
+  999 CONTINUE
+      CALL LNCNT(1)
+      WRITE (6,50) NA
+   50 FORMAT(* DIMENSION ERROR IN NULL  NA =*2I6)
+      RETURN
+      END
+      SUBROUTINE TRCE  (A,NA,TR)
+C
+C
+      DIMENSION A(1)
+      DIMENSION NA(2)
+      IF (NA(1).NE.NA(2)) GO TO 600
+      N=NA(1)
+      TR=0.0
+      IF( N .LT. 1 ) GO TO 600
+      DO 10 I=1,N
+      M=I+N*(I-1)
+   10 TR=TR+A(M)
+      RETURN
+  600 CALL LNCNT(1)
+      WRITE (6,1600) NA
+ 1600 FORMAT (* TRACE REQUIRES SQUARE MATRIX    NA=*,2I6)
+      RETURN
+      END
+      SUBROUTINE ADD (A,NA,B,NB,C,NC)
+C
+C
+      DIMENSION A(1),B(1),C(1),NA(2),NB(2),NC(2)
+      IF( (NA(1) .NE. NB(1)) .OR. (NA(2) .NE. NB(2)) )  GO TO 999
+      NC(1)=NA(1)
+      NC(2)=NA(2)
+      L=NA(1)*NA(2)
+      IF( NA(1) .LT. 1  .OR.  L .LT. 1 )  GO TO 999
+      DO 300 I=1,L
+  300 C(I)=A(I)+B(I)
+      GO TO 1000
+  999 CALL LNCNT (1)
+      WRITE(6,50) NA,NB
+   50 FORMAT  (* DIMENSION ERROR IN ADD     NA=*2I6,5X,*NB=*2I6)
+ 1000 RETURN
+      END
+      SUBROUTINE SUBT(A,NA,B,NB,C,NC)
+C
+C
+      DIMENSION A(1),B(1),C(1),NA(2),NB(2),NC(2)
+      IF((NA(1).NE.NB(1)).OR.(NA(2).NE.NB(2))) GO TO 999
+      NC(1)=NA(1)
+      NC(2)=NA(2)
+      L=NA(1)*NA(2)
+      IF( NA(1) .LT. 1 .OR. L .LT. 1 ) GO TO 999
+      DO 300 I=1,L
+  300 C(I)=A(I)-B(I)
+      GO TO 1000
+  999 CALL LNCNT (1)
+      WRITE(6,50) NA,NB
+   50 FORMAT  (* DIMENSION ERROR IN SUBT    NA=*2I6,5X,*NB=*2I6)
+ 1000 RETURN
+      END
+      SUBROUTINE MULT(A,NA,B,NB,C,NC)
+C
+C
+      DIMENSION A(1),B(1),C(1),NA(2),NB(2),NC(2)
+C     DOUBLE PRECISION V1,V2,V3,V4
+      NC(1) = NA(1)
+      NC(2) = NB(2)
+      IF(NA(2).NE.NB(1)) GO TO 999
+      NAR = NA(1)
+      NAC = NA(2)
+      NBC = NB(2)
+      NAA=NAR*NAC
+      NBB=NAR*NBC
+      IF ( NAR .LT. 1 .OR. NAA .LT. 1 .OR. NBB .LT. 1 ) GO TO 999
+      IR = 0
+      IK=-NAC
+      DO 350 K=1,NBC
+      IK = IK + NAC
+      DO 350 J=1,NAR
+      IR=IR+1
+      IB=IK
+      JI=J-NAR
+      V1=0.0
+      DO 300 I=1,NAC
+      JI = JI + NAR
+      IB=IB+1
+      V3=A(JI)
+      V4=B(IB)
+      V2=V3*V4
+      V1=V1+V2
+  300 CONTINUE
+      C(IR)=V1
+  350 CONTINUE
+      GO TO 1000
+  999 CALL LNCNT (1)
+      WRITE(6,500) (NA(I),I=1,2),(NB(I),I=1,2)
+  500 FORMAT  (* DIMENSION ERROR IN MULT    NA=*2I6,5X,*NB=*2I6)
+ 1000 RETURN
+      END
+      SUBROUTINE MAXEL(A,NA,ELMAX)
+C
+C
+      DIMENSION A(1),NA(2)
+C
+      N = NA(1)*NA(2)
+C
+      ELMAX = ABS( A(1))
+      IF (N .LE. 1 )  RETURN
+      DO 100 I = 2,N
+      ELMAXI = ABS( A(I) )
+      IF( ELMAXI .GT. ELMAX )  ELMAX = ELMAXI
+  100 CONTINUE
+C
+      RETURN
+      END
+      SUBROUTINE NORMS(MAXROW,M,N,A,IOPT,RLNORM)
+C
+C
+      DIMENSION A(1)
+C
+C  INITIALIZATION
+C
+      RLNORM=SUM=0.
+      I=-MAXROW
+C
+C  TRANSFER TO APPROPRIATE LOOP TO COMPUTE THE DESIRED NORM
+C
+      IF(IOPT-2)5,20,30
+C
+C  THIS LOOP COMPUTES THE ONE-NORM
+C
+    5 DO 15 K=1,N
+      I=I+MAXROW
+      DO 10 J=1,M
+      L=I+J
+   10 SUM=ABS(A(L))+SUM
+      IF(SUM.GT.RLNORM)RLNORM=SUM
+   15 SUM=0.
+      RETURN
+C
+C  THIS LOOP COMPUTES THE EUCLIDEAN NORM
+C
+   20 DO 25 K=1,N
+      I=I+MAXROW
+      DO 25 J=1,M
+      L=I+J
+      SUM=A(L)
+   25 RLNORM=SUM*SUM+RLNORM
+      RLNORM=SQRT(RLNORM)
+      RETURN
+C
+C  THIS LOOP COMPUTES THE INFINITY-NORM
+C
+   30 DO 40 J=1,M
+      L=I+J
+      DO 35 K=1,N
+      L=L+MAXROW
+   35 SUM=ABS(A(L))+SUM
+      IF(SUM.GT.RLNORM)RLNORM=SUM
+   40 SUM=0.
+      RETURN
+      END
+      SUBROUTINE JUXTC(A,NA,B,NB,C,NC)
+C
+C
+      DIMENSION A(1),B(1),C(1),NA(2),NB(2),NC(2)
+      IF (NA(1).NE.NB(1)) GO TO 600
+      NC(1)=NA(1)
+      NC(2)=NA(2)+NB(2)
+      L=NA(1)*NA(2)
+      NNC=NC(1)*NC(2)
+      IF( NA(1) .LT. 1 .OR. L .LT. 1 ) GO TO 600
+      IF( NC(2) .LT. 1  )  GO TO 600
+      MS=NA(1)*NA(2)
+      DO 10 I=1,MS
+   10 C(I)=A(I)
+      MBS=NA(1)*NB(2)
+      DO 20 I=1,MBS
+      J=MS+I
+   20 C(J)=B(I)
+      RETURN
+  600 CALL LNCNT(1)
+      WRITE (6,1600) NA,NB
+ 1600 FORMAT (* DIMENSION ERROR IN JUXTC,  NA=*,2I6,5X,*NB=*,2I6)
+      RETURN
+      END
+      SUBROUTINE JUXTR(A,NA,B,NB,C,NC)
+C                                           A
+C
+      DIMENSION A(1),B(1),C(1),NA(2),NB(2),NC(2)
+      IF(NA(2).NE.NB(2))GO TO 600
+      NC(2)=NA(2)
+      NC(1)=NA(1)+NB(1)
+      L=NA(1)*NA(2)
+      IF( NA(1) .LT. 1 .OR. L .LT. 1 ) GO TO 600
+      IF( NC(2) .LT. 1 ) GO TO 600
+      MCA=NA(2)
+      MRA=NA(1)
+      MRB=NB(1)
+      MRC=NC(1)
+      DO 10 I=1,MCA
+      DO 10 J=1,MRA
+      K=J+MRA*(I-1)
+      L=J+MRC*(I-1)
+   10 C(L)=A(K)
+      DO 20 I=1,MCA
+      DO 20 J=1,MRB
+      K=J+MRB*(I-1)
+      L=MRA+J+MRC*(I-1)
+   20 C(L)=B(K)
+      RETURN
+  600 CALL LNCNT(1)
+      WRITE(6,1600) NA,NB
+ 1600 FORMAT(* DIMENSION ERROR IN JUXTR,  NA=*,2I6,5X,*NB=*,2I6)
+      RETURN
+      END
+      SUBROUTINE FACTOR(Q,NQ,D,ND,IOP,IAC,DUMMY)
+C
+C
+      DIMENSION Q(1),D(1),DUMMY(1)
+      DIMENSION NQ(2),ND(2),NDUM(2)
+C
+      NOS = 1
+      IOPT = 2
+      N = NQ(1)
+      M = N**2
+      N1 = M + 1
+      N2 = N1 + N
+C
+      CALL EQUATE(Q,NQ,DUMMY,NQ)
+      CALL SNVDEC(IOPT,N,N,N,N,DUMMY,NOS,B,IAC,ZTEST,DUMMY(N1),D,IRANK,A
+     1PLUS,IERR)
+      IF( IERR .EQ. 0 ) GO TO 200
+      CALL LNCNT(5)
+      IF( IERR .GT. 0 ) PRINT 100,IERR
+      IF( IERR .EQ. -1) PRINT 150,ZTEST,IRANK
+  100 FORMAT(//* IN FACTOR , SNVDEC HAS FAILED TO CONVERGE TO THE *I4* S
+     1INGULARVALUE AFTER 30 ITERATIONS*)
+  150 FORMAT(//* IN FACTOR, THE MATRIX Q SUBMITTED TO SNVDEC IS CLOSE TO
+     1 A MATRIX OF LOWER RANK USING ZTEST = *E16.8/* IF THE ACCURACY IS
+     2REDUCED  THE RANK MAY ALSO BE REDUCED*/* CURRENT RANK =*I4)
+      NDUM(1)=N
+      NDUM(2)=1
+      IF(IERR .EQ. -1)  CALL PRNT(DUMMY(N1),NDUM,4HSNVL,1)
+      IF( IERR .GT. 0 ) RETURN
+C
+  200 CONTINUE
+      NDUM(1) = N
+C
+      DO 250 J =1,N
+      M1 = (J-1)*N + 1
+      M2 = J*N
+      DO 250 I =M1,M2
+      K = N2+I-1
+      L = N1+J-1
+      IF( DUMMY(L) .EQ. 0.0) GO TO 300
+      DUMMY(K) = SQRT(DUMMY(L))*DUMMY(I)
+  250 CONTINUE
+      NDUM(2)=N
+      GO TO 350
+C
+  300 NDUM(2) = J - 1
+  350 CONTINUE
+      IF( DUMMY(N2) .LT. 0.0 ) CALL SCALE(DUMMY(N2),NDUM,DUMMY(N2),NDUM,
+     1-1.0)
+      CALL TRANP(DUMMY(N2),NDUM,D,ND)
+C
+      IF( IOP .EQ. 0 ) RETURN
+      CALL LNCNT(4)
+      PRINT 400
+  400 FORMAT(//* FACTOR Q AS (D TRANSPOSE)XD */)
+      CALL PRNT(Q,NQ,4H Q  ,1)
+      CALL PRNT(D,ND,4H D  ,1)
+      CALL MULT(DUMMY(N2),NDUM,D,ND,DUMMY,NQ)
+      CALL PRNT(DUMMY,NQ,4HDTXD,1)
+C
+      RETURN
+      END
+      SUBROUTINE EIGEN(MAX, N, A, ER, EI, ISV, ILV, V, WK, IERR)
+C
+C
+      DIMENSION A(MAX,N),ER(N),EI(N),V(MAX,1),WK(N,1)
+      LOGICAL LTESTV
+      EQUIVALENCE (TESTV,LTESTV)
+      DATA TRUE,FALSE / 77777777777777777777B, 00000000000000000000B/
+C
+C     PRELIMINARY REDUCTION
+C
+      CALL BALANC (MAX,N,A,LOW,IGH,WK)
+      CALL ELMHES (MAX,N,LOW,IGH,A,WK(1,2))
+      IV = ISV + ILV
+      IF (IV .NE. 0) GO TO 10
+C
+C     COMPUTE ALL EIGENVALUES AND NO EIGENVECTORS
+C
+      CALL HQR (MAX,N,LOW,IGH,A,ER,EI,IERR)
+      IF (IERR .NE. 0) GO TO 260
+      DO 5 I=1,N
+         WK(I,1) = ER(I)
+         WK(I,2) = EI(I)
+         WK(I,3) = ER(I)**2 + EI(I)**2
+  5   CONTINUE
+      IC = 0
+      GO TO 190
+  10  CONTINUE
+C
+C     SAVE A MATRIX FOR INVERSE ITERATION AND INITIALIZE WK(I,4)
+C       ARRAY WHICH WILL BE A LOGICAL ARRAY IN CALLED SUBROUTINES
+C
+      DO 20 I=1,N
+         WK(I,4) = FALSE
+         JS = 1
+         IF (I .GE. 3) JS = I-1
+         DO 20 J=JS,N
+            WK(I,J+5) = A(I,J)
+  20  CONTINUE
+C
+C     COMPUTE ALL EIGENVALUES (UNORDERED)
+C
+      CALL HQR (N,N,LOW,IGH,WK(1,6),ER,EI,IERR)
+      IF (IERR .NE. 0) GO TO 260
+      DO 30 I=1,N
+         WK(I,3) = ER(I)**2 + EI(I)**2
+  30  CONTINUE
+      IF (ILV .EQ. 0) GO TO 60
+C
+C     FIND LARGEST ILV EIGENVALUES AND FLAG THEM
+C
+      DO 50 I=1,ILV
+         P = -1.
+         DO 40 J=1,N
+            IF (WK(J,3) .LE. P) GO TO 40
+            K = J
+            P = WK(J,3)
+  40     CONTINUE
+         WK(K,4) = TRUE
+         WK(K,3) = -WK(K,3)
+  50  CONTINUE
+      IF (EI(K) .EQ. 0.) GO TO 60
+      IF (EI(K) .GT. 0.) GO TO 55
+      TESTV = WK(K-1,4)
+      IF (LTESTV) GO TO 60
+      ILV = ILV+1
+      WK(K-1,4) = TRUE
+      GO TO 60
+  55  CONTINUE
+      TESTV = WK(K+1,4)
+      IF (.NOT.LTESTV) ILV = ILV+1
+  60  CONTINUE
+      IF (ISV .EQ. 0) GO TO 90
+C
+C     FIND SMALLEST ISV EIGENVALUES AND FLAG THEM
+C
+      DO 65 I=1,N
+         WK(I,3) = ABS(WK(I,3))
+  65  CONTINUE
+      DO 80 I=1,ISV
+         P = 1.E321
+         DO 70 J=1,N
+            IF (WK(J,3) .GE. P) GO TO 70
+            K = J
+            P = WK(J,3)
+  70     CONTINUE
+         WK(K,4) = TRUE
+         WK(K,3) = 1.E321
+  80  CONTINUE
+      IF (EI(K) .EQ. 0.) GO TO 90
+      IF (EI(K) .GT. 0.) GO TO 85
+      TESTV = WK(K-1,4)
+      IF (LTESTV) GO TO 90
+      ISV = ISV+1
+      WK(K-1,4) = TRUE
+      GO TO 90
+  85  CONTINUE
+      TESTV = WK(K+1,4)
+      IF (.NOT.LTESTV) ISV = ISV+1
+  90  CONTINUE
+C
+C     FIND EIGENVECTORS FOR FLAGGED EIGENVALUES
+C
+      CALL INVIT (MAX,N,A,ER,EI,WK(1,4),N,M,V,IERR,WK(1,6),WK(1,3),
+     1            WK(1,5))
+C
+C     BACK TRANSFORM EIGENVECTORS TO ORIGINAL MATRIX
+C
+      CALL ELMBAK (MAX,LOW,IGH,A,WK(1,2),M,V)
+      CALL BALBAK (MAX,N,LOW,IGH,WK,M,V)
+C
+C     SEPARATE FLAGGED EIGENVALUES FROM UNFLAGGED EIGENVALUES
+C
+      IV = ISV + ILV
+      IF (IV .LE. N) GO TO 100
+      ILV = N-ISV
+      IV = N
+ 100  CONTINUE
+      IC = 0
+      JC = IV
+      DO 150 I=1,N
+         TESTV = WK(I,4)
+         IF (LTESTV) GO TO 120
+         IF (EI(I) .GE. 0.) GO TO 110
+         TESTV = WK(I-1,4)
+         IF (LTESTV) GO TO 120
+ 110     CONTINUE
+         JC = JC+1
+         WK(JC,1) = ER(I)
+         WK(JC,2) = EI(I)
+         KC = JC
+         GO TO 130
+ 120     CONTINUE
+         IC = IC+1
+         WK(IC,1) = ER(I)
+         WK(IC,2) = EI(I)
+         KC = IC
+ 130     CONTINUE
+         WK(KC,3) = ER(I)**2 + EI(I)**2
+ 150  CONTINUE
+C
+C     NORMALIZE VECTORS TO UNIT LENGTH AND STORE FOR REORDERING
+C
+      J = 0
+ 151  CONTINUE
+      J = J+1
+      IF (WK(J,2) .NE. 0.) GO TO 154
+      SUM = 0.
+      DO 152 I=1,N
+         SUM = SUM + V(I,J)**2
+ 152  CONTINUE
+      IF (SUM .EQ. 0.) GO TO 158
+      SUM = SQRT(SUM)
+      DO 153 I=1,N
+         WK(I,J+4) = V(I,J)/SUM
+ 153  CONTINUE
+      GO TO 158
+ 154  CONTINUE
+      JP1 = J+1
+      SUM = 0.
+      DO 155 I=1,N
+         SUM = SUM + V(I,J)**2 + V(I,JP1)**2
+ 155  CONTINUE
+      IF (SUM .EQ. 0.) GO TO 157
+      SUM = SQRT(SUM)
+      DO 156 I=1,N
+         WK(I,J+4) = V(I,J)/SUM
+         WK(I,J+5) = V(I,JP1)/SUM
+ 156  CONTINUE
+ 157  CONTINUE
+      J = JP1
+ 158  CONTINUE
+      IF (J .LT. IV) GO TO 151
+      IC = 0
+      LC = 0
+      IF (ISV .EQ. 0) GO TO 190
+C
+C     ORDER SMALLEST ISV EIGENVALUES AND EIGENVECTORS FOR OUTPUT
+C
+      DO 180 I=1,ISV
+         P = 1.E321
+         DO 160 J=1,IV
+            IF (WK(J,3) .GE. P) GO TO 160
+            K = J
+            P = WK(J,3)
+ 160     CONTINUE
+         IC = IC+1
+         LC = LC+1
+         ER(IC) = WK(K,1)
+         EI(IC) = WK(K,2)
+         DO 170 J=1,N
+            V(J,LC) = WK(J,K+4)
+ 170     CONTINUE
+         WK(K,3) = 1.E321
+ 180  CONTINUE
+ 190  CONTINUE
+      IF (IV .EQ. N) GO TO 220
+C
+C     ORDER UNFLAGGED EIGENVALUES FOR OUTPUT
+C
+      IV1 = IV+1
+      IUF = N - IV
+      DO 210 I=1,IUF
+         P = 1.E321
+         DO 200 J=IV1,N
+            IF (WK(J,3) .GE. P) GO TO 200
+            K = J
+            P = WK(J,3)
+ 200     CONTINUE
+         IC = IC+1
+         ER(IC) = WK(K,1)
+         EI(IC) = WK(K,2)
+         WK(K,3) = 1.E321
+ 210  CONTINUE
+ 220  CONTINUE
+      IF (ILV .EQ. 0) GO TO 260
+C
+C     ORDER LARGEST ILV EIGENVALUES AND EIGENVECTORS FOR OUTPUT
+C
+      DO 250 I=1,ILV
+         P = 1.E321
+         DO 230 J=1,IV
+            IF (WK(J,3) .GE. P) GO TO 230
+            K = J
+            P = WK(J,3)
+ 230     CONTINUE
+         IC = IC+1
+         LC = LC+1
+         ER(IC) = WK(K,1)
+         EI(IC) = WK(K,2)
+         DO 240 J=1,N
+            V(J,LC) = WK(J,K+4)
+ 240     CONTINUE
+         WK(K,3) = 1.E321
+ 250  CONTINUE
+ 260  CONTINUE
+      RETURN
+      END
+      SUBROUTINE SYMPDS (MAXN,N,A,NRHS,B,IOPT,IFAC,DETERM,ISCALE,P,IERR)
+C
+C
+      DIMENSION A(MAXN,N),B(MAXN,NRHS),P(N)
+C
+      DATA R1,R2/1.0E+100,1.0E-100/
+C
+C             TEST FOR A SCALAR MATRIX (IF COEFFICIENT MATRIX IS A
+C             SCALAR-- SOLVE  AND COMPUTE DETERMINANT IF DESIRED)
+      IERR = 0
+      NM1 = N-1
+      IF (NM1 .GT. 0) GO TO 20
+C
+      IF( A(1) .LE. 0.0 )  IERR = 1
+      ISCALE = 0
+      DETERM = A(1)
+      P(1) = 1.0/A(1)
+      IF (IFAC .EQ. 2) RETURN
+      DO 10 J=1,NRHS
+      B(1,J) = B(1,J)/DETERM
+   10 CONTINUE
+      RETURN
+C
+C             TEST TO DETERMINE IF CHOLESKY DECOMPOSITION OF COEFFICIENT
+C             MATRIX IS DESIRED
+   20 IF (IFAC .EQ. 1) GO TO 160
+C
+C             INITIALIZE DETERMINANT EVALUATION PARAMETERS
+      DETERM=1.0
+      ISCALE=0
+C
+C              "LOOP" TO PERFORM CHOLESKY DECOMPOSTION ON THE COEF-
+C             FICIENT MATRIX A (I.E. MATRIX A WILL BE DECOMPOSED INTO
+C             THE PRODUCT OF A UNIT LOWER TRIANGULAR MATRIX (L), A
+C             DIAGONAL MATRIX (D), AND THE TRANSPOSE OF L (LTRANSPOSE).)
+C
+   30 DO 150 I=1,N
+      IM1 = I-1
+C
+      DO 150 J=1,I
+      X = A(J,I)
+C
+C             DETERMINE IF ELEMENTS ARE ABOVE OR BELOW THE DIAGONAL
+      IF (I .GT. J) GO TO 110
+C
+C             USING THE DIAGONAL ELEMENTS OF MATRIX A, THIS SECTION
+C             COMPUTES DIAGONAL MATRIX AND DETERMINES IF MATRIX A IS
+C             SYMMETRIC POSITIVE DEFINITE
+      IF (IM1 .EQ. 0) GO TO 50
+      DO 40 K=1,IM1
+      Y = A(I,K)
+      A(I,K) = Y*P(K)
+      X = X - Y*A(I,K)
+   40 CONTINUE
+C
+C             TEST IF COEFFICIENT MATRIX IS POSITIVE DEFINITE
+   50 IF( X .LE. 0.0 )  IERR = 1
+C
+C             COMPUTE INVERSE OF DIAGONAL MATRIX D**-1 = 1/P
+      P(I) = 1.0 / X
+C
+C             TEST TO SEE IF DETERMINANT IS TO BE EVALUATED
+      IF (IOPT .EQ. 0) GO TO 150
+C
+C
+C             SCALE THE DETERMINANT (COMPUTE THE DETERMINANT EVALUATION
+C             PARAMETERS DETERM AND ISCALE)
+      PIVOTI=X
+   60 IF(ABS(DETERM).LT.R1) GO TO 70
+      DETERM = DETERM*R2
+      ISCALE = ISCALE+1
+      GO TO 60
+   70 IF(ABS(DETERM).GT.R2) GO TO 80
+      DETERM = DETERM*R1
+      ISCALE = ISCALE-1
+      GO TO 70
+   80 IF(ABS(PIVOTI).LT.R1) GO TO 90
+      PIVOTI = PIVOTI*R2
+      ISCALE = ISCALE+1
+      GO TO 80
+   90 IF(ABS(PIVOTI).GT.R2) GO TO 100
+      PIVOTI = PIVOTI*R1
+      ISCALE = ISCALE-1
+      GO TO 90
+  100 DETERM = DETERM*PIVOTI
+      GO TO 150
+C
+C
+C             USING THE LOWER TRIANGULAR ELEMENTS OF MATRIX A, THIS
+C             SECTION COMPUTES THE UNIT LOWER TRIANGULAR MATRIX
+  110 JM1 = J-1
+      IF (JM1 .EQ. 0) GO TO 140
+      DO 120 K=1,JM1
+      X = X - A(I,K)*A(J,K)
+  120 CONTINUE
+C
+  140 A(I,J) = X
+C
+  150 CONTINUE
+C
+C             SECTION TO APPLY BACK SUBSTITUTION TO SOLVE L*Y = B FOR
+C             UNIT LOWER TRIANGULAR MATRIX AND CONSTANT COLUMN VECTOR B
+C
+  160 IF( IFAC .EQ. 2 )  RETURN
+      DO 180 I=2,N
+      IM1=I-1
+C
+      DO 180 J=1,NRHS
+      X = B(I,J)
+C
+      DO 170 K=1,IM1
+      X = X - A(I,K)*B(K,J)
+  170 CONTINUE
+C
+      B(I,J) = X
+  180 CONTINUE
+C
+C             SECTION TO SOLVE (L TRANSPOSE)*X = (D**-1)*Y FOR TRANSPOSE
+C             OF UNIT LOWER TRIANGULAR MATRIX AND INVERSE OF DIAGONAL
+C             MATRIX
+C
+      Y = P(N)
+      DO 190 J=1,NRHS
+      B(N,J) = B(N,J)*Y
+  190 CONTINUE
+C
+  200 I = NM1+1
+      Y = P(NM1)
+C
+      DO 220 J=1,NRHS
+      X = B(NM1,J)*Y
+C
+      DO 210 K=I,N
+      X = X - A(K,NM1)*B(K,J)
+  210 CONTINUE
+C
+      B(NM1,J) = X
+  220 CONTINUE
+C
+C
+C             TEST TO DETERMINE IF SOLUTIONS HAVE BEEN DETERMINED FOR
+C             ALL COLUMN VECTORS
+      NM1 = NM1-1
+      IF (NM1 .GT. 0) GO TO 200
+C
+      RETURN
+      END
+      SUBROUTINE GELIM(NMAX,N,A,NRHS,B,IPIVOT,IFAC,WK,IERR)
+C
+C
+      DIMENSION A(NMAX,1),B(NMAX,1),IPIVOT(1),WK(1)
+C
+      IERR=0
+C
+C     TEST FOR L/U FACTORIZATION
+C
+      IF(IFAC.EQ.1)GO TO 10
+      CALL DETFAC(NMAX,N,A,IPIVOT,0,DETERM,ISCALE,WK,IERR)
+      IF(IERR.GT.0)RETURN
+   10 NM1=N-1
+C
+C     TEST FOR SCALAR A MATRIX
+C
+      IF(NM1.GT.0)GO TO 40
+      IF(A(1).EQ.0.)GO TO 30
+      DO 20 I=1,NRHS
+   20 B(1,I)=B(1,I)/A(1)
+      RETURN
+   30 IERR=1
+      RETURN
+C
+   40 DO 100 M=1,NRHS
+C
+C     PIVOT THE M-TH COLUMN OF B MATRIX
+C
+      DO 50 I=1,NM1
+      KI=IPIVOT(I)
+      P=B(KI,M)
+      B(KI,M)=B(I,M)
+   50 B(I,M)=P
+C
+C     FORWARD SUBSTITUTION
+C
+      WK(1)=B(1,M)
+C
+      DO 70 I=2,N
+      IM1=I-1
+      P=0.0
+      DO 60 K=1,IM1
+   60 P=P+A(I,K)*WK(K)
+   70 WK(I)=B(I,M)-P
+C
+C     BACK SUBSTITUTION
+C
+      B(N,M)=WK(N)/A(N,N)
+C
+      DO 90 J=1,NM1
+      I=N-J
+      IP1=I+1
+      P=WK(I)
+      DO 80 K=IP1,N
+   80 P=P-A(I,K)*B(K,M)
+   90 B(I,M)=P/A(I,I)
+C
+  100 CONTINUE
+      RETURN
+      END
+      SUBROUTINE SNVDEC(IOP,MD,ND,M,N,A,NOS,B,IAC,ZTEST,Q,V,IRANK,APLUS,
+     1IERR)
+C
+C
+      LOGICAL WITHU,WITHV
+      DIMENSION A(MD,N),V(ND,N),Q(N),E(150)
+      DIMENSION B(MD,NOS),APLUS(ND,M)
+C
+C
+C     TEST FOR  SCALAR OR VECTOR A
+C
+      IF( N .GE. 2 ) GO TO 3000
+C
+      IERR = 0
+      ZTEST = 10.**(-IAC)
+      SUM = 0.0
+      DO 1000 I=1,M
+      SUM = SUM + A(I,1)*A(I,1)
+ 1000 CONTINUE
+      SUM = SQRT(SUM)
+      IRANK = 0
+      IF( SUM .GT. ZTEST ) IRANK = 1
+      Q(1) = SUM
+C
+      IF( IOP .EQ. 1) RETURN
+      V(1,1) = 1.0
+      IF( IRANK .EQ. 0 ) GO TO 1200
+      DO 1100 I =1,M
+      A(I,1) = A(I,1)/SUM
+ 1100 CONTINUE
+      GO TO 1300
+ 1200 CONTINUE
+      A(1,1) = 1.0
+ 1300 CONTINUE
+C
+      IF( IOP .EQ. 2 ) RETURN
+      IF( IOP .EQ. 4 ) GO TO 1850
+      IF( IRANK .EQ. 0 ) GO TO 1600
+      DO 1500 J = 1,NOS
+      Z = 0
+      DO 1400 I = 1,M
+      Z = Z + A(I,1)*B(I,J)/SUM
+ 1400 CONTINUE
+      B(1,J) = Z
+ 1500 CONTINUE
+      GO TO 1800
+ 1600 CONTINUE
+      DO 1700 J =1,NOS
+      B(1,J) = 0.0
+ 1700 CONTINUE
+ 1800 CONTINUE
+C
+      IF( IOP .EQ. 3 ) RETURN
+ 1850 CONTINUE
+      IF( IRANK .EQ. 0 ) GO TO 2000
+      DO 1900 I =1,M
+      APLUS(1,I) = A(I,1)/SUM
+ 1900 CONTINUE
+      RETURN
+ 2000 CONTINUE
+      DO 2100 I=1,M
+      APLUS(1,I) = 0.0
+ 2100 CONTINUE
+      RETURN
+C
+C
+ 3000 CONTINUE
+C
+C
+C
+      TOL=1.0E-60
+      SIZE=0.0
+      NP1=N+1
+C
+C     COMPUTE THE E-NORM OF MATRIX A AS ZERO TEST FOR SINGULAR VALUES
+C
+      SUM=0.0
+      DO 500 I=1,M
+      DO 500 J=1,N
+  500 SUM = SUM + A(I,J)**2
+      ZTEST = SQRT(SUM)
+      ZTEST = ZTEST*10.**(-IAC)
+C
+  510 IF (IOP.NE.1 ) GO TO 515
+      WITHU=.FALSE.
+      WITHV=.FALSE.
+      GO TO 520
+  515 WITHU=.TRUE.
+      WITHV=.TRUE.
+  520 CONTINUE
+      G = 0.0
+      X = 0.0
+      DO 30 I = 1,N
+C
+C     HOUSEHOLDER REDUCTION TO BIDIAGONAL FORM.
+C
+      E(I) = G
+      S = 0.0
+      L = I+1
+C
+C     ANNIHILATE THE I-TH COLUMN BELOW DIAGONAL.
+C
+      DO 3 J = I,M
+    3 S = S + A(J,I)**2
+      G = 0.0
+      IF(S .LT. TOL)    GO TO 10
+      G = SQRT(S)
+      F = A(I,I)
+      IF(F .GE. 0.0)   G = -G
+      H = F*G -S
+      A(I,I) = F-G
+      IF(I .EQ. N)   GO TO 10
+        DO 9 J = L,N
+        S = 0.0
+        DO 7 K = I,M
+    7   S = S +A(K,I)*A(K,J)
+        F = S/H
+        DO 8 K = I,M
+    8   A(K,J) =A(K,J) + F*A(K,I)
+    9   CONTINUE
+   10 Q(I) = G
+      IF(I .EQ. N)   GO TO 20
+C
+C     ANNIHILATE THE I-TH ROW TO RIGHT OF SUPER-DIAG.
+C
+      S = 0.0
+      DO 11 J = L,N
+   11 S = S + A(I,J)**2
+      G = 0.0
+      IF (S .LT. TOL)    GO TO 20
+        G = SQRT(S)
+        F = A(I,I+1)
+        IF(F .GE. 0.0)   G = -G
+        H = F*G -S
+        A(I,I+1) = F - G
+        DO 15 J = L,N
+   15   E(J) = A(I,J)/H
+        DO 19 J = L,M
+        S = 0.0
+        DO 16 K = L,N
+   16   S = S + A(J,K) * A(I,K)
+        DO 17 K = L,N
+   17   A(J,K) = A(J,K) + S*E(K)
+   19   CONTINUE
+   20 Y = ABS(Q(I)) + ABS(E(I))
+      IF(Y .GT. SIZE)    SIZE = Y
+   30 CONTINUE
+      IF(.NOT. WITHV)   GO TO 41
+C
+C     ACCUMULATION OF RIGHT TRANSFORMATIONS.
+C
+      DO 40 II = 1,N
+      I = NP1 - II
+      IF(I .EQ. N)   GO TO 39
+      IF(G .EQ. 0.0)   GO TO 37
+      H = A(I,I+1)*G
+      DO 32 J = L,N
+   32 V(J,I) = A(I,J)/H
+      DO 36 J = L,N
+      S = 0.0
+      DO 33 K = L,N
+   33 S = S + A(I,K)*V(K,J)
+      DO 34 K = L,N
+   34 V(K,J) = V(K,J) + S*V(K,I)
+   36 CONTINUE
+   37 DO 38 J = L,N
+      V(I,J) = 0.0
+   38 V(J,I) = 0.0
+   39 V(I,I) = 1.0
+      G = E(I)
+   40 L = I
+   41 CONTINUE
+      IF(.NOT. WITHU)   GO TO 53
+C
+C     ACCUMULATION OF LEFT TRANSFORMATIONS.
+C
+      DO 52 II = 1,N
+      I = NP1 -II
+      L = I + 1
+      G = Q(I)
+      IF(I .EQ. N)   GO TO 43
+      DO 42 J = L,N
+   42 A(I,J) = 0.0
+   43 CONTINUE
+      IF(G .EQ. 0.0)   GO TO 49
+      IF(I .EQ. N)   GO TO 47
+        H = A(I,I)*G
+        DO 46 J = L,N
+        S = 0.0
+        DO 44 K = L,M
+   44   S = S + A(K,I)*A(K,J)
+        F = S/H
+        DO 45 K = I,M
+   45   A(K,J) = A(K,J) +  F*A(K,I)
+   46   CONTINUE
+   47 DO 48 J = I,M
+   48 A(J,I) = A(J,I)/G
+      GO TO 51
+   49 DO 50 J = I,M
+   50 A(J,I) = 0.0
+   51 A(I,I) = A(I,I) + 1.0
+   52 CONTINUE
+   53 CONTINUE
+C
+C     DIAGONALIZATION OF BIDIAGONAL FORM.
+C
+      DO 100 KK=1,N
+        K=NP1-KK
+        ITCNT=0
+        KP1=K+1
+C
+C      TEST F SPLITTING.
+C
+   59   CONTINUE
+        DO 60 LL=1,K
+          L=KP1-LL
+          IF((SIZE+ABS(E(L))).EQ.SIZE)    GO TO 64
+          LM1=L-1
+          IF((SIZE+ABS(Q(LM1))).EQ.SIZE)    GO TO 61
+   60   CONTINUE
+C
+C      CANCELLATION OF E(L) IF L .GT. 1.
+C
+   61   C=0.0
+        S=1.0
+        L1=L-1
+        DO 63 I=L,K
+          F=S*E(I)
+          E(I)=C*E(I)
+          IF((SIZE+ABS(F)).EQ.SIZE)   GO TO 64
+          G=Q(I)
+          Q(I)=SQRT(F*F+G*G)
+          H=Q(I)
+          IF(H.NE.0.0)GO TO 611
+          C=0.0
+          S=1.0
+          GO TO 612
+  611     C=G/H
+          S=-F/H
+  612     IF(.NOT.WITHU)GO TO 63
+            DO 62 J=1,M
+              Y=A(J,L1)
+              Z=A(J,I)
+              A(J,L1)=Y*C+Z*S
+              A(J,I)= -Y*S+Z*C
+   62       CONTINUE
+C
+   63   CONTINUE
+C
+C      TEST F CONVERGENCE.
+C
+   64 Z=Q(K)
+      IF(L.EQ.K)   GO TO 75
+      IF(ITCNT .LE. 30)   GO TO 65
+      IERR = KK
+      RETURN
+   65 ITCNT = ITCNT + 1
+C
+C       SHIFT FROM LOWER 2X2.
+C
+        X=Q(L)
+        Y=Q(K-1)
+      G=E(K-1)
+      H=E(K)
+      F=((Y-Z)*(Y+Z)+(G-H)*(G+H))/(2.0*H*Y)
+      G=SQRT(F*F+1.0)
+      IF(F.LT.0.0)  G=-G
+      F = ((X-Z)*(X+Z)+H*(Y/(F+G)-H))/X
+C
+C
+C     NEXT QR TRANSFORMATION.
+C
+      C=1.0
+      S=1.0
+      LP1=L+1
+      DO 73 I=LP1,K
+        G=E(I)
+        Y=Q(I)
+        H=S*G
+        G=C*G
+        Z=SQRT(F*F+H*H)
+        E(I-1)=Z
+        IF(Z.NE.0.0)GO TO 66
+        C=0.0
+        S=1.0
+        GO TO 67
+   66   C=F/Z
+        S=H/Z
+   67   F=X*C+G*S
+        G=-X*S+G*C
+        H=Y*S
+        Y=Y*C
+        IF(.NOT.WITHV)   GO TO 70
+          DO 68 J=1,N
+            X=V(J,I-1)
+            Z=V(J,I)
+            V(J,I-1)=X*C+Z*S
+            V(J,I)=-X*S+Z*C
+   68     CONTINUE
+C
+   70   Z=SQRT(F*F+H*H)
+        Q(I-1)=Z
+        IF(Z.NE.0.0)GO TO 71
+        C=0.0
+        S=1.0
+        GO TO 711
+   71   C=F/Z
+        S=H/Z
+  711   F=C*G+S*Y
+        X=-S*G+C*Y
+        IF(.NOT.WITHU)   GO TO 73
+          DO 72 J=1,M
+            Y=A(J,I-1)
+            Z=A(J,I)
+            A(J,I-1)=Y*C+Z*S
+            A(J,I)=-Y*S+Z*C
+   72     CONTINUE
+C
+C
+   73   E(L) = 0.0
+        E(K)=F
+        Q(K)=X
+        GO TO 59
+C
+C       CONVERGENCE.
+C
+   75   CONTINUE
+        IF(Z.GE.0.0)   GO TO 100
+          Q(K)=-Z
+          IF(.NOT.WITHV)   GO TO 100
+          DO 76 J=1,N
+   76     V(J,K)=-V(J,K)
+  100   CONTINUE
+C
+      IERR = 0
+      DO 280  II=2,N
+      I= II-1
+      K=I
+      P=Q(I)
+C
+      DO 250  J=II,N
+      IF (Q(J).LE.P) GO TO 250
+      K=J
+      P=Q(J)
+  250 CONTINUE
+C
+      IF (K.EQ.I) GO TO 280
+      Q(K) = Q(I)
+      Q(I) = P
+C
+      IF(IOP.EQ.1) GO TO 280
+C
+      DO 260  J=1,N
+      P= V(J,I)
+      V(J,I)= V(J,K)
+      V(J,K)= P
+  260 CONTINUE
+C
+      DO 270  J=1,M
+      P = A(J,I)
+      A(J,I)= A(J,K)
+      A(J,K)= P
+  270 CONTINUE
+C
+  280 CONTINUE
+C
+      J=N
+ 290  IF (Q(J).GT.ZTEST.OR.J.EQ.0) GO TO 300
+      Q(J)=0.0
+      J=J-1
+      GO TO 290
+  300 IRANK =J
+      IF (IRANK .EQ. 0) RETURN
+      TEMP = ZTEST/Q(J)
+      IF (TEMP.GT..0625)    IERR=-1
+C
+      IF (IOP.LT. 3)  RETURN
+      IF(IOP.GT.3) GO TO 170
+      DO 160  L=1,NOS
+      DO 130  J=1,IRANK
+      SUM=0.0
+      DO 120  I=1,M
+  120 SUM =SUM + A(I,J)*B(I,L)
+  130 E(J)= SUM/Q(J)
+C
+      DO 150  K=1,N
+      SUM=0.0
+      DO 140  I=1,IRANK
+  140 SUM =SUM  + V(K,I)*E(I)
+  150 B(K,L)=SUM
+  160 CONTINUE
+      RETURN
+  170 DO 200  J=1,M
+      DO 190  I=1,N
+      SUM=0.0
+      DO 180  K=1,IRANK
+  180 SUM =SUM + V(I,K)*A(J,K)/Q(K)
+  190 APLUS(I,J)= SUM
+  200 CONTINUE
+C
+      IF( IOP .EQ.4) RETURN
+      DO 230  K=1,NOS
+      DO 220  I=1,N
+      SUM=0.0
+      DO 210  J=1,M
+  210 SUM=SUM+ APLUS(I,J)*B(J,K)
+  220 E(I)=SUM
+      DO 225  I=1,N
+  225 B(I,K)=E(I)
+  230 CONTINUE
+      RETURN
+      END
+      SUBROUTINE SUM(A,NA,B,NB,C,NC,IOP,SYM,DUMMY)
+C
+C
+      DIMENSION A(1),B(1),C(1),DUMMY(1)
+      DIMENSION NA(2),NB(2),NC(2)
+      LOGICAL SYM
+      COMMON/CONV/SUMCV,MAXSUM,RICTCV,SERCV
+C
+      IF( IOP  .EQ. 0  ) GO TO 100
+      PRINT 50
+   50 FORMAT(//* LINEAR EQUATION SOLVER    X = AXC + B *)
+      CALL PRNT(A,NA,4H A  ,1)
+      IF( SYM ) GO TO 75
+      CALL PRNT(C,NC,4H C  ,1)
+      GO TO 85
+   75 CONTINUE
+      PRINT 80
+   80 FORMAT(/ * C = A TRANSPOSE */)
+   85 CONTINUE
+      CALL PRNT(B,NB,4H B  ,1)
+C
+  100 CONTINUE
+      N1 = 1 + NA(1)*NC(1)
+      I=1
+  200 CONTINUE
+      CALL MULT(A,NA,B,NB,DUMMY,NB)
+      CALL MULT(DUMMY,NB,C,NC,DUMMY(N1),NB)
+      CALL MAXEL(B,NB,WNS)
+      CALL MAXEL(DUMMY(N1),NB,WNDX)
+      IF(WNS .GE. 1.) GO TO 225
+      IF( WNDX/WNS .LT. SUMCV ) GO TO 300
+      GO TO 235
+  225 IF( WNDX .LT. SUMCV ) GO TO 300
+  235 CONTINUE
+      CALL ADD(B,NB,DUMMY(N1),NB,B,NB)
+      CALL MULT(A,NA,A,NA,DUMMY,NA)
+      CALL EQUATE(DUMMY,NA,A,NA)
+      IF( SYM ) GO TO 245
+      CALL MULT(C,NC,C,NC,DUMMY,NC)
+      CALL EQUATE(DUMMY,NC,C,NC)
+      GO TO  250
+  245 CONTINUE
+      CALL TRANP(A,NA,C,NC)
+  250 CONTINUE
+      I=I+1
+      IF( I .LE. MAXSUM ) GO TO 200
+      CALL LNCNT(3)
+      PRINT 275,MAXSUM
+  275 FORMAT(//* IN SUM, THE SEQUENCE OF PARTIAL SUMS HAS EXCEEDED STAGE
+     1 *I5* WITHOUT CONVERGENCE*)
+  300 CONTINUE
+      IF(IOP .EQ. 0) RETURN
+      CALL PRNT(B,NB,4H X  ,1)
+      RETURN
+      END
+      SUBROUTINE BILIN(A,NA,B,NB,C,NC,IOP,BETA,SYM,DUMMY)
+C
+C
+      DIMENSION A(1),B(1),C(1),DUMMY(1)
+      DIMENSION NA(2),NB(2),NC(2),NDUM(2)
+      DIMENSION IOP(2)
+      LOGICAL SYM
+C
+      IF( IOP(1) .EQ. 0 )  GO TO 300
+      IF(SYM) GO TO 100
+      CALL LNCNT(3)
+      PRINT 50
+   50 FORMAT(//* LINEAR EQUATION SOLVER  AX + XB = C *)
+      CALL PRNT(A,NA,4H A  ,1)
+      CALL PRNT(B,NB,4H B  ,1)
+      GO TO 200
+  100 CONTINUE
+      CALL LNCNT(3)
+      PRINT 150
+  150 FORMAT(//* LINEAR EQUATION SOLVER  ( B TRANSPOSE )X + XB = C *)
+      CALL TRANP(A,NA,DUMMY,NDUM)
+      CALL PRNT(DUMMY,NDUM,4H B  ,1)
+  200 CONTINUE
+      CALL PRNT(C,NC,4H C  ,1)
+  300 CONTINUE
+C
+      IOPTT = 0
+      N=NA(1)**2
+      M = N
+      IF( .NOT. SYM )  M = NB(1)**2
+C
+      IF( IOP(2) .EQ. 0 )  GO TO 500
+C
+      N1 = N + 1
+      CALL EQUATE(A,NA,DUMMY,NA)
+      N2 = N1 + NA(1)
+      N3 = N2 + NA(1)
+      ISV = 0
+      ILV = 0
+      NEVL = NA(1)
+      CALL EIGEN(NA(1),NA(1),DUMMY,DUMMY(N1),DUMMY(N2),ISV,ILV,V,DUMMY(N
+     13),IERR)
+      IF (IERR .EQ. 0) GO TO 350
+      CALL LNCNT(3)
+      PRINT 325,IERR
+  325 FORMAT(//* IN BILIN, THE *I4* EIGENVALUE OF A HAS NOT BEEN  DETERM
+     1INED AFTER 30 ITERATIONS*)
+      IERR=1
+      CALL NORMS(NEVL,NEVL,NEVL,A,IERR,BETA)
+      BETA=2.*BETA
+      GO TO 385
+  350 CONTINUE
+      J= N1 + NEVL -1
+      K = N2 + NEVL -1
+      CO = SQRT(DUMMY(N1)**2 + DUMMY(N2)**2)
+      CN = SQRT(DUMMY(J)**2 + DUMMY(K)**2)
+      CD = DUMMY(J)-DUMMY(N1)
+      IF(CD .EQ. 0.0)  GO TO 365
+      BETA = (DUMMY(N1)*CN-DUMMY(J)*CO)/CD
+      IF(BETA .LE. 0.0)  GO TO 365
+      BETA = SQRT(BETA)
+      GO TO 385
+C
+  365 CONTINUE
+C
+      BETA = 0.0
+      DO 375 I = 1,NEVL
+      J = N1 + I -1
+      K = N2 + I -1
+      IF(DUMMY(J) .GE. 0.0)  GO TO 375
+      BETA = BETA + SQRT(DUMMY(J)**2 + DUMMY(K)**2)
+  375 CONTINUE
+      BETA = BETA/NEVL
+C
+  385 CONTINUE
+C
+      IF( SYM ) GO TO 500
+      CALL EQUATE(B,NB,DUMMY,NB)
+      N1=M+1
+      N2 = N1 +NB(1)
+      N3 = N2 +NB(1)
+      NEVL = NB(1)
+      CALL EIGEN(NB(1),NB(1),DUMMY,DUMMY(N1),DUMMY(N2),ISV,ILV,V,DUMMY(N
+     13),IERR)
+      IF(IERR .EQ. 0) GO TO 450
+      CALL LNCNT(3)
+      PRINT 400,IERR
+  400 FORMAT(//* IN BILIN, THE *I4* EIGENVALUE OF B HAS NOT BEEN FOUND A
+     1FTER 30 ITERATIONS*)
+      IERR=1
+      CALL NORMS(NEVL,NEVL,NEVL,B,IERR,BETA1)
+      BETA1=2.*BETA1
+      GO TO 485
+  450 CONTINUE
+      J = N1 + NEVL -1
+      K = N2 + NEVL -1
+      CO = SQRT(DUMMY(N1)**2 + DUMMY(N2)**2)
+      CN = SQRT(DUMMY(J)**2 + DUMMY(K)**2)
+      CD = DUMMY(J)-DUMMY(N1)
+      IF(CD .EQ. 0.0)  GO TO 465
+      BETA1 = (DUMMY(N1)*CN - DUMMY(J)*CO)/CD
+      IF(BETA1 .LE. 0.0)  GO TO 465
+      BETA1 = SQRT(BETA1)
+      GO TO 485
+C
+  465 CONTINUE
+C
+      BETA1 = 0.0
+      DO 475 I= 1,NEVL
+      J = N1 + I -1
+      K = N2 + I -1
+      IF(DUMMY(J) .GE. 0.0)  GO TO 475
+      BETA1 = BETA1 + SQRT(DUMMY(J)**2 + DUMMY(K)**2)
+  475 CONTINUE
+      BETA1 = BETA1/NEVL
+C
+  485 CONTINUE
+      BETA = (BETA + BETA1)/2.
+C
+  500 CONTINUE
+C
+C
+      IF( IOP(1) .EQ. 0 )  GO TO 520
+      CALL LNCNT(4)
+      PRINT 515,BETA
+  515 FORMAT(//* BETA = *E16.8/)
+  520 CONTINUE
+C
+      N1 = N+1
+      CALL EQUATE(A,NA,DUMMY,NA)
+      CALL EQUATE(A,NA,DUMMY(N1),NA)
+      CALL SCALE(DUMMY,NA,DUMMY,NA,-1.)
+      L = -NA(1)
+      NAX = NA(1)
+      DO 525 I=1,NAX
+      L = L + NAX +1
+      M1 = L + N
+      DUMMY(L) = BETA - A(L)
+      DUMMY(M1)= BETA + A(L)
+  525 CONTINUE
+      N2 = N1 + N
+      CALL EQUATE(C,NC,DUMMY(N2),NDUM)
+      NDUM(2)= NDUM(2) + NA(1)
+      N3 = N2 + NC(1)*NC(2)
+      GAM = -2.*BETA
+C
+      IF( .NOT. SYM ) GO  TO 600
+C
+      CALL UNITY(DUMMY(N3),NA)
+      N4 = N3 + N
+      NDUM(2) = NDUM(2) + NA(1)
+      N5 = N4 + NA(1)
+      IFAC = 0
+      CALL GELIM(NA(1),NA(1),DUMMY,NDUM(2),DUMMY(N1),DUMMY(N4),IFAC,DUMM
+     1Y(N5),IERR)
+      IF( IERR .EQ. 1 )  PRINT 625
+      CALL EQUATE(DUMMY(N1),NA,DUMMY,NA)
+      CALL EQUATE(DUMMY(N2),NC,C,NC)
+      CALL TRANP(DUMMY,NA,DUMMY(N1),NA)
+      CALL TRANP(DUMMY(N3),NA,DUMMY(N2),NA)
+      CALL MULT(C,NC,DUMMY(N2),NA,DUMMY(N3),NA)
+      CALL SCALE(DUMMY(N3),NC,C,NC,GAM)
+C
+C
+      CALL SUM(DUMMY,NA,C,NC,DUMMY(N1),NA,IOPTT,SYM,DUMMY(N2))
+      GO TO 700
+  600 CONTINUE
+      N4 = N3 +NA(1)
+      IFAC = 0
+      CALL GELIM(NA(1),NA(1),DUMMY,NDUM(2),DUMMY(N1),DUMMY(N3),IFAC,DUMM
+     1Y(N4),IERR)
+      IF(IERR .EQ. 1 ) PRINT 625
+  625 FORMAT(//* IN BILIN, THE MATRIX  (BETA)I - A IS SINGULAR, INCREASE
+     1 BETA *)
+      CALL EQUATE(DUMMY(N1),NA,DUMMY,NA)
+      CALL EQUATE(DUMMY(N2),NC,C,NC)
+      N2 = M + N1
+      CALL EQUATE(B,NB,DUMMY(N1),NB)
+      CALL EQUATE(B,NB,DUMMY(N2),NB)
+      CALL SCALE(DUMMY(N1),NB,DUMMY(N1),NB,-1.0)
+      L=-NB(1)
+      NAX=NB(1)
+      DO650I =1,NAX
+      L=L + NAX +1
+      L1 = L + N
+      M1 = L + N2-1
+      DUMMY(L1)= BETA- B(L)
+      DUMMY(M1)= BETA + B(L)
+  650 CONTINUE
+C
+      N3 = N2 + M
+      CALL TRANP(DUMMY(N1),NB,DUMMY(N3),NB)
+      CALL EQUATE(DUMMY(N3),NB,DUMMY(N1),NB)
+      CALL TRANP(DUMMY(N2),NB,DUMMY(N3),NB)
+      CALL EQUATE(DUMMY(N3),NB,DUMMY(N2),NB)
+      CALL TRANP(C,NC,DUMMY(N3),NDUM)
+      NSDUM = NDUM(2)
+      NDUM(2)= NDUM(2) + NB(2)
+      IFAC = 0
+      N4=N3+NC(1)*NC(2)
+      N5=N4+NB(1)
+      CALL GELIM(NB(1),NB(1),DUMMY(N1),NDUM(2),DUMMY(N2),DUMMY(N4),IFAC,
+     1DUMMY(N5),IERR)
+      IF(IERR .EQ. 1 )  PRINT 675
+  675 FORMAT(//*IN BILIN, THE MATRIX (BETA)I - B  IS SINGULAR, INCREASE
+     1 BETA *)
+      CALL TRANP(DUMMY(N2),NB,DUMMY(N1),NB)
+      NDUM(2)= NSDUM
+      CALL TRANP(DUMMY(N3),NDUM,C,NC)
+      CALL SCALE(C,NC,C,NC,GAM)
+      N2 = N + M + 1
+      CALL SUM(DUMMY,NA,C,NC,DUMMY(N1),NB,IOPTT,SYM,DUMMY(N2))
+C
+  700 CONTINUE
+      IF( IOP .EQ. 0 ) RETURN
+      CALL PRNT(C,NC,4H X  ,1)
+      RETURN
+      END
+      SUBROUTINE BARSTW(A,NA,B,NB,C,NC,IOP,SYM,EPSA,EPSB,DUMMY)
+C
+C
+      DIMENSION A(1),B(1),C(1),DUMMY(1)
+      DIMENSION NA(2),NB(2),NC(2),NDUM1(2),NDUM2(2),NDUM3(2),NDUM4(2)
+      LOGICAL  SYM
+C
+      IF ( IOP .EQ. 0 )  GO TO 250
+      IF(SYM) GO TO 100
+      CALL LNCNT(3)
+      PRINT 50
+   50 FORMAT(//* LINEAR EQUATION SOLVER     AX + XB = C *)
+      CALL PRNT(A,NA,4H A  ,1)
+      CALL PRNT(B,NB,4H B  ,1)
+      GO TO 200
+  100 CONTINUE
+      CALL LNCNT(3)
+      PRINT 150
+  150 FORMAT(//* LINEAR EQUATION SOLVER  ( B TRANSPOSE )X + XB = C*)
+      CALL TRANP(A,NA,DUMMY,NDUM1)
+      CALL PRNT(DUMMY,NDUM1,4H B  ,1)
+  200 CONTINUE
+      CALL PRNT(C,NC,4H C  ,1)
+C
+  250 CONTINUE
+      CALL EQUATE(A,NA,DUMMY,NDUM1)
+      N1=(NA(1)**2)+1
+      N2=N1+NA(1)-1
+      DO 300I=N1,N2
+      DUMMY(I)=0.0
+  300 CONTINUE
+C
+      NDUM1(2)=NDUM1(2)+1
+      NDUM2(1)=1
+      NDUM2(2)=NDUM1(2)
+      N1=NDUM1(1)*NDUM1(2)+1
+      CALL NULL(DUMMY(N1),NDUM2)
+      LU=(NA(1)+1)**2 + 1
+      CALL JUXTR(DUMMY,NDUM1,DUMMY(N1),NDUM2,DUMMY(LU),NDUM3)
+      CALL EQUATE(DUMMY(LU),NDUM3,DUMMY,NDUM1)
+      N=NA(1)+1
+C
+      IF(SYM ) GO TO 500
+C
+      CALL EQUATE(B,NB,DUMMY(LU),NDUM2)
+      M1=LU+NB(1)**2
+      M2=M1+NB(1)-1
+      DO400I=M1,M2
+      DUMMY(I)=0.0
+  400 CONTINUE
+C
+      NDUM2(2)=NDUM2(2)+1
+      NDUM3(1)=1
+      NDUM3(2)=NDUM2(2)
+      M1=NDUM2(1)*NDUM2(2)+LU
+      CALL NULL(DUMMY(M1),NDUM3)
+      M2=LU+(NB(1)+1)**2
+      CALL JUXTR(DUMMY(LU),NDUM2,DUMMY(M1),NDUM3,DUMMY(M2),NDUM4)
+      CALL EQUATE(DUMMY(M2),NDUM4,DUMMY(LU),NDUM2)
+      M=NB(1)+ 1
+      LNB = LU
+      LU = LU + (NB(1)+1)**2
+      LV = LU +  NA(1)**2
+      CALL AXPXB(DUMMY,DUMMY(LU),NA(1),N,NA(1),DUMMY(LNB),DUMMY(LV),NB(1
+     1),M,NB(1),C,NC(1),EPSA,EPSB,NFAIL)
+      GO TO 600
+C
+  500 CONTINUE
+      CALL TRANP(DUMMY,NDUM1,DUMMY(LU),NDUM2)
+      CALL EQUATE(DUMMY(LU),NDUM2,DUMMY,NDUM1)
+      CALL ATXPXA(DUMMY,DUMMY(LU),C,NA(1),N,NA(1),NC(1),EPSA,NFAIL)
+C
+  600 CONTINUE
+      IF(NFAIL .EQ. 0 ) GO TO 700
+      CALL LNCNT(3)
+      PRINT 650
+  650 FORMAT(//* IN BARSTW, EITHER THE SUBROUTINE AXPXB  OR  ATXPXA  WAS
+     1 UNABLE TO REDUCE A OR B TO SCHUR FORM *)
+      RETURN
+C
+  700 CONTINUE
+C
+      IF( IOP .NE. 0 )  CALL PRNT(C,NC,4H  X ,1)
+      RETURN
+      END
+      SUBROUTINE TESTSTA(A,NA,ALPHA,DISC,STABLE,IOP,DUMMY)
+C
+C
+      DIMENSION A(1),DUMMY(1)
+      DIMENSION NA(2),NDUM1(2),NDUM2(2)
+      LOGICAL  DISC,STABLE
+C
+      STABLE = .FALSE.
+C
+      CALL EQUATE(A,NA,DUMMY,NA)
+      N1= NA(1)**2 + 1
+      N2= N1+NA(1)
+      N3= N2+NA(1)
+      ISV = 0
+      CALL EIGEN(NA(1),NA(1),DUMMY,DUMMY(N1),DUMMY(N2),ISV,ISV,V,DUMMY(N
+     13),IERR)
+      NEVL = NA(1)
+      IF( IERR .EQ. 0 ) GO TO 200
+      CALL LNCNT(4)
+      PRINT 100,IERR
+  100 FORMAT(//* IN TESTSTA, THE *I5* EIGENVALUE OF A HAS NOT BEEN FOUND
+     1 AFTER 30 ITERATIONS*/)
+      RETURN
+C
+  200 CONTINUE
+      NDUM1(1) = NEVL
+      NDUM1(2) = 1
+      CALL JUXTC(DUMMY(N1),NDUM1,DUMMY(N2),NDUM1,DUMMY,NDUM2)
+C
+      IF( DISC ) GO TO 400
+      DO 300 I=1,NEVL
+      IF( DUMMY(I) .GE. ALPHA ) GO TO 600
+  300 CONTINUE
+      GO TO 550
+  400 CONTINUE
+      N = NDUM2(1)*NDUM2(2)+1
+      DO 500 I =1,NEVL
+      K = I + NEVL
+      L=N +I -1
+      DUMMY(L) = SQRT((DUMMY(I)**2)+(DUMMY(K)**2))
+  500 CONTINUE
+C
+      IF( DUMMY(L) .GE. ALPHA ) GO TO 600
+C
+  550 CONTINUE
+      STABLE =.TRUE.
+  600 CONTINUE
+      IF( IOP .EQ. 0 ) RETURN
+      CALL LNCNT(4)
+      PRINT 700
+  700 FORMAT(//* PROGRAM TO TEST THE RELATIVE STABILITY OF THE MATRIX A
+     1*/)
+      CALL PRNT(A,NA,4H A  ,1)
+      CALL LNCNT(4)
+  750 FORMAT(//* EIGENVALUES OF A */)
+      CALL PRNT(DUMMY,NDUM2,4HEVLA,1)
+      IF(  .NOT. DISC ) GO TO 850
+      CALL LNCNT(4)
+      PRINT 800
+  800 FORMAT(//* MODULI OF EIGENVALUES OF A*/)
+      CALL PRNT(DUMMY(N),NDUM1,4HMODA,1)
+C
+  850 CONTINUE
+      CALL LNCNT(4)
+      IF(STABLE) PRINT 900,ALPHA
+      IF( .NOT. STABLE) PRINT 950,ALPHA
+  900 FORMAT(//* MATRIX A  IS STABLE RELATIVE TO *E16.8,/)
+  950 FORMAT(//* MATRIX A  IS UNSTABLE RELATIVE TO * E16.8,/)
+C
+      RETURN
+      END
+      SUBROUTINE EXPSER(A,NA,EXPA,NEXPA,T,IOP,DUMMY)
+C
+C
+      DIMENSION A(1),EXPA(1),DUMMY(1)
+      DIMENSION NA(2),NEXPA(2)
+      COMMON/CONV/SUMCV,MAXSUM,RICTCV,SERCV
+C
+      N = NA(1)
+      L = (N**2) + 1
+      TT = T
+      NEXPA(1)=NA(1)
+      NEXPA(2)=NA(2)
+C
+      CALL MAXEL(A,NA,ANAA)
+      ANAA = ANAA*TT
+      ANAA = ABS(ANAA)
+      IF( ANAA .GT. 1.E-15 ) GO TO 100
+      CALL SCALE(A,NA,DUMMY,NEXPA,TT)
+      CALL UNITY(EXPA,NEXPA)
+      CALL ADD(EXPA,NEXPA,DUMMY,NEXPA,EXPA,NEXPA)
+      GO TO 800
+C
+  100 CONTINUE
+      IOPT=2
+      CALL NORMS(N,N,N,A,IOPT,ZERO)
+      ZERO=ZERO/(2.**47)
+      CALL TRCE(A,NA,TR)
+      TR = TR/N
+      DO 200 I =1,N
+      M =I+N*(I-1)
+      A(M) = A(M) - TR
+  200 CONTINUE
+C
+      IOPT = 1
+      CALL NORMS(N,N,N,A,IOPT,COL)
+      IOPT = 3
+      CALL NORMS(N,N,N,A,IOPT,ROW)
+      ANORM = ROW
+      IF( ANORM .GT. COL )  ANORM = COL
+      K= 0
+  300 CONTINUE
+      IF( ABS(TT)*ANORM .LE. 1.0E+00 ) GO TO 350
+      K=K+1
+      TT = TT*0.5E+00
+      IF( K - 1000 ) 300,700,700
+  350 CONTINUE
+      SC = TT
+      CALL SCALE(A,NA,A,NA,TT)
+      CALL UNITY(EXPA,NEXPA)
+      II = 2
+      CALL ADD(A,NA,EXPA,NEXPA,DUMMY,NA)
+      CALL EQUATE(A,NA,DUMMY(L),NA)
+  400 CONTINUE
+      CALL MULT(A,NA,DUMMY(L),NA,EXPA,NEXPA)
+      S = 1./II
+      CALL SCALE(EXPA,NEXPA,DUMMY(L),NA,S)
+      CALL ADD(DUMMY(L),NA,DUMMY,NA,EXPA,NEXPA)
+      CALL MAXEL(DUMMY,NA,TOT)
+      CALL MAXEL(DUMMY(L),NA,DELT)
+      IF( TOT .GT. 1.0 ) GO TO 500
+      IF( DELT/TOT .LT. SERCV )  GO TO 600
+      GO TO 550
+  500 CONTINUE
+      IF( DELT .LT. SERCV )  GO TO 600
+  550 CONTINUE
+      CALL EQUATE(EXPA,NEXPA,DUMMY,NA)
+      II = II + 1
+      GO TO 400
+C
+  600 CONTINUE
+      IF( K ) 625,675,650
+  625 CONTINUE
+      CALL LNCNT(1)
+      PRINT 635
+  635 FORMAT( *   ERROR IN EXPSER,  K IS NEGATIVE * )
+      RETURN
+C
+  650 CONTINUE
+      DO 660 I =1,K
+      TT = 2*TT
+      CALL EQUATE(EXPA,NEXPA,DUMMY,NA)
+      CALL EQUATE(DUMMY,NA,DUMMY(L),NA)
+      CALL MULT(DUMMY(L),NA,DUMMY,NA,EXPA,NEXPA)
+  660 CONTINUE
+  675 CONTINUE
+      S = 1./SC
+      CALL SCALE(A,NA,A,NA,S)
+      DO 685 I = 1,N
+      M = I + N*(I-1)
+      A(M) = A(M) + TR
+      IF( ABS(A(M)) .LE. ZERO )  A(M) = 0.0
+  685 CONTINUE
+C
+      TR=TR*T
+      S =  EXP(TR)
+      CALL SCALE(EXPA,NEXPA,EXPA,NEXPA,S)
+      GO TO 800
+C
+  700 CONTINUE
+      CALL LNCNT(1)
+      PRINT 750
+  750 FORMAT(*  ERROR IN EXPSER,  K = 1000 *)
+      RETURN
+C
+  800 CONTINUE
+      IF( IOP .EQ. 0 ) RETURN
+      CALL LNCNT(4)
+      PRINT 825
+  825 FORMAT(//* COMPUTATION OF THE MATRIX EXPONENTIAL EXP(A T) BY THE S
+     1ERIES METHOD */)
+      CALL PRNT(A,NA,4H A  ,1)
+      CALL LNCNT(3)
+      PRINT 850,T
+  850 FORMAT(/* T = * E16.8/)
+      CALL PRNT(EXPA,NEXPA,4HEXPA,1)
+      RETURN
+      END
+      SUBROUTINE EXPADE (MAX, N, A, EA, IDIG, WK, IERR)
+C
+C
+      DIMENSION A(MAX,N),EA(MAX,N),WK(N,1),C(9)
+      IERR = 0
+C ****
+C     CALCULATE NORM OF A
+C ****
+      ANORM = 0.
+      DO 10 I=1,N
+         S = 0.
+         DO 5 J=1,N
+            S = S + ABS(A(I,J))
+ 5       CONTINUE
+         IF (S .GT. ANORM)  ANORM = S
+ 10   CONTINUE
+C ****
+C     CALCULATE ACCURACY ESTIMATE
+C ****
+      DIGC = 24.*FLOAT(N)
+      IF (ANORM .GT. 1.) DIGC = DIGC*ANORM
+      IDIG = 15 - IFIX(ALOG10(DIGC) + .5)
+C ****
+C     DETERMINE POWER OF TWO AND NORMALIZATION FACTOR
+C ****
+      M = 0
+      IF (ANORM .LE. 1.)  GO TO 27
+      FACTOR =2.
+      DO 15 M=1,46
+         IF (ANORM .LE. FACTOR) GO TO 20
+         FACTOR = FACTOR*2.
+ 15   CONTINUE
+      GO TO 125
+ 20   CONTINUE
+C ****
+C     NORMALIZE MATRIX
+C ****
+      DO 25 I=1,N
+         DO 25 J=1,N
+            A(I,J) = A(I,J)/FACTOR
+ 25   CONTINUE
+ 27   CONTINUE
+C ****
+C     SET COEFFICIENTS FOR (9,9) PADE TABLE ENTRY
+C ****
+      C(1) = .5
+      C(2) = 1.1764705882352E-01
+      C(3) = 1.7156862745098E-02
+      C(4) = 1.7156862745098E-03
+      C(5) = 1.2254901960784E-04
+      C(6) = 6.2845651080945E-06
+      C(7) = 2.2444875386051E-07
+      C(8) = 5.1011080422845E-09
+      C(9) = 5.6678978247605E-11
+C ****
+C     CALCULATE PADE NUMERATOR AND DENOMINATOR BY COLUMNS
+C ****
+      NP1 = N+1
+      NP7 = N+7
+      DO 95 J=1,N
+C ****
+C        COMPUTE JTH COLUMN OF FIRST NINE POWERS OF A
+C ****
+         DO 35 I=1,N
+            S = 0.
+            DO 30 L=1,N
+               S = S + A(I,L)*A(L,J)
+ 30         CONTINUE
+            WK(I,NP1) = S
+ 35      CONTINUE
+         DO 45 K=NP1,NP7
+            KP1 = K+1
+            DO 45 I=1,N
+               S = 0.
+               DO 40 L=1,N
+                  S = S + A(I,L)*WK(L,K)
+ 40            CONTINUE
+               WK(I,KP1) = S
+ 45      CONTINUE
+C ****
+C        COLLECT TERMS FOR JTH COLUMN OF NUMERATOR AND DENOMINATOR
+C ****
+         DO 85 I=1,N
+            S = 0.
+            U = 0.
+            DO 65 L=1,8
+               K = N+9-L
+               KN1 = K-N+1
+               P = C(KN1)*WK(I,K)
+               S = S + P
+              IEO = MOD(KN1,2)
+              IF (IEO.EQ.0) GO TO 55
+               U = U - P
+               GO TO 65
+ 55            CONTINUE
+               U = U + P
+ 65         CONTINUE
+            P = C(1)*A(I,J)
+            S = S + P
+            U = U - P
+            IF (I .NE. J) GO TO 80
+            S = S + 1.
+            U = U + 1.
+ 80         CONTINUE
+            EA(I,J) = S
+            WK(I,J) = U
+ 85      CONTINUE
+ 95   CONTINUE
+C ****
+C     CALCULATE NORMALIZED EXP(A) BY  WK * EXP(A) = EA
+C ****
+      CALL GAUSEL (MAX,N,WK,N,EA,IERR)
+      IF (IERR .NE. 0) GO TO 130
+      IF (M .EQ. 0)  GO TO 130
+C ****
+C     TAKE OUT EFFECT OF NORMALIZATION ON EXP(A)
+C ****
+      DO 120 K=1,M
+         DO 110 I=1,N
+            DO 110 J=1,N
+               S = 0.
+               DO 105 L=1,N
+                  S = S + EA(I,L)*EA(L,J)
+ 105           CONTINUE
+               WK(I,J) = S
+ 110     CONTINUE
+         DO 115 I=1,N
+            DO 115 J=1,N
+               EA(I,J) = WK(I,J)
+ 115     CONTINUE
+ 120  CONTINUE
+C ****
+C     UN-NORMALIZE A
+C ****
+      DO 122 I=1,N
+         DO 122 J=1,N
+            A(I,J) = A(I,J)*FACTOR
+ 122  CONTINUE
+      GO TO 130
+C ****
+C     NORM OF A IS EXCESSIVE
+C ****
+ 125  CONTINUE
+      IERR = 1
+C ****
+C     EXIT ROUTINE
+C ****
+ 130  CONTINUE
+      RETURN
+      END
+      SUBROUTINE EXPINT(A,NA,B,NB,C,NC,T,IOP,DUMMY)
+C
+C
+      DIMENSION A(1),B(1),C(1),DUMMY(1)
+      DIMENSION NA(2),NB(2),NC(2)
+      COMMON/CONV/SUMCV,MAXSUM,RICTCV,SERCV
+C
+      N = NA(1)
+      L = (N**2)+1
+      NC(1) = NA(1)
+      NC(2) = NA(2)
+      NB(1) = NA(1)
+      NB(2) = NA(2)
+      TT = T
+      CALL MAXEL(A,NA,ANAA)
+      ANAA = ANAA*TT
+      ANAA = ABS(ANAA)
+      IF ( ANAA .GT. 1.E-15 ) GO TO 50
+      CALL SCALE(A,NA,DUMMY,NB,TT)
+      CALL UNITY(B,NB)
+      CALL UNITY(C,NC)
+      CALL ADD(B,NB,DUMMY,NB,B,NB)
+      CALL SCALE(DUMMY,NC,DUMMY,NC,0.5E+00)
+      CALL ADD(C,NC,DUMMY,NC,C,NC)
+      CALL SCALE(C,NC,C,NC,TT)
+      GO TO 525
+   50 CONTINUE
+C
+      IOPT = 1
+      CALL NORMS(N,N,N,A,IOPT,COL)
+      IOPT = 3
+      CALL NORMS(N,N,N,A,IOPT,ROW)
+      ANAA = COL
+      IF( ANAA .GT. ROW )  ANAA = ROW
+      K = 0
+  100 CONTINUE
+      IF( ABS(TT)*ANAA .LE. 1.0E+00 ) GO TO 150
+      K = K + 1
+      TT = TT*0.5E+00
+      IF( K - 1000 )100,600,600
+C
+  150 CONTINUE
+      SC = TT
+      CALL SCALE(A,NA,A,NA,TT)
+      CALL UNITY(B,NB)
+      CALL SCALE(B,NB,DUMMY,NB,TT)
+      S =  TT/2.
+      CALL SCALE(A,NA,DUMMY(L),NA,S)
+      II = 2
+      CALL ADD(DUMMY,NA,DUMMY(L),NA,DUMMY(L),NA)
+      CALL ADD(A,NA,B,NB,DUMMY,NA)
+      CALL EQUATE(A,NA,C,NC)
+  200 CONTINUE
+      CALL MULT(A,NA,C,NC,B,NB)
+      S = 1./II
+      CALL SCALE(B,NB,C,NC,S)
+      CALL MAXEL(DUMMY,NA,TOT)
+      CALL MAXEL(C,NC,DELT)
+      IF( TOT .GT. 1.0 ) GO TO 300
+      IF( DELT/TOT .LT. SERCV )  GO TO 400
+      GO TO 350
+  300 CONTINUE
+      IF( DELT .LT. SERCV )  GO TO 400
+  350 CONTINUE
+      S = TT/(II + 1)
+      CALL SCALE(C,NC,B,NB,S)
+      CALL ADD(B,NB,DUMMY(L),NB,DUMMY(L),NB)
+      CALL ADD(C,NC,DUMMY,NC,DUMMY,NC)
+      II = II + 1
+      GO TO 200
+C
+  400 CONTINUE
+      CALL EQUATE(DUMMY,NB,B,NB)
+      IF( K ) 425,500,450
+  425 CONTINUE
+      CALL LNCNT(1)
+      PRINT 435
+  435 FORMAT(*  ERROR IN EXPINT, K IS NEGATIVE*)
+      RETURN
+C
+  450 CONTINUE
+      DO 475 J = 1,K
+      TT = 2*TT
+      CALL EQUATE(B,NB,DUMMY,NB)
+      CALL MULT(DUMMY,NA,DUMMY(L),NA,C,NC)
+      CALL ADD(DUMMY(L),NC,C,NC,DUMMY(L),NC)
+      CALL MULT(DUMMY,NB,DUMMY,NB,B,NB)
+  475 CONTINUE
+C
+  500 CONTINUE
+      CALL EQUATE(DUMMY(L),NC,C,NC)
+      S = 1./SC
+      CALL SCALE(A,NA,A,NA,S)
+C
+  525 CONTINUE
+      IF( IOP .EQ. 0 ) RETURN
+      CALL LNCNT(5)
+      PRINT 550
+  550 FORMAT(//* COMPUTATION OF THE MATRIX EXPONENTIAL  EXP(A T)*/* AND
+     1ITS INTEGRAL OVER  (0,T) BY THE SERIES METHOD */)
+      CALL PRNT(A,NA,4H A  ,1)
+      CALL LNCNT(3)
+      PRINT 575, T
+  575 FORMAT(/*  T = * E16.8/)
+      CALL  PRNT(B,NB,4HEXPA,1)
+      CALL PRNT(C,NC,4HINT ,1)
+      RETURN
+C
+  600 CONTINUE
+      CALL LNCNT(1)
+      PRINT 650
+  650 FORMAT( * ERROR IN EXPINT, K = 1000 *)
+      RETURN
+C
+      END
+      SUBROUTINE VARANCE(A,NA,G,NG,Q,NQ,W,NW,IDENT,DISC,IOP,DUMMY)
+C
+C
+      DIMENSION A(1),G(1),Q(1),W(1),DUMMY(1)
+      DIMENSION NA(2),NG(2),NQ(2),NW(2),NDUM1(2),IOP(3),IOPT(2)
+      LOGICAL IDENT,DISC,SYM
+      COMMON/TOL/EPSAM,EPSBM,IACM
+C
+      IF( IOP(1) .EQ. 0 ) GO TO 100
+      CALL LNCNT(5)
+      IF( DISC ) PRINT 25
+      IF( .NOT. DISC ) PRINT 35
+   25 FORMAT(//* PROGRAM TO SOLVE FOR THE STEADY-STATE VARIANCE MATRIX*/
+     /* FOR A LINEAR DISCRETE SYSTEM*/)
+   35 FORMAT(//* PROGRAM TO SOLVE FOR THE STEADY-STATE VARIANCE MATRIX*/
+     1* FOR A LINEAR CONTINUOUS SYSTEM*/)
+      CALL PRNT(A,NA,4H A  ,1)
+      IF( .NOT. IDENT ) GO TO 55
+      CALL LNCNT(3)
+      PRINT 45
+   45 FORMAT(/* G IS AN IDENTITY MATRIX */)
+      GO TO 65
+   55 CONTINUE
+      CALL PRNT(G,NG,4H G  ,1)
+   65 CONTINUE
+      IF ( .NOT. IDENT ) GO TO 85
+      CALL LNCNT(3)
+      PRINT 75
+   75 FORMAT(/* INTENSITY MATRIX FOR COVARIANCE OF PROCESS NOISE */)
+C
+   85 CONTINUE
+      CALL PRNT(Q,NQ,4H Q  ,1)
+C
+  100 CONTINUE
+      IF( IDENT ) GO TO 200
+      CALL MULT(G,NG,Q,NQ,DUMMY,NG)
+      N1 = NG(1)*NG(2) + 1
+      CALL TRANP(G,NG,DUMMY(N1),NDUM1)
+      CALL MULT(DUMMY,NG,DUMMY(N1),NDUM1,Q,NQ)
+C
+      IF( IOP(1) .EQ. 0 ) GO TO 200
+      CALL LNCNT(3)
+      PRINT 75
+      CALL PRNT(Q,NQ,4HGQGT,1)
+C
+  200 CONTINUE
+      CALL EQUATE(Q,NQ,W,NW)
+      IF(.NOT. DISC) CALL SCALE(W,NW,W,NW,-1.0)
+      IOPT(1) = IOP(2)
+      IOPT(2) = 1
+      SYM = .TRUE.
+      IF( DISC ) GO TO 300
+      IF( IOP(3) .EQ. 0 ) GO TO 250
+      CALL BILIN(A,NA,A,NA,W,NW,IOPT,BETA,SYM,DUMMY)
+      GO TO 400
+C
+  250 CONTINUE
+      EPSA=EPSAM
+      CALL BARSTW(A,NA,A,NA,W,NW,IOPT,SYM,EPSA,EPSA,DUMMY)
+      GO TO 400
+C
+  300 CONTINUE
+      CALL EQUATE(A,NA,DUMMY,NA)
+      N = NA(1)**2
+      N1 = N + 1
+      CALL TRANP(A,NA,DUMMY(N1),NA)
+      N2 = N1 + N
+      CALL SUM(DUMMY,NA,W,NW,DUMMY(N1),NA,IOPT,SYM,DUMMY(N2))
+C
+  400 CONTINUE
+      IF( IOP(1) .EQ. 0 ) RETURN
+      CALL LNCNT(3)
+      PRINT 450
+  450 FORMAT(/ * VARIANCE MATRIX */)
+      CALL PRNT(W,NW,4H W  ,1)
+C
+      RETURN
+      END
+      SUBROUTINE CTROL(A,NA,B,NB,C,NC,IOP,IAC,IRANK,DUMMY)
+C
+C
+      DIMENSION A(1),B(1),C(1),DUMMY(1)
+      DIMENSION NA(2),NB(2),NC(2),NV(2),IOP(5)
+C
+      N = NA(1)*NB(2)
+      N1 = N+1
+      N2 = N1+N
+      K = NA(1)-1
+      J = 1
+C
+      CALL EQUATE(B,NB,DUMMY(N2),NV)
+      CALL EQUATE(B,NB,DUMMY,NB)
+100   CONTINUE
+      CALL MULT(A,NA,DUMMY,NB,DUMMY(N1),NB)
+      CALL JUXTC(DUMMY(N2),NV,DUMMY(N1),NB,C,NC)
+C
+      IF( J .EQ. K ) GO TO 200
+C
+      CALL EQUATE(DUMMY(N1),NB,DUMMY,NB)
+      CALL EQUATE(C,NC,DUMMY(N2),NV)
+      J = J + 1
+      GO TO 100
+C
+  200 CONTINUE
+C
+      IF(IOP(1) .EQ. 0 ) GO TO 300
+      CALL PRNT(A,NA,4H A  ,1)
+      CALL PRNT(B,NB,4H B  ,1)
+      CALL LNCNT(4)
+      PRINT 250
+  250 FORMAT(//* THE MATRIX C IS THE CONTROLLABILITY MATRIX FOR THE  A/B
+     1 PAIR*/)
+      CALL PRNT(C,NC,4H C  ,1)
+C
+  300  IF( IOP(2) .EQ. 0 ) RETURN
+      NOS = 1
+      IOPT = 2
+      K = NC(2)
+      NC(2) = NB(2)*(NA(2)-NB(2)+1)
+      N = NC(1)*NC(2)
+      CALL TRANP(C,NC,DUMMY,NV)
+      NC(2) = K
+      N1 = N + 1
+      N2 = N1 + NV(2)
+      CALL SNVDEC(IOPT,NV(1),NV(2),NV(1),NV(2),DUMMY,NOS,B,IAC,ZTEST,DUM
+     1MY(N1),DUMMY(N2),IRANK,A,IERR)
+      IF( IERR .EQ. 0 ) GO TO 340
+      CALL LNCNT(5)
+      IF( IERR .GT. 0 ) PRINT 310,IERR
+      IF( IERR .EQ. -1 ) PRINT 320, ZTEST,IRANK
+  310 FORMAT(//* IN CTROL, SNVDEC HAS FAILED TO CONVERGE TO THE *I4 * SI
+     1NGULAR VALUE AFTER 30 ITERATIONS *)
+  320 FORMAT(//* IN CTROL, THE MATRIX SUBMITTED TO SNVDEC USING ZTEST =
+     1*E16.8* IS CLOSE TO A MATRIX WHICH IS OF LOWER RANK*/* IF THE ACCU
+     2RACACY IS REDUCED THE RANK MAY ALSO BE REDUCED*/* CURRENT RANK =*I
+     34)
+      IF( IERR .GT. 0 ) RETURN
+C
+  340 CONTINUE
+      IF( IOP(3) .EQ. 0 ) GO TO 400
+      CALL LNCNT(6)
+      PRINT 350,ZTEST,IRANK
+  350 FORMAT(//* BASED ON THE ZERO-TEST *E16.8* THE RANK OF THE CONTROLL
+     1ABILITY MATRIX IS *I4/* THE SINGULAR VALUES ARE */)
+      IOPT = 0
+      NV(1)= NV(2)
+      NV(2)= 1
+      CALL PRNT(DUMMY(N1),NV,IOPT,3)
+C
+  400 IF( IOP(4) .EQ. 0 ) RETURN
+      N = NA(1)**2
+      CALL EQUATE(DUMMY(N2),NA,DUMMY,NA)
+      N1 = N + 1
+      N2 = N1 + N
+      CALL MULT(A,NA,DUMMY,NA,DUMMY(N1),NA)
+      CALL TRANP(DUMMY,NA,DUMMY(N2),NA)
+      CALL EQUATE(DUMMY(N2),NA,DUMMY,NA)
+      CALL MULT(DUMMY,NA,DUMMY(N1),NA,DUMMY(N2),NA)
+      CALL MULT(DUMMY,NA,B,NB,DUMMY(N1),NB)
+C
+      IF( IOP(5) .EQ. 0 ) RETURN
+      CALL LNCNT(5)
+      PRINT 500
+  500 FORMAT(//* CONTROLLABILITY CANONICAL FORM */ * (V TRANSPOSE) A V*)
+      CALL PRNT(DUMMY(N2),NA,IOPT,3)
+      CALL LNCNT(2)
+      PRINT 510
+  510 FORMAT(/* (V TRANSPOSE ) B *)
+      CALL PRNT(DUMMY(N1),NB,IOPT,3)
+      CALL LNCNT(2)
+      PRINT 520
+  520 FORMAT(/* V TRANSPOSE*)
+      CALL PRNT(DUMMY,NA,IOPT,3)
+C
+      RETURN
+      END
+      SUBROUTINE TRANSIT(A,NA,B,NB,H,NH,G,NG,F,NF,V,NW,T,X,NX,DISC,STABL
+     1E,IOP,DUMMY)
+C
+C
+      DIMENSION A(1),B(1),H(1),G(1),F(1),V(1),X(1),DUMMY(1)
+      DIMENSION NA(2),NB(2),NH(2),NG(2),NF(2),NW(2),NX(2),T(2),IOP(4)
+      DIMENSION NDUM1(2),NDUM2(2),NV(2)
+      LOGICAL  DISC,STABLE
+C
+      N = NA(1)*NA(2)
+      N1 = N + 1
+      N2 = N + N1
+      N3 = N + N2
+      N4 = N + N3
+      N5 = N + N4
+      N6 = N + N5
+C
+      CALL LNCNT(4)
+      IF(DISC) PRINT 100
+      IF( .NOT. DISC ) PRINT 120
+  100 FORMAT(//* COMPUTATION OF TRANSIENT RESPONSE FOR THE DIGITAL SYSTE
+     1M */)
+  120 FORMAT(//* COMPUTATION OF TRANSIENT RESPONSE FOR THE CONTINUOUS
+     1SYSTEM*/)
+      CALL PRNT(A,NA,4H A  ,1)
+      CALL PRNT(B,NB,4H B  ,1)
+      IF( (IOP(1) .NE. 1) .AND. (IOP(1) .NE. 0) )  GO TO 180
+      CALL LNCNT(3)
+      IF( IOP(1) .EQ. 0 ) PRINT 140
+      IF( IOP(1) .EQ. 1 ) PRINT 160
+  140 FORMAT(//* H IS A NULL MATRIX *)
+  160 FORMAT(//* H IS AN IDENTITY MATRIX *)
+      GO TO 200
+  180 CONTINUE
+      CALL PRNT(H,NH,4H H  ,1)
+  200 CONTINUE
+      IF( (IOP(2) .NE. 1) .AND. (IOP(2) .NE. 0) )  GO TO 260
+      CALL LNCNT(3)
+      IF( IOP(2) .EQ. 0 ) PRINT 220
+      IF( IOP(2) .EQ. 1 ) PRINT 240
+  220 FORMAT(//* G IS A NULL MATRIX*)
+  240 FORMAT(//* G IS AN IDENTITY MATRIX*)
+      GO TO 280
+  260 CONTINUE
+      CALL PRNT(G,NG,4H G  ,1)
+  280 CONTINUE
+      CALL PRNT(F,NF,4H F  ,1)
+      IF( (IOP(3) .NE. 0) .AND. (IOP(3) .NE. 1) )  GO TO 295
+      CALL LNCNT(3)
+      IF(IOP(3).EQ.0) PRINT 285
+      IF(IOP(3).EQ.1) PRINT 290
+  285 FORMAT(//* V IS A NULL MATRIX*)
+  290 FORMAT(//* V IS AN IDENTITY MATRIX*)
+      GO TO 300
+  295 CONTINUE
+      NV(1) = NW(1)
+      NV(2) = NW(2)
+      CALL PRNT(V,NV,4H V  ,1)
+C
+  300 CONTINUE
+      CALL EQUATE(A,NA,DUMMY(N6),NA)
+      CALL MULT(B,NB,F,NF,DUMMY,NA)
+      CALL SUBT(A,NA,DUMMY,NA,A,NA)
+C
+      IF(DISC) GO TO 350
+      XTT = T(1)/T(2)
+      NMAX = INT(XTT)
+      IF( (T(1)-NMAX*T(2)) .GT. 0.1*T(2) )  NMAX = NMAX+1
+      IOPT = 1
+      TT = T(2)
+      IF( IOP(3) .NE. 0 )  GO TO 315
+      CALL EXPSER(A,NA,DUMMY,NA,TT,IOPT,DUMMY(N1))
+      GO TO 400
+  315 CONTINUE
+      CALL EXPINT(A,NA,DUMMY,NA,DUMMY(N1),NA,TT,IOPT,DUMMY(N2))
+      CALL MULT(DUMMY(N1),NA,B,NB,DUMMY(N2),NB)
+      IF( IOP(3) .NE. 1 ) GO TO 325
+      CALL EQUATE(DUMMY(N2),NB,DUMMY(N1),NX)
+      GO TO 400
+  325 CONTINUE
+      CALL MULT(DUMMY(N2),NB,V,NV,DUMMY(N1),NX)
+      GO TO 400
+  350 CONTINUE
+      NMAX = IOP(4)
+      CALL EQUATE(A,NA,DUMMY,NA)
+      IF( IOP(3) .EQ. 0 ) GO TO 400
+      IF ( IOP(3) .EQ. 1 ) GO TO 360
+      CALL MULT(B,NB,V,NV,DUMMY(N1),NX)
+      GO TO 400
+  360 CONTINUE
+      CALL EQUATE(B,NB,DUMMY(N1),NX)
+C
+  400 CONTINUE
+      CALL LNCNT(4)
+      PRINT 420
+  420 FORMAT(//* STRUCTURE OF PRINTING TO FOLLOW*/)
+      CALL LNCNT(6)
+      PRINT 440
+  440 FORMAT(*   TIME OR STAGE */*  STATE - X TRANSPOSE - FROM DX = AX +
+     1 BU*/*  OUTPUT - Y TRANSPOSE - FROM Y = HX + GU   IF DIFFERENT FRO
+     2M X*/*  CONTROL - U TRANSPOSE - FROM U = -FX + V*//)
+C
+      K = 0
+      L = 0
+      CALL SCALE(F,NF,F,NF,-1.0)
+C
+  450 CONTINUE
+      CALL MULT(F,NF,X,NX,DUMMY(N2),NV)
+      IF ( IOP(3) .EQ. 0 ) GO TO 470
+      IF ( IOP(3) .EQ. 1 ) GO TO 460
+      CALL ADD(DUMMY(N2),NV,V,NV,DUMMY(N2),NV)
+      GO TO 470
+  460 CONTINUE
+      CALL UNITY(DUMMY(N5),NV)
+      CALL ADD(DUMMY(N2),NV,DUMMY(N5),NV,DUMMY(N2),NV)
+  470 CONTINUE
+      CALL MULT(DUMMY,NA,X,NX,DUMMY(N3),NX)
+      IF( IOP(3) .EQ. 0 ) GO TO 475
+      CALL ADD(DUMMY(N1),NX,DUMMY(N3),NX,DUMMY(N3),NX)
+  475 CONTINUE
+      IF( IOP(2) .EQ. 0 ) GO TO 525
+      IF( IOP(2) .EQ. 1 ) GO TO 500
+      CALL MULT(G,NG,DUMMY(N2),NV,DUMMY(N4),NDUM1)
+      GO TO 525
+  500 CONTINUE
+      CALL EQUATE(DUMMY(N2),NV,DUMMY(N4),NDUM1)
+  525 CONTINUE
+      IF( IOP(1) .EQ. 0 ) GO TO 575
+      IF( IOP(1) .EQ. 1 ) GO TO 550
+      CALL MULT(H,NH,X,NX,DUMMY(N5),NDUM1)
+      GO TO 575
+  550 CONTINUE
+      CALL EQUATE(X,NX,DUMMY(N5),NDUM1)
+  575 CONTINUE
+      IF( IOP(2) .EQ. 0 ) GO TO 600
+      IF( IOP(1) .EQ. 0 ) GO TO 700
+      CALL ADD(DUMMY(N4),NDUM1,DUMMY(N5),NDUM1,DUMMY(N4),NDUM1)
+      GO TO 700
+  600 CONTINUE
+      IF( IOP(1) .NE. 0 ) CALL EQUATE(DUMMY(N5),NDUM1,DUMMY(N4),NDUM1)
+C
+  700 CONTINUE
+      CALL LNCNT(5)
+      IF( .NOT. DISC ) GO TO 720
+      PRINT 710,K
+  710 FORMAT(////,I5)
+      GO TO 740
+  720 CONTINUE
+      TIME=K*T(2)
+      PRINT 730,TIME
+  730 FORMAT(////,E16.7)
+  740 CONTINUE
+      CALL TRANP(X,NX,DUMMY(N5),NDUM2)
+      CALL PRNT(DUMMY(N5),NDUM2,L,3)
+      IF( (IOP(2) .EQ. 0) .AND. ( (IOP(1) .EQ. 0) .OR. (IOP(1) .EQ. 1) )
+     1) GO TO 750
+      CALL TRANP(DUMMY(N4),NDUM1,DUMMY(N5),NDUM2)
+      CALL PRNT(DUMMY(N5),NDUM2,L,3)
+  750 CONTINUE
+      CALL TRANP(DUMMY(N2),NV,DUMMY(N5),NDUM2)
+      CALL PRNT(DUMMY(N5),NDUM2,L,3)
+      IF( K .GE. NMAX )  GO TO 800
+C
+      CALL EQUATE(DUMMY(N3),NX,X,NX)
+      K = K + 1
+      GO TO 450
+C
+C
+  800 CONTINUE
+      CALL SCALE(F,NF,F,NF,-1.0)
+      IF( .NOT. STABLE  .OR.  IOP(3) .EQ. 0  )   GO TO 900
+      IF( IOP(3) .EQ. 1 )  GO TO 820
+      CALL MULT(B,NB,V,NV,DUMMY,NX)
+      GO TO 840
+  820 CONTINUE
+      CALL EQUATE(B,NB,DUMMY,NX)
+  840 CONTINUE
+      IF( .NOT. DISC )  GO TO 860
+      CALL UNITY(DUMMY(N1),NA)
+      CALL SUBT(DUMMY(N1),NA,A,NA,A,NA)
+  860 CONTINUE
+      IFAC = 0
+      CALL GELIM(NA(1),NA(1),A,NX(2),DUMMY,DUMMY(N1),IFAC,DUMMY(N2),IERR
+     1)
+      IF( IERR .EQ. 0 )  GO TO 880
+      CALL LNCNT(3)
+      IF( .NOT. DISC )  PRINT 865
+      IF( DISC )  PRINT 870
+  865 FORMAT(//* IN TRANSIT, THE MATRIX A-BF SUBMITTED TO GELIM IS SINGU
+     1LAR*)
+  870 FORMAT(//* IN TRANSIT, THE MATRIX  I - (A-BF) SUBMITTED TO GELIM I
+     1S SINGULAR*)
+      GO TO 900
+  880 CONTINUE
+      IF( .NOT. DISC )  CALL SCALE(DUMMY,NX,DUMMY,NX,-1.0)
+      CALL LNCNT(5)
+      PRINT 890
+  890 FORMAT(////* STEADY-STATE VALUE OF  X TRANSPOSE*)
+      CALL TRANP(DUMMY,NX,DUMMY(N5),NDUM2)
+      CALL PRNT(DUMMY(N5),NDUM2,L,3)
+C
+  900 CONTINUE
+      CALL EQUATE(DUMMY(N6),NA,A,NA)
+C
+      RETURN
+      END
+      SUBROUTINE LEVIER(A,NA,B,NB,H,NH,C,NC,HCB,NHCB,D,ND,BIDENT,HIDENT,
+     1IOP,DUMMY)
+C
+C
+      DIMENSION A(1),B(1),H(1),C(1),HCB(1),D(1),DUMMY(1)
+      DIMENSION NA(2),NB(2),NH(2),NC(2),NHCB(2),ND(2),NDUM1(2),NDUM2(2)
+      LOGICAL  BIDENT,HIDENT
+C
+      IF( IOP .EQ. 0 ) GO TO 100
+      CALL LNCNT(6)
+      PRINT 10
+   10 FORMAT(//* THE TRANSFER MATRIX  H((SI-A)INVERSE)B IS COMPUTED*/* F
+     1OR THE  (A,B,H) SYSTEM*/)
+      CALL PRNT(A,NA,4H A  ,1)
+      IF( BIDENT .AND. HIDENT ) GO TO 40
+      IF( .NOT. BIDENT ) CALL PRNT(B,NB,4H B  ,1)
+      IF( .NOT. HIDENT ) CALL PRNT(H,NH,4H H  ,1)
+      IF( (.NOT. BIDENT) .AND. (.NOT. HIDENT) )  GO TO 50
+      CALL LNCNT(3)
+      IF( BIDENT ) PRINT 20
+      IF( HIDENT ) PRINT 30
+   20 FORMAT(/* B IS AN IDENTITY MATRIX*/)
+   30 FORMAT(/* H IS AN IDENTITY MATRIX*/)
+      GO TO 50
+   40 CONTINUE
+      CALL LNCNT(6)
+      PRINT 20
+      PRINT 30
+   50 CONTINUE
+      CALL LNCNT(8)
+      PRINT 60
+   60 FORMAT(//22X*N-1*6X*N-2*)
+      PRINT 65
+   65 FORMAT(6X*(SI-A)INVERSE=(S   C(0)+S   C(1)+...+SC(N-2)+C(N-1))/D(S
+     1)*/)
+      PRINT 70
+   70 FORMAT(14X*N  N-1*6X*N-2*)
+      PRINT 75
+   75 FORMAT(8X*D(S)=S +S   D(1)+S   D(2)+...+SD(N-1)+D(N)*/)
+C
+  100 CONTINUE
+      N = NA(1)
+      M = N**2
+      N1= M+1
+C
+      CALL UNITY(C,NA)
+      CALL EQUATE(C,NA,DUMMY,NA)
+      K = N + 1
+C
+      DO 600 I = 1,K
+      L = I-1
+      IF( I .LT. K ) GO TO 200
+C
+      IF( IOP .EQ. 0 )  GO TO 700
+      CALL LNCNT(3)
+      PRINT 150
+  150 FORMAT(/* ERROR IN SATISFYING CAYLEY-HAMILTON THEOREM */)
+      CALL PRNT(DUMMY,NA,4HEROR,1)
+      GO TO 700
+C
+  200 CONTINUE
+      IF( IOP .EQ. 0 ) GO TO 300
+      CALL LNCNT(4)
+      PRINT 250,L
+  250 FORMAT(//* MATRIX C(*I3* ) IN (SI-A)INVERSE EQUATION */)
+      IM = L*M + 1
+      CALL PRNT(C(IM),NA,0,3)
+  300 CONTINUE
+      IF( BIDENT .AND. HIDENT ) GO TO 500
+      IF( I .GT. 1) GO TO 400
+      IF( BIDENT )  CALL EQUATE(H,NH,HCB,NHCB)
+      IF ( HIDENT )  CALL EQUATE(B,NB,HCB,NHCB)
+      IF( (.NOT. BIDENT) .AND. (.NOT. HIDENT) ) CALL MULT(H,NH,B,NB,HCB,
+     1NHCB)
+      IF( IOP .EQ. 0 ) GO TO 500
+      CALL LNCNT(4)
+      PRINT 350,L
+  350 FORMAT(//* MATRIX HC(*I3* )B*/)
+      CALL PRNT(HCB,NHCB,0,3)
+      GO TO 500
+  400 CONTINUE
+      IF( BIDENT )  IHB = L*NH(1)*NA(2) + 1
+      IF( HIDENT )  IHB = L*NA(1)*NB(2) + 1
+      IF( (.NOT. BIDENT) .AND. (.NOT. HIDENT) ) IHB = L*NH(1)*NB(2) + 1
+      IF( BIDENT ) CALL EQUATE(C(IM),NA,DUMMY(N1),NDUM1)
+      IF( .NOT. BIDENT )  CALL MULT(C(IM),NA,B,NB,DUMMY(N1),NDUM1)
+      IF( HIDENT ) CALL EQUATE(DUMMY(N1),NDUM1,HCB(IHB),NDUM2)
+      IF( .NOT. HIDENT )  CALL MULT(H,NH,DUMMY(N1),NDUM1,HCB(IHB),NDUM2)
+      IF( IOP .EQ. 0 ) GO TO 500
+      CALL LNCNT(4)
+      PRINT 350,L
+      CALL PRNT(HCB(IHB),NDUM2,0,3)
+C
+  500 CONTINUE
+      IM = I*M + 1
+      IF( I .EQ. 1) CALL EQUATE(A,NA,C(IM),NA)
+      IF( I .GT. 1) CALL MULT(DUMMY,NA,A,NA,C(IM),NA)
+      CALL TRCE(C(IM),NA,TR)
+      D(I) = -TR/I
+      S = D(I)
+      CALL UNITY(DUMMY,NA)
+      CALL SCALE(DUMMY,NA,DUMMY,NA,S)
+      CALL ADD(C(IM),NA,DUMMY,NA,C(IM),NA)
+      CALL EQUATE(C(IM),NA,DUMMY,NA)
+  600 CONTINUE
+C
+  700 CONTINUE
+      NC(1) = N
+      NC(2) = N*(N+1)
+      ND(1)   = N
+      ND(2)   = 1
+      IF( HIDENT .AND. BIDENT )  GO TO 750
+      IF( HIDENT )  NHCB(1) = NA(1)
+      IF( (.NOT. HIDENT) )  NHCB(1) = NH(1)
+      IF( BIDENT )  NHCB(2) = N*NA(1)
+      IF( (.NOT. BIDENT) )  NHCB(2) = N*NB(2)
+  750 CONTINUE
+C
+      IF( IOP .EQ. 0 ) RETURN
+      CALL PRNT(D,ND,4H D  ,1)
+C
+      RETURN
+      END
+      SUBROUTINE SAMPL(A,NA,B,NB,Q,NQ,R,NR,W,NW,T,IOP,DUMMY)
+C
+C
+      DIMENSION A(1),B(1),Q(1),R(1),W(1),DUMMY(1)
+      DIMENSION NA(2),NB(2),NQ(2),NR(2),NW(2),IOP(2),NDUM(2)
+      COMMON/CONV/SUMCV,MAXSUM,RICTCV,SERCV
+C
+      IF(  IOP(1) .EQ. 0 ) GO TO 100
+C
+      IF(  IOP(2) .EQ. 0 ) GO TO 50
+C
+      CALL LNCNT(5)
+      PRINT 25
+   25 FORMAT(//* COMPUTATION OF WEIGHTING MATRICES FOR THE OPTIMAL SAMPL
+     1ED-DATA REGULATOR PROBLEM*//)
+      CALL PRNT(A,NA,4H A  ,1)
+      CALL PRNT(B,NB,4H B  ,1)
+      CALL LNCNT(3)
+      PRINT 35
+   35 FORMAT(/* CONTINUOUS PERFORMANCE INDEX WEIGHTING MATRICES*/)
+      CALL PRNT(Q,NQ,4H Q  ,1)
+      CALL PRNT(R,NR,4H R  ,1)
+      CALL LNCNT(3)
+      PRINT 45,T
+   45 FORMAT(/* SAMPLE TIME = *E16.8/)
+C
+      GO TO 100
+C
+   50 CONTINUE
+      CALL LNCNT(8)
+      PRINT 75
+   75 FORMAT(//* COMPUTATION OF THE RECONSTRUCTIBILITY GRAMIAN*/* FOR TH
+     1E (A,H) SYSTEM OVER THE INTERVAL (0,T) */* THE MATRIX Q IS  ( H TR
+     2ANSPOSE ) X H*//)
+      CALL PRNT(A,NA,4H A  ,1)
+      CALL PRNT(Q,NQ,4H Q  ,1)
+      CALL LNCNT(3)
+      PRINT 85,T
+   85 FORMAT(/* T = *E16.8/)
+C
+  100 CONTINUE
+C
+      N = NA(1)
+      L = ( N**2)
+      N1 = L + 1
+      N2 = N1 + L
+      TT  = T
+C
+      IOPT = 1
+      CALL NORMS(N,N,N,A,IOPT,ANORM)
+      IOPT = 3
+      CALL NORMS(N,N,N,A,IOPT,ROWA)
+      IF( ANORM .GT. ROWA ) ANORM = ROWA
+C
+      IF( ANORM .LE. 1.E-15 ) GO TO 900
+C
+      TMAX = 1.0/ANORM
+      K = 0
+C
+  125 CONTINUE
+      IF( TMAX - ABS(TT) ) 150,150,200
+  150 CONTINUE
+      K = K + 1
+      TT = T/( 2**K)
+      IF( K - 1000 ) 125,800,800
+C
+  200 CONTINUE
+C
+      I = 0
+      SC = TT
+      CALL SCALE(A,NA,A,NA,TT)
+      CALL SCALE(Q,NQ,Q,NQ,TT)
+      CALL EQUATE(Q,NQ,DUMMY,NQ)
+C
+      IF( IOP(2) .NE. 0 ) GO TO 500
+C
+  225 CONTINUE
+      II = I + 2
+      I = I + 1
+      F = 1.0/II
+      CALL SCALE(A,NA,DUMMY(N1),NA,F)
+      CALL MULT(DUMMY,NA,DUMMY(N1),NA,DUMMY(N2),NA)
+      CALL TRANP(DUMMY(N2),NA,DUMMY(N1),NA)
+      CALL ADD(DUMMY(N1),NA,DUMMY(N2),NA,DUMMY,NA)
+C
+      CALL MAXEL(Q,NQ,TOT)
+      CALL MAXEL(DUMMY,NA,DELT)
+      IF( TOT .GT. 1.0 ) GO TO 250
+      IF( DELT/TOT .LT. SERCV )  GO TO 300
+      GO TO 275
+  250 CONTINUE
+      IF( DELT .LT. SERCV )  GO TO 300
+  275 CONTINUE
+      CALL ADD(Q,NQ,DUMMY,NA,Q,NQ)
+      GO TO 225
+C
+  300 CONTINUE
+C
+      IF( K .EQ. 0 ) GO TO 400
+      N3 = N2 + L
+      G = 1.0
+      IOPT = 0
+      CALL EXPSER(A,NA,DUMMY,NA,G,IOPT,DUMMY(N1))
+C
+  350 CONTINUE
+      IF( K .EQ. 0 ) GO TO 400
+      K = K-1
+C
+      CALL TRANP(DUMMY,NA,DUMMY(N1),NA)
+      CALL MULT(Q,NQ,DUMMY,NA,DUMMY(N2),NA)
+      CALL MULT(DUMMY(N1),NA,DUMMY(N2),NA,DUMMY(N3),NA)
+      CALL ADD(Q,NQ,DUMMY(N3),NA,Q,NQ)
+      CALL MULT(DUMMY,NA,DUMMY,NA,DUMMY(N1),NA)
+      CALL EQUATE(DUMMY(N1),NA,DUMMY,NA)
+C
+      GO TO 350
+C
+  400 CONTINUE
+      S =  1.0/SC
+      CALL SCALE(A,NA,A,NA,S)
+C
+      IF( IOP(1) .EQ. 0 ) RETURN
+      CALL PRNT(Q,NQ,4HGRAM,1)
+      RETURN
+C
+  500 CONTINUE
+      CALL SCALE(B,NB,B,NB,TT)
+      N3 = N2 + L
+      N4 = N3 + L
+      N5 = N4 + L
+      N6 = N5 + L
+C
+  525 CONTINUE
+      II = I + 2
+      I = I + 1
+      F = 1.0/II
+      CALL SCALE(A,NA,DUMMY(N1),NA,F)
+      CALL TRANP(DUMMY(N1),NA,DUMMY(N2),NA)
+      CALL MULT(DUMMY,NA,DUMMY(N1),NA,DUMMY(N3),NA)
+      CALL TRANP(DUMMY(N3),NA,DUMMY(N1),NA)
+      CALL MULT(DUMMY,NA,B,NB,DUMMY(N5),NW)
+      CALL ADD(DUMMY(N1),NA,DUMMY(N3),NA,DUMMY,NA)
+      CALL SCALE(DUMMY(N5),NW,DUMMY(N1),NW,F)
+      IF( I .NE. 1 ) GO TO 550
+      CALL EQUATE(DUMMY(N1),NW,W,NW)
+      CALL EQUATE(DUMMY(N1),NW,DUMMY(N6),NW)
+      CALL ADD(Q,NQ,DUMMY,NQ,Q,NQ)
+      GO TO 525
+C
+  550 CONTINUE
+      CALL MULT(DUMMY(N2),NA,DUMMY(N6),NW,DUMMY(N5),NW)
+      CALL ADD(DUMMY(N5),NW,DUMMY(N1),NW,DUMMY(N1),NW)
+      CALL TRANP(B,NB,DUMMY(N2),NDUM)
+      CALL SCALE(DUMMY(N2),NDUM,DUMMY(N2),NDUM,F)
+      CALL MULT(DUMMY(N2),NDUM,DUMMY(N6),NW,DUMMY(N3),NR)
+      CALL TRANP(DUMMY(N3),NR,DUMMY(N5),NR)
+      CALL ADD(DUMMY(N3),NR,DUMMY(N5),NR,DUMMY(N3),NR)
+      CALL EQUATE(DUMMY(N1),NW,DUMMY(N6),NW)
+      IF(  I .NE. 2 ) GO TO 575
+      CALL ADD(Q,NQ,DUMMY,NQ,Q,NQ)
+      CALL ADD(W,NW,DUMMY(N1),NW,W,NW)
+      CALL EQUATE(DUMMY(N3),NR,DUMMY(N4),NR)
+      GO TO 525
+C
+  575 CONTINUE
+      CALL MAXEL(Q,NQ,TOT)
+      CALL MAXEL(DUMMY,NQ,DELT)
+      IF( TOT .GT. 1.0 )  GO TO 580
+      IF( DELT/TOT .LT. SERCV )  GO TO 585
+      GO TO 595
+C
+  580 CONTINUE
+      IF( DELT .LT. SERCV )  GO TO 585
+      GO TO 595
+C
+  585 CONTINUE
+      CALL MAXEL(DUMMY(N4),NR,TOT)
+      CALL MAXEL(DUMMY(N3),NR,DELT)
+      IF( TOT .GT. 1.0 )  GO TO 590
+      IF( DELT/TOT .LT. SERCV )  GO TO 600
+      GO TO 595
+C
+  590 CONTINUE
+      IF( DELT .LT. SERCV )  GO TO 600
+C
+  595 CONTINUE
+      CALL ADD (Q,NQ,DUMMY,NQ,Q,NQ)
+      CALL ADD(W,NW,DUMMY(N1),NW,W,NW)
+      CALL ADD(DUMMY(N4),NR,DUMMY(N3),NR,DUMMY(N4),NR)
+      GO TO 525
+C
+  600 CONTINUE
+      IF( K .EQ. 0 ) GO TO 700
+      G = 1.0
+      IOPT = 0
+      CALL EXPINT(A,NA,DUMMY,NA,DUMMY(N1),NA,G,IOPT,DUMMY(N2))
+      CALL MULT(DUMMY(N1),NA,B,NB,DUMMY(N2),NB)
+      CALL EQUATE(DUMMY(N2),NB,DUMMY(N1),NB)
+C
+  650 CONTINUE
+      IF( K .EQ. 0 ) GO TO 700
+      K = K - 1
+      CALL MULT(Q,NQ,DUMMY,NA,DUMMY(N2),NA)
+      CALL TRANP(DUMMY,NA,DUMMY(N3),NA)
+      CALL MULT(DUMMY(N3),NA,DUMMY(N2),NA,DUMMY(N5),NA)
+      CALL MULT(Q,NQ,DUMMY(N1),NB,DUMMY(N2),NB)
+      CALL ADD(Q,NQ,DUMMY(N5),NA,Q,NQ)
+      CALL MULT(DUMMY(N3),NA,DUMMY(N2),NB,DUMMY(N5),NB)
+      CALL MULT(DUMMY(N3),NA,W,NW,DUMMY(N6),NW)
+      CALL ADD(DUMMY(N5),NW,DUMMY(N6),NW,DUMMY(N5),NW)
+      CALL TRANP(DUMMY(N1),NB,DUMMY(N6),NDUM)
+      CALL MULT(DUMMY(N6),NDUM,W,NW,DUMMY(N3),NR)
+      CALL ADD(W,NW,DUMMY(N5),NW,W,NW)
+      CALL MULT(DUMMY(N6),NDUM,DUMMY(N2),NB,DUMMY(N5),NR)
+      CALL ADD(DUMMY(N5),NR,DUMMY(N3),NR,DUMMY(N5),NR)
+      CALL TRANP(DUMMY(N3),NR,DUMMY(N6),NR)
+      CALL ADD(DUMMY(N5),NR,DUMMY(N6),NR,DUMMY(N6),NR)
+      CALL SCALE(DUMMY(N4),NR,DUMMY(N4),NR,2.0)
+      CALL ADD(DUMMY(N6),NR,DUMMY(N4),NR,DUMMY(N4),NR)
+      CALL MULT(DUMMY,NA,DUMMY(N1),NB,DUMMY(N3),NB)
+      CALL ADD(DUMMY(N3),NB,DUMMY(N1),NB,DUMMY(N1),NB)
+      CALL MULT(DUMMY,NA,DUMMY,NA,DUMMY(N3),NA)
+      CALL EQUATE(DUMMY(N3),NA,DUMMY,NA)
+      GO TO 650
+C
+  700 CONTINUE
+      CALL SCALE(R,NR,R,NR,T)
+      CALL ADD(R,NR,DUMMY(N4),NR,R,NR)
+      CALL SCALE(W,NW,W,NW,2.0)
+      S = 1.0/SC
+      CALL SCALE(A,NA,A,NA,S)
+      CALL SCALE(B,NB,B,NB,S)
+      IF( IOP(1) .EQ. 0 ) RETURN
+C
+      CALL LNCNT(3)
+      PRINT 750
+  750 FORMAT(/* DISCRETE PERFORMANCE INDEX WEIGHTING MATRICES*/)
+      CALL PRNT(Q,NQ,4H Q  ,1)
+      CALL PRNT(W,NW,4H W  ,1)
+      CALL PRNT(R,NR,4H R  ,1)
+      RETURN
+C
+  800 CONTINUE
+      CALL LNCNT(1)
+      PRINT 850
+  850 FORMAT(* ERROR IN SAMPL , K = 1000*)
+      RETURN
+C
+  900 CONTINUE
+      CALL SCALE(Q,NQ,Q,NQ,T)
+      IF( IOP(2) .NE. 0 ) GO TO 925
+      IF( IOP(1) .NE. 0 ) CALL PRNT(Q,NQ,4HGRAM,1)
+      RETURN
+C
+  925 CONTINUE
+      CALL MULT(Q,NQ,B,NB,W,NW)
+      CALL SCALE(W,NW,W,NW,T)
+      CALL TRANP(B,NB,DUMMY,NDUM)
+      CALL MULT(DUMMY,NDUM,W,NW,DUMMY(N1),NR)
+      TT = T/3.
+      CALL SCALE(DUMMY(N1),NR,DUMMY,NR,TT)
+      CALL SCALE(R,NR,R,NR,T)
+      CALL ADD(R,NR,DUMMY,NR,R,NR)
+      IF( IOP(1) .EQ. 0 ) RETURN
+      CALL LNCNT(3)
+      PRINT 750
+      CALL PRNT(Q,NQ,4H Q  ,1)
+      CALL PRNT(W,NW,4H W  ,1)
+      CALL PRNT(R,NR,4H R  ,1)
+      RETURN
+C
+      END
+      SUBROUTINE PREFIL(A,NA,B,NB,Q,NQ,W,NW,R,NR,F,NF,IOP,DUMMY)
+C
+C
+      DIMENSION A(1),B(1),Q(1),W(1),R(1),F(1),DUMMY(1)
+      DIMENSION NA(2),NB(2),NQ(2),NW(2),NR(2),NF(2),IOP(3)
+C
+      IF( IOP(1) .EQ. 0 ) GO TO 100
+      CALL LNCNT(5)
+      PRINT 25
+   25 FORMAT(// * PROGRAM TO COMPUTE PREFILTER GAIN F TO ELIMINATE  CROS
+     1S-PRODUCT TERM */* IN QUADRATIC PERFORMANCE INDEX */)
+      IF( IOP(3) .EQ. 0 ) GO TO 50
+      CALL PRNT(A,NA,4H A  ,1)
+      CALL PRNT(B,NB,4H B  ,1)
+   50 CONTINUE
+      CALL PRNT(W,NW,4H W  ,1)
+      CALL PRNT(R,NR,4H R  ,1)
+      IF (IOP(2) .EQ. 0) GO TO 100
+      CALL PRNT(Q,NQ,4H Q  ,1)
+C
+  100 CONTINUE
+      CALL TRANP(W,NW,F,NF)
+      CALL SCALE(F,NF,F,NF,0.5)
+      CALL EQUATE(R,NR,DUMMY,NR)
+      IOPT=0
+      IFAC=0
+      N1 = NR(1)**2 + 1
+      M = NR(1)
+      CALL SYMPDS(M,M,DUMMY,NF(2),F,IOPT,IFAC,DETERM,ISCALE,DUMMY(N1),IE
+     1RR)
+      IF( IERR .EQ. 0 ) GO TO 200
+      CALL LNCNT(4)
+      PRINT 150
+  150 FORMAT(//* IN PREFIL, THE MATRIX R IS NOT SYMMETRIC POSITIVE DEFIN
+     1ITE*/)
+      RETURN
+C
+  200 CONTINUE
+      IF( IOP(2) .EQ. 0 ) GO TO 300
+      CALL MULT(W,NW,F,NF,DUMMY,NQ)
+      CALL SCALE(DUMMY,NQ,DUMMY,NQ,0.5)
+      CALL SUBT(Q,NQ,DUMMY,NQ,Q,NQ)
+C
+  300 CONTINUE
+      IF( IOP(3) .EQ. 0 ) GO TO 400
+      CALL MULT(B,NB,F,NF,DUMMY,NA)
+      CALL SUBT(A,NA,DUMMY,NA,A,NA)
+C
+  400 CONTINUE
+      IF( IOP(1) .EQ. 0 ) RETURN
+      CALL PRNT(F,NF,4H F  ,1)
+      IF( IOP(2) .EQ. 0 ) GO TO 500
+      CALL LNCNT(3)
+      PRINT 450
+  450 FORMAT(/ * MATRIX  Q - (W/2)F */)
+      CALL PRNT(Q,NQ,4HNEWQ,1)
+C
+  500 CONTINUE
+      IF( IOP(3) .EQ. 0 ) RETURN
+      CALL PRNT(A,NA,4HNEWA,1)
+      RETURN
+      END
+      SUBROUTINE CSTAB(A,NA,B,NB,F,NF,IOP,SCLE,DUMMY)
+C
+C
+      DIMENSION A(1),B(1),F(1),DUMMY(1)
+      DIMENSION NA(2),NB(2),NF(2),IOP(3),NDUM(2)
+      DIMENSION IOPT(2)
+      LOGICAL SYM
+      COMMON/TOL/EPSAM,EPSBM,IACM
+C
+      N = NA(1)**2
+      N1=N+1
+C
+      IF(IOP(2) .EQ. 0 ) GO TO 100
+      CALL EQUATE(A,NA,DUMMY,NA)
+      N2=N1+NA(1)
+      N3=N2+NA(1)
+      ISV =0
+      ILV =0
+      CALL EIGEN(NA(1),NA(1),DUMMY,DUMMY(N1),DUMMY(N2),ISV,ILV,V,DUMMY(N
+     13),IERR)
+C
+      M=NA(1)
+      IF(IERR .EQ. 0) GO TO 50
+      CALL LNCNT(3)
+      PRINT 25,IERR
+   25 FORMAT(//* IN CSTAB, THE SUBROUTINE EIGEN FAILED TO DETERMINE THE
+     1*I4* EIGENVALUE FOR THE MATRIX A  AFTER 30 ITERATIONS*)
+      IERR=1
+      CALL NORMS(M,M,M,A,IERR,BETA)
+      BETA=2.*BETA
+      GO TO 200
+   50 CONTINUE
+C
+      BETA = 0.0
+      DO 75 I = 1,M
+      J = N1 + I - 1
+      BETA1 = ABS(DUMMY(J))
+      IF(BETA1 .GT. BETA)  BETA = BETA1
+   75 CONTINUE
+      BETA = SCLE*(BETA + .001)
+      GO TO 200
+C
+  100 CONTINUE
+      BETA = SCLE
+  200 CONTINUE
+C
+      CALL TRANP(B,NB,DUMMY,NDUM)
+      CALL MULT(B,NB,DUMMY,NDUM,DUMMY(N1),NA)
+      CALL SCALE(DUMMY(N1),NA,DUMMY,NA,-2.0)
+      CALL SCALE(A,NA,DUMMY(N1),NA,-1.0)
+      J = -NA(1)
+      NAX = NA(1)
+      DO 225 I=1,NAX
+      J = J+NAX+1
+      K = N1+J-1
+      DUMMY(K)=DUMMY(K)-BETA
+  225 CONTINUE
+      N2 = N1 + N
+      SYM = .TRUE.
+      IOPT(1)=0
+C
+      IF( IOP(3) .NE. 0 )  GO TO 300
+      EPSA=EPSAM
+      CALL BARSTW(DUMMY(N1),NA,A,NA,DUMMY,NA,IOPT,SYM,EPSA,EPSA,DUMMY(N2
+     1))
+      GO TO 350
+  300 CONTINUE
+      IOPT(2) = 1
+      CALL BILIN(DUMMY(N1),NA,A,NA,DUMMY,NA,IOPT,ASCLE,SYM,DUMMY(N2))
+  350 CONTINUE
+C
+      CALL EQUATE(B,NB,DUMMY(N1),NB)
+      IOPT = 3
+      IAC =IACM
+      N3 = N2 + NA(1)
+      CALL SNVDEC(IOPT,NA(1),NA(1),NA(1),NA(1),DUMMY,NB(2),DUMMY(N1),IAC
+     1,ZTEST,DUMMY(N2),DUMMY(N3),IRANK,APLUS,IERR)
+      IF(IERR .EQ. 0 ) GO TO 400
+      CALL LNCNT(5)
+      IF(IERR .GT. 0 ) PRINT 360,IERR
+      IF(IERR .EQ. -1) PRINT 370,ZTEST,IRANK
+  360 FORMAT(//* IN CSTAB, SNVDEC HAS FAILED TO CONVERGE TO THE *I4* SIN
+     1GULARVALUE AFTER 30 ITERATIONS*//)
+  370 FORMAT(//* IN CSTAB, THE MATRIX SUBMITTED TO SNVDEC USING ZTEST =
+     1*E16.8* IS CLOSE TO A  MATRIX OF LOWER  RANK */* IF THE ACCURACY I
+     2AC IS REDUCED THE RANK MAY ALSO BE REDUCED*/* CURRENT RANK =*I4)
+      IF( IERR .GT. 0 ) RETURN
+      NDUM(1) = NA(1)
+      NDUM(2) =1
+      CALL PRNT(DUMMY(N2),NDUM,4HSGVL,1)
+  400 CONTINUE
+C
+      CALL TRANP(DUMMY(N1),NB,F,NF)
+      IF ( IOP(1) .EQ. 0 )   RETURN
+      CALL LNCNT(4)
+      PRINT 500
+  500 FORMAT(//* COMPUTATION OF F MATRIX SUCH THAT A-BF IS ASYMPTOTICALL
+     1Y STABLE IN THE CONTINUOUS SENSE */)
+      CALL PRNT(A,NA,4H A  ,1)
+      CALL LNCNT(4)
+      PRINT 550,BETA
+  550 FORMAT(//* BETA = *E16.8/)
+      CALL PRNT(B,NB,4H B  ,1)
+      CALL PRNT(F,NF,4H F  ,1)
+      CALL MULT(B,NB,F,NF,DUMMY,NA)
+      CALL SUBT(A,NA,DUMMY,NA,DUMMY,NA)
+      CALL PRNT(DUMMY,NA,4HA-BF,1)
+      N2 = N1+NA(1)
+      N3 = N2+NA(1)
+      ISV = 0
+      ILV = 0
+      CALL EIGEN(NA(1),NA(1),DUMMY,DUMMY(N1),DUMMY(N2),ISV,ILV,V,DUMMY(N
+     13),IERR)
+      M = NA(1)
+      IF( IERR .EQ. 0 ) GO TO 600
+      M = NA(1)-IERR
+      CALL LNCNT(3)
+      PRINT 25,IERR
+  600 CONTINUE
+      CALL LNCNT(4)
+      PRINT 650
+  650 FORMAT(//* EIGENVALUES OF A-BF*/)
+  675 FORMAT(10X,2E16.8)
+      CALL LNCNT(M)
+      DO 700 I=1,M
+      J = N1+I-1
+      K = N2+I-1
+      PRINT 675,DUMMY(J),DUMMY(K)
+  700 CONTINUE
+C
+      RETURN
+      END
+      SUBROUTINE DSTAB(A,NA,B,NB,F,NF,SING,IOP,SCLE,DUMMY)
+C
+C
+      DIMENSION A(1),B(1),F(1),DUMMY(1)
+      DIMENSION NA(2),NB(2),NF(2),NDUM(2),IOP(2),IOPT(3),NDUM1(2)
+      LOGICAL SING,SYM
+      COMMON/TOL/EPSAM,EPSBM,IACM
+C
+      N = NA(1)**2
+      N1 = N + 1
+      N2 = N1 + N
+      IF( .NOT. SING ) GO TO 100
+      IOPT(1)=IOP(1)
+      IOPT(2) = 1
+      IOPT(3) = 0
+      CSCLE=1.05
+      CALL CSTAB(A,NA,B,NB,F,NF,IOPT,CSCLE,DUMMY)
+      CALL MULT(B,NB,F,NF,DUMMY,NA)
+      CALL SUBT(A,NA,DUMMY,NA,DUMMY,NA)
+      CALL EQUATE(DUMMY,NA,DUMMY(N1),NA)
+      GO TO 200
+C
+  100 CONTINUE
+      CALL EQUATE(A,NA,DUMMY,NA)
+      CALL EQUATE(A,NA,DUMMY(N1),NA)
+C
+  200 CONTINUE
+      IF( IOP(2) .EQ. 0 ) GO TO 300
+      N3 = N2 + NA(1)
+      N4 = N3 + NA(1)
+      ISV = 0
+      CALL EIGEN(NA(1),NA(1),DUMMY(N1),DUMMY(N2),DUMMY(N3),ISV,ISV,V,DUM
+     1MY(N4),IERR)
+      CALL EQUATE(DUMMY,NA,DUMMY(N1),NA)
+      M = NA(1)
+      IF( IERR .EQ. 0 ) GO TO 250
+      CALL LNCNT(3)
+      PRINT 225
+  225 FORMAT(//* IN DSTAB, THE PROGRAM EIGEN FAILED TO DETERMINE THE *I5
+     1* EIGENVALUE FOR THE MATRIX A-BG AFTER 30 ITERATIONS*)
+      CALL PRNT(DUMMY,NA,4HA-BG,1)
+      IF( SING ) CALL PRNT(F,NF,4H G  ,1)
+      RETURN
+C
+  250 CONTINUE
+      ALPHA = 1.0
+      DO 275 I =1,M
+      I1 = N2 + I -1
+      I2 = N3 + I -1
+      ALPHA1 = SQRT(DUMMY(I1)**2 + DUMMY(I2)**2)
+      IF( ALPHA1 .LT. ALPHA .AND. ALPHA1 .NE. 0 ) ALPHA = ALPHA1
+  275 CONTINUE
+      ALPHA = SCLE*ALPHA
+      GO TO 400
+C
+  300 CONTINUE
+      ALPHA = SCLE
+C
+  400 CONTINUE
+      J = -NA(1)
+      NAX = NA(1)
+      DO 425 I = 1,NAX
+      J = J + NAX + 1
+      K = N1 + J -1
+      DUMMY(K) = DUMMY(J) - ALPHA
+      DUMMY(J) = DUMMY(J) + ALPHA
+  425 CONTINUE
+      CALL EQUATE(B,NB,DUMMY(N2),NB)
+      N3 = N2 + NA(1)*NB(2)
+      NRHS = NA(1)+NB(2)
+      N4 = N3 + NA(1)
+      IFAC = 0
+      CALL GELIM(NA(1),NA(1),DUMMY,NRHS,DUMMY(N1),DUMMY(N3),IFAC,DUMMY(N
+     14),IERR)
+      IF( IERR .EQ. 0 ) GO TO 500
+      CALL LNCNT(3)
+      IF( .NOT. SING ) GO TO 445
+      PRINT 435
+  435 FORMAT(//* IN DSTAB, GELIM HAS FOUND THE MATRIX ( A-BG) + (ALPHA)I
+     1 SINGULAR *)
+      CALL PRNT(A,NA,4H A  ,1)
+      CALL PRNT(F,NF,4H G  ,1)
+      GO TO 465
+  445 CONTINUE
+      CALL LNCNT(3)
+      PRINT 455
+  455 FORMAT(//* IN DSTAB, GELIM HAS FOUND THE MATRIX A + (ALPHA)I SINGU
+     1LAR *)
+      CALL PRNT(A,NA,4H A  ,1)
+  465 CONTINUE
+      CALL LNCNT(3)
+      PRINT 475,ALPHA
+  475 FORMAT(//* ALPHA = *E16.8)
+      RETURN
+C
+  500 CONTINUE
+      CALL EQUATE(DUMMY(N1),NA,DUMMY,NA)
+      CALL TRANP(DUMMY(N2),NB,DUMMY(N1),NDUM)
+      N3 = N2 + N
+      CALL MULT(DUMMY(N2),NB,DUMMY(N1),NDUM,DUMMY(N3),NA)
+      CALL SCALE(DUMMY(N3),NA,DUMMY(N1),NA,4.0)
+      SYM = .TRUE.
+      IOPT(1) = 0
+      EPSA=EPSAM
+      CALL BARSTW(DUMMY,NA,B,NB,DUMMY(N1),NA,IOPT,SYM,EPSA,EPSA,DUMMY(N2
+     1))
+      CALL EQUATE(DUMMY(N1),NA,DUMMY,NA)
+      CALL TRANP(B,NB,DUMMY(N1),NDUM)
+      CALL MULT(B,NB,DUMMY(N1),NDUM,DUMMY(N2),NA)
+      CALL ADD(DUMMY,NA,DUMMY(N2),NA,DUMMY,NA)
+      CALL EQUATE(A,NA,DUMMY(N1),NA)
+      IF( .NOT. SING ) GO TO 600
+      CALL MULT(B,NB,F,NF,DUMMY(N1),NA)
+      CALL SUBT(A,NA,DUMMY(N1),NA,DUMMY(N1),NA)
+C
+  600 CONTINUE
+      IOPT(1) = 3
+      M = NA(1)
+      IAC=IACM
+      CALL SNVDEC(IOPT,M,M,M,M,DUMMY,M,DUMMY(N1),IAC,ZTEST,DUMMY(N2),DUM
+     1MY(N3),IRANK,APLUS,IERR)
+      IF( IERR  .EQ. 0 ) GO TO 700
+      CALL LNCNT(5)
+      IF( IERR .GT. 0 ) PRINT 625,IERR
+      IF( IERR .EQ. -1) PRINT 650,ZTEST,IRANK
+  625 FORMAT(//* IN DSTAB, SNVDEC HAS FAILED TO CONVERGE TO THE *I5* SIN
+     1GULAR VALUE AFTER 30 ITERATIONS*)
+  650 FORMAT(//* IN DSTAB, THE MATRIX SUBMITTED TO SNVDEC, USING ZTEST =
+     1 *E16.8* , IS CLOSE TO A MATRIX OF LOWER RANK*/* IF THE ACCURACY I
+     2AC IS REDUCED THE RANK MAY ALSO BE REDUCED*/* CURRENT RANK = *I4)
+      IF( IERR  .GT. 0 ) RETURN
+      NDUM(1)= NA(1)
+      NDUM(2)= 1
+      CALL PRNT(DUMMY(N2),NDUM,4HSGVL,1)
+C
+  700 CONTINUE
+      CALL TRANP(B,NB,DUMMY(N2),NDUM)
+      CALL MULT(DUMMY(N2),NDUM,DUMMY(N1),NA,DUMMY,NF)
+      IF( .NOT. SING ) GO TO 800
+      CALL ADD(F,NF,DUMMY,NF,F,NF)
+      GO TO 900
+C
+  800 CONTINUE
+      CALL EQUATE(DUMMY,NF,F,NF)
+C
+  900 CONTINUE
+      IF( IOP(1) .EQ. 0 ) RETURN
+      CALL LNCNT(4)
+      PRINT 1000
+ 1000 FORMAT(//* COMPUTATION OF F SUCH THAT A-BF IS ASYMPTOTICALLY STABL
+     1E IN THE DISCRETE SENSE*/)
+      CALL PRNT(A,NA,4H A  ,1)
+      CALL PRNT(B,NB,4H B  ,1)
+      CALL LNCNT(4)
+      PRINT 1100,ALPHA
+ 1100 FORMAT(//* ALPHA = *E16.8/)
+      CALL PRNT(F,NF,4H F  ,1)
+      CALL MULT(B,NB,F,NF,DUMMY,NA)
+      CALL SUBT(A,NA,DUMMY,NA,DUMMY,NA)
+      CALL PRNT(DUMMY,NA,4HA-BF,1)
+      CALL LNCNT(3)
+      PRINT 1200
+ 1200 FORMAT(//* EIGENVALUES OF A-BF*)
+      NDUM(1) = NA(1)
+      NDUM(2) = 1
+      N2 = N1 + NA(1)
+      N3 = N2 + NA(1)
+      ISV = 0
+      CALL EIGEN(NA(1),NA(1),DUMMY,DUMMY(N1),DUMMY(N2),ISV,ISV,V,DUMMY(N
+     13),IERR)
+      IF( IERR .EQ. 0 ) GO TO 1300
+      CALL LNCNT(3)
+      PRINT 1250
+ 1250 FORMAT(//* IN DSTAB, THE PROGRAM EIGEN FAILED TO DETERMINE THE *I5
+     1* EIGENVALUE FOR THE A-BF MATRIX AFTER 30 ITERATIONS*)
+      NDUM(1)=NA(1)-IERR
+C
+ 1300 CONTINUE
+      CALL JUXTC(DUMMY(N1),NDUM,DUMMY(N2),NDUM,DUMMY,NDUM1)
+      CALL PRNT(DUMMY,NDUM1,4HEIGN,1)
+      CALL LNCNT(4)
+      PRINT 1400
+ 1400 FORMAT(//* MODULI OF EIGENVALUES OF A-BF*/)
+      M =NDUM(1)
+      DO 1500 I = 1,M
+      J = N1 + I - 1
+      K = N2 + I - 1
+      DUMMY(I)=SQRT(DUMMY(J)**2 + DUMMY(K)**2)
+ 1500 CONTINUE
+      CALL PRNT(DUMMY,NDUM,4HMOD ,1)
+C
+      RETURN
+      END
+      SUBROUTINE DISCREG(A,NA,B,NB,H,NH,Q,NQ,R,NR,F,NF,P,NP,IOP,IDENT,DU
+     1MMY)
+C
+C
+      DIMENSION A(1),B(1),Q(1),R(1),F(1),P(1),DUMMY(1)
+      DIMENSION NA(2),NB(2),NQ(2),NR(2),NF(2),NP(2)
+      DIMENSION IOP(3)
+      DIMENSION H(1),NH(2),NDUM(2)
+      LOGICAL  IDENT
+      COMMON/TOL/EPSAM,EPSBM,IACM
+      COMMON/CONV/SUMCV,MAXSUM,RICTCV,SERCV
+C
+      N = NA(1)**2
+      N1= N +1
+      N2= N1+N
+      N3= N2+N
+C
+      KSS = 0
+      I=IOP(3)
+C
+      IF(IOP(1) .EQ. 0)  GO TO 85
+      CALL LNCNT(5)
+      PRINT 25
+   25 FORMAT(//* PROGRAM TO SOLVE THE TIME-INVARIANT FINITE-DURATION OPT
+     1IMAL*/* DIGITAL REGULATOR PROBLEM WITH NOISE-FREE MEASUREMENTS*/)
+      CALL PRNT(A,NA,4H A  ,1)
+      CALL PRNT(B,NB,4H B  ,1)
+      CALL PRNT(Q,NQ,4H Q  ,1)
+      IF( .NOT. IDENT )  GO TO 45
+      CALL LNCNT(3)
+      PRINT 35
+   35 FORMAT(/* H IS AN IDENTITY MATRIX*/)
+      GO TO 65
+   45 CONTINUE
+      CALL PRNT(H,NH,4H H  ,1)
+      CALL MULT(Q,NQ,H,NH,DUMMY,NH)
+      CALL TRANP(H,NH,DUMMY(N1),NF)
+      CALL MULT(DUMMY(N1),NF,DUMMY,NH,Q,NQ)
+      CALL LNCNT(3)
+      PRINT 55
+   55 FORMAT(/* MATRIX ( H TRANSPOSE )QH*/)
+      CALL PRNT(Q,NQ,4HHTQH,1)
+   65 CONTINUE
+      CALL PRNT(R,NR,4H R  ,1)
+      CALL LNCNT(4)
+      PRINT 75
+   75 FORMAT(//* WEIGHTING ON TERMINAL VALUE OF STATE VECTOR*/)
+      CALL PRNT(P,NP,4H P  ,1)
+C
+   85 CONTINUE
+      IF((IOP(1) .NE. 0)  .OR. IDENT)  GO TO 100
+      CALL MULT(Q,NQ,H,NH,DUMMY,NH)
+      CALL TRANP(H,NH,DUMMY(N1),NF)
+      CALL MULT(DUMMY(N1),NF,DUMMY,NH,Q,NQ)
+C
+  100 CONTINUE
+      I=I-1
+      CALL EQUATE(P,NP,DUMMY,NP)
+      CALL MULT(P,NP,A,NA,DUMMY(N1),NA)
+      CALL TRANP(B,NB,DUMMY(N2),NF)
+      CALL MULT(DUMMY(N2),NF,DUMMY(N1),NA,F,NF)
+      CALL MULT(P,NP,B,NB,DUMMY(N1),NB)
+      CALL MULT(DUMMY(N2),NF,DUMMY(N1),NB,DUMMY(N3),NR)
+      CALL ADD(R,NR,DUMMY(N3),NR,DUMMY(N1),NR)
+      IOPT = 3
+      IAC=IACM
+      MF = NR(1)
+      CALL SNVDEC(IOPT,MF,MF,MF,MF,DUMMY(N1),NF(2),F,IAC,ZTEST,DUMMY(N2)
+     1,DUMMY(N3),IRANK,APLUS,IERR)
+      IF( IERR .EQ.0) GO TO 300
+      CALL LNCNT(5)
+      IF(IERR .GT. 0) PRINT 200,IERR
+      IF(IERR  .EQ. -1) PRINT 250,ZTEST,IRANK
+  200 FORMAT(//* IN DISCREG, SNVDEC HAS FAILED TO CONVERGE TO THE *I4*SI
+     1NGULARVALUE AFTER 30 ITERATIONS*//)
+  250 FORMAT(//* IN DISCREG, THE MATRIX SUBMITTED TO SNVDEC USING ZTEST
+     1=*E16.8* IS CLOSE TO A MATRIX OF LOWER RANK*/*IF  THE ACCURACY IAC
+     2 IS REDUCED THE RANK MAY ALSO BE REDUCED*/* CURRENT RANK = *I4)
+      IF( IERR .GT. 0 ) RETURN
+      NDUM(1) = NA(1)
+      NDUM(2) =  1
+      CALL PRNT(DUMMY(N2),NDUM,4HSGVL,1)
+C
+  300 CONTINUE
+      CALL MULT(R,NR,F,NF,DUMMY(N1),NF)
+      CALL TRANP(F,NF,DUMMY(N2),NB)
+      CALL MULT(DUMMY(N2),NB,DUMMY(N1),NF,P,NP)
+      CALL ADD(Q,NQ,P,NP,P,NP)
+      CALL MULT(B,NB,F,NF,DUMMY(N1),NA)
+      CALL SUBT(A,NA,DUMMY(N1),NA,DUMMY(N1),NA)
+      CALL MULT(DUMMY,NA,DUMMY(N1),NA,DUMMY(N2),NA)
+      CALL TRANP(DUMMY(N1),NA,DUMMY(N3),NA)
+      CALL MULT(DUMMY(N3),NA,DUMMY(N2),NA,DUMMY(N1),NA)
+      CALL ADD(P,NP,DUMMY(N1),NA,P,NP)
+C
+      IF( IOP(2) .EQ. 0 )  GO TO 400
+      CALL LNCNT(5)
+      PRINT 350,I
+  350 FORMAT(///* STAGE *I5,/)
+      CALL PRNT(F,NF,4H F  ,1)
+      CALL PRNT(P,NP,4H P  ,1)
+C
+  400 CONTINUE
+      IF( I .EQ. 0 )  GO TO 600
+      CALL MAXEL(DUMMY,NP,ANORM1)
+      CALL SUBT(DUMMY,NP,P,NP,DUMMY(N2),NP)
+      CALL MAXEL(DUMMY(N2),NP,ANORM2)
+      IF( ANORM1 .NE. 0.0 )  GO TO 500
+      GO TO 100
+C
+  500 CONTINUE
+      IF(ANORM1 .GT. 1.0 ) GO TO 550
+      IF( ANORM2/ANORM1 .LT. RICTCV ) KSS = 1
+      GO TO 575
+  550 CONTINUE
+      IF( ANORM2 .LT. RICTCV ) KSS=1
+  575 CONTINUE
+      IF( KSS .EQ. 1) GO TO 600
+      GO TO 100
+C
+  600 CONTINUE
+      K = IOP(1) + IOP(2)
+      IF( K .EQ. 0 ) RETURN
+      IF( KSS .EQ. 0) GO TO 700
+      CALL LNCNT(4)
+      PRINT 650
+  650 FORMAT(//* STEADY-STATE SOLUTION HAS BEEN REACHED IN  DISCREG*/)
+C
+  700 CONTINUE
+      IF( IOP(2) .NE. 0 )  RETURN
+      IF( IOP(1) .EQ. 0 )  RETURN
+      CALL LNCNT(3)
+      I = IOP(3)-I
+      PRINT 800, I
+  800 FORMAT(/* F AND P AFTER *I5 * STEPS*/)
+      CALL PRNT(F,NF,4H F  ,1)
+      CALL PRNT(P,NP,4H P  ,1)
+C
+      RETURN
+      END
+      SUBROUTINE CNTNREG(A,NA,B,NB,H,NH,Q,NQ,R,NR,Z,W,LAMBDA,S,F,NF,P,NP
+     1,T,IOP,IDENT,DUMMY)
+C
+C
+      DIMENSION A(1),B(1),H(1),Q(1),R(1),Z(1),W(1),LAMBDA(1),S(1),F(1),P
+     1(1),T(1),DUMMY(1)
+      DIMENSION NA(2),NB(2),NH(2),NQ(2),NR(2),NF(2),NP(2),IOP(3),NDUM1(2
+     1),NDUM2(2)
+      LOGICAL IDENT
+      REAL LAMBDA
+      COMMON/CONV/SUMCV,MAXSUM,RICTCV,SERCV
+C
+      IF( IOP(1). EQ. 0 ) GO TO 65
+      CALL LNCNT(5)
+      IF( IOP(3) .EQ. 0 ) PRINT 25
+   25 FORMAT(//* PROGRAM TO SOLVE THE TIME-INVARIANT FINITE-DURATION CON
+     1TINUOUS OPTIMAL*/* REGULATOR PROBLEM WITH NOISE-FREE MEASUREMENTS*
+     2)
+      IF( IOP(3) .NE. 0 ) PRINT 30
+   30 FORMAT(//* PROGRAM TO SOLVE THE TIME-INVARIANT INFINITE-DURATION C
+     1ONTINUOUS OPTIMAL*/* REGULATOR PROBLEM  WITH NOISE-FREE MEASUREMEN
+     2TS*)
+      CALL PRNT(A,NA,4H A  ,1)
+      CALL PRNT(B,NB,4H B  ,1)
+      CALL PRNT(Q,NQ,4H Q  ,1)
+      IF( .NOT. IDENT ) GO TO 45
+      CALL LNCNT(3)
+      PRINT 35
+   35 FORMAT(/* H IS AN IDENTITY MATRIX*/)
+      GO TO 55
+C
+   45 CONTINUE
+      CALL PRNT(H,NH,4H H  ,1)
+      CALL MULT(Q,NQ,H,NH,DUMMY,NH)
+      N1= NH(1)*NH(2)+1
+      CALL TRANP(H,NH,DUMMY(N1),NDUM1)
+      CALL MULT(DUMMY(N1),NDUM1,DUMMY,NH,Q,NQ)
+      CALL LNCNT(3)
+      PRINT 50
+   50 FORMAT(//* MATRIX (H TRANSPOSE)QH*)
+      CALL PRNT(Q,NQ,0,3)
+   55 CONTINUE
+      CALL PRNT(R,NR,4H R  ,1)
+C
+      IF( IOP(3) .NE. 0 ) GO TO 65
+      CALL LNCNT(4)
+      PRINT 60
+   60 FORMAT(//* WEIGHTING ON TERMINAL VALUE OF STATE VECTOR*/)
+      CALL PRNT(P,NP,4H P  ,1)
+C
+   65 CONTINUE
+      CALL EQUATE(R,NR,DUMMY,NR)
+      N = NA(1)**2
+      N1 = NB(1)*NB(2)+1
+      CALL TRANP(B,NB,DUMMY(N1),NDUM1)
+      N2 = N1 + N
+      L = NR(1)
+      IOPT = 0
+      IFAC = 0
+      CALL SYMPDS(L,L,DUMMY,NB(1),DUMMY(N1),IOPT,IFAC,DET,ISCALE,DUMMY(N
+     12),IERR)
+C
+      IF( IERR .EQ. 0 ) GO TO 100
+      CALL LNCNT(4)
+      PRINT 75
+   75 FORMAT(//* IN CNTNREG, THE SUBROUTINE  SYMPDS HAS FOUND THE MATRIX
+     1 R NOT SYMMETRIC POSITIVE DEFINITE*/)
+      RETURN
+C
+  100 CONTINUE
+      CALL EQUATE(DUMMY(N1),NDUM1,DUMMY,NDUM1)
+      CALL MULT(B,NB,DUMMY(N1),NDUM1,DUMMY(N2),NA)
+      CALL SCALE(DUMMY(N2),NA,DUMMY(N1),NA,-1.0)
+      N3 = N2 + N
+      IF( IDENT .OR. (IOP(1) .NE. 0) ) GO TO 200
+      CALL MULT(Q,NQ,H,NH,DUMMY(N2),NH)
+      CALL TRANP(H,NH,DUMMY(N3),NDUM1)
+      CALL MULT(DUMMY(N3),NDUM1,DUMMY(N2),NH,Q,NQ)
+C
+  200 CONTINUE
+      CALL SCALE(Q,NQ,Q,NQ,-1.0)
+      CALL JUXTR(A,NA,Q,NQ,Z,NDUM1)
+      CALL TRANP(A,NA,DUMMY(N2),NA)
+      CALL SCALE( DUMMY(N2),NA,DUMMY(N2),NA,-1.0)
+      L = 2*N + 1
+      CALL JUXTR(DUMMY(N1),NA,DUMMY(N2),NA,Z(L),NDUM1)
+      CALL SCALE(Q,NQ,Q,NQ,-1.0)
+      NDUM2(1) = 2*NA(1)
+      NDUM2(2) = NDUM2(1)
+      IF( IOP(1) .NE. 0 )  CALL PRNT(Z,NDUM2,4H Z  ,1)
+      CALL EQUATE(Z,NDUM2,DUMMY(N1),NDUM2)
+      M = 4*N
+      N2 = M + N1
+      L = 2*NA(1)
+      N3 = N2 + L
+      N4 = N3 + L
+      ISV = L
+      ILV = 0
+      CALL EIGEN(L,L,DUMMY(N1),DUMMY(N2),DUMMY(N3),ISV,ILV,W,DUMMY(N4),I
+     1ERR)
+      IF( IERR .EQ. 0 ) GO TO 300
+      CALL LNCNT(4)
+      IF( IERR .GT. 0 ) GO TO 250
+      PRINT 225,IERR
+  225 FORMAT(//* IN CNTNREG, EIGEN FAILED TO COMPUTE THE * I6 * EIGENVEC
+     1TOR OF Z */)
+      RETURN
+  250 CONTINUE
+      PRINT 275,IERR
+  275 FORMAT(//* IN CNTNREG, THE *I6 * EIGENVALUE OF Z HAS NOT BEEN FOU
+     1ND AFTER 30 ITERATIONS IN EIGEN*/)
+      RETURN
+C
+  300 CONTINUE
+      IF( IOP(1) .EQ. 0 ) GO TO 400
+      CALL LNCNT(3)
+      PRINT 325
+  325 FORMAT(//* EIGENVALUES OF Z*)
+      NDUM1(1) = L
+      NDUM1(2) = 2
+      CALL PRNT(DUMMY(N2),NDUM1,0,3)
+      CALL LNCNT(3)
+      PRINT 350
+  350 FORMAT(//* CORRESPONDING EIGENVECTORS*)
+      CALL PRNT(W,NDUM2,0,3)
+C
+  400 CONTINUE
+      CALL EQUATE(W,NDUM2,DUMMY(N1),NDUM2)
+      J1 = 1
+      J2 = 1
+      M = 2*N
+      NDUM1(1) = L
+      NDUM1(2) = 1
+      K4 = N4
+C
+      I=1
+  415 CONTINUE
+      IF( I .GT. L )  GO TO 515
+      K1 = N2+I-1
+      K2 = N1+(I-1)*L
+      K3 = N3+I-1
+      IF(DUMMY(K1) .GT. 0.0 ) GO TO 425
+      J = (J1-1)*L+M+1
+      J1 = J1+1
+      IF(DUMMY(K3).NE. 0.0) J1=J1+1
+      GO TO 450
+  425 CONTINUE
+      DUMMY(K4)=I
+      K4 = K4+1
+      J = (J2-1)*L+1
+      J2 = J2+1
+      IF( DUMMY(K3) .NE. 0.0 )  J2 = J2 + 1
+  450 CONTINUE
+      CALL EQUATE(DUMMY(K2),NDUM1,W(J),NDUM1)
+      IF(DUMMY(K3) .EQ. 0.0) GO TO 500
+      I = I+1
+      K2 = K2+L
+      J = J+L
+      CALL EQUATE(DUMMY(K2),NDUM1,W(J),NDUM1)
+  500 CONTINUE
+      I=I+1
+      GO TO 415
+  515 CONTINUE
+C
+      CALL NULL(LAMBDA,NA)
+      K0 = -1
+      J = -NA(1)
+      NAX = NA(1)
+      I=1
+  520 CONTINUE
+      IF( I .GT. NAX )  GO TO 530
+      J = NAX + J + 1
+      K0 = K0 + 1
+      K1 = N4 + K0
+      K2 = DUMMY(K1)
+      K = N2+K2-1
+      LAMBDA(J) = DUMMY(K)
+      K3 = N3+K2-1
+      IF( DUMMY(K3) .EQ. 0.0 ) GO TO 525
+      K4 = J+1
+      LAMBDA(K4) = -DUMMY(K3)
+      K4 = K4+NAX
+      LAMBDA(K4) = DUMMY(K)
+      K4 = K4-1
+      LAMBDA(K4) = DUMMY(K3)
+      K5 = M + (I-1)*L + 1
+      K6 = K5 + L
+      CALL EQUATE(W(K5),NDUM1,DUMMY(N1),NDUM1)
+      CALL EQUATE(W(K6),NDUM1,W(K5),NDUM1)
+      CALL EQUATE(DUMMY(N1),NDUM1,W(K6),NDUM1)
+      I = I+1
+      J = NAX + J +1
+  525 CONTINUE
+      I=I+1
+      GO TO 520
+  530 CONTINUE
+C
+      IF( IOP(1) .EQ. 0 ) GO TO 700
+      CALL LNCNT(3)
+      PRINT 535
+  535 FORMAT(//* REORDERED EIGENVECTORS*)
+      CALL PRNT(W,NDUM2,0,3)
+      CALL LNCNT(4)
+      PRINT 545
+  545 FORMAT(//* LAMBDA MATRIX OF EIGENVALUES OF Z WITH POSITIVE REAL PA
+     1RTS*/)
+      CALL PRNT(LAMBDA,NA,0,3)
+C
+      CALL MULT(Z,NDUM2,W,NDUM2,DUMMY(N1),NDUM2)
+      L = NDUM2(1)
+      M = L**2
+      N2 = N1+M
+      CALL EQUATE(W,NDUM2,DUMMY(N2),NDUM2)
+      N3 = N2+M
+      N4 = N3+L
+      IFAC = 0
+      CALL GELIM(L,L,DUMMY(N2),L,DUMMY(N1),DUMMY(N3),IFAC,DUMMY(N4),IERR
+     1)
+      IF( IERR .EQ. 0 ) GO TO 600
+      CALL LNCNT(4)
+      PRINT 550
+  550 FORMAT(//* IN CNTNREG, GELIM HAS FOUND THE REORDERED MATRIX W TO B
+     1E SINGULAR */)
+  600 CONTINUE
+      CALL PRNT(DUMMY(N1),NDUM2,4HWIZW,1)
+C
+  700 CONTINUE
+      NDUM1(1) = 2*NA(1)
+      NDUM1(2) = NA(1)
+      N2 = 2*N + N1
+      CALL TRANP(W,NDUM1,DUMMY(N2),NDUM2)
+      NW11 = N1
+      NDUM1(1) = NA(1)
+      CALL TRANP(DUMMY(N2),NDUM1,DUMMY(NW11),NDUM1)
+      L = N2+N
+      NW21 = NW11+N
+      CALL TRANP(DUMMY(L),NDUM1,DUMMY(NW21),NDUM1)
+      L = 2*N+1
+      NDUM1(1)=2*NA(1)
+      N3 = N2 + 2*N
+      CALL TRANP(W(L),NDUM1,DUMMY(N3),NDUM2)
+      NDUM1(1) = NA(1)
+      NW12 = NW21+N
+      CALL TRANP(DUMMY(N3),NDUM1,DUMMY(NW12),NDUM1)
+      L = N3 + N
+      NW22 = NW12 + N
+      CALL TRANP(DUMMY(L),NDUM1,DUMMY(NW22),NDUM1)
+C
+      IF( IOP(1) .EQ. 0 ) GO TO 800
+      CALL PRNT(DUMMY(NW11),NA,4HW11 ,1)
+      CALL PRNT(DUMMY(NW21),NA,4HW21 ,1)
+      CALL PRNT(DUMMY(NW12),NA,4HW12 ,1)
+      CALL PRNT(DUMMY(NW22),NA,4HW22 ,1)
+C
+  800 CONTINUE
+      IF( IOP(3) .NE. 0 ) GO TO 900
+      N2 = N1+4*N
+      CALL MULT(P,NP,DUMMY(NW12),NA,S,NA)
+      CALL MULT(P,NP,DUMMY(NW11),NA,DUMMY(N2),NA)
+      CALL SUBT(S,NA,DUMMY(NW22),NA,S,NA)
+      CALL SUBT(DUMMY(NW21),NA,DUMMY(N2),NA,DUMMY(N2),NA)
+      N3 = N2+N
+      L = NA(1)
+      IFAC = 0
+      N4 = N3+NA(1)
+      CALL GELIM(L,L,DUMMY(N2),L,S,DUMMY(N3),IFAC,DUMMY(N4),IERR)
+      IF( IERR .EQ. 0 ) GO TO 850
+      CALL LNCNT(4)
+      PRINT 825
+  825 FORMAT(//* IN CNTNREG, GELIM HAS FOUND THE MATRIX  W21 - P1XW11 TO
+     1 BE SINGULAR*/)
+      RETURN
+C
+  850 CONTINUE
+      IF( IOP(1) .EQ. 0 ) GO TO 1000
+      CALL PRNT(S,NA,4H S  ,1)
+      NDUM1(1) = NR(1)
+      NDUM1(2) = NA(1)
+      CALL LNCNT(3)
+      PRINT 875
+  875 FORMAT(//* MATRIX (R INVERSE)X(B TRANSPOSE)*)
+      CALL PRNT(DUMMY,NDUM1,0,3)
+      GO TO 1000
+C
+  900 CONTINUE
+      N2 = N1+4*N
+      CALL TRANP(DUMMY(NW12),NA,DUMMY(N2),NA)
+      CALL TRANP(DUMMY(NW22),NA,P,NP)
+      N3 = N2+N
+      IFAC = 0
+      L = NA(1)
+      N4 = N3 + NA(1)
+      CALL GELIM(L,L,DUMMY(N2),L,P,DUMMY(N3),IFAC,DUMMY(N4),IERR)
+      IF( IERR .EQ. 0 ) GO TO 950
+      CALL LNCNT(4)
+      PRINT 925
+  925 FORMAT(//* IN CNTNREG, GELIM HAS FOUND THE MATRIX W12 TO BE SINGUL
+     1AR*/)
+      RETURN
+  950 CONTINUE
+      NDUM1(1) = NR(1)
+      NDUM1(2) = NA(1)
+      CALL MULT(DUMMY,NDUM1,P,NP,F,NF)
+      IF( IOP(1) .EQ. 0 ) RETURN
+      CALL PRNT(P,NP,4H P  ,1)
+      CALL PRNT(F,NF,4H F  ,1)
+      RETURN
+C
+ 1000 CONTINUE
+      XTT = T(1)/T(2)
+      NMAX = INT(XTT)
+      IF( (T(1)-NMAX*T(2)) .GT. 0.1*T(2) )  NMAX = NMAX+1
+      I = NMAX
+      TT = -T(2)
+      N4 = N3+N
+      N5 = N4+N
+      N6 = N5+N
+      N7 = N6+NA(1)
+      KSS = 0
+      NDUM1(1) = NR(1)
+      NDUM1(2) = NA(1)
+      NA1=NA(1)
+      LL=NA1+1
+      L2=LL+LL
+      N21 = N2 - 1
+      II=1
+      IF (TT .EQ. 0.0) GO TO 1030
+      CALL NULL(DUMMY(N2),NA)
+ 1010 IF (II .GT. N) GO TO 1040
+      E=EXP(TT*LAMBDA(II))
+      IF (II .EQ. N) GO TO 1020
+      IF (LAMBDA(II+NA1) .EQ. 0.0) GO TO 1020
+      CS=COS(TT*LAMBDA(II+NA1))
+      SN=SIN(TT*LAMBDA(II+NA1))
+      ER=E*CS
+      EI=E*SN
+      DUMMY(N21+II)=ER
+      DUMMY(N21+II+LL)=ER
+      DUMMY(N21+II+1)=-EI
+      DUMMY(N21+II+NA1)=EI
+      II=II+L2
+      GO TO 1010
+ 1020 DUMMY(N21+II)=E
+      II=II+LL
+      GO TO 1010
+ 1030 CALL UNITY(DUMMY(N2),NA)
+ 1040 CONTINUE
+      IF( IOP(1) .EQ. 0 )  GO TO 1075
+      CALL LNCNT(3)
+      PRINT 1050,T(2)
+ 1050 FORMAT(//* EXP(-LAMBDA X *E16.8 *)*)
+      CALL PRNT(DUMMY(N2),NA,0,3)
+ 1075 CONTINUE
+      IF( NMAX .LE. 0 )  RETURN
+      CALL EQUATE(S,NA,DUMMY(N3),NA)
+ 1100 CONTINUE
+      TIME = I*T(2)
+      IF( I .NE. NMAX )  CALL EQUATE(DUMMY(N5),NA,P,NP)
+      CALL MULT(DUMMY(N3),NA,DUMMY(N2),NA,DUMMY(N4),NA)
+      CALL MULT(DUMMY(N2),NA,DUMMY(N4),NA,DUMMY(N3),NA)
+      CALL MULT(DUMMY(NW11),NA,DUMMY(N3),NA,DUMMY(N4),NA)
+      CALL ADD(DUMMY(NW12),NA,DUMMY(N4),NA,DUMMY(N4),NA)
+      CALL TRANP(DUMMY(N4),NA,DUMMY(N5),NA)
+      CALL EQUATE(DUMMY(N5),NA,DUMMY(N4),NA)
+      CALL MULT(DUMMY(NW21),NA,DUMMY(N3),NA,DUMMY(N5),NA)
+      CALL ADD(DUMMY(NW22),NA,DUMMY(N5),NA,DUMMY(N5),NA)
+      CALL TRANP(DUMMY(N5),NA,DUMMY(N6),NA)
+      CALL EQUATE(DUMMY(N6),NA,DUMMY(N5),NA)
+      L = NA(1)
+      IFAC = 0
+      CALL GELIM(L,L,DUMMY(N4),L,DUMMY(N5),DUMMY(N6),IFAC,DUMMY(N7),IERR
+     1)
+      IF( IERR .EQ. 0 ) GO TO 1200
+      CALL LNCNT(3)
+      PRINT 1150,TIME
+ 1150 FORMAT(//* IN CNTNREG AT TIME *E16.8*  P CANNOT BE COMPUTED DUE TO
+     1 MATRIX SINGULARITY IN GELIM*)
+      RETURN
+C
+ 1200 CONTINUE
+      CALL MAXEL(P,NP,ANORM1)
+      CALL SUBT(DUMMY(N5),NA,P,NP,DUMMY(N4),NA)
+      CALL MAXEL(DUMMY(N4),NA,ANORM2)
+      IF( ANORM1 .NE. 0.0 ) GO TO 1225
+      GO TO 1300
+C
+ 1225 CONTINUE
+      IF(ANORM1 .GT. 1.0 ) GO TO 1250
+      IF( ANORM2/ANORM1 .LT. RICTCV ) KSS=1
+      GO TO 1300
+ 1250 CONTINUE
+      IF( ANORM2 .LT. RICTCV ) KSS=1
+C
+ 1300 CONTINUE
+      CALL MULT(DUMMY,NDUM1,P,NP,F,NF)
+      IF( IOP(2) .EQ. 0 ) GO TO 1400
+      CALL LNCNT(5)
+      PRINT 1350,TIME
+ 1350 FORMAT(///* TIME = *E16.8/)
+      CALL PRNT(P,NP,4H P  ,1)
+      IF( I .NE. NMAX )  CALL PRNT(F,NF,4H F  ,1)
+C
+ 1400 CONTINUE
+      IF( KSS .EQ. 1 ) GO TO 1500
+      I = I-1
+      IF( I .GE. 0 ) GO TO 1100
+      GO TO 1600
+ 1500 CONTINUE
+      CALL LNCNT(4)
+      PRINT 1550
+ 1550 FORMAT(//* STEADY-STATE SOLUTION HAS BEEN REACHED IN CNTNREG*/)
+C
+ 1600 CONTINUE
+      IF( IOP(2) .NE. 0 ) RETURN
+      IF( IOP(1) .EQ. 0 ) RETURN
+      CALL LNCNT(5)
+      PRINT 1350,TIME
+      CALL PRNT(P,NP,4H P  ,1)
+      CALL PRNT(F,NF,4H F  ,1)
+C
+      RETURN
+      END
+      SUBROUTINE RICTNWT(A,NA,B,NB,H,NH,Q,NQ,R,NR,F,NF,P,NP,IOP,IDENT,DI
+     1SC,FNULL,DUMMY)
+C
+C
+      DIMENSION A(1),B(1),Q(1),R(1),F(1),P(1),DUMMY(1)
+      DIMENSION NA(2),NB(2),NQ(2),NR(2),NF(2),NP(2),IOP(3)
+      DIMENSION H(1),NH(2),IOPT(2)
+      LOGICAL  IDENT,DISC,FNULL,SYM
+      COMMON/TOL/EPSAM,EPSBM,IACM
+      COMMON/CONV/SUMCV,MAXSUM,RICTCV,SERCV
+C
+      I=1
+      IOPT(1)=0
+      SYM = .TRUE.
+C
+      N = NA(1)**2
+      N1 = N +1
+      IF( .NOT. DISC) N1 = NA(1)*NR(1) + 1
+      N2= N1+N
+      N3= N2+N
+      N4 = N3+N
+C
+      IF( IOP(1) .EQ. 0 )  GO TO 210
+      CALL LNCNT(4)
+      IF(.NOT. DISC)PRINT 100
+      IF( DISC )PRINT 150
+  100 FORMAT(//* PROGRAM TO SOLVE CONTINUOUS STEADY-STATE RICCATI EQUATI
+     1ON BY THE NEWTON ALGORITHM*/)
+  150 FORMAT(//* PROGRAM TO SOLVE DISCRETE STEADY-STATE RICCATI EQUATION
+     1 BY THE NEWTON ALGORITHM*/)
+      CALL PRNT(A,NA,4H A  ,1)
+      CALL PRNT(B,NB,4H B  ,1)
+      CALL PRNT(Q,NQ,4H Q  ,1)
+      IF( .NOT. IDENT )GO TO 185
+      CALL LNCNT(3)
+      PRINT 180
+  180 FORMAT(/* H IS AN IDENTITY MATRIX*/)
+      GO TO 200
+  185 CONTINUE
+      CALL PRNT(H,NH,4H H  ,1)
+      CALL MULT(Q,NQ,H,NH,DUMMY,NH)
+      CALL TRANP(H,NH,DUMMY(N2),NP)
+      CALL MULT(DUMMY(N2),NP,DUMMY,NH,Q,NQ)
+      CALL LNCNT(3)
+      PRINT 195
+  195 FORMAT(/* MATRIX (H TRANSPOSE)QH */)
+      CALL PRNT(Q,NQ,4HHTQH,1)
+  200 CONTINUE
+      CALL PRNT(R,NR,4H R  ,1)
+      IF( FNULL )  GO TO 210
+      CALL LNCNT(3)
+      PRINT 205
+  205 FORMAT(/* INITIAL F MATRIX*/)
+      CALL PRNT(F,NF,4H F  ,1)
+C
+  210 CONTINUE
+      IF((IOP(1) .NE. 0)  .OR. IDENT)  GO TO 220
+      CALL MULT(Q,NQ,H,NH,DUMMY,NH)
+      CALL TRANP(H,NH,DUMMY(N2),NP)
+      CALL MULT(DUMMY(N2),NP,DUMMY,NH,Q,NQ)
+  220 CONTINUE
+C
+      IF (DISC) GO TO 900
+C
+      CALL TRANP(B,NB,P,NP)
+      CALL EQUATE(R,NR,DUMMY,NR)
+      CALL SYMPDS(NR(1),NR(1),DUMMY,NP(2),P,IOPT,IOPT,DET,ISCALE,DUMMY(N
+     11),IERR)
+      IF(IERR .EQ. 0) GO TO 250
+      CALL LNCNT(3)
+      PRINT 225
+  225 FORMAT(/* IN RICTNWT, A MATRIX WHICH IS  NOT SYMMETRIC POSITIVE DE
+     1FINITE HAS BEEN SUBMITTED TO  SYMPDS*/)
+      RETURN
+C
+  250 CONTINUE
+      CALL EQUATE(P,NP,DUMMY,NF)
+      CALL MULT(B,NB,DUMMY,NF,DUMMY(N1),NA)
+      CALL TRANP(DUMMY(N1),NA,DUMMY(N2),NA)
+      CALL ADD(DUMMY(N1),NA,DUMMY(N2),NA,DUMMY(N1),NA)
+      CALL SCALE(DUMMY(N1),NA,DUMMY(N1),NA,0.5)
+C
+      IF(FNULL) GO TO 300
+C
+      CALL MULT(B,NB,F,NF,DUMMY(N2),NA)
+      CALL SUBT(A,NA,DUMMY(N2),NA,DUMMY(N2),NA)
+      CALL TRANP(DUMMY(N2),NA,DUMMY(N3),NA)
+      CALL EQUATE(DUMMY(N3),NA,DUMMY(N2),NA)
+      CALL MULT(R,NR,F,NF,DUMMY(N3),NF)
+      CALL TRANP(F,NF,P,NP)
+      CALL MULT(P,NP,DUMMY(N3),NF,DUMMY(N4),NA)
+      CALL TRANP(DUMMY(N4),NA,DUMMY(N3),NA)
+      CALL ADD(DUMMY(N4),NA,DUMMY(N3),NA,DUMMY(N3),NA)
+      CALL SCALE(DUMMY(N3),NA,DUMMY(N3),NA,0.5)
+      CALL ADD(DUMMY(N3),NA,Q,NQ,P,NP)
+      CALL SCALE(P,NP,P,NP,-1.0)
+      GO TO 350
+C
+  300 CONTINUE
+      CALL TRANP(A,NA,DUMMY(N2),NA)
+      CALL SCALE(Q,NQ,P,NP,-1.0)
+C
+  350 CONTINUE
+      IF(IOP(3) .NE. 0) GO TO 400
+      EPSA= EPSAM
+      CALL BARSTW(DUMMY(N2),NA,B,NB,P,NP,IOPT,SYM,EPSA,EPSA,DUMMY(N3))
+      GO TO 450
+C
+  400 CONTINUE
+      IOPT(2)=1
+      CALL BILIN(DUMMY(N2),NA,B,NB,P,NP,IOPT,SCLE,SYM,DUMMY(N3))
+C
+  450 CONTINUE
+      CALL EQUATE(P,NP,DUMMY(N2),NP)
+      IF(IOP(2).EQ. 0) GO TO 550
+      CALL LNCNT(3)
+      PRINT 500,I
+  500 FORMAT(/* ITERATION  *I5/)
+      CALL PRNT(P,NP,4H P  ,1)
+C
+  550 CONTINUE
+      CALL MULT(DUMMY(N1),NA,P,NP,DUMMY(N3),NA)
+      CALL MULT(P,NP,DUMMY(N3),NA,DUMMY(N4),NA)
+      CALL TRANP(DUMMY(N4),NA,P,NA)
+      CALL ADD(P,NP,DUMMY(N4),NA,P,NP)
+      CALL SCALE(P,NP,P,NP,0.5)
+      CALL ADD(Q,NQ,P,NP,P,NP)
+      CALL SCALE(P,NP,P,NP,-1.0)
+      CALL SUBT(A,NA,DUMMY(N3),NA,DUMMY(N4),NA)
+      CALL TRANP(DUMMY(N4),NA,DUMMY(N3),NA)
+C
+      IF(IOP(3) .NE. 0 ) GO TO 650
+      CALL BARSTW(DUMMY(N3),NA,B,NB,P,NP,IOPT,SYM,EPSA,EPSA,DUMMY(N4))
+      GO TO 675
+C
+  650 CONTINUE
+      CALL BILIN(DUMMY(N3),NA,B,NB,P,NP,IOPT,SCLE,SYM,DUMMY(N4))
+C
+  675 CONTINUE
+      I=I+1
+      CALL MAXEL(DUMMY(N2),NA,ANORM1)
+      CALL SUBT(P,NP,DUMMY(N2),NA,DUMMY(N3),NA)
+      CALL MAXEL(DUMMY(N3),NA,ANORM2)
+      IF(ANORM1 .GT. 1.0) GO TO 700
+      IF( ANORM2/ANORM1 .LT. RICTCV ) GO TO 800
+      GO TO 750
+C
+  700 CONTINUE
+      IF( ANORM2 .LT. RICTCV ) GO TO 800
+C
+  750 CONTINUE
+      IF( I .LE. 101) GO TO 450
+      CALL LNCNT(3)
+      PRINT 775
+  775 FORMAT(/* THE SUBROUTINE RICTNWT HAS EXCEEDED 100 ITERATIONS WITHO
+     1UT CONVERGENCE*/)
+      IOP(1) = 1
+C
+  800 CONTINUE
+      CALL MULT(DUMMY,NF,P,NP,F,NF)
+      GO TO 1300
+C
+  900 CONTINUE
+      IF( .NOT. FNULL ) GO TO 950
+C
+      CALL EQUATE(Q,NQ,P,NP)
+      CALL EQUATE(A,NA,DUMMY(N1),NA)
+      CALL TRANP(A,NA,DUMMY(N2),NA)
+      GO TO 1000
+  925 CONTINUE
+C
+      I=I+1
+      CALL EQUATE(P,NP,DUMMY,NP)
+  950 CONTINUE
+C
+      CALL MULT(R,NR,F,NF,DUMMY(N1),NF)
+      CALL TRANP(F,NF,P,NP)
+      CALL MULT(P,NP,DUMMY(N1),NF,DUMMY(N2),NA)
+      CALL TRANP(DUMMY(N2),NA,DUMMY(N1),NA)
+      CALL ADD(DUMMY(N1),NA,DUMMY(N2),NA,DUMMY(N1),NA)
+      CALL SCALE(DUMMY(N1),NA,DUMMY(N1),NA,0.5)
+      CALL ADD(Q,NQ,DUMMY(N1),NA,P,NP)
+      CALL MULT(B,NB,F,NF,DUMMY(N1),NA)
+      CALL SUBT(A,NA,DUMMY(N1),NA,DUMMY(N1),NA)
+      CALL TRANP(DUMMY(N1),NA,DUMMY(N2),NA)
+C
+ 1000 CONTINUE
+      CALL SUM(DUMMY(N2),NA,P,NP,DUMMY(N1),NA,IOPT,SYM,DUMMY(N3))
+      IF(IOP(2) .EQ. 0) GO TO 1100
+      CALL LNCNT(3)
+      PRINT 500,I
+      CALL PRNT(P,NP,4H P  ,1)
+C
+ 1100 CONTINUE
+      CALL MULT(P,NP,A,NA,DUMMY(N1),NA)
+      CALL MULT(P,NP,B,NB,DUMMY(N2),NB)
+      CALL TRANP(B,NB,DUMMY(N3),NF)
+      CALL MULT(DUMMY(N3),NF,DUMMY(N1),NA,F,NF)
+      CALL MULT(DUMMY(N3),NF,DUMMY(N2),NB,DUMMY(N1),NR)
+      CALL TRANP(DUMMY(N1),NR,DUMMY(N2),NR)
+      CALL ADD(DUMMY(N1),NR,DUMMY(N2),NR,DUMMY(N1),NR)
+      CALL SCALE(DUMMY(N1),NR,DUMMY(N1),NR,0.5)
+      CALL ADD(R,NR,DUMMY(N1),NR,DUMMY(N1),NR)
+      CALL SYMPDS(NR(1),NR(1),DUMMY(N1),NA(1),F,IOPT,IOPT,DET,ISCALE,DUM
+     1MY(N2),IERR)
+      IF(IERR .EQ. 0) GO TO 1150
+      CALL LNCNT(3)
+      PRINT 225
+      RETURN
+C
+ 1150 CONTINUE
+      IF( I .EQ. 1) GO TO 925
+      CALL MAXEL(DUMMY,NA,ANORM1)
+      CALL SUBT(P,NP,DUMMY,NA,DUMMY(N1),NA)
+      CALL MAXEL(DUMMY(N1),NA,ANORM2)
+      IF( ANORM1 .GT. 1) GO TO 1200
+      IF( ANORM2/ANORM1 .LT. RICTCV ) GO TO 1300
+      GO TO 1250
+ 1200 CONTINUE
+      IF( ANORM2 .LT. RICTCV ) GO TO 1300
+C
+ 1250 CONTINUE
+      IF( I .LE. 101) GO TO  925
+      CALL LNCNT(3)
+      PRINT 775
+      IOP(1) = 1
+C
+ 1300 CONTINUE
+      IF(IOP(1) .EQ. 0 ) RETURN
+      CALL LNCNT(4)
+      PRINT 1350,I
+ 1350 FORMAT(//* FINAL VALUES OF P AND F AFTER*I5* ITERATIONS*/)
+      CALL PRNT(P,NP,4H P  ,1)
+      CALL PRNT(F,NF,4H F  ,1)
+C
+      RETURN
+      END
+      SUBROUTINE ASYMREG(A,NA,B,NB,H,NH,Q,NQ,R,NR,F,NF,P,NP,IDENT,DISC,N
+     1EWT,STABLE,FNULL,ALPHA,IOP,DUMMY)
+C
+C
+      DIMENSION A(1),B(1),H(1),Q(1),R(1),F(1),P(1),DUMMY(1)
+      DIMENSION NA(2),NB(2),NH(2),NQ(2),NR(2),NF(2),NP(2),IOP(5),IOPT(3)
+     1,NDUM1(2),NDUM2(2),NDUM3(2)
+      LOGICAL IDENT,DISC,NEWT,STABLE,FNULL,SING
+C
+      N = NA(1)**2
+      N1= N+1
+      IOPTT=0
+C
+      IF ( .NOT. NEWT ) GO TO 600
+      IF( STABLE )  GO TO 500
+      IF ( FNULL ) GO TO 100
+      CALL MULT(B,NB,F,NF,DUMMY,NA)
+      CALL SUBT(A,NA,DUMMY,NA,DUMMY,NA)
+      CALL TESTSTA(DUMMY,NA,ALPHA,DISC,STABLE,IOPTT,DUMMY(N1))
+      GO TO 200
+C
+  100 CONTINUE
+      CALL TESTSTA(A,NA,ALPHA,DISC,STABLE,IOPTT,DUMMY)
+C
+  200 CONTINUE
+      IF( STABLE ) GO TO 500
+      IF( DISC ) GO TO 230
+      J = -NA(1)
+      NAX = NA(1)
+      DO 210 I =1,NAX
+      J = J + NAX +1
+      A(J) = A(J)-ALPHA
+  210 CONTINUE
+      SCLE = 3.
+      IOPT(1)=IOP(1)
+      IOPT(2) = 1
+      IOPT(3)=1
+      CALL CSTAB(A,NA,B,NB,F,NF,IOPT,SCLE,DUMMY)
+      J = -NA(1)
+      DO 220 I=1,NAX
+      J = J + NAX + 1
+      A(J) = A(J) + ALPHA
+  220 CONTINUE
+  225 CONTINUE
+      CALL MULT(B,NB,F,NF,DUMMY,NA)
+      CALL SUBT(A,NA,DUMMY,NA,DUMMY,NA)
+      CALL TESTSTA(DUMMY,NA,ALPHA,DISC,STABLE,IOPTT,DUMMY(N1))
+      GO TO 300
+C
+  230 CONTINUE
+      J = 2*NA(1) + 1
+      IF( .NOT. FNULL )  J = J + N
+      SING = .FALSE.
+      IF( DUMMY(J) .EQ. 0.0 )  SING = .TRUE.
+      IOPT(1) = IOP(1)
+      IOPT(2) = 1
+      DSCLE = 0.5
+      ALPHAT = 1./ALPHA
+      CALL SCALE(A,NA,A,NA,ALPHAT)
+      CALL SCALE(B,NB,B,NB,ALPHAT)
+      CALL DSTAB(A,NA,B,NB,F,NF,SING,IOPT,DSCLE,DUMMY)
+      CALL SCALE(A,NA,A,NA,ALPHA)
+      CALL SCALE(B,NB,B,NB,ALPHA)
+      GO TO 225
+C
+  300 CONTINUE
+      IF( STABLE) GO TO 400
+      CALL LNCNT(5)
+      IF( DISC ) GO TO 330
+      PRINT 310,ALPHA
+  310 FORMAT(//* IN ASYMREG, CSTAB HAS FAILED TO FIND A STABILIZING GAIN
+     1 MATRIX (F) RELATIVE TO */* ALPHA = *E16.8/)
+      RETURN
+  330 CONTINUE
+      PRINT 340,ALPHA
+  340 FORMAT(//* IN ASYMREG, DSTAB HAS FAILED TO FIND A STABILIZING GAIN
+     1 MATRIX (F) RELATIVE TO */* ALPHA = *E16.8/)
+      RETURN
+C
+  400 CONTINUE
+      FNULL = .FALSE.
+C
+  500 CONTINUE
+      CALL RICTNWT(A,NA,B,NB,H,NH,Q,NQ,R,NR,F,NF,P,NP,IOP,IDENT,DISC,FNU
+     1LL,DUMMY)
+      GO TO 750
+C
+  600 CONTINUE
+      IF( DISC ) GO TO 700
+      NW = 4*N + 1
+      NLAM = NW + 4*N
+      NDUM = NLAM + N
+      IOP(3) = 1
+      CALL CNTNREG(A,NA,B,NB,H,NH,Q,NQ,R,NR,DUMMY,DUMMY(NW),DUMMY(NLAM),
+     1S,F,NF,P,NP,T,IOP,IDENT,DUMMY(NDUM))
+      GO TO 750
+  700 CONTINUE
+      CALL DISCREG(A,NA,B,NB,H,NH,Q,NQ,R,NR,F,NF,P,NP,IOP,IDENT,DUMMY)
+C
+  750 CONTINUE
+C
+      IF( IOP(4) .EQ. 0 ) GO TO 1100
+C
+      N2= N1 + N
+      N3= N2 + N
+C
+      IF( DISC ) GO TO 800
+      CALL MULT(P,NP,B,NB,DUMMY,NB)
+      CALL MULT(DUMMY,NB,F,NF,DUMMY(N1),NP)
+      CALL TRANP(DUMMY(N1),NP,DUMMY,NP)
+      CALL ADD(DUMMY,NP,DUMMY(N1),NP,DUMMY,NP)
+      CALL SCALE(DUMMY,NP,DUMMY,NP,0.5)
+      CALL SUBT(Q,NQ,DUMMY,NP,DUMMY,NP)
+      CALL MULT(P,NP,A,NA,DUMMY(N1),NP)
+      CALL ADD(DUMMY,NP,DUMMY(N1),NP,DUMMY,NP)
+      CALL TRANP(DUMMY(N1),NP,DUMMY(N2),NP)
+      CALL ADD(DUMMY,NP,DUMMY(N2),NP,DUMMY,NP)
+      GO TO 900
+C
+  800 CONTINUE
+      CALL MULT(R,NR,F,NF,DUMMY,NF)
+      CALL TRANP(F,NF,DUMMY(N1),NB)
+      CALL MULT(DUMMY(N1),NB,DUMMY,NF,DUMMY(N2),NA)
+      CALL ADD(DUMMY(N2),NA,Q,NQ,DUMMY,NA)
+      CALL MULT(B,NB,F,NF,DUMMY(N1),NA)
+      CALL SUBT(A,NA,DUMMY(N1),NA,DUMMY(N1),NA)
+      CALL MULT(P,NP,DUMMY(N1),NA,DUMMY(N2),NA)
+      CALL TRANP(DUMMY(N1),NA,DUMMY(N3),NA)
+      CALL MULT(DUMMY(N3),NA,DUMMY(N2),NA,DUMMY(N1),NA)
+      CALL ADD(DUMMY,NA,DUMMY(N1),NA,DUMMY,NA)
+      CALL SUBT(P,NP,DUMMY,NA,DUMMY,NA)
+C
+  900 CONTINUE
+      CALL LNCNT(4)
+      PRINT 1000
+ 1000 FORMAT(//* RESIDUAL ERROR IN RICCATI EQUATION */)
+      CALL PRNT(DUMMY,NP,4HEROR,1)
+C
+ 1100 CONTINUE
+      N2= N1+NA(1)
+      N3= N2+NA(1)
+      ISV = 0
+      CALL EQUATE(P,NP,DUMMY,NP)
+      CALL EIGEN(NA(1),NA(1),DUMMY,DUMMY(N1),DUMMY(N2),ISV,ISV,V,DUMMY(N
+     13),IERR)
+      NEVL = NA(1)
+      IF( IERR .EQ. 0) GO TO 1300
+      NEVL=NA(1)-IERR
+      CALL LNCNT(4)
+      PRINT 1200,IERR
+ 1200 FORMAT(//* IN ASYMREG, THE *I5 * EIGENVALUE OF P  HAS NOT BEEN COM
+     1PUTED AFTER 30 ITERATIONS */)
+C
+ 1300 CONTINUE
+      NDUM1(1) = NEVL
+      NDUM1(2) = 1
+      CALL EQUATE(DUMMY(N1),NDUM1,DUMMY,NDUM1)
+      N1 = NDUM1(1) +1
+      CALL MULT(B,NB,F,NF,DUMMY(N1),NA)
+      CALL SUBT(A,NA,DUMMY(N1),NA,DUMMY(N1),NA)
+      N2 = N1+N
+      CALL EQUATE(DUMMY(N1),NA,DUMMY(N2),NA)
+      N3=N2+N
+      N4=N3+NA(1)
+      N5=N4+NA(1)
+      CALL EIGEN(NA(1),NA(1),DUMMY(N2),DUMMY(N3),DUMMY(N4),ISV,ISV,V,DUM
+     1MY(N5),IERR)
+      NEVL = NA(1)
+      IF( IERR .EQ. 0 ) GO TO 1500
+      NEVL=NA(1)-IERR
+      CALL LNCNT(4)
+      PRINT 1400,IERR
+ 1400 FORMAT(//* IN ASYMREG, THE *I5* EIGENVALUE OF A-BF HAS NOT BEEN CO
+     1MPUTED AFTER 30 ITERATIONS*/)
+C
+ 1500 CONTINUE
+      NDUM2(1) = NEVL
+      NDUM2(2) = 1
+      CALL JUXTC(DUMMY(N3),NDUM2,DUMMY(N4),NDUM2,DUMMY(N2),NDUM3)
+C
+      IF ( IOP(5) .EQ. 0 ) RETURN
+C
+      CALL LNCNT(4)
+      PRINT 1600
+ 1600 FORMAT(//* EIGENVALUES OF P */)
+      CALL PRNT(DUMMY,NDUM1,4HEVLP,1)
+      CALL LNCNT(4)
+      PRINT 1700
+ 1700 FORMAT(//* CLOSED-LOOP RESPONSE MATRIX A-BF */)
+      CALL PRNT(DUMMY(N1),NA,4HA-BF,1)
+      CALL LNCNT(3)
+      PRINT 1800
+ 1800 FORMAT(//* EIGENVALUES OF A-BF*)
+      CALL PRNT(DUMMY(N2),NDUM3,0,3)
+C
+      RETURN
+      END
+      SUBROUTINE ASYMFIL(A,NA,G,NG,H,NH,Q,NQ,R,NR,F,NF,P,NP,IDENT,DISC,N
+     1EWT,STABLE,FNULL,ALPHA,IOP,DUMMY)
+C
+C
+      DIMENSION A(1),G(1),H(1),Q(1),R(1),F(1),P(1),DUMMY(1)
+      DIMENSION NA(2),NG(2),NH(2),NQ(2),NR(2),NF(2),NP(2),IOPT(5),NDUM1(
+     12),IOP(1)
+      LOGICAL  IDENT,DISC,NEWT,STABLE,FNULL
+C
+      IF( IOP(1) .EQ. 0 ) GO TO 100
+      CALL LNCNT(4)
+      IF(DISC)  PRINT 15
+      IF( .NOT. DISC )  PRINT 25
+   15 FORMAT(//* PROGRAM TO SOLVE THE DISCRETE INFINITE-DURATION OPTIMAL
+     1 FILTER PROBLEM*/)
+   25 FORMAT(//* PROGRAM TO SOLVE THE CONTINUOUS INFINITE-DURATION OPTIM
+     1AL FILTER PROBLEM*/)
+      CALL PRNT(A,NA,4H A  ,1)
+      IF( .NOT.  IDENT )  GO TO 35
+      CALL LNCNT(3)
+      PRINT 30
+   30 FORMAT(/* G IS AN IDENTITY MATRIX*/)
+      GO TO 40
+   35 CONTINUE
+      CALL PRNT(G,NG,4H G  ,1)
+   40 CONTINUE
+      CALL PRNT(H,NH,4H H  ,1)
+      CALL LNCNT(3)
+      PRINT 45
+   45 FORMAT(/* INTENSITY MATRIX FOR COVARIANCE OF MEASUREMENT NOISE*/)
+      CALL PRNT(R,NR,4H R  ,1)
+C
+      IF( .NOT. IDENT ) GO TO 65
+      CALL LNCNT(3)
+      PRINT 55
+   55 FORMAT(/* INTENSITY MATRIX FOR COVARIANCE OF PROCESS NOISE*/)
+C
+   65 CONTINUE
+      CALL PRNT(Q,NQ,4H Q  ,1)
+C
+  100 CONTINUE
+      IOPT(1)=IOP(2)
+      IOPT(2)=IOP(3)
+      IOPT(3)=IOP(4)
+      IOPT(4)=IOP(5)
+      IOPT(5)=0
+      K = 0
+C
+  200 CONTINUE
+      CALL TRANP(A,NA,DUMMY,NA)
+      CALL EQUATE(DUMMY,NA,A,NA)
+      CALL TRANP(H,NH,DUMMY,NDUM1)
+      CALL EQUATE(DUMMY,NDUM1,H,NH)
+      IF( IDENT )  GO TO 250
+      CALL TRANP(G,NG,DUMMY,NDUM1)
+      CALL EQUATE(DUMMY,NDUM1,G,NG)
+  250 CONTINUE
+      IF ( K .EQ. 1 ) RETURN
+C
+      K = K+1
+      CALL ASYMREG(A,NA,H,NH,G,NG,Q,NQ,R,NR,F,NF,P,NP,IDENT,DISC,NEWT,ST
+     1ABLE,FNULL,ALPHA,IOPT,DUMMY)
+C
+      N1=(NA(1)**2)+3*NA(1)+1
+      CALL TRANP(F,NF,DUMMY(N1),NDUM1)
+      CALL EQUATE(DUMMY(N1),NDUM1,F,NF)
+C
+      IF( IOP(1) .EQ. 0 ) GO TO 200
+C
+      IF(IDENT) GO TO 300
+      CALL LNCNT(3)
+      PRINT 55
+      CALL PRNT(Q,NQ,4HGQGT,1)
+C
+  300 CONTINUE
+      CALL LNCNT(3)
+      PRINT 325
+  325 FORMAT(/* FILTER GAIN*/)
+      CALL PRNT(F,NF,4H F  ,1)
+      CALL LNCNT(3)
+      PRINT 350
+  350 FORMAT(/* STEADY-STATE VARIANCE MATRIX OF RECONSTRUCTION ERROR*/)
+      CALL PRNT(P,NP,4H P  ,1)
+      NDUM1(1)=NP(1)
+      NDUM1(2)=1
+      CALL LNCNT(3)
+      PRINT 375
+  375 FORMAT(/* EIGENVALUES OF P */)
+      CALL PRNT(DUMMY,NDUM1,4HEVLP,1)
+      N1 = NP(1) + 1
+      N = NA(1)**2
+      N2 = N1 + N + 2*NA(1)
+      CALL TRANP(DUMMY(N1),NA,DUMMY(N2),NA)
+      CALL PRNT(DUMMY(N2),NA,4HA-FH,1)
+      N2 = N1 + N
+      CALL LNCNT(3)
+      PRINT 385
+  385 FORMAT(/* EIGENVALUES OF A-FH MATRIX*/)
+      NDUM1(1) = NA(1)
+      NDUM1(2) =  2
+      CALL PRNT(DUMMY(N2),NDUM1,0,3)
+C
+      GO TO 200
+C
+      END
+      SUBROUTINE EXPMDFL (A,NA,B,NB,H,NH,AM,NAM,HM,NHM,Q,NQ,R,NR,F,NF,P,
+     1NP,HIDENT,HMIDENT,DISC,NEWT,STABLE,FNULL,ALPHA,IOP,DUMMY)
+C
+C
+      DIMENSION A(1),B(1),H(1),AM(1),HM(1),Q(1),R(1),F(1),P(1),DUMMY(1)
+      DIMENSION NA(2),NB(2),NH(2),NAM(2),NHM(2),NQ(2),NR(2),NF(2),NP(2),
+     1IOP(1),IOPT(5),NDUM1(2),NDUM2(2),NDUM3(2)
+      LOGICAL  HIDENT,HMIDENT,DISC,NEWT,STABLE,FNULL,SYM
+      COMMON/TOL/EPSAM,EPSBM,IACM
+C
+      IF( IOP(1) .EQ. 0 ) GO TO 300
+      CALL LNCNT(6)
+      IF( DISC ) PRINT 25
+      IF( .NOT. DISC ) PRINT 50
+   25 FORMAT(/* PROGRAM TO SOLVE ASYMPTOTIC DISCRETE EXPLICIT MODEL-FOLL
+     1OWING PROBLEM*//* PLANT DYNAMICS*/)
+   50 FORMAT(/* PROGRAM TO SOLVE ASYMPTOTIC CONTINUOUS EXPLICIT MODEL-FO
+     1LLOWING PROBLEM*//* PLANT DYNAMICS*/)
+      CALL PRNT(A,NA,4H A  ,1)
+      CALL PRNT(B,NB,4H B  ,1)
+      IF( HIDENT ) GO TO 75
+      CALL PRNT(H,NH,4H H  ,1)
+      GO TO 100
+   75 CONTINUE
+      CALL LNCNT(3)
+      PRINT 85
+   85 FORMAT(/* H IS AN IDENTITY MATRIX*/)
+C
+  100 CONTINUE
+      CALL LNCNT(4)
+      PRINT 125
+  125 FORMAT(//* MODEL DYNAMICS*/)
+      CALL PRNT(AM,NAM,4H AM ,1)
+      IF( HMIDENT ) GO TO 175
+      CALL PRNT(HM,NHM,4H HM ,1)
+      GO TO 200
+  175 CONTINUE
+      CALL LNCNT(3)
+      PRINT 185
+  185 FORMAT(/* HM IS AN IDENTITY MATRIX */)
+C
+  200 CONTINUE
+      CALL LNCNT(4)
+      PRINT 225
+  225 FORMAT(//* WEIGHTING MATRICES */)
+      CALL PRNT(Q,NQ,4H Q  ,1)
+      CALL PRNT(R,NR,4H R  ,1)
+C
+  300 CONTINUE
+      IF( IOP(2) .EQ. 0 ) GO TO 400
+      NF(1) = NB(2)
+      NF(2) = NA(1)
+      NP(1) = NA(1)
+      NP(2) = NA(1)
+      IOPT(1) = IOP(3)
+      IOPT(2) = IOP(4)
+      IOPT(3) = IOP(5)
+      IOPT(4) =  0
+      IOPT(5) =  0
+      N1 = NA(1)*NA(2) + 1
+      CALL EQUATE(Q,NQ,DUMMY,NDUM1)
+      CALL ASYMREG(A,NA,B,NB,H,NH,DUMMY,NDUM1,R,NR,F,NF,P,NP,HIDENT,DISC
+     1,NEWT,STABLE,FNULL,ALPHA,IOPT,DUMMY(N1))
+C
+  400 CONTINUE
+      IF( IOP(1) .EQ. 0 ) GO TO 600
+      CALL LNCNT(4)
+      PRINT 425
+  425 FORMAT(//* CONTROL LAW U = -F( COL.(X,XM) ),  F = (F11,F12)*/)
+      CALL LNCNT(3)
+      PRINT 450
+  450 FORMAT(/* PART OF F MULTIPLYING  X */)
+      CALL PRNT(F,NF,4H F11,1)
+      IF( .NOT. DISC  .AND. IOP(2) .EQ. 0 ) GO  TO 600
+      CALL PRNT(P,NP,4H P11,1)
+      IF(  IOP(2) .EQ. 0 ) GO TO 600
+      CALL LNCNT(2)
+      PRINT 475
+  475 FORMAT(/* EIGENVALUES OF P11*)
+      NDUM1(1) = NA(1)
+      NDUM1(2) = 1
+      CALL PRNT(DUMMY(N1),NDUM1,0,3)
+      N1 = N1 + NDUM1(1)
+      NDUM1(2) = NA(1)
+      CALL LNCNT(2)
+      PRINT 500
+  500 FORMAT(/* PLANT CLOSED-LOOP RESPONSE MATRIX A - BF11*)
+      CALL PRNT(DUMMY(N1),NDUM1,0,3)
+      CALL LNCNT(2)
+      PRINT 525
+  525 FORMAT(/* EIGENVALUES OF CLOSED-LOOP RESPONSE MATRIX*)
+      N1 = N1 + NDUM1(1)*NDUM1(2)
+      NDUM1(2) = 2
+      CALL PRNT(DUMMY(N1),NDUM1,0,3)
+C
+  600 CONTINUE
+      NF(1)= NB(2)
+      NF(2)= NA(1)
+      CALL MULT(B,NB,F,NF,DUMMY,NA)
+      CALL SUBT(A,NA,DUMMY,NA,DUMMY,NA)
+      IF(  IOP(1).EQ. 0  .OR.  IOP(2) .NE. 0 ) GO TO 700
+      CALL LNCNT(2)
+      PRINT 500
+      CALL PRNT(DUMMY,NA,0,3)
+C
+  700 CONTINUE
+      N1 =  NA(1)**2 +1
+      CALL TRANP(DUMMY,NA,DUMMY(N1),NA)
+      CALL EQUATE(DUMMY(N1),NA,DUMMY,NA)
+      NF(2) = NA(1) + NAM(1)
+      NP(2) = NF(2)
+      IF( .NOT. DISC .AND. IOP(2).EQ. 0 ) NP(2) = NAM(2)
+      IOPTT = 0
+      SYM = .FALSE.
+      CALL EQUATE( Q,NQ,DUMMY(N1),NDUM2)
+      IF( HMIDENT ) GO TO 725
+      CALL MULT(Q,NQ,HM,NHM,DUMMY(N1),NDUM2)
+  725 CONTINUE
+      IF( HIDENT ) GO TO 750
+      NDUM3(1) = NDUM2(1)
+      NDUM3(2) = NDUM2(2)
+      N2 = N1 + NQ(1)*NAM(2)
+      CALL TRANP(H,NH,DUMMY(N2),NDUM1)
+      N3 = N2 + NH(1)*NH(2)
+      CALL MULT(DUMMY(N2),NDUM1,DUMMY(N1),NDUM3,DUMMY(N3),NDUM2)
+      CALL EQUATE(DUMMY(N3),NDUM2,DUMMY(N1),NDUM2)
+  750 CONTINUE
+      N2 = NA(1)**2 + NA(1)*NAM(2) + 1
+      N3 = NA(1)**2 + 1
+      IF( .NOT. DISC .AND. IOP(2) .EQ. 0 ) N3 = 1
+      CALL EQUATE(DUMMY(N1),NDUM2,P(N3),NDUM2)
+      IF( DISC ) GO TO 800
+      EPSA = EPSAM
+      CALL BARSTW(DUMMY,NA,AM,NAM,P(N3),NDUM2,IOPTT,SYM ,EPSA,EPSA,DUMMY
+     1(N2))
+      GO TO 900
+C
+  800 CONTINUE
+      CALL SCALE(P(N3),NDUM2,P(N3),NDUM2,-1.0)
+      N4 = N2 +NAM(1)**2
+      CALL EQUATE(AM,NAM,DUMMY(N2),NAM)
+      CALL SUM(DUMMY,NA,P(N3),NDUM2,DUMMY(N2),NAM,IOPTT,SYM,DUMMY(N4))
+C
+  900 CONTINUE
+      N2 = NB(2)*NA(1) + 1
+      CALL TRANP(B,NB,DUMMY,NDUM1)
+      CALL MULT(DUMMY,NDUM1,P(N3),NDUM2,F(N2),NDUM3)
+      IF( .NOT. DISC ) GO TO 1000
+      N1 = NB(1)*NB(2) + 1
+      CALL MULT(DUMMY,NDUM1,P,NA,DUMMY(N1),NDUM2)
+      CALL MULT(DUMMY(N1),NDUM2,B,NB,DUMMY,NR)
+      CALL ADD(R,NR,DUMMY,NR,DUMMY,NR)
+      GO TO 1100
+C
+ 1000 CONTINUE
+      CALL EQUATE(R,NR,DUMMY,NR)
+C
+ 1100 CONTINUE
+      N1 = NR(1)**2 + 1
+      CALL SYMPDS(NR(1),NR(1),DUMMY,NAM(2),F(N2),IOPTT,IOPTT,DETERM,ISCA
+     1LE,DUMMY(N1),IERR)
+      IF( IERR .EQ. 0 ) GO TO 1200
+      CALL LNCNT(3)
+      PRINT 1150
+ 1150 FORMAT(/ * IN EXPMDFL, THE COEFFICIENT MATRIX FOR SYMPDS IS NOT SY
+     1MMETRIC POSITIVE DEFINITE */)
+      RETURN
+C
+ 1200 CONTINUE
+      IF( .NOT. DISC ) GO TO 1300
+      CALL MULT(F(N2),NDUM3,AM,NAM,DUMMY,NDUM1)
+      CALL EQUATE(DUMMY,NDUM1,F(N2),NDUM1)
+C
+ 1300 CONTINUE
+      IF( IOP(1) .EQ. 0 ) RETURN
+      CALL LNCNT(3)
+      PRINT 1325
+ 1325 FORMAT(/* PART OF F MULTIPLYING XM */)
+      CALL PRNT(F(N2),NDUM3,4H F12,1)
+      NDUM1(1) = NA(1)
+      NDUM1(2) = NAM(1)
+      CALL PRNT(P(N3),NDUM1,4H P12,1)
+      RETURN
+      END
+      SUBROUTINE IMPMDFL(A,NA,B,NB,H,NH,AM,NAM,BM,NBM,Q,NQ,R,NR,F,NF,P,N
+     1P,IDENT,DISC,NEWT,STABLE,FNULL,ALPHA,IOP,DUMMY)
+C
+C
+      DIMENSION A(1),B(1),H(1),AM(1),BM(1),Q(1),R(1),F(1),P(1),DUMMY(1)
+      DIMENSION NA(2),NB(2),NH(2),NAM(2),NBM(2),NQ(2),NR(2),NF(2),NP(2),
+     1IOP(1),IOPT(5),NDUM1(2),NDUM2(2)
+      LOGICAL IDENT,DISC,NEWT,STABLE,FNULL,HIDENT
+C
+      IF( IOP(1) .EQ. 0 ) GO TO 200
+      CALL LNCNT(6)
+      IF( DISC ) PRINT 25
+      IF( .NOT. DISC ) PRINT 50
+   25 FORMAT(/*PROGRAM TO SOLVE ASYMPTOTIC DISCRETE IMPLICIT MODEL-FOLLO
+     1WING PROBLEM*//* PLANT DYNAMICS */)
+   50 FORMAT(/* PROGRAM TO SOLVE ASYMPTOTIC CONTINUOUS IMPLICIT MODEL-FO
+     1LLOWING PROBLEM*//* PLANT DYNAMICS*/)
+      CALL PRNT(A,NA,4H A  ,1)
+      CALL PRNT(B,NB,4H B  ,1)
+      IF( IDENT ) GO TO 75
+      CALL PRNT(H,NH,4H H  ,1)
+      GO TO 100
+   75 CONTINUE
+      CALL LNCNT(3)
+      PRINT 85
+   85 FORMAT(/* H IS AN IDENTITY MATRIX*/)
+C
+  100 CONTINUE
+      CALL LNCNT(4)
+      PRINT 125
+  125 FORMAT(//* MODEL DYNAMICS*/)
+      CALL PRNT(AM,NAM,4H AM ,1)
+      CALL PRNT(BM,NBM,4H BM ,1)
+      CALL LNCNT(4)
+      PRINT 150
+  150 FORMAT(//* WEIGHTING MATRICES*/)
+      CALL PRNT(Q,NQ,4H Q  ,1)
+      CALL PRNT(R,NR,4H R  ,1)
+C
+  200 CONTINUE
+      N = NA(1)**2
+      N1 = N + 1
+      IF( .NOT. IDENT ) GO TO 300
+      CALL SUBT(A,NA,AM,NAM,DUMMY,NDUM2)
+      CALL SUBT(B,NB,BM,NBM,DUMMY(N1),NB)
+      GO TO 400
+C
+  300 CONTINUE
+      CALL MULT(H,NH,A,NA,DUMMY,NH)
+      CALL MULT(AM,NAM,H,NH,DUMMY(N1),NH)
+      CALL SUBT(DUMMY,NH,DUMMY(N1),NH,DUMMY,NDUM2)
+      CALL MULT(H,NH,B,NB,DUMMY(N1),NBM)
+      CALL SUBT(DUMMY(N1),NBM,BM,NBM,DUMMY(N1),NBM)
+C
+  400 CONTINUE
+      IF( IOP(1) .EQ. 0 ) GO TO 500
+      CALL LNCNT(3)
+      PRINT 450
+  450 FORMAT(//* MATRIX HA - AMH*)
+      CALL PRNT(DUMMY,NDUM2,0,3)
+      CALL LNCNT(3)
+      PRINT 475
+  475 FORMAT(//* MATRIX HB - BM*)
+      CALL PRNT(DUMMY(N1),NBM,0,3)
+C
+  500 CONTINUE
+      N2 = N1 + N
+      N3 = N2 + N
+      N4 = N3 + N
+      CALL MULT(Q,NQ,DUMMY,NDUM2,DUMMY(N2),NDUM2)
+      CALL MULT(Q,NQ,DUMMY(N1),NBM,DUMMY(N3),NBM)
+      CALL TRANP(DUMMY,NDUM2,DUMMY(N4),NDUM1)
+      CALL MULT(DUMMY(N4),NDUM1,DUMMY(N2),NDUM2,DUMMY,NA)
+      CALL MULT(DUMMY(N4),NDUM1,DUMMY(N3),NBM,DUMMY(N2),NB)
+      CALL TRANP(DUMMY(N1),NBM,DUMMY(N4),NDUM1)
+      CALL SCALE(DUMMY(N2),NB,DUMMY(N1),NB,2.0)
+      CALL MULT(DUMMY(N4),NDUM1,DUMMY(N3),NBM,DUMMY(N2),NR)
+      CALL ADD(DUMMY(N2),NR,R,NR,DUMMY(N2),NR)
+      IF( IOP(1) .EQ. 0 ) GO TO 600
+      CALL LNCNT(3)
+      PRINT 525
+  525 FORMAT(//* MATRIX ( HA - AMH  TRANSPOSE)Q( HA - AMH)*)
+      CALL PRNT(DUMMY,NA,0,3)
+      CALL LNCNT(3)
+      PRINT 550
+  550 FORMAT(//* MATRIX 2( HA - AMH  TRANSPOSE)Q( HB - BM)*)
+      CALL PRNT(DUMMY(N1),NB,0,3)
+      CALL LNCNT(3)
+      PRINT 575
+  575 FORMAT(//* MATRIX ( HB - BM  TRANSPOSE)Q( HB - BM ) + R*)
+      CALL PRNT(DUMMY(N2),NR,0,3)
+C
+  600 CONTINUE
+      IOPT(1)= 0
+      IOPT(2)= 1
+      IOPT(3)= 1
+      N5 = N4 + N
+      CALL EQUATE(A,NA,DUMMY(N3),NA)
+      CALL PREFIL(DUMMY(N3),NA,B,NB,DUMMY,NA,DUMMY(N1),NB,DUMMY(N2),NR,D
+     1UMMY(N4),NF,IOPT,DUMMY(N5))
+      IF(IOP(1) .EQ. 0 ) GO TO 700
+      CALL LNCNT(3)
+      PRINT 625
+  625 FORMAT(//* PREFILTER GAIN*)
+      CALL PRNT(DUMMY(N4),NF,0,3)
+      CALL LNCNT(3)
+      PRINT 650
+  650 FORMAT(//* MATRIX A - B(PREFILTER)*)
+      CALL PRNT(DUMMY(N3),NA,0,3)
+      CALL LNCNT(3)
+      PRINT 675
+  675 FORMAT(//* MODIFIED STATE VECTOR WEIGHTING MATRIX*)
+      CALL PRNT(DUMMY,NA,0,3)
+C
+  700 CONTINUE
+      CALL EQUATE(DUMMY(N4),NF,DUMMY(N1),NF)
+C
+      IF( IOP(2) .EQ. -1000 ) RETURN
+C
+      IOPT(1) = IOP(2)
+      IOPT(2) = IOP(3)
+      IOPT(3) = IOP(4)
+      IOPT(4) = 0
+      IOPT(5) = 0
+      HIDENT = .TRUE.
+      CALL ASYMREG(DUMMY(N3),NA,B,NB,H,NH,DUMMY,NA,DUMMY(N2),NR,F,NF,P,N
+     1P,HIDENT,DISC,NEWT,STABLE,FNULL,ALPHA,IOPT,DUMMY(N4))
+      IF( IOP(1) .EQ. 0 ) GO TO 800
+      CALL LNCNT(3)
+      PRINT 725
+  725 FORMAT(//* GAIN FROM ASYMREG*)
+      CALL PRNT(F,NF,0,3)
+      CALL LNCNT(3)
+      PRINT 750
+  750 FORMAT(//* SOLUTION OF ASSOCIATED STEADY-STATE RICCATI EQUATION*)
+      CALL PRNT(P,NP,0,3)
+      CALL LNCNT(3)
+      PRINT 775
+  775 FORMAT(//* EIGENVALUES OF P*)
+      NDUM1(1)= NA(1)
+      NDUM1(2)= 1
+      CALL PRNT(DUMMY(N4),NDUM1,0,3)
+C
+  800 CONTINUE
+      CALL ADD(F,NF,DUMMY(N1),NF,F,NF)
+      IF( IOP(1) .EQ. 0 ) RETURN
+      CALL LNCNT(4)
+      PRINT 825
+  825 FORMAT(//* GAIN FOR MODEL-FOLLOWING CONTROL LAW, U = - F X  , F =
+     1(PREFILTER) + (ASYMREG)*/)
+      CALL PRNT(F,NF,4H F  ,1)
+      N6 = N4 + NA(1)
+      CALL PRNT(DUMMY(N6),NA,4HA-BF,1)
+      NDUM1(2) = 2
+      N6 = N6 + N
+      CALL LNCNT(3)
+      PRINT 850
+  850 FORMAT(//* EIGENVALUES OF A-BF*)
+      CALL PRNT(DUMMY(N6),NDUM1,0,3)
+C
+      RETURN
+      END
+      SUBROUTINE POLE(A,NA,B,NB,EVAL,NUMR,F,NF,IOP,DUMMY)
+C
+C
+      DIMENSION A(1),B(1),EVAL(1),F(1),DUMMY(1)
+      DIMENSION NA(2),NB(2),NF(2),NDUM1(2),NDUM2(2)
+C
+C
+      IF( IOP .EQ. 0 ) GO TO 100
+      CALL LNCNT(6)
+      PRINT 25
+   25 FORMAT(*  GIVEN THE COMPLETELY CONTROLLABLE PAIR (A,B), THE MATRIX
+     1 F IS COMPUTED*/* SUCH THAT A-BF HAS PRESCRIBED EIGENVALUES*///)
+      CALL PRNT(A,NA,4H A  ,1)
+      CALL PRNT(B,NB,4H B  ,1)
+      CALL LNCNT(6)
+      PRINT 50,NUMR
+   50 FORMAT(///* THE PRESCRIBED EIGENVALUES ARE STORED IN EVAL*/* PAST
+     1ENTRY *I4* NUMBERS CORRESPOND TO REAL AND IMAGINARY PARTS*/)
+      CALL PRNT(EVAL,NB,4HEVAL,1)
+  100 CONTINUE
+C
+      N = NA(1)
+      M = N**2
+      N1 = M + 1
+      N2 = N1 + M
+      N3 = N2 + M
+      N4 = N3 + M
+      J = 1
+      CALL EQUATE(B,NB,DUMMY,NDUM2)
+      CALL EQUATE(B,NB,DUMMY(N1),NB)
+  200 CONTINUE
+      CALL MULT(A,NA,DUMMY(N1),NB,DUMMY(N2),NB)
+      IF( J .EQ. N ) GO TO 300
+      CALL JUXTC(DUMMY,NDUM2,DUMMY(N2),NB,DUMMY(N3),NDUM1)
+      CALL EQUATE(DUMMY(N2),NB,DUMMY(N1),NB)
+      CALL EQUATE(DUMMY(N3),NDUM1,DUMMY,NDUM2)
+      J = J + 1
+      GO TO 200
+  300 CONTINUE
+C
+      CALL SCALE(DUMMY(N2),NB,F,NF,-1.0)
+      CALL EQUATE(DUMMY,NA,DUMMY(N4),NA)
+      IFAC = 0
+      NRHS = 1
+      CALL GELIM(N,N,DUMMY,NRHS,F,DUMMY(N1),IFAC,DUMMY(N2),IERR)
+      IF( IERR .EQ. 0 ) GO TO 400
+      CALL LNCNT(1)
+      PRINT 350
+  350 FORMAT(* IN POLE, THE CONTROLLABILITY MATRIX, C, HAS BEEN DECLARED
+     1 SINGULAR BY GELIM*)
+      RETURN
+  400 CONTINUE
+C
+      IF( IOP .EQ. 0 ) GO TO 500
+      CALL LNCNT(10)
+      PRINT 425
+  425 FORMAT(//* DENOTE CHARACTERISTIC POLYNOMIAL OF A BY D(S)*)
+      PRINT 450
+  450 FORMAT(14X*N  N-1*6X*N-2*)
+      PRINT 475
+  475 FORMAT(8X*D(S)=S +S   D(1)+S   D(2)+...+SD(N-1)+D(N)*//)
+      PRINT 485
+  485 FORMAT(//*  AL = COL.(D(N),D(N-1),...,D(1))*)
+      CALL PRNT(F,NF,4H AL ,1)
+C
+  500 CONTINUE
+      NDUM1(1) = 2
+      NDUM1(2) = 2
+      CALL NULL(DUMMY,NDUM1)
+      IF( NUMR .EQ. 0 )   GO TO 535
+C
+      DO 525 I =1,N
+      DO 525 J =1,NUMR
+      DUMMY(I) = DUMMY(I) + EVAL(J)**I
+  525 CONTINUE
+  535 CONTINUE
+      N11 = N1
+      N21 = N11 + 1
+      N12 = N21 + 1
+      N22 = N12 + 1
+      IF( NUMR .EQ. N ) GO TO 600
+      L = NUMR + 1
+      DO 550 I= L,N,2
+      DUMMY(N11) =  EVAL(I)
+      DUMMY(N12) =  EVAL(I+1)
+      DUMMY(N21) = -EVAL(I+1)
+      DUMMY(N22) =  EVAL(I)
+      CALL EQUATE(DUMMY(N1),NDUM1,DUMMY(N2),NDUM1)
+      DO 550 K =1,N
+      CALL TRCE(DUMMY(N2),NDUM1,TR)
+      DUMMY(K) = DUMMY(K) + TR
+      IF( K .EQ. N ) GO TO 550
+      CALL MULT(DUMMY(N1),NDUM1,DUMMY(N2),NDUM1,DUMMY(N3),NDUM1)
+      CALL EQUATE(DUMMY(N3),NDUM1,DUMMY(N2),NDUM1)
+  550 CONTINUE
+  600 CONTINUE
+      NDUM1(1) = N
+      NDUM1(2) = 1
+      DUMMY(N1) = - DUMMY(1)
+      DO 650 K = 2,N
+      NK = N1+K-1
+      DUMMY(NK) = DUMMY(K)
+      KM1 = K-1
+      DO 625 J = 1,KM1
+      NJ = N1+J-1
+      NKJ = NK-NJ
+      DUMMY(NK) = DUMMY(NK)+ DUMMY(NJ)*DUMMY(NKJ)
+  625 CONTINUE
+      DUMMY(NK) = - DUMMY(NK)/K
+  650 CONTINUE
+      DO 675 J = 1,N
+      I = N+1-J
+      DUMMY(J) = DUMMY(N1-1+I)
+  675 CONTINUE
+C
+      IF( IOP .EQ. 0 ) GO TO 800
+      CALL LNCNT(7)
+      PRINT 700,N
+  700 FORMAT(//*  FOR THE *I4* EIGENVALUES STORED IN EVAL THE CHARACTERI
+     1STIC POLYNOMIAL IS*/14X*N  N-1      N-2*/8X*D(S)=S +S   D(1)+S   D
+     2(2)+...+SD(N-1)+D(N)*//)
+      PRINT 750
+  750 FORMAT(//*  ALTL = COL.(D(N),D(N-1),...,D(1))*)
+      CALL PRNT(DUMMY,NB,4HALTL,1)
+C
+  800 CONTINUE
+      CALL NULL(DUMMY(N1),NA)
+      DO 850 I =1,N
+      N1I = I*N-I+N1
+      DUMMY(N1I) = 1.0
+  850 CONTINUE
+      NM1 = N-1
+      DO 875 J = 1,NM1
+      K = J+1
+      DO 875 I = K,N
+      NJ = N1 + (J-1)*N + I-K
+      DUMMY(NJ) = F(I)
+  875 CONTINUE
+      CALL MULT(DUMMY(N4),NA,DUMMY(N1),NA,DUMMY(N2),NA)
+      CALL SUBT(DUMMY,NB,F,NF,F,NF)
+      CALL TRANP(DUMMY(N2),NA,DUMMY,NA)
+      IFAC = 0
+      CALL GELIM(N,N,DUMMY,NRHS,F,DUMMY(N1),IFAC,DUMMY(N2),IERR)
+      IF( IERR .EQ. 0 ) GO TO 900
+      CALL LNCNT(1)
+      PRINT 885
+  885 FORMAT(*  IN POLE, THE MATRIX V HAS BEEN DECLARED SINGULAR BY GELI
+     1M*)
+      RETURN
+C
+  900 CONTINUE
+      NF(1) = 1
+      NF(2) = N
+      CALL MULT(B,NB,F,NF,DUMMY,NDUM1)
+      CALL SUBT(A,NA,DUMMY,NDUM1,DUMMY,NDUM1)
+      CALL EQUATE(DUMMY,NDUM1,DUMMY(N1),NDUM1)
+      ISV = N
+      ILV = 0
+      N21 = N2
+      N22 = N2+N
+      N23 = N22+N
+      CALL EIGEN(N,N,DUMMY(N1),DUMMY(N21),DUMMY(N22),ISV,ILV,DUMMY(N3),D
+     1UMMY(N4),IERR)
+      IF( IERR .EQ. 0 ) GO TO 1000
+      CALL LNCNT(1)
+      PRINT 950,IERR
+  950 FORMAT(*  IN POLE, AFTER CALL TO EIGEN WITH  A-BF, IERR= *I4)
+C
+ 1000 CONTINUE
+      CALL EQUATE(DUMMY(N3),NA,DUMMY(N23),NA)
+      NDUM1(1) = N
+      NDUM1(2) = N+2
+      CALL EQUATE(DUMMY(N2),NDUM1,DUMMY(N1),NDUM1)
+      IF( IOP .EQ. 0 ) RETURN
+      CALL PRNT(F,NF,4H F  ,1)
+      CALL PRNT(DUMMY,NA,4HA-BF,1)
+      CALL LNCNT(3)
+      PRINT 1100
+ 1100 FORMAT(//*  EIGENVALUES(VAL MATRIX) AND EIGENVECTORS(VECT MATRIX)
+     1OF A-BF*)
+      NDUM1(2) = 2
+      CALL PRNT(DUMMY(N1),NDUM1,4H VAL,1)
+      NDUM1(2) = N
+      N24 = N1 + 2*N
+      CALL PRNT(DUMMY(N24),NDUM1,4HVECT,1)
+C
+      RETURN
+      END
+      SUBROUTINE READ1 (A,NA,NZ,NAM)
+C
+C
+      DIMENSION A(1)
+      DIMENSION NA(2),NZ(2)
+      IF  (NZ(1).EQ.0)  GO TO 410
+      NR=NZ(1)
+      NC=NZ(2)
+      NLST=NR*NC
+      IF( NLST .LT. 1 .OR. NR .LT. 1 ) GO TO 16
+      DO 400 I = 1, NR
+  400 READ (5,101) (A(  J), J = I,NLST,NR)
+      NA(1)=NR
+      NA(2)=NC
+  410 CALL  PRNT (A,NA,NAM,1)
+  101 FORMAT(8E10.2)
+      RETURN
+   16 CALL LNCNT(1)
+      WRITE  (6,916)  NAM,NR,NC
+  916 FORMAT  (* ERROR IN READ1   MATRIX *A4,* HAS NA=*,2I6)
+      RETURN
+      END
+      SUBROUTINE BALANC(NM,N,A,LOW,IGH,SCALE)
+C
+C
+      INTEGER I,J,K,L,M,N,JJ,NM,IGH,LOW,IEXC
+      REAL A(NM,N),SCALE(N)
+      REAL C,F,G,R,S,B2,RADIX
+C     REAL ABS
+      LOGICAL NOCONV
+C
+C
+C     ********** RADIX IS A MACHINE DEPENDENT PARAMETER SPECIFYING
+C                THE BASE OF THE MACHINE FLOATING POINT REPRESENTATION.
+C
+C
+      RADIX = 2.
+C
+      B2 = RADIX * RADIX
+      K = 1
+      L = N
+      GO TO 100
+C     ********** IN-LINE PROCEDURE FOR ROW AND
+C                COLUMN EXCHANGE **********
+   20 SCALE(M) = J
+      IF (J .EQ. M) GO TO 50
+C
+      DO 30 I = 1, L
+         F = A(I,J)
+         A(I,J) = A(I,M)
+         A(I,M) = F
+   30 CONTINUE
+C
+      DO 40 I = K, N
+         F = A(J,I)
+         A(J,I) = A(M,I)
+         A(M,I) = F
+   40 CONTINUE
+C
+   50 GO TO (80,130), IEXC
+C     ********** SEARCH FOR ROWS ISOLATING AN EIGENVALUE
+C                AND PUSH THEM DOWN **********
+   80 IF (L .EQ. 1) GO TO 280
+      L = L - 1
+C     ********** FOR J=L STEP -1 UNTIL 1 DO -- **********
+  100 DO 120 JJ = 1, L
+         J = L + 1 - JJ
+C
+         DO 110 I = 1, L
+            IF (I .EQ. J) GO TO 110
+            IF (A(J,I) .NE. 0.0) GO TO 120
+  110    CONTINUE
+C
+         M = L
+         IEXC = 1
+         GO TO 20
+  120 CONTINUE
+C
+      GO TO 140
+C     ********** SEARCH FOR COLUMNS ISOLATING AN EIGENVALUE
+C                AND PUSH THEM LEFT **********
+  130 K = K + 1
+C
+  140 DO 170 J = K, L
+C
+         DO 150 I = K, L
+            IF (I .EQ. J) GO TO 150
+            IF (A(I,J) .NE. 0.0) GO TO 170
+  150    CONTINUE
+C
+         M = K
+         IEXC = 2
+         GO TO 20
+  170 CONTINUE
+C     ********** NOW BALANCE THE SUBMATRIX IN ROWS K TO L **********
+      DO 180 I = K, L
+  180 SCALE(I) = 1.0
+C     ********** ITERATIVE LOOP FOR NORM REDUCTION **********
+  190 NOCONV = .FALSE.
+C
+      DO 270 I = K, L
+         C = 0.0
+         R = 0.0
+C
+         DO 200 J = K, L
+            IF (J .EQ. I) GO TO 200
+            C = C + ABS(A(J,I))
+            R = R + ABS(A(I,J))
+  200    CONTINUE
+C     ********** GUARD AGAINST ZERO C OR R DUE TO UNDERFLOW **********
+         IF (C .EQ. 0.0 .OR. R .EQ. 0.0) GO TO 270
+         G = R / RADIX
+         F = 1.0
+         S = C + R
+  210    IF (C .GE. G) GO TO 220
+         F = F * RADIX
+         C = C * B2
+         GO TO 210
+  220    G = R * RADIX
+  230    IF (C .LT. G) GO TO 240
+         F = F / RADIX
+         C = C / B2
+         GO TO 230
+C     ********** NOW BALANCE **********
+  240    IF ((C + R) / F .GE. 0.95 * S) GO TO 270
+         G = 1.0 / F
+         SCALE(I) = SCALE(I) * F
+         NOCONV = .TRUE.
+C
+         DO 250 J = K, N
+  250    A(I,J) = A(I,J) * G
+C
+         DO 260 J = 1, L
+  260    A(J,I) = A(J,I) * F
+C
+  270 CONTINUE
+C
+      IF (NOCONV) GO TO 190
+C
+  280 LOW = K
+      IGH = L
+      RETURN
+C     ********** LAST CARD OF BALANC **********
+      END
+      SUBROUTINE ELMHES(NM,N,LOW,IGH,A,INT)
+C
+C
+      INTEGER I,J,M,N,LA,NM,IGH,KP1,LOW,MM1,MP1
+      REAL A(NM,N)
+      REAL X,Y
+C     REAL ABS
+      INTEGER INT(IGH)
+C
+      LA = IGH - 1
+      KP1 = LOW + 1
+      IF (LA .LT. KP1) GO TO 200
+C
+      DO 180 M = KP1, LA
+         MM1 = M - 1
+         X = 0.0
+         I = M
+C
+         DO 100 J = M, IGH
+            IF (ABS(A(J,MM1)) .LE. ABS(X)) GO TO 100
+            X = A(J,MM1)
+            I = J
+  100    CONTINUE
+C
+         INT(M) = I
+         IF (I .EQ. M) GO TO 130
+C    ********** INTERCHANGE ROWS AND COLUMNS OF A **********
+         DO 110 J = MM1, N
+            Y = A(I,J)
+            A(I,J) = A(M,J)
+            A(M,J) = Y
+  110    CONTINUE
+C
+         DO 120 J = 1, IGH
+            Y = A(J,I)
+            A(J,I) = A(J,M)
+            A(J,M) = Y
+  120    CONTINUE
+C    ********** END INTERCHANGE **********
+  130    IF (X .EQ. 0.0) GO TO 180
+         MP1 = M + 1
+C
+         DO 160 I = MP1, IGH
+            Y = A(I,MM1)
+            IF (Y .EQ. 0.0) GO TO 160
+            Y = Y / X
+            A(I,MM1) = Y
+C
+            DO 140 J = M, N
+  140       A(I,J) = A(I,J) - Y * A(M,J)
+C
+            DO 150 J = 1, IGH
+  150       A(J,M) = A(J,M) + Y * A(J,I)
+C
+  160    CONTINUE
+C
+  180 CONTINUE
+C
+  200 RETURN
+C    ********** LAST CARD OF ELMHES **********
+      END
+      SUBROUTINE HQR(NM,N,LOW,IGH,H,WR,WI,IERR)
+C
+C
+      INTEGER I,J,K,L,M,N,EN,LL,MM,NA,NM,IGH,ITS,LOW,MP2,ENM2,IERR
+      REAL H(NM,N),WR(N),WI(N)
+      REAL P,Q,R,S,T,W,X,Y,ZZ,NORM,MACHEP
+C     REAL SQRT,ABS,SIGN
+C     INTEGER MIN0
+      LOGICAL NOTLAS
+C
+C
+C     ********** MACHEP IS A MACHINE DEPENDENT PARAMETER SPECIFYING
+C                THE RELATIVE PRECISION OF FLOATING POINT ARITHMETIC.
+C
+C
+      MACHEP = 2.**(-47)
+C
+      IERR = 0
+      NORM = 0.0
+      K = 1
+C     ********** STORE ROOTS ISOLATED BY BALANC
+C                AND COMPUTE MATRIX NORM **********
+      DO 50 I = 1, N
+C
+         DO 40 J = K, N
+   40    NORM = NORM + ABS(H(I,J))
+C
+         K = I
+         IF (I .GE. LOW .AND. I .LE. IGH) GO TO 50
+         WR(I) = H(I,I)
+         WI(I) = 0.0
+   50 CONTINUE
+C
+      EN = IGH
+      T = 0.0
+C     ********** SEARCH FOR NEXT EIGENVALUES **********
+   60 IF (EN .LT. LOW) GO TO 1001
+      ITS = 0
+      NA = EN - 1
+      ENM2 = NA - 1
+C     ********** LOOK FOR SINGLE SMALL SUB-DIAGONAL ELEMENT
+C                FOR L=EN STEP -1 UNTIL LOW DO -- **********
+   70 DO 80 LL = LOW, EN
+         L = EN + LOW - LL
+         IF (L .EQ. LOW) GO TO 100
+         S = ABS(H(L-1,L-1)) + ABS(H(L,L))
+         IF (S .EQ. 0.0) S = NORM
+         IF (ABS(H(L,L-1)) .LE. MACHEP * S) GO TO 100
+   80 CONTINUE
+C     ********** FORM SHIFT **********
+  100 X = H(EN,EN)
+      IF (L .EQ. EN) GO TO 270
+      Y = H(NA,NA)
+      W = H(EN,NA) * H(NA,EN)
+      IF (L .EQ. NA) GO TO 280
+      IF (ITS .EQ. 30) GO TO 1000
+      IF (ITS .NE. 10 .AND. ITS .NE. 20) GO TO 130
+C     ********** FORM EXCEPTIONAL SHIFT **********
+      T = T + X
+C
+      DO 120 I = LOW, EN
+  120 H(I,I) = H(I,I) - X
+C
+      S = ABS(H(EN,NA)) + ABS(H(NA,ENM2))
+      X = 0.75 * S
+      Y = X
+      W = -0.4375 * S * S
+  130 ITS = ITS + 1
+C     ********** LOOK FOR TWO CONSECUTIVE SMALL
+C                SUB-DIAGONAL ELEMENTS.
+C                FOR M=EN-2 STEP -1 UNTIL L DO -- **********
+      DO 140 MM = L, ENM2
+         M = ENM2 + L - MM
+         ZZ = H(M,M)
+         R = X - ZZ
+         S = Y - ZZ
+         P = (R * S - W) / H(M+1,M) + H(M,M+1)
+         Q = H(M+1,M+1) - ZZ - R - S
+         R = H(M+2,M+1)
+         S = ABS(P) + ABS(Q) + ABS(R)
+         P = P / S
+         Q = Q / S
+         R = R / S
+         IF (M .EQ. L) GO TO 150
+         IF (ABS(H(M,M-1)) * (ABS(Q) + ABS(R)) .LE. MACHEP * ABS(P)
+     X    * (ABS(H(M-1,M-1)) + ABS(ZZ) + ABS(H(M+1,M+1)))) GO TO 150
+  140 CONTINUE
+C
+  150 MP2 = M + 2
+C
+      DO 160 I = MP2, EN
+         H(I,I-2) = 0.0
+         IF (I .EQ. MP2) GO TO 160
+         H(I,I-3) = 0.0
+  160 CONTINUE
+C     ********** DOUBLE QR STEP INVOLVING ROWS L TO EN AND
+C                COLUMNS M TO EN **********
+      DO 260 K = M, NA
+         NOTLAS = K .NE. NA
+         IF (K .EQ. M) GO TO 170
+         P = H(K,K-1)
+         Q = H(K+1,K-1)
+         R = 0.0
+         IF (NOTLAS) R = H(K+2,K-1)
+         X = ABS(P) + ABS(Q) + ABS(R)
+         IF (X .EQ. 0.0) GO TO 260
+         P = P / X
+         Q = Q / X
+         R = R / X
+  170    S = SIGN(SQRT(P*P+Q*Q+R*R),P)
+         IF (K .EQ. M) GO TO 180
+         H(K,K-1) = -S * X
+         GO TO 190
+  180    IF (L .NE. M) H(K,K-1) = -H(K,K-1)
+  190    P = P + S
+         X = P / S
+         Y = Q / S
+         ZZ = R / S
+         Q = Q / P
+         R = R / P
+C     ********** ROW MODIFICATION **********
+         DO 210 J = K, EN
+            P = H(K,J) + Q * H(K+1,J)
+            IF (.NOT. NOTLAS) GO TO 200
+            P = P + R * H(K+2,J)
+            H(K+2,J) = H(K+2,J) - P * ZZ
+  200       H(K+1,J) = H(K+1,J) - P * Y
+            H(K,J) = H(K,J) - P * X
+  210    CONTINUE
+C
+         J = MIN0(EN,K+3)
+C     ********** COLUMN MODIFICATION **********
+         DO 230 I = L, J
+            P = X * H(I,K) + Y * H(I,K+1)
+            IF (.NOT. NOTLAS) GO TO 220
+            P = P + ZZ * H(I,K+2)
+            H(I,K+2) = H(I,K+2) - P * R
+  220       H(I,K+1) = H(I,K+1) - P * Q
+            H(I,K) = H(I,K) - P
+  230    CONTINUE
+C
+  260 CONTINUE
+C
+      GO TO 70
+C     ********** ONE ROOT FOUND **********
+  270 WR(EN) = X + T
+      WI(EN) = 0.0
+      EN = NA
+      GO TO 60
+C     ********** TWO ROOTS FOUND **********
+  280 P = (Y - X) / 2.0
+      Q = P * P + W
+      ZZ = SQRT(ABS(Q))
+      X = X + T
+      IF (Q .LT. 0.0) GO TO 320
+C     ********** REAL PAIR **********
+      ZZ = P + SIGN(ZZ,P)
+      WR(NA) = X + ZZ
+      WR(EN) = WR(NA)
+      IF (ZZ .NE. 0.0) WR(EN) = X - W / ZZ
+      WI(NA) = 0.0
+      WI(EN) = 0.0
+      GO TO 330
+C     ********** COMPLEX PAIR **********
+  320 WR(NA) = X + P
+      WR(EN) = X + P
+      WI(NA) = ZZ
+      WI(EN) = -ZZ
+  330 EN = ENM2
+      GO TO 60
+C     ********** SET ERROR -- NO CONVERGENCE TO AN
+C                EIGENVALUE AFTER 30 ITERATIONS **********
+ 1000 IERR = EN
+ 1001 RETURN
+C     ********** LAST CARD OF HQR **********
+      END
+      SUBROUTINE INVIT(NM,N,A,WR,WI,SELECT,MM,M,Z,IERR,RM1,RV1,RV2)
+C
+C
+      INTEGER I,J,K,L,M,N,S,II,IP,MM,MP,NM,NS,N1,UK,IP1,ITS,KM1,IERR
+      REAL A(NM,N),WR(N),WI(N),Z(NM,MM),RM1(N,N),RV1(N),RV2(N)
+      REAL T,W,X,Y,EPS3,NORM,NORMV,GROWTO,ILAMBD,MACHEP,RLAMBD,UKROOT
+C     REAL SQRT,CABS,ABS,FLOAT
+C     INTEGER IABS
+      LOGICAL SELECT(N)
+      COMPLEX Z3
+C     COMPLEX CMPLX
+C     REAL REAL,AIMAG
+C
+C
+      MACHEP = 2.**(-47)
+C
+      IERR = 0
+      UK = 0
+      S = 1
+C     ********** IP = 0, REAL EIGENVALUE
+C                     1, FIRST OF CONJUGATE COMPLEX PAIR
+C                    -1, SECOND OF CONJUGATE COMPLEX PAIR **********
+      IP = 0
+      N1 = N - 1
+C
+      DO 980 K = 1, N
+         IF (WI(K) .EQ. 0.0 .OR. IP .LT. 0) GO TO 100
+         IP = 1
+         IF (SELECT(K) .AND. SELECT(K+1)) SELECT(K+1) = .FALSE.
+  100    IF (.NOT. SELECT(K)) GO TO 960
+         IF (WI(K) .NE. 0.0) S = S + 1
+         IF (S .GT. MM) GO TO 1000
+         IF (UK .GE. K) GO TO 200
+C     ********** CHECK FOR POSSIBLE SPLITTING **********
+         DO 120 UK = K, N
+            IF (UK .EQ. N) GO TO 140
+            IF (A(UK+1,UK) .EQ. 0.0) GO TO 140
+  120    CONTINUE
+C     ********** COMPUTE INFINITY NORM OF LEADING UK BY UK
+C                (HESSENBERG) MATRIX **********
+  140    NORM = 0.0
+         MP = 1
+C
+         DO 180 I = 1, UK
+            X = 0.0
+C
+            DO 160 J = MP, UK
+  160       X = X + ABS(A(I,J))
+C
+            IF (X .GT. NORM) NORM = X
+            MP = I
+  180    CONTINUE
+C     ********** EPS3 REPLACES ZERO PIVOT IN DECOMPOSITION
+C                AND CLOSE ROOTS ARE MODIFIED BY EPS3 **********
+         IF (NORM .EQ. 0.0) NORM = 1.0
+         EPS3 = MACHEP * NORM
+C     ********** GROWTO IS THE CRITERION FOR THE GROWTH **********
+         UKROOT = SQRT(FLOAT(UK))
+         GROWTO = 1.0E-1 / UKROOT
+  200    RLAMBD = WR(K)
+         ILAMBD = WI(K)
+         IF (K .EQ. 1) GO TO 280
+         KM1 = K - 1
+         GO TO 240
+C     ********** PERTURB EIGENVALUE IF IT IS CLOSE
+C                TO ANY PREVIOUS EIGENVALUE **********
+  220    RLAMBD = RLAMBD + EPS3
+C     ********** FOR I=K-1 STEP -1 UNTIL 1 DO -- **********
+  240    DO 260 II = 1, KM1
+            I = K - II
+            IF (SELECT(I) .AND. ABS(WR(I)-RLAMBD) .LT. EPS3 .AND.
+     X         ABS(WI(I)-ILAMBD) .LT. EPS3) GO TO 220
+  260    CONTINUE
+C
+         WR(K) = RLAMBD
+C     ********** PERTURB CONJUGATE EIGENVALUE TO MATCH **********
+         IP1 = K + IP
+         WR(IP1) = RLAMBD
+C     ********** FORM UPPER HESSENBERG A-RLAMBD*I (TRANSPOSED)
+C                AND INITIAL REAL VECTOR **********
+  280    MP = 1
+C
+         DO 320 I = 1, UK
+C
+            DO 300 J = MP, UK
+  300       RM1(J,I) = A(I,J)
+C
+            RM1(I,I) = RM1(I,I) - RLAMBD
+            MP = I
+            RV1(I) = EPS3
+  320    CONTINUE
+C
+         ITS = 0
+         IF (ILAMBD .NE. 0.0) GO TO 520
+C     ********** REAL EIGENVALUE.
+C                TRIANGULAR DECOMPOSITION WITH INTERCHANGES,
+C                REPLACING ZERO PIVOTS BY EPS3 **********
+         IF (UK .EQ. 1) GO TO 420
+C
+         DO 400 I = 2, UK
+            MP = I - 1
+            IF (ABS(RM1(MP,I)) .LE. ABS(RM1(MP,MP))) GO TO 360
+C
+            DO 340 J = MP, UK
+               Y = RM1(J,I)
+               RM1(J,I) = RM1(J,MP)
+               RM1(J,MP) = Y
+  340       CONTINUE
+C
+  360       IF (RM1(MP,MP) .EQ. 0.0) RM1(MP,MP) = EPS3
+            X = RM1(MP,I) / RM1(MP,MP)
+            IF (X .EQ. 0.0) GO TO 400
+C
+            DO 380 J = I, UK
+  380       RM1(J,I) = RM1(J,I) - X * RM1(J,MP)
+C
+  400    CONTINUE
+C
+  420    IF (RM1(UK,UK) .EQ. 0.0) RM1(UK,UK) = EPS3
+C     ********** BACK SUBSTITUTION FOR REAL VECTOR
+C                FOR I=UK STEP -1 UNTIL 1 DO -- **********
+  440    DO 500 II = 1, UK
+            I = UK + 1 - II
+            Y = RV1(I)
+            IF (I .EQ. UK) GO TO 480
+            IP1 = I + 1
+C
+            DO 460 J = IP1, UK
+  460       Y = Y - RM1(J,I) * RV1(J)
+C
+  480       RV1(I) = Y / RM1(I,I)
+  500    CONTINUE
+C
+         GO TO 740
+C     ********** COMPLEX EIGENVALUE.
+C                TRIANGULAR DECOMPOSITION WITH INTERCHANGES
+C                REPLACING ZERO PIVOTS BY EPS3.  STORE IMAGINARY
+C                PARTS IN UPPER TRIANGLE STARTING AT (1,3) $$$$$$$$$$
+  520    NS = N - S
+         Z(1,S-1) = -ILAMBD
+         Z(1,S) = 0.0
+         IF (N .EQ. 2) GO TO 550
+         RM1(1,3) = -ILAMBD
+         Z(1,S-1) = 0.0
+         IF (N .EQ. 3) GO TO 550
+C
+         DO 540 I = 4, N
+  540    RM1(1,I) = 0.0
+C
+  550    DO 640 I = 2, UK
+            MP = I - 1
+            W = RM1(MP,I)
+            IF (I .LT. N) T = RM1(MP,I+1)
+            IF (I .EQ. N) T = Z(MP,S-1)
+            X = RM1(MP,MP) * RM1(MP,MP) + T * T
+            IF (W * W .LE. X) GO TO 580
+            X = RM1(MP,MP) / W
+            Y = T / W
+            RM1(MP,MP) = W
+            IF (I .LT. N) RM1(MP,I+1) = 0.0
+            IF (I .EQ. N) Z(MP,S-1) = 0.0
+C
+            DO 560 J = I, UK
+               W = RM1(J,I)
+               RM1(J,I) = RM1(J,MP) - X * W
+               RM1(J,MP) = W
+               IF (J .LT. N1) GO TO 555
+               L = J - NS
+               Z(I,L) = Z(MP,L) - Y * W
+               Z(MP,L) = 0.0
+               GO TO 560
+  555          RM1(I,J+2) = RM1(MP,J+2) - Y * W
+               RM1(MP,J+2) = 0.0
+  560       CONTINUE
+C
+            RM1(I,I) = RM1(I,I) - Y * ILAMBD
+            IF (I .LT. N1) GO TO 570
+            L = I - NS
+            Z(MP,L) = -ILAMBD
+            Z(I,L) = Z(I,L) + X * ILAMBD
+            GO TO 640
+  570       RM1(MP,I+2) = -ILAMBD
+            RM1(I,I+2) = RM1(I,I+2) + X * ILAMBD
+            GO TO 640
+  580       IF (X .NE. 0.0) GO TO 600
+            RM1(MP,MP) = EPS3
+            IF (I .LT. N) RM1(MP,I+1) = 0.0
+            IF (I .EQ. N) Z(MP,S-1) = 0.0
+            T = 0.0
+            X = EPS3 * EPS3
+  600       W = W / X
+            X = RM1(MP,MP) * W
+            Y = -T * W
+C
+            DO 620 J = I, UK
+               IF (J .LT. N1) GO TO 610
+               L = J - NS
+               T = Z(MP,L)
+               Z(I,L) = -X * T - Y * RM1(J,MP)
+               GO TO 615
+  610          T = RM1(MP,J+2)
+               RM1(I,J+2) = -X * T - Y * RM1(J,MP)
+  615          RM1(J,I) = RM1(J,I) - X * RM1(J,MP) + Y * T
+  620       CONTINUE
+C
+            IF (I .LT. N1) GO TO 630
+            L = I - NS
+            Z(I,L) = Z(I,L) - ILAMBD
+            GO TO 640
+  630       RM1(I,I+2) = RM1(I,I+2) - ILAMBD
+  640    CONTINUE
+C
+         IF (UK .LT. N1) GO TO 650
+         L = UK - NS
+         T = Z(UK,L)
+         GO TO 655
+  650    T = RM1(UK,UK+2)
+  655    IF (RM1(UK,UK) .EQ. 0.0 .AND. T .EQ. 0.0) RM1(UK,UK) = EPS3
+C     ********** BACK SUBSTITUTION FOR COMPLEX VECTOR
+C                FOR I=UK STEP -1 UNTIL 1 DO -- **********
+  660    DO 720 II = 1, UK
+            I = UK + 1 - II
+            X = RV1(I)
+            Y = 0.0
+            IF (I .EQ. UK) GO TO 700
+            IP1 = I + 1
+C
+            DO 680 J = IP1, UK
+               IF (J .LT. N1) GO TO 670
+               L = J - NS
+               T = Z(I,L)
+               GO TO 675
+  670          T = RM1(I,J+2)
+  675          X = X - RM1(J,I) * RV1(J) + T * RV2(J)
+               Y = Y - RM1(J,I) * RV2(J) - T * RV1(J)
+  680       CONTINUE
+C
+  700       IF (I .LT. N1) GO TO 710
+            L = I - NS
+            T = Z(I,L)
+            GO TO 715
+  710       T = RM1(I,I+2)
+  715       Z3 = CMPLX(X,Y) / CMPLX(RM1(I,I),T)
+            RV1(I) = REAL(Z3)
+            RV2(I) = AIMAG(Z3)
+  720    CONTINUE
+C     ********** ACCEPTANCE TEST FOR REAL OR COMPLEX
+C                EIGENVECTOR AND NORMALIZATION **********
+  740    ITS = ITS + 1
+         NORM = 0.0
+         NORMV = 0.0
+C
+         DO 780 I = 1, UK
+            IF (ILAMBD .EQ. 0.0) X = ABS(RV1(I))
+            IF (ILAMBD .NE. 0.0) X = CABS(CMPLX(RV1(I),RV2(I)))
+            IF (NORMV .GE. X) GO TO 760
+            NORMV = X
+            J = I
+  760       NORM = NORM + X
+  780    CONTINUE
+C
+         IF (NORM .LT. GROWTO) GO TO 840
+C     ********** ACCEPT VECTOR **********
+         X = RV1(J)
+         IF (ILAMBD .EQ. 0.0) X = 1.0 / X
+         IF (ILAMBD .NE. 0.0) Y = RV2(J)
+C
+         DO 820 I = 1, UK
+            IF (ILAMBD .NE. 0.0) GO TO 800
+            Z(I,S) = RV1(I) * X
+            GO TO 820
+  800       Z3 = CMPLX(RV1(I),RV2(I)) / CMPLX(X,Y)
+            Z(I,S-1) = REAL(Z3)
+            Z(I,S) = AIMAG(Z3)
+  820    CONTINUE
+C
+         IF (UK .EQ. N) GO TO 940
+         J = UK + 1
+         GO TO 900
+C     ********** IN-LINE PROCEDURE FOR CHOOSING
+C                A NEW STARTING VECTOR **********
+  840    IF (ITS .GE. UK) GO TO 880
+         X = UKROOT
+         Y = EPS3 / (X + 1.0)
+         RV1(1) = EPS3
+C
+         DO 860 I = 2, UK
+  860    RV1(I) = Y
+C
+         J = UK - ITS + 1
+         RV1(J) = RV1(J) - EPS3 * X
+         IF (ILAMBD .EQ. 0.0) GO TO 440
+         GO TO 660
+C     ********** SET ERROR -- UNACCEPTED EIGENVECTOR **********
+  880    J = 1
+         IERR = -K
+C     ********** SET REMAINING VECTOR COMPONENTS TO ZERO **********
+  900    DO 920 I = J, N
+            Z(I,S) = 0.0
+            IF (ILAMBD .NE. 0.0) Z(I,S-1) = 0.0
+  920    CONTINUE
+C
+  940    S = S + 1
+  960    IF (IP .EQ. (-1)) IP = 0
+         IF (IP .EQ. 1) IP = -1
+  980 CONTINUE
+C
+      GO TO 1001
+C     ********** SET ERROR -- UNDERESTIMATE OF EIGENVECTOR
+C                SPACE REQUIRED **********
+ 1000 IF (IERR .NE. 0) IERR = IERR - N
+      IF (IERR .EQ. 0) IERR = -(2 * N + 1)
+ 1001 M = S - 1 - IABS(IP)
+      RETURN
+C     ********** LAST CARD OF INVIT **********
+      END
+      SUBROUTINE ELMBAK(NM,LOW,IGH,A,INT,M,Z)
+C
+C
+      INTEGER I,J,M,LA,MM,MP,NM,IGH,KP1,LOW,MP1
+      REAL A(NM,IGH),Z(NM,M)
+      REAL X
+      INTEGER INT(IGH)
+C
+C
+      IF (M .EQ. 0) GO TO 200
+      LA = IGH - 1
+      KP1 = LOW + 1
+      IF (LA .LT. KP1) GO TO 200
+C     ********** FOR MP=IGH-1 STEP -1 UNTIL LOW+1 DO -- **********
+      DO 140 MM = KP1, LA
+         MP = LOW + IGH - MM
+         MP1 = MP + 1
+C
+         DO 110 I = MP1, IGH
+            X = A(I,MP-1)
+            IF (X .EQ. 0.0) GO TO 110
+C
+            DO 100 J = 1, M
+  100       Z(I,J) = Z(I,J) + X * Z(MP,J)
+C
+  110    CONTINUE
+C
+         I = INT(MP)
+         IF (I .EQ. MP) GO TO 140
+C
+         DO 130 J = 1, M
+            X = Z(I,J)
+            Z(I,J) = Z(MP,J)
+            Z(MP,J) = X
+  130    CONTINUE
+C
+  140 CONTINUE
+C
+  200 RETURN
+C     ********** LAST CARD OF ELMBAK **********
+      END
+      SUBROUTINE BALBAK(NM,N,LOW,IGH,SCALE,M,Z)
+C
+C
+      INTEGER I,J,K,M,N,II,NM,IGH,LOW
+      REAL SCALE(N),Z(NM,M)
+      REAL S
+C
+C
+C
+      IF (M .EQ. 0) GO TO 200
+      IF (IGH .EQ. LOW) GO TO 120
+C
+      DO 110 I = LOW, IGH
+         S = SCALE(I)
+C     ********** LEFT HAND EIGENVECTORS ARE BACK TRANSFORMED
+C                IF THE FOREGOING STATEMENT IS REPLACED BY
+C                S=1.0/SCALE(I). **********
+         DO 100 J = 1, M
+  100    Z(I,J) = Z(I,J) * S
+C
+  110 CONTINUE
+C     ********- FOR I=LOW-1 STEP -1 UNTIL 1,
+C               IGH+1 STEP 1 UNTIL N DO -- **********
+  120 DO 140 II = 1, N
+         I = II
+         IF (I .GE. LOW .AND. I .LE. IGH) GO TO 140
+         IF (I .LT. LOW) I = LOW - II
+         K = SCALE(I)
+         IF (K .EQ. I) GO TO 140
+C
+         DO 130 J = 1, M
+            S = Z(I,J)
+            Z(I,J) = Z(K,J)
+            Z(K,J) = S
+  130    CONTINUE
+C
+  140 CONTINUE
+C
+  200 RETURN
+C     ********** LAST CARD OF BALBAK **********
+      END
+      SUBROUTINE DETFAC(NMAX,N,A,IPIVOT,IDET,DETERM,ISCALE,WK,IERR)
+C
+C
+      DIMENSION A(NMAX,1),IPIVOT(1),WK(1)
+C
+      DATA R1,R2/1.E+100,1.E-100/
+C
+      ISCALE=0
+      NM1=N-1
+      IERR=0
+C
+C     DETERMINANT CALCULATION TEST
+C
+      IF(IDET.EQ.1)GO TO 230
+C
+C     TEST FOR A SCALAR MATRIX
+C
+      IF(NM1.GT.0)GO TO 20
+      DETERM=A(1)
+      RETURN
+C
+C     COMPUTE SCALING FACTORS
+C
+   20 DO 60 I=1,N
+      P=0.0
+      DO 30 J=1,N
+      Q=AMAX1(P,ABS(A(I,J)))
+      IF(Q.GT.P)P=Q
+   30 CONTINUE
+      IF(P)60,40,60
+   60 WK(I)=P
+C
+      DO 210 M=1,NM1
+C
+C     PIVOTAL LOGIC SETUP
+C
+      P=0.0
+      DO 110 I=M,N
+      Q=ABS(A(I,M)/WK(I))
+      IF(Q-P)110,110,100
+  100 P=Q
+      IP=I
+  110 CONTINUE
+C
+      IPIVOT(M)=IP
+C
+      IF(P.EQ.0.)GO TO 40
+      IF(M.EQ.IP)GO TO 155
+C
+C     PIVOT THE M-TH ROW OF THE A MATRIX
+C
+      DO 150 I=1,N
+      P=A(IP,I)
+      A(IP,I)=A(M,I)
+  150 A(M,I)=P
+C
+      P=WK(IP)
+      WK(IP)=WK(M)
+      WK(M)=P
+C
+  155 MP1=M+1
+C
+C      L/U FACTORIZATION LOGIC
+C
+      P=A(M,M)
+      DO 180 I=MP1,N
+      A(I,M)=A(I,M)/P
+      Q=A(I,M)
+      DO 180 K=MP1,N
+  180 A(I,K)=A(I,K)-Q*A(M,K)
+C
+  210 CONTINUE
+C
+      IPIVOT(N)=N
+      IF (A(N,N) .EQ. 0.0) GO TO 40
+C
+C     CALCULATION OF THE DETERMINANT OF A
+C
+      IF(IDET.EQ.0)RETURN
+C
+  230 SIGN=1.0
+      DETERM=1.0
+C
+C     ADJUST SIGN OF DETERMINANT DUE TO PIVOTAL STRATEGY
+C
+      DO 250 I=1,NM1
+      IF(I-IPIVOT(I))240,250,240
+  240 SIGN=-SIGN
+  250 CONTINUE
+C
+      DO 340 I=1,N
+      P=A(I,I)
+C
+  260 CONTINUE
+      IF(R1.GT.ABS(P))GO TO 280
+      P=P*R2
+      ISCALE=ISCALE+1
+      GO TO 260
+C
+  280 CONTINUE
+      IF(R2.LT.ABS(P))GO TO 290
+      P=P*R1
+      ISCALE=ISCALE-1
+      GO TO 280
+C
+  290 DETERM=DETERM*P
+C
+  300 CONTINUE
+      IF(R1.GT.ABS(DETERM))GO TO 320
+      DETERM=DETERM*R2
+      ISCALE=ISCALE+1
+      GO TO 300
+C
+  320 CONTINUE
+      IF(R2.LT.ABS(DETERM))GO TO 340
+      DETERM=DETERM*R1
+      ISCALE=ISCALE-1
+      GO TO 320
+C
+  340 CONTINUE
+C
+      DETERM=DETERM*SIGN
+C
+      RETURN
+   40 DETERM=0.0
+      IERR=1
+      RETURN
+      END
+      SUBROUTINE AXPXB(A,U,M,NA,NU,B,V,N,NB,NV,C,NC,EPSA,
+     1EPSB,FAIL)
+C
+C
+      REAL
+     1A(NA,1),U(NU,1),B(NB,1),V(NV,1),C(NC,1),EPSA,EPSB,TEMP
+      INTEGER
+     1M,NA,NU,N,NB,NV,NC,FAIL,M1,MM1,N1,NM1,I,J,K
+      M1 = M+1
+      MM1 = M-1
+      N1 = N+1
+      NM1 = N-1
+C
+C IF REQUIRED, REDUCE A TO UPPER REAL SCHUR FORM.
+C
+      IF(EPSA .LT. 0.) GO TO 35
+      DO 10 I=1,M
+        DO 10 J=I,M
+          TEMP = A(I,J)
+          A(I,J) = A(J,I)
+          A(J,I) = TEMP
+   10 CONTINUE
+      CALL HSHLDR(A,M,NA)
+      CALL BCKMLT(A,U,M,NA,NU)
+      IF(MM1 .EQ. 0) GO TO 25
+      DO 20 I=1,MM1
+        A(I+1,I) = A(I,M1)
+   20 CONTINUE
+      CALL SCHUR(A,U,M,NA,NU,EPSA,FAIL)
+      IF(FAIL .NE. 0) RETURN
+   25 DO 30 I=1,M
+        DO 30 J=I,M
+          TEMP = A(I,J)
+          A(I,J) = A(J,I)
+          A(J,I) = TEMP
+   30 CONTINUE
+C
+C IF REQUIRED, REDUCE B TO UPPER REAL SCHUR FORM.
+C
+   35 IF(EPSB .LT. 0.) GO TO 45
+      CALL HSHLDR(B,N,NB)
+      CALL BCKMLT(B,V,N,NB,NV)
+      IF(NM1 .EQ. 0) GO TO 45
+      DO 40 I=1,NM1
+        B(I+1,I) = B(I,N1)
+   40 CONTINUE
+      CALL SCHUR(B,V,N,NB,NV,EPSB,FAIL)
+      FAIL = -FAIL
+      IF(FAIL .NE. 0) RETURN
+C
+C TRANSFORM C.
+C
+   45 DO 60 J=1,N
+        DO 50 I=1,M
+          A(I,M1) = 0.
+          DO 50 K=1,M
+            A(I,M1) = A(I,M1) + U(K,I)*C(K,J)
+   50 CONTINUE
+      DO 60 I=1,M
+        C(I,J) = A(I,M1)
+   60 CONTINUE
+      DO 80 I=1,M
+        DO 70 J=1,N
+          B(N1,J) = 0.
+          DO 70 K=1,N
+            B(N1,J) = B(N1,J) + C(I,K)*V(K,J)
+   70 CONTINUE
+      DO 80 J=1,N
+        C(I,J) = B(N1,J)
+   80 CONTINUE
+C
+C SOLVE THE TRANSFORMED SYSTEM.
+C
+      CALL SHRSLV(A,B,C,M,N,NA,NB,NC)
+C
+C TRANSFORM C BACK TO THE SOLUTION.
+C
+      DO 100 J=1,N
+        DO 90 I=1,M
+          A(I,M1) = 0.
+          DO 90 K=1,M
+            A(I,M1) = A(I,M1) + U(I,K)*C(K,J)
+   90 CONTINUE
+      DO 100 I=1,M
+        C(I,J) = A(I,M1)
+  100 CONTINUE
+      DO 120 I=1,M
+        DO 110 J=1,N
+          B(N1,J) = 0.
+          DO 110 K=1,N
+            B(N1,J) = B(N1,J) + C(I,K)*V(J,K)
+  110    CONTINUE
+         DO 120 J=1,N
+           C(I,J) = B(N1,J)
+  120  CONTINUE
+       RETURN
+       END
+       SUBROUTINE SHRSLV(A,B,C,M,N,NA,NB,NC)
+C
+C
+      REAL
+     1A(NA,1),B(NB,1),C(NC,1),T,P
+      INTEGER
+     1M,N,NA,NB,NC,K,KM1,DK,KK,L,LM1,DL,LL,I,IB,J,JA,NSYS
+      COMMON/SLVBLK/T(5,5),P(5),NSYS
+      L = 1
+   10   LM1 = L-1
+        DL = 1
+        IF(L .EQ. N) GO TO 15
+        IF(B(L+1,L) .NE. 0.) DL = 2
+   15   LL = L+DL-1
+        IF(L .EQ. 1) GO TO 30
+        DO 20 J=L,LL
+          DO 20 I=1,M
+            DO 20 IB=1,LM1
+              C(I,J) = C(I,J) - C(I,IB)*B(IB,J)
+   20   CONTINUE
+   30   K = 1
+   40     KM1 = K-1
+          DK = 1
+          IF(K .EQ. M) GO TO 45
+          IF(A(K,K+1) .NE. 0.) DK = 2
+   45     KK = K+DK-1
+          IF(K .EQ. 1) GO TO 60
+          DO 50 I=K,KK
+            DO 50 J=L,LL
+              DO 50 JA=1,KM1
+                C(I,J) = C(I,J) - A(I,JA)*C(JA,J)
+  50      CONTINUE
+  60      IF(DL .EQ. 2) GO TO 80
+          IF(DK .EQ. 2) GO TO 70
+          T(1,1) = A(K,K) + B(L,L)
+          IF(T(1,1) .EQ. 0.) STOP
+          C(K,L) = C(K,L)/T(1,1)
+          GO TO 100
+  70      T(1,1) = A(K,K) + B(L,L)
+          T(1,2) = A(K,KK)
+          T(2,1) = A(KK,K)
+          T(2,2) = A(KK,KK) + B(L,L)
+          P(1) = C(K,L)
+          P(2) = C(KK,L)
+          NSYS = 2
+          CALL SYSSLV
+          C(K,L) = P(1)
+          C(KK,L) = P(2)
+          GO TO 100
+  80      IF(DK .EQ. 2) GO TO 90
+          T(1,1) = A(K,K) + B(L,L)
+          T(1,2) = B(LL,L)
+          T(2,1) = B(L,LL)
+          T(2,2) = A(K,K) + B(LL,LL)
+          P(1) = C(K,L)
+          P(2) = C(K,LL)
+          NSYS = 2
+          CALL SYSSLV
+          C(K,L) = P(1)
+          C(K,LL) = P(2)
+          GO TO 100
+  90      T(1,1) = A(K,K) + B(L,L)
+          T(1,2) = A(K,KK)
+          T(1,3) = B(LL,L)
+          T(1,4) = 0.
+          T(2,1) = A(KK,K)
+          T(2,2) = A(KK,KK) + B(L,L)
+          T(2,3) = 0.
+          T(2,4) = T(1,3)
+          T(3,1) = B(L,LL)
+          T(3,2) = 0.
+          T(3,3) = A(K,K) + B(LL,LL)
+          T(3,4) = T(1,2)
+          T(4,1) = 0.
+          T(4,2) = T(3,1)
+          T(4,3) = T(2,1)
+          T(4,4) = A(KK,KK) + B(LL,LL)
+          P(1) = C(K,L)
+          P(2) = C(KK,L)
+          P(3) = C(K,LL)
+          P(4) = C(KK,LL)
+          NSYS = 4
+          CALL SYSSLV
+          C(K,L) = P(1)
+          C(KK,L) = P(2)
+          C(K,LL) = P(3)
+          C(KK,LL) = P(4)
+  100   K = K + DK
+        IF(K .LE. M) GO TO 40
+      L = L + DL
+      IF(L .LE. N) GO TO 10
+      RETURN
+      END
+      SUBROUTINE ATXPXA(A,U,C,N,NA,NU,NC,EPS,FAIL)
+C
+C
+      REAL
+     1A(NA,1),U(NU,1),C(NC,1),EPS
+      INTEGER
+     1N,NA,NU,NC,FAIL,N1,NM1,I,J,K
+      N1 = N+1
+      NM1 = N-1
+C
+C IF REQUIRED, REDUCE A TO LOWER REAL SCHUR FORM.
+C
+      IF(EPS .LT. 0.) GO TO 15
+      CALL HSHLDR(A,N,NA)
+      CALL BCKMLT(A,U,N,NA,NU)
+      DO 10 I=1,NM1
+        A(I+1,I) = A(I,N1)
+   10 CONTINUE
+      CALL SCHUR(A,U,N,NA,NU,EPS,FAIL)
+      IF(FAIL .NE. 0) RETURN
+C
+C TRANSFORM C.
+C
+   15 DO 20 I=1,N
+          C(I,I)=C(I,I)/2.
+   20 CONTINUE
+      DO 40 I=1,N
+        DO 30 J=1,N
+          A(N1,J) = 0.
+          DO 30 K=I,N
+            A(N1,J) = A(N1,J) + C(I,K)*U(K,J)
+   30   CONTINUE
+          DO 40 J=1,N
+          C(I,J) = A(N1,J)
+   40 CONTINUE
+      DO 60 J=1,N
+        DO 50 I=1,N
+          A(I,N1) = 0.
+          DO 50 K=1,N
+            A(I,N1) = A(I,N1) + U(K,I)*C(K,J)
+   50   CONTINUE
+        DO 60 I=1,N
+          C(I,J) = A(I,N1)
+   60 CONTINUE
+      DO 70 I=1,N
+        DO 70 J=I,N
+          C(I,J) = C(I,J) + C(J,I)
+          C(J,I) = C(I,J)
+   70 CONTINUE
+C
+C SOLVE THE TRANSFORMED SYSTEM.
+C
+      CALL SYMSLV(A,C,N,NA,NC)
+C
+C TRANSFORM C BACK TO THE SOLUTION.
+C
+      DO 80 I=1,N
+        C(I,I) = C(I,I)/2.
+   80 CONTINUE
+      DO 100 I=1,N
+        DO 90 J=1,N
+          A(N1,J) = 0.
+          DO 90 K=I,N
+            A(N1,J) = A(N1,J) + C(I,K)*U(J,K)
+   90   CONTINUE
+        DO 100 J=1,N
+          C(I,J) = A(N1,J)
+  100 CONTINUE
+      DO 120 J=1,N
+        DO 110 I=1,N
+          A(I,N1) = 0.
+          DO 110 K=1,N
+            A(I,N1) = A(I,N1) + U(I,K)*C(K,J)
+  110   CONTINUE
+        DO 120 I=1,N
+          C(I,J) = A(I,N1)
+  120 CONTINUE
+      DO 130 I=1,N
+        DO 130 J=I,N
+          C(I,J) = C(I,J) + C(J,I)
+          C(J,I) = C(I,J)
+  130 CONTINUE
+      RETURN
+      END
+      SUBROUTINE SYMSLV(A,C,N,NA,NC)
+C
+C
+      REAL
+     1A(NA,1),C(NC,1),T,P
+      INTEGER
+     1N,NA,NC,K,KK,DK,KM1,L,LL,DL,LDL,I,IA,J,NSYS
+      COMMON/SLVBLK/T(5,5),P(5),NSYS
+      L = 1
+   10   DL = 1
+        IF(L .EQ. N) GO TO 20
+        IF(A(L+1,L) .NE. 0.) DL = 2
+   20   LL = L+DL-1
+        K = L
+   30     KM1 = K-1
+          DK = 1
+          IF(K .EQ. N) GO TO 35
+          IF(A(K+1,K) .NE. 0.) DK = 2
+   35     KK = K+DK-1
+          IF(K .EQ. L) GO TO 45
+          DO 40 I=K,KK
+            DO 40 J=L,LL
+              DO 40 IA=L,KM1
+                C(I,J) = C(I,J) - A(IA,I)*C(IA,J)
+   40     CONTINUE
+   45     IF(DL .EQ. 2) GO TO 60
+          IF(DK .EQ. 2 ) GO TO 50
+          T(1,1) = A(K,K) + A(L,L)
+          IF(T(1,1) .EQ. 0.) STOP
+          C(K,L) = C(K,L)/T(1,1)
+          GO TO 90
+  50      T(1,1) = A(K,K) + A(L,L)
+          T(1,2) = A(KK,K)
+          T(2,1) = A(K,KK)
+          T(2,2) = A(KK,KK) + A(L,L)
+          P(1) = C(K,L)
+          P(2) = C(KK,L)
+          NSYS = 2
+          CALL SYSSLV
+          C(K,L) = P(1)
+        C(KK,L) = P(2)
+          GO TO 90
+  60      IF(DK .EQ. 2) GO TO 70
+          T(1,1) = A(K,K) + A(L,L)
+          T(1,2) = A(LL,L)
+          T(2,1) = A(L,LL)
+          T(2,2) = A(K,K) + A(LL,LL)
+          P(1) = C(K,L)
+          P(2) = C(K,LL)
+          NSYS = 2
+          CALL SYSSLV
+          C(K,L) = P(1)
+          C(K,LL) = P(2)
+          GO TO 90
+  70      IF(K .NE. L) GO TO 80
+          T(1,1) = A(L,L)
+          T(1,2) = A(LL,L)
+          T(1,3) = 0.
+          T(2,1) = A(L,LL)
+          T(2,2) = A(L,L) + A(LL,LL)
+          T(2,3) = T(1,2)
+          T(3,1) = 0.
+          T(3,2) = T(2,1)
+          T(3,3) = A(LL,LL)
+          P(1) = C(L,L)/2.
+          P(2) = C(LL,L)
+          P(3) = C(LL,LL)/2.
+          NSYS = 3
+          CALL SYSSLV
+          C(L,L) = P(1)
+          C(LL,L) = P(2)
+          C(L,LL) = P(2)
+          C(LL,LL) = P(3)
+          GO TO 90
+  80      T(1,1) = A(K,K) + A(L,L)
+          T(1,2) = A(KK,K)
+          T(1,3) = A(LL,L)
+          T(1,4) = 0.
+          T(2,1) = A(K,KK)
+          T(2,2) = A(KK,KK) + A(L,L)
+          T(2,3) = 0.
+          T(2,4) = T(1,3)
+          T(3,1) = A(L,LL)
+          T(3,2) = 0.
+          T(3,3) = A(K,K) + A(LL,LL)
+          T(3,4) = T(1,2)
+          T(4,1) = 0.
+          T(4,2) = T(3,1)
+          T(4,3) = T(2,1)
+          T(4,4) = A(KK,KK) + A(LL,LL)
+          P(1) = C(K,L)
+          P(2) = C(KK,L)
+          P(3) = C(K,LL)
+          P(4) = C(KK,LL)
+          NSYS = 4
+          CALL SYSSLV
+          C(K,L) = P(1)
+          C(KK,L) = P(2)
+          C(K,LL) = P(3)
+          C(KK,LL) = P(4)
+  90    K = K + DK
+        IF(K .LE. N) GO TO 30
+        LDL = L + DL
+        IF(LDL .GT. N) RETURN
+        DO 120 J=LDL,N
+          DO 100 I=L,LL
+            C(I,J) = C(J,I)
+  100     CONTINUE
+          DO 120 I=J,N
+            DO 110 K=L,LL
+              C(I,J) = C(I,J) - C(I,K)*A(K,J) - A(K,I)*C(K,J)
+  110     CONTINUE
+          C(J,I) = C(I,J)
+  120 CONTINUE
+      L = LDL
+      GO TO 10
+      END
+      SUBROUTINE HSHLDR(A,N,NA)
+C
+C
+      REAL
+     1A(NA,1),MAX,SUM,S,P
+      INTEGER
+     1N,NA,NM2,N1,L,L1,I,J
+      NM2 = N-2
+      N1 = N+1
+      IF(N .EQ. 1) RETURN
+      IF(N .GT. 2) GO TO 5
+      A(1,N1) = A(2,1)
+      RETURN
+    5 DO 80 L=1,NM2
+        L1 = L+1
+        MAX = 0.
+        DO 10 I=L1,N
+          MAX = AMAX1(MAX,ABS(A(I,L)))
+   10   CONTINUE
+        IF(MAX .NE. 0.) GO TO 20
+        A(L,N1) = 0.
+        A(N1,L) = 0.
+        GO TO 80
+   20   SUM = 0.
+        DO 30 I=L1,N
+          A(I,L) = A(I,L)/MAX
+          SUM = SUM + A(I,L)**2
+   30   CONTINUE
+        S = SIGN(SQRT(SUM),A(L1,L))
+        A(L,N1) = -MAX*S
+        A(L1,L) = S + A(L1,L)
+        A(N1,L) = S*A(L1,L)
+        DO 50 J=L1,N
+          SUM = 0.
+          DO 40 I=L1,N
+            SUM = SUM + A(I,L)*A(I,J)
+   40     CONTINUE
+          P = SUM/A(N1,L)
+          DO 50 I=L1,N
+            A(I,J) = A(I,J) - A(I,L)*P
+   50   CONTINUE
+        DO 70 I=1,N
+          SUM = 0.
+          DO 60 J=L1,N
+            SUM = SUM + A(I,J)*A(J,L)
+   60     CONTINUE
+          P = SUM/A(N1,L)
+          DO 70 J=L1,N
+            A(I,J) = A(I,J) - P*A(J,L)
+   70   CONTINUE
+   80 CONTINUE
+      A(N-1,N1) = A(N,N-1)
+      RETURN
+      END
+      SUBROUTINE BCKMLT(A,U,N,NA,NU)
+C
+C
+      REAL
+     1A(NA,1),U(NU,1),SUM,P
+      INTEGER
+     1N,NA,N1,NM1,NM2,LL,L,L1,I,J
+      N1 = N+1
+      NM1 = N-1
+      NM2 = N-2
+      U(N,N) = 1.
+      IF(NM1 .EQ. 0) RETURN
+      U(NM1,N) = 0.
+      U(N,NM1) = 0.
+      U(NM1,NM1) = 1.
+      IF(NM2 .EQ. 0) RETURN
+      DO 40 LL=1,NM2
+        L = NM2-LL+1
+        L1 = L+1
+        IF(A(N1,L) .EQ. 0.) GO TO 25
+        DO 20 J=L1,N
+          SUM = 0.
+          DO 10 I=L1,N
+            SUM = SUM + A(I,L)*U(I,J)
+   10     CONTINUE
+          P = SUM/A(N1,L)
+          DO 20 I=L1,N
+            U(I,J) = U(I,J) - A(I,L)*P
+   20   CONTINUE
+   25   DO 30 I=L1,N
+          U(I,L) = 0.
+          U(L,I) = 0.
+   30   CONTINUE
+        U(L,L) = 1.
+   40 CONTINUE
+      RETURN
+      END
+      SUBROUTINE SCHUR(H,U,NN,NH,NU,EPS,FAIL)
+C
+C
+      REAL
+     1H(NH,1),U(NU,1),EPS,HN,RSUM,TEST,P,Q,R,S,W,X,Y,Z
+      INTEGER
+     1NN,NA,NH,FAIL,I,ITS,J,JL,K,L,LL,M,MM,M2,M3,N,NA
+      LOGICAL
+     1LAST
+      HN = 0.
+      N = NN
+      DO 20 I=1,N
+        JL = MAX0(1,I-1)
+        RSUM = 0.
+      DO 10 J=JL,N
+          RSUM = RSUM + ABS(H(I,J))
+   10   CONTINUE
+        HN = AMAX1(HN,RSUM)
+   20 CONTINUE
+      TEST = EPS*HN
+      IF(HN .EQ. 0.) GO TO 230
+   30 IF(N .LE. 1) GO TO 230
+      ITS = 0
+      NA = N-1
+      NM2 = N-2
+   40 DO 50 LL=2,N
+      L = N-LL+2
+        IF(ABS(H(L,L-1)) .LE. TEST) GO TO 60
+   50 CONTINUE
+      L = 1
+      GO TO 70
+   60 H(L,L-1) = 0.
+   70 IF(L .LT. NA) GO TO 72
+      N = L-1
+      GO TO 30
+   72 X = H(N,N)/HN
+      Y = H(NA,NA)/HN
+      R = (H(N,NA)/HN)*(H(NA,N)/HN)
+      IF(ITS .LT. 30) GO TO 75
+      FAIL = N
+      RETURN
+   75 IF(ITS.EQ.10 .OR. ITS.EQ.20) GO TO 80
+      S = X + Y
+      Y = X*Y - R
+      GO TO 90
+   80 Y = (ABS(H(N,NA)) + ABS(H(NA,NM2)))/HN
+      S = 1.5*Y
+      Y = Y**2
+   90 ITS = ITS + 1
+      DO 100 MM=L,NM2
+        M = NM2-MM+L
+        X = H(M,M)/HN
+        R = H(M+1,M)/HN
+        Z = H(M+1,M+1)/HN
+        P = X*(X-S) + Y + R*(H(M,M+1)/HN)
+        Q = R*(X+Z-S)
+        R = R*(H(M+2,M+1)/HN)
+        W = ABS(P) + ABS(Q) + ABS(R)
+        P = P/W
+        Q = Q/W
+        R = R/W
+        IF(M .EQ. L) GO TO 110
+      IF(ABS(H(M,M-1))*(ABS(Q)+ABS(R)) .LE. ABS(P)*TEST)
+     1GO TO 110
+  100 CONTINUE
+  110 M2 = M+2
+      M3 = M+3
+      DO 120 I=M2,N
+        H(I,I-2) = 0.
+  120 CONTINUE
+      IF(M3 .GT. N) GO TO 140
+      DO 130 I=M3,N
+        H(I,I-3) = 0.
+  130 CONTINUE
+  140 DO 220 K=M,NA
+        LAST = K.EQ.NA
+        IF(K .EQ. M) GO TO 150
+        P = H(K,K-1)
+        Q = H(K+1,K-1)
+        R = 0.
+        IF(.NOT.LAST) R = H(K+2,K-1)
+        X = ABS(P) + ABS(Q) + ABS(R)
+        IF(X .EQ. 0.) GO TO 220
+        P = P/X
+        Q = Q/X
+        R = R/X
+  150   S = SQRT(P**2 + Q**2 + R**2)
+        IF(P .LT. 0.) S = -S
+        IF(K .NE. M) H(K,K-1) = -S*X
+        IF(K.EQ.M .AND. L.NE.M) H(K,K-1) = -H(K,K-1)
+        P = P + S
+        X = P/S
+        Y = Q/S
+        Z = R/S
+        Q = Q/P
+        R = R/P
+        DO 170 J=K,NN
+          P = H(K,J) + Q*H(K+1,J)
+          IF(LAST) GO TO 160
+          P = P + R*H(K+2,J)
+          H(K+2,J) = H(K+2,J) - P*Z
+  160     H(K+1,J) = H(K+1,J) - P*Y
+          H(K,J) = H(K,J) - P*X
+  170   CONTINUE
+        J = MIN0(K+3,N)
+        DO 190 I=1,J
+          P = X*H(I,K) + Y*H(I,K+1)
+          IF(LAST) GO TO 180
+          P = P + Z*H(I,K+2)
+          H(I,K+2) = H(I,K+2) - P*R
+  180     H(I,K+1) = H(I,K+1) - P*Q
+          H(I,K) = H(I,K) - P
+  190   CONTINUE
+        DO 210 I=1,NN
+          P = X*U(I,K) + Y*U(I,K+1)
+          IF(LAST) GO TO 200
+          P = P + Z*U(I,K+2)
+          U(I,K+2) = U(I,K+2) - P*R
+  200     U(I,K+1) = U(I,K+1) - P*Q
+          U(I,K) = U(I,K) - P
+  210   CONTINUE
+  220 CONTINUE
+      GO TO 40
+  230 FAIL = 0
+      RETURN
+      END
+      SUBROUTINE SYSSLV
+C
+C
+      COMMON/SLVBLK/A(5,5),B(5),N
+      REAL MAX
+    1 NM1 = N - 1
+      N1 = N+1
+C
+C COMPUTE THE LU FACTORIZATION OF A.
+C
+      DO 80 K=1,N
+        KM1 = K-1
+        IF(K.EQ.1) GO TO 20
+        DO 10 I=K,N
+          DO 10 J=1,KM1
+            A(I,K) = A(I,K) - A(I,J)*A(J,K)
+   10   CONTINUE
+   20   IF(K.EQ.N) GO TO 100
+        KP1 = K+1
+      MAX = ABS(A(K,K))
+        INTR = K
+        DO 30 I=KP1,N
+          AA = ABS(A(I,K))
+          IF(AA .LE. MAX) GO TO 30
+          MAX = AA
+          INTR = I
+   30   CONTINUE
+        IF(MAX .EQ. 0.) STOP
+        A(N1,K) = INTR
+        IF(INTR .EQ. K) GO TO 50
+        DO 40 J=1,N
+          TEMP = A(K,J)
+          A(K,J) = A(INTR,J)
+          A(INTR,J) = TEMP
+   40   CONTINUE
+   50   DO 80 J=KP1,N
+          IF(K.EQ.1) GO TO 70
+          DO 60 I=1,KM1
+            A(K,J) = A(K,J) - A(K,I)*A(I,J)
+   60     CONTINUE
+   70     A(K,J) = A(K,J)/A(K,K)
+   80 CONTINUE
+C
+C INTERCHANGE THE COMPONENTS OF B.
+C
+  100 DO 110 J=1,NM1
+        INTR = A(N1,J)
+        IF(INTR .EQ. J) GO TO 110
+        TEMP = B(J)
+        B(J) = B(INTR)
+        B(INTR) = TEMP
+  110 CONTINUE
+C
+C SOLVE LX = B.
+C
+  200 B(1) = B(1)/A(1,1)
+      DO 220 I=2,N
+        IM1 = I-1
+        DO 210 J=1,IM1
+          B(I) = B(I) - A(I,J)*B(J)
+  210   CONTINUE
+        B(I) = B(I)/A(I,I)
+  220 CONTINUE
+C
+C SOLVE UX = B.
+C
+  300 DO 310 II=1,NM1
+          I = NM1-II+1
+        I1 = I+1
+        DO 310 J=I1,N
+          B(I) = B(I) - A(I,J)*B(J)
+  310 CONTINUE
+      RETURN
+      END
+      SUBROUTINE GAUSEL (MAX, N, A, NR, B, IERR)
+C
+C
+      DIMENSION A(N,N),B(MAX,NR)
+      NM1 = N-1
+      IF (NM1 .EQ. 0) GO TO 140
+C
+C     FIND LARGEST REMAINING ELEMENT IN I-TH COLUMN FOR PIVOT
+C
+      DO 100 I=1,NM1
+         BIG = 0.
+         DO 20 K=I,N
+            TERM = ABS(A(K,I))
+            IF (TERM - BIG) 20,20,10
+  10        BIG = TERM
+            L = K
+  20     CONTINUE
+         IF (BIG) 40,30,40
+  40     IF (I-L) 50,80,50
+C
+C     PIVOT ROWS OF A AND B
+C
+  50     CONTINUE
+         DO 60 J=1,N
+            TEMP = A(I,J)
+            A(I,J) = A(L,J)
+            A(L,J) = TEMP
+  60     CONTINUE
+         DO 70 J=1,NR
+            TEMP = B(I,J)
+            B(I,J) = B(L,J)
+            B(L,J) = TEMP
+  70     CONTINUE
+  80     CONTINUE
+C
+C     STORE PIVOT AND PERFORM COLUMN OPERATIONS ON A AND B
+C
+         IP1 = I+1
+         DO 100 II=IP1,N
+            A(II,I) = A(II,I)/A(I,I)
+            X3 = A(II,I)
+            DO 90 K=IP1,N
+               A(II,K) = A(II,K) - X3*A(I,K)
+  90        CONTINUE
+            DO 100 K=1,NR
+               B(II,K) = B(II,K) - X3*B(I,K)
+ 100  CONTINUE
+C
+C     PERFORM BACK SUBSTITUTION
+C
+      DO 110 IC=1,NR
+         B(N,IC) = B(N,IC)/A(N,N)
+ 110  CONTINUE
+      DO 130 KK=1,NM1
+         I = N-KK
+         IP1 = I+1
+         DO 130 J=1,NR
+            SUM = B(I,J)
+            DO 120 K=IP1,N
+               SUM = SUM - A(I,K)*B(K,J)
+ 120        CONTINUE
+            B(I,J) = SUM/A(I,I)
+ 130  CONTINUE
+      RETURN
+ 140  CONTINUE
+      IF (A(1,1) .EQ. 0.) GO TO 30
+      DO 150 J=1,NR
+         B(1,J) = B(1,J)/A(1,1)
+ 150  CONTINUE
+      RETURN
+  30     IERR = 2
+      RETURN
+      END

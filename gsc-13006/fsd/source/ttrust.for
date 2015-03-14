@@ -1,0 +1,38 @@
+      FUNCTION TTRUST(TPULSE,TIME,TVEC,TPAR)
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      DIMENSION TVEC(4),TPAR(4)
+C
+C
+      T1=TVEC(1)
+      T2=TVEC(2)
+      T3=TVEC(3)
+      T4=TVEC(4)
+C
+      A=TPAR(1)
+      B=TPAR(2)
+      C=TPAR(3)
+      D=TPAR(4)
+C
+      TEST=TIME-TPULSE
+      T21=T2-T1
+      T31=T3-T1
+      T41=T4-T1
+      ARG1=TEST
+      IF(TEST.GT.T21) ARG1=T21
+      ARG1=-B*ARG1
+      TMAG=A*(1.0D0-DEXP(ARG1))
+      ARG1=TEST-T21
+      IF(ARG1.LT.0.0D0) GO TO 10
+      IF(TEST.GT.T31) ARG1=T3-T2
+      TMAG=TMAG+C*ARG1
+      ARG1=TEST-T31
+      IF(ARG1.LT.0.0D0) GO TO 10
+      ARG1=-D*ARG1
+      TMAG=TMAG*DEXP(ARG1)*(T41-TEST)/(T4-T3)
+      IF(TEST.GT.T41) TMAG=0.0D0
+   10 CONTINUE
+      TTRUST=TMAG
+      RETURN
+      END

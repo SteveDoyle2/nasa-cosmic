@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+A bullet chart is used to generate the topic outlines for a presentation.
+Often used as a view graph, a bullet chart contains key words or brief phrases.
+The bullet chart does automatic paging and centering.  It also provides the
+option of selecting character sizes and symbols.
+
+The fields which are to be entered are as follows:
+        Title        : Displayed at the top and centered on every page
+        Sub-title    : Displayed below title and centered on every page
+        Bullet       : Main point, up to 120 characters, shown in the middle of
+                       the chart and can have any number of them
+        Sub-bullet   : Sub point, up to 120 characters, shown below its
+                       associated bullet and can have any number of them
+        Date         : Any date desired, up to 20 characters
+        Author       : Any author desired, up to 20 characters
+        Organization : Any organization desired, up to 20 characters
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

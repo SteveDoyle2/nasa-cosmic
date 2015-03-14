@@ -1,0 +1,500 @@
+{ $INCLUDE : 'compile.inc' }
+{ $INCLUDE : 'getparam.int' }
+{ $INCLUDE : 'vbpas.int' }
+{ $INCLUDE : 'sfpas.int' }
+{ $INCLUDE : 'dialog.int' }
+{ $INCLUDE : 'utility.int' }
+{ $INCLUDE : 'execute.int' }
+{ $INCLUDE : 'display.int' }
+
+implementation of display;
+
+USES getparam;
+
+USES vbpas;
+
+USES sfpas;
+
+USES dialog;
+
+USES execute;
+
+    var
+{     f       : text(79);
+      buf     : lstring(79);}
+      inchar  :twobyte;
+{     numline : array[0..93] of integer;}
+      inchars : lstring(80);
+      temp    : lstring(5);
+
+  procedure menu;
+
+    var
+      i,j     : integer;
+      error   : boolean;
+      helpcall: boolean;
+
+    begin
+     repeat
+      helpcall := false;
+      if nlines > 0 then
+	begin
+	  if helpcode = 65535 then there1 ( 0, start_line )
+			      else there  ( 0, start_line );
+	  for i := 1 to nlines do
+	    writeln ( msg[i] );
+	end;
+      if n > 0 then
+	  repeat
+	    reply[1] := 0;
+	    inchar[1] := 1;
+	    inchar[2] := 0;
+	    i := 0;
+	    j := 1;
+	    error := false;
+
+	    while (((inchar[1]<48)or(inchar[1]>57))and((inchar[1]<>0)or
+		  ((inchar[2]<59)or(inchar[2]>68))and(inchar[2]<>104)))
+		  and (inchar[1] <> 13) do
+	      get_input ( inchar );
+
+	    if ((inchar[1]<>0)or(((n<>1)and(inchar[2]<>35))and(inchar[2]<>99)) then
+	      begin { process possible initial key entries excluding }
+		    { F1 to F10, Alt H, or Ctrl F6 }
+
+		while ((inchar[1]<>13)and(j<80)and((inchar[2]<59)or(inchar[2]>68))and(inchar[2]<>104)) do
+		  begin { process possible key entries excluding }
+			{ CR and F1 to F10 }
+		    write ( chr (inchar[1]) );
+		    if inchar[1] = 8 then { backspace }
+		      begin
+			if j > 1 then
+			  begin
+			    write (' ',chr(8));
+			    j := j - 2;
+			  end;
+		      end
+		     else inchars[j] := chr(inchar[1]);
+		    get_input ( inchar );
+		    j := j + 1;
+		  end;
+		if ((inchar[2]>=59)and(inchar[2]<=68))or(inchar[2]=104)then
+		  begin
+		    case inchar[2] of
+		      59..67: begin
+				inchars[j] := chr(ord(inchar[2])-10);
+				write(inchars[j])
+			      end;
+			  68: begin
+				inchars[j] := chr(ord(inchar[2])-10);
+				write('10')
+			      end;
+			 104: begin
+				inchars[j] := chr(59);
+				write('1');
+			      end;
+		      otherwise
+		    end; { case inchar[2] }
+		    j := j + 1
+		  end;
+		inchars[j] := chr(13); { attach CR key }
+		j := 1;
+
+		while (( i < n ) and ( inchars[j] <> chr ( 13 ) ) ) do
+		  begin { determine actual numerical value of entry }
+		    i := i + 1;
+		    reply[i] := 0;
+
+		    while (((inchars[j]<'0')or(inchars[j]>chr(59)))and
+			  (inchars[j]<>chr(13))) do
+		      j := j + 1; { determine jth position of entry }
+
+		    while ((inchars[j]>='0')and(inchars[j]<=chr(59)))do
+		      begin { compute actual numerical value of entry }
+			    { from jth position }
+			reply[i] := reply[i] * 10 + ord(inchars[j])-48;
+			j := j + 1;
+		      end;
+		  end;
+	      end
+	      else { possible initial key entry is any F1 to F10, }
+		   { Alt H, or Ctrl F6 }
+		case inchar[2] of
+		  35: begin { Alt H }
+			help (helpcode);
+			helpcall := true;
+			screen ( 3 );
+			colors ( 0, 1 )
+		      end;
+		  59..68: begin { F1 to F10 }
+			    reply[1] := ord(inchar[2]) - 58;
+			    write(reply[1]);
+			  end;
+		 104: begin
+			reply[1] := 11;
+			write ( '1' );
+		      end;
+		  99: n := -1; { Ctrl F6 }
+		end; { case inchar[2] }
+
+	   if not helpcall then
+	    if n <> -1 then
+	     if n = 1 then
+	      if reply[1] = 0 then n := default
+	       else
+		begin
+		 error:=(reply[1]>upper_bound)or(reply[1]<lower_bound);
+		 if not error then n := reply[1]
+		   else writeln ( 'Value out of range. Try again...');
+		end
+	      else n := i;
+	   until not error;
+       until not helpcall;
+     end;
+(********************************************************************)
+
+{ procedure help;
+
+    var
+      i,j  : integer;
+      top,bot:integer;
+      ex,num  :integer;
+      nextpage :boolean;
+      ans     :integer;
+
+    begin
+     ex :=4;
+     nextpage :=true;
+     while (ex >= 0) and (nextpage) do
+       begin
+	 num := 1;
+	 for j := 1 to ex do num := num * 10;
+	 ans := ( code div num ) mod 100;
+	 if (ans> 0) then
+	   begin
+	     assign ( f, 'graph.hlp' );
+	     screen ( 3 );
+	     f.trap := true;
+	     f.errs := 0;
+	     f.mode := direct;
+	     reset ( f );
+	     if f.errs = 0 then
+	       begin
+		 colors ( 0, 1 );
+		 seek ( f, 2 );
+		 read ( f, i );
+		 for j := 0 to i do
+		   begin
+		     read ( f, numline[j] );
+		   end;
+		 if ans  > 6 then
+		   begin
+		     seek ( f, numline[0]+3 );
+		     read ( f, i );
+		     for j := 1 to i do
+		       begin
+			 read ( f, numline[j] );
+		       end;
+		    top := ans - 7;
+		    bot := 0;
+		   end
+		  else
+		   [top := ans - 1 ;bot := 1;];
+		 j := 0;
+		 for i := bot to top do
+		   j := j + numline[i];
+		 seek ( f, j+4-bot );
+		 for i := 1 to numline[top + 1] - 1 do
+		   begin
+		     readln ( f, buf );
+		    writeln ( buf );
+		   end;
+		 if ex > 0 then
+		   write ( 'Enter Alt H for more help or any key to return.')
+		  else
+		   write ( 'Enter any key to return.');
+		 get_input ( inchar );
+		 if ((inchar[1]=0)and(inchar[2]=35)and(ex >=0) then
+		   nextpage := true
+		  else
+		   nextpage :=false;
+		 close ( f );
+	       end
+	     else
+	       begin
+		 there ( 0, 23 );
+		 writeln ( 'Graph.hlp not found ... Please Strike any key to continue' );
+		 get_input ( inchar );
+		 ex := 0;
+	       end;
+	     end;
+	   ex := ex - 2;
+       end;
+     end;    }
+(***********************************************************************)
+
+  procedure help;
+
+  type fna=lstring(14);
+
+   var	f	       : text;
+	fnames,tfnames : array[1..10] of lstring(14);
+	error	       : boolean;
+	level,n,len,scrm:integer;
+	vset	       : set of byte;
+	msg	       : suplstring(25);
+	reply	       : supinteger(2);
+
+    procedure rfile;
+      var
+	 i,j	       : integer;
+
+      begin
+	 for i := 1 to 10 do begin
+	     readln (f, tfnames[i] ) ;
+	     for j := 1 to tfnames[i].len do
+               begin
+                 if (j < 4) and ( tfnames[i][j] = '~' ) then
+                   tfnames[i][j] := gtype[j];
+		 if tfnames[i][j] <> ' ' then vset := vset + [i] ;
+               end;
+	 end; (* for *)
+
+	 len := 1;
+	 while not eof(f) do begin
+	     readln ( f, msg[len] ) ;
+	     len  := len + 1;
+	 end;
+      end; (* rfile *)
+(*--------------------------------------------------*)
+   procedure ofile (  fnam : fna ; var erro : boolean ) ;
+
+    var
+      i : integer;
+
+    begin
+       close   ( f );
+       assign  ( f, fnam ) ;
+       f.trap  := true ;
+       f.errs  := 0    ;
+       reset   ( f )   ;
+       erro    := false;
+       if f.errs <> 0 then begin
+          sclear;
+	  there1 ( 0, 20 );
+          writeln('File ', fnam, ' not found. Before pressing the help key, place the help disk');
+          writeln('with the proper file in the System''s default drive.');
+          writeln('Make sure the disk which contains the last screen that was viewed is in');
+          writeln('the System''s default drive and then press any key to continue.');
+	  get_input ( inchar ) ;
+          there1 ( 0, 20 );
+          for i := 1 to 4 do
+            writeln ( '                                                                               ' );
+	  erro := true;
+	  close ( f ) ;
+       end; (* if *)
+    end; (* ofile *)
+(*---------------------------------------------------*)
+  begin
+     scrm := scrmode;
+     if scrmode>3 then
+        begin
+          screen ( 2 );
+          colors ( 0, color );
+        end;
+     spage ( 1 );
+     level     := 1;
+     fnames[1] := 'Graph.hlp' ;
+     ofile ( fnames[level], error ) ;
+     if not error then begin
+	repeat
+	   vset := [ 8,10 ];
+	   rfile;
+	   repeat
+               sclear;  
+	       n := 1 ;
+	       menu ( msg, len-1, 0, 1, 10, 8, n, reply, wrd(65535) ) ;
+	   until n in vset ;
+
+	   if n = 10 then level := 0
+	   else begin
+	      if n = 8 then
+                begin
+                  level := level-1;
+                  if level > 0 then
+                    begin
+                      ofile(fnames[level],error);
+                      if error then
+                        begin
+                          level := level+1;
+                          ofile(fnames[level],error);
+                        end;
+                    end;
+                end
+	      else begin
+		  ofile ( tfnames[n], error ) ;
+		  if not error then [ level := level + 1;
+				      fnames[level] := tfnames[n]; ]
+		     else ofile ( fnames[level],error );
+	      end; (* if n = 8 *)
+	   end ;   (* if n = 10 *)
+	until level <= 0 ;
+     end; (* if not error *)
+     close ( f );
+     spage ( 0 );
+     if scrm > 3 then reduce ( rtype, color );
+  end ; (* help *)
+
+(***************************************************************)
+
+  procedure multimenu;
+
+  const
+    numset  = ['0'..'9'];
+
+  var
+    i,j,dir,k:integer;
+    exit    : boolean;
+    helpcall: boolean;
+    rangeok : boolean;
+
+  begin
+      screen ( 2 );
+      colors ( 0, color );
+      exit := false;
+      helpcall := false;
+      if nlines > 0 then
+	begin
+	  there ( 0, sline );
+	  for i := 1 to nlines do
+	      if i = 25 then write  ( msg[i] )
+			else writeln( msg[i] );
+	  for i := 1 to nvalues do
+	    begin
+	      there ( x[i], y[i] );
+	      write ( def[i] );
+	    end;
+	  i := 1;
+	  j := 0;
+	  repeat
+	    there ( x[i]+1, y[i] );
+	    get_input ( inchar );
+	    dir := 0;
+	    if ( inchar[1] = 0 ) then
+	    case inchar[2] of
+	      75 : inchar[1] := 8;
+	      77 : if j < 2 then
+		       begin
+			 inchar[1] := wrd (def[i][j+1]);
+		       end;
+	      72 : dir := -1;
+	      80 : dir := 1;
+	   73,81 : begin end;
+	      71 : dir := -i+1;
+	      79 : dir := nvalues-i;
+	      otherwise
+		begin
+		  funckey := ord ( inchar[2] );
+                  if fctn_map^[1][funckey-58]=2 then
+                    help(0)
+                   else
+                    begin
+                      exit := true;
+                      inchar[1] := 13;
+                    end;
+		end;
+	      end;
+	    if inchar[1] = 13 then dir := 1;
+	    if dir <> 0 then
+	      begin
+		temp.len := 2;
+		if j = 2 then
+		  begin
+		    if range[i*2-1] = numset then
+		     begin
+		       if temp[1] = ' ' then
+			 rangeok := temp[2] in range[i*2]*numset;
+			else
+			  rangeok :=(chr((ord(temp[1])-48)*10+ord(temp[2]))
+				 in range[i*2]) and (temp[1] in numset)
+                                 and (temp[2] in numset)
+		      end
+		     else
+		      rangeok := (temp[1] in range[i*2-1])and(temp[2] in range[i*2]);
+		    if rangeok then
+		      begin
+			def[i] := temp;
+			there ( x[i], y[i] );
+			write ( def[i] );
+			i := i + dir;
+			if i > nvalues then i := 1;
+			if i < 1 then i := nvalues;
+		      end
+		     else
+		      begin
+			there ( x[i], y[i] );
+			write ( def[i] , chr(7) );
+		      end;
+		  end
+		 else
+		  if j = 1 then
+		  begin
+		   if range[i*2-1] = numset then
+		     rangeok := temp[1] in numset*range[i*2]
+		    else rangeok := temp[1] in range[i*2];
+		    if rangeok then
+		      begin
+			temp[2] := temp[1];
+			temp[1] := ' ';
+			def[i] := temp;
+			there ( x[i], y[i] );
+			write ( def[i] );
+			i := i + dir;
+			if i > nvalues then i := 1;
+			if i < 1 then i := nvalues;
+		      end
+		     else
+		      begin
+			there ( x[i], y[i] );
+			write ( def[i] , chr(7) );
+		      end;
+		   end
+		  else if j = 0 then
+			 begin
+                           there(x[i],y[i]);
+                           write(def[i]);
+			   i := i + dir;
+			   if i > nvalues then i := 1;
+			   if i < 1 then i := nvalues;
+			 end;
+		j := 0;
+	      end;
+	    if inchar[1] in [32,48..57,65..90,97..122] then
+	      begin
+                if cpflg then
+                  if inchar[1] in [97..122] then
+                    inchar[1] := inchar[1] - 32;
+		if j < def[i].len then
+		  begin
+		    j := j + 1;
+		    temp[j] := chr( inchar[1] );
+		    write ( chr(8), chr(8) );
+		    for k := j to 2 do write ( ' ' );
+		    for k := 1 to j do
+		      write ( temp[k] );
+		  end;
+	      end;
+	    if inchar[1] = 8 then
+	      if j > 0 then
+		begin
+		  temp[j] := ' ';
+		  j := j - 1;
+		  write ( chr(8), chr(8) );
+		  for k := j to 2 do write ( ' ' );
+		  for k := 1 to j do write ( temp[k] );
+		end;
+	  until exit;
+	end;
+    end;
+   end.
+

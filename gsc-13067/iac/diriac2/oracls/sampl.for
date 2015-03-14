@@ -1,0 +1,289 @@
+      SUBROUTINE SAMPL(A,NA,B,NB,Q,NQ,R,NR,W,NW,T,IOP,DUMMY)
+C 
+C   REFERENCES:
+C      Kwakernaak, Huibert; and Sivan, Raphael: Linear Optimal Control
+C        Systems. John Wiley & Sons, Inc., c. 1972.
+C      Dorato, Peter; and Levis, Alexander H.: Optimal Linear Regula-
+C        tors:  The Discrete-Time Case. IEEE Trans. Autom. Control,
+C        vol. AC-16, no. 6, Dec. 1971, pp. 613-620.
+C      Levis, Alexander H.; Schlueter, Robert A.; and Athans, Michael:
+C        On the Behaviour of Optimal Linear Sampled-Data Regulators.
+C        Int. J. Control, vol. 13, no. 2, Feb. 1971, pp. 343-361.
+C      Armstrong, Ernest S.; and Caglayan, Alper K.: An Algorithm for
+C        the Weighting Matrices in the Sampled-Data Optimal Linear
+C        Regulator Problem. NASA TN D-8372, 1976.
+C 
+C   Subroutines employed by SAMPL: ADD, EQUATE, EXPINT, EXPSER, LNCNT,
+C      MAXEL, MULT, NORMS, PRNT, SCALE, TRANP
+C   Subroutines employing SAMPL: None
+C 
+      IMPLICIT REAL*8 (A-H,O-Z)
+      DIMENSION A(1),B(1),Q(1),R(1),W(1),DUMMY(1)
+      DIMENSION NA(2),NB(2),NQ(2),NR(2),NW(2),IOP(2),NDUM(2)
+      COMMON/CONV/SUMCV,MAXSUM,RICTCV,SERCV
+C 
+      IF(  IOP(1) .EQ. 0 ) GO TO 100
+C 
+      IF(  IOP(2) .EQ. 0 ) GO TO 50
+C 
+      CALL LNCNT(5)
+      WRITE(6,25)
+   25 FORMAT(//' COMPUTATION OF WEIGHTING MATRICES FOR THE OPTIMAL SAMPL
+     1ED-DATA REGULATOR PROBLEM'//)
+      CALL PRNT(A,NA,' A  ',1)
+      CALL PRNT(B,NB,' B  ',1)
+      CALL LNCNT(3)
+      WRITE(6,35)
+   35 FORMAT(/' CONTINUOUS PERFORMANCE INDEX WEIGHTING MATRICES'/)
+      CALL PRNT(Q,NQ,' Q  ',1)
+      CALL PRNT(R,NR,' R  ',1)
+      CALL LNCNT(3)
+      WRITE(6,45) T
+   45 FORMAT(/' SAMPLE TIME = ',D16.8/)
+C 
+      GO TO 100
+C 
+   50 CONTINUE
+      CALL LNCNT(8)
+      WRITE(6,75)
+   75 FORMAT(//' COMPUTATION OF THE RECONSTRUCTIBILITY GRAMIAN'/' FOR TH
+     1E (A,H) SYSTEM OVER THE INTERVAL (0,T) '/' THE MATRIX Q IS  ( H TR
+     2ANSPOSE ) X H'//)
+      CALL PRNT(A,NA,' A  ',1)
+      CALL PRNT(Q,NQ,' Q  ',1)
+      CALL LNCNT(3)
+      WRITE(6,85) T
+   85 FORMAT(/' T = ',D16.8/)
+C 
+  100 CONTINUE
+C 
+      N = NA(1)
+      L = ( N**2)
+      N1 = L + 1
+      N2 = N1 + L
+      TT  = T
+C 
+      IOPT = 1
+      CALL NORMS(N,N,N,A,IOPT,ANORM)
+      IOPT = 3
+      CALL NORMS(N,N,N,A,IOPT,ROWA)
+      IF( ANORM .GT. ROWA ) ANORM = ROWA
+C 
+      IF( ANORM .LE. 1.E-15 ) GO TO 900
+C 
+      TMAX = 1.0/ANORM
+      K = 0
+C 
+  125 CONTINUE
+      IF( TMAX - TT ) 150,150,200
+  150 CONTINUE
+      K = K + 1
+      TT = T/( 2**K)
+      IF( K - 1000 ) 125,800,800
+C 
+  200 CONTINUE
+C 
+      I = 0
+      SC = TT
+      CALL SCALE(A,NA,A,NA,TT)
+      CALL SCALE(Q,NQ,Q,NQ,TT)
+      CALL EQUATE(Q,NQ,DUMMY,NQ)
+C 
+      IF( IOP(2) .NE. 0 ) GO TO 500
+C 
+  225 CONTINUE
+      II = I + 2
+      I = I + 1
+      F = 1.0/II
+      CALL SCALE(A,NA,DUMMY(N1),NA,F)
+      CALL MULT(DUMMY,NA,DUMMY(N1),NA,DUMMY(N2),NA)
+      CALL TRANP(DUMMY(N2),NA,DUMMY(N1),NA)
+      CALL ADD(DUMMY(N1),NA,DUMMY(N2),NA,DUMMY,NA)
+C 
+      CALL MAXEL(Q,NQ,TOT)
+      CALL MAXEL(DUMMY,NA,DELT)
+      IF( TOT .GT. 1.0 ) GO TO 250
+      IF( DELT/TOT .LT. SERCV )  GO TO 300
+      GO TO 275
+  250 CONTINUE
+      IF( DELT .LT. SERCV )  GO TO 300
+  275 CONTINUE
+      CALL ADD(Q,NQ,DUMMY,NA,Q,NQ)
+      GO TO 225
+C 
+  300 CONTINUE
+C 
+      IF( K .EQ. 0 ) GO TO 400
+      N3 = N2 + L
+      G = 1.0
+      IOPT = 0
+      CALL EXPSER(A,NA,DUMMY,NA,G,IOPT,DUMMY(N1))
+C 
+  350 CONTINUE
+      IF( K .EQ. 0 ) GO TO 400
+      K = K-1
+C 
+      CALL TRANP(DUMMY,NA,DUMMY(N1),NA)
+      CALL MULT(Q,NQ,DUMMY,NA,DUMMY(N2),NA)
+      CALL MULT(DUMMY(N1),NA,DUMMY(N2),NA,DUMMY(N3),NA)
+      CALL ADD(Q,NQ,DUMMY(N3),NA,Q,NQ)
+      CALL MULT(DUMMY,NA,DUMMY,NA,DUMMY(N1),NA)
+      CALL EQUATE(DUMMY(N1),NA,DUMMY,NA)
+C 
+      GO TO 350
+C 
+  400 CONTINUE
+      S =  1.0/SC
+      CALL SCALE(A,NA,A,NA,S)
+C 
+      IF( IOP(1) .EQ. 0 ) RETURN
+      CALL PRNT(Q,NQ,'GRAM',1)
+      RETURN
+C 
+  500 CONTINUE
+      CALL SCALE(B,NB,B,NB,TT)
+      N3 = N2 + L
+      N4 = N3 + L
+      N5 = N4 + L
+      N6 = N5 + L
+C 
+  525 CONTINUE
+      II = I + 2
+      I = I + 1
+      F = 1.0/II
+      CALL SCALE(A,NA,DUMMY(N1),NA,F)
+      CALL TRANP(DUMMY(N1),NA,DUMMY(N2),NA)
+      CALL MULT(DUMMY,NA,DUMMY(N1),NA,DUMMY(N3),NA)
+      CALL TRANP(DUMMY(N3),NA,DUMMY(N1),NA)
+      CALL MULT(DUMMY,NA,B,NB,DUMMY(N5),NW)
+      CALL ADD(DUMMY(N1),NA,DUMMY(N3),NA,DUMMY,NA)
+      CALL SCALE(DUMMY(N5),NW,DUMMY(N1),NW,F)
+      IF( I .NE. 1 ) GO TO 550
+      CALL EQUATE(DUMMY(N1),NW,W,NW)
+      CALL EQUATE(DUMMY(N1),NW,DUMMY(N6),NW)
+      CALL ADD(Q,NQ,DUMMY,NQ,Q,NQ)
+      GO TO 525
+C 
+  550 CONTINUE
+      CALL MULT(DUMMY(N2),NA,DUMMY(N6),NW,DUMMY(N5),NW)
+      CALL ADD(DUMMY(N5),NW,DUMMY(N1),NW,DUMMY(N1),NW)
+      CALL TRANP(B,NB,DUMMY(N2),NDUM)
+      CALL SCALE(DUMMY(N2),NDUM,DUMMY(N2),NDUM,F)
+      CALL MULT(DUMMY(N2),NDUM,DUMMY(N6),NW,DUMMY(N3),NR)
+      CALL TRANP(DUMMY(N3),NR,DUMMY(N5),NR)
+      CALL ADD(DUMMY(N3),NR,DUMMY(N5),NR,DUMMY(N3),NR)
+      CALL EQUATE(DUMMY(N1),NW,DUMMY(N6),NW)
+      IF(  I .NE. 2 ) GO TO 575
+      CALL ADD(Q,NQ,DUMMY,NQ,Q,NQ)
+      CALL ADD(W,NW,DUMMY(N1),NW,W,NW)
+      CALL EQUATE(DUMMY(N3),NR,DUMMY(N4),NR)
+      GO TO 525
+C 
+  575 CONTINUE
+      CALL MAXEL(Q,NQ,TOT)
+      CALL MAXEL(DUMMY,NQ,DELT)
+      IF( TOT .GT. 1.0 )  GO TO 580
+      IF( DELT/TOT .LT. SERCV )  GO TO 585
+      GO TO 595
+C 
+  580 CONTINUE
+      IF( DELT .LT. SERCV )  GO TO 585
+      GO TO 595
+C 
+  585 CONTINUE
+      CALL MAXEL(DUMMY(N4),NR,TOT)
+      CALL MAXEL(DUMMY(N3),NR,DELT)
+      IF( TOT .GT. 1.0 )  GO TO 590
+      IF( DELT/TOT .LT. SERCV )  GO TO 600
+      GO TO 595
+C 
+  590 CONTINUE
+      IF( DELT .LT. SERCV )  GO TO 600
+C 
+  595 CONTINUE
+      CALL ADD (Q,NQ,DUMMY,NQ,Q,NQ)
+      CALL ADD(W,NW,DUMMY(N1),NW,W,NW)
+      CALL ADD(DUMMY(N4),NR,DUMMY(N3),NR,DUMMY(N4),NR)
+      GO TO 525
+C 
+  600 CONTINUE
+      IF( K .EQ. 0 ) GO TO 700
+      G = 1.0
+      IOPT = 0
+      CALL EXPINT(A,NA,DUMMY,NA,DUMMY(N1),NA,G,IOPT,DUMMY(N2))
+      CALL MULT(DUMMY(N1),NA,B,NB,DUMMY(N2),NB)
+      CALL EQUATE(DUMMY(N2),NB,DUMMY(N1),NB)
+C 
+  650 CONTINUE
+      IF( K .EQ. 0 ) GO TO 700
+      K = K - 1
+      CALL MULT(Q,NQ,DUMMY,NA,DUMMY(N2),NA)
+      CALL TRANP(DUMMY,NA,DUMMY(N3),NA)
+      CALL MULT(DUMMY(N3),NA,DUMMY(N2),NA,DUMMY(N5),NA)
+      CALL MULT(Q,NQ,DUMMY(N1),NB,DUMMY(N2),NB)
+      CALL ADD(Q,NQ,DUMMY(N5),NA,Q,NQ)
+      CALL MULT(DUMMY(N3),NA,DUMMY(N2),NB,DUMMY(N5),NB)
+      CALL MULT(DUMMY(N3),NA,W,NW,DUMMY(N6),NW)
+      CALL ADD(DUMMY(N5),NW,DUMMY(N6),NW,DUMMY(N5),NW)
+      CALL TRANP(DUMMY(N1),NB,DUMMY(N6),NDUM)
+      CALL MULT(DUMMY(N6),NDUM,W,NW,DUMMY(N3),NR)
+      CALL ADD(W,NW,DUMMY(N5),NW,W,NW)
+      CALL MULT(DUMMY(N6),NDUM,DUMMY(N2),NB,DUMMY(N5),NR)
+      CALL ADD(DUMMY(N5),NR,DUMMY(N3),NR,DUMMY(N5),NR)
+      CALL TRANP(DUMMY(N3),NR,DUMMY(N6),NR)
+      CALL ADD(DUMMY(N5),NR,DUMMY(N6),NR,DUMMY(N6),NR)
+      CALL SCALE(DUMMY(N4),NR,DUMMY(N4),NR,2.0D0)
+      CALL ADD(DUMMY(N6),NR,DUMMY(N4),NR,DUMMY(N4),NR)
+      CALL MULT(DUMMY,NA,DUMMY(N1),NB,DUMMY(N3),NB)
+      CALL ADD(DUMMY(N3),NB,DUMMY(N1),NB,DUMMY(N1),NB)
+      CALL MULT(DUMMY,NA,DUMMY,NA,DUMMY(N3),NA)
+      CALL EQUATE(DUMMY(N3),NA,DUMMY,NA)
+      GO TO 650
+C 
+  700 CONTINUE
+      CALL SCALE(R,NR,R,NR,T)
+      CALL ADD(R,NR,DUMMY(N4),NR,R,NR)
+      CALL SCALE(W,NW,W,NW,2.0D0)
+      S = 1.0/SC
+      CALL SCALE(A,NA,A,NA,S)
+      CALL SCALE(B,NB,B,NB,S)
+      IF( IOP(1) .EQ. 0 ) RETURN
+C 
+      CALL LNCNT(3)
+      WRITE(6,750)
+  750 FORMAT(/' DISCRETE PERFORMANCE INDEX WEIGHTING MATRICES'/)
+      CALL PRNT(Q,NQ,' Q  ',1)
+      CALL PRNT(W,NW,' W  ',1)
+      CALL PRNT(R,NR,' R  ',1)
+      RETURN
+C 
+  800 CONTINUE
+      CALL LNCNT(1)
+      WRITE(6,850)
+  850 FORMAT(' ERROR IN SAMPL , K = 1000')
+      RETURN
+C 
+  900 CONTINUE
+      CALL SCALE(Q,NQ,Q,NQ,T)
+      IF( IOP(2) .NE. 0 ) GO TO 925
+      IF( IOP(1) .NE. 0 ) CALL PRNT(Q,NQ,'GRAM',1)
+      RETURN
+C 
+  925 CONTINUE
+      CALL MULT(Q,NQ,B,NB,W,NW)
+      CALL SCALE(W,NW,W,NW,T)
+      CALL TRANP(B,NB,DUMMY,NDUM)
+      CALL MULT(DUMMY,NDUM,W,NW,DUMMY(N1),NR)
+      TT = T/3.
+      CALL SCALE(DUMMY(N1),NR,DUMMY,NR,TT)
+      CALL SCALE(R,NR,R,NR,T)
+      CALL ADD(R,NR,DUMMY,NR,R,NR)
+      IF( IOP(1) .EQ. 0 ) RETURN
+      CALL LNCNT(3)
+      WRITE(6,750)
+      CALL PRNT(Q,NQ,' Q  ',1)
+      CALL PRNT(W,NW,' W  ',1)
+      CALL PRNT(R,NR,' R  ',1)
+      RETURN
+C 
+      END

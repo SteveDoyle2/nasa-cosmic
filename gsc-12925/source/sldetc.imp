@@ -1,0 +1,220 @@
+{ $INCLUDE : 'compile.inc' }
+{ $INCLUDE : 'getparam.int' }
+{ $INCLUDE : 'vbpas.int' }
+{ $INCLUDE : 'sfpas.int' }
+{ $INCLUDE : 'utility.int' }
+{ $INCLUDE : 'ldb.int' }
+{ $INCLUDE : 'execute.int' }
+{ $INCLUDE : 'sldetc.int' }
+
+  implementation of sldetc;
+
+  USES vbpas;
+  USES utility;
+  USES ldb;
+  USES execute;
+
+  const
+    xgap = 14;
+    lenpage = 5;
+
+  var
+      b : char;
+      f : text;
+      df: text(41);
+      buf : lstring ( 14 );
+      title  : lstring(30);
+
+  value
+        b := ' ';
+
+  procedure enter ( var current, first : entity ); extern;
+
+  function freect ( w: word ) : word; extern;
+
+
+  procedure createsld;
+
+  var
+    size, i : integer;
+
+  begin
+    case current_node of
+      1 : size := 10;
+    2,3 : size := 8;
+      4 : size := 30;
+      otherwise
+    end;
+    new ( current );
+    new (current^.field, size );
+    with current^ do
+      begin
+        etype := current_node;
+        field^.len := 0;
+        up     := current;
+        down   := current;
+        x := 0;
+        y := 0;
+      end;
+  end;
+
+  (**************************************************************)
+
+  procedure deletesld;
+
+   var next : entity;
+       i    : integer;
+
+   begin
+          current^.up^.down := current^.down;
+          current^.down^.up := current^.up;
+          next := current^.down;
+          if next = current then next := nil;
+          dispose ( current^.field );
+          dispose ( current );
+          current := next;
+   end;
+
+  procedure load_chart1 ( var first : entity );
+
+   var
+         i       : byte;
+         length  : byte;
+    current,newnode : entity;
+
+   begin
+      assign ( f, sldname );
+      reset ( f );
+      read ( f, i );
+      createsld ( newnode, i );
+      with newnode^ do
+        readln ( f, x, y, xtext, ytext, b, field^ );
+      current := newnode;
+      first := current;
+      while not eof ( f ) do
+         begin
+            read ( f, i );
+            if (i=3)or(i=4) then readln ( f )
+             else
+               begin
+                 createsld ( newnode, i );
+                 with newnode^ do
+                   readln ( f, x, y, xtext, ytext, b, field^ );
+                 link ( current, newnode);
+               end;
+        end;
+      close ( f );
+   end;
+
+  procedure sldlist;
+
+  var
+    current,newnode : entity;
+    i,j : integer;
+    gnum   : string(3);
+    sortarray : array [0..199] of integer;
+
+  begin
+    assign ( f, sldname );
+    f.trap := true;
+    f.errs := 0;
+    reset ( f );
+    if f.errs <> 0 then
+      begin
+        close ( f );
+        for i := 1 to 5 do
+          begin
+            createsld ( newnode, 1 );
+            if i > 1 then link ( current, newnode )
+              else
+                begin
+                  current := newnode;
+                  firstsld := current;
+                end;
+            current^.xtext := (i-1)*xgap+10;
+            current^.ytext := 1;
+            for j := 1 to 10 do
+              begin
+                createsld ( newnode, 2 );
+                link ( current, newnode );
+                current^.xtext := (i-1)*xgap+11;
+                current^.ytext := j+2;
+              end;
+          end;
+      end
+     else
+       begin
+         close ( f );
+         load_chart1 ( firstsld );
+         enter ( current,firstsld );
+         current := firstsld^.up;
+         while current^.etype in [3,4] do
+           begin
+             deletesld ( current );
+             current := current^.up;
+           end;
+       end;
+    buf[1] := drive;
+    buf.len := 1;
+    concat ( buf, ':' );
+    concat ( buf, gtype );
+    concat ( buf, '.ord' );
+    assign ( f, buf );
+    f.trap := true;
+    f.errs := 0;
+      reset ( f );
+      if f.errs <> 0 then
+        begin
+          f.errs := 0;
+          close ( f );
+        end
+       else
+        begin
+          f.trap := true;
+          read ( f, sortarray[0] );
+      if f.errs <> 0 then
+        begin
+          f.errs := 0;
+          close ( f );
+        end
+       else
+        begin
+          for i := 1 to sortarray[0] do
+            read ( f, sortarray[i] );
+          close ( f );
+          buf.len := buf.len-3;
+          concat ( buf, 'dir' );
+          assign ( df, buf );
+          df.errs := 0;
+          df.mode := direct;
+          reset ( df );
+          if df.errs <> 0 then
+            begin
+              df.errs := 0;
+              close ( df );
+            end
+           else
+            begin
+            current := firstsld^.up;
+             for i := 1 to sortarray[0] do
+                begin
+                  seek ( df, sortarray[i] );
+                  read ( df, gnum, name1, title );
+                  createsld ( newnode, 3 );
+                  link ( current, newnode );
+                  copylst ( name1, current^.field^ );
+                  current^.xtext := (i div lenpage)*40;
+                  current^.ytext := ((i-1) mod lenpage)+17;
+                  createsld ( newnode, 4 );
+                  link ( current, newnode );
+                  copylst ( title, current^.field^ );
+                  current^.xtext := (i div lenpage)*40+9;
+                  current^.ytext := ((i-1) mod lenpage)+17;
+                end;
+              close ( df );
+            end;
+        end;
+        end;
+    end;
+  end.
+

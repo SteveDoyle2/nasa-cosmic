@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+After print is pressed from the Print/View a Slide Show Menu, the prompt checks
+to make sure the printer is ready.  The slide show which is chosen will be
+shown on the screen one at a time and printed as soon as it finishes drawing.
+If one chart is chosen, it will act like a slide show of one slide.  To not
+print a slide show once print has been pressed, press F1(Cancel).  Any other
+key will start the printing.  To stop a print once it has begun press
+F1(Cancel) and if the slide show is to be stopped, press F1 again immediately
+after the first.  Sometimes printers have large buffers so the printing may
+take a while to stop.
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

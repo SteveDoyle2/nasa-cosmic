@@ -1,0 +1,3 @@
+I have been unable to backup files to the archival disk buffer because
+of a "QUOTA EXCEEDED" error.  Please increase my quota so that I can
+archive my files properly.

@@ -1,0 +1,729 @@
+      INTEGER*2 NFLL                                                      A   1
+      DIMENSION NFLL(66,999)                                              A   2
+      INTEGER*2 NSTART,LASTLT                                             A   3
+      INTEGER*2 NDATE,NACTIV,NCOM,NREP,IPERB,NCOMP,NCPDAT,NDIST,NLEVEL,N  A   4
+     1SORT,K,NDAYS,NTRACT,NO,NPLRS,NFILE,IN,LAST,N,J,LEVEL,I,IFLAG,L,JJ,  A   5
+     2LRGTE,NACT,NSMLTE,KK,NN,LESS1,MAXTE,MAXC,L2,LRGTL,LRGSA,MEBTFS,L4,  A   6
+     3L3,NOWLBT,LASTTL,LASTST,NOWEBT,LRGST,NERROR                         A   7
+      COMMON MONS(12),NDATE(12),NACTIV(66,999),NCOM(22),NREP(15,5),IPERB  A   8
+     1(21,99),NCOMP(48,50),NCPDAT(5,30),NDIST(99),NLEVEL(999),NSORT(999)  A   9
+     2,K(6),NDAYS(12),NTRACT(13,15),NSTART(50)                            A  10
+      EQUIVALENCE (NACTN(1,1),ACTN(1,1))                                  A  11
+      DIMENSION IN(37), NACT(14), XIN(9), ACTN(16,120), NACTN(16,120)     A  12
+C     PROGRAM 'PREEP'                                                     A  13
+C     USE WITH PROJECT DATA TO PREPARE                                    A  14
+C     INITIAL PLAYER FILES FOR GREMEX                                     A  15
+C     REF NASA TN D-7238                                                  A  16
+      IA=1                                                                A  17
+      IB=0                                                                A  18
+      DO 110 I=1,999                                                      A  19
+      NACTIV(54,I)=0                                                      A  20
+      NSORT(I)=1                                                          A  21
+  110 CONTINUE                                                            A  22
+      DO 120 I=1,12                                                       A  23
+  120 NDATE(I)=0                                                          A  24
+      DO 130 I=1,5                                                        A  25
+      DO 130 J=1,30                                                       A  26
+  130 NCPDAT(I,J)=0                                                       A  27
+      DO 140 I=1,13                                                       A  28
+      DO 140 J=1,15                                                       A  29
+  140 NTRACT(I,J)=0                                                       A  30
+      DO 150 I=1,22                                                       A  31
+  150 NCOM(I)=0                                                           A  32
+      DO 160 I=1,15                                                       A  33
+      DO 160 J=1,5                                                        A  34
+  160 NREP(I,J)=0                                                         A  35
+      DO 170 I=1,48                                                       A  36
+      DO 170 J=1,50                                                       A  37
+  170 NCOMP(I,J)=0                                                        A  38
+      NCOM(17)=1234                                                       A  39
+      NCOM(12)=5793                                                       A  40
+      NCOM(13)=8427                                                       A  41
+      NCOM(14)=6599                                                       A  42
+C     READ AND EDIT CONTROL CARDS                                         A  43
+      READ (5,1000) NO,NPLRS                                              A  44
+      IF (NO.NE.75) GO TO 750                                             A  45
+      DO 180 I=1,6                                                        A  46
+  180 K(I)=0                                                              A  47
+      NCOM(18)=NPLRS                                                      A  48
+  190 READ (5,1000) NO,NFILE                                              A  49
+      IF (NO.NE.70) GO TO 250                                             A  50
+      IF (K(1).NE.0) GO TO 290                                            A  51
+      IF (NFILE.NE.30) GO TO 290                                          A  52
+      K(1)=1                                                              A  53
+      N=0                                                                 A  54
+      LAST=0                                                              A  55
+C     READ AND EDIT PERTURBATION CARDS                                    A  56
+  200 READ (5,1010) NO,(IN(I),I=1,5)                                      A  57
+      IF (NO.NE.30) GO TO 240                                             A  58
+      IF (IN(1).LE.LAST) GO TO 780                                        A  59
+      N=N+1                                                               A  60
+      LAST=IN(1)                                                          A  61
+      IF (N.GT.99) GO TO 790                                              A  62
+      READ (5,1020) NO,(IN(I),I=6,11)                                     A  63
+      IF (NO.NE.31) GO TO 800                                             A  64
+      IF (IN(1).NE.IN(6)) GO TO 810                                       A  65
+      READ (5,1030) NO,(IN(I),I=12,22)                                    A  66
+      IF (NO.NE.32) GO TO 800                                             A  67
+      IF (IN(1).NE.IN(12)) GO TO 810                                      A  68
+      DO 210 I=1,5                                                        A  69
+  210 IPERB(I,N)=IN(I)                                                    A  70
+      DO 220 I=6,10                                                       A  71
+      J=I+1                                                               A  72
+  220 IPERB(I,N)=IN(J)                                                    A  73
+      J=12                                                                A  74
+      DO 230 I=11,20                                                      A  75
+      J=J+1                                                               A  76
+  230 IPERB(I,N)=IN(J)                                                    A  77
+      IPERB(21,N)=0                                                       A  78
+      GO TO 200                                                           A  79
+  240 IF (NO.NE.77) GO TO 820                                             A  80
+      NCOM(2)=N                                                           A  81
+C     PRINT PERTURBATION REPORT                                           A  82
+      CALL PREP (N,IN)                                                    A  83
+      GO TO 190                                                           A  84
+  250 IF (NO.NE.79) GO TO 770                                             A  85
+      GO TO 710                                                           A  86
+  260 IF (K(3).NE.0) GO TO 620                                            A  87
+      IF (NFILE.NE.20) GO TO 620                                          A  88
+      K(3)=1                                                              A  89
+      N=1                                                                 A  90
+C     READ AND EDIT COMPONENT CARDS                                       A  91
+  270 READ (5,1050) NO,(NCOMP(I,N),I=1,9),NSTART(N)                       A  92
+      IF (NO.NE.20) GO TO 280                                             A  93
+      N=N+1                                                               A  94
+      IF (N.GT.60) GO TO 870                                              A  95
+      GO TO 270                                                           A  96
+  280 IF (NO.NE.77) GO TO 890                                             A  97
+      NCOM(3)=N-1                                                         A  98
+      GO TO 190                                                           A  99
+  290 IF (K(2).NE.0) GO TO 260                                            A 100
+      IF (NFILE.NE.10) GO TO 260                                          A 101
+C      COMPONENT FILE MUST BE LOADED BEFORE ACTIVITY FILE                 A 102
+      IF (K(3).NE.1) GO TO 760                                            A 103
+      K(2)=1                                                              A 104
+      N=0                                                                 A 105
+      LAST=0                                                              A 106
+C     READ AND EDIT ACTIVITY CARDS                                        A 107
+  300 READ (5,1040) NO,(IN(I),I=1,37)                                     A 108
+      IF (NO.NE.10) GO TO 310                                             A 109
+      IF (IN(1).LE.LAST) GO TO 830                                        A 110
+      N=N+1                                                               A 111
+      LAST=IN(1)                                                          A 112
+      IF (N.GT.999) GO TO 840                                             A 113
+      IF (IN(20).NE.(IN(21)+IN(22)+IN(23)+IN(24))) GO TO 850              A 114
+C     PUT ACTIVITY DATA INTO ACTIVITY FILE                                A 115
+      II=1                                                                A 116
+      NACTIV(3,N)=IN(1)                                                   A 117
+      NACTIV(1,N)=IN(2)                                                   A 118
+      NACTIV(2,N)=IN(3)                                                   A 119
+      NACTIV(4,N)=IN(4)                                                   A 120
+      NACTIV(5,N)=IN(5)                                                   A 121
+      NACTIV(6,N)=IN(6)                                                   A 122
+      NACTIV(7,N)=IN(7)                                                   A 123
+      NACTIV(12,N)=IN(8)                                                  A 124
+      NACTIV(13,N)=IN(9)                                                  A 125
+      NACTIV(14,N)=IN(10)                                                 A 126
+      NACTIV(15,N)=IN(11)                                                 A 127
+      NACTIV(8,N)=IN(12)                                                  A 128
+      NACTIV(9,N)=IN(14)                                                  A 129
+      NACTIV(10,N)=IN(15)                                                 A 130
+      NACTIV(20,N)=IN(20)                                                 A 131
+      NACTIV(21,N)=IN(21)                                                 A 132
+      NACTIV(22,N)=IN(22)                                                 A 133
+      NACTIV(23,N)=IN(23)                                                 A 134
+      NACTIV(24,N)=IN(24)                                                 A 135
+      NACTIV(11,N)=IN(25)                                                 A 136
+      NACTIV(55,N)=IN(26)                                                 A 137
+      NACTIV(56,N)=IN(27)                                                 A 138
+      NACTIV(57,N)=IN(28)                                                 A 139
+      NACTIV(58,N)=IN(29)                                                 A 140
+      NACTIV(59,N)=IN(30)                                                 A 141
+      NACTIV(60,N)=IN(31)                                                 A 142
+      NACTIV(61,N)=IN(32)                                                 A 143
+      NACTIV(62,N)=IN(33)                                                 A 144
+      NACTIV(63,N)=IN(34)                                                 A 145
+      NACTIV(64,N)=IN(35)                                                 A 146
+      NACTIV(65,N)=IN(36)                                                 A 147
+      NACTIV(66,N)=IN(37)                                                 A 148
+      IA=IN(13)                                                           A 149
+      IB=IN(17)                                                           A 150
+      IC=IN(18)                                                           A 151
+      ID=IN(19)                                                           A 152
+      CALL PACK (IA,16,N)                                                 A 153
+      CALL PACK (IB,10,N)                                                 A 154
+      CALL PACK (IC,9,N)                                                  A 155
+      CALL PACK (ID,5,N)                                                  A 156
+      NACTIV(25,N)=IN(8)                                                  A 157
+      NACTIV(26,N)=IN(9)                                                  A 158
+      NACTIV(27,N)=IN(10)                                                 A 159
+      NACTIV(28,N)=IN(11)                                                 A 160
+      NACTIV(33,N)=IN(20)                                                 A 161
+      NACTIV(34,N)=IN(21)                                                 A 162
+      NACTIV(35,N)=IN(22)                                                 A 163
+      NACTIV(36,N)=IN(23)                                                 A 164
+      NACTIV(37,N)=IN(24)                                                 A 165
+      NACTIV(38,N)=IN(8)                                                  A 166
+      NACTIV(39,N)=IN(9)                                                  A 167
+      NACTIV(40,N)=IN(10)                                                 A 168
+      NACTIV(41,N)=IN(11)                                                 A 169
+      NACTIV(46,N)=IN(20)                                                 A 170
+      NACTIV(47,N)=IN(21)                                                 A 171
+      NACTIV(48,N)=IN(22)                                                 A 172
+      NACTIV(49,N)=IN(23)                                                 A 173
+      NACTIV(50,N)=IN(24)                                                 A 174
+      IF (IN(7).NE.0) CALL PACK (II,8,N)                                  A 175
+      NACTIV(51,N)=0                                                      A 176
+      NACTIV(52,N)=0                                                      A 177
+      NACTIV(53,N)=0                                                      A 178
+      IA=1
+      IB=0
+      GO TO 300                                                           A 179
+  310 IF (NO.NE.77) GO TO 860                                             A 180
+      NCOM(1)=N                                                           A 181
+C     TOPOLOGIVALLY SORT NETWORK                                          A 182
+      LEVEL=0                                                             A 183
+C     COMPUTE LEVEL NUMBERS                                               A 184
+      DO 320 I=1,N                                                        A 185
+      CALL UNPAK (IN(1),16,I)                                             A 186
+      IF (IN(1).GE.0) NLEVEL(I)=0                                         A 187
+      IF (IN(1).LT.0) NLEVEL(I)=1                                         A 188
+  320 CONTINUE                                                            A 189
+  330 IFLAG=0                                                             A 190
+      LEVEL=LEVEL+1                                                       A 191
+      DO 350 I=1,N                                                        A 192
+      IF (NLEVEL(I).NE.LEVEL) GO TO 350                                   A 193
+      DO 340 J=1,N                                                        A 194
+      IF (NACTIV(2,I).NE.NACTIV(1,J)) GO TO 340                           A 195
+      IFLAG=1                                                             A 196
+      NLEVEL(J)=LEVEL+1                                                   A 197
+  340 CONTINUE                                                            A 198
+  350 CONTINUE                                                            A 199
+      IF (IFLAG.NE.0) GO TO 330                                           A 200
+C     NOW STORE INDEXES IN SORT TABLE NSORT                               A 201
+      L=0                                                                 A 202
+      DO 360 I=1,LEVEL                                                    A 203
+      DO 360 J=1,N                                                        A 204
+      IF (NLEVEL(J).NE.I) GO TO 360                                       A 205
+      L=L+1                                                               A 206
+      NSORT(L)=J                                                          A 207
+  360 CONTINUE                                                            A 208
+C     COMPUTE EXPECTED COMPLETION TIMES FOR ALL ACTIVITIES(FRWRD PASS)    A 209
+      DO 510 L=1,N                                                        A 210
+      JJ=NSORT(L)                                                         A 211
+      CALL UNPAK (IN(1),8,JJ)                                             A 212
+      IF (IN(1).GE.0) GO TO 370                                           A 213
+      CALL UNPAK (IN(2),16,JJ)                                            A 214
+      IF (IN(2).LT.0) CALL PACK (IA,11,JJ)                                A 215
+      LRGTE=0                                                             A 216
+      NACTIV(16,JJ)=LRGTE                                                 A 217
+      NACTIV(29,JJ)=LRGTE                                                 A 218
+      NACTIV(42,JJ)=LRGTE                                                 A 219
+      GO TO 510                                                           A 220
+C     GET BASE DURATION,CONTRACT NUMBER,SYSTEM NUMBER,SUBSYSTEM NUMBER,   A 221
+C     COSTS AND COMPONENT MASK FROM ACTIVITY FILE                         A 222
+  370 NSMLTE=NACTIV(15,JJ)                                                A 223
+      NACT(1)=NACTIV(4,JJ)                                                A 224
+      NACT(2)=NACTIV(5,JJ)                                                A 225
+      NACT(3)=NACTIV(6,JJ)                                                A 226
+      NACT(4)=NACTIV(20,JJ)                                               A 227
+      NACT(5)=NACTIV(21,JJ)                                               A 228
+      NACT(6)=NACTIV(22,JJ)                                               A 229
+      NACT(7)=NACTIV(23,JJ)                                               A 230
+      NACT(8)=NACTIV(24,JJ)                                               A 231
+      NACT(9)=NACTIV(12,JJ)                                               A 232
+      NACT(10)=NACTIV(13,JJ)                                              A 233
+      NACT(11)=NACTIV(14,JJ)                                              A 234
+      CALL PACK (IA,11,JJ)                                                A 235
+      CALL UNPAK (IN(3),16,JJ)                                            A 236
+      IF (IN(3).GE.0) GO TO 420                                           A 237
+      KK=NCOM(3)                                                          A 238
+      DO 410 NN=1,KK                                                      A 239
+      IF (NACT(1).NE.NCOMP(1,NN)) GO TO 410                               A 240
+      IF (NACT(2).NE.NCOMP(2,NN)) GO TO 390                               A 241
+      IF (NACT(3).NE.NCOMP(3,NN)) GO TO 400                               A 242
+  380 LRGTE=NSMLTE+NSTART(NN)                                             A 243
+      GO TO 440                                                           A 244
+  390 IF (NCOMP(2,NN).EQ.0) GO TO 380                                     A 245
+      GO TO 410                                                           A 246
+  400 IF (NCOMP(3,NN).EQ.0) GO TO 380                                     A 247
+  410 CONTINUE                                                            A 248
+  420 LESS1=L-1                                                           A 249
+      MAXTE=0                                                             A 250
+      DO 430 L2=1,LESS1                                                   A 251
+      J=NSORT(L2)                                                         A 252
+      CALL UNPAK (IN(1),8,J)                                              A 253
+      IF (IN(1).LT.0) GO TO 430                                           A 254
+      IF (NACTIV(2,J).NE.NACTIV(1,JJ)) GO TO 430                          A 255
+C     GET BASE EXPECTED COMPLETION TIME FROM ACTIVITY FILE                A 256
+      NACT(12)=NACTIV(4,J)                                                A 257
+      NACT(13)=NACTIV(5,J)                                                A 258
+      NACT(14)=NACTIV(6,J)                                                A 259
+      IF (LRGTE.GT.MAXTE) MAXTE=LRGTE                                     A 260
+      IF (NACT(2).EQ.0) NACT(13)=0                                        A 261
+      IF (NACT(3).EQ.0) NACT(14)=0                                        A 262
+      IF (NACT(12).EQ.NACT(1).AND.NACT(13).EQ.NACT(2).AND.NACT(14).EQ.NA  A 263
+     1CT(3)) CALL PACK (IB,11,JJ)                                         A 264
+  430 CONTINUE                                                            A 265
+      LRGTE=MAXTE+NSMLTE                                                  A 266
+C     PLACE EXPECTED COMPLETION TIME INTO ACTIVITY FILE                   A 267
+  440 NACTIV(16,JJ)=LRGTE                                                 A 268
+      NACTIV(29,JJ)=LRGTE                                                 A 269
+      NACTIV(42,JJ)=LRGTE                                                 A 270
+      KK=NCOM(3)                                                          A 271
+C     COMPUTE COSTS, EXPECTED COMPLETION,PROBABILITIES FOR COMPONENT FIL  A 272
+      DO 500 I=1,KK                                                       A 273
+      IF (NACT(1).NE.NCOMP(1,I)) GO TO 500                                A 274
+      IF (NACT(2).NE.NCOMP(2,I)) GO TO 490                                A 275
+      IF (NACT(3).NE.NCOMP(3,I)) GO TO 480                                A 276
+  450 DO 460 J=1,5                                                        A 277
+      NCOMP(J+10,I)=NCOMP(J+10,I)+NACT(J+3)                               A 278
+      NCOMP(J+19,I)=NCOMP(J+10,I)                                         A 279
+  460 NCOMP(J+28,I)=NCOMP(J+10,I)                                         A 280
+      IF (LRGTE.LE.NCOMP(19,I)) GO TO 500                                 A 281
+      NCOMP(19,I)=LRGTE                                                   A 282
+      NCOMP(37,I)=LRGTE                                                   A 283
+      NCOMP(28,I)=LRGTE                                                   A 284
+      DO 470 J=1,3                                                        A 285
+      NCOMP(J+15,I)=NACT(J+8)                                             A 286
+      NCOMP(J+24,I)=NACT(J+8)                                             A 287
+  470 NCOMP(J+33,I)=NACT(J+8)                                             A 288
+      GO TO 500                                                           A 289
+  480 IF (NCOMP(3,I).EQ.0) GO TO 450                                      A 290
+      GO TO 500                                                           A 291
+  490 IF (NCOMP(2,I).EQ.0) GO TO 450                                      A 292
+  500 CONTINUE                                                            A 293
+  510 CONTINUE                                                            A 294
+      MAXC=0                                                              A 295
+      DO 520 I=1,KK                                                       A 296
+      IF (NCOMP(2,I).NE.0) GO TO 520                                      A 297
+      IF (NCOMP(3,I).NE.0) GO TO 520                                      A 298
+      MAXC=MAXC+1                                                         A 299
+      NTRACT(1,MAXC)=NCOMP(1,I)                                           A 300
+      NTRACT(9,MAXC)=NCOMP(11,I)                                          A 301
+  520 CONTINUE                                                            A 302
+      NCOM(4)=MAXC                                                        A 303
+C     PRINT COMPONENT REPORT                                              A 304
+      CALL HREP (NCOM(3))                                                 A 305
+C     COMPUTE LATEST ALLOWABLE COMPLETION TIME AND SLACKS (BKWRD PASS)    A 306
+      MAXTE=0                                                             A 307
+      DO 530 I=1,N                                                        A 308
+      CALL UNPAK (IN(1),10,I)                                             A 309
+      IF (IN(1).GE.0) GO TO 530                                           A 310
+C     UNPACK BASE EXPECTED COMPLETION TIME FROM ACTIVITY FILE             A 311
+      LGRTE=NACTIV(16,I)                                                  A 312
+      NACT(12)=NACTIV(4,I)                                                A 313
+      NACT(13)=NACTIV(5,I)                                                A 314
+      NACT(14)=NACTIV(6,I)                                                A 315
+      IF (LRGTE.GT.MAXTE) MAXTE=LRGTE                                     A 316
+  530 CONTINUE                                                            A 317
+      DO 590 L=1,N                                                        A 318
+      L2=N-L+1                                                            A 319
+      I=NSORT(L2)                                                         A 320
+      CALL UNPAK (IN(1),8,I)                                              A 321
+      IF (IN(1).GE.0) GO TO 540                                           A 322
+      LRGTL=0                                                             A 323
+      LRGST=0                                                             A 324
+      LRGSA=0                                                             A 325
+      GO TO 580                                                           A 326
+C     GET EXPECTED COMPLETION TIME FROM ACTIVITY FILE                     A 327
+  540 LGRTE=NACTIV(16,I)                                                  A 328
+      NACT(12)=NACTIV(4,I)                                                A 329
+      NACT(13)=NACTIV(5,I)                                                A 330
+      NACT(14)=NACTIV(6,I)                                                A 331
+      CALL PACK (IA,5,I)                                                  A 332
+      CALL UNPAK (IN(1),10,I)                                             A 333
+      IF (IN(1).GE.0) GO TO 550                                           A 334
+      LRGTL=MAXTE                                                         A 335
+      MEBTFS=MAXTE                                                        A 336
+      GO TO 570                                                           A 337
+  550 LRGTL=5000                                                          A 338
+      MEBTFS=5000                                                         A 339
+      LESS1=L-1                                                           A 340
+      DO 560 L3=1,LESS1                                                   A 341
+      L4=N-L3+1                                                           A 342
+      J=NSORT(L4)                                                         A 343
+      CALL UNPAK (IN(1),8,J)                                              A 344
+      IF (IN(1).LT.0) GO TO 560                                           A 345
+      IF (NACTIV(2,I).NE.NACTIV(1,J)) GO TO 560                           A 346
+C     GET LATEST COMPLETION TIME ,SLACKS FROM ACTIVITY FILE               A 347
+      LASTST=NACTIV(15,J)                                                 A 348
+      LASTLT=NACTIV(16,J)                                                 A 349
+      LASTTL=NACTIV(17,J)                                                 A 350
+      NACT(1)=NACTIV(4,J)                                                 A 351
+      NACT(2)=NACTIV(5,J)                                                 A 352
+      NACT(3)=NACTIV(6,J)                                                 A 353
+      NOWLBT=LASTTL-LASTST                                                A 354
+      NOWEBT=LASTLT-LASTST                                                A 355
+      IF (NOWLBT.LT.LRGTL) LRGTL=NOWLBT                                   A 356
+      IF (NOWEBT.LT.MEBTFS) MEBTFS=NOWEBT                                 A 357
+      IF (NACT(1).EQ.NACT(12).AND.NACT(2).EQ.NACT(13).AND.NACT(3).EQ.NAC  A 358
+     1T(14)) CALL PACK (IB,5,I)                                           A 359
+  560 CONTINUE                                                            A 360
+  570 LRGST=LRGTL-LRGTE                                                   A 361
+      LRGSA=MEBTFS-LRGTE                                                  A 362
+C     PLACE LATEST COMPLETION TIME ANS SLACKS INTO ACTIVITY FILE          A 363
+  580 NACTIV(18,I)=LRGST                                                  A 364
+      NACTIV(19,I)=LRGSA                                                  A 365
+      NACTIV(17,I)=LRGTL                                                  A 366
+      NACTIV(31,I)=LRGST                                                  A 367
+      NACTIV(32,I)=LRGSA                                                  A 368
+      NACTIV(30,I)=LRGST                                                  A 369
+      NACTIV(44,I)=LRGST                                                  A 370
+      NACTIV(45,I)=LRGSA                                                  A 371
+      NACTIV(43,I)=LRGTL                                                  A 372
+  590 CONTINUE                                                            A 373
+      DO 600 L=1,N                                                        A 374
+  600 CALL PACK (IB,8,L)                                                  A 375
+C     PRINT ACTIVITY REPORT                                               A 376
+      CALL AREP (N)                                                       A 377
+      DO 610 I=1,N                                                        A 378
+      IF (NLEVEL(I).NE.0) GO TO 610                                       A 379
+      WRITE (6,1100) NACTIV(3,I)                                          A 380
+  610 CONTINUE                                                            A 381
+      GO TO 190                                                           A 382
+  620 IF (K(4).NE.0) GO TO 670                                            A 383
+      IF (NFILE.NE.40) GO TO 670                                          A 384
+      K(4)=1                                                              A 385
+      N=0                                                                 A 386
+C     READ AND EDIT ACTION CARDS                                          A 387
+  630 READ (5,1060) NO,IN(12),(XIN(I),I=1,9),(IN(I),I=14,16),IN(11),IN(1  A 388
+     17),(IN(I),I=19,34)                                                  A 389
+      IF (NO.NE.40) GO TO 660                                             A 390
+      N=N+1                                                               A 391
+      IF (IN(12).NE.N) GO TO 900                                          A 392
+      IF (N.GT.100) GO TO 910                                             A 393
+C     STORE FLOATING POINT DATA INTO ACTION FILE                          A 394
+      DO 640 I=1,9                                                        A 395
+  640 ACTN(I+1,N)=XIN(I)                                                  A 396
+      DO 650 I=12,14                                                      A 397
+  650 NACTN(I,N)=IN(I+2)                                                  A 398
+      NACTN(15,N)=IN(11)                                                  A 399
+C     PUT REMAINING FIXED POINT DATA INTO ACTION FILE                     A 400
+      NACTN(1,N)=IN(12)                                                   A 401
+      NACTN(11,N)=IN(19)                                                  A 402
+      NACTN(16,N)=IN(17)                                                  A 403
+C     PRINT ACTION REPORT                                                 A 404
+      CALL CREP (N,IN,XIN)                                                A 405
+      GO TO 630                                                           A 406
+  660 IF (NO.NE.77) GO TO 920                                             A 407
+      NCOM(5)=N                                                           A 408
+      GO TO 190                                                           A 409
+  670 IF (K(6).NE.0) GO TO 680                                            A 410
+      IF (NFILE.NE.50) GO TO 680                                          A 411
+      K(6)=1                                                              A 412
+C     READ AND EDIT DATE CARDS                                            A 413
+      READ (5,1070) NO,(MONS(I),I=1,12)                                   A 414
+      IF (NO.NE.50) GO TO 880                                             A 415
+      READ (5,1090) NO,(NDAYS(I),I=1,12)                                  A 416
+      IF (NO.NE.50) GO TO 980                                             A 417
+      READ (5,1070) NO                                                    A 418
+      IF (NO.NE.77) GO TO 970                                             A 419
+      GO TO 190                                                           A 420
+  680 IF (K(5).NE.0) GO TO 950                                            A 421
+      IF (NFILE.NE.60) GO TO 960                                          A 422
+      K(5)=1                                                              A 423
+      N=0                                                                 A 424
+C     READ AND EDIT DISTRIBUTION CARDS                                    A 425
+  690 READ (5,1080) NO,IN(1)                                              A 426
+      IF (NO.NE.60) GO TO 700                                             A 427
+      N=N+1                                                               A 428
+C     STORE DISTRIBUTION DATA IN DISTRIBUTION FILE                        A 429
+      NDIST(N)=IN(1)                                                      A 430
+      GO TO 690                                                           A 431
+  700 IF (NO.NE.77) GO TO 930                                             A 432
+      IF (N.NE.99) GO TO 940                                              A 433
+      NCOM(7)=N                                                           A 434
+C     PRINT MISCELLANEOUS REPORT                                          A 435
+      CALL MREP                                                           A 436
+      GO TO 190                                                           A 437
+C     COMPLETE SETTING UP OF FILES FOR PLAY MODE                          A 438
+  710 NCOM(8)=0                                                           A 439
+      NCOM(9)=0                                                           A 440
+      NCOM(18)=NPLRS                                                      A 441
+C     WRITE BINARY TAPE WITH FILES FOR PLAY MODE                          A 442
+      N=NCOM(1)                                                           A 443
+      DO 720 I=1,N                                                        A 444
+      KK=NSORT(I)                                                         A 445
+      DO 720 J=1,66                                                       A 446
+      NFLL(J,I)=NACTIV(J,KK)                                              A 447
+  720 CONTINUE                                                            A 448
+      N=N+1                                                               A 449
+      IF (N.EQ.999) GO TO 730                                             A 450
+      DO 730 I=N,999                                                      A 451
+      DO 730 J=1,66                                                       A 452
+      NFLL(J,I)=0                                                         A 453
+  730 CONTINUE                                                            A 454
+      DO 740 I=1,NPLRS                                                    A 455
+      WRITE (10) NFLL                                                     A 456
+      NCOM(6)=NCOM(6)+1                                                   A 457
+      WRITE (10) IPERB,NCOMP,NTRACT,ACTN,NDIST,NCOM,NREP,MONS,NDAYS,NDAT  A 458
+     1E                                                                   A 459
+  740 WRITE (10) NCPDAT                                                   A 460
+      REWIND 10                                                           A 461
+      WRITE (6,1110) NPLRS                                                A 462
+      STOP                                                                A 463
+C     THIS IS PROPER END OF PROGRAM                                       A 464
+  750 NERROR=500                                                          A 465
+      GO TO 990                                                           A 466
+  760 NERROR=501                                                          A 467
+      GO TO 990                                                           A 468
+  770 NERROR=502                                                          A 469
+      GO TO 990                                                           A 470
+  780 NERROR=503                                                          A 471
+      GO TO 990                                                           A 472
+  790 NERROR=504                                                          A 473
+      GO TO 990                                                           A 474
+  800 NERROR=505                                                          A 475
+      GO TO 990                                                           A 476
+  810 NERROR=506                                                          A 477
+      GO TO 990                                                           A 478
+  820 NERROR=507                                                          A 479
+      GO TO 990                                                           A 480
+  830 NERROR=508                                                          A 481
+      GO TO 990                                                           A 482
+  840 NERROR=509                                                          A 483
+      GO TO 990                                                           A 484
+  850 NERROR=510                                                          A 485
+      GO TO 990                                                           A 486
+  860 NERROR=511                                                          A 487
+      GO TO 990                                                           A 488
+  870 NERROR=512                                                          A 489
+      GO TO 990                                                           A 490
+  880 NERROR=513                                                          A 491
+      GO TO 990                                                           A 492
+  890 NERROR=515                                                          A 493
+      GO TO 990                                                           A 494
+  900 NERROR=516                                                          A 495
+      GO TO 990                                                           A 496
+  910 NERROR=517                                                          A 497
+      GO TO 990                                                           A 498
+  920 NERROR=518                                                          A 499
+      GO TO 990                                                           A 500
+  930 NERROR=521                                                          A 501
+      GO TO 990                                                           A 502
+  940 NERROR=522                                                          A 503
+      GO TO 990                                                           A 504
+  950 NERROR=523                                                          A 505
+      GO TO 990                                                           A 506
+  960 NERROR=524                                                          A 507
+      GO TO 990                                                           A 508
+  970 NERROR=525                                                          A 509
+      GO TO 990                                                           A 510
+  980 NERROR=526                                                          A 511
+      GO TO 990                                                           A 512
+  990 WRITE (6,1120) NERROR                                               A 513
+C     ERROR TERMINATION, ABORTED PROGRAM                                  A 514
+      STOP                                                                A 515
+C                                                                         A 516
+ 1000 FORMAT (2I2)                                                        A 517
+ 1010 FORMAT (3I2,2I1,I3)                                                 A 518
+ 1020 FORMAT (2I2,5I3)                                                    A 519
+ 1030 FORMAT (2I2,10I3)                                                   A 520
+ 1040 FORMAT (I2,I3,2I4,I2,2I1,I2,3I2,2I3,2I1,I2,I1,3I1,6I2,12A2)         A 521
+ 1050 FORMAT (2I2,2I1,12X,6A2,4X,I6)                                      A 522
+ 1060 FORMAT (I2,I3,3F3.2,6F4.2,6X,2I3,2I4,I2,2X,I3,15A1)                 A 523
+ 1070 FORMAT (I2,12A3)                                                    A 524
+ 1080 FORMAT (I2,I4)                                                      A 525
+ 1090 FORMAT (13I2)                                                       A 526
+ 1100 FORMAT (6X,'NO PRED. FOUND FOR ACTIVITY NO.',I4)                    A 527
+ 1110 FORMAT (//,6X,I3,' COPIES OF PLAYER FILES MADE.',/,12X,'JOB COMPLE  A 528
+     1TED ** ')                                                           A 529
+ 1120 FORMAT (1H1,20X,12HERROR NUMBER,I6,3X,'ENCOUNTERED.ABORTED')        A 530
+      END                                                                 A 531-
+      SUBROUTINE MREP                                                     B   1
+      INTEGER*2 NPAGE,I,J                                                 B   2
+      INTEGER*2 NDATE,NACTIV,NCOM,NREP,IPERB,NCOMP,NCPDAT,NDIST           B   3
+      COMMON MONS(12),NDATE(12),NACTIV(66,999),NCOM(22),NREP(15,5),IPERB  B   4
+     1(21,99),NCOMP(48,50),NCPDAT(5,30),NDIST(99)                         B   5
+      DIMENSION A(4)                                                      B   6
+      NPAGE=1                                                             B   7
+      WRITE (6,140) NPAGE                                                 B   8
+      A(1)=.01                                                            B   9
+      DO 110 I=1,3                                                        B  10
+  110 A(I+1)=A(I)+.25                                                     B  11
+      DO 130 I=1,24                                                       B  12
+      WRITE (6,150) A(1),NDIST(I),A(2),NDIST(I+25),A(3),NDIST(I+50),A(4)  B  13
+     1,NDIST(I+75)                                                        B  14
+      DO 120 J=1,4                                                        B  15
+  120 A(J)=A(J)+.01                                                       B  16
+  130 CONTINUE                                                            B  17
+      WRITE (6,160) A(1),NDIST(25),A(2),NDIST(50),A(3),NDIST(75)          B  18
+      RETURN                                                              B  19
+C                                                                         B  20
+  140 FORMAT (1H1,9X,26HMISCELLANEOUS FILE LISTING,84X,4HPAGE,2X,I2//15X  B  21
+     1,18HDISTRIBUTION CURVE//1X,4(18X,12HPROB   SIGMA)//)                B  22
+  150 FORMAT (1X,4(19X,F3.2,I8)//)                                        B  23
+  160 FORMAT (1X,3(19X,F3.2,I8))                                          B  24
+      END                                                                 B  25-
+      SUBROUTINE HREP (N)                                                 C   1
+      INTEGER*2 NDATE,NACTIV,NCOM,NREP,IPERB,NCOMP,NCPDAT,NDIST           C   2
+      COMMON MONS(12),NDATE(12),NACTIV(66,999),NCOM(22),NREP(15,5),IPERB  C   3
+     1(21,99),NCOMP(48,50),NCPDAT(5,30),NDIST(99)                         C   4
+      INTEGER*2 NPAGE,LINE,IITE,N                                         C   5
+      NPAGE=1                                                             C   6
+      LINE=4                                                              C   7
+      WRITE (6,120) NPAGE                                                 C   8
+      DO 110 J=1,N                                                        C   9
+      IITE=NCOMP(19,J)/10                                                 C  10
+      IDTE=NCOMP(19,J)-10*IITE                                            C  11
+      WRITE (6,130) (NCOMP(I,J),I=1,3),(NCOMP(I,J),I=11,15),(NCOMP(I,J),  C  12
+     1I=4,9),IITE,IDTE                                                    C  13
+      LINE=LINE+2                                                         C  14
+      IF (LINE.LT.60) GO TO 110                                           C  15
+      NPAGE=NPAGE+1                                                       C  16
+      LINE=4                                                              C  17
+      WRITE (6,120) NPAGE                                                 C  18
+  110 CONTINUE                                                            C  19
+      RETURN                                                              C  20
+C                                                                         C  21
+  120 FORMAT (1H1,9X,16HHARDWARE LISTING,94X,4HPAGE,1X,I2//15X,68HCN SY   C  22
+     1SU    TOTAL    ENGNR    MATER    TECHL    CONTR    DESCRIPTION,5X,  C  23
+     227HWEEKS FROM CONTRACT START  //)                                   C  24
+  130 FORMAT (15XI2,2I3,5I9,4X6A2,10X,I8,1H.I1//)                         C  25
+      END                                                                 C  26-
+      SUBROUTINE AREP (N)                                                 D   1
+      INTEGER*2 NDATE,NACTIV,NCOM,NREP,IPERB,NCOMP,NCPDAT,NDIST           D   2
+      INTEGER*2 IN,NPAGE,LINE,J,N                                         D   3
+      COMMON MONS(12),NDATE(12),NACTIV(66,999),NCOM(22),NREP(15,5)        D   4
+      DIMENSION ACTIV(6,999), IN(37)                                      D   5
+      NPAGE=1                                                             D   6
+      LINE=5                                                              D   7
+      WRITE (6,120) NPAGE                                                 D   8
+      DO 110 J=1,N                                                        D   9
+      CALL UNPAK (IN(1),16,J)                                             D  10
+      CALL UNPAK (IN(2),11,J)                                             D  11
+      CALL UNPAK (IN(3),10,J)                                             D  12
+      CALL UNPAK (IN(4),9,J)                                              D  13
+      IF (IN(2).LT.0) IN(2)=1                                             D  14
+      IF (IN(1).LT.0) IN(1)=1                                             D  15
+      IF (IN(4).LT.0) IN(4)=1                                             D  16
+      ACTIV(2,J)=NACTIV(16,J)/10.                                         D  17
+      IF (IN(3).LT.0) IN(3)=1                                             D  18
+      ACTIV(1,J)=NACTIV(15,J)/10.                                         D  19
+      ACTIV(3,J)=NACTIV(17,J)/10.                                         D  20
+      ACTIV(4,J)=NACTIV(18,J)/10.                                         D  21
+      ACTIV(5,J)=NACTIV(19,J)/10.                                         D  22
+      ACTIV(6,J)=NACTIV(8,J)/10.                                          D  23
+      WRITE (6,130) (NACTIV(I,J),I=4,7),NACTIV(3,J),NACTIV(10,J),NACTIV(  D  24
+     11,J),NACTIV(2,J),(ACTIV(I,J),I=1,6),NACTIV(11,J),NACTIV(9,J),(NACT  D  25
+     2IV(I,J),I=12,14),(NACTIV(I,J),I=20,24),(IN(I),I=1,4),(NACTIV(I,J),  D  26
+     3I=55,66)                                                            D  27
+      LINE=LINE+2                                                         D  28
+      IF (LINE.LT.58) GO TO 110                                           D  29
+      NPAGE=NPAGE+1                                                       D  30
+      LINE=5                                                              D  31
+      WRITE (6,120) NPAGE                                                 D  32
+  110 CONTINUE                                                            D  33
+      RETURN                                                              D  34
+C                                                                         D  35
+  120 FORMAT (17H1ACTIVITY LISTING,107X,4HPAGE,2X,I2,//58H  W.B.S.     A  D  36
+     1CTIV       EVENT   BASE EARLY LATE    SLACK 19X,21HPROBABILITIES    D  37
+     2 COSTS,12X,10HINDICATORS/130H CN SY SU PR NO.  RLC PRED SUCC TIME   D  38
+     3 COMPLETION  BASE  FREE TDEV CDEV L  TIME COST REL TOT ENG MAT TEC  D  39
+     4 CNT  I S T Q   DESCRIPTION//)                                      D  40
+  130 FORMAT (1X,I2,3I3,I4,2X,1H.,I2,2I5,F5.1,4(F6.1),F5.1,I4,I3,3(2X,1H  D  41
+     1.,I2),5I4,I3,3I2,3X,6A2/119X,6A2)                                   D  42
+      END                                                                 D  43-
+      SUBROUTINE CREP (N,IN,XIN)                                          E   1
+      DIMENSION IN(37), XIN(9)                                            E   2
+      INTEGER*2 N,IN,NPAGE,LINE                                           E   3
+      IF (N.NE.1) GO TO 110                                               E   4
+      NPAGE=1                                                             E   5
+      LINE=4                                                              E   6
+      WRITE (6,120) NPAGE                                                 E   7
+  110 WRITE (6,130) IN(12),IN(14),IN(15),(XIN(I),I=1,3),(XIN(I),I=7,9),I  E   8
+     1N(11),IN(17),(IN(I),I=19,34)                                        E   9
+      LINE=LINE+1                                                         E  10
+      IF (LINE.LT.60) RETURN                                              E  11
+      NPAGE=NPAGE+1                                                       E  12
+      LINE=4                                                              E  13
+      WRITE (6,120) NPAGE                                                 E  14
+      RETURN                                                              E  15
+C                                                                         E  16
+  120 FORMAT (15H1ACTION LISTING105X4HPAGEI3//79H   NO.   UT    UC        E  17
+     1POT   POC   POR   SOT   SOC   SOR   OVHD   C/R/L   NCODE//)         E  18
+  130 FORMAT (1H I4,2I6,4X,6F6.2,3I6,15A1)                                E  19
+      END                                                                 E  20-
+      SUBROUTINE PREP (N,IN)                                              F   1
+      COMMON MONS(12),NDATE(12),NACTIV(66,999),NCOM(22),NREP(15,5),IPERB  F   2
+     1(21,99),NCOMP(48,50),NCPDAT(5,30),NDIST(99)                         F   3
+      INTEGER*2 NDATE,NACTIV,NCOM,NREP,IPERB,NCOMP,NCPDAT,NDIST           F   4
+      DIMENSION IN(37)                                                    F   5
+      INTEGER*2 NPAGE,LINE,IN,N                                           F   6
+      NPAGE=1                                                             F   7
+      LINE=5                                                              F   8
+      WRITE (6,160) NPAGE                                                 F   9
+      DO 150 J=1,N                                                        F  10
+      WRITE (6,170) IPERB(1,J),IPERB(5,J),(IPERB(I,J),I=2,4),IPERB(6,J),  F  11
+     1IPERB(11,J)                                                         F  12
+      LINE=LINE+2                                                         F  13
+      IF (LINE.LT.59) GO TO 110                                           F  14
+      NPAGE=NPAGE+1                                                       F  15
+      LINE=5                                                              F  16
+      WRITE (6,160) NPAGE                                                 F  17
+  110 DO 140 I=1,9                                                        F  18
+      IF (I.LE.4) GO TO 120                                               F  19
+      IF (IPERB((I+11),J).EQ.0) GO TO 150                                 F  20
+      WRITE (6,190) IPERB(I+11,J)                                         F  21
+      GO TO 130                                                           F  22
+  120 IF ((IPERB((I+6),J).EQ.0).AND.(IPERB((I+11),J).EQ.0)) GO TO 150     F  23
+      WRITE (6,180) IPERB(I+6,J),IPERB(I+11,J)                            F  24
+  130 LINE=LINE+1                                                         F  25
+      IF (LINE.LT.59) GO TO 140                                           F  26
+      NPAGE=NPAGE+1                                                       F  27
+      LINE=5                                                              F  28
+      WRITE (6,160) NPAGE                                                 F  29
+  140 CONTINUE                                                            F  30
+  150 CONTINUE                                                            F  31
+      RETURN                                                              F  32
+C                                                                         F  33
+  160 FORMAT (1H1,9X,20HPERTURBATION LISTING,90X,4HPAGE,1X,I2//20X,2HPR,  F  34
+     135X,10HACTIVITIES/20X,49HNO.   TRIGGER    CN SY SU      DELETED     F  35
+     2   ADDED//)                                                         F  36
+  170 FORMAT (1H0,19X,I2,I9,I8,2I3,2I11)                                  F  37
+  180 FORMAT (45X,2I11)                                                   F  38
+  190 FORMAT (56X,I11)                                                    F  39
+      END                                                                 F  40-
+      SUBROUTINE PACK (K,N,M)                                             G   1
+C      PACK SETS BIT 'N' OF NACTIV(54,'M') TO 'K'                         G   2
+C      K AN N ARE I*4,M IS I*2                                            G   3
+C      BITS NUMBERED      1 TO 16 WHERE 16 IS LEAST SIGNIFICANT           G   4
+C                                                                         G   5
+      COMMON MONS(12),NDATE(12),NACTIV(66,999)                            G   6
+      INTEGER*2 IDUM,NACTIV,IB,J,L,M,NDATE                                G   7
+      J=NACTIV(54,M)                                                      G   8
+C      FIRST DETERMINE IF BIT 'N' IS ALREADY SET TO 'K'                   G   9
+      L=17-N                                                              G  10
+      DO 110 JL=1,L                                                       G  11
+      JK=J/2                                                              G  12
+      IB=J-2*JK                                                           G  13
+  110 J=JK                                                                G  14
+C     DETERMINE CHANGE REQUIRED IF ANY                                    G  15
+      JB=IB-K                                                             G  16
+      L=L-1                                                               G  17
+      J=2**L                                                              G  18
+      IF (JB) 130,140,120                                                 G  19
+  120 J=-J                                                                G  20
+  130 NACTIV(54,M)=NACTIV(54,M)+J                                         G  21
+  140 RETURN                                                              G  22
+      END                                                                 G  23-
+      SUBROUTINE UNPAK (K,N,M)                                            H   1
+C      UNPAK TESTS BIT 'N' OF NACTIV(54,'M')                              H   2
+C      RETURNS -1 IN 'K' IF BIT IS SET, 0 IF BIT IS 0                     H   3
+C     K AND M ARE I*2, N IS I*4 LENGTH                                    H   4
+      COMMON MONS(12),NDATE(12),NACTIV(66,999)                            H   5
+      DIMENSION IB(16)                                                    H   6
+      INTEGER*2 IDUM,NACTIV,IB,J,K,L,M,JK,JL,NDATE                        H   7
+C      DETERMINE VALUE OF BITS BY 'EVEN OR ODD' TEST                      H   8
+      J=NACTIV(54,M)                                                      H   9
+      DO 110 JL=1,16                                                      H  10
+      L=17-JL                                                             H  11
+      IB(L)=-1                                                            H  12
+      JK=J/2                                                              H  13
+      IF (JK*2.EQ.J) IB(L)=0                                              H  14
+  110 J=JK                                                                H  15
+C      ARRAY IB NOW HAS ALL VALUES OF BITS,SELECT REQUESTED VALUE AND RE  H  16
+      K=IB(N)                                                             H  17
+      RETURN                                                              H  18
+      END                                                                 H  19-

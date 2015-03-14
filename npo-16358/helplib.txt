@@ -1,0 +1,256 @@
+1 INFO
+        Help is available for all the "look" mode command primitives:
+
+        $       ^       #       (       )       &       @
+        +       %       *       !       <       "       '
+
+        and all the "command" mode command except @ which is included
+        in DEFINE:
+
+        DEFINE  EXIT    HELP    READ    SET     SHOW    SPAWN
+
+        and for the operations:
+
+        JUMP    SCROLL  PRINT   SEARCH  REPEAT  END     REVERSE
+        CANCEL  REWRITE
+1 $
+          n$         - jump by n lines (positive or negative)
+1 ^
+          ^          - search (forward) for the string(s) in the search
+                       buffers (up to 10) and display from that line if
+                       found, if not found ring the terminal bell and
+                       turn on LED 3 (VT100's only).  Matches are found
+                       irregardless of lower/uppercase differences.
+          or
+          - "string" 'string' ... ^
+                     - load search buffers with the given strings and
+                       search (backward) for them, same rules as
+                       forward search.
+          or
+          -^
+                     - search (backward) for string(s), same rules as
+                       forward search.
+1 #
+          #          - scroll
+          or
+          -#         - backwards scroll
+1 (
+          (          - stop scrolling (only valid command when
+                       scrolling is in operation),
+                       or cancel current line jump, search, or
+                       & command.
+1 )
+          n)         - set scrolling speed to n lines per second
+                       (positive or negative, integer or real)
+                       (originally set to 2).
+                       NOTE:  there is a maximum speed that will not
+                       be exceeded (varies with situation) even if
+                       scrolling speed is set at a fast value.
+1 &
+          n&         - print the range of lines from the top of the
+                       screen to the nth line from the top of the
+                       screen (n can be either positive or negative).
+                       onto device SYS$PRINT.  if n is 0 or absent
+                       then the range marked with the * command is
+                       used, if available, otherwise 23 is used for
+                       n.  The format of the printout will be that
+                       of the original file, not necessarily what
+                       is shown on the screen (i.e. FORTRAN carriage-
+                       control, and all printer control will work as
+                       they are supposed to).
+          or
+          n-&        - same as n&, except output is put into a file
+                       named LOOKPRINT.LIS in the default directory
+                       (File format will be the same as the original
+                       file, except organization will be sequential)
+                       (appended to the latest version if a previous n-&
+                       or n--& command has been given, otherwise a new
+                       version is created).
+          or
+          n--&       - same as n-&, except always creates a new version
+                       of the output file.
+1 @
+          @          - exit the program.
+1 +
+          +          - re-write the screen.
+1 <
+          n<         - repeat the last command. (n times if n is given)
+1 PERCENT
+          n%         - jump by n blocks (positive or negative)
+1 ASTERISK
+          n*         - mark the nth line from the top of the screen as
+                       a boundary of the print range.  The range is
+                       given by the last two such lines marked.
+1 EXCLAMATION
+          !          - set reverse switch, all commands will now work
+                       in reverse (i.e. n$ will jump -n lines, etc.)
+1 "
+          "string"   - clear the search buffers and save the given
+                       string as the only search string.  A string
+                       can consist of any characters, to include a
+                       quotation mark (") one must put two of them in
+                       a row ("").
+1 '
+          'string' 'string' ...
+                     - add the given string(s) to the search buffers.
+                       A string can consist of any characters, to
+                       include a single quote (') one must put two of
+                       them in a row ('').
+1 DEFINE
+          DEFINE s := a1 a2 ...
+                      - defines the symbol s to be the string of indiv-
+                        idual commands a1, a2,..., a10.  Up to 10 com-
+                        mands can be defined (to execute in sequence)
+                        for a symbol (excluding any "string" or 'string'
+                        commands (for loading the search buffers)).
+                        If a line ends in a minus sign the next line is
+                        considered a continuation of it and is prompted
+                        for by -.  Continuation lines are appended to
+                        the previous line(s) without the insertion of
+                        any delimeters.
+
+                        NOTE:  Definitions which load the search buffers
+                               with strings and execute NO searches will
+                               not perform correctly.
+2 @
+          @filename   - inputs the file given by filename as a defi-
+                        nitions file.
+1 EXIT
+          EXIT        - returns to the normal "look" mode.
+1 HELP
+          HELP a      - returns help on a
+1 READ
+          READ        - This command will output any and all
+                        broadcast messages the terminal may have
+                        received.
+1 SET
+          SET [NO]switch
+                      - with switch being any of WRAP, BOX, WIDE
+                        or NARROW.  These have the same affect as
+                        the command line switches of the same
+                        names (WIDE is the same as NONARROW),
+                        with the NO qualifier turning off the affect.
+2 WRAP
+          SET WRAP    - causes lines to long for the screen to be
+                        "wrapped" to the next line, rather than
+                        truncated.
+2 NOWRAP
+          SET NOWRAP  - causes lines to long for the screen to be
+                        truncated.
+2 BOX
+          SET BOX     - causes a demarcation line to be drawn between
+                        the displayed file text and the command line
+                        (display size will be reduced to 22 lines from
+                        23).
+2 NOBOX
+          SET NOBOX   - causes no demarcation line to be drawn between
+                        the displayed file text and the command line
+                        (display size will be 23 lines)
+2 WIDE
+          SET WIDE    - causes the display to be 132 columns wide
+                        (only applicable to VT100's).
+2 NOWIDE
+          SET NOWIDE  - causes the display to be 80 columns wide.
+2 NARROW
+          SET NARROW  - causes the display to be 80 columns wide.
+2 NONARROW
+          SET NONARROW
+                      - causes the display to be 132 columns wide
+                        (only applicable to VT100's).
+1 SHOW
+          SHOW [s]    - where s is a defined symbol.  This will show
+                        what commands a symbol is defined to be.
+                        (if s is omitted, all defined symbols are
+                        shown).
+1 SPAWN
+          SPAWN       - This command will spawn a sub-process which
+                        will allow the user to execute DCL level
+                        commands.
+1 JUMP
+          n$         - jump by n lines (positive or negative)
+
+          n%         - jump by n blocks (positive or negative)
+1 SCROLL
+          #          - scroll
+          or
+          -#         - backwards scroll
+
+          (          - stop scrolling (only valid command when
+                       scrolling is in operation),
+                       or cancel current line jump, search, or
+                       & command.
+
+          n)         - set scrolling speed to n lines per second
+                       (positive or negative, integer or real)
+                       (originally set to 2).
+                       NOTE:  there is a maximum speed that will not
+                       be exceeded (varies with situation) even if
+                       scrolling speed is set at a fast value.
+1 PRINT
+          n&         - print the range of lines from the top of the
+                       screen to the nth line from the top of the
+                       screen (n can be either positive or negative).
+                       onto device SYS$PRINT.  if n is 0 or absent
+                       then the range marked with the * command is
+                       used, if available, otherwise 23 is used for
+                       n.  The format of the printout will be that
+                       of the original file, not necessarily what
+                       is shown on the screen (i.e. FORTRAN carriage-
+                       control, and all printer control will work as
+                       they are supposed to).
+          or
+          n-&        - same as n&, except output is put into a file
+                       named LOOKPRINT.LIS in the default directory
+                       (File format will be the same as the original
+                       file, except organization will be sequential)
+                       (appended to the latest version if a previous n-&
+                       or n--& command has been given, otherwise a new
+                       version is created).
+          or
+          n--&       - same as n-&, except always creates a new version
+                       of the output file.
+
+          n*         - mark the nth line from the top of the screen as
+                       a boundary of the print range.  The range is
+                       given by the last two such lines marked.
+1 SEARCH
+          ^          - search (forward) for the string(s) in the search
+                       buffers (up to 10) and display from that line if
+                       found, if not found ring the terminal bell and
+                       turn on LED 3 (VT100's only).  Matches are found
+                       irregardless of lower/uppercase differences.
+          or
+          - "string" 'string' ... ^
+                     - load search buffers with the given strings and
+                       search (backward) for them, same rules as
+                       forward search.
+          or
+          -^
+                     - search (backward) for string(s), same rules as
+                       forward search.
+
+          to load strings in the search buffers:
+
+          "string"   - clear the search buffers and save the given
+                       string as the only search string.  A string
+                       can consist of any characters, to include a
+                       quotation mark (") one must put two of them in
+                       a row ("").
+          or
+          'string' 'string' ...
+                     - add the given string(s) to the search buffers.
+                       A string can consist of any characters, to
+                       include a single quote (') one must put two of
+                       them in a row ('').
+1 REPEAT
+          n<         - repeat the last command. (n times if n is given)
+1 END
+          @          - exit the program.
+1 REVERSE
+          !          - set reverse switch, all commands will now work
+                       in reverse (i.e. n$ will jump -n lines, etc.)
+1 CANCEL
+          (          - cancels current line jump, search, or
+                       & command.
+1 REWRITE
+          +          - re-write the screen.

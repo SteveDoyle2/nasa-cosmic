@@ -1,0 +1,263 @@
+   (* $INCLUDE : 'compile.inc' *)
+   (* $INCLUDE : 'getparam.int' *)
+   (* $INCLUDE : 'utility.int' *)
+   (* $INCLUDE : 'vbpas.int' *)
+   (* $INCLUDE : 'dspas.int' *)
+   (* $INCLUDE : 'barexec.int' *)
+   (* $INCLUDE : 'barpict.int' *)
+
+   implementation of barpict;
+
+      uses vbpas;
+
+      uses dspas;
+
+      uses barexec;
+
+
+   procedure picture;	extern;
+   procedure chartinfo; extern;
+   procedure get_list;	extern;
+   procedure format;	extern;
+
+   procedure skelebar;
+
+   var
+	 color1  : integer;
+	 i,j,k,l : integer;
+	 texts	 : lstring(20);
+	 month	 : array [0..16] of lstring(4);
+	 yr	 : array [1..2] of char;
+	 fiscal_start : integer;
+
+   begin
+   color1 := 3;
+   if plotchoice <> 2 then [THERE(0,24); WRITE('Skeleton Drawing...          ');];
+   if symbol = 1 then dsymbol(xy[33],xy[34],3,0,0,1);
+   (* the big box *)
+   dsline(xy[1],xy[2],xy[3],xy[2],color1,1,0);
+   dsline(xy[1],xy[2],xy[1],xy[4],color1,1,0);
+   dsline(xy[1],xy[4],xy[3],xy[4],color1,1,0);
+   dsline(xy[3],xy[2],xy[3],xy[4],color1,1,0);
+   dsline(xy[5],xy[6],xy[7],xy[8],color1,1,0);	  (* below date *)
+   dsline(xy[9],xy[10],xy[11],xy[10],color1,1,0);   (* above year label *)
+   dsline(xy[13],xy[14],xy[15],xy[16],color1,1,0);   (* above month label *)
+   for i := 1 to 2 do	(* data values (horizontal) *)
+      begin
+	 j := xy[18] * (2 * i - 1);
+	 k := xy[18] * (2 * i);
+	 dsline(0,xy[14]+j,xy[15],xy[14]+j,color1,1,0);
+	 dsline(xy[12],xy[16]+k,xy[15],xy[16]+k,color1,1,0)
+      end;
+
+   (* Vertical lines *)
+
+   dsline(xy[19],xy[20],xy[21],xy[22],color1,1,0);   (* y axis *)
+   dsline(xy[23],xy[24],xy[23],xy[26],color1,1,0);   (* y axis *)
+   dsline(xy[17],xy[16]+xy[18],xy[17],xy[4],color1,1,0); (* last qtr *)
+   dsline(xy[12],xy[16]+xy[18],xy[12],xy[4],color1,1,0);
+
+
+   if (period = 0) or (period > 4) then   (* display of monthly data *)
+      for i := 0 to 11 do
+	 begin
+	    j := xy[31] * i;
+	    dsline(xy[27]+j,xy[28],xy[29]+j,xy[30],color1,1,0)
+	 end
+   else 		  (* display of weekly data *)
+       begin
+	 for k := 1 to 2 do
+	    begin
+	       for i := 0 to 3 do
+		  begin
+		     j := xy[31] * i + 152 * (k - 1);
+		     dsline(xy[27]+j,xy[28],xy[29]+j,xy[30],color1,1,0)
+		  end;
+	       dsline(xy[27]+j,xy[28]-10,xy[29]+j,xy[30],color1,1,0)
+	    end;
+	 for k := 0 to 3 do
+	    begin
+	       j := xy[31] * k + 304;
+	       dsline(xy[27]+j,xy[28],xy[29]+j,xy[30],color1,1,0)
+	    end;
+      end;
+
+   (***** allocation *****)
+
+   texts.len := 12;
+   texts := 'Allocation: ';
+   dstext(xy[9]+4,xy[6]+4,0,color1,texts,texts.len,0);
+   (***** year and period labels *****)
+
+   month[10]:='OCT'; month[11]:='NOV'; month[0]:='DEC';
+   month[1]:='JAN'; month[2]:='FEB'; month[3]:='MAR';
+   month[4]:='APR'; month[5]:='MAY'; month[6]:='JUN';
+   month[7]:='JUL'; month[8]:='AUG'; month[9]:='SEP';
+   month[13]:='1/'; month[14]:='2/'; month[15]:='3/';
+   month[12]:='4/'; month[16]:='19';
+
+   yr[1] := year[1];
+   yr[2] := year[2];
+   fiscal_start := fiscal_year * 3 + 1;
+   if (fiscal_year <> 0) and (start >= fiscal_start) then begin
+       if year[2] = '9' then [ if year[1] = '9' then
+				  [ year[1] := '0'; month[16] := '20'; ]
+			       else year[1] := succ( year[1] );
+			       year[2] := '0';            ]
+			else   year[2] := succ( year[2] );
+   end;
+   l := xy[10] + 2;
+
+   if period = 0 then
+      begin
+	j := xy[10] + 2;
+	l := l + xy[18];
+	texts.len := 2;
+	if start = fiscal_start then
+	   begin
+	     i := xy[9] + xy[31] * 6 + 18;
+	     dstext(i,j,0,color1,year,2,0);
+	   end
+	 else
+	   begin
+	     if start < fiscal_start then k := fiscal_start - start
+				     else k := fiscal_start + 12 - start;
+	     i := xy[9] + xy[31] * k ;
+	     dsline(i,xy[10],i,xy[10]+xy[18],color1,1,0);
+	     if year[2] = '9' then [if year[1] = '9' then
+				    [ texts[1]:='0'; month[16]:='20';]
+				    else texts[1] := succ( year[1] );
+				    texts[2] := '0';]
+			      else [texts[1] := year[1];
+				    texts[2] := succ(year[2]);];
+	     dstext((i+xy[9])div 2 - 8,j,0,color1,year,2,0);
+	     dstext((i+xy[3])div 2 - 8,j,0,color1,texts,2,0);
+	   end;
+       end;
+
+   if (period = 0) or (period > 4) then begin
+       for i := 0 to 11 do
+	 begin
+	   k := xy[9] + 8 + xy[31] * i;
+	   if period = 0 then  (* monthly *)
+	      dstext(k,l,0,color1,month[(i+start) mod 12],3,0)
+	   else begin	       (* period <> 0 *)
+	      if period = 9 then		     (* yearly *)
+		  j := 16
+	      else
+		  j := ( i + period - 4 ) mod 4 + 12 ;(* quarterly *)
+	      dstext(k,l+xy[18],1,color1,month[j],2,0);
+	      dstext(k+12,l+xy[18],1,color1,year,2,0);
+	      if ((i+period-4) mod 4 = 0) or (period = 9) then
+		 begin
+		   if year[2] = '9' then
+		      begin
+			if year[1] = '9' then
+			   begin
+			     year[1] := '0';
+			     year[2] := '0';
+			     month[16] := '20';
+			   end
+			else
+			   begin
+			     year[2] := '0';
+			     year[1] := succ(year[1]);
+			   end;  (* if year[1] *)
+		      end
+		   else  (*  year[2] <> 9 *)
+		      year[2] := succ(year[2]);
+		 end;	 (*  if i+period-4 mod 4 *)
+	       end;	 (*  if period = 0 *)
+	     end;	 (*  for i	   *)
+	   end		 (*  if period = 0 or period > 4 *)
+   else
+     begin	     (*  weekly data *)
+       i := xy[9] + xy[31] + (xy[31] div 4) * 2 - 4;
+       j := i + xy[31] * 4;
+       k := j + xy[31] * 4 + ( xy[31] div 2 );
+
+       case period of
+	  1 : begin
+		dstext(i,l,0,color1,month[1],3,0);
+		dstext(j,l,0,color1,month[2],3,0);
+		dstext(k,l,0,color1,month[3],3,0);
+	      end;
+	  2 : begin
+		dstext(i,l,0,color1,month[4],3,0);
+		dstext(j,l,0,color1,month[5],3,0);
+		dstext(k,l,0,color1,month[6],3,0);
+	      end;
+	  3 : begin
+		dstext(i,l,0,color1,month[7],3,0);
+		dstext(j,l,0,color1,month[8],3,0);
+		dstext(k,l,0,color1,month[9],3,0);
+		   end;
+	  4 : begin
+		dstext(i,l,0,color1,month[10],3,0);
+		dstext(j,l,0,color1,month[11],3,0);
+		dstext(k,l,0,color1,month[0],3,0);
+	      end;
+	  otherwise begin end; end;
+
+	texts	 := null;    texts.len := 3;
+	texts[1] := '/';     texts[2]  := year[1];
+	texts[3] := year[2];
+
+	dstext(i+24,l,0,color1,texts,3,0);
+	dstext(j+24,l,0,color1,texts,3,0);
+	dstext(k+24,l,0,color1,texts,3,0);
+
+	l := l + xy[18];
+	month[1] := 'wk 1';
+	month[2] := 'wk 2';
+	month[3] := 'wk 3';
+	month[4] := 'wk 4';
+	month[5] := 'wk 5';
+	for i := 1 to 3 do
+	    begin
+	      j := xy[9] + 4 + ( i - 1 ) * xy[31] * 4;
+	      for k := 1 to 4 do
+		  dstext(j+xy[31]*(k-1),l,0,color1,month[k],4,0);
+	    end;
+	dstext(j+xy[31]*4,l,0,color1,month[5],4,0);
+   end; (* if period = 0 or period > 4 *)
+
+   year[1] := yr[1];
+   year[2] := yr[2];
+
+   (***** unit labels *****)
+
+   texts.len := 14;
+   case period of
+     0	  : texts := 'MONTHLY COST $';
+     1..4 : texts := 'WEEKLY  COST $';
+     5..8 : texts := 'QUARTERLY COST';
+     9	  : texts := 'YEARLY  COST $';
+     end;
+   dstext(xy[19]+12,xy[20]+68,0,color1,texts,texts.len,270);
+   texts := 'CUMULATIVE COST $'; texts.len := 17;
+   dstext(xy[1]+12,xy[20]+52,0,color1,texts,texts.len,270);
+
+   (***** variable labels *****)
+   texts.len := 8;
+   for i := 0 to 1 do
+     begin
+       texts := ' PLANNED';
+       dstext(xy[1]+14,xy[4]-xy[18]*4+i*(2*xy[18])+2,0,color1,texts,texts.len,0);
+       texts.len := 7;
+       texts := ' ACTUAL';
+       dstext(xy[1]+14,xy[4]-xy[18]*3+i*2*xy[18]+2,0,color1,texts,texts.len,0);
+     end;
+   texts.len := 1;
+   texts := 'I';
+   dstext(xy[1]+2,xy[4]-32,0,color1,texts,1,0)
+   texts := 'C';
+   dstext(xy[1]+2,xy[4]-12,0,color1,texts,1,0)
+
+   end;
+   end.
+
+
+
+
+

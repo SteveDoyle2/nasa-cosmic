@@ -1,0 +1,837 @@
+C                                                                       00002700
+C     ******************************************************************00002800
+C     *                                                                *00002900
+C     *    THIS ALGORITHM CALCULATES ESTIMATES OF NONEQUILIBRIUM       *00003000
+C     *    HEATING FOR A REAL GAS AIR MODEL USING AN AEROTHERMAL       *00003100
+C     *    MATH MODEL BASED ON ROCKWELL INT. REPORT STS-84-0015        *00003200
+C     *                                                                *00003300
+C     *    PROGRAMMERS -  S. GREENSCHLAG & B. A. MILLER                *00003400
+C     *                                                                *00003500
+C     ******************************************************************00003600
+C                                                                       00003700
+C     ******************************************************************00003800
+C     ******************************************************************00003800
+C     *                                                                *00003900
+C     *                    INPUT VARIABLE TABLE                        *00004000
+C     *                                                                *00004100
+C     *    SYMBOL      DESCRIPTION                      UNITS          *00004200
+C     *                                                                *00004300
+C     *    HT          TOTAL ENTHALPY                   BTU/LB         *00004400
+C     *    PL          LOCAL PRESSURE                   P.S.F.         *00004500
+C     *    SL          CHARACTERISTIC LENGTH            FT.            *00004600
+C     *    TW          TEMPERATURE AT THE WALL          DEGREES R.     *00004700
+C     *    VL          VELOCITY AT THE                  FT./SEC.       *00004800
+C     *                BOUNDARY LAYER EDGE                             *00004900
+C     *                                                                *00005000
+C     ******************************************************************00005100
+C                                                                       00005200
+C     ******************************************************************00005300
+C     *                                                                *00005400
+C     *                        INPUT PROCEDURE                         *00005500
+C     *                                                                *00005600
+C     *    THE FIVE VARIABLES LISTED IN THE INPUT VARIABLE TABLE       *00005700
+C     *    ABOVE ARE ENTERED ON A STANDARD IBM CARD IN THE ORDER       *00005800
+C     *    OF APPEARANCE IN THE TABLE IN FREE FORMAT SEPARATED BY      *00005900
+C     *    COMMAS.  UP TO 2500 INPUT CASES CAN BE ENTERED IN ONE       *00006000
+C     *    RUN.                                                        *00006100
+C     *                                                                *00006200
+C     ******************************************************************00006300
+C                                                                       00006400
+C     ******************************************************************00006500
+C     *                                                                *00006600
+C     *                    OUTPUT VARIABLE TABLE                       *00006700
+C     *                                                                *00006800
+C     *    QW          HEAT TRANSFER RATE AT THE        BTU/SQFT/SEC   *00006900
+C     *                WALL                                            *00007000
+C     *    CF          COEFFICIENT OF FRICTION AT       ----           *00007100
+C     *                THE WALL                                        *00007200
+C     *    HCO         HEAT TRANSFER COEFFICIENT        LB/SQFT/SEC    *00007300
+C     *                AT THE WALL                                     *00007400
+C     *    HAW         ADIABATIC WALL ENTHALPY          BTU/LB         *00007500
+C     *                BASED ON TEMPERATURE AND                        *00007600
+C     *                CATALYTIC CONDITIONS                            *00007700
+C     *    HWF         ENTHALPY OF THE WALL BASED       BTU/LB         *00007800
+C     *                ON TEMPERATURE AND CATALYTIC                    *00007900
+C     *                CONDITIONS                                      *00008000
+C     *    ETA         DISSOCIATION EFFICIENCY          ----           *00008100
+C     *                                                                *00008200
+C     ******************************************************************00008300
+C     NONEQUILIBRIUM AEROHEATING USING LAMINAR ECKERT REFERENCE         00008400
+C     ENTHALPY METHOD AS A BASELINE AND THE ROCKWELL STS84-0015 REPORT  00008500
+C**** DIMENSION STATEMENTS *********************************************00008600
+      CHARACTER*4 YES                                                   00008700
+      REAL HT(2500),PL(2500),SL(2500),TW(2500),VL(2500)                 00008800
+C**** COMMON STATEMENTS ************************************************00008900
+      COMMON/THERMO/ CR(200)                                            00009000
+C***********************************************************************00009100
+C**** EQUIVALENCE STATEMENTS *******************************************00009200
+      EQUIVALENCE                                                       00009300
+     *   (CR(   1),    PC   ),(CR(   2),    TC   ),                     00009400
+     *   (CR(   4),    HC   ),(CR(   6),  RHOC   ),                     00009500
+     *   (CR(   8),  VISC   ),(CR(   9),   PRC   ),                     00009600
+     *   (CR(  92),  IERR   )                                           00009700
+C***********************************************************************00009800
+C                                                                       00009900
+C                                                                       00010000
+C**** OPEN FILE 7                                                       00010100
+      OPEN (7)                                                          00010200
+C**** ENTER INPUT DATA                                                  00010300
+      ICASE=1                                                           00010400
+    5 READ (5,*,END=10)HT(ICASE),PL(ICASE),SL(ICASE),TW(ICASE),VL(ICASE)00010500
+      ICASE=ICASE+1                                                     00010600
+      GO TO 5                                                           00010700
+   10 IPAGE=0                                                           00010800
+      ICASE=ICASE-1                                                     00010900
+      ILINE=0                                                           00011000
+      DO 300 I=1,ICASE                                                  00011100
+      ILINE=ILINE+1                                                     00011200
+      IF (ILINE.LE.30) GO TO 13                                         00011300
+      ILINE=1                                                           00011400
+   13 HL=HT(I)-VL(I)**2/50064.0                                         00011500
+      IF (ILINE.EQ.1) IPAGE=IPAGE+1                                     00011600
+      PC=PL(I)                                                          00011700
+      TC=TW(I)                                                          00011800
+      CALL PANDT                                                        00011900
+      CALL MISPRO                                                       00012000
+      HW=HC                                                             00012100
+      HAW=HT(I)                                                         00012200
+      TL=HL/0.24                                                        00012300
+      CALL PH(PL(I),HL,SOR,TL,.1E-04,IC)                                00012400
+      IF (IERR.EQ.0) GO TO 20                                           00012500
+      ILINE=ILINE-1                                                     00012600
+      WRITE (6,15)                                                      00012700
+   15 FORMAT (2X,'ERROR IN PH WHILE CALCULATING LOCAL PROPERTIES ')     00012800
+      GO TO 300                                                         00012900
+   20 CALL MISPRO                                                       00013000
+      PRL=PRC                                                           00013100
+      RHOL=RHOC                                                         00013200
+      VISL=VISC/32.169                                                  00013300
+      TS=TL*.8                                                          00013400
+      DO 25 J=1,15                                                      00013500
+      HS=HL+(HW-HL)*.5+.22*(HAW-HL)                                     00013600
+      CALL PH(PL(I),HS,SOR,TS,.1E-4,ICNTR)                              00013700
+      IF (IERR.EQ.0) GO TO 22                                           00013800
+      ILINE=ILINE-1                                                     00013900
+      GO TO 300                                                         00014000
+   22 RHOS=RHOC                                                         00014100
+      CALL MISPRO                                                       00014200
+      VISS = VISC/32.17405                                              00014300
+      RF=PRC**0.5                                                       00014400
+      HA = HAW                                                          00014500
+      HAW=HL+RF*(HT(I)-HL)                                              00014600
+      IF (ABS((HA-HAW)/HAW).LE.1.0E-04) GO TO 35                        00014700
+   25 CONTINUE                                                          00014800
+      WRITE (6,30) HAW                                                  00014900
+   30 FORMAT (2X,'WARNING]]  THE CALCULATION OF ADIABATIC WALL '/       00015000
+     *        2X,'ENTHALPY DID NOT CONVERGE IN 15 ITERATIONS.  THE '/   00015100
+     *        2X,'CALCULATION WILL PROCEED WITH A VALUE OF ',1PE10.3)   00015200
+   35 RES=(RHOS*VL(I)*SL(I))/VISS                                       00015300
+      XJI=0.0                                                           00015400
+      XJIO2=XJI/2                                                       00015500
+      CF=0.664/SQRT(RES)*3.**XJIO2                                      00015600
+      STECK=0.5*CF/PRL**.67                                             00015700
+      HCO=STECK*RHOS*VL(I)*32.16                                        00015800
+      QW=HCO*(HAW-HW)                                                   00015900
+      CALL CAT(RHOL,TL,TW(I),VL(I),PRL,PL(I),HAW,HT(I),HCO,             00016000
+     *     QW,ETA,HW,HWF)                                               00016100
+      IF (ILINE.EQ.1) WRITE (7,220) IPAGE                               00016200
+  220 FORMAT(1H1,31X,'ESTIMATED NONEQUILIBRIUM HEAT TRANSFER RESULTS',  00016300
+     *       24X,'PAGE',I3,//,                                          00016400
+     *       1X,'CASE NO.',5X,'HEAT TRANSFER',2X,'COEFFICIENT OF',      00016500
+     *       3X,'HEAT TRANSFER',2X,'ADIABATIC WALL',3X,'FROZEN WALL',   00016600
+     *       9X,'ETA',                                                  00016700
+     *       /,18X,'RATE',10X,'FRICTION',7X,'COEFFICIENT',              00016800
+     *       6X,'ENTHALPY',8X,'ENTHALPY',/,                             00016900
+     *       13X,'BTU/SQ.FT./SEC.',17X,'LB./SQ.FT./SEC.',4X,'BTU/LB.',  00017000
+     *       9X,'BTU/LB.',//)                                           00017100
+      WRITE (7,225) I,QW,CF,HCO,HAW,HWF,ETA                             00017200
+  225 FORMAT(I6,9X,1P,E10.3,5(6X,E10.3))                                00017300
+  300 CONTINUE                                                          00017400
+      STOP                                                              00017500
+      END                                                               00017600
+      SUBROUTINE CAT(RHOL,TL,TW,VL,PRL,PL,HAW,HT,HCO,QW,ETA,HW,HWF)     00017700
+C     SUBROUTINE CALCULATES NONEQUILIBRIUM HEATING USING EQUILIBRIUM    00017800
+C     HEATING AS A BASELINE                                             00017900
+      ZF=PL/(RHOL*TL*1716.48272)                                        00018000
+      GAMF=(8.0+ZF)/(8.0-ZF)                                            00018100
+      CPF=0.0686*(ZF/2.0+4.0)                                           00018200
+      IF (ZF.LE.1.21) HD=7380.*(ZF-1.0)                                 00018300
+      IF (ZF.GT.1.21.AND.ZF.LE.1.99)                                    00018400
+     * HD=1550.0+13980.*(ZF-1.21)                                       00018500
+      IF (ZF.GT.1.99) HD=12454.4                                        00018600
+      EN=0.5                                                            00018700
+      TF= (HT-HD)/(CPF+VL**2/(50103.0*TL))                              00018800
+      HLF=CPF*TF+HD                                                     00018900
+      ARGVLF=HT-HLF                                                     00019000
+      VLF=0.0                                                           00019100
+      IF (ARGVLF.GT.0.0) VLF=223.48*SQRT(ARGVLF)                        00019200
+      AF=SQRT(TL*ZF*GAMF*1716.48272)                                    00019300
+      EMLF=VLF/AF                                                       00019400
+      HAWF=(VLF**2/50062.7)*(PRL)**EN+HLF                               00019500
+      DHEQ=HAW-HW                                                       00019600
+      ENCAT=0.05787                                                     00019700
+      ENEXP=-6876.0                                                     00019800
+      GAMMAR=ENCAT*EXP(ENEXP/TW)                                        00019900
+      EKW=16.5*GAMMAR*SQRT(ZF*TW)                                       00020000
+      ETA=1.0-(0.309*GAMMAR*PL*DHEQ)/                                   00020100
+     *(SQRT(ZF*TW)*QW)                                                  00020200
+      IF (ETA.GT.0.0) GO TO 35                                          00020300
+      EKW=(53.33*HCO*ZF*TW)/PL                                          00020400
+      ETA=0.0                                                           00020500
+      HWF=HW                                                            00020600
+      QWF=QW                                                            00020700
+      GO TO 70                                                          00020800
+   35 IF (ETA.LE.1.0) GO TO 45                                          00020900
+      EKW=0.0                                                           00021000
+      ETA=1.0                                                           00021100
+   45 HWF=CPF*TW+ETA*HD                                                 00021200
+      QWF=QW*(HAWF-HWF)/DHEQ                                            00021300
+      IF (QWF.GT.QW) QWF=QW                                             00021400
+   70 QW=QWF                                                            00021500
+      HW=HWF                                                            00021600
+      HAW=HAWF                                                          00021700
+      END                                                               00021800
+      SUBROUTINE PANDT                                                  00021900
+C ENTER WITH P IN CR(1) AND T IN CR(2)                                  00022000
+C EXITS WITH.. SOR IN CR(3), H IN CR(4), Z IN CR(5), RHO IN CR(66)      00022100
+C                                                                       00022200
+C     ENTER WITH P IN CR(1) AND T IN CR(2)                              00022300
+C     EXIT WITH SOR IN CR(3), H IN CR(4), Z IN CR(5), RHO IN CR(6)      00022400
+C*************** DIMENSION STATEMENTS **********************************00022500
+      DIMENSION PF(40)                                                  00022600
+      REAL LPF8,LPF10,LPF2,LPF24                                        00022700
+C***********************************************************************00022800
+C*************** COMMON STATEMENTS *************************************00022900
+      COMMON/THERMO/ CR(200)                                            00023000
+C***********************************************************************00023100
+C*************** EQUIVALENCE STATEMENTS ********************************00023200
+      EQUIVALENCE                                                       00023300
+     *   (CR(   1),     P   ),(CR(   2),     T   ),(CR(   3),   SOR   ),00023400
+     *   (CR(   4),     H   ),(CR(   5),     Z   ),(CR(   6),   RHO   ),00023500
+     *   (CR(  16),    CI   ),(CR(  17),  SQCI   ),(CR(  18),   CII   ),00023600
+     *   (CR(  19),  CIII   ),(CR(  20),   SIG   ),(CR(  21),   TLN   ),00023700
+     *   (CR(  22),    ZE   ),(CR(  23),    ZO   ),(CR(  24),   ZOI   ),00023800
+     *   (CR(  25),   ZO2   ),(CR(  26),  ZOPL   ),(CR(  27),    ZN   ),00023900
+     *   (CR(  28),   ZN2   ),(CR(  29),  ZNII   ),(CR(  30),  ZNPL   ),00024000
+     *   (CR(  31),    PF(1)),(CR(  68),   DP5   ),(CR(  69),  DP25   ),00024100
+     *   (CR(  70),  DP26   ),(CR(  90),  IERR   )                      00024200
+C***********************************************************************00024300
+      IF (P) 2,2,1                                                      00024400
+    1 IF (T) 2,2,5                                                      00024500
+    2 WRITE         (6,3)P,T                                            00024600
+    3 FORMAT(32H0SUBROUTINE PANDT ABORT EXIT, P=,1P,E13.5,4H  T=,E13.5 )00024700
+      IERR = 1                                                          00024800
+      GO TO  9999                                                       00024900
+    5 DEL=P/2116.2169                                                   00025000
+      DLN= ALOG(DEL)                                                    00025100
+      TLN= ALOG(T)                                                      00025200
+      CPF11=.0671+.02584*TLN                                            00025300
+      ARG =     8.1-55500./T-DLN*.5                                     00025400
+      IF ( ABS(ARG) - 88.028) 20,25,25                                  00025500
+   20 SQCI =  EXP(ARG)                                                  00025600
+      IF(SQCI-1.0E-20)25,30,30                                          00025700
+   25 SQCI = 0.                                                         00025800
+      Z = 1.                                                            00025900
+      ZO = 0.                                                           00026000
+      ZN = 0.                                                           00026100
+      ZOPL = 0.                                                         00026200
+      ZNPL = 0.                                                         00026300
+      ZE = 0.                                                           00026400
+      CI = 0.                                                           00026500
+      CII = 0.                                                          00026600
+      CIII = 0.                                                         00026700
+      ZNII = 0.                                                         00026800
+      ZO2 = .2095                                                       00026900
+      ZN2 = .7808                                                       00027000
+      IF (300. - T) 26,27,27                                            00027100
+   26 PF(4) = PF4 (T)                                                   00027200
+      PF(6) = PF6 (T)                                                   00027300
+      PF(8) = LPF8 (TLN)                                                00027400
+      PF(10) = LPF10 (TLN)                                              00027500
+      SOR = .520655 + .2095 * PF(8) + .7808 * PF(10) + CPF11 - DLN      00027600
+      H = .0686 * T * (.2095 * PF(4) + .7808 * PF(6) + .024 )           00027700
+      GO TO 230                                                         00027800
+   27 H = .24 * T                                                       00027900
+      SOR = 3.49 * TLN + 2. - DLN                                       00028000
+      GO TO 230                                                         00028100
+C                                                                       00028200
+   30 IF(SQCI-.244949E-1)40,40,50                                       00028300
+C                                                                       00028400
+   40 ZOI=.4575*SQCI                                                    00028500
+      GO TO 60                                                          00028600
+   50 CI=SQCI**2                                                        00028700
+      ZOI=2.*( SQRT((.3657*CI+.8378)*CI)-.3953*CI)/(4.+CI)              00028800
+      IF(ZOI-.22)60,60,70                                               00028900
+C                                                                       00029000
+   60 Z=1.+.5*ZOI                                                       00029100
+      ZO=ZOI                                                            00029200
+      ZO2=.2095-.5*ZO                                                   00029300
+      ZN2=.7808                                                         00029400
+      ZN=0.                                                             00029500
+      ZOPL=0.                                                           00029600
+      ZNPL=0.                                                           00029700
+      ZE=0.                                                             00029800
+      CII=0.                                                            00029900
+      CIII=0.                                                           00030000
+      ZNII = 0.                                                         00030100
+      PF(3)=PF3 (T)                                                     00030200
+      PF(4)=PF4 (T)                                                     00030300
+      PF(6)=PF6 (T)                                                     00030400
+      PF(7)=3.42+2.54*TLN                                               00030500
+      PF(8)=LPF8 (TLN)                                                  00030600
+      PF(10)=LPF10 (TLN)                                                00030700
+      SOR=ZO*(PF(7)- ALOG(ZO))+ZO2*(PF(8)- ALOG(ZO2))+.7808*PF(10)+CPF1100030800
+     *+.193198-Z* ALOG(DEL/Z)                                           00030900
+      H=3665.*ZO+.0686*T*(ZO*PF(3)+ZO2*PF(4)+.7808*PF(6)+.024)          00031000
+      GO TO 230                                                         00031100
+C                                                                       00031200
+   70 PF(2)=LPF2 (TLN)                                                  00031300
+      CII= EXP(PF(2)-204000./T)/DEL                                     00031400
+      IF(CII-.0001)80,80,90                                             00031500
+C                                                                       00031600
+   80 ZNII= SQRT(.7808*(1.+.5*ZOI)*CII)                                 00031700
+      GO TO 100                                                         00031800
+   90 ZNII=2.*( SQRT((.9903*CII+3.778)*CII)-.2143*CII)/(4.+CII)         00031900
+      IF(ZNII-.7)100,100,105                                            00032000
+C                                                                       00032100
+  100 ZO2=.2095-.5*ZOI                                                  00032200
+      PF(4)=PF4 (T)                                                     00032300
+      PF(8)=LPF8 (TLN)                                                  00032400
+      CIII=0.                                                           00032500
+      ZEII=9.55E-6* SQRT(ZOI*ZNII)* EXP(.784*TLN-28500./T)              00032600
+      SZO2=ZO2*(PF(8)- ALOG(ZO2))                                       00032700
+      HZO2=ZO2*PF(4)                                                    00032800
+      GO TO 130                                                         00032900
+C                                                                       00033000
+  105 IF(ZNII-1.5616)120,120,110                                        00033100
+  110 ZNII=1.5616                                                       00033200
+  120 PF(24)=LPF24 (TLN)                                                00033300
+      ZO2=0.                                                            00033400
+      CIII= EXP(PF(24)-300000./T)/DEL                                   00033500
+      ZEIII=1.99* SQRT(CIII/(1.+CIII))                                  00033600
+      ZEII=9.55E-6* SQRT(ZOI*ZNII)* EXP(.784*TLN-28500./T)              00033700
+      IF(ZEII-ZEIII)140,125,125                                         00033800
+C                                                                       00033900
+  125 SZO2=0.                                                           00034000
+      HZO2=0.                                                           00034100
+  130 PF(3)=PF3 (T)                                                     00034200
+      ZN2=.7808-.5*ZNII                                                 00034300
+      ZOPL=0.                                                           00034400
+      ZNPL=0.                                                           00034500
+      DP5=DELPF5 (T)                                                    00034600
+      ZO=ZOI                                                            00034700
+      ZE=ZEII                                                           00034800
+      Z=1.+.5*(ZOI+ZNII)+ZEII                                           00034900
+      PF(5)=2.5+DP5                                                     00035000
+      ZN=ZNII                                                           00035100
+      PF(7)=3.42+2.54*TLN                                               00035200
+      PF(9)=3.*TLN-1.5                                                  00035300
+      PF(10)=LPF10 (TLN)                                                00035400
+      PF(33)=2.5*TLN-13.21                                              00035500
+      PF(6)=PF6 (T)                                                     00035600
+      SOR=ZOI*(PF(7)- ALOG(ZOI))+SZO2+ZNII*(PF(9)- ALOG(ZNII))+ZN2*(PF(100035700
+     *0)- ALOG(ZN2))+ZEII*(PF(33)- ALOG(ZEII))+CPF11     -Z* ALOG(DEL/Z)00035800
+      H=3665.*ZOI+6993.*ZNII+14600.*ZEII+.0686*T*(ZOI*PF(3)+HZO2+ZNII*PF00035900
+     *(5)+ZN2*PF(6)+2.5*ZEII+.024)                                      00036000
+      GO TO 230                                                         00036100
+C                                                                       00036200
+  140 PF(37)=PF37 (T)                                                   00036300
+      CIIIPR= EXP(PF(37)-19500./T)                                      00036400
+      F1=1.-CIIIPR                                                      00036500
+      F2=CIIIPR*ZNII+.419+ZEIII*F1                                      00036600
+C                                                                       00036700
+      IF(CIIIPR-.98)170,160,150                                         00036800
+  150 IF(CIIIPR-1.02)160,160,170                                        00036900
+C                                                                       00037000
+  160 ZOPL=.419/F2*ZEIII                                                00037100
+      GO TO 180                                                         00037200
+C                                                                       00037300
+  170 ZOPL=.5/F1*(F2- SQRT(F2**2-1.676*ZEIII*F1))                       00037400
+  180 IF(ZOPL-ZOI)200,200,190                                           00037500
+  190 ZOPL=ZOI                                                          00037600
+  200 ZNPL=ZEIII-ZOPL                                                   00037700
+      IF(ZNPL-ZNII)220,220,210                                          00037800
+  210 ZNPL=ZNII                                                         00037900
+  220 ZN2=.7808-.5*ZNII                                                 00038000
+      ZO=ZOI-ZOPL                                                       00038100
+      ZN=ZNII-ZNPL                                                      00038200
+      Z=1.+.5*(ZNII+ZOI)+ZEIII                                          00038300
+      ZE=ZEIII                                                          00038400
+      PF(3)=PF3 (T)                                                     00038500
+      DP5=DELPF5 (T)                                                    00038600
+      PF(5)=2.5+DP5                                                     00038700
+      PF(6)=PF6 (T)                                                     00038800
+      PF(7)=3.42+2.54*TLN                                               00038900
+      PF(9)=3.*TLN-1.5                                                  00039000
+      PF(10)=LPF10 (TLN)                                                00039100
+      DP25=DEPF25 (T)                                                   00039200
+      PF(25)=2.5+DP25                                                   00039300
+      DP26=DEPF26 (T)                                                   00039400
+      PF(26)=2.5+DP26                                                   00039500
+      PF(31)=2.87*TLN-.47                                               00039600
+      PF(32)=1.5+2.73*TLN                                               00039700
+      PF(33)=2.5*TLN-13.21                                              00039800
+      SOR = CPF11 -Z*ALOG(DEL/Z)                                        00039900
+      IF (ZO    .GT. 0.)  SOR = SOR + ZO*(PF(7) - ALOG(ZO))             00040000
+      IF (ZN    .GT. 0.)  SOR = SOR + ZN*(PF(9) - ALOG(ZN))             00040100
+      IF (ZN2   .GT. 0.)  SOR = SOR + ZN2*(PF(10) - ALOG(ZN2))          00040200
+      IF (ZOPL  .GT. 0.)  SOR = SOR + ZOPL*(PF(31) - ALOG(ZOPL))        00040300
+      IF (ZNPL  .GT. 0.)  SOR = SOR + ZNPL*(PF(32)-ALOG(ZNPL))          00040400
+      IF (ZEIII .GT. 0.)  SOR = SOR + ZEIII*(PF(33) - ALOG(ZEIII))      00040500
+      H=3665.*ZOI+6993.*ZNII+20600.*ZEIII+.0686*T*(ZO*PF(3)+ZN*PF(5)+ZN200040600
+     **PF(6)+ZOPL*PF(25)+ZNPL*PF(26)+2.5*ZEIII+.024)                    00040700
+C                                                                       00040800
+  230 SIG=491.68/Z*DEL/T                                                00040900
+      RHO=P/Z/T/1716.48272                                              00041000
+ 9999 RETURN                                                            00041100
+      END                                                               00041200
+      FUNCTION PFS(T)                                                   00041300
+      ENTRY LPF2(TLN)                                                   00041400
+      PFS  = 9.17 * EXP (.06 * TLN)                                     00041500
+      GO TO 50                                                          00041600
+      ENTRY PF3(T1)                                                     00041700
+      A = EXP(-41000./T1)                                               00041800
+      B = EXP(-410./T1)                                                 00041900
+      PFS = (190000.* A + 1500.* B) / (T1 *(5.*(A +1.)+ 3.* B))+ 2.5    00042000
+      GO TO 50                                                          00042100
+      ENTRY PF4(T2)                                                     00042200
+      PFS=3.5+((4090./(EXP(4090./T2)-1.)+20000.*EXP(-21500./T2))/T2)    00042300
+      GO TO 50                                                          00042400
+      ENTRY DELPF5(T3)                                                  00042500
+      IF (T3- 4500.)5,10,10                                             00042600
+    5 PFS    = 0.                                                       00042700
+      GO TO 50                                                          00042800
+   10 PFS    = 120000. * (EXP (-49000./ T3) / T3)                       00042900
+      GO TO 50                                                          00043000
+      ENTRY PF6(T4)                                                     00043100
+      A = 6100. / T4                                                    00043200
+      PFS = 3.5 + A /(EXP(A)-1.)                                        00043300
+      GO TO 50                                                          00043400
+      ENTRY LPF8(TLN1)                                                  00043500
+      IF ( TLN1   .LT. 7.2) GO TO 15                                    00043600
+      PFS  = 4.5 *( TLN 1 -1.)                                          00043700
+      GO TO 50                                                          00043800
+   15 PFS  = 3.5 * TLN1 + 2.7                                           00043900
+      GO TO 50                                                          00044000
+      ENTRY LPF10(TLN2)                                                 00044100
+      IF(TLN2.LT.7.32) GO TO 20                                         00044200
+      PFS   = 4.325 *TLN2-5.                                            00044300
+      GO TO 50                                                          00044400
+   20 PFS   = 3.5 * TLN2 + 1.04                                         00044500
+      GO TO 50                                                          00044600
+      ENTRY PF12(T5)                                                    00044700
+      IF (T5.GE. 4100.) GO TO 25                                        00044800
+      PFS  = 1.5                                                        00044900
+      GO TO 50                                                          00045000
+   30 PFS  = 1.4 * EXP (T5/60000.)                                      00045100
+      GO TO 50                                                          00045200
+   25 IF(T5.LT. 14400.) GO TO 30                                        00045300
+      PFS  = 1.78                                                       00045400
+      GO TO 50                                                          00045500
+      ENTRY PF13(T6)                                                    00045600
+      A = EXP(4090. /T6)                                                00045700
+      PFS = 2.5 + ((4090./(1.-A)   )**2 * A + 4.3 * 10.E7 * EXP(-21500. 00045800
+     */T6)) / T6**2                                                     00045900
+      GO TO 50                                                          00046000
+      ENTRY PF14(T7,DBN)                                                00046100
+      A = EXP(-49900. /T7)                                              00046200
+      B = EXP(-74800. /T7)                                              00046300
+      PFS  = (  1.E+8 / T7**2) * (124.1 * A + 167.5 * B ) / ( 5.* A + 3.00046400
+     * * B + 2.) -(DBN)**2 + 1.5                                        00046500
+      GO TO 50                                                          00046600
+      ENTRY PF15(T8)                                                    00046700
+      A = EXP ( 6100. /T8)                                              00046800
+      PFS  =2.5+(6100.   /(T8*(A-1.))) **2 * A                          00046900
+      GO TO 50                                                          00047000
+      ENTRY LPF24(TLN3)                                                 00047100
+      PFS = .62 *EXP(.275*TLN3)                                         00047200
+      GO TO 50                                                          00047300
+      ENTRY DEPF25(T9)                                                  00047400
+      IF (T9.LE. 7000.) GO TO 35                                        00047500
+      PFS    = (190000.*EXP (-70000./T9))/ T9                           00047600
+      GO TO 50                                                          00047700
+   35 PFS    = 0.                                                       00047800
+      GO TO 50                                                          00047900
+      ENTRY DEPF26(T10)                                                 00048000
+      IF(T10.GE. 8100.) GO TO 40                                        00048100
+      PFS    = .04                                                      00048200
+      GO TO 50                                                          00048300
+   40 PFS    = (T10/90000.) - .05                                       00048400
+      GO TO 50                                                          00048500
+      ENTRY PF27(T11,DBO)                                               00048600
+      A = EXP(-69500. /T11)                                             00048700
+      B = EXP(-104900. /T11)                                            00048800
+      PFS  = 1.5 + (((241. * A) + 330. * B) / ( 2.+ 3. * B + 5. * A)) * 00048900
+     *10.E7 /T11**2 -DBO**2                                             00049000
+      GO TO 50                                                          00049100
+      ENTRY PF28(T12)                                                   00049200
+      IF(T12.LE. 5400.) GO TO 45                                        00049300
+      PFS  = 1.5 + .35 * (1.- EXP(-.00015 * T12))                       00049400
+      GO TO 50                                                          00049500
+   45 PFS  = 1.5                                                        00049600
+      GO TO 50                                                          00049700
+      ENTRY PF37(T13)                                                   00049800
+      PFS  = 1.58 - 4.2 * EXP(-70000. /T13)                             00049900
+   50 RETURN                                                            00050000
+      END                                                               00050100
+      SUBROUTINE MISPRO                                                 00050200
+C     CALCULATE MISCELLANEOUS (REMAINING) AIR PROPERTIES, MU, K,        00050300
+C     C(P)/R, C(V)/R, GAMMA, A, PR                                      00050400
+C***************** DIMENSION STATEMENTS ********************************00050500
+      DIMENSION PF(40)                                                  00050600
+C***********************************************************************00050700
+C***************** COMMON STATEMENTS ***********************************00050800
+      COMMON/THERMO/ CR(200)                                            00050900
+C***********************************************************************00051000
+C***************** EQUIVALENCE STATEMENTS ******************************00051100
+      EQUIVALENCE                                                       00051200
+     *   (CR(   2),     T   ),(CR(   5),     Z   ),(CR(   6),   RHO   ),00051300
+     *   (CR(   7),   GAM   ),(CR(   8),   VIS   ),(CR(   9),  PRTH   ),00051400
+     *   (CR(  10),     A   ),(CR(  11),   CON   ),(CR(  12), CONTH   ),00051500
+     *   (CR(  13),    CP   ),(CR(  14),    CV   ),(CR(  15),    PR   ),00051600
+     *   (CR(  16),    CI   ),(CR(  17),  SQCI   ),(CR(  18),   CII   ),00051700
+     *   (CR(  19),  CIII   ),(CR(  20),   SIG   ),(CR(  21),   TLN   ),00051800
+     *   (CR(  22),    ZE   ),(CR(  23),    ZO   ),(CR(  24),   ZOI   ),00051900
+     *   (CR(  25),   ZO2   ),(CR(  26),  ZOPL   ),(CR(  27),    ZN   ),00052000
+     *   (CR(  28),   ZN2   ),(CR(  29),  ZNII   ),(CR(  30),  ZNPL   ),00052100
+     *   (CR(  31),    PF(1)),(CR(  72),   ZOM   )                      00052200
+C***********************************************************************00052300
+      CONR= SQRT(T)/(1.+202./T)                                         00052400
+      VISR=7.33E-7*CONR                                                 00052500
+      CONR=2.39E-7*CONR                                                 00052600
+      PF(21) = 2.15 - .179 * TLN                                        00052700
+      F111T=111000./T                                                   00052800
+C                                                                       00052900
+      CPII=0.                                                           00053000
+      CPIII=0.                                                          00053100
+      CVII=0.                                                           00053200
+      CVIII=0.                                                          00053300
+      CONII=0.                                                          00053400
+      CONIII=0.                                                         00053500
+      IF (SQCI - .0244949) 1,1,12                                       00053600
+C                                                                       00053700
+    1 IF (T - 300.) 2,2,3                                               00053800
+    2 CVOR = 2.5                                                        00053900
+      CPOR = 3.5                                                        00054000
+      VISRAT = 1.                                                       00054100
+      CONTH = 1.                                                        00054200
+      CONRAT = 1.                                                       00054300
+      GAM = CPOR / CVOR                                                 00054400
+      GO TO 290                                                         00054500
+C                                                                       00054600
+    3 F1=5600./T                                                        00054700
+      F2= EXP(F1)                                                       00054800
+      F3=(F1/(F2-1.))**2*F2                                             00054900
+      CVTH=2.5+F3                                                       00055000
+      CPTH=CVTH+1.                                                      00055100
+      CVI=SQCI/T                                                        00055200
+      COT=13.6E8/T                                                      00055300
+      CPI=CVI*(COT+12700.)                                              00055400
+      CVI=CVI*(COT-12230.)                                              00055500
+      CPOR=CPTH+CPI                                                     00055600
+      CVOR=CVTH+CVI                                                     00055700
+      GAM=CPOR/CVOR                                                     00055800
+C                                                                       00055900
+      IF (T - 1800.) 5,5,6                                              00056000
+C                                                                       00056100
+    5 PF(36) = 1.                                                       00056200
+      GO TO 7                                                           00056300
+    6 PF(36) = 2.05 - .14 * TLN                                         00056400
+    7 VISRAT = 1.0 / PF(36)                                             00056500
+      CONTH = (1.0+(.209*F3))/PF(36)                                    00056600
+      CONI=.0358*SQCI/PF(21)*(F111T+1.)**2                              00056700
+      CONRAT=CONTH+CONI                                                 00056800
+      GO TO 290                                                         00056900
+C                                                                       00057000
+   12 ZA=ZO+ZN                                                          00057100
+      IF(ZA)14,14,16                                                    00057200
+   14 ZM=0.                                                             00057300
+      GO TO 20                                                          00057400
+   16 ZM = 1.0 - (ZOI + ZNII) / 2.0                                     00057500
+   20 PF(12)=PF12 (T)                                                   00057600
+C                                                                       00057700
+      IF (T-1800.) 21,21,23                                             00057800
+C                                                                       00057900
+   21 PF(36) = 1.0                                                      00058000
+      GO TO 24                                                          00058100
+   23 PF(36) = 2.05 - .14 * TLN                                         00058200
+   24 PF(4)=PF4 (T)                                                     00058300
+      PF(13)=PF13 (T)                                                   00058400
+      PF(38)=DELPF5 (T)                                                 00058500
+      PF(6)=PF6 (T)                                                     00058600
+      PF(14)=PF14 (T,PF(38))                                            00058700
+      PF(3)=PF3 (T)                                                     00058800
+      PF(5)=2.5+PF(38)                                                  00058900
+      PF(15)=PF15 (T)                                                   00059000
+      PF(18)=2.*PF(3)-PF(4)                                             00059100
+      PF(19)=2.*PF(5)-PF(6)                                             00059200
+      PF(20) = .8 - 1.6 * T / 100000.0                                  00059300
+      PF(22) = 1.0/3.0 + 1600.0/(T+2400.0)                              00059400
+      PF(23)=1.852-.1516*TLN                                            00059500
+      PF(39)=DEPF25 (T)                                                 00059600
+      PF(25)=2.5+PF(39)                                                 00059700
+      PF(40)=DEPF26 (T)                                                 00059800
+      PF(26)=2.5+PF(40)                                                 00059900
+      PF(27)=PF27 (T,PF(39))                                            00060000
+      PF(28)=PF28 (T)                                                   00060100
+      PF(30)=.21*(PF(25)-PF(3))+.79*(PF(26)-PF(5))                      00060200
+      PF(34) = 40.0* T **(-.39)                                         00060300
+      IF (ZE) 300,300,301                                               00060400
+C     SIMULATED INFINITY VALUE IS NOT USED                              00060500
+  300 PF(35) =-.9E38                                                    00060600
+      GO TO 302                                                         00060700
+  301 PF(35)=3.6E9*( ALOG(T**3/SIG/ZE)*.5-14.17)/(T**2+(202.*T))        00060800
+  302 CVTH=ZO*PF(12)+ZO2*PF(13)+ZN*PF(14)+ZN2*PF(15)+ZOPL*PF(27)+ZNPL*PF00060900
+     *(28)+1.5*ZE+.014                                                  00061000
+      CPTH=CVTH+Z                                                       00061100
+      FI=CI/(4.+CI)*((.4189+.3657*CI)/ SQRT((.3657*CI+.8378)*CI)-.3953-Z00061200
+     *OI/2.)                                                            00061300
+      CPI=F111T**2*FI                                                   00061400
+      CG1=FI/(FI+Z)*(F111T-1.)                                          00061500
+      CVI=Z*CG1*(F111T-1.)                                              00061600
+      CG4=FI*F111T/Z                                                    00061700
+      ZAPL=ZOPL+ZNPL                                                    00061800
+C                                                                       00061900
+      IF(ZM)22,22,25                                                    00062000
+C                                                                       00062100
+   22 CU1=0.                                                            00062200
+      CK1=0.                                                            00062300
+      FKU5=0.                                                           00062400
+      FMM= 40.                                                          00062500
+      FKU11=0.                                                          00062600
+      GO TO 26                                                          00062700
+C                                                                       00062800
+   25 FMM =(28.967-(14.01*ZNII)-(16.0*ZOI))/ ZM                         00062900
+      SQMM= SQRT(FMM)                                                   00063000
+      FU1=.2625*ZM*SQMM                                                 00063100
+      FKU2=1.414*ZM                                                     00063200
+      FKU5=PF(20)*ZM                                                    00063300
+      FK1=3.6*ZM+1.6*(ZO2*PF(13)+ZN2*PF(15))                            00063400
+      FKU11=1.264*ZM                                                    00063500
+C                                                                       00063600
+   26 IF(ZA)30,30,40                                                    00063700
+C                                                                       00063800
+   30 CU2=0.                                                            00063900
+      CK2=0.                                                            00064000
+      FMA=0.                                                            00064100
+      FKU8=0.                                                           00064200
+C                                                                       00064300
+      IF(ZM)50,50,35                                                    00064400
+C                                                                       00064500
+   35 CU1=FU1/FKU2                                                      00064600
+      CK1=FK1/SQMM/FKU2                                                 00064700
+      GO TO 50                                                          00064800
+C                                                                       00064900
+   40 FMA=(16.*ZO+14.*ZN)/ZA                                            00065000
+      SQMA= SQRT(FMA)                                                   00065100
+      FKU8=PF(22)*ZA                                                    00065200
+      FKU11=ZA+FKU11                                                    00065300
+C                                                                       00065400
+      IF(ZM)44,44,42                                                    00065500
+C                                                                       00065600
+   42 FKU5=FKU5* SQRT(1.+FMA/FMM)                                       00065700
+      CU1 = FKU2*PF(36)+(ZA*PF(20)+ZAPL*PF(34))* SQRT(1.0+FMM/FMA)      00065800
+      CK1 = (FK1+.0233) / (CU1*SQMM)                                    00065900
+      CU1 = FU1/CU1                                                     00066000
+   44 CU2 = FKU5+1.414*(ZA*PF(22)+ZAPL*PF(34))                          00066100
+      CK2 =(3.6*ZA+1.6*(ZO*PF(12)+ZN*PF(14)))/(CU2*SQMA)                00066200
+      CU2 = .2625*ZA*SQMA/CU2                                           00066300
+   50 IF (ZE) 55,55,70                                                  00066400
+   55 CK3 = 0.                                                          00066500
+   60 CU3 = 0.                                                          00066600
+      GO TO 130                                                         00066700
+   70 CK3 = 255.9 * ZE/(.31*(ZA+ZM) + ZE*PF(35))                        00066800
+      IF (ZA) 60,60,90                                                  00066900
+   90 CU3 = ZAPL/(1.414 * ZA * PF(34) + PF(35)*ZAPL)                    00067000
+C                                                                       00067100
+  130 VISRAT=CU1+CU2+CU3                                                00067200
+      CONTH =CK1+CK2+CK3                                                00067300
+      ZOZO2=ZO*ZO2                                                      00067400
+      ZNZN2=ZN*ZN2                                                      00067500
+      ZAZAPL=ZA*ZAPL                                                    00067600
+      CONI=0.                                                           00067700
+      F204TP=204000./T+PF(19)                                           00067800
+      F3TP=300000./T+PF(30)                                             00067900
+C                                                                       00068000
+      IF(ZOZO2)160,160,150                                              00068100
+C                                                                       00068200
+  150 CONI=.179*ZOZO2/(PF(21)*(.101+1.8*ZO2)+.552*ZO)*F111T**2          00068300
+C                                                                       00068400
+  160 IF(ZNZN2)190,190,180                                              00068500
+C                                                                       00068600
+  180 CONII=.179*ZNZN2/(PF(21)*(1.41+.242*ZN)+.838*PF(23)*ZN2)*F204TP**200068700
+C                                                                       00068800
+  190 IF(ZAZAPL)220,220,210                                             00068900
+C                                                                       00069000
+  210 CONIII = 10.3385 * ZAZAPL / (115.*PF(34)) * (F3TP + 2.5)**2       00069100
+C                                                                       00069200
+  220 IF(CII)230,230,240                                                00069300
+  230 CG2=0.                                                            00069400
+      CG5=0.                                                            00069500
+      GO TO 250                                                         00069600
+  240 FII=CII/(4.+CII)*((1.887+.9903*CII)/ SQRT((.9903*CII+3.774)*CII)-.00069700
+     *2143-ZNII/2.)                                                     00069800
+      CPII=FII*F204TP                                                   00069900
+      CVII=F204TP-1.                                                    00070000
+      CG2=FII/(FII+Z)*CVII                                              00070100
+      CVII=Z*CG2*CVII                                                   00070200
+      CG5=CPII/Z                                                        00070300
+      CPII=CPII*F204TP                                                  00070400
+C                                                                       00070500
+  250 IF(CIII)260,260,270                                               00070600
+C                                                                       00070700
+  260 CG3=0.                                                            00070800
+      CG6=0.                                                            00070900
+      GO TO 280                                                         00071000
+  270 SQC9=.99* SQRT(CIII)                                              00071100
+      SQC3=1.+CIII                                                      00071200
+      SQC3= SQRT(SQC3)*SQC3                                             00071300
+      CG6=SQC9/SQC3*(F3TP+2.5)                                          00071400
+      CPIII=CG6*(F3TP+2.5)                                              00071500
+      CG6=CG6/Z                                                         00071600
+      CG3=SQC9/(Z*SQC3+SQC9)*(F3TP+1.5)                                 00071700
+      CVIII=Z*CG3*(F3TP+1.5)                                            00071800
+C                                                                       00071900
+  280 CPOR=CPTH+CPI+CPII+CPIII                                          00072000
+      CVOR=CVTH+CVI+CVII+CVIII                                          00072100
+      CONRAT=CONTH+CONI+CONII+CONIII                                    00072200
+      GAM=CPOR/CVOR*(1.+CG1+CG2+CG3)/(1.+CG4+CG5+CG6)                   00072300
+  290 VIS=VISRAT*VISR                                                   00072400
+      CON=CONRAT*CONR                                                   00072500
+      AA=1716.48272*GAM*T*Z                                             00072600
+      A= SQRT(AA)                                                       00072700
+      CP=.0686*CPOR                                                     00072800
+      CV=.0686*CVOR                                                     00072900
+      PR=.210526*CPOR/CONRAT*VISRAT                                     00073000
+      PRTH=.210526*CPTH/CONTH*VISRAT                                    00073100
+C               DIMENSIONED FORM                                        00073200
+      CONTH = CONTH * CONR                                              00073300
+      IF(T .LT. 180.) RETURN                                            00073400
+      TK = T/1.8                                                        00073500
+      DELFA = -3.030993 * (1.-ALOG(TK))                                 00073600
+      DELFB = -1.309476E-4*TK                                           00073700
+      DELFC = +1.725756E-9*TK**2                                        00073800
+      DELFD = + .4235962E-13*TK**3                                      00073900
+      DELFE = - .8555165E-18*TK**4                                      00074000
+      DELFS = DELFA+DELFB+DELFC+DELFD+DELFE-14.75022                    00074100
+      DELTAF = -1.9865*TK*DELFS-3.22788E+4                              00074200
+      EXPK = EXP(DELTAF/(1.9865*TK))                                    00074300
+      ZCPL = 0.0                                                        00074400
+      SUMPL = ZNPL + ZOPL + ZCPL                                        00074500
+      CONRHO = 0.5154/28.966*RHO                                        00074600
+      ZOM = 82.05*TK*CONRHO*EXPK*SUMPL*ZO                               00074700
+      RETURN                                                            00074800
+      END                                                               00074900
+      SUBROUTINE PH (P,H,SOR,T,EPS,ICNTR)                               00075000
+C     S.N.GREENSCHLAG - RESPONSIBLE PROGRAMMER                          00075100
+C                                                                       00075200
+      COMMON/THERMO/ CR(200)                                            00075300
+      EQUIVALENCE                                                       00075400
+     *   (CR(   1),    PC   ),(CR(   2),    TC   ),(CR(   3),  SORC   ),00075500
+     *   (CR(   4),    HC   ),(CR(  92),  IERR   )                      00075600
+C                                                                       00075700
+      IF (P) 2,2,1                                                      00075800
+    1 IF (T) 2,2,5                                                      00075900
+    2 WRITE         (6,3)P,T                                            00076000
+    3 FORMAT(32H0SUBROUTINE PH    ABORT EXIT, P=,1P,E13.5,4H  T=,E13.5) 00076100
+      IERR = 1                                                          00076200
+      GO TO  9999                                                       00076300
+    5 IC = 0                                                            00076400
+      PC=P                                                              00076500
+      KC = 0                                                            00076600
+      TI=T                                                              00076700
+C                                                                       00076800
+  500 IC=IC+1                                                           00076900
+      TC=TI                                                             00077000
+      IP=-1                                                             00077100
+C                                                                       00077200
+  510 CALL PANDT                                                        00077300
+      IF(IERR .NE. 0)GO TO 2                                            00077400
+      F=HC-H                                                            00077500
+C                                                                       00077600
+C*****ITERATION VALUES CLOSEST TO THE ROOT ARE SAVED                    00077700
+      IF(IC.GT.1) GO TO 512                                             00077800
+      FSAV1=0.0                                                         00077900
+      TSAV1=0.0                                                         00078000
+      FSAV2=0.0                                                         00078100
+      TSAV2=0.0                                                         00078200
+  512 IF(F.LT.0.0) GO TO 515                                            00078300
+      IF(ABS(F).GE.ABS(FSAV1).AND.FSAV1.NE.0.0) GO TO 520               00078400
+      FSAV1 = F                                                         00078500
+      TSAV1 = TC                                                        00078600
+      GO TO 520                                                         00078700
+  515 IF(ABS(F).GE.ABS(FSAV2).AND.FSAV2.NE.0.0) GO TO 520               00078800
+      FSAV2 = F                                                         00078900
+      TSAV2 = TC                                                        00079000
+  520 IF(ABS(F/H)-EPS) 530,530,540                                      00079100
+C                                                                       00079200
+  530 SOR=SORC                                                          00079300
+      T=TC                                                              00079400
+      GO TO 1000                                                        00079500
+  540 IF(IC.GE.25) GO TO 800                                            00079600
+C                                                                       00079700
+      IF(IP) 580,680,680                                                00079800
+  580 IF(IC-1)620,620,590                                               00079900
+C                                                                       00080000
+  590 IF(DFDT)600,620,600                                               00080100
+C                                                                       00080200
+  600 DT=-F/DFDT                                                        00080300
+      GO TO 630                                                         00080400
+C                                                                       00080500
+  620 DT=-F                                                             00080600
+C                                                                       00080700
+  630 IF( ABS(DT)-.01*TI)640,670,650                                    00080800
+C                                                                       00080900
+  640 DT= SIGN(.01*TI,DT)                                               00081000
+      GO TO 670                                                         00081100
+C                                                                       00081200
+  650 IF( ABS(DT)-.9*TI)670,670,660                                     00081300
+  660 DT= SIGN(.9*TI,DT)                                                00081400
+C                                                                       00081500
+  670 TII=TI+DT                                                         00081600
+      FI=F                                                              00081700
+      IP=1                                                              00081800
+      TC=TII                                                            00081900
+      GO TO 510                                                         00082000
+C                                                                       00082100
+  680 DFDT=(F-FI)/DT                                                    00082200
+C                                                                       00082300
+      IF(DFDT)700,690,700                                               00082400
+C                                                                       00082500
+  690 TI=TII                                                            00082600
+      GO TO 500                                                         00082700
+C                                                                       00082800
+  700 DT=-FI/DFDT                                                       00082900
+      IF( ABS(DT)-.9*TI)730,720,720                                     00083000
+C                                                                       00083100
+  720 DT= SIGN(.9*TI,DT)                                                00083200
+C                                                                       00083300
+  730 TI=TI+DT                                                          00083400
+      GO TO 500                                                         00083500
+C*****SECOND ATTEMPT AT CONVERGING ON A ROOT USING A SEARCHING METHOD   00083600
+  800 TU = TSAV1                                                        00083700
+      IF(TSAV1.EQ.0.0) TU = 27000.0                                     00083800
+      TL = TSAV2                                                        00083900
+      GM = (SQRT(5.0)-1.0)/2.0                                          00084000
+  805 KC = KC +1                                                        00084100
+      DELRT = (TU-TL)*GM                                                00084200
+      TC = TL + DELRT                                                   00084300
+      CALL PANDT                                                        00084400
+      F = HC - H                                                        00084500
+      IF(ABS(F/H).GT.EPS) GO TO 810                                     00084600
+      GO TO 530                                                         00084700
+  810 IF(F) 815,815,820                                                 00084800
+  815 TL = TC                                                           00084900
+      GO TO 825                                                         00085000
+  820 TU = TC                                                           00085100
+  825 IF(KC.LT.45) GO TO 805                                            00085200
+      FOH = F/H                                                         00085300
+      IKCT = IC + KC                                                    00085400
+      WRITE(6,850) IKCT,TC,F,FOH,P,H,SOR,T,EPS                          00085500
+  850 FORMAT(15H0PASSES IN PH =   ,I3, 13H TC, F, FOH =    ,1P,3E20.8/  00085600
+     *  33H INITIAL ARGUMENT P,H,SOR,T,EPS =,5E14.6     )               00085700
+      SOR = SORC                                                        00085800
+      T = TC                                                            00085900
+ 1000 ICNTR = IC + KC                                                   00086000
+ 9999 RETURN                                                            00086100
+      END                                                               00086200

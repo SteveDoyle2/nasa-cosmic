@@ -1,0 +1,110 @@
+ INCA- INTERACTIVE CONTROLS ANALYSIS
+
+( NASA Goddard Space Flight Center )
+
+     The Interactive Controls Analysis (INCA) program was developed to pro-
+vide a user friendly environment for the design and analysis of linear con-
+trol systems, primarily feedback control systems. INCA is designed for use
+with both small and large order systems. Using the interactive graphics ca-
+pability, the INCA user can quickly plot a root locus, frequency response,
+or time response of either a continuous time system or a sampled data sys-
+tem. The system configuration and parameters can be easily changed, al-
+lowing the INCA user to design compensation networks and perform sensi-
+tivity analysis in a very convenient manner. A journal file capability is
+included. This stores an entire sequence of commands, generated during an
+INCA session into a file which can be accessed later. Also included in INCA
+are a context-sensitive help library, a screen editor, and plot windows.
+INCA is robust to VAX-specific overflow problems.
+
+     The transfer function is the basic unit of INCA. Transfer functions are
+automatically saved and are available to the INCA user at any time. A power-
+ful, user friendly transfer function manipulation and editing capability
+is built into the INCA program. The user can do all transfer function manip-
+ulations and plotting without leaving INCA, although provisions are made to
+input transfer functions from data files. By using a small set of commands,
+the user may compute and edit transfer functions, and then examine these
+functions by using the ROOT_LOCUS, FREQUENCY_RESPONSE, and TIME_RESPONSE
+capabilities. Basic input data, including gains, are handled as single-
+input single-output transfer functions. These functions can be developed
+using the function editor or by using FORTRAN- like arithmetic expressions.
+In addition to the arithmetic functions, special functions are available
+to 1) compute step, ramp, and sinusoid functions, 2) compute closed loop
+transfer functions, 3) convert from S plane to Z plane with optional ad-
+vanced Z transform, and 4) convert from Z plane to W plane and back. These
+capabilities allow the INCA user to perform block diagram algebraic manip-
+ulations quickly for functions in the S, Z, and W domains. Additionally,
+a versatile digital control capability has been included in INCA. Special
+plane transformations allow the user to easily convert functions from one
+domain to another. Other digital control capabilities include: 1) totally
+independent open loop frequency response analyses on a continuous plant,
+discrete control system with a delay, 2) advanced Z-transform capability
+for systems with delays, and 3) multirate sampling analyses. The current
+version of INCA includes Dynamic Functions (which change when a parameter
+changes), standard filter generation, PD and PID controller generation,
+incorporation of the QZ-algorithm (function addition, inverse Laplace),
+and describing functions that allow the user to calculate the gain and phase
+characteristics of a nonlinear device.
+
+     The INCA graphic modes provide the user with a convenient means to doc-
+ument and study frequency response, time response, and root locus analyses.
+General graphics features include: 1) zooming and dezooming, 2) plot docu-
+mentation, 3) a table of analytic computation results, 4) multiple curves
+on the same plot, and 5) displaying frequency and gain information for a
+
+
+
+                                        1
+
+specific point on a curve. Additional capabilities in the frequency re-
+sponse mode include: 1) a full complement of graphical methods
+
+     Bode magnitude, Bode phase, Bode combined magnitude and phase, Bode
+strip plots, root contour plots, Nyquist, Nichols, and Popov plots; 2) user
+selected plot scaling; and 3) gain and phase margin calculation and dis-
+play. In the time response mode, additional capabilities include: 1) sup-
+port for inverse Laplace and inverse Z transforms, 2) support for various
+input functions, 3) closed loop response evaluation, 4) loop gain sensitiv-
+ity analyses, 5) intersample time response for discrete systems using the
+advanced Z transform, and 6) closed loop time response using mixed plane (S,
+Z, W) operations with delay. A Graphics mode command was added to the cur-
+rent version of INCA, version 3.13, to produce Metafiles (graphic files)
+of the currently displayed plot. The metafile can be displayed and edited
+using the QPLOT Graphics Editor and Replotter for Metafiles (GERM) program
+included with the INCA package.
+
+     The INCA program is written in Pascal and FORTRAN for interactive or
+batch execution and has been implemented on a DEC VAX series computer under
+VMS. Both source code and executable code are supplied for INCA. Full INCA
+graphics capabilities are supported for various Tektronix 40xx and 41xx
+terminals; DEC VT graphics terminals; many PC and Macintosh terminal emu-
+lators; TEK014 hardcopy devices such as the LN03 Laserprinter; and bit map
+graphics external hardcopy devices. Also included for the TEK4510 raster-
+izer users are a multiple copy feature, a wide line feature, and additional
+graphics fonts. The INCA program was developed in 1985, Version 2.04 was
+released in 1986, Version 3.00 was released in 1988, and Version 3.13 was
+released in 1989. An INCA version 2.0X conversion program is included.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: PASCAL ( 94 %); FORTRAN 77 ( 06 %);
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 26,701 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX BACKUP Format Magnetic Tape
+
+PROGRAM NUMBER: GSC-12998
+
+DOMESTIC - DOCUMENTATION PRICE: $61.00    PROGRAM PRICE: $3000.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $122.00   PROGRAM PRICE: $6000.00
+
+
+
+                                        2
+

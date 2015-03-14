@@ -1,0 +1,55 @@
+To user TeXVIEW, include the command
+
+\input texview
+
+at the head of your document.  See the documentation for the macros
+and environment this defines.  Output is on 11" x 8.5" paper.
+Note: if your TeX distribution does not have enough memory for all
+the fonts that TeXVIEW uses, running the input file through TeX will
+cause it to crash before it reaches the end of the TeXVIEW macros.  In this
+case, your only option is to use the high-speed loading form of TeXVIEW
+described below:
+
+The TeXVIEW macros can be converted into a high-speed loading format
+which saves around 40 seconds per job.  Modify the command procedure
+FAST_INSTALL to provide your local logical names and devices for this.
+
+In order to use this form of TeXVIEW, users must insert the commands
+below exactly as printed:
+
+     $ SET COMMAND TEXVIEW
+     $ TEXVIEW :== INTEX """&tex_inputs:texview
+ 
+into their LOGIN.COM file and then whenever they want to produce viewgraphs
+type the command
+
+     $ TEXVIEW input_file
+ 
+They must remove the \input texview command from their TeX file if they
+do this.
+
+Unfortunately, in order to make this possible, it was necessary to comment
+some commands out of the PLAIN.TEX file used by INITEX in order to load
+all of the fonts used.  Therefore, a version of PLAIN.TEX, called TEXVIEWPLAIN,
+is included.  Don, I'm sorry.
+
+TeXVIEW uses so many fonts that you may need to create some yourself if
+your installation doesn't have all the necessary magnifications.  Ask a
+METAFONT wizard to do this.
+
+The file PRELUDE.TEX defines a macro called \makelogo which outputs the
+JPL logo in the appropriate position on the page.  That font has not been
+included with this distribution (what use would it be to you?).  However,
+you can use the \makelogo macro as a proforma for your own macro to output
+your local logo on every page.
+
+Note: TeXVIEW has been revised since the documentation went to COSMIC, and
+you are only getting this revision because they couldn't read the tape the
+first time.  The manual changed and there are more things you can do.  Install
+TeXVIEW and run MANUAL.TEX through it to produce the new manual.  I distribute
+it here by printing the file MANUAL.TEX separately and copying each page
+onto the back of the corresponding MANUAL.DVI page; page-breaks are inserted
+in MANUAL.TEX at the correct places.
+
+
+Peter Scott   (pjs@grouch.jpl.nasa.gov)

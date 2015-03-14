@@ -1,0 +1,28 @@
+     0PROGRAM AERELA(INPUT=201,OUTPUT=201,TAPE5=INPUT,TAPE6=OUTPUT,     ARLA0010
+     . TAPE20=201)                                                      ARLA0020
+C***********************************************************************ARLA0030
+C                                                                       ARLA0040
+C  AERELA USES THE GEOMETRY AND STRUCTURAL DATA FILES CREATED IN AEREAD ARLA0050
+C  AND AERLAS TO COMPUTE THE ELASTIC AND RIGID STABILITY DERIVATIVES    ARLA0060
+C  AND INDUCED DRAG FOR A THIN ELASTIC AIRPLANE.                        ARLA0070
+C                                                                       ARLA0080
+C                                                                       ARLA0100
+      COMMON IND(1)                                                     ARLA0110
+C***********************************************************************ARLA0090
+      COMMON/CNTROL/N,NEAMAX,NCNTL,HALFSW,CREF,AM,CLDES,                ARLA0120
+     . NCP2,NCP3,NCP4,WNGPNL,HT1PNL,HT2PNL,NCPHT1,NCPHT2,NWNGP,         ARLA0130
+     . NHT1P,NHT2P,HALFB,ALPH,HALFB1,HALFB2,NCPSWL,NCPWNG,MAX,IALPHA    ARLA0140
+      DIMENSION D(1)                                                    ARLA0150
+      EQUIVALENCE (IND(1),D(1))                                         ARLA0160
+      COMMON/INDMS/ IA,IB,IC                                            ARLA0170
+      INTEGER WNGPNL,HT1PNL,HT2PNL                                      ARLA0180
+      CALL OPENMS(20,IND,14,0)                                          ARLA0190
+      CALL READMS(20,N,26,1)                                            ARLA0200
+C                                                                       ARLA0210
+C  PARTITION COMMON FOR PROBLEM ARRAYS                                  ARLA0220
+C                                                                       ARLA0230
+C  DISC ADDRESSES OF MATRICES                                           ARLA0240
+      IA=1                                                              ARLA0250
+      IB=IA+N                                                           ARLA0260
+      IC=IB+N                                                           ARLA0270
+C                                                                       ARLA0280

@@ -1,0 +1,91 @@
+/*****************************************************************************/
+/*                                                                           */
+/*  exec_queue                                                               */
+/*                                                                           */
+/*  This subroutine executes a rule queue.  It executes only those rules     */
+/*  which are on the queue at the time the subroutine is called.             */
+/*                                                                           */
+/*  Input:  rq - pointer to a rule queue.                                    */
+/*  Output: none.                                                            */
+/*                                                                           */
+/*  Method:  Add a stop sentinel to the end of the queue.                    */
+/*           Do                                                              */
+/*              Get & remove 1st rule on the queue.                          */
+/*              If the rule is a repeater, add to to the queue.              */
+/*              If the rule is a group, then                                 */
+/*                  If the group is not empty, then execute the group.       */
+/*              Else                                                         */
+/*                  Fire the rule.                                           */
+/*                  Adjust all conditions affected by the action.            */
+/*           Until the stop sentinel is reached.                             */
+/*                                                                           */
+/*  Programmer: G R Goodrum, MDTSCO, June 1984                               */
+/*                                                                           */
+/*****************************************************************************/
+
+#include "structures.inc"
+
+exec_queue ( rq )
+struct rule_queue *rq;
+{
+    struct rule_info *fire;
+    struct rule_info *get_first();
+    extern double time;
+    extern struct rule_info rule[];
+
+    add_to_queue ( rq -> stop_sentinel );
+
+    do
+    {
+        count ( 2, 8 );                                         /* debug */
+        fire  =  get_first ( rq );
+        take_from_queue ( fire );
+        if  ( fire -> delta_t >= 0. )
+        {                                                       /* debug */
+            count ( 2, 0 );                                     /* debug */
+            add_to_queue ( fire );
+        }                                                       /* debug */
+        else count ( 2, 1 );                                    /* debug */
+
+        if  ( time >= fire -> next_fire_time )
+        {
+            count ( 2, 2 );                                     /* debug */
+            fire -> next_fire_time  =  time + fire -> delta_t;
+#ifdef TRACE
+            if  ( fire -> trace )
+                printf ( "\nFire rule %d: %s\n", fire-&rule[0], fire->ri_tag );
+#endif
+
+            if ( fire -> rule_type == GROUP )
+            {
+                count ( 2, 4 );                                 /* debug */
+                if ( not_empty ( fire -> group_queue ) )
+                {                                               /* debug */
+                    count ( 2, 6 );                             /* debug */
+                    exec_queue ( fire -> group_queue );
+                }                                               /* debug */
+                else count ( 2, 7 );                            /* debug */
+            }
+            else
+            {
+                count ( 2, 5 );                                 /* debug */
+                (*fire->action) ();
+#ifdef TRACE
+                push ( 0, fire-&rule[0] );
+#endif
+                true_set_list ( fire -> true_list );
+                false_set_list ( fire -> false_list );
+                undef_set_list ( fire -> undef_list );
+#ifdef TRACE
+                pop ();
+#endif
+            }
+
+        }
+        else count ( 2, 3 );                                    /* debug */
+
+    }  while ( fire != rq->stop_sentinel );
+
+    count ( 2, 9 );                                             /* debug */
+    return;
+}

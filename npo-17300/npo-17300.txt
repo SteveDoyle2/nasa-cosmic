@@ -1,0 +1,52 @@
+ ZED- A LINE EDITOR FOR THE DEC VAX
+
+( Cal Tech/Jet Propulsion Lab. )
+
+     The ZED editor for the DEC VAX is a simple, yet powerful line editor for
+text, program source code, and non-binary data. Line editors can be supe-
+rior to screen editors in some cases, such as executing complex multiple or
+conditional commands, or editing via slow modem lines. ZED excels in the
+area of text processing by using procedure files. For example, such pro-
+cedures can reformat a file of addresses or remove all comment lines from a
+FORTRAN program.
+
+     In addition to command files, ZED also features versatile search qual-
+ifiers, global changes, conditionals, on-line help, hexadecimal mode,
+space compression, looping, logical combinations of search strings, jour-
+naling, visible control characters, and automatic detabbing.
+
+     The ZED editor was originally developed at Cambridge University in
+London and has been continuously enhanced since 1976. Users of the Cam-
+bridge implementation have devised such elaborate ZED procedures as chess
+games, calculators, and programs for evaluating Pi. This implementation of
+ZED strives to maintain the characteristics of the Cambridge editor.
+
+     A complete ZED manual is included on the tape. ZED is written entirely
+in C for either batch or interactive execution on the DEC VAX under VMS 4.X
+and requires 80,896 bytes of memory. This program was released in 1988 and
+updated in 1989.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: C-LANGUAGE
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 7,058 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX BACKUP Format Magnetic Tape
+
+PROGRAM NUMBER: NPO-17300
+
+DOMESTIC - DOCUMENTATION PRICE: $21.00    PROGRAM PRICE: $1000.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $42.00   PROGRAM PRICE: $2000.00
+
+
+
+                                        1
+

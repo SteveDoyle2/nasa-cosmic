@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+After plot is pressed from the Plot a Slide Show Menu, the prompt checksto make
+sure the plotter is ready.  The slide show which is chosen will be copied
+directly to the plotter.  If one chart is chosen, it will act like a slide show
+of one slide.  To not plot a slide show once plot has been pressed, press
+F1(Cancel).  Any other key will start the plotting.  To stop a plot once it has
+begun, press F1(Cancel) and if the slide show is to be stopped, press F1 again
+when prompted to ready the plotter.  Sometimes plotters have large buffers so
+the plotting may take a while to stop.
+
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

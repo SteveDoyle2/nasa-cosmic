@@ -1,0 +1,139 @@
+ARGUMENT ABBREVIATIONS:
+a, b	line numbers (or . or *)	cg	command group
+m, n	numbers				q	qualifier list (possibly empty)
+se	search expression		s, t	strings of arbitrary characters
+sw	switch value (+ or -)		name	sequence of letters
+						(4 significant)
+
+QUALIFIERS:
+B	beginning	E	ending		C	control character
+L	last		P	precisely	W	word
+S	significant	U	uppercase	n	count
+[m,n]	window		_m,n_	window
+
+LINE SELECTION:
+Ma	move to line a			M*	move to end-of-file
+M-	move back as far as possible	M+	move forward to high water
+N	move to next line		P	move to previous line
+F se	find (forward)			BF se	backward find
+
+LINE INSERTION AND DELETION:
+Insert material for the I and R commands may be any one of
+----------
+<in-line text, any # of lines terminated by Z on a new line>
+BUFFn	to insert an in-store buffer (0 <= n <= 4)
+COPYn	to insert a copy of an in-store buffer
+/s/	to insert a file with name or logical name s
+----------
+IC	insert current line		IS /s/	insert string
+Ia	insert before line a		Ra b	replace lines a to b
+Da b	delete lines a to b		DF se	delete find
+DREST	delete rest of source		DBUFFn	delete contents of buffer n
+DBUFF	delete contents of all buffers
+
+LINE WINDOWING:
+>		move character pointer to right
+<		move character pointer to left
+PR		reset character pointer to start
+PA q/s/		point after
+PB q/s/		point before
+
+SINGLE CHARACTER OPERATIONS:  Act on the object of the character pointer:
+$	force lower case		%	force upper case
+_	change character to space	#	delete character
+
+STRING OPERATIONS:
+A q/s/t/	after			AP q/s/t/	after and point
+B q/s/t/	before			BP q/s/t/	before and point
+E q/s/t/	exchange		EP q/s/t/	exchange and point
+DFA q/s/	delete from after	DFB q/s/	delete from before
+DTA q/s/	delete till after	DTB q/s/	delete till before
+LC q/s/		force lower case	UC q/s/		force upper case
+SHC q/s/	show column		CC/s/		set control character
+LCL (UCL)	force entire line to lower (upper) case
+'		repeat last string operation
+UNDO		undo current line
+
+SPLITTING AND JOINING:
+SA q/s/		split after		SB q/s/		split before
+CL /s/		concatenate
+
+TEXT INSPECTION:
+Tn	type n lines		TLn	ditto, with line numbers
+T+	type to high water	TL+	ditto, with line numbers
+TBUFFn	type buffer n		TBUFF	type all buffers
+
+FILE AND BUFFER CONTROL:
+C /s/		take commands from file s
+C BUFFn		take commands from buffer n (destructive)
+C COPYn		take commands from buffer n (non-destructive)
+FROM BUFFn	select buffer n as source
+TO BUFFn	select buffer n for output
+TBUFFn		type contents of buffer n
+DBUFFn		delete contents of buffer n
+DBUFF		delete contents of all buffers
+SHBUFF		show non-empty buffer numbers
+FROM /s/	select file for input	TO /s/		select file for output
+FROM		select original input	TO		select original output
+
+CONDITIONALS AND LOOPS:
+Wherever ELSE appears it may be replaced by:
+
+ELIF se THEN cg ELSE cg		or	ELUL se THEN cg ELSE cg
+
+IF se THEN cg ELSE cg		UL se THEN cg ELSE cg
+IFEOF cg ELSE cg	if end-of-file
+ULEOF cg ELSE cg	unless end-of-file
+WH se cg	while			UT se cg	until
+UTEOF cg	until end-of-file	RPT cg		repeat indefinitely
+AGP		abandon command group and any enclosing repetitive command
+
+GLOBAL OPERATIONS:
+GE q/s/t/		global exchange
+GA q/s/t/		global after
+GB q/s/t/		global before
+ON se cg ELSE cg	complicated global
+CGn		cancel global n		DGn	disable global n
+EGn		enable global n		SHGn	show global n
+SHG		show all globals	VG sw	global change verification
+
+HEXADECIMAL MODE:
+X sw	switch hex mode on/off
+
+STATE DISPLAY:
+SHD	show data		SHF	show files
+SHG	show globals		SHS	show switches
+
+TERMINATION (disallowed in interactive mode if non-empty buffers exist):
+W	windup				Q	quit (exit command level)
+STOP	exit without writing output file
+
+LINE VERIFICATION:
+V sw	automatic verification		VI sw	verify with indicators
+VG sw	global change verification	VN sw	verify line numbers
+VT sw	verify line texts		VX sw	verify in hex for indicators
+VE sw	verify edit commands
+?	verify current line		!	ditto, with character indicators
+
+PROCEDURES:
+PROC name cg	define			DO name		obey
+SHPROC name	show			SHPROC		show all procedures
+CPROC name	cancel			CPROC		cancel all procedures
+
+MISCELLANEOUS:
+FN sw			find next mode
+Z /s/			set insert terminator string
+Ha			halt at line a
+COMM/s/			comment to verification file
+COLS, COLS n, COLS+	verify column numbers
+=n			set line number
+MXLL n			maximum line length
+WORD /s/		set word characters
+WARN sw			warnings mode
+ERRSTOP sw		non-interactive error action
+FLUSH			flush output queue
+TR sw			suppress trailing spaces on input and output
+CS sw			compress spaces in input
+HELP			sic
+DETAB sw		convert tabs to spaces on input and output
+TAB n			set space between tab columns (default 8)

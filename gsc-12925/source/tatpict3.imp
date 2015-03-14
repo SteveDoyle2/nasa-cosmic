@@ -1,0 +1,501 @@
+   (* $INCLUDE : 'compile.inc'  *)
+   (* $INCLUDE : 'getparam.int' *)
+   (* $INCLUDE : 'utility.int'  *)
+   (* $INCLUDE : 'vbpas.int'    *)
+   (* $INCLUDE : 'display.int'  *)
+   (* $INCLUDE : 'sfpas.int'    *)
+   (* $INCLUDE : 'option.int'   *)
+   (* $INCLUDE : 'execute.int'  *)
+   (* $INCLUDE : 'tatpict.int'    *)
+   (* $INCLUDE : 'tatexec.int'    *)
+
+   implementation of tatpict;
+
+      uses getparam;
+
+      uses utility;
+
+      uses vbpas;
+
+      uses display;
+
+      uses sfpas;
+
+      uses option;
+
+      uses execute;
+
+      uses tatexec;
+
+   procedure skeletat; extern;
+
+   procedure picture; extern;
+
+
+   var
+      def		   : suplstring2(10);
+      x, y		   : supinteger(10);
+      range		   : supset(20);
+      msg		   : suplstring(25);
+      old_total 	   : byte;
+      newnode		   : entity;
+      month		   : string(2);
+      buf		   : lstring(10);
+      current_node,total   : byte;
+
+   procedure get_list;
+
+   var
+	 current  : entity;
+	 i,j	  : byte;
+	 nchar	  : integer;
+	 numberx  : integer;
+	 numbery  : integer;
+	 numxtex  : integer;
+	 numytex  : integer;
+	 boxwide  : integer;
+	 boxhigh  : integer;
+
+   begin
+
+      total := 12;
+      current := first^.up;
+      delete ( current );
+      current := first^.up^.up;
+      numberx := current^.x;
+      numbery := current^.y;
+      numxtex := current^.xtext;
+      numytex := current^.ytext;
+      nchar   := xy[35];
+      boxhigh := xy[18];
+      boxwide := xy[31];
+
+      for i := 1 to 2 do begin
+	  if i = 2 then begin
+	     add_node (current, current^.etype);
+	     current^.x     := numberx;
+	     current^.y     := current^.up^.y +  boxhigh;
+	     current^.xtext := numxtex;
+	     current^.ytext := numytex + 1;
+	  end; (* if i *)
+	  for j := 1 to 12  do
+	    begin
+	       add_node (current, current^.etype);
+	       current^.x     := current^.up^.x + boxwide;
+	       current^.y     := current^.up^.y ;
+	       if (j = 7) then
+	       [  current^.xtext := numxtex + nchar;
+		  current^.ytext := current^.up^.ytext + 5; ]
+	       else
+	       [  current^.xtext := current^.up^.xtext + nchar;
+		  current^.ytext := current^.up^.ytext;     ];
+	    end; (* for j *)
+      end;	 (* for i *)
+
+      current := first^.up;
+      for i := 1 to 2 do      (* two lines of footnotes *)
+	begin
+	  create ( newnode, current^.etype );
+	  link ( current, newnode );
+	  with current^ do
+	    begin
+	      x := up^.x;
+	      y := up^.y + 8;
+	      xtext := up^.xtext;
+	      ytext := up^.ytext + 1 ;
+	    end; (* with *)
+	end;	 (* for *)
+   end; 	 (* get list *)
+
+(************************************************)
+
+procedure format;
+var
+      i,j,n		   : integer;
+
+begin
+   msg[1]  := '                    Travel/Training Plot Format Option';
+   msg[2]  := '                              Default';
+   concat  (msg[2],'                                  Default');
+   msg[3]  := '                                     ';
+   msg[4]  := 'Starting year    (yy):               ';
+   msg[5]  := '                                     ';
+   msg[6]  := 'Starting month   (mm):               ';
+   msg[7]  := '                                     ';
+   msg[8]  := 'Type of period:                      ';
+   msg[9] := '  W = weeks     M = months           ';
+   msg[10] := '  Q = quarters  Y = years            ';
+   msg[11] := '                                     ';
+   msg[12] := 'Start of Fiscal Year:                ';
+   msg[13] := '  C = calendar   A = April           ';
+   msg[14] := '  J = July       O = October         ';
+   msg[15] := '                                     ';
+   msg[16] := 'Type of plot:                        ';
+   msg[17] := '  B  = bar       C = curve           ';
+   msg[18] := '  BC = both                          ';
+   msg[19] := '                                     ';
+   msg[20] := '                                     ';
+   msg[21] := '                                     ';
+   msg[22] := '  Modify default options as needed - press return key for next option.';
+   msg[23] := '  Select F2 to begin creating chart';
+   msg[24] := '                                     ';
+   msg[25] := null;
+
+   buf.len := 1;
+   for i := 1 to 10 do
+      if fctn_map^[1][i] <> 0 then
+	 begin
+	    if i < 10 then  [ buf[1] := chr( i + 48 );
+			      concat (msg [25], buf ); ]
+		      else    concat (msg [25], '10');
+	    if	fctn_map^[1][i] = 7 then concat( msg[25], 'End ' );
+	    concat (msg [25], fctn_tag^[fctn_map^[1][i] ] );
+	    if i < 10 then concat (msg [25], ' ' );
+	    if i = 2 then while msg[25].len < 21 do concat( msg[25], ' ' );
+	    if i = 7 then while msg[25].len < 60 do concat( msg[25], ' ' );
+     end; (* for *)
+
+   for i := 3 to 20 do concat ( msg[i], chr(219) );(* append the center line *)
+
+
+   concat ( msg[4],  '  Values to be entered:                ');
+   concat ( msg[5],  '    C  = cumulative  I = incremental   ');
+   concat ( msg[7],  '  Values to be displayed:              ');
+   concat ( msg[8],  '    C  = cumulative  I = incremental   ');
+   concat ( msg[9],  '    CI = both                          ');
+   concat ( msg[11], '  Type of chart:                       ');
+   concat ( msg[12], '    TV = travel     TR = training      ');
+   concat ( msg[14], '  GSFC symbol    (N = no, Y = yes):    ');
+   concat ( msg[16], '  Background color:                    ');
+   concat ( msg[17], '    X = black       W = white          ');
+   concat ( msg[18], '    R = red         M = magenta        ');
+   concat ( msg[19], '    G = green       Y = yellow         ');
+   concat ( msg[20], '    B = blue        C = cyan           ');
+
+   (*	set the default value	 *)
+
+   def[1][1] := year[1];   def[1][2] := year[2];     (* year *)
+						     (* month *)
+   if start > 9 then [ month[1] := '1';  month[2] := chr( start + 48 - 10 ); ]
+		else [ month[1] := ' ';  month[2] := chr( start + 48 ); ];
+   def[2][1] := month[1];   def[2][2] := month[2];
+
+   def[3][1] := ' ';                                 (* type of period *)
+   case period of
+	0     : def[3][2] := 'M' ;
+	1..4  : def[3][2] := 'W' ;
+	5..8  : def[3][2] := 'Q' ;
+	9     : def[3][2] := 'Y' ;
+   end;
+
+   if (period = 0) or (period > 4) then total := 12  (* total # of periods *)
+				   else total := 13;
+   old_total := total;
+
+   for i := 4 to 10 do def[i][1] := ' ';
+
+   case fiscal_year of				(* start of fiscal year *)
+	0  : def[4][2] := 'C' ;
+	1  : def[4][2] := 'A' ;
+	2  : def[4][2] := 'J' ;
+	3  : def[4][2] := 'O' ;
+   end;
+
+   case curve of				(* type of plot *)
+	1  :   def[5][2] := 'B' ;
+	2  :   def[5][2] := 'C' ;
+	3  : [ def[5][1] := 'B' ;  def[5][2] := 'C' ; ];
+   end;
+
+   if enter_mode = 0 then def[6][2] := 'C'      (* values to be enter *)
+		     else def[6][2] := 'I';
+
+   case dis_mode of
+	1  :   def[7][2] := 'C' ;               (* values to be display *)
+	2  :   def[7][2] := 'I' ;
+	3  : [ def[7][1] := 'C';  def[7][2] := 'I' ; ];
+   end;
+
+   def[8][1] := 'T';
+   if  form  = 0 then def[8][2] := 'R'          (* type of chart TRAINING *)
+		 else def[8][2] := 'V';                       (* TRAVEL   *)
+
+   if symbol = 0 then def[9][2] := 'N'
+		 else def[9][2] := 'Y';         (* GFSC symble *)
+
+   case color of				(* background color *)
+	0  :   def[10][2] := 'X' ;
+	1  :   def[10][2] := 'B' ;
+	2  :   def[10][2] := 'G' ;
+	3  :   def[10][2] := 'C' ;
+	4  :   def[10][2] := 'R' ;
+	5  :   def[10][2] := 'M' ;
+	6  :   def[10][2] := 'Y' ;
+	7  :   def[10][2] := 'W' ;
+   end;
+
+   for i := 1 to 10 do def[i].len := 2 ;
+
+   (* set the default location x y *)
+
+   y[1] :=  3;	y[2] := 5;  y[3] :=  7;  y[4] := 11;  y[5]  := 15;
+   y[6] :=  3;	y[7] := 6;  y[8] := 10;  y[9] := 13;  y[10] := 15;
+   for i := 1 to 5  do x[i] := 33 ;
+   for i := 6 to 10 do x[i] := 73 ;
+
+   (* valid set of each format options *)
+
+   range[1]  := [ '0'..'9' ];
+   range[2]  := [ '0'..chr( 48 + 99 ) ] ;          (* range of year : 0..99 *)
+
+   range[3]  := [ '0'..'9' ];
+   range[4]  := [ '1'..chr( 48 + 12 ) ] ;          (* range of month : 1..12 *)
+
+   range[5]  := [' '];                               (* type of period *)
+   range[6]  := ['m','w', 'q', 'y', 'M','W','Q', 'Y' ];
+
+   range[7]  := [' '];                               (* start of fiscal year *)
+   range[8]  := ['c', 'a', 'j', 'o', 'C', 'A', 'J', 'O' ];
+
+   range[9]  := [' ', 'b', 'B'];                     (* type of plot *)
+   range[10] := [ 'b', 'c', 'B', 'C' ];
+
+   range[11] := [' '];                               (* values to be enter   *)
+   range[12] := [ 'c', 'i', 'C', 'I' ];
+
+   range[13] := [' ', 'c', 'C'];                     (* values to be display *)
+   range[14] := [ 'i', 'c', 'I', 'C' ];
+
+   range[15] := [ 't', 'T'];                          (* type of chart        *)
+   range[16] := [ 'v', 'r', 'V', 'R' ];
+
+   range[17] := [' '];                               (* GFSC  symbol *)
+   range[18] := [ 'n', 'y', 'N', 'Y' ];
+
+   range[19] := [' '];                               (* Background color *)
+   range[20] := [ 'x', 'w', 'r', 'm', 'g', 'y', 'b', 'c',
+		  'X', 'W', 'R', 'M', 'G', 'Y', 'B', 'C' ];
+
+   (* display format menu and accept the user option *)
+
+   multimenu( msg, 25, 0, 10, def, x, y, range, inkey, 2 );
+
+   for n := 1 to 10 do
+       case n of
+	    1  : begin
+		    year.len  := 2;
+		    if def[1][1] = ' ' then  def[1][1] := chr( 48 );
+		       year[1] := def[1][1]; year[2] := def[1][2];
+		 end;
+	    2  : begin
+		    if def[2][1] = ' ' then  def[2][1] := chr( 48 ) ;
+		    start := ( ord(def[2][1]) - 48)*10 + ord( def[2][2] ) - 48;
+		 end;
+	    3  : begin
+		   case def[3][2] of
+		       'm', 'M' : period := 0;
+		       'w', 'W' : period := 1;
+		       'q', 'Q' : period := 5;
+		       'y', 'Y' : period := 9;
+		   end;
+		   if period in [1..4] then  total := 13
+				       else  total := 12;
+		 end;
+	    4  : case def[4][2] of
+		    'c', 'C' : fiscal_year := 0;
+		    'a', 'A' : fiscal_year := 1;
+		    'j', 'J' : fiscal_year := 2;
+		    'o', 'O' : fiscal_year := 3;
+		  end;
+	    5  : case def[5][2] of
+		    'b', 'B' : curve  := 1;
+		    'c', 'C' : if def[5][1] = ' ' then curve := 2
+						  else curve := 3;
+		  end;
+	    6  : case def[6][2] of
+		    'c', 'C' : enter_mode := 0;
+		    'i', 'I' : enter_mode := 1;
+		  end;
+	    7  : case def[7][2] of
+		    'c', 'C' : dis_mode   := 1;
+		    'i', 'I' : if def[7][1] = ' ' then dis_mode := 2
+						  else dis_mode := 3;
+		  end;
+	    8  : case def[8][2] of
+		    'r', 'R' : form := 0;
+		    'v', 'V' : form := 1;
+		 end;
+	    9  : case def[9][2] of
+		    'n', 'N' : symbol := 0;
+		    'y', 'Y' : symbol := 1;
+		  end;
+	   10  : case def[10][2] of
+		    'x', 'X' : color  := 0 ;
+		    'b', 'B' : color  := 1 ;
+		    'g', 'G' : color  := 2 ;
+		    'c', 'C' : color  := 3 ;
+		    'r', 'R' : color  := 4 ;
+		    'm', 'M' : color  := 5 ;
+		    'y', 'Y' : color  := 6 ;
+		    'w', 'W' : color  := 7 ;
+		 end;
+	 end; (* case n *)
+
+  if (period in [5..8]) then		   (* quarterly *)
+      period := (( ((start-1) div 3) + 4 - fiscal_year) mod 4 ) + 1 ;
+
+  if period in [1..4] then		       (* weekly *)
+     case start of
+	1..3 : period := 1;
+	4..6 : period := 2;
+	7..9 : period := 3;
+       10..12: period := 4;
+       otherwise
+     end;  (* case *)
+
+  if  old_total <> total   then
+     begin
+       current := first;
+       while current^.etype <> 4 do  current := current^.down;
+       if old_total > total then	 (* change to monthly, yearly list *)
+	  for i := 1 to 2 do  begin
+	     j	:= 1;
+	     repeat
+		current := current^.down;
+		if  j = 7  then
+		    [ current^.xtext := node_data^[4].xtext + skeleton^[35];
+		      current^.ytext := current^.up^.ytext  + 5;  ]
+		else
+		    [ current^.xtext := current^.up^.xtext + skeleton^[35];
+		      current^.ytext := current^.up^.ytext;	  ];
+		j := j + 1;
+	     until (current^.y <> current^.down^.y) or
+		   (current^.down^.etype <> 4);
+	     delete (current);
+	  end	(* for, if old_total > total *)
+       else				     (* change to weekly link list *)
+	  for i := 1 to 2 do  begin
+	     j	:= 1;
+	     repeat
+		current := current^.down;
+		if  j in [5, 9] then
+		    [ current^.xtext := node_data^[4].xtext + skeleton^[35];
+		      current^.ytext := current^.up^.ytext  + 5;  ]
+		else
+		    [ current^.xtext := current^.up^.xtext + skeleton^[35];
+		      current^.ytext := current^.up^.ytext;	  ];
+		j := j + 1;
+	     until (current^.y <> current^.down^.y) or
+		   (current^.down^.etype <> 4 );
+	     add_node (current, current^.etype);       (* add 13th node *)
+	     current^.x     := current^.up^.x + skeleton^[31];
+	     current^.y     := current^.up^.y;
+	     current^.xtext := current^.up^.xtext + skeleton^[35];
+	     current^.ytext := current^.up^.ytext;
+	     current := current^.down;
+	  end; (* for, if old_total < total *)
+     end;      (* if old_total <> total     *)
+
+     current := first;	  (* if values are cumulative and y was not changed *)
+     while current^.etype <> 4	do current := current^.down;
+     if (enter_mode = 0) and (node_data^[4].y = current^.y) then
+	repeat
+	  current^.y := current^.y + 20;
+	  current := current^.down;
+	until current^.etype <> 4;
+     if (enter_mode = 1) and (node_data^[4].y <> current^.y) then
+	repeat
+	  current^.y := current^.y - 20;
+	  current := current^.down;
+	until current^.etype <> 4;
+
+     screen (3); colors (0,color);
+     inkey := fctn_map^[1][inkey-58];
+
+     if inkey in [1,4,5]  then current_node := 0
+			  else current_node := current^.etype;
+
+     if inkey = 7 then inkey := 3;
+     if not( inkey in [ 1,2,4,5,7,41 ] ) then  redraw(1,current,first);
+     perform2 ( inkey,	first, name, skeleton^);
+     perform  ( inkey,	current, current_node, first );
+
+     if inkey in [4,5] then redraw (1, current, first);
+ end;
+
+(************************************************************************)
+
+ procedure chartinfo;
+
+ var
+	current   : entity;
+	i	  : integer;
+
+  begin
+      current := first^.up;
+      case code of
+       1 :  begin   (**** for creating entity file ****)
+	      create ( newnode, 5 );
+	      with newnode^ do
+		begin
+		  field^.len := 18;
+		  x := 0;
+		  y := 0;
+		  field^[1]  := chr ( form + 48 );
+		  field^[2]  := year[1];
+		  field^[3]  := year[2];
+		  field^[4]  := chr ( period + 48 );
+		  field^[5]  := chr ( color + 48 );
+		  field^[6]  := chr ( curve + 48 );
+		  field^[7]  := chr ( (start div 10) + 48 );
+		  field^[8]  := chr ( (start mod 10) + 48 );
+		  field^[9]  := chr ( color2[1]   + 48 );
+		  field^[10] := chr ( color2[2]   + 48 );
+		  field^[11] := chr ( fill2[1]	  + 48 );
+		  field^[12] := chr ( fill2[2]	  + 48 );
+		  field^[13] := chr ( pattern2[1] + 48 );
+		  field^[14] := chr ( pattern2[2] + 48 );
+		  field^[15] := chr ( symbol	  + 48 );
+		  field^[16] := chr ( fiscal_year + 48 );
+		  field^[17] := chr ( enter_mode  + 48 );
+		  field^[18] := chr ( dis_mode	  + 48 );
+	       end;   (* with newnode^ *)
+	     link ( current, newnode );
+	   end;       (* case code = 1 *)
+
+      2   :  with current^ do		  (**** updating entity file ****)
+	       begin
+		  form	   := ord ( field^[1] ) - 48;
+		  year.len := 2;
+		  year[1]  :=	    field^[2];
+		  year[2]  :=	    field^[3];
+		  period   := ord ( field^[4] ) - 48;
+		  color    := ord ( field^[5] ) - 48;
+		  curve    := ord ( field^[6] ) - 48;
+		  start    :=(ord ( field^[7] ) - 48)*10+ord(field^[8])-48;
+		  color2[1]:= ord ( field^[9] ) - 48;
+		  color2[2]:= ord ( field^[10]) - 48;
+		  fill2[1] := ord ( field^[11]) - 48;
+		  fill2[2] := ord ( field^[12]) - 48;
+		  pattern2[1] := ord ( field^[13] ) - 48;
+		  pattern2[2] := ord ( field^[14] ) - 48;
+		  symbol      := ord ( field^[15] ) - 48;
+		  fiscal_year := ord ( field^[16] ) - 48;
+		  enter_mode  := ord ( field^[17] ) - 48;
+		  dis_mode    := ord ( field^[18] ) - 48;
+		  delete (current);
+	       end;   (* with current, code = 2 *)
+
+      3   : begin     (* create a  new chart ****)
+		year[1]  := '8';    year[2]  := '5';    period :=  0;
+		form	 :=  1 ;    color    :=  1 ;
+		start	 :=  1 ;    symbol   :=  0 ;	fiscal_year :=	0;
+		curve	 :=  3 ;    dis_mode :=  3 ;	enter_mode  :=	1;
+		get_list (first, total, xy);
+	    end;  (* cade code = 3 *)
+      otherwise begin end; end; (* case code *)
+
+   end; (* chartinfo *)
+   end.
+
+

@@ -1,0 +1,53 @@
+1 BUGOUT
+
+BUGOUT is a debugging program for FORTRAN programs.  It finds several types
+of errors that are difficult to find manually.  Specifically, misalignment
+of CALLs/SUBROUTINEs and misalignment of COMMON blocks between subprograms.
+A utility is also provided to insert trace and CPU time usage code into the
+source code.  A file, BUGOUT.FOR, is created containing the instrumented
+source code.
+
+Execute the program by entering:
+
+   BUGOUT filespec [optionspec]
+
+where filespec is the name of the FORTRAN source file less the .FOR suffix and
+optionspec is an optional file of program options.  If optionspec is omitted,
+the default switch settings will be used.  See MERLIN:BUGOUT.DOC for more
+information.
+
+2 OPTIONS
+
+PRINT=n  - produce brief(n=0) to detailed(n=2) printouts.
+UNIT=n   - the embedded code will produce output to unit n (single digit).
+MAP      - produce a cross-reference map of COMMON blocks to SUBPROGRAMS.
+TIME     - insert code to extract CPU breakdown by subprogram.
+NOTIME   - do not insert CPU time code.
+TRACE    - insert code to produce trace information.
+NOTRACE  - do not insert trace code.
+CALLS    - check CALL statement / SUBROUTINE statement alignment.
+NOCALLS  - do not check CALL statements.
+COMMON   - check COMMON block alignment (omit to bypass COMMON checking).
+NOCOMMON - do not check COMMON blocks.
+SAVE     - save the status of the run after completing processing.
+RESTORE  - restore the status of a run before commencing processing.
+SAVENAME='filespec' - specify the name for the SAVE/RESTORE file.
+SORT     - sort the subprogram and common names in the cross-reference
+            maps.
+NOSORT   - do not sort the subprogram and common names in the cross-
+            reference maps.
+VARIABLES- check all variables to make sure they are used and initialized.
+NOVARIABLES - do not check the variables.
+MAPVARIABLES - produce a variable/subprogram cross-reference map.  Note:
+            BUGOUT does not attempt to determine if a variable with a
+            given name is the same variable between subprograms.
+NOMAPVARIABLES - do not produce the variable/subprogram cross-reference map.
+
+Note: there should be no spaces around '=' in PRINT, UNIT, and SAVENAME.  If
+SAVENAME is specified, the quotes are required.  If SAVENAME is specified, 
+SAVE is implied.
+
+2 DEFAULTS
+
+NOMAP, PRINT=1, UNIT=6, TIME, NOTRACE, CALLS, COMMON
+

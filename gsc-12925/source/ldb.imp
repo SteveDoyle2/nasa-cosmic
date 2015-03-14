@@ -1,0 +1,1411 @@
+  { $INCLUDE : 'compile.inc' }
+  { $INCLUDE : 'filkqq.inc' }
+  { $INCLUDE : 'vbpas.int' }
+  { $INCLUDE : 'vdmgen.int' }
+  { $INCLUDE : 'getparam.int' }
+  { $INCLUDE : 'display.int' }
+  { $INCLUDE : 'utility.int' }
+  { $INCLUDE : 'dspas.int' }
+  { $INCLUDE : 'sfpas.int' }
+  { $INCLUDE : 'option.int' }
+  { $INCLUDE : 'dialog.int' }
+  { $INCLUDE : 'ldb.int' }
+  { $INCLUDE : 'execute.int' }
+
+   
+  implementation of ldb;
+
+  USES filkqq;
+
+  USES vbpas;
+
+  USES getparam;
+
+  USES display;
+
+  USES utility;
+
+  USES dspas;
+
+  USES sfpas;
+
+  USES option;
+
+  USES dialog;
+
+  USES vdmgen;
+
+  USES execute;
+
+  const
+    lenpage   = 34;
+    prompt_line = 22;
+    b  = ' ';
+
+  var
+    df         : text(41);
+    sf, cf     : text;
+    i,j,k,l    : integer;
+    dfile,hostname,
+    sortfile   : lstring(14);
+    title,title1: lstring(30);
+    gnum       : lstring(3);
+    sortarray  : array [0..99] of integer;
+    status     : mode;
+    buffer     : lstring(128);
+    length     : byte;
+    name2,name3: lstring(8);
+    newname    : lstring(8);
+    n,rev1     : integer;
+    msg1,msg2  : lstring(80);
+    error1,error2:boolean;
+    gnum1      : lstring(3);
+    first      : entity;
+    inkey,msglen : byte;
+    functn     : func;
+    b79        : string(79);
+
+  value
+    b79 = '                                                                               ';
+
+  procedure exit ( var current, first : entity ); extern;
+  procedure enter ( var current, first : entity ); extern;
+
+procedure int_st3 ( n : byte; var st : lstring );
+
+  var
+    h,t: byte;
+
+  begin
+    h:= n div 100;
+    t:= n div 10 - h * 10;
+    st[1]:= chr (h+ord('0'));
+    st[2]:= chr (t+ord('0'));
+    st[3]:= chr (n-h*100-t*10+ord('0'));
+    st.len := 3;
+  end;
+
+
+
+function st3_int (var s:lstring): byte;
+
+  begin
+    st3_int:= (ord(s[1])-ord('0'))*100 + (ord(s[2])-ord('0'))*10 + ord(s[3])-ord('0');
+  end;
+
+procedure fill ( var s : lstring; l : integer );
+
+  var
+    i : integer;
+
+  begin
+    if l = 8 then
+      for i := 1 to s.len do
+        if s[i] in ['a'..'z'] then s[i] := chr ( ord ( s[i] ) - 32 );
+    for i := s.len+ 1 to l do
+      s[i] := ' ';
+    s.len := l;
+  end;
+
+
+procedure fullname;
+
+  begin
+    copylst(dfile,name);
+    name.len:= name.len - 3;
+    concat (name,gnum);
+    assign ( cf, name );
+  end;
+
+procedure newdrive;
+
+  var
+    ch : char;
+    inchar : twobyte;
+
+  begin
+      ch := ' ';
+      there ( 0 , prompt_line );
+      write ( 'Enter drive letter ( A-E ):                                                    ' );
+      there ( 29, prompt_line );
+    repeat
+      get_input ( inchar );
+      if inchar[1] in [97..102] then inchar[1] := inchar[1]-32;
+      ch := chr ( inchar[1] );
+      if ch > ' ' then write ( ch );
+       while not (inchar[1] in [8,13]) do get_input(inchar);
+       if inchar[1] = 8 then [write(chr(8),' ',chr(8));ch:=' ';];
+    until ((ch>='A')and(ch<='E'))or((ch>='a')and(ch<='e'))or(ch=chr(13));
+    if (ch <> ' ')and(ch<>chr(13)) then
+      begin
+        drive := ch;
+        dfile[1] := drive;
+        sortfile[1] := drive;
+        assign ( df, dfile );
+        assign ( sf, sortfile );
+        df.trap := true;
+        sf.trap := true;
+      end;
+    there ( 0, prompt_line );
+    write ( b79 );
+    there ( 0, prompt_line );
+  end;
+
+procedure ldbadd; forward;
+procedure ldbdel; forward;
+procedure ldbren; forward;
+procedure ldbret; forward;
+procedure ldbdir; forward;
+procedure ldbupd; forward;
+
+procedure chkdir;
+
+  var
+    inkey1 : byte;
+
+  begin
+    inkey1 := inkey;
+    if inkey = 20 then
+      begin
+        newdrive;
+        if page > 0 then
+          begin
+            page := 0;
+            ldbdir;
+          end;
+      end;
+    if inkey = 24 then
+      if page > 1 then page := page - 2
+        else if page = 1 then page := 0;
+    if inkey = 12 then page := 0;
+    if inkey in [12,13,24,29] then ldbdir;
+    if inkey = 2 then help(0);
+    if inkey = 0 then inkey := inkey1;
+  end;
+
+procedure ldbren0; forward;
+
+procedure ldbdel0;
+
+  var  vks : integer;
+  begin
+    buffer := null;
+    length := 0;
+    if (functn = sav) then vks := 5
+      else vks := 6;
+    repeat
+    msg1 := null;
+    inkey := 0;
+     msglen := messages^[11].len+1;
+    incom(prompt_line,messages^[11],msg1,rev1,rtype,0,
+          msglen,prompt_line,0,8,vks,1,1,1,1,1,1,
+          status,buffer,length,inkey);
+    chkdir;
+    until not ( inkey in [2,12,13,14,20,24,29] );
+    if (length > 0) and (not (inkey in [1,3,5])) then
+     begin
+       copylst ( buffer, name1 );
+       fill ( name1, 8 );
+       if name1 = hostname then
+        begin
+          there ( 0, prompt_line );
+          writeln ( 'File : ', hostname, ' cannot be deleted                                                        ' );
+        end
+       else
+        begin
+          ldbdel;
+          there ( 0, prompt_line );
+          if failed then
+            writeln ( 'File : ', name1, ' has NOT been deleted                                           ' )
+           else
+             begin
+               if page > 0 then [ page := page - 1; ldbdir; ];
+               there ( 0, prompt_line );
+               writeln ( 'File : ', name1, ' has been deleted                                              ' );
+             end;
+          write ( b79 );
+        end;
+      promptupd := 0;
+     end
+     else begin
+          promptupd :=1;
+          if (inkey = 15) and (functn =mnt) then
+          ldbren0;
+          end;
+  end;
+
+procedure ldbren0;
+
+   var  vks : integer;
+  begin
+    buffer := null;
+    length := 0;
+    if (functn = sav) then vks := 5
+      else vks := 6;
+    repeat
+    msg1 := null;
+    inkey := 0;
+    msglen := messages^[12].len+1;
+    incom(prompt_line,messages^[12],msg1,rev1,rtype,0,
+          msglen,prompt_line,0,8,vks,1,1,1,1,1,1,
+          status,buffer,length,inkey);
+    chkdir;
+    until not ( inkey in [2,12,13,15,20,24,29] );
+    if (length > 0) and (not (inkey in [1,3])) then
+     begin
+       copylst ( buffer, name1 );
+       fill ( name1, 8 );
+       if name1 = hostname then
+        begin
+          there ( 0, prompt_line );
+          writeln ( 'File : ', hostname, ' cannot be renamed                                              ' );
+        end
+       else
+        begin
+          ldbren;
+          there ( 0, prompt_line );
+          if failed then
+            writeln ( 'File : ', name1, ' has NOT been renamed                                           ' )
+           else 
+             begin
+               if page > 0 then [page := page - 1; ldbdir;];
+               there ( 0, prompt_line );
+               writeln ( 'File : ', name1, ' has been renamed : ', newname, '                                    ' );
+             end;
+        end;
+      write ( b79 );
+      promptupd := 0;
+     end
+    else begin
+         promptupd :=1;
+         if (inkey = 14) and (functn = mnt) then
+         ldbdel0;
+         end;
+  end;
+
+procedure ldbadd0;
+
+  begin
+    length := 0;
+    buffer := null;
+    repeat
+    msg1 := null;
+    inkey := 0;
+    copylst ( messages^[9], msg2 );
+    concat ( msg2, drive );
+    msglen := messages^[10].len+1;
+    incom(prompt_line,msg2,messages^[10],rev1,rtype,0,
+          msglen,prompt_line+1,0,8,3,1,1,1,1,1,1,
+          status,buffer,length,inkey);
+    chkdir;
+    until not ( inkey in [2,12,13,20,24,29] );
+    if (length > 0) and (not (inkey in [1,3,5])) then
+        begin
+          copylst ( buffer, name1 );
+          fill ( name1, 8 );
+          copylst ( messages^[10], msg1 );
+          concat ( msg1, name1 );
+          buffer := null;
+          length := 0;
+          repeat
+          inkey := 0;
+          promptupd := 0;
+          incom(prompt_line,msg2,msg1,rev1,rtype,0,
+                msg1.len+1,prompt_line+1,0,30,3,1,1,1,1,1,1,
+                status,buffer,length,inkey);
+          chkdir;
+          until not ( inkey in [2,12,13,20,24,29] );
+          if not (inkey in [1,3,5]) then
+            begin
+              copylst (buffer, title);
+              fill ( title, 30 );
+              ldbadd;
+              there ( 0, prompt_line );
+              if failed then
+                writeln ( 'File : ', name1, ' has NOT been saved                                             ' )
+           else [writeln ( 'File : ', name1, ' has been saved                                                 ' );saved := true;update:=true;];
+          write ( b79 );
+            end;
+          failed := false;
+        end
+       else if inkey in [1,5] then failed:=true
+             else [failed := false; promptupd := 1;];
+  end;
+ 
+procedure ldbupd0;
+
+  begin
+    copylst ( name1, buffer );
+    length := buffer.len;
+    repeat
+    inkey := 0;
+    copylst ( messages^[16], msg2 );
+    concat ( msg2, drive );
+    msglen := messages^[17].len+1;
+    incom(prompt_line,msg2,messages^[17],rev1,rtype,0,
+          msglen,prompt_line+1,0,8,4,1,1,1,1,1,1,
+          status,buffer,length,inkey);
+    chkdir;
+    until not ( inkey in [2,12,13,20,24,29] );
+    if (inkey=0)and(name1=buffer)and(olddd=drive) then inkey = 16;
+    if (length > 0) and (not (inkey in [1,3,5,16])) then
+        begin
+          copylst ( buffer, name1 );
+          fill ( name1, 8 );
+          copylst ( messages^[17], msg1 );
+          concat ( msg1, name1 );
+          length := 0;
+          buffer := null;
+          repeat
+          inkey := 0;
+          incom(prompt_line,msg2,msg1,rev1,rtype,0,
+                msg1.len+2,prompt_line+1,0,30,3,1,1,1,1,1,1,
+                status,buffer,length,inkey);
+          chkdir;
+          until not ( inkey in [2,12,13,20,24,29] );
+          if not (inkey in [1,3,5,16]) then
+            begin
+              copylst ( buffer, title );
+              fill ( title, 30 );
+              ldbadd;
+              there ( 0, prompt_line );
+              if failed then
+                writeln ( 'File : ', name1, ' has NOT been saved                                             ' )
+           else [writeln ( 'File : ', name1, ' has been saved                                                 ' );saved:=true;];
+            end;
+          failed := false;
+        end
+       else if inkey in [1,5] then failed:=true
+              else [failed := false; if inkey <> 16 then promptupd:=1];
+        if inkey = 16 then
+          begin
+            ldbupd;
+            there ( 0, prompt_line );
+            if failed then
+              writeln ( 'File : ', name1, ' has NOT been updated                                           ' );
+         else [writeln ( 'File : ', name1, ' has been updated                                               ' );saved:=true;];
+            failed := false;
+          end;
+    write ( b79 );
+    if promptupd <> 1 then promptupd := 0;
+    buffer := null;
+    buffer.len := 0;
+    length := 0;
+  end;
+
+procedure ldbret0;
+
+  begin
+    ldbdir ;
+    if not failed then
+      begin
+        length := 0;
+        buffer := null;
+        repeat
+        msg1 := null;
+        inkey := 0;
+        msglen := messages^[13].len+1;
+        incom(prompt_line,messages^[13],msg1,rev1,rtype,0,
+              msglen,prompt_line,0,8,7,1,1,1,1,1,1,
+              status,buffer,length,inkey);
+        chkdir;
+        until not ( inkey in [2,12,13,20,24,29] );
+        if (length > 0) and (not (inkey in [1,3])) then
+          begin
+            copylst ( buffer, name1 );
+            fill ( name1, 8 );
+            ldbret;
+          end
+         else
+          failed := true;
+      end;
+  end;
+ 
+procedure ldbcpy;
+  var
+    drive1 : char;
+    plchoice : integer;
+  begin
+    drive1 := drive;
+    newdrive;
+    if drive <> drive1 then
+     begin
+      ldbdir;
+      if not failed then
+      begin
+      buffer :=null;
+      length := 0;
+      repeat
+      inkey := 0;
+      msg1:=null;
+      msglen :=messages^[34].len + 1;
+      incom(prompt_line,messages^[34],msg1,-1,rtype,0,msglen,
+            prompt_line,0,8,105,1,1,1,1,1,1,status,buffer,
+            length,inkey);
+      if inkey=2 then help(0);
+      until inkey <> 2;
+      if (length > 0) and (not (inkey in [1,3])) then
+       begin
+        copylst(buffer,name1);
+        fill(name1,8);
+        ldbret;
+        if not failed then
+         begin
+          close (plfile);
+          assign(plfile,name);
+          plchoice :=plotchoice;
+          plotchoice := 2;
+          drive := drive1;
+          dfile[1] := drive;
+          sortfile[1] := drive;
+          close (df);
+          close (sf);
+          assign(df,dfile);
+          assign(sf,sortfile);
+          df.trap := true;
+          sf.trap := true;
+          df.errs := 0;
+          sf.errs := 0;
+          ldbadd;
+          if not failed then
+             ldbdir;
+          there(0,prompt_line);
+          if failed then
+             writeln('File: ',name1,' has NOT been copied.                                   ')
+          else writeln('File: ',name1,' has been copied.                                       ');
+          promptupd := 0;
+          plotchoice := plchoice;
+         end;
+       end;
+        end;
+      drive := drive1;
+      dfile[1] := drive;
+      sortfile[1] := drive;
+      close (df);
+      close (sf);
+      assign(df,dfile);
+      assign(sf,sortfile);
+      df.trap := true;
+      sf.trap := true;
+      df.errs := 0;
+      sf.errs := 0;
+     end;
+   end;
+
+
+procedure ldbmnt ( vksi : integer );
+
+  begin
+  ldbdir;
+  promptupd := 1;
+  while not (inkey in [1,3,5]) do
+   begin
+    repeat
+      msg1 := null;
+      length := 0;
+      buffer := null;
+      inkey := 0;
+      incom(prompt_line,msg1,messages^[18],rev1,rtype,0,0,prompt_line+1,4,0,vksi,
+            1,1,1,1,1,1,status,buffer,length,inkey);
+      chkdir;
+    until not ( inkey in [2,12,13,20,24,29] );
+    case inkey of
+     14: ldbdel0;
+     15: ldbren0;
+     44: ldbcpy;
+      otherwise promptupd := 0;
+      end;
+   end;
+  end;
+
+procedure errchk ( flen : integer );
+
+  var  name3 : lstring(8);
+
+  begin
+     if flen <> 0 then
+        begin
+          repeat
+          inkey := 0;
+          length := 0;
+          buffer := null;
+          incom(prompt_line,messages^[5],messages^[3],rev1,rtype,0,0,prompt_line+1,4,
+                0,12,1,1,1,1,1,1,status,buffer,length,inkey);
+          chkdir;
+          until not ( inkey in [2,12,13,24,29] );
+          if inkey = 14  then
+            begin
+              name3 := name1;
+              ldbdel0;
+              name1 := name3;
+            end;
+          if not (inkey in [1,3]) then ldbadd else failed := true;
+        end;
+      if ( flen = 0 ) then
+        begin
+          repeat
+          inkey := 0;
+          length := 0;
+          buffer := null;
+          incom(prompt_line,messages^[5],messages^[3],rev1,rtype,0,0,prompt_line+1,4,
+                0,13,1,1,1,1,1,1,status,buffer,length,inkey);
+          chkdir;
+          until not ( inkey in [2,12,13,24,29] );
+          if not (inkey in [1,3]) then ldbadd else failed := true;
+        end;
+  end;
+
+procedure createdir;
+
+  begin
+    df.mode := sequential;
+    rewrite ( df );
+    if df.errs<>0 then [df.errs:=0;close(df);errchk(0);] else begin
+    writeln ( df, '001', hostname, 'Host Chart Mailbox            ' );
+    if df.errs<>0 then [df.errs:=0;close(df);errchk(0);] else begin
+    df.trap := true;
+    close ( df );
+    if df.errs<>0 then errchk(0) else begin
+    df.mode := direct;
+    rewrite ( sf );
+    if sf.errs<>0 then [sf.errs:=0;close(sf);errchk(0);] else begin
+    sortarray[0] := 1;
+    sortarray[1] := 1;
+    write(sf, sortarray[0]:1, b, sortarray[1]:1, b );
+    if sf.errs<>0 then [sf.errs:=0;close(sf);errchk(0);] else begin
+    sf.trap := true;
+    close ( sf );
+    if sf.errs<>0 then errchk(0);
+    end; end; end; end; end;
+  end;
+
+procedure dirnotfound ( ecode : integer; var n : integer );
+
+  begin
+    msg1 := messages^[4];
+    concat ( msg1, drive );
+    inkey := 0;
+    length := 0;
+    repeat
+    incom (prompt_line,msg1,messages^[3],rev1,rtype,0,0,prompt_line+1,4,0,ecode,1,
+           1,1,1,1,1,status,buffer,length,inkey);
+    if inkey = 2 then help(0);
+    until inkey <> 2;
+    if inkey = 20 then newdrive;
+  end;
+
+procedure filenotfound ( var n : integer );
+
+  var
+    i : integer;
+
+  begin
+    concat ( msg1, drive );
+    repeat
+    inkey := 0;
+    length := 0;
+    incom (prompt_line,messages^[6],messages^[3],rev1,rtype,0,0,prompt_line+1,4,0,11,
+           1,1,1,1,1,1,status,buffer,length,inkey);
+    chkdir;
+    until not ( inkey in [12,13,24,29] );
+    if inkey = 21 then
+      begin
+                        msg1 := messages^[22];
+                        concat ( msg1, name1 );
+                        msg2 := null;
+                        length := name1.len;
+                        repeat
+                          inkey := 0;
+    i := 1;
+    while (i<=25)and(fctn_map^[3][i]<>34) do i := i + 1;
+    if i <=25 then fctn_map^[3][i]:=35;
+                          msglen := messages^[22].len ;
+                          incom(prompt_line,msg1,msg2,rev1,rtype,0,
+                                msglen,prompt_line,0,8,3,
+                                1,1,1,1,1,1,status,name1,length,inkey);
+    if i <=25 then fctn_map^[3][i]:=34;
+                          chkdir;
+                        until not (inkey in [2,12,13,20,24,29]);
+                        fill ( name1, 8 );
+      end;
+{   if inkey = 20 then newdrive;}
+  end;
+
+procedure ldbdir;
+
+  begin
+    failed := false;
+    page := page + 1;
+    repeat
+      error1 := false;
+      sf.errs := 0;
+      reset ( sf );
+      if sf.errs <> 0 then
+        begin
+          error1 := true;
+          sf.errs := 0;
+          close ( sf );
+        end
+       else
+        begin
+          sf.trap := true;
+          read ( sf, sortarray[0] );
+      if sf.errs <> 0 then
+        begin
+          error1 := true;
+          sf.errs := 0;
+          close ( sf );
+        end
+       else
+        begin
+          for i := 1 to sortarray[0] do
+            read ( sf, sortarray[i] );
+          close ( sf );
+          df.errs := 0;
+          df.mode := direct;
+          reset ( df );
+          if df.errs <> 0 then
+            begin
+              error1 := true;
+              df.errs := 0;
+              close ( df );
+            end
+           else
+            begin
+              repeat
+                l := (page-1) * lenpage;
+                j := sortarray[0] -l;
+                if j < 1 then page := page - 1;
+              until (j > 0)or(page<1);
+              if page < 1 then page := 1;
+              rev1 := -1;
+              screen ( 3 );
+              colors ( 0, 1 );
+              there ( (80-21-cname.len) div 2, 0 );
+              write ( cname, ' Directory on drive ',drive );
+              there ( 73, 0 );
+              writeln ( 'Page ',page:1 );
+              writeln;
+              writeln ('Filename          Description           Filename          Description');
+              for l := 1 to 39 do write ( chr (205) );
+              write ( ' ' );
+              for l := 1 to 39 do write ( chr (205) );
+              writeln;
+              l := (page-1) * lenpage;
+              j := sortarray[0] -l;
+              if j > lenpage then j := lenpage;
+              if j < lenpage div 2 then k := j else k := lenpage div 2;
+              for i := 1 to k do
+                begin
+                  seek ( df, sortarray[i+l] );
+                  read ( df, gnum, name2, title1);
+                  writeln ( name2, b, title1);
+                end;
+              for i := (lenpage div 2) + 1 to j do
+                begin
+                  seek ( df, sortarray[i+l] );
+                  read ( df, gnum, name2, title1);
+                  there ( 40, i-(lenpage div 2)+3 );
+                  write ( name2, b, title1);
+                end;
+              close ( df );
+            end;
+        end;
+        end;
+      inkey := 0;
+      if error1 then
+        begin
+          dirnotfound ( 13, n );
+          if (inkey in [1,3,5]) then [error1 := false; failed := true];
+        end;
+    until not error1;
+{   if not failed then
+    for i := 1 to upper ( fctn_map^ ) do
+      for j := 1 to 10 do
+        if fctn_map^[i][j] = 12 then fctn_map^[i][j] := 13;}
+  end;
+
+procedure savechart (var error1:boolean; var name1: lstring; var first: entity);
+
+  var
+    current: entity;
+    t: text;
+    done:boolean;
+    inchar : twobyte;
+    ch     : char;
+
+  begin
+      error1:=false;
+      if plotchoice <> 2 then
+        begin
+      exit ( current, first );
+      current := first;
+      assign (t,name1);
+      t.trap:= true;
+      t.errs := 0;
+      rewrite (t);
+          repeat
+            with current^ do [write (t,etype:1,b,x:1,b,y:1,b,xtext:1,
+                                     b,ytext:1,b);
+                              if t.errs <> 8 then
+                              if current^.field^.len > 0 then
+                               writeln(t,field^)
+                              else writeln(t);];
+            current:= current^.down;
+          until (current = first) or (t.errs = 8);
+          if t.errs = 8 then error1:= true;
+          close (t);
+          if t.errs <> 0 then error1:= true else olddd:=drive;
+      enter ( current, first );
+      if error1 then
+        begin
+          t.trap:= true;
+          t.errs:= 0;
+          discard (t);
+        end;
+        end
+       else
+        begin
+          assign ( t, name1 );
+          t.trap := true;
+          t.errs := 0;
+          rewrite ( t );
+          reset ( plfile );
+          while (not eof(plfile)) and (t.errs = 0) do
+            begin
+              read (plfile, ch);
+              write (t, ch);
+            end;
+          if t.errs <> 0 then
+            begin
+              t.trap := true;
+              t.errs := 0;
+              discard ( t );
+              error1 := true;
+            end
+          else close (t);
+           close ( plfile );
+        end;
+  end;
+
+procedure ldbdel;
+
+  begin
+    failed := false;
+    repeat
+      error1 := false;
+      error2 := false;
+      df.errs := 0;
+      reset ( df );
+      if df.errs <> 0 then
+        begin
+          error1 := true;
+          df.errs := 0;
+          close ( df );
+        end
+       else
+        begin
+          i := 0;
+          repeat
+            i := i + 1;
+            readln ( df, gnum, name2 );
+          until (name2 = name1) or (eof ( df ));
+          if (name2<>name1) then
+            begin
+              error2 := true;
+              close ( df );
+            end
+           else
+            begin
+              close ( df );
+              fullname;
+              df.mode := direct;
+              rewrite ( df );
+              seek ( df, i );
+              gnum := '000';
+              title1 := ' ';
+              title1.len := 1;
+              fill (title1, 30);
+              write ( df, gnum,'!@#$%^&*', title1);
+              close ( df );
+              rewrite ( cf );
+              discard ( cf );
+              reset ( sf );
+              read ( sf, sortarray[0] );
+              for j := 1 to sortarray[0] do
+                read ( sf, sortarray[j] );
+              close ( sf );
+              k := 0;
+              repeat
+                k := k + 1;
+              until sortarray[k] = i;
+              sortarray[0] := sortarray[0] - 1;
+              for j := k to sortarray[0] do
+                sortarray[j] := sortarray[j+1];
+              rewrite ( sf );
+              for j := 0 to sortarray[0] do
+                write ( sf, sortarray[j]:1, b );
+              close ( sf );
+            end;
+        end;
+    if error2 then
+      begin
+        filenotfound ( n );
+        if inkey in [1,3,5] then [error2 := false; failed := true;];
+      end;
+    if error1 then
+      begin
+        dirnotfound ( 13, n );
+        if (inkey in [1,3,5]) then [error1 := false; failed := true;];
+      end;
+    until not (error1 or error2);
+  end;
+
+procedure ldbret;
+  
+  var
+      f : text;
+
+  begin
+    failed := false;
+    repeat
+      error1 := false;
+      error2 := false;
+      df.errs := 0;
+      reset ( df );
+      if df.errs <> 0 then
+        begin
+          error1 := true;
+          df.errs := 0;
+        end
+       else
+        begin
+          repeat
+            readln ( df, gnum, name2, title );
+          until (name1 = name2) or ( eof ( df ) );
+          if (name1<>name2) then
+            begin
+              error2 := true;
+            end
+           else
+            begin
+              fullname;
+              olddd := drive;
+              if (name1 = 'HOSTMAIL') then
+              begin
+                assign(f,name);
+                f.trap :=true;
+                f.errs := 0;
+                reset(f);
+                if f.errs <> 0 then 
+                  begin
+                    error2 := true;
+                    name := null;
+                  end;
+                close (f);
+                discard (f);
+              end;
+            end;
+        end;
+      close ( df );
+      if error2 then
+        begin
+          filenotfound ( n );
+          if inkey in [1,3,5,104] then [error2 := false; failed :=true;];
+        end;
+      if error1 then
+        begin
+          dirnotfound ( 13, n );
+          if (inkey in [1,3,5]) then [error1 := false; failed := true;];
+        end;
+    until not (error1 or error2);
+  end;
+
+procedure ldbadd;
+
+  begin
+    failed := false;
+    repeat
+      error1 := false;
+      error2 := false;
+      sf.errs := 0;
+      reset ( sf );
+      if sf.errs <> 0 then
+        begin
+          error1 := true;
+          sf.errs := 0;
+          close ( sf );
+        end
+       else
+        begin
+         sf.trap := true;
+         read ( sf, sortarray[0] );
+      if sf.errs <> 0 then
+        begin
+          error1 := true;
+          sf.errs := 0;
+          close ( sf );
+        end
+       else
+        begin
+         for i := 1 to sortarray[0] do
+           read ( sf, sortarray[i] );
+         close ( sf );
+         df.errs := 0;
+         df.mode := direct;
+         reset ( df );
+         if df.errs <> 0 then
+           begin
+             error1 := true;
+             df.errs := 0;
+             close ( df );
+           end
+          else
+           begin
+            i := 0;
+            repeat
+              i := i + 1;
+              gnum := null;
+              readln ( df, gnum );
+            until((gnum='000')or(eof(df)))or
+                 (not(gnum[1] in ['0'..'9']))or
+                 (not(gnum[2] in ['0'..'9']))or
+                 (not(gnum[3] in ['0'..'9']));
+            if (eof(df))and(gnum[1] in ['0'..'9'])and
+               (gnum[2] in ['0'..'9'])and(gnum[3] in ['0'..'9']) then
+                 i := i + 1;
+            j := 1;
+            if sortarray[0] > 1 then
+             if name1 = hostname then name2 := hostname
+              else
+             begin
+              repeat
+                j := j + 1;
+                seek ( df, sortarray[j] );
+                readln ( df, gnum, name2 );
+              until ( name1 <= name2 ) or ( j = sortarray[0] );
+              if name1 > name2 then j := j + 1;
+             end
+             else [j := 2;name2:=null;];
+            if name1 = name2 then
+              begin
+                close ( df );
+                repeat
+                  inkey := 0;
+                  msg1 := messages^[7];
+                  concat(msg1, '  ');
+                  concat(msg1, name1);
+                  buffer := null;
+                  length := 0;
+                  incom(prompt_line,msg1,messages^[3],rev1,rtype,0,
+                     0,prompt_line+1,4,0,9,1,1,1,1,1,1,status,buffer,length,inkey);
+                  chkdir;
+                until not ( inkey in [2,12,13,24,29] );
+                case inkey of
+                 16 : ldbupd;
+              17,20 : ldbadd;
+                 21 : begin
+                        msg1 := messages^[22];
+                        concat ( msg1, name1 );
+                        msg2 := null;
+                        length := name1.len;
+                        i := 1;
+                        while (i<=25)and(fctn_map^[3][i]<>34) do
+                               i := i + 1;
+                        if i <=25 then fctn_map^[3][i]:=35;
+                        repeat
+                          inkey := 0;
+                          msglen := messages^[22].len;
+                          incom(prompt_line,msg1,msg2,rev1,rtype,0,
+                                msglen,prompt_line,0,8,3,
+                                1,1,1,1,1,1,status,name1,length,inkey);
+                          chkdir;
+                        until not (inkey in [2,12,13,20,24,29]);
+                        if i <=25 then fctn_map^[3][i]:=34;
+                        fill ( name1, 8 );
+                        if inkey in [1,3,5] then
+                          failed := true
+                         else
+                          ldbadd;
+                      end;
+             1,3,5 : failed := true;
+                  end;
+              end
+             else
+              begin
+                close (df);
+                df.mode := direct;
+                rewrite (df);
+                seek (df, i);
+                int_st3 ( i, gnum );
+                fullname;
+                savechart ( error2, name, first );
+                if error2 then [close(df);errchk(sortarray[0]-1);]
+                 else
+                  begin
+                    writeln ( df, gnum, name1, title );
+                    close ( df );
+                    sortarray[0] := sortarray[0] + 1;
+                    for k := sortarray[0] downto j + 1 do
+                      sortarray[k] := sortarray[k-1];
+                    sortarray[j] := i;
+                    rewrite ( sf );
+                    for i := 0 to sortarray[0] do
+                      write ( sf, sortarray[i]:1, b );
+                    close ( sf );
+                  end;
+              end;
+          end;
+          end;
+      end;
+    if error1 then
+      begin
+        dirnotfound ( 10, n );
+        if inkey = 18 then createdir;
+        if (inkey in [1,3,5]) then [error1 := false; failed := true;];
+      end;
+    until not error1;
+  end;
+
+procedure ldbren;
+
+  begin
+    failed := false;
+    repeat
+      error1 := false;
+      error2 := false;
+      sf.errs := 0;
+      reset ( sf );
+      if sf.errs <> 0 then
+        begin
+          error1 := true;
+          sf.errs := 0;
+          close ( sf );
+        end
+       else
+        begin
+          sf.trap:=true;
+          read ( sf, sortarray[0] );
+      if sf.errs <> 0 then
+        begin
+          error1 := true;
+          sf.errs := 0;
+          close ( sf );
+        end
+       else
+        begin
+          for i := 1 to sortarray[0] do
+            read ( sf, sortarray[i] );
+          close ( sf );
+          df.errs := 0;
+          df.mode := direct;
+          reset ( df );
+          if df.errs <> 0 then
+            begin
+              error1 := true;
+              df.errs := 0;
+              close ( df );
+            end
+           else
+            begin
+              i := 0;
+              repeat
+                i :=  i + 1;
+                readln ( df, gnum, name2, title );
+              until ( name1 = name2) or ( eof (df) );
+              if name1<>name2 then
+                begin
+                  error2 := true;
+                  close ( df );
+                end
+               else
+                begin
+                  msg1 := messages^[23];
+                  concat ( msg1, name1 );
+                  concat ( msg1, ' ' );
+                  concat ( msg1, title );
+                  msg2 := null;
+                  newname := name1;
+                  length := newname.len;
+    l := 1;
+    while (l<=25)and(fctn_map^[3][l]<>34) do l := l + 1;
+    if l <=25 then fctn_map^[3][l]:=35;
+                  repeat
+                    inkey := 0;
+                     msglen := messages^[23].len ;
+                    incom(prompt_line,msg1,msg2,rev1,rtype,0,
+                          msglen,prompt_line,0,8,3,
+                          1,1,1,1,1,1,status,newname,length,inkey);
+                    chkdir;
+                  until not (inkey in [2,12,13,20,24,29]);
+    if l <=25 then fctn_map^[3][l]:=34;
+                  if length = 0 then newname := name1;
+                  if not ( inkey in [1,3,8] ) then
+                    begin
+                      fill ( newname, 8 );
+                      msg1 := messages^[23];
+                      concat ( msg1, newname );
+                      concat ( msg1, ' ' );
+                      concat ( msg1, title );
+                      length := title.len;
+                      copylst ( title, buffer );
+    l := 1;
+    while (l<=25)and(fctn_map^[3][l]<>34) do l := l + 1;
+    if l <=25 then fctn_map^[3][l]:=35;
+                      repeat
+                        inkey := 0;
+                        msglen := messages^[23].len+9;
+                        incom(prompt_line,msg1,msg2,rev1,rtype,0,
+                              msglen,prompt_line,0,30,3,
+                              1,1,1,1,1,1,status,title,length,inkey);
+                        chkdir;
+                      until not (inkey in [2,12,13,20,24,29]);
+    if l <=25 then fctn_map^[3][l]:=34;
+                      if length = 0 then copylst ( buffer, title );
+                      if not ( inkey in [1,3,8] ) then
+                        begin
+                  fill ( title, 30 );
+                  j := 1;
+                  repeat
+                    j := j + 1;
+                    seek ( df, sortarray[j] );
+                    readln ( df, gnum1, name2 );
+                  until (j = sortarray[0]) or (newname <= name2);
+                  if (newname > name2) then j := j + 1;
+                  if name1 = newname then
+                    begin
+                      close ( df );
+                      df.mode := direct;
+                      rewrite ( df );
+                      seek ( df, i );
+                      write ( df, gnum, newname, title );
+                      close ( df );
+                    end
+                   else
+                    if newname = name2 then
+                     begin
+                      repeat
+                      inkey := 0;
+                      incom(prompt_line,messages^[8],messages^[3],rev1,
+                            rtype,0,0,prompt_line+1,4,0,9,1,1,1,1,1,1,status,
+                            buffer,length,inkey);
+                      chkdir;
+                      until not ( inkey in [2,12,13,20,24,29] );
+                      close ( df );
+                      case inkey of
+                       21 : begin
+                        msg1 := messages^[22];
+                        concat ( msg1, name1 );
+                        msg2 := null;
+                        length := name1.len;
+                        l := 1;
+                        while (l<=25)and(fctn_map^[3][l]<>34) do
+                               l := l + 1;
+                        if l <=25 then fctn_map^[3][l]:=35;
+                        repeat
+                          inkey := 0;
+                          msglen := messages^[22].len ;
+                          incom(prompt_line,msg1,msg2,rev1,rtype,0,
+                                msglen,prompt_line,0,8,3,
+                                1,1,1,1,1,1,status,name1,length,inkey);
+                          chkdir;
+                        until not (inkey in [2,12,13,20,24,29]);
+                        if l <= 25 then fctn_map^[3][l] := 34;
+                        fill ( name1, 8 );
+                        if inkey in [1,3,5] then
+                          failed := true
+                         else ldbren;
+                            end;
+                   1,3,5 : failed := true;
+                        otherwise
+                        end;
+                     end
+                    else
+                     begin
+                      close ( df );
+                      df.mode := direct;
+                      rewrite ( df );
+                      seek ( df, i );
+                      writeln ( df, gnum, newname, title );
+                      close ( df );
+                     l := 0;
+                     repeat
+                       l := l + 1;
+                     until sortarray[l] = i;
+                      if l < j then
+                       begin
+                        for k := l to j - 2 do
+                          sortarray[k] := sortarray[k+1]
+                        sortarray[j-1] := i;
+                       end
+                       else
+                       begin
+                        for k := l downto j + 1 do
+                          sortarray[k] := sortarray[k-1];
+                        sortarray[j] := i;
+                       end;
+                      rewrite ( sf );
+                      for k := 0 to sortarray[0] do
+                        write ( sf, sortarray[k]:1, b );
+                      close ( sf );
+                     end;
+                        end else [ close(df); failed := true; ];
+                    end else [ close(df); failed := true; ] ;
+                end;
+          end;
+            end;
+          end;
+        if error2 then
+          begin
+            filenotfound ( n );
+            if inkey in [1,3,5] then [error2 := false; failed := true;];
+          end;
+        if error1 then
+          begin
+            dirnotfound ( 13, n );
+            if (inkey in [1,3,5]) then
+              [error1 := false; failed := true;];
+          end;
+      until not ( error1 or error2 );
+    end;
+
+procedure ldbupd;
+
+  begin
+    ldbret;
+    if not failed then
+      begin
+        fullname;
+        savechart ( error1, name, first );
+        if error1 then
+          begin
+            ldbdel;
+            errchk ( sortarray[0] );
+          end;
+      end;
+  end;
+
+  procedure ldbsav;
+
+  begin
+                if update then
+                  ldbupd0;
+                 else
+                  ldbadd0;
+                if (not failed) and (not (inkey in [1,5]) then
+                repeat
+                  msg1 := null;
+                  msg2 := null;
+                  inkey := 0;
+                  buffer := null;
+                  length := 0;
+                  incom(prompt_line,msg1,msg2,rev1,rtype,0,0,prompt_line+1,4,0,5,
+                        1,1,1,1,1,1,status,buffer,length,inkey);
+                  chkdir;
+                  case inkey of
+                    15:[if name3=null then name3:=name1;ldbren0;if inkey=3 then inkey:=0];
+                    14:[if name3=null then name3:=name1;ldbdel0;if inkey=3 then inkey:=0];
+                    otherwise
+                   end;
+                until inkey in [1,3,5];
+  end;
+
+  procedure ldbsld;
+   var inchar:  twobyte;
+
+    begin
+        gnum := '000';
+        fullname;
+        savechart ( error1, name, first );
+        if error1 then
+          begin
+            there ( 0,23 );
+            write ( 'Disk full error when saving Slide Show file. Press any key to continue.');
+            get_input (inchar);
+          end;
+    end;
+
+  procedure ldburt;
+  
+  var temp : byte;  inchar: twobyte;
+    l : byte;
+  begin
+    ldbdir;
+    if not failed then
+      begin
+        length := 0;
+        buffer := null;
+        repeat
+          msg1 := null;
+          inkey := 0;
+          msglen := messages^[27].len + 1;
+          temp := fctn_map^[7][5];
+          fctn_map^[7][5] := 37;
+          l := 5+58;
+          valid_set^[7]:=valid_set^[7] + [l];
+          incom (prompt_line,messages^[27],msg1,rev1,rtype,0,
+                 msglen,prompt_line,0,8,7,1,1,1,1,1,1,status,
+                 buffer,length,inkey);
+          fctn_map^[7][5] := temp;
+          valid_set^[7]:=valid_set^[7] - [l];
+          chkdir;
+        until not (inkey in [2,12,13,20,24,29]);
+        if (length>0) and (not (inkey in [1,3,37])) then
+          begin
+            copylst (buffer, name1);
+            fill (name1,8);
+            ldbret;
+          end
+        else if (inkey in [1,3]) then failed := true;
+      end;
+  end;
+
+  procedure ldbman;
+
+  var
+    esc       : boolean;
+
+  begin
+    functn := funct;
+    if funct in [man,del,ren,dir] then name3:=name1 else name3:=null;
+    if scrmode < 4 then rev1 := -1 else rev1 := 0;
+    page := 0;
+    dfile[1] := drive;
+    dfile[2] := ':';
+    dfile.len := 2;
+    concat ( dfile, gtype );
+    concat ( dfile, '.dir' );
+    sortfile := dfile;
+    sortfile.len := sortfile.len - 3;
+    concat ( sortfile, 'ord' );
+    hostname := 'HOSTMAIL';
+    exited := false;
+    assign ( df, dfile );
+    df.trap := true;
+    assign ( sf, sortfile );
+    sf.trap := true;
+    first := e;
+    esc := escape;
+    escape := true;
+    case funct of
+      ret: ldbret0;
+      mnt: ldbmnt(6);
+      man: ldbmnt(5);
+      upd: ldbupd0;
+      del: ldbdel0;
+      ren: ldbren0;
+      dir: ldbdir ;
+      add: ldbadd0;
+      sav: ldbsav;
+      ssl: ldbsld;
+      srt: ldbret;
+      upl: ldburt;
+      otherwise writeln ('Error in call to local data base');
+      end;
+    if name3 <> null then name1 := name3;
+    if promptupd = 2 then promptupd := 0;
+    escape := esc;
+    inkey1 := inkey;
+  end;
+end.
+

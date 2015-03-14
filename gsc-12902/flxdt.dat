@@ -1,0 +1,97 @@
+ID SFS,FRISCH
+APP DMAP
+TIME 30
+CEND
+TITLE = FLEXIBLE DECOUPLING FRAME, "T" SECTION ONLY
+SUBTITLE = REDUCED SIZE MODEL - PROBLEM FLXDT
+LABEL = STANDARD MODAL DATA AND TABLE OUTPUT, TEST DATA FOR NASAM.PRG
+DISP = ALL
+METHOD = 40
+BEGIN BULK
+$$
+PARAM   GRDPNT  0
+PARAM   LMODES  10
+PARAM   PCHGPWG 1
+PARAM   PCHLAMA 1
+PARAM   PCHPHIG 1
+PARAM   WTMASS  .00259
+EIGR    40      GIV                             10                      +EIG40
++EIG40  MASS
+$$
+$$$              PEDESTAL WITH CONCEN MASS
+$$
+CONM2   1000    100             500.                                    +CM1000
++CM1000 750.+3          300.+3                  750.+3
+$
+$$$             GRID POINT ID'S AND COORDINATES
+$$
+GRID    100             0.      0.      0.
+GRID    102             0.      12.     0.
+GRID    104             0.      24.     0.
+GRID    106             0.      36.     0.
+GRID    108             0.      48.     0.
+GRID    110             0.      60.     0.
+GRID    112             6.      60.     0.
+GRID    114             18.     60.     0.
+GRID    116             30.     60.     0.
+GRID    118             42.     60.     0.
+GRID    120             54.     60.     0.
+GRID    122             66.     60.     0.
+GRID    124             78.     60.     0.
+GRID    126             90.     60.     0.
+GRID    200             -90.    60.     0.
+GRID    202             -78.    60.     0.
+GRID    204             -66.    60.     0.
+GRID    206             -54.    60.     0.
+GRID    208             -42.    60.     0.
+GRID    210             -30.    60.     0.
+GRID    212             -18.    60.     0.
+GRID    214             -6.     60.     0.
+$$
+$$             OMIT1 CARDS
+$$
+OMIT1   456     104     108     110
+OMIT1   456     112     114     118     122     124     126
+OMIT1   456     200     204     208     212     214
+$$
+OMIT1   123456  102     106
+OMIT1   123456  202     206     210
+OMIT1   123456  124     120     116
+$$
+$$
+$$$            CONNECTING CBARS
+$$
+$$$               LOWER T-SECTION
+$
+CBAR    100     10      100     102     0.      0.      1.      1
+CBAR    102     10      102     104     0.      0.      1.      1
+CBAR    104     10      104     106     0.      0.      1.      1
+CBAR    106     10      106     108     0.      0.      1.      1
+CBAR    108     10      108     110     0.      0.      1.      1
+$$
+CBAR    110     10      110     112     0.      0.      1.      1
+CBAR    112     10      112     114     0.      0.      1.      1
+CBAR    114     10      114     116     0.      0.      1.      1
+CBAR    116     10      116     118     0.      0.      1.      1
+CBAR    118     10      118     120     0.      0.      1.      1
+CBAR    120     10      120     122     0.      0.      1.      1
+CBAR    122     10      122     124     0.      0.      1.      1
+CBAR    124     10      124     126     0.      0.      1.      1
+$$
+CBAR    200     10      200     202     0.      0.      1.      1
+CBAR    202     10      202     204     0.      0.      1.      1
+CBAR    204     10      204     206     0.      0.      1.      1
+CBAR    206     10      206     208     0.      0.      1.      1
+CBAR    208     10      208     210     0.      0.      1.      1
+CBAR    210     10      210     212     0.      0.      1.      1
+CBAR    212     10      212     214     0.      0.      1.      1
+CBAR    214     10      214     110     0.      0.      1.      1
+$$
+$$$           PROPERTY AND MATERIAL CARD 
+$$            ALUM BARS WITH CROSS SECT AREA=.309
+$
+PBAR    10      10      .309    .16     .16     .32
+MAT1    10      1.+7            .3      .098
+$$
+$
+ENDDATA

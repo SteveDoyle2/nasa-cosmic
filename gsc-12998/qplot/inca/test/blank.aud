@@ -1,0 +1,103 @@
+================================================================================================================================
+INCA Vers 3.13A -- November 14, 1988       16:19:01.86  17-NOV-1988
+Terminal type is TEK4107 
+
+Project BLANK
+================================================================================================================================
+================================================================================================================================
+Utilities executed.         16:19:02.00  17-NOV-1988
+The Verify     flag is    off
+================================================================================================================================
+Misc executed.         16:19:02.05  17-NOV-1988
+================================================================================================================================
+Utilities executed.         16:19:02.35  17-NOV-1988
+The value of NoPress_Wait is  0.00000000000000000    
+================================================================================================================================
+Utilities executed.         16:19:02.42  17-NOV-1988
+================================================================================================================================
+Utilities executed.         16:19:02.50  17-NOV-1988
+================================================================================================================================
+Utilities executed.         16:19:02.57  17-NOV-1988
+================================================================================================================================
+Utilities executed.         16:19:02.65  17-NOV-1988
+================================================================================================================================
+Utilities executed.         16:19:02.77  17-NOV-1988
+The value of EDIT                X AXIS Grid_Color is "DARKGRAY"
+The value of LOCUS               X AXIS Grid_Color is "DARKGRAY"
+The value of MAGNITUDE           X AXIS Grid_Color is "DARKGRAY"
+The value of BODE_MAGNITUDE      X AXIS Grid_Color is "DARKGRAY"
+The value of BODE_STRIP_MAGNITUDEX AXIS Grid_Color is "DARKGRAY"
+The value of PHASE               X AXIS Grid_Color is "DARKGRAY"
+The value of BODE_PHASE          X AXIS Grid_Color is "DARKGRAY"
+The value of BODE_STRIP_PHASE    X AXIS Grid_Color is "DARKGRAY"
+The value of NYQUIST             X AXIS Grid_Color is "DARKGRAY"
+The value of NICHOLS             X AXIS Grid_Color is "DARKGRAY"
+The value of POPOV               X AXIS Grid_Color is "DARKGRAY"
+The value of TIME_RESPONSE       X AXIS Grid_Color is "DARKGRAY"
+The value of BACKGROUND          X AXIS Grid_Color is "DARKGRAY"
+================================================================================================================================
+Utilities executed.         16:19:03.09  17-NOV-1988
+The value of EDIT                Y AXIS Grid_Color is "DARKGRAY"
+The value of LOCUS               Y AXIS Grid_Color is "DARKGRAY"
+The value of MAGNITUDE           Y AXIS Grid_Color is "DARKGRAY"
+The value of BODE_MAGNITUDE      Y AXIS Grid_Color is "DARKGRAY"
+The value of BODE_STRIP_MAGNITUDEY AXIS Grid_Color is "DARKGRAY"
+The value of PHASE               Y AXIS Grid_Color is "DARKGRAY"
+The value of BODE_PHASE          Y AXIS Grid_Color is "DARKGRAY"
+The value of BODE_STRIP_PHASE    Y AXIS Grid_Color is "DARKGRAY"
+The value of NYQUIST             Y AXIS Grid_Color is "DARKGRAY"
+The value of NICHOLS             Y AXIS Grid_Color is "DARKGRAY"
+The value of POPOV               Y AXIS Grid_Color is "DARKGRAY"
+The value of TIME_RESPONSE       Y AXIS Grid_Color is "DARKGRAY"
+The value of BACKGROUND          Y AXIS Grid_Color is "DARKGRAY"
+================================================================================================================================
+Set executed.         16:19:03.40  17-NOV-1988
+================================================================================================================================
+Utilities executed.         16:19:03.70  17-NOV-1988
+The Verify     flag is     on
+================================================================================================================================
+Misc executed.         16:19:03.86  17-NOV-1988
+================================================================================================================================
+proJect executed.         16:19:14.62  17-NOV-1988
+================================================================================================================================
+Curve executed.         16:19:55.30  17-NOV-1988
+================================================================================================================================
+Plot executed.         16:20:22.11  17-NOV-1988
+QPLOT error handler report
+HOST/PASCAL system error
+Floating divide
+Return to command level
+QPLOT error handler report
+HOST/PASCAL system error
+CTRL-C abort
+Return to command level
+================================================================================================================================
+Function executed.         16:33:10.72  17-NOV-1988
+------------------------------------------------------------------------------
+
+Function name  = I3
+Storage requirements              208
+Function last modified on      16:33:57.34  17-NOV-1988
+Comment: ITAE Filter, Order= 3  Bandwidth= 23.00000    
+
+FACTORED FORM
+Function plane = S
+Gain =   12167.0000000000      
+
+Numerator   has  0 distinct factors:
+
+Denominator has  3 distinct factors:
+  (S+ 16.2862999999999998                                 )  **   1
+  (S+ 11.9830000000000001     + j* 24.5640000000000001    )  **   1
+  (S+ 11.9830000000000001     - j* 24.5640000000000001    )  **   1
+
+------------------------------------------------------------------------------
+Project BLANK written
+================================================================================================================================
+Function executed.         16:34:02.15  17-NOV-1988
+================================================================================================================================
+Xit executed.         16:50:43.42  17-NOV-1988
+================================================================================================================================
+CPU time used is     264.79 seconds.
+16:50:54.47  17-NOV-1988
+================================================================================================================================

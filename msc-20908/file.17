@@ -1,0 +1,57 @@
+/*****************************************************************************/
+/*                                                                           */
+/*  Undef_set_list                                                           */
+/*                                                                           */
+/*  This subroutine sets all conditions in a list to undefined.              */
+/*                                                                           */
+/*  Input:  list - pointer to a list of pointers to conditions               */
+/*  Output: none.                                                            */
+/*                                                                           */
+/*  Method:  For each condition in the list                                  */
+/*              set the temporary marker.                                    */
+/*           For each condition in the list                                  */
+/*              if the marker is set                                         */
+/*                  call set_undef                                           */
+/*                                                                           */
+/*  The marker is used to indicate that a condition in the list has          */
+/*  already been defined by implication from another condition in the list.  */
+/*                                                                           */
+/*  Programmer: G R Goodrum, MDTSCO, June 1984                               */
+/*                                                                           */
+/*****************************************************************************/
+
+#include "structures.inc"
+
+undef_set_list ( list )
+struct cond_info **list;
+{
+    struct cond_info *cond;
+    struct cond_info **t;
+
+    /* Since the list is scanned twice, the list pointer must be saved. */
+    t  =  list;
+
+    /* Mark all conditions which are to be undefined */
+    while  ( ( cond = *list++ ) != NULL )
+    {                                                           /* debug */
+        count ( 13, 0 );                                        /* debug */
+        cond -> mark  =  TRUE;
+    }                                                           /* debug */
+    count ( 13, 1 );                                            /* debug */
+
+    /* Call set_undef for all conditions in the list which are marked */
+    while  ( ( cond = *t++ ) != NULL )
+    {                                                           /* debug */
+        count ( 13, 2 );                                        /* debug */
+        if  ( cond -> mark )
+        {
+            count ( 13, 4 );                                    /* debug */
+            set_undef ( cond );         /* This action may clear the marks */
+                                        /* on some conditions in the list  */
+            cond -> mark  =  FALSE;
+        }
+        else count ( 13, 5 );                                   /* debug */
+    }                                                           /* debug */
+    count ( 13, 3 );                                            /* debug */
+
+}

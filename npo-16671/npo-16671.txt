@@ -1,0 +1,60 @@
+ ORBSIM- ESTIMATING GEOPHYSICAL MODEL PARAMETERS FROM PLANETARY GRAVITY
+DATA
+
+( Cal Tech/Jet Propulsion Lab. )
+
+     The ORBSIM program was developed for the accurate extraction of geo-
+physical model parameters from Doppler radio tracking data acquired from
+orbiting planetary spacecraft. The model of the proposed planetary struc-
+ture is used in a numerical integration of the spacecraft along simulated
+trajectories around the primary body. Using line of sight (LOS) Doppler
+residuals, ORBSIM applies fast and efficient modelling and optimization
+procedures which avoid the traditional complex dynamic reduction of data.
+ORBSIM produces quantitative geophysical results such as size, depth, and
+mass. ORBSIM has been used extensively to investigate topographic features
+on the Moon, Mars, and Venus. The program has proven particulary suitable
+for modelling gravitational anomalies and mascons.
+
+     The basic observable for spacecraft-based gravity data is the Doppler
+frequency shift of a transponded radio signal. The time derivative of this
+signal carries information regarding the gravity field acting on the space-
+craft in the LOS direction (the LOS direction being the path between the
+spacecraft and the receiving station, either Earth or another satellite).
+There are many dynamic factors taken into account: earth rotation, so-
+lar radiation, acceleration from planetary bodies, tracking station time
+and location adjustments, etc. The actual trajectories of the spacecraft
+are simulated using least squares fitted to conic motion. The theoretical
+Doppler readings from the simulated orbits are compared to actual Doppler
+observations and another least squares adjustment is made. ORBSIM has
+three modes of operation: trajectory simulation, optimization, and grav-
+ity modelling. In all cases, an initial gravity model of curved and/or flat
+disks, harmonics, and/or a force table are required input.
+
+     ORBSIM is written in FORTRAN 77 for batch execution and has been imple-
+mented on a DEC VAX 11/780 computer operating under VMS. This program was
+released in 1985.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN 77
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 6,972 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX FILES-11 Format Magnetic Tape
+
+PROGRAM NUMBER: NPO-16671
+
+DOMESTIC - DOCUMENTATION PRICE: $16.00    PROGRAM PRICE: $800.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $32.00   PROGRAM PRICE: $1600.00
+
+
+
+                                        1
+

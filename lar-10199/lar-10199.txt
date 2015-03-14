@@ -1,0 +1,73 @@
+ MODIFIED STRIP ANALYSIS METHOD FOR PREDICTING WING FLUTTER AT SUBSONIC TO
+HYPERSONIC SPEEDS
+
+( NASA Langley Research Center )
+
+     A modified strip analysis has been developed for rapidly predicting
+flutter of finite-span, swept or unswept wings at subsonic to hypersonic
+speeds. The method employs distributions of aerodynamic parameters which
+may be evaluated from any suitable linear or nonlinear steady-flow theory
+or from measured steady-flow load distributions for the underformed wing.
+The method has been shown to give good flutter results for a broad range of
+wings at Mach number from 0 to as high as 15.3.
+
+     The principles of the modified strip analysis may be summarized as fol-
+lows: Variable section lift-curve slope and aerodynamic center are substi-
+tuted respectively, for the two-dimensional incompressible-flow values of
+2 pi and quarter chord which were employed by Barmby, Cunningham, and Gar-
+rick. Spanwise distributions of these steady-flow section aerodynamic pa-
+rameters, which are pertinent to the desired planform and Mach number, are
+used. Appropriate values of Mach number-dependent circulation functions
+are obtained from two-dimensional unsteady compressible-flow theory.
+
+     Use of the modified strip analysis avoids the necessity of reevalu-
+ating a number of loading parameters for each value of reduced frequency,
+since only the modified circulation functions, and of course the reduced
+frequency itself, vary with frequency. It is therefore practical to in-
+clude in the digital computing program a very brief logical subroutine,
+which automatically selects reduced-frequency values that converge on a
+flutter solution. The problem of guessing suitable reduced-frequency val-
+ues is thus eliminated, so that a large number of flutter points can be com-
+pletely determined in a single brief run on the computing machine. If nec-
+essary, it is also practical to perform the calculations manually.
+
+     Flutter characteristics have been calculated by the modified strip
+analysis and compared with results of other calculations and with experi-
+ments for Mach numbers up to 15.3 and for wings with sweep angles from 0 de-
+grees to 52.5 degrees, aspect ratios from 2.0 to 7.4, taper ratios from 0.2
+to 1.0, and center-of-gravity positions between 34% chord and 59% chord.
+These ranges probably cover the great majority of wings that are of practi-
+cal interest with the exception of very low-aspect-ratio surfaces such as
+delta wings and missile fins.
+
+     This program has been implemented on the IBM 7094.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC 6000 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 1,714 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-10199
+
+DOMESTIC - DOCUMENTATION PRICE: $49.00    PROGRAM PRICE: $400.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $98.00   PROGRAM PRICE: $800.00
+
+
+
+                                        2
+

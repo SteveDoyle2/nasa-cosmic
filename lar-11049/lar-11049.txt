@@ -1,0 +1,60 @@
+ TRANSIENT RESPONSE OF ABLATING AXISYMMETRIC BODIES INCLUDING THE EFFECTS
+OF SHAPE CHANGE
+
+( NASA Langley Research Center )
+
+     A computer program has been developed to analyze the transient re-
+sponse of an ablating axisymmetric body, including the effect of shape
+change. The governing differential equation, the boundary conditions for
+the analysis on which the computer program is based, and the method of so-
+lution of the resulting finite-difference equations are discussed in the
+documentation.
+
+     Some of the features of the analysis and the associated program are (1)
+the ablation material is considered to be orthotropic with temperature-
+dependent thermal properties; (2) the thermal response of the entire body
+is considered simultaneously; (3) the heat transfer and pressure distribu-
+tion over the body are adjusted to the new geometry as ablation occurs; (4)
+the governing equations and several boundary-condition options are formu-
+lated in terms of generalized orthogonal coordinates for fixed points in a
+moving coordinate system; (5) the finite-difference equations are solved
+implicitly; and (6) other instantaneous body shapes can be displayed with a
+user-supplied plotting routine.
+
+     The physical problem to be modeled with the analysis is described by
+FORTRAN input variables. For example, the external body geometry is de-
+scribed in the W, Z coordinates; material density is given; and the stagna-
+tion cold-wall heating rate is given in a time-dependent array. Other input
+variables are required which control the solution, specify boundary condi-
+tions, and determine output from the program. The equations have been pro-
+grammed so that either the International System of Units or the U. S. Cus-
+tomary Units may be used.
+
+     This program is written in FORTRAN IV for batch execution and has been
+implemented on a CDC 6000 Series computer. This program was developed in
+1972.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC 6000 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 1,679 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-11049
+
+DOMESTIC - DOCUMENTATION PRICE: $20.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $40.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

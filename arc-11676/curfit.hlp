@@ -1,0 +1,54 @@
+1 CURVE_FIT
+The curve fit program allows the user to easily fit a curve to a set of data 
+using the least-squares criterion for one of three forms of fit.  The three 
+forms are : polynomial, exponential, and sinusoidal(harmonic).  A plot is 
+displayed on Graphon and Tektronix terminals to demonstrate the adequacy of 
+the fitted curve.  To use the curve fit program enter :
+
+      RUN CURFIT
+
+2 Data_files
+The capability exists to read the data to be fit from a data file rather 
+than inputing it from the keyboard.  Simply chose the LOAD option from the 
+main menu.  You will be prompted for the name of the file.  The data on the 
+file must be in the following format :
+
+   Number_of_data_points  in I4 format
+   X(1)  Y(1)             in E12.5,2X,E12.5 format
+   X(2)  Y(2)                        "
+   .
+   .
+
+The SAVE option of the main menu will write the data you have been working 
+on in this format.
+2 Polynomial
+The form of the polynomial fit is :
+
+    Y = A0   +   A1 * X   +   A2 * X **2   + ... +   An * X **N
+
+where N is the order of the curve fit.
+2 Exponential
+The form of the exponential fit is :
+
+    Y = A0 * E ** ( A1 * X )
+
+the user is not given an option on the order of an exponential fit.
+2 Sinusoidal
+The form of the sinusoidal fit is :
+
+    Y = A0  +  A1 * SIN(X)  +  A2 * COS(X)  +  A3 * SIN(2X) ...  
+             ... +  An * COS(NX/2)
+
+where N is the order of the fit.  Note that N does not have to be even and 
+that the number of harmonics used is N/2.
+2 Editor
+There is a builtin screen-oriented editor in CURFIT that may only be 
+accessed with a VT100 or compatible.  It doesn't use the keypad, but it uses 
+the screen control codes.  If you are running CURFIT on a non-VT100, don't 
+use the edit option.  There is a help command available from the editor.
+
+The editor is the NAE editor from MERLIB; more documentation can be found in
+MERLIB.DOC.
+2 Other_forms
+The CURFIT program can be readily modified to fit other forms of linear
+equations.  See the system manager for help.

@@ -1,0 +1,293 @@
+  { $INCLUDE : 'compile.inc' }
+  { $INCLUDE : 'vbpas.int' }
+  { $INCLUDE : 'sfpas.int' }
+  { $INCLUDE : 'utility.int' }
+  { $INCLUDE : 'ldb.int' }
+  { $INCLUDE : 'bulalts.int' }
+
+  implementation of bulalts;
+
+  USES vbpas;
+
+  USES sfpas;
+
+  USES utility;
+
+  USES ldb;
+
+  var
+      ibuf	: lstring(80);
+      outchar	 : array [1..2] of char;
+
+  value
+      ibuf.len := 80;
+      ibuf := '                                                                                ';
+      outchar[1] := 'o';
+      outchar[2] := 'o';
+
+  procedure alter_screen;
+
+  var
+      temp	     : entity;
+      next_line      : integer;
+      i, j, n	     : integer;
+      half_auth_len  : integer;
+      buf	    : array [1..5] of lstring(20);
+
+  (****************************************)
+
+  procedure erase ( line : integer );
+
+  begin
+    there ( 0, line );
+    write ( ibuf );
+  end;
+
+  (****************************************)
+
+  function line ( var node : entity ): boolean;
+
+   var
+       line_length : integer;
+       nlines	   : integer;
+       status	   : boolean;
+       i, j	   : integer;
+
+   begin
+   with node^ do
+    begin
+     line_length := 80 - xtext;
+     nlines	 := (ord(field^.len) div line_length) +
+			ord ( (ord(field^.len) mod line_length) <> 0 );
+     status := false;
+   (*status := ( (mode=3)  and (next_line-nlines>=0) )
+				    or
+	       ( (mode<>3) and (next_line+nlines-1<=last_line) );*)
+     if mode=3 then
+	begin
+	  if next_line - nlines +1 >= first_line then status := true;
+	end
+	  else
+	begin
+	  if next_line < last_line then status := true;
+	end;
+     if status then
+     begin  {  display }
+     if mode <> 3 then
+	begin  { scroll down }
+	 ytext := next_line;
+	 erase ( next_line );
+	 there ( xtext-2, next_line );
+	 write ( outchar[etype-5], ' '  );
+	 if field^.len <= line_length then write ( field^ )
+				      else
+				 for i := 1 to ord (field^.len) do
+				     begin
+				       write ( field^[i] );
+				       if (i mod line_length=0 ) then
+					  begin
+					    next_line := next_line + 1;
+					    erase ( next_line );
+					    there ( xtext, next_line );
+					  end;
+				      end;
+	 next_line := next_line + 1;
+	end
+	  else
+	begin  { scroll up }
+	 if field^.len <= line_length then
+	    begin
+	      ytext := next_line;
+	      erase ( next_line );
+	      there ( xtext-2, ytext );
+	      write ( outchar[etype-5], ' ', field^ );
+	      next_line := next_line - 1;
+	    end
+	      else
+	    begin
+	      n := ord ( field^.len ) mod line_length;
+	      if n=0 then
+		begin
+		 for j := nlines downto 2 do
+		     begin
+		       erase ( next_line );
+		       there ( xtext, next_line );
+		       for i := (j-1)*line_length+1 to j*line_length do
+			   write ( field^[i] );
+		       next_line := next_line - 1;
+		     end;
+		end
+		  else
+		begin
+		  erase ( next_line );
+		  there ( xtext, next_line );
+		  for i := ord(field^.len)-n+1 to ord(field^.len) do
+		      write ( field^[i] );
+		  next_line := next_line - 1;
+		  for j := nlines-1 downto 2 do
+		      begin
+			erase ( next_line );
+			there ( xtext, next_line );
+			for i := (j-1)*line_length+1 to j*line_length do
+			    write ( field^[i] );
+			next_line := next_line - 1;
+		      end;
+		end;
+		ytext := next_line;
+		erase ( next_line );
+		there ( xtext-2, ytext );
+		write ( outchar[etype-5], ' ' );
+		for i := 1 to line_length do write ( field^[i] );
+		next_line := next_line - 1;
+	    end;
+	end;
+   end	 { display }
+     else
+   if mode = 3 then
+     begin
+       if first_line < next_line+1 then
+	 for i := first_line to next_line do
+	   erase ( i );
+       next_line := 0;
+     end
+    else
+     begin
+       if next_line-1 < last_line then
+	 for i := next_line to last_line do
+	   erase ( i );
+       next_line := 256;
+     end;
+   end;  { with node^ }
+   line := status;
+   end;
+
+  (****************************************)
+
+  begin
+    case mode of
+
+      0: begin	{ display title, sub_title, data, date, name and org. }
+	   screen ( 3 );
+	   colors ( 0, color );
+	   there ( ord(80-cname.len-6) div 2, 0 );
+	   write (cname,' Chart' );
+	   copylst ( 'Title : ', buf[1] );
+	   copylst ( 'Subtitle : ', buf[2] );
+	   copylst ( 'Date : ', buf[3] );
+	   copylst ( 'Author : ', buf[4] );
+	   copylst ( 'Organization : ', buf[5] );
+	   temp := first;
+	   repeat
+	       there (temp^.xtext-buf[temp^.etype].len,temp^.ytext);
+	       write ( buf[temp^.etype] );
+	       write ( temp^.field^ );
+	       temp := temp^.down;
+	   until temp^.etype in [1,6..8];
+	   next_line := first_line;
+	   last_item := nil;
+	   if first_item <> nil then
+	      begin
+		temp := first_item;
+		while (temp^.etype in [6,7])and(next_line<=last_line)do
+		    if	line ( temp )  then
+		       begin
+			 last_item := temp;
+			 temp := temp^.down;
+		       end;
+		while temp^.etype in [6,7] do
+		  begin
+		    temp^.ytext := last_line + 1;
+		    temp := temp^.down;
+		  end;
+	      end;
+	 end;
+      1: begin	(* update bullets and/or sub-bullets on screen *)
+	    temp:=first;
+	    repeat
+	      temp := temp^.down;
+	    until temp^.etype in [1,6,8];
+	    if first_item <> nil then
+	    while (temp^.etype in [6,7])and(temp <> first_item) do
+	      begin
+		temp^.ytext := first_line-1;
+		temp:=temp^.down;
+	      end;
+	    last_item := nil;
+	    if first_item <> nil then
+	    begin
+	      next_line := current^.ytext;
+	      temp := current;
+	      while(temp^.etype in [6,7])and(next_line<=last_line)do
+		  if  line ( temp )  then
+		     begin
+		       last_item := temp;
+		       temp   := temp^.down;
+		     end;
+	      if current^.down^.etype in [6,7] then
+		 for i := next_line to last_line do erase ( i );
+	      while temp^.etype in [6,7] do
+		begin
+		  temp^.ytext := last_line+1;
+		  temp := temp^.down;
+		end;
+	    end;
+	 end;
+      2: begin	{ update current line }
+	   erase ( current^.ytext );
+	   if current^.etype in [6,7] then
+					begin
+					  there ( current^.xtext-2, current^.ytext );
+					  write ( chr(outchar[current^.etype-5] ) );
+					end;
+	   there ( current^.xtext, current^.ytext );
+	   write ( current^.field^ );
+	 end;
+      3: begin	{ scroll up }
+	   temp:=first;
+	   repeat
+	     temp := temp^.up;
+	   until temp^.etype in [5..7];
+	   while (temp^.etype in [6,7])and(temp<>last_item) do
+	     begin
+	       temp^.ytext := last_line+1;
+	       temp := temp^.up;
+	     end;
+	   first_item := nil;
+	   if last_item <> nil then
+	      begin
+		next_line := last_line;
+		temp := last_item;
+		while (temp^.etype<>5) and (next_line>=first_line) do
+		  begin
+		    with temp^ do
+		      next_line := next_line - (ord(field^.len) div (80-xtext))
+				   - ord ( ord(field^.len) mod (80-xtext)<>0 );
+		    temp := temp^.up;
+		  end;
+		if next_line >= first_line then
+		  begin
+		    next_line := last_line-next_line-1+first_line;
+		    for i := last_line downto next_line do erase ( i );
+		  end
+		    else
+		  next_line := last_line-1;
+		temp := last_item;
+		while (temp^.etype<>5) and (next_line>=first_line) do
+		  if line ( temp ) then
+		     begin
+		       first_item := temp;
+		       temp := temp^.up;
+		     end;
+		while temp^.etype in [6,7] do
+		  begin
+		    temp^.ytext := first_line-1;
+		    temp := temp^.up;
+		  end;
+	      end;
+	 end;
+
+    end;
+
+  end;
+  end.
+

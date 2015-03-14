@@ -1,0 +1,326 @@
+%
+% ZED quick-reference card
+%
+\nopagenumbers
+\hsize=10.4truein
+\vsize=7.7truein
+\voffset.1truein
+\hoffset.2truein
+\parindent0pt
+\newdimen\pagewidth
+\newdimen\pageheight
+\pagewidth=\hsize
+\pageheight=\vsize
+\newdimen\tpgwd
+\newdimen\tpgdp
+\newdimen\gap
+\gap=.3truein
+\tpgwd=\hsize
+\divide\tpgwd by3
+\advance\tpgwd by-\gap
+\tpgdp=\vsize
+\multiply\tpgdp by3
+\advance\tpgdp by1truepc
+\def\onepageout#1{\shipout\vbox{
+ \offinterlineskip
+ \vbox to3pc{\the\headline\vfill}
+ \vbox to\pageheight{
+ #1 \boxmaxdepth=\maxdepth}}
+ \advancepageno
+}
+\catcode`@=11
+\newbox\partialpage
+\def\begintriplecolumns{\begingroup
+ \output={\global\setbox\partialpage=\vbox{\unvbox255\bigskip}}\eject
+ \output={\triplecolumnout} \hsize=\tpgwd \vsize=\tpgdp}
+\def\endtriplecolumns{\output={\balancecolumns}\eject
+ \endgroup \pagegoal=\vsize}
+\def\triplecolumnout{\splittopskip=\topskip \splitmaxdepth=\maxdepth
+ \dimen@=\pageheight \advance\dimen@ by-\ht\partialpage
+ \setbox0=\vsplit255 to\dimen@ \setbox2=\vsplit255 to\dimen@
+ \setbox4=\vsplit255 to\dimen@ \onepageout\pagesofar \unvbox255
+ \penalty\outputpenalty}
+\def\pagesofar{\unvbox\partialpage
+ \wd0=\hsize \wd2=\hsize \wd4=\hsize \hbox to\pagewidth%
+{\box0\hfil\box2\hfil\box4}}
+\def\balancecolumns{\setbox0=\vbox{\unvbox255}\dimen@=\ht0
+ \advance\dimen@ by\topskip \advance\dimen@ by-\baselineskip
+ \divide\dimen@ by3 \splittopskip=\topskip
+ {\vbadness=10000 \loop \global\setbox3=\copy0
+  \global\setbox1=\vsplit3 to\dimen@ \global\setbox5=\vsplit3 to\dimen@
+  \ifdim\ht3>\dimen@ \global\advance\dimen@ by1pt \repeat}
+ \setbox0=\vbox to\dimen@{\unvbox1} \setbox4=\vbox to\dimen@{\unvbox3}
+ \setbox2=\vbox to\dimen@{\unvbox5}\pagesofar
+}
+\catcode`@=12
+\outer\def\+{\tabalign\tt}
+\def\beginsec#1{\medskip\smallskip\filbreak\leftline{\bf #1}\smallskip}
+\def\sskip{\vskip1pt}
+\begintriplecolumns
+\beginsec{ZED Command Syntax}
+Setup:
+\sskip
+\centerline{\tt SET COMMAND NAVTXT:ZED}
+\medskip
+Syntax:
+\sskip
+\centerline{\tt ZED input\_file [output\_file]}
+\smallskip
+Parameters:
+\sskip
+\halign{\quad\tt#\hfil\qquad&#\hfil\cr
+input\_file&file to be edited\cr
+output\_file&Resulting file\cr
+}
+\smallskip
+The default output file is one version higher than the highest existing
+version of {\tt input\_file}.
+\medskip
+Qualifiers:
+\sskip
+\halign{\tt\hfil#\quad&\vtop{\parindent0pt\hsize=1.7truein
+ \tolerance=1000\hangindent0pt\strut#\strut}\cr
+/WITH=filename&Take commands from {\tt filename} instead of
+{\tt SYS\$INPUT}.\cr
+\noalign{\sskip}
+/VER=filename&Send verification of editing commands to {\tt filename}
+instead of {\tt SYS\$OUTPUT}.\cr
+\noalign{\sskip}
+/EPRINT=filename&Send copies of editing commands to {\tt filename}
+(default is {\tt /NOEPRINT}).\cr
+}
+
+\beginsec{Argument Abbreviations:}
+\settabs\+[m,n] $or$ \_\thinspace m,n\_\qquad &\cr
+\+$a,\ b$&line numbers (or . or *)\cr
+\+$cg$&command group\cr
+\+$m,\ n$&numbers\cr
+\+$q$&qualifier list (possibly empty)\cr
+\+$se$&search expression\cr
+\+$s,\ t$&strings of arbitrary characters\cr
+\+$sw$&switch value (+ or --)\cr
+\+$name$&sequence of letters (4 significant)\cr
+
+\beginsec{Qualifiers:}
+\+B&beginning\cr
+\+E&ending\cr
+\+C&control character (for FTN files)\cr
+\+L&last\cr
+\+P&precisely\cr
+\+W&word\cr
+\+S&significant\cr
+\+U&uppercase\cr
+\+n&count\cr
+\+[m,n] $or$ \_\thinspace m,n\_&window\cr
+\bigskip\bigskip
+\filbreak
+{\bf ZED COMMANDS BY FUNCTION}
+
+\beginsec{Line Selection}
+\+M$a$&move to line $a$\cr
+\+M*&move to end-of-file\cr
+\+M-&move back as far as possible\cr
+\+M+&move forward to high water\cr
+\+N&move to next line\cr
+\+P&move to previous line\cr
+\+F $se$&find (forward)\cr
+\+BF $se$&backward find\cr
+
+\beginsec{Line Insertion and Deletion}
+Insert material for the {\tt I} and {\tt R} commands may be any one of
+\vskip-.02in plus.2in\centerline{\hbox to1in{\hrulefill}}
+\sskip
+$\langle$in-line text, any \# of 
+lines terminated by {\tt Z} on a new line$\rangle$
+\+BUFF $n$&to insert an in-store {\it (destructive)}\cr
+\+COPY $n$&\llap{\smash{\raise1.2ex\hbox{$\biggr\}$}}}buffer ($1 \le n \le 4$)
+{\it (non-destructive)}\cr
+\+/$s$/&to insert a file with name $s$\cr
+\vskip-.02in plus.2in\centerline{\hbox to1in{\hrulefill}}
+\sskip
+\+IC&insert current line\cr
+\+IS /$s$/&insert string\cr
+\+I$a$&insert before line $a$\cr
+\+R$a\ b$&replace lines $a$ to $b$\cr
+\+D$a\ b$&delete lines $a$ to $b$\cr
+\+DF $se$&delete find\cr
+\+DREST&delete rest of source\cr
+\+DBUFF $n$&delete contents of buffer $n$\cr
+\+DBUFF&delete contents of all buffers\cr
+
+\beginsec{Line Windowing}
+\+>&move character pointer to right\cr
+\+<&move character pointer to left\cr
+\+PR&reset character pointer to start\cr
+\+PA $q$/$s$/&point after\cr
+\+PB $q$/$s$/&point before\cr
+
+\beginsec{Single Character Operations}
+Act on the object of the character pointer:
+\sskip
+\+\$&force lower case\cr
+\+\%&force upper case\cr
+\+{\bf\_}&change character to space\cr
+\+\#&delete character\cr
+
+\beginsec{String Operations}
+\+A $q$/$s$/$t$&after\cr
+\+AP $q$/$s$/$t$/&after and point\cr
+\+B $q$/$s$/$t$/&before\cr
+\+BP $q$/$s$/$t$/&before and point\cr
+\+E $q$/$s$/$t$/&exchange\cr
+\+EP $q$/$s$/$t$/&exchange and point\cr
+\+DFA $q$/$s$/&delete from after\cr
+\+DFB $q$/$s$/&delete from before\cr
+\+DTA $q$/$s$/&delete till after\cr
+\+DTB $q$/$s$/&delete till before\cr
+\+LC $q$/$s$/&force lower case\cr
+\+UC $q$/$s$/&force upper case\cr
+\+SHC $q$/$s$/&show column\cr
+\+CC/$s$/&set control character\cr
+\+LCL &force entire line to lower case\cr
+\+UCL &force entire line to upper case\cr
+\+'&repeat last string operation\cr
+\+UNDO&undo current line\cr
+
+\beginsec{Splitting and Joining}
+\+SA $q$/$s$/&split after\cr
+\+SB $q$/$s$/&split before\cr
+\+CL /$s$/&concatenate\cr
+
+\beginsec{Line Verification}
+\+V $sw$&automatic verification\cr
+\+VI $sw$&verify with indicators\cr
+\+VG $sw$&global change verification\cr
+\+VN $sw$&verify line numbers\cr
+\+VT $sw$&verify line texts\cr
+\+VX $sw$&verify in hex for indicators\cr
+\+VE $sw$&verify edit commands\cr
+\+?&verify current line\cr
+\+!&ditto, with character indicators\cr
+
+\beginsec{Text Inspection}
+\+T$n$&type $n$ lines\cr
+\+TL$n$&ditto, with line numbers\cr
+\+T+&type to high water\cr
+\+TL+&ditto, with line numbers\cr
+\+TBUFF$n$&type buffer $n$\cr
+\+TBUFF&type all buffers\cr
+
+\settabs\+UL $se$ THEN $cg$ ELSE $cg$&\cr
+\beginsec{File and Buffer Control}
+\+C /$s$/&take commands from file $s$\cr
+\+C BUFF$n$&commands from {\it (destructive)}\cr
+\+C COPY$n$&\llap{\smash{\raise1.2ex\hbox{$\biggr\}$}}}buffer
+$n$ {\it (non-destructive)}\cr
+\+FROM BUFF$n$&select buffer $n$ as source\cr
+\+TO BUFF$n$&select buffer $n$ for output\cr
+\+TBUFF$n$&type contents of buffer $n$\cr
+\+DBUFF$n$&delete contents of buffer $n$\cr
+\+DBUFF&delete contents of all buffers\cr
+\+SHBUFF&show non-empty buffer \#'s\cr
+\+FROM /$s$/&select file for input\cr
+\+TO /$s$/&select file for output\cr
+\+FROM&select original input\cr
+\+TO&select original output\cr
+
+\beginsec{Conditionals And Loops}
+Wherever {\tt ELSE} appears it may be replaced by:
+\sskip
+\def\[{{\rm[}}\def\]{{\rm]}}
+\centerline{\tt ELIF $se$ THEN $cg$ \[ELSE $cg$\]}
+\centerline{or}
+\centerline{\tt ELUL $se$ THEN $cg$ \[ELSE $cg$\]}
+\smallskip
+\+IF $se$ THEN $cg$ \[ELSE $cg$\]&if\cr
+\+UL $se$ THEN $cg$ \[ELSE $cg$\]&unless\cr
+\+IFEOF $cg$ \[ELSE $cg$\]&if end-of-file\cr
+\+ULEOF $cg$ \[ELSE $cg$\]&unless end-of-file\cr
+\+WH $se$ $cg$&while\cr
+\+UT $se$ $cg$&until\cr
+\+UTEOF $cg$&until end-of-file\cr
+\+RPT $cg$&repeat indefinitely\cr
+\+AGP&abandon command group\cr
+\+&and any enclosing\cr
+\+&repetitive command\cr
+
+\beginsec{Global Operations}
+\+GE $q$/$s$/$t$/&global exchange\cr
+\+GA $q$/$s$/$t$/&global after\cr
+\+GB $q$/$s$/$t$/&global before\cr
+\+ON $se$ $cg$ \[ELSE $cg$\]&complicated global\cr
+\+CG$n$&cancel global $n$\cr
+\+DG$n$&disable global $n$\cr
+\+EG$n$&enable global $n$\cr
+\+SHG$n$&show global $n$\cr
+\+SHG&show all globals\cr
+\+VG $sw$&global change verification\cr
+
+\beginsec{State Display}
+\+SHD&show data\cr
+\+SHF&show files\cr
+\+SHG&show globals\cr
+\+SHS&show switches\cr
+
+\beginsec{Hexadecimal Mode}
+\+X $sw$&switch hex mode on/off\cr
+
+\beginsec{Termination}
+(disallowed in interactive mode if non-empty buffers exist):
+\+W&windup\cr
+\+Q&quit (exit command level)\cr
+\+STOP&exit without writing output\cr
+
+\beginsec{Procedures}
+\+PROC $name$ $cg$&define\cr
+\+DO $name$&obey\cr
+\+SHPROC $name$&show\cr
+\+SHPROC&show all procedures\cr
+\+CPROC $name$&cancel\cr
+\+CPROC&cancel all procedures\cr
+
+\beginsec{Miscellaneous}
+\+=$n$&set line number\cr
+\+COLS&\cr
+\+COLS+&$\smash{\Biggr\}}$ verify column numbers\cr
+\+COLS $n$&\cr
+\+COMM/$s$/&comment to verification file\cr
+\+ERRSTOP $sw$&non-interactive error action\cr
+\+FLUSH&flush output queue\cr
+\+FN $sw$&find next mode\cr
+\+H$a$&halt at line $a$\cr
+\+HELP&sic\cr
+\+MXLL $n$&maximum line length\cr
+\+TR $sw$&suppress trailing spaces\cr
+\+CS $sw$&compress spaces\cr
+\+WARN $sw$&warnings mode\cr
+\+WORD /$s$/&set word characters\cr
+\+DETAB $sw$&convert tabs to spaces\cr
+\+TAB $n$&set gap between tab columns\cr
+\+Z /$s$/&set insert terminator string\cr
+\filbreak
+\null
+\vfill
+\font\bigb=amssbx10 scaled\magstep2
+\bigb
+\centerline{ZED}
+\bigskip
+\centerline{QUICK}
+\bigskip
+\centerline{REFERENCE}
+\bigskip
+\centerline{CARD}
+\vskip1truein
+\font\bigit=amti10 scaled\magstep1
+\bigit
+\centerline{JPL Version}
+\medskip
+\centerline{April, 1987}
+\vfill
+\rm
+\centerline{For a complete specification of ZED,}
+\medskip
+\centerline{\tt PRINT USER\$DISK:[PJS.ZED]COMPLETE.SPEC}
+\medskip
+\centerline{on a line-printer (approx.~60 pages).}
+\vfill\eject\endtriplecolumns\end

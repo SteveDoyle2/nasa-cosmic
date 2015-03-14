@@ -1,0 +1,54 @@
+ EGRAM- ECHELLE SPECTROGRAPH DESIGN AID
+
+( NASA Goddard Space Flight Center )
+
+     EGRAM aids in the design of spectrographic systems that utilize an
+echelle-first order cross disperser combination. This optical combina-
+tion causes a two dimensional echellogram to fall on a detector. EGRAM de-
+scribes the echellogram with enough detail to allow the user to effectively
+judge the feasibility of the spectrograph's design. By iteratively alter-
+ing system parameters, the desired echellogram can be achieved without mak-
+ing a physical model. EGRAM calculates system parameters which are accu-
+rate to the first order and compare favorably to results from ray tracing
+techniques.
+
+     The spectrographic system modelled by EGRAM consists of an entrance
+aperture, collimator, echelle, cross dispersion grating, focusing op-
+tions, and a detector. The system is assumed to be free of aberrations and
+the echelle, cross disperser, and detector should be planar. The EGRAM pro-
+gram is menu driven and has a HELP facility. The user is prompted for in-
+formation such as minimum and maximum wavelengths, slit dimensions, rul-
+ing frequencies, detector geometry, and angle of incidence. EGRAM calcu-
+lates the resolving power and range of order numbers covered by the echel-
+logram. A numerical map is also produced. This tabulates the order number,
+slit bandpass, and high/middle/low wavelengths. EGRAM can also compute the
+centroid coordinates of a specific wavelength and order (or vice versa).
+
+     EGRAM is written for interactive execution and is written in Microsoft
+BASIC A. It has been implemented on an IBM PC series computer operating un-
+der DOS. EGRAM was developed in 1985.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: BASIC
+
+MACHINE REQUIREMENTS: IBM PC SERIES
+
+PROGRAM SIZE: APPROXIMATELY 794 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 3.5 Inch IBM PC DOS Format Diskette
+
+PROGRAM NUMBER: GSC-13016
+
+DOMESTIC - DOCUMENTATION PRICE: $18.00    PROGRAM PRICE: $200.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $36.00   PROGRAM PRICE: $400.00
+
+
+
+                                        1
+

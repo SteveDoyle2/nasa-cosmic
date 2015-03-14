@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+The revise which is located in Annotation Mode is used to revise an existing
+annotation.  After the revise key is pressed, the user has a chance to move the
+cursor onto the annotation which is to be revised.  When the cursor is on an
+annotation, the annotation will appear reversed.  When the annotation to be
+revised is reversed, press return.  To not revise an annotation make sure the
+cursor is not on an annotation when pressing the return key.  After the
+annotation is chosen the annotation will appear near the bottom of the screen.
+After changing the annotation to be as desired, press the return key and the
+revised annotation will be displayed on the chart where the old one was.
+
+When revising an annotation, there may be extra characters displayed at the
+end of the revised annotation.  Do not worry about this since it will be fixed
+when leaving the annotation mode.
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

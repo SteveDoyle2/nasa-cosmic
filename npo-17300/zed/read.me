@@ -1,0 +1,8 @@
+The logical name ZED$HLP needs to be defined to point to the file
+ZED.HLP.  An example of a suitable command to place in SYSTARTUP.COM
+is:
+
+$ DEFINE/SYSTEM  ZED$HLP    USER$DISK:[NAV.PJS.COSMIC.ZED]ZED.HLP
+
+ZED will still work if this logical isn't defined, except that HELP
+won't work.

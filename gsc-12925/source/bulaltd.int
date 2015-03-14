@@ -1,0 +1,57 @@
+  interface;
+  
+  unit bulaltd  ( alter_display_space, format, tf, tw, th, uf, uw, uh,
+                  bf, bw, bh, sf, sw, sh, df, dw, dh, lf, spixl, spixo,
+                  spixn, spixd, slined, slinel, lava, bullet_symbol,
+                  bullet_item_length, symbols, sub_bullet_symbol,
+                  top_page, bottom_page, sub_bullet_item_length,
+                  sline, yturn, maxpix, base, count, paging, dscreen );
+
+  USES utility;
+
+  var
+       tf     : integer;
+       tw     : integer;
+       th     : integer;
+       uf     : integer;
+       uw     : integer;
+       uh     : integer;
+       bf     : integer;
+       bw     : integer;
+       bh     : integer;
+       sf     : integer;
+       sw     : integer;
+       sh     : integer;
+       df     : integer;
+       dw     : integer;
+       dh     : integer;
+       lf     : integer;
+       spixl  : integer;
+       spixo  : integer;
+       spixn  : integer;
+       spixd  : integer;
+       slined : integer;
+       slinel : integer;
+       lava   : integer;
+       sline  : integer;
+       yturn  : integer;
+       maxpix : integer;
+       symbols                : array[1..6] of char;
+       bullet_symbol          : integer;
+       bullet_item_length     : integer;
+       sub_bullet_symbol      : integer;
+       sub_bullet_item_length : integer;
+       top_page, bottom_page  : entity;
+       base                   : integer;
+       count                  : array[1..2] of integer;
+       dscreen                : boolean;
+
+  procedure alter_display_space ( var first : entity );
+
+  procedure format ( var inkey : byte; var current, first : entity );
+
+  procedure paging(mode:integer;var npage:integer;var first:entity);
+
+  begin
+  end;
+

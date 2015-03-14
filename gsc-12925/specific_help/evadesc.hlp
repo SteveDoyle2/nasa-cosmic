@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+evadesc2.hlp
+
+The Earned Value Analysis Chart allows you to monitor the cost performance of a
+contract or project.  Line graphs are used to plot cumulative figures for the
+budgeted cost of the work scheduled (BCWS), the actual cost of work performed
+(ACWP), and the budgeted cost of work performed (BCWP).  The budgeted cost at
+completion (BAC) is represented with a horizontal base line.
+The fields which are to be entered are as follows:
+        Contract no.  : Contact id number
+        Type          : Contract type
+        Category      : Reporting category
+        Unit          : Unit of values entered
+        By            : Preparation person
+        Date          : 8 characters, if none given today's date displayed
+        Scope of work : Contract and category description
+        Data values   : 3 lines of up to 13 values, one initial value each line
+        Footnotes     : Up to 3, located at bottom of chart
+For descriptions of values displayed at left side press F9(More Help).
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+        F9  More Help
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

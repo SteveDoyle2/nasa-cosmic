@@ -1,0 +1,76 @@
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+C
+C   SAVEFILE - Definitions for the File Input Menu of CARE3MENU
+C
+C   VERSION:  0.0
+C   AUTHOR:  A. Roberts; Tesseract Systems, Inc.
+C   CREATION DATE:  05/29/83
+C   LAST REVISION DATE:  ---
+C   LAST REVISED BY:  ---
+C
+C FUNCTION: Defintions and declarations for CARE3MENU command level
+C		menu.
+C
+C USEAGE:  included in CARE3MENU
+C
+C ARGUMENTS:  NA
+C
+C ERRORS:   NA
+C
+C NOTES:  Written in VAX/VMS FORTRAN.  Uses default tables
+C
+C PROCESS:  NA
+C
+C REVISION HISTORY:  0.0 - Created on 05/29/83 by A. Roberts;
+C				Tesseract Systems, Inc.
+C
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
+C
+C Menu parameters
+C
+	parameter SAV_MITEMS = 2		! Items in menu
+	parameter SAV_H_LOGNAME = 'sav'		! Help logical name
+
+	parameter SAV_SDT1 = NO_DAT .or. BOLD	! Special video
+
+	parameter SAV_FIL_PNTR = 2		! Location pointers
+
+	parameter SAV_FIL_DEF = 'CREIN.DAT'	! Defaults
+
+C
+C Menu tables
+C
+	character*(MAX_STRING) sav_labs(SAV_MITEMS)	! Item labels
+	integer*4 sav_lpos(2,SAV_MITEMS)		! Item Positions
+	integer*4 sav_dtype(SAV_MITEMS)			! Item Datatypes
+	integer*4 sav_idat(SAV_MITEMS)			! INTEGER Data
+	real*4 sav_rdat(SAV_MITEMS)			! REAL Data
+	character*(MAX_STRING) sav_sdat(SAV_MITEMS)	! STRING Data
+
+C
+C Default restore tables
+C
+	character*(MAX_STRING) sav_sdat_def(SAV_MITEMS)
+
+C
+C Anything in the menu that is hardwired
+C
+	data sav_labs /'File Name Input',
+	1	'Enter File Name for Model Storage:'/
+
+	data sav_lpos /1,32,
+	1		14,25/
+
+	data sav_dtype /SAV_SDT1,
+	9			STR_DAT/
+
+C
+C Default values and restore table
+C
+	data sav_sdat /' ', SAV_FIL_DEF/
+	data sav_sdat_def /' ', SAV_FIL_DEF/
+
+C
+C End of Menu Definition
+C

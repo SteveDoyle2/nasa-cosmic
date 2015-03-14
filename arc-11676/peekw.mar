@@ -1,0 +1,13 @@
+;	INTEGER PEEKW
+;	IWORD = PEEKW(IADDR)
+; C Where IADDR is the address of the value desired, and IWORD
+; C  is the INTEGER*4 value.
+;
+	.TITLE	PEEKW
+
+PEEKW::
+	.WORD	^M<R4>
+	MOVL	@4(AP),R4
+   	MOVL	(R4),R0
+	RET
+	.END

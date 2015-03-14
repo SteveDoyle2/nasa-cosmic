@@ -1,0 +1,30 @@
+  interface;
+  
+  unit mlsaltd ( draw_skeleton, picture,
+                 nstops, stop_width, ncolumns, column_width, format,
+                 period_type, month, day, year, bar_location );
+
+  USES getparam;
+
+  USES utility;
+
+  var
+       nstops       : integer;
+       stop_width   : integer;
+       ncolumns     : integer;
+       column_width : integer;
+       period_type  : integer;
+       month        : integer;
+       day          : integer;
+       year         : integer;
+       bar_location : integer;
+
+  procedure draw_skeleton ( var first : entity );
+
+  procedure picture ( var current : entity ; var first : entity );
+
+  procedure format ( var inkey : byte; var current, first : entity );
+
+  begin
+  end;
+

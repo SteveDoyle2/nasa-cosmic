@@ -1,0 +1,24 @@
+   interface;
+      unit dspas(dspoint,dsline,dsbar,dsymbol,dstext,
+                 dsinit,dsseg,dscir,plotchoice,plfile);
+
+   var dsseg : word;
+       plotchoice : integer;
+           plfile : text;
+
+   procedure dspoint(x1,y1,color : integer);
+   procedure dsline(x1,y1,x2,y2,color,ndon,ndoff : integer);
+   procedure dsbar(x1,y1,x2,y2,color,fill : integer);
+   procedure dsymbol(x,y,color,id1,id2,scale : integer);
+   procedure dstext(x,y,size,color : integer;
+                var text : lstring;
+                    length, dir : integer);
+   procedure dsinit;
+{  procedure dsbmove(x1,y1,x2,y2,npix,nline  : integer);
+   procedure dspmove(x1,y1,x2,y2  : integer);}
+   procedure dscir(cx,cy,radius,sangle,eangle,color,fill:integer);
+
+
+   begin
+   end;
+

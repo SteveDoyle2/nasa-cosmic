@@ -1,0 +1,14 @@
+  interface;
+
+  unit option ( select, cdefault, endflag, update );
+
+  var
+      endflag, update : boolean;
+
+  procedure select;
+
+  procedure cdefault;
+
+  begin
+  end;
+

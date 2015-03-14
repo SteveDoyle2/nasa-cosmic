@@ -1,0 +1,36 @@
+  interface;
+
+  unit pieexec(format,perform2,exit,enter,redraw,form,symbol,erro,
+               sldredraw);
+
+  USES vbpas;
+
+  USES getparam;
+
+  USES utility;
+
+  var
+     form   : byte ;
+     symbol : integer ;
+     erro : boolean ;
+ 
+  procedure exit (var current, first     : entity );
+   
+  procedure enter (var current, first     : entity );
+
+  procedure redraw ( code : integer;var current, first  : entity );
+
+  procedure sldredraw ( var current, first : entity );
+
+  procedure format ( var inkey : byte; var current,first : entity );
+
+
+  procedure perform2 ( var inkey         : byte;
+                       var current       : entity;
+                       var current_node  : byte;
+                       var first         : entity );
+
+
+  begin
+  end;
+

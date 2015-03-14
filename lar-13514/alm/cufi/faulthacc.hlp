@@ -1,0 +1,14 @@
+	The Fault Handling Model Accuracy menu allows the user to
+	enter two parameters which will control the accuracy of
+	CARE III when processing a fault-handling model that includes
+        at least one uniform distribution.  The parameters are not used
+        when default (exponential) distributions are used.  The two
+	parameters are:
+
+		DBLDF - A real value in the range of 0.1 - 0.01.
+			This value is the step size doubling
+                        difference.  A smaller value increases
+                        both accuracy and the cost of the run.
+
+		TRUNC - A real value in the range of 1.0E-3 - 1.0E-6.
+                        This value is the coverage function truncation value.

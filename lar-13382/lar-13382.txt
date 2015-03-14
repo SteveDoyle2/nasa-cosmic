@@ -1,0 +1,60 @@
+ AESOP- AN EXPERT SYSTEM ENGINE WITH OPERATIVE PROBABILITIES
+
+( CARNEGIE-MELLON UNIV. )
+
+     AESOP is a rule-based inference engine for an expert system, which
+makes decisions about a particular situation given user-supplied hypothe-
+ses, rules, and answers to questions drawn from the rules. If a knowledge
+base containing the hypotheses and rules governing an environment is avail-
+able to AESOP, almost any situation within that environment can be resolved
+by answering the questions asked by AESOP. The questions can be answered
+with YES, NO, MAYBE, DON'T KNOW, DON'T CARE, or with a probability factor
+ranging from zero to ten. AESOP was developed as a tool for expert system
+development. Although it is probably not suitable for the final implemen-
+tation of most expert systems applications, AESOP can serve as a fast means
+of developing a proof-of-concept test system. It also can be valuable in
+allowing the majority of the knowledge engineering to be done before com-
+mittment to a final implementation mechanism. The sample AESOP rule file
+contains data for determining if tasks in space should be automated or per-
+formed by humans. The initial prompt asks what task is under consideration,
+and AESOP asks questions about feasibility and performance until one of the
+original hypotheses (automate or perform by humans) is confirmed.
+
+     The rule file contains the initial prompt, the rules and mutually ex-
+clusive rules used in the decision making, the hypotheses, and the proba-
+bility factors for each rule in a hypothesis. AESOP builds a top-down logic
+tree structure. If a reply is DON'T KNOW, the rule base is checked for ex-
+isting questions which may solve the dilemma. This allows several levels of
+rules to exist within a particular level containing more specific decision
+criteria. When any hypothesis reaches 90 percent certainty, AESOP prints a
+final confirming message. The user can ask WHY or HOW for a detailed list of
+the evidence confirming the hypothesis. The status of all initial hypothe-
+ses posed to AESOP is stored in a file for later reference.
+
+     AESOP is written in Franz LISP for interactive execution and has been
+implemented on a DEC VAX series computer. This program was developed in
+1984.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: LISP
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 675 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX FILES-11 Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-13382
+
+DOMESTIC - DOCUMENTATION PRICE: $12.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $24.00   PROGRAM PRICE: $1000.00
+
+
+                                        1
+

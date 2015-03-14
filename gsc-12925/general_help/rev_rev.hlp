@@ -1,0 +1,35 @@
+
+edit.hlp
+dirkey.hlp
+cngdrive.hlp
+
+
+
+
+
+
+After F2 REVIEW/REVISE a chart is pressed, The prompt asks for the file you
+wish to work with.  Enter the 8 letter or less filename and press return to
+start working on a chart which has already been created and saved.  Pressing
+F10 Exit at the REVIEW/REVISE screen will return you to the Main Menu.
+
+The PgUp (Page Up) and PgDn (Page Down) keys can be used to recieve the 
+previous or next page of the directory.  Pressing F3 Directory will then
+display the first page again.
+
+To obtain help for any of the following subjects,  press the function key next
+to the desired subject.
+
+ 
+        F2  Edit
+        F3  Directory
+        F4  Change Drive
+ 
+ 
+ 
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last help screen or F10 to leave the help mode
+

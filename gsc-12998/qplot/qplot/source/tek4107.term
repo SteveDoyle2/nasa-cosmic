@@ -1,0 +1,194 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STANDARD',
+               'QLIBHOME:FIG',
+               'QLIBHOME:COLOR',
+               'QLIBHOME:TERM_VAX',
+               'QLIBHOME:TERM_ANSI',
+               'QLIBHOME:TERM_4100',
+               'QLIBHOME:TEK4106.TEN'),
+  ENVIRONMENT ('QLIBHOME:TEK4107.TEN') ]
+MODULE term_TEK4107;
+{=============================================================================}
+[ HIDDEN ] VAR
+   segmentopen   : boolean := false;
+   currseg       : integer := 0;
+   panelopen     : boolean := false;
+   inpanel       : boolean := false;
+{=============================================================================}
+{-- PROCEDURES FOR TERMINAL TYPE TEK4107 -------------------------------------}
+{=============================================================================}
+[ GLOBAL ]
+FUNCTION termname_TEK4107 (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0: termname_TEK4107 := '1234';
+   1: termname_TEK4107 := 'TEK4107 ';
+   2: termname_TEK4107 := 'TEK4109 ';
+   3: termname_TEK4107 := 'TEK4207 ';
+   4: termname_TEK4107 := 'TGRAF   ';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE colorsetup_TEK4107;
+BEGIN
+IF (terminal.name = 'TEK4109 ') OR (terminal.name = 'TGRAF   ')
+ THEN colorsetup_4100 (16,16,true)
+ ELSE colorsetup_4100 (16,4,true);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE executecom_TEK4107;
+VAR
+   ii,j          : integer;
+   oldpos        : ipoint;
+{------------------------------}
+PROCEDURE bufferempty;
+{ Purpose -- empty software plotting buffer }
+BEGIN
+CASE env.mode OF
+   M_TEXT:  BEGIN
+            qiowwrite (ESC + '%!0'      { CODE TEK               }
+                     + ESC + 'TM3');    { SET COLOR DEFINE MODE  }
+            env.mode := M_PLOT;
+            colorsetup_TEK4107;
+            IF config.overlaykill
+             THEN qiowwrite (ESC + 'LV0');     { DIALOG AREA INVISIBLE  }
+            END;
+   M_DUAL:  IF config.overlaykill
+             THEN qiowwrite (ESC + 'LV0');     { DIALOG AREA INVISIBLE  }
+   M_PLOT:  ;
+   END;
+env.mode := M_PLOT;
+IF length(env.buffer) <> 0 
+ THEN 
+  BEGIN
+  IF NOT segmentopen
+   THEN 
+    BEGIN
+    currseg := currseg + 1;
+    qiowwrite (ESC + 'SE' + strofi_4100(currseg));
+    segmentopen := true;
+    END;
+  IF inpanel
+   THEN qiowwrite (env.buffer)
+   ELSE qiowwrite (env.buffer + CRLF);
+  env.buffer := '';
+  END;
+END;
+{------------------------------}
+BEGIN
+WITH plotitem DO CASE ins OF
+   I_col:  BEGIN
+           bufferempty;
+           IF env.visible
+            THEN 
+             BEGIN
+             j := getcolorindex_4100 (termpalette,st,bufferempty);
+             env.buffer := ESC + 'ML' + strofi_4100 (j-1)
+                         + ESC + 'MT' + strofi_4100 (j-1);
+             END;
+           bufferempty;
+           END;
+   I_pan:  BEGIN
+           bufferempty;
+           j := getcolorindex_4100 (termpalette,st,bufferempty);
+           panelopen := j > 0;
+           inpanel := j > 0;
+           IF panelopen
+            THEN env.buffer := ESC + 'MP' + strofi_4100 (1-j);
+           bufferempty;
+           END;
+   I_clo:  BEGIN
+           bufferempty;
+           env.buffer := ESC + 'LE';
+           bufferempty;
+           inpanel := false;
+           END;
+   I_pos:  BEGIN
+           bufferempty;
+           env.pos.ix := ix;
+           env.pos.iy := iy;
+           END;
+   I_dra:  draw_4100(ix,iy,panelopen,bufferempty);
+   I_siz:  ;
+   I_mar:  ;
+   I_pri:  IF env.visible AND (st <> '') 
+            THEN 
+             BEGIN
+             bufferempty;
+             env.buffer := ESC + ';' + ESC + 'MC' 
+               + strofi_4100((env.curch.width -env.curch.charspacing) DIV 16)
+               + strofi_4100((env.curch.height-env.curch.linespacing) DIV 16)
+               + strofi_4100 (env.curch.charspacing DIV 16);
+             bufferempty;
+             env.buffer := chr(29) + strofpos_4100 (env.pos) 
+                         + ESC + 'LT' + strofi_4100 (length(st)) 
+                         + st;
+             bufferempty;
+             END;
+   I_emp:  bufferempty;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE writeterm_TEK4107 (str : VARYING [l2] OF char);
+BEGIN
+IF segmentopen 
+ THEN BEGIN  qiowwrite (ESC + 'SC');  segmentopen := false;  END;
+writeterm_TEK4106 (str);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE readterm_TEK4107 (VAR outstr : VARYING [l2] OF char);  
+BEGIN
+readterm_vax (outstr);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screenerase_TEK4107;
+BEGIN
+env.mode := M_TEXT;
+qiowwrite (ESC + '%!0'      { CODE TEK               }
+         + ESC + 'TM3');    { SET COLOR DEFINE MODE  }
+colorsetup_TEK4107;
+qiowwrite (ESC + 'KA0'      { DIALOG AREA DISABLE    }
+         + ESC + 'LZ'       { DIALOG AREA CLEAR      }
+         + ESC + 'RF0'      { FIXUP OFF              }
+         + ESC + 'SK!'      { DELETE ALL SEGMENTS    }
+         + ESC + 'RF6'      { FIXUP ON               }
+         + ESC + chr(12));
+qiowwrite (ESC + '%!2');
+screenerase_ansi;
+segmentopen := false;
+currseg := 0;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screencopy_TEK4107;
+BEGIN
+screencopy_TEK4106;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE gin_TEK4107 (VAR key : char;  VAR ipt : ipoint;  color : color_type);
+BEGIN
+IF segmentopen THEN BEGIN qiowwrite (ESC + 'SC');  segmentopen := false;  END;
+IF env.mode = M_TEXT THEN qiowwrite (ESC + '%!0');
+gin_4100 (key,ipt,color);
+END;
+{-----------------------------------------------------------------------------}
+[GLOBAL]
+FUNCTION readmenu_TEK4107 (default : char;  toplevel : boolean;
+   helpprefix : anystring) : command_type;
+BEGIN
+readmenu_TEK4107 := readmenu_ansi (default,toplevel,helpprefix,true);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE termconfig_TEK4107 (configcontrol : configcontrol_type);
+BEGIN
+termconfig_TEK4106 (configcontrol);
+END;
+{-----------------------------------------------------------------------------}
+END.

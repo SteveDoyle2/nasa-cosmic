@@ -1,0 +1,93 @@
+/*****************************************************************************/
+/*                                                                           */
+/*  Set_undef                                                                */
+/*                                                                           */
+/*  This function sets one condition to undefined if its value is not        */
+/*  required; if it is required, it is evaluated.  No assumption is made     */
+/*  about the state of the condition before the function is called.          */
+/*                                                                           */
+/*  Input:  cond - pointer to a condition.                                   */
+/*  Output: none.                                                            */
+/*                                                                           */
+/*  Method: If the value is required                                         */
+/*              evaluate the condition.                                      */
+/*          Else                                                             */
+/*              If the last value was true                                   */
+/*                  set the value to undef.                                  */
+/*                  adjust the undef counters, etc. of all rules which       */
+/*                      depend on the condition.                             */
+/*              If the last value was false                                  */
+/*                  set the value to undef.                                  */
+/*                  adjust the undef and false counters, etc. of all rules   */
+/*                      which depend on the condition.                       */
+/*                                                                           */
+/*  Programmer: G R Goodrum, MDTSCO, June 1984                               */
+/*                                                                           */
+/*****************************************************************************/
+
+#include "structures.inc"
+
+set_undef ( cond )
+struct cond_info *cond;
+{
+    struct rule_info **r_list;
+    struct rule_info *set_rule;
+    struct cond_info *find_false();
+
+    if  ( cond -> is_val_required )
+    {                                                           /* debug */
+        count ( 11, 0 );                                        /* debug */
+        evaluate ( cond );
+    }                                                           /* debug */
+
+    else
+    {
+        count ( 11, 1 );                                        /* debug */
+#ifdef TRACE
+        if  ( cond -> trace )
+            trace ( cond, UNDEF );
+#endif
+        if  ( cond -> last_value > 0 )          /* true */
+        {
+            count ( 11, 2 );                                    /* debug */
+            cond -> last_value  =  UNDEF;
+
+            r_list  =  cond -> rule_list;
+            while  ( ( set_rule = *r_list++ ) != NULL )
+            {
+                count ( 11, 5 );                                /* debug */
+                set_rule -> undef_count  +=  1;
+                check_rule ( set_rule );                        /* debug */
+            }
+            count ( 11, 6 );                                    /* debug */
+        }
+
+        else if  ( cond -> last_value == FALSE )
+        {
+            count ( 11, 3 );                                    /* debug */
+            cond -> last_value  =  UNDEF;
+
+            r_list  =  cond -> rule_list;
+            while  ( ( set_rule = *r_list++ ) != NULL )
+            {
+                count ( 11, 7 );                                /* debug */
+                set_rule -> undef_count  +=  1;
+                if  ( --( set_rule -> false_count ) == 1 )
+                {
+                    count ( 11, 9 );                            /* debug */
+                    set_rule -> only_false = find_false ( set_rule->cond_list );
+
+                    set_rule -> only_false -> is_val_required  +=  1;
+                }
+                else count ( 11, 10 );                          /* debug */
+                check_rule ( set_rule );                        /* debug */
+            }
+            count ( 11, 8 );                                    /* debug */
+
+        }
+        else count ( 11, 4 );                                   /* debug */
+
+    }
+
+    check_cond ( cond );                                        /* debug */
+}

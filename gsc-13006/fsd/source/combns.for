@@ -1,0 +1,193 @@
+      SUBROUTINE COMBNS(K,XLK,XL1,XL2,XL3,DRPR,ITEST)
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C    *                                                            *
+C
+C    **************************************************************
+C    *    COMBNS COMBINES ARRAYS FOR THE SIMULATION OF LINEARLY   *
+C    *    VARYING DRAG PRESSURE FOR VERY LONG ELEMENTS.           *
+C    *                                                            *
+C    **************************************************************
+C
+      COMMON/COMSOL/ ZZ01(10),ZZ12(3,10),ZZ23(9,10),SZS01(10),SZS02(10)
+     *              ,SZS11(3,10),SZS12(3,10),SZS13(3,10),SZS21(9,10)
+     *              ,SZS22(9,10),SZS23(9,10),SZS24(9,10),SZS31(27,10)
+     *              ,SZS32(27,10),SZS41(81,10)
+C
+      COMMON/COMSL1/ ZS101(2),ZS102(2),ZS111(6),ZS112(6),ZS113(6)
+     *              ,ZS121(18),ZS122(18),ZS123(18),ZS124(18),ZS131(54)
+     *              ,ZS132(54),ZS141(162),Z2S101(2),Z2S112(6)
+     *              ,Z2S123(18),XLTEST
+C
+      COMMON/IPOOL1/ IDUM(19),LK(10),LLK(10)
+C
+      COMMON/RPOOL1/ RHOK(10),TIME,SA(3,3),FM1(3,3),ZLK(10),OMEG(3)
+     *              ,ZLKP(10),ZLKDP(10),CMAT(3,3),GBAR(3,3),YBCM(3)
+     *              ,ZBZK(3,10),FCM(3,3),DTO,PHID,PHI
+C
+      COMMON/RPOOL2/ PO,SD(3),DAN(3,10),DBN(3,10),CFMT(3,3),DIY1(3)
+     *              ,SD1(3),DT1,P1,AERO,DTO1,YIZK(3),PO1
+C
+      COMMON/VECTRS/ XSAT(3),XSATDT(3),AD(3)
+C
+C
+      DATA FEET/3.28083333333333D3/
+C
+      DIMENSION XB(3),XI(3),SXSAT(3),SZZ12(3),SZZ23(9),SSZS11(3)
+     *         ,SSZS12(3),SSZS13(3),SSZS21(9),SSZS22(9),SSZS23(9)
+     *         ,SSZS24(9),SSZS31(27),SSZS32(27),SSZS41(81)
+C
+      IF(XLK.LT.XLTEST) RETURN
+      IF(DRPR.EQ.0.0D0) RETURN
+C
+      IF(ITEST.EQ.2) GO TO 100
+C
+C     FIND DRAG PRESSURE AT ELEMENT TIP
+C
+C     FIND BODY POSITION AT ELEMENT TIP
+C
+      DO 10 I=1,3
+      XB(I)=FCM(I,1)*XL1+FCM(I,2)*XL2+FCM(I,3)*XL3
+      XB(I)=XB(I)+YIZK(I)
+   10 CONTINUE
+C
+C
+C     FIND INERTIAL POSITION OF ELEMENT TIP
+C
+      DO 20 I=1,3
+      XI(I)=SA(I,1)*XB(1)+SA(I,2)*XB(2)+SA(I,3)*XB(3)
+   20 CONTINUE
+C
+C     MODIFY POSITION VECTOR IN COMMON FOR AIRDRG
+C
+      DO 30 I=1,3
+      SXSAT(I)=XSAT(I)
+      XSAT(I)=XSAT(I)+XI(I)/FEET
+   30 CONTINUE
+      SP1=P1
+C
+      CALL AIRDRG(2)
+C
+      DELTP=(P1-DRPR)/DRPR
+C
+C     RESTORE XSAT AND P1 TO ORIGINAL VALUES
+C
+      DO 40 I=1,3
+      XSAT(I)=SXSAT(I)
+   40 CONTINUE
+      P1=SP1
+C
+C     SAVE COMSOL ARRAYS
+C
+      SZZ01=ZZ01(K)
+      SSZS01=SZS01(K)
+      SSZS02=SZS02(K)
+C
+      DO 50 I=1,3
+      SZZ12(I)=ZZ12(I,K)
+      SSZS11(I)=SZS11(I,K)
+      SSZS12(I)=SZS12(I,K)
+      SSZS13(I)=SZS13(I,K)
+   50 CONTINUE
+C
+      DO 51 I=1,9
+      SZZ23(I)=ZZ23(I,K)
+      SSZS21(I)=SZS21(I,K)
+      SSZS22(I)=SZS22(I,K)
+      SSZS23(I)=SZS23(I,K)
+      SSZS24(I)=SZS24(I,K)
+   51 CONTINUE
+C
+      DO 52 I=1,27
+      SSZS31(I)=SZS31(I,K)
+      SSZS32(I)=SZS32(I,K)
+   52 CONTINUE
+      DO 53 I=1,81
+C
+      SSZS41(I)=SZS41(I,K)
+   53 CONTINUE
+C
+      L0=1
+      LNK=0
+      IF(LK(K).EQ.1) GO TO 55
+      L0=2
+      LNK=3
+   55 CONTINUE
+      L1=LNK
+      L2=LNK*LNK
+      L3=L1*L2
+      L4=L1*L3
+C
+C     LOAD COMSOL ARRAYS WITH COMBINED ARRAYS
+C
+      ZZ01(K)=ZZ01(K)+DELTP*Z2S101(L0)
+      SZS01(K)=SZS01(K)+DELTP*ZS101(L0)
+      SZS02(K)=SZS02(K)+DELTP*ZS102(L0)
+C
+      DO 60 I=1,3
+      I1=L1+I
+      ZZ12(I,K)=ZZ12(I,K)+DELTP*Z2S112(I1)
+      SZS11(I,K)=SZS11(I,K)+DELTP*ZS111(I1)
+      SZS12(I,K)=SZS12(I,K)+DELTP*ZS112(I1)
+      SZS13(I,K)=SZS13(I,K)+DELTP*ZS113(I1)
+   60 CONTINUE
+C
+      DO 61 I=1,9
+      I2=L2+I
+      ZZ23(I,K)=ZZ23(I,K)+DELTP*Z2S123(I2)
+      SZS21(I,K)=SZS21(I,K)+DELTP*ZS121(I2)
+      SZS22(I,K)=SZS22(I,K)+DELTP*ZS122(I2)
+      SZS23(I,K)=SZS23(I,K)+DELTP*ZS123(I2)
+      SZS24(I,K)=SZS24(I,K)+DELTP*ZS124(I2)
+   61 CONTINUE
+C
+      DO 62 I=1,27
+      I3=L3+I
+      SZS31(I,K)=SZS31(I,K)+DELTP*ZS131(I3)
+      SZS32(I,K)=SZS32(I,K)+DELTP*ZS132(I3)
+   62 CONTINUE
+C
+      DO 63 I=1,81
+      I4=L4+I
+      SZS41(I,K)=SZS41(I,K)+DELTP*ZS141(I4)
+   63 CONTINUE
+C
+C     RETURN TO SOLAR FOR LINEARLY VARYING DRAG FORCE CALCULATION
+C
+      RETURN
+C
+  100 CONTINUE
+C
+C     RESTORE ORIGINAL ARRAYS TO COMSOL
+C
+      ZZ01(K)=SZZ01
+      SZS01(K)=SSZS01
+      SZS02(K)=SSZS02
+C
+      DO 110 I=1,3
+      ZZ12(I,K)=SZZ12(I)
+      SZS11(I,K)=SSZS11(I)
+      SZS12(I,K)=SSZS12(I)
+      SZS13(I,K)=SSZS13(I)
+  110 CONTINUE
+C
+      DO 111 I=1,9
+      ZZ23(I,K)=SZZ23(I)
+      SZS21(I,K)=SSZS21(I)
+      SZS22(I,K)=SSZS22(I)
+      SZS23(I,K)=SSZS23(I)
+      SZS24(I,K)=SSZS24(I)
+  111 CONTINUE
+C
+      DO 112 I=1,27
+      SZS31(I,K)=SSZS31(I)
+      SZS32(I,K)=SSZS32(I)
+  112 CONTINUE
+C
+      DO 113 I=1,81
+      SZS41(I,K)=SSZS41(I)
+  113 CONTINUE
+C
+C
+      RETURN
+      END

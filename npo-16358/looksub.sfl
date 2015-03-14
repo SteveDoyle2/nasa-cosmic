@@ -1,0 +1,811 @@
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        BRDCST                30-SEP-83      07:36:15      PAGE    1
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+    1              SUBROUTINE BRDCST(MESSAGE)                                                                                       
+    2       C                                       C                                                                               
+    3       C                                       C***********************************************************************        
+    4       C                                       C*****************************   BRDCST   ******************************        
+    5       C                                       C***********************************************************************        
+    6       C                                       C                                                                               
+    7       C                                       CDM   This subroutine catches broadcast messages and stores them away in        
+    8       C                                       CDM   common.                                                                   
+    9       C                                       CDM                                                                             
+   10       C                                       CDM   Programmer - Jon Vavrus   4 APR 1983                                      
+   11       C                                       CM                                                                              
+   12       C                                       CM         This routine is called as an AST whenever a broadcast message        
+   13       C                                       CM    comes through to the terminal.  That message is then stored away          
+   14       C                                       CM    in the common area BRDCM1.  A flag is set and a count is updated          
+   15       C                                       CM    in BRDCM2.                                                                
+   16       C                                       CM                                                                              
+   17       C                                       CM         A message is also output on to the screen.                           
+   18       C                                       C                                                                               
+   19       C                                       C***   COMMON AREAS                                                             
+   20       C                                       C                                                                               
+   21       C                                       CS    BRDCM1  Contains character variables for broadcast handling.              
+   22       C                                       CS              BRDNOT holds the notice to be displayed on the screen.          
+   23       C                                       CS              BRDMSG which holds broadcast messages.                          
+   24       C                                       C                                                                               
+   25       C                                       CS    BRDCM2  Contains non-character information for broadcast handling.        
+   26       C                                       CS              BRDLEN the length of strings in BRDMSG.                         
+   27       C                                       CS              BRDCNT the count of strings in BRDMSG.                          
+   28       C                                       CS              BRDFLG a flag telling if there are unread messages.             
+   29       C                                       C                                                                               
+   30       C                                       CS    DOITNM  Contains information transferred from the main program:           
+   31       C                                       CS                 INCHAN - input channel of the terminal                       
+   32       C                                       CS                 TIME   - scrolling speed in -10000000*seconds/line           
+   33       C                                       CS                 SBFFLG - flag indicating whether there is a string           
+   34       C                                       CS                          in the search buffer                                
+   35       C                                       CS                 DIRECT - flag for reverse (-1 for reverse, else 1)           
+   36       C                                       CS                 EBK    - EBK of input file                                   
+   37       C                                       CS                 SBFLEN - length of string(s) in search buffer(s)             
+   38       C                                       CS                 RECBLK - number of bytes used per block in FIX-BLK files     
+   39       C                                       CS                 RANGE  - starting and ending block numbers and pointers      
+   40       C                                       CS                          of the print range.                                 
+   41       C                                       CS                 VT100  - flag set .TRUE. if terminal is a VT100              
+   42       C                                       CS                 LRL    - length of longest record in input file              
+   43       C                                       CS                 LENLMT - maximum length of output (if <0 then WRAP set)      
+   44       C                                       CS                 PAGEND - Line number of last line output to screen.          
+   45       C                                       CS                 PAGLEN - number of lines per page                            
+   46       C                                       CS                 COMLIN - line number for command input (bottom of screen)    
+   47       C                                       CS                 VT100A - flag set .TRUE. if VT100 has advanced video option  
+   48       C                                       C                                                                               
+   49              CHARACTER*(*) MESSAGE                                                                                            
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        BRDCST                30-SEP-83      07:36:15      PAGE    2
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+   50              CHARACTER*128 BRDMSG(20)                                                                                         
+   51              CHARACTER*22 BRDNOT                                                                                              
+   52              INTEGER*4 TIME,EBK,RANGE(2,2),PAGEND                                                                             
+   53              INTEGER*2 DIRECT,SBFLEN(10),RECBLK,LENLMT,PAGLEN,COMLIN,                                                         
+   54            1       BRDCNT,BRDLEN(20)                                                                                          
+   55              LOGICAL*1 SBFFLG,VT100,VT100A,BRDFLG                                                                             
+   56                                                                                                                               
+   57              COMMON /BRDCM1/BRDNOT,BRDMSG                                                                                     
+   58              COMMON /BRDCM2/BRDLEN,BRDCNT,BRDFLG                                                                              
+   59              COMMON /DOITNM/INCHAN,TIME,SBFFLG,DIRECT,EBK,SBFLEN,RECBLK,RANGE,                                                
+   60            1       VT100,LRL,LENLMT,PAGEND,PAGLEN,COMLIN,VT100A                                                               
+   61                                                                                                                               
+   62              BRDCNT = BRDCNT + 1                                                                                              
+   63     *        IF (BRDCNT .LE. 20) THEN                                                                                         
+   64   1             BRDFLG = .TRUE.                                                                                               
+   65   1             BRDMSG(BRDCNT) = MESSAGE                                                                                      
+   66   1             BRDLEN(BRDCNT) = LEN(MESSAGE)                                                                                 
+   67     *        ELSE                                                                                                             
+                     +--------------------------------------------------------------------------------------------------------------
+   68   1 *          |DO FOR I=2,20                                                                                                 
+   69   2            |   BRDMSG(I-1) = BRDMSG(I)                                                                                    
+   70   2            |   BRDLEN(I-1) = BRDLEN(I)                                                                                    
+   71   1 *          |END DO FOR                                                                                                    
+                     +--------------------------------------------------------------------------------------------------------------
+   72   1             BRDMSG(20) = MESSAGE                                                                                          
+   73   1             BRDLEN(20) = LEN(MESSAGE)                                                                                     
+   74     *        ENDIF                                                                                                            
+   75     *        IF (VT100)                                                                                                       
+   76   1             CALL LIB$PUT_SCREEN(CHAR(27)//'7')                                                                            
+   77   1             CALL LIB$PUT_SCREEN(BRDNOT,COMLIN,IABS(LENLMT)-28)                                                            
+   78     *        ENDIF                                                                                                            
+   79              RETURN                                                                                                           
+              <-----                                                                                                                
+   80              END                                                                                                              
+
+       0 DIAGNOSTICS GENERATED
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)                              30-SEP-83      07:36:15      PAGE    3
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+   81                                                                                                                              
+   82              SUBROUTINE CONVUP(LENGTH,LOWER,UPPER)                                                                            
+   83       C                                       C                                                                               
+   84       C                                       C***********************************************************************        
+   85       C                                       C*****************************   CONVUP   ******************************        
+   86       C                                       C***********************************************************************        
+   87       C                                       C                                                                               
+   88       C                                       CDM   This subroutine converts a string from lower to upper case.               
+   89       C                                       CDM   Both of the strings are passed in non-descriptor form.                    
+   90       C                                       CDM                                                                             
+   91       C                                       CDM   Programmer - Jon Vavrus  13 NOV 1980                                      
+   92       C                                       CM                                                                              
+   93       C                                       CM         The routine takes a string of bytes starting at the location         
+   94       C                                       CM    given for LOWER and converts any alphabetic characters in the first       
+   95       C                                       CM    LENGTH bytes to upper-case, returning the converted string of bytes       
+   96       C                                       CM    starting at the location given for UPPER.                                 
+   97       C                                       C                                                                               
+   98              INTEGER*2 LENGTH                                                                                                 
+   99              LOGICAL*1 LOWER(1),UPPER(1)                                                                                      
+  100                                                                                                                               
+                  +-----------------------------------------------------------------------------------------------------------------
+  101     *       |DO FOR I=1,LENGTH                                                                                                
+  102       C     |                                 C                                                                               
+  103       C     |                                 C***   141 octal is lowercase a in ASCII, 172 octal is lowercase z in           
+  104       C     |                                 C***   ASCII.  40 octal is the spacing between the upper and lowercase          
+  105       C     |                                 C***   alphabets in ASCII.                                                      
+  106       C     |                                 C                                                                               
+  107   1 *       |   IF (LOWER(I) .GE. '141'O .AND. LOWER(I) .LE. '172'O) THEN                                                     
+  108   2         |      UPPER(I) = LOWER(I) - '40'O                                                                                
+  109   1 *       |   ELSE                                                                                                          
+  110   2         |      UPPER(I) = LOWER(I)                                                                                        
+  111   1 *       |   ENDIF                                                                                                         
+  112     *       |END DO FOR                                                                                                       
+                  +-----------------------------------------------------------------------------------------------------------------
+  113              RETURN                                                                                                           
+              <-----                                                                                                                
+  114              END                                                                                                              
+
+       0 DIAGNOSTICS GENERATED
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)                              30-SEP-83      07:36:15      PAGE    4
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  115                                                                                                                              
+  116              SUBROUTINE EXITR                                                                                                 
+  117       C                                       C                                                                               
+  118       C                                       C***********************************************************************        
+  119       C                                       C*******************************   EXITR   *****************************        
+  120       C                                       C***********************************************************************        
+  121       C                                       C                                                                               
+  122       C                                       CDM   This subroutine is invoked on image exit and cancels any                  
+  123       C                                       CDM   AST, and closes the file and re-stores the terminal.                      
+  124       C                                       CDM                                                                             
+  125       C                                       CDM   Programmer - Jon Vavrus  13 JAN 1983                                      
+  126       C                                       CM                                                                              
+  127       C                                       CM    Should be set up by a call to SYS$DCLEXH(BLOCK) where block               
+  128       C                                       CM    is a 4 longword array with this routines address as the second            
+  129       C                                       CM    longword, 1 as the third longword, and the address of any                 
+  130       C                                       CM    writable location (longword) as the fourth.                               
+  131       C                                       C                                                                               
+  132       C                                       C***   COMMON STORAGE                                                           
+  133       C                                       C                                                                               
+  134       C                                       CS    DOITNM  Contains information transferred from the main program:           
+  135       C                                       CS                 INCHAN - input channel of the terminal                       
+  136       C                                       CS                 TIME   - scrolling speed in -10000000*seconds/line           
+  137       C                                       CS                 SBFFLG - flag indicating whether there is a string           
+  138       C                                       CS                          in the search buffer                                
+  139       C                                       CS                 DIRECT - flag for reverse (-1 for reverse, else 1)           
+  140       C                                       CS                 EBK    - EBK of input file                                   
+  141       C                                       CS                 SBFLEN - length of string(s) in search buffer(s)             
+  142       C                                       CS                 RECBLK - number of bytes used per block in FIX-BLK files     
+  143       C                                       CS                 RANGE  - starting and ending block numbers and pointers      
+  144       C                                       CS                          of the print range.                                 
+  145       C                                       CS                 VT100  - flag set .TRUE. if terminal is a VT100              
+  146       C                                       C                                                                               
+  147       C                                       CS    STOPCM  Used to pass information back and forth to/from the stop          
+  148       C                                       CS            scrolling AST.  STOPIT is a flag set .TRUE. if scrolling          
+  149       C                                       CS            should be stopped, INBUF is the input character, IOFLAG and       
+  150       C                                       CS            TIMFLG are event flags, and IOSB is the I/O IOSB.                 
+  151       C                                       C                                                                               
+  152              INTEGER*4 TIMFLG,TIME,EBK,RANGE(2,2)                                                                             
+  153              INTEGER*2 IOSB(4),DIRECT,SBFLEN(10),RECBLK                                                                       
+  154              LOGICAL*1 STOPIT,INBUF,SBFFLG,VT100                                                                              
+  155                                                                                                                               
+  156              COMMON /DOITNM/INCHAN,TIME,SBFFLG,DIRECT,EBK,SBFLEN,RECBLK,RANGE,                                                
+  157            1       VT100                                                                                                      
+  158              COMMON /STOPCM/STOPIT,INBUF,IOFLAG,IOSB,TIMFLG                                                                   
+  159                                                                                                                               
+  160     *        IF (IOFLAG .GT. 0)                                                                                               
+  161   1             CALL SYS$CANCEL(%VAL(INCHAN))                                                                                 
+  162   1             CALL LIB$FREE_EF(IOFLAG)                                                                                      
+  163     *        ENDIF                                                                                                            
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        EXITR                 30-SEP-83      07:36:15      PAGE    5
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  164              CALL WORKNG(.FALSE.)                                                                                             
+  165              CALL RESTRM(INCHAN)                                                                                              
+  166              CALL BLKCLS                                                                                                      
+  167              IF (VT100) CALL LIB$PUT_SCREEN(CHAR(27)//'[0q')                                                                  
+  168              CALL SYS$DASSGN(%VAL(INCHAN))                                                                                    
+  169              RETURN                                                                                                           
+              <-----                                                                                                                
+  170              END                                                                                                              
+
+       0 DIAGNOSTICS GENERATED
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)                              30-SEP-83      07:36:15      PAGE    6
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  171                                                                                                                              
+  172              SUBROUTINE INTASC(LENGTH,DATA,STRING)                                                                            
+  173       C                                       C                                                                               
+  174       C                                       C***********************************************************************        
+  175       C                                       C******************************   INTASC   *****************************        
+  176       C                                       C***********************************************************************        
+  177       C                                       C                                                                               
+  178       C                                       CDM   This subroutine converts a string of ascii coded bytes to a character     
+  179       C                                       CDM   variable                                                                  
+  180       C                                       CDM                                                                             
+  181       C                                       CDM   Programmer - Jon Vavrus    JUL 1980                                       
+  182       C                                       CM                                                                              
+  183       C                                       CM         The subroutine is called with LENGTH (the number of bytes to be      
+  184       C                                       CM    converted), DATA (the starting location of the data), and STRING (a       
+  185       C                                       CM    character variable to recieve the translation).  After translation the    
+  186       C                                       CM    LENGTH+1 character of STRING is set to a blank.                           
+  187       C                                       C                                                                               
+  188              CHARACTER*(*) STRING                                                                                             
+  189              INTEGER*2 LENGTH                                                                                                 
+  190              LOGICAL*1 DATA(200)                                                                                              
+  191                                                                                                                               
+  192              DECODE (LENGTH,100,DATA)STRING                                                                                   
+  193       100    FORMAT (A<LENGTH>)                                                                                               
+  194              STRING(LENGTH+1:LENGTH+1) = ' '                                                                                  
+  195              RETURN                                                                                                           
+              <-----                                                                                                                
+  196              END                                                                                                              
+
+       0 DIAGNOSTICS GENERATED
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)                              30-SEP-83      07:36:15      PAGE    7
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  197                                                                                                                              
+  198              SUBROUTINE REDOIT(COMAND,NUMFLG,TANUMB,MINFLG)                                                                   
+  199       C                                       C                                                                               
+  200       C                                       C***********************************************************************        
+  201       C                                       C*****************************   REDOIT   ******************************        
+  202       C                                       C***********************************************************************        
+  203       C                                       C                                                                               
+  204       C                                       CDM   This routine calls DOIT                                                   
+  205       C                                       CDM                                                                             
+  206       C                                       CDM   Programmer - Jon Vavrus  26 AUG 1981                                      
+  207       C                                       CM                                                                              
+  208       C                                       CM         The routine simply calls DOIT with the same argument list.           
+  209       C                                       CM    This allows DOIT to call itself.                                          
+  210       C                                       C                                                                               
+  211       C                                       C***   CALLED ROUTINES                                                          
+  212       C                                       C                                                                               
+  213       C                                       C     DOIT    Executes commands                                                 
+  214       C                                       C                                                                               
+  215              INTEGER*4 COMAND                                                                                                 
+  216              LOGICAL*1 MINFLG,NUMFLG                                                                                          
+  217                                                                                                                               
+  218              CALL DOIT(COMAND,NUMFLG,TANUMB,MINFLG)                                                                           
+  219              RETURN                                                                                                           
+              <-----                                                                                                                
+  220              END                                                                                                              
+
+       0 DIAGNOSTICS GENERATED
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)                              30-SEP-83      07:36:15      PAGE    8
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  221                                                                                                                              
+  222              SUBROUTINE SFTLIN(LINES)                                                                                         
+  223       C                                       C                                                                               
+  224       C                                       C***********************************************************************        
+  225       C                                       C*****************************   SFTLIN   ******************************        
+  226       C                                       C***********************************************************************        
+  227       C                                       C                                                                               
+  228       C                                       CDM   This subroutine shifts the output lines stored in the line storage        
+  229       C                                       CDM   arrays in order to make room at the end of the arrays for more lines.     
+  230       C                                       CDM                                                                             
+  231       C                                       CDM    Programmer - Jon Vavrus  13 NOV 1980                                     
+  232       C                                       CDM    Revised    - Jon Vavrus  12 MAY 1981                                     
+  233       C                                       CDM    Revised    - Jon Vavrus  29 JUL 1981 (change CCLINE usage)               
+  234       C                                       CDM    Revised    - Jon Vavrus  18 AUG 1982 (bigger arrays)                     
+  235       C                                       CM                                                                              
+  236       C                                       CM         The routine requires LINES (the character array of actual            
+  237       C                                       CM    output lines) to be passed as an argument, all the other arrays are       
+  238       C                                       CM    passed through common area LNCN.  The normal shift is to make room        
+  239       C                                       CM    for 100 more lines at the end, however, if there are less then 500        
+  240       C                                       CM    lines already then the shift frees up 599 of the 600 lines.  When         
+  241       C                                       CM    the shift occurs lines shifted off the front of the arrays are lost.      
+  242       C                                       C                                                                               
+  243       C                                       C***   COMMON AREAS                                                             
+  244       C                                       C                                                                               
+  245       C                                       CS    LNCN    Contains output arrays, and file pointers and information:        
+  246       C                                       CS                 LINLEN - array of output line lengths                        
+  247       C                                       CS                 LINEP  - top of screen line (or last line output by          
+  248       C                                       CS                          backward scroll)                                    
+  249       C                                       CS                 NLINES - number of lines in arrays                           
+  250       C                                       CS                 BUFFER - array of unconverted data                           
+  251       C                                       CS                 PBUF   - current position in BUFFER                          
+  252       C                                       CS                 NBUF   - number of bytes in BUFFER                           
+  253       C                                       CS                 BLK    - next block in file                                  
+  254       C                                       CS                 FSZ    - record length for FIX files, or FSZ for VFC files   
+  255       C                                       CS                 IFSZ   - word extended record length for FIX files           
+  256       C                                       CS                 RFM    - files RFM                                           
+  257       C                                       CS                 RAT    - files RAT (1=CR,2=FTN,3=PRN,4=none,<0=BLK set)      
+  258       C                                       CS                 SBLK   - starting block of current batch of output lines     
+  259       C                                       CS                 CCLINE - array containing pointer to where the line's        
+  260       C                                       CS                          record starts in the file (CCLINE(1,x) = block      
+  261       C                                       CS                          #, CCLINE(2,x) = byte number in block).  If         
+  262       C                                       CS                          CCLINE(1,x) = 0 then it is a carriage control       
+  263       C                                       CS                          line.                                               
+  264       C                                       CS                 LBLK   - last block processed by LINCON                      
+  265       C                                       CS                 LPBUF  - last value of PBUF processed by LINCON              
+  266       C                                       C                                                                               
+  267              CHARACTER*132 LINES(600)                                                                                         
+  268              INTEGER*4 RFM,RAT,FSZ,PBUF,BLK,SBLK,CCLINE(2,600)                                                                
+  269              INTEGER*2 LINLEN(600)                                                                                            
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        SFTLIN                30-SEP-83      07:36:15      PAGE    9
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  270              LOGICAL*1 BUFFER(3750)                                                                                           
+  271                                                                                                                               
+  272              COMMON /LNCN/LINLEN,LINEP,NLINES,BUFFER,PBUF,NBUF,BLK,FSZ,IFSZ,                                                  
+  273            1       RFM,RAT,SBLK,CCLINE,LBLK,LPBUF                                                                             
+  274                                                                                                                               
+  275     *        IF (LINEP .GT. 500) THEN                                                                                         
+  276   1             J = 500                                                                                                       
+  277     *        ELSE                                                                                                             
+  278   1             J = LINEP - 1                                                                                                 
+  279     *        ENDIF                                                                                                            
+                  +-----------------------------------------------------------------------------------------------------------------
+  280     *       |DO FOR I=J,600                                                                                                   
+  281   1         |   LINLEN(I-J+1) = LINLEN(I)                                                                                     
+  282   1         |   LINES(I-J+1) = LINES(I)                                                                                       
+  283   1         |   CCLINE(1,I-J+1) = CCLINE(1,I)                                                                                 
+  284   1         |   CCLINE(2,I-J+1) = CCLINE(2,I)                                                                                 
+  285     *       |END DO FOR                                                                                                       
+                  +-----------------------------------------------------------------------------------------------------------------
+                  +-----------------------------------------------------------------------------------------------------------------
+  286     *       |DO FOR I=1,J-1                                                                                                   
+  287   1 *       |   IF (CCLINE(1,I) .NE. 0)                                                                                       
+  288   2         |      SBLK = CCLINE(1,I)                                                                                         
+  289   2 *       |      UNDO                                                                                                       
+                  <-------                                                                                                          
+  290   1 *       |   ENDIF                                                                                                         
+  291     *       |END DO FOR                                                                                                       
+                  +-----------------------------------------------------------------------------------------------------------------
+  292              LINEP = LINEP - J + 1                                                                                            
+  293              NLINES = 600 - J + 1                                                                                             
+  294              RETURN                                                                                                           
+              <-----                                                                                                                
+  295              END                                                                                                              
+
+       0 DIAGNOSTICS GENERATED
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)                              30-SEP-83      07:36:15      PAGE   10
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  296                                                                                                                              
+  297              SUBROUTINE STOPSC                                                                                                
+  298       C                                       C                                                                               
+  299       C                                       C***********************************************************************        
+  300       C                                       C*****************************   STOPSC   ******************************        
+  301       C                                       C***********************************************************************        
+  302       C                                       C                                                                               
+  303       C                                       CDM   This subroutine is the AST used to stop the scrolling function.           
+  304       C                                       CDM                                                                             
+  305       C                                       CDM   Programmer - Jon Vavrus  13 NOV 1980                                      
+  306       C                                       CDM   Revised    - Jon Vavrus  12 MAY 1981                                      
+  307       C                                       CDM   Revised    - Jon Vavrus  26 AUG 1981                                      
+  308       C                                       CDM   Revised    - Jon Vavrus   6 NOV 1981                                      
+  309       C                                       CDM   Revised    - Jon Vavrus   4 MAY 1982 (non-advanced video VT100's)         
+  310       C                                       CM                                                                              
+  311       C                                       CM         The routine is executed whenever anything is typed while a           
+  312       C                                       CM    scroll is in progress.  If the character typed is "(" or a symbol         
+  313       C                                       CM    defined as "(", all timer requests are cancelled, the timer event         
+  314       C                                       CM    flag is set, and STOPIT is set to .TRUE..  If the character typed         
+  315       C                                       CM    is not one of the above, then the I/O is requeued with STPSC2 as          
+  316       C                                       CM    its AST (STPSC2 just calls this routine), and the character is in-        
+  317       C                                       CM    serted into the input buffer.                                             
+  318       C                                       C                                                                               
+  319       C                                       C***   CALLED ROUTINES                                                          
+  320       C                                       C                                                                               
+  321       C                                       CC    STPSC2  Routine to re-call this one.                                      
+  322       C                                       C                                                                               
+  323       C                                       C***   COMMON AREAS                                                             
+  324       C                                       C                                                                               
+  325       C                                       C                                                                               
+  326       C                                       CS    STOPCM  Used to pass information back and forth to/from the main          
+  327       C                                       CS            process.  STOPIT is a flag set .TRUE. if scrolling should         
+  328       C                                       CS            be stopped, INBUF is the input character, IOFLAG and TIMFLG       
+  329       C                                       CS            are event flags, and IOSB is the I/O IOSB.                        
+  330       C                                       C                                                                               
+  331       C                                       CS    DOITNM  Contains information transferred from the main program:           
+  332       C                                       CS                 INCHAN - input channel of the terminal                       
+  333       C                                       CS                 TIME   - scrolling speed in -10000000*seconds/line           
+  334       C                                       CS                 SBFFLG - flag indicating whether there is a string           
+  335       C                                       CS                          in the search buffer                                
+  336       C                                       CS                 DIRECT - flag for reverse (-1 for reverse, else 1)           
+  337       C                                       CS                 EBK    - EBK of input file                                   
+  338       C                                       CS                 SBFLEN - length of string(s) in search buffer(s)             
+  339       C                                       CS                 RECBLK - number of bytes used per block in FIX-BLK files     
+  340       C                                       CS                 RANGE  - starting and ending block numbers and pointers      
+  341       C                                       CS                          of the print range.                                 
+  342       C                                       CS                 VT100  - flag set .TRUE. if terminal is a VT100              
+  343       C                                       CS                 LRL    - length of longest record in input file              
+  344       C                                       CS                 LENLMT - maximum length of output (if <0 then WRAP set)      
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        STOPSC                30-SEP-83      07:36:15      PAGE   11
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  345       C                                       CS                 PAGEND - Line number of last line output to screen.          
+  346       C                                       CS                 PAGLEN - number of lines per page                            
+  347       C                                       CS                 COMLIN - line number for command input (bottom of screen)    
+  348       C                                       CS                 VT100A - flag set .TRUE. if VT100 has advanced video option  
+  349       C                                       C                                                                               
+  350       C                                       CS    INPUTC  Contains the input character buffer INLINE and the defined        
+  351       C                                       CS            symbols SYMS and the definition search buffers DEFBUF             
+  352       C                                       C                                                                               
+  353       C                                       CS    INPUTN  Contains the input character buffer length LENSAV, and the        
+  354       C                                       CS            symbol definitions DEFS, the number of such definitions           
+  355       C                                       CS            (NDEFS), the definition flags DEFFLG, and the definition          
+  356       C                                       CS            numbers NUMDEF                                                    
+  357       C                                       C                                                                               
+  358       C                                       C***   INPUT VARIABLES                                                          
+  359       C                                       C                                                                               
+  360       C                                       CI    INBUF   One byte buffer used for the QIO input request.                   
+  361       C                                       C                                                                               
+  362       C                                       C***   INPUT UNIT                                                               
+  363       C                                       C                                                                               
+  364       C                                       CR    INCHAN  Channel number of the terminal.                                   
+  365       C                                       C                                                                               
+  366              EXTERNAL STPSC2                                                                                                  
+  367              CHARACTER*128 INLINE                                                                                             
+  368              CHARACTER*30 DEFBUF(10,10,60)                                                                                    
+  369              CHARACTER*1 SYMS(60)                                                                                             
+  370              REAL*4 NUMDEF(10,60)                                                                                             
+  371              INTEGER*4 TIMFLG,TIME,EBK,RANGE(2,2),PAGEND                                                                      
+  372              INTEGER*2 IOSB(4),DIRECT,SBFLEN(10),RECBLK,DEFS(11,10,60),LENLMT,                                                
+  373            1       LENSAV,PAGLEN,COMLIN                                                                                       
+  374              LOGICAL*1 INBUF,STOPIT,ERROUT(5),SBFFLG,VT100,DEFFLG(3,10,60),                                                   
+  375            1       VT100A                                                                                                     
+  376                                                                                                                               
+  377              COMMON /STOPCM/STOPIT,INBUF,IOFLAG,IOSB,TIMFLG                                                                   
+  378              COMMON /DOITNM/INCHAN,TIME,SBFFLG,DIRECT,EBK,SBFLEN,RECBLK,RANGE,                                                
+  379            1       VT100,LRL,LENLMT,PAGEND,PAGLEN,COMLIN,VT100A                                                               
+  380              COMMON /INPUTC/INLINE,SYMS,DEFBUF                                                                                
+  381              COMMON /INPUTN/LENSAV,DEFS,NDEFS,DEFFLG,NUMDEF                                                                   
+  382                                                                                                                               
+  383              DATA ERROUT/7,27,'[','3','q'/                                                                                    
+  384     *        IF (IOSB(1) .NE. '830'X .AND. IOSB(1) .NE. '2C'X)                                                                
+  385       C                                       C                                                                               
+  386       C                                       C***   Is the character a (                                                     
+  387       C                                       C                                                                               
+  388   1 *           IF (INBUF .EQ. '(') THEN                                                                                      
+  389   2                CALL SYS$CANTIM(,)                                                                                         
+  390   2                STOPIT = .TRUE.                                                                                            
+  391   2                CALL SYS$SETEF(%VAL(TIMFLG))                                                                               
+  392   1 *           ELSE                                                                                                          
+  393       C                                       C                                                                               
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        STOPSC                30-SEP-83      07:36:15      PAGE   12
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  394       C                                       C***   Is the character a symbol defined as (                                   
+  395       C                                       C                                                                               
+                        +-----------------------------------------------------------------------------------------------------------
+  396   2 *             |DO FOR I=1,NDEFS                                                                                           
+  397   3 *             |   IF (ICHAR(SYMS(I)) .EQ. INBUF .AND. DEFS(1,1,I) .EQ. 6) THEN                                            
+  398   4               |      CALL SYS$CANTIM(,)                                                                                   
+  399   4               |      STOPIT = .TRUE.                                                                                      
+  400   4               |      CALL SYS$SETEF(%VAL(TIMFLG))                                                                         
+  401   4               |      RETURN                                                                                               
+              <-----------------                                                                                                    
+  402   3 *             |   ENDIF                                                                                                   
+  403   2 *             |END DO FOR                                                                                                 
+                        +-----------------------------------------------------------------------------------------------------------
+  404       C                                       C                                                                               
+  405       C                                       C***   If character is not a control character add it to INLINE (input          
+  406       C                                       C***   buffer)                                                                  
+  407       C                                       C                                                                               
+  408   2 *              IF (INBUF .GE. 32 .AND. INBUF .LE. 126)                                                                    
+  409   3                   LENSAV = LENSAV + 1                                                                                     
+  410   3                   INLINE(LENSAV:LENSAV) = CHAR(INBUF)                                                                     
+  411   2 *              ELSE                                                                                                       
+  412       C                                       C                                                                               
+  413       C                                       C***   If it is a <DEL> then remove the last character                          
+  414       C                                       C                                                                               
+  415   3 *                 IF (INBUF .EQ. 127 .AND. LENSAV .GE. 1)                                                                 
+  416   4                      LENSAV = LENSAV - 1                                                                                  
+  417   3 *                 ELSE                                                                                                    
+  418       C                                       C                                                                               
+  419       C                                       C***   If it is a ^X or ^U then delete entire buffer                            
+  420       C                                       C                                                                               
+  421   4 *                    IF (INBUF .EQ. 24 .OR. INBUF .EQ. 21)                                                                
+  422   5                         LENSAV = 0                                                                                        
+  423   4 *                    ENDIF                                                                                                
+  424   3 *                 ENDIF                                                                                                   
+  425   2 *              ENDIF                                                                                                      
+  426       C                                       C                                                                               
+  427       C                                       C***   Requeue request                                                          
+  428       C                                       C                                                                               
+  429   2                CALL SYS$QIO(%VAL(IOFLAG),%VAL(INCHAN),%VAL('1171'X),IOSB,                                                 
+  430            1             STPSC2,,INBUF,%VAL(1),,,,)                                                                           
+  431   1 *           ENDIF                                                                                                         
+  432     *        ENDIF                                                                                                            
+  433              RETURN                                                                                                           
+              <-----                                                                                                                
+  434              END                                                                                                              
+
+       0 DIAGNOSTICS GENERATED
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)                              30-SEP-83      07:36:15      PAGE   13
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  435                                                                                                                              
+  436              SUBROUTINE STPSC2                                                                                                
+  437       C                                       C                                                                               
+  438       C                                       C***********************************************************************        
+  439       C                                       C*****************************   STPSC2   ******************************        
+  440       C                                       C***********************************************************************        
+  441       C                                       C                                                                               
+  442       C                                       CDM   This subroutine is the AST for the I/O request from STOPSC, if            
+  443       C                                       CDM   invoked it will call STOPSC and exit.                                     
+  444       C                                       CDM                                                                             
+  445       C                                       CDM   Programmer - Jon Vavrus  13 NOV 1980                                      
+  446       C                                       C                                                                               
+  447       C                                       C***   CALLED ROUTINES                                                          
+  448       C                                       C                                                                               
+  449       C                                       C     STOPSC   Actual AST routine.                                              
+  450       C                                       C                                                                               
+  451              CALL STOPSC                                                                                                      
+  452              RETURN                                                                                                           
+              <-----                                                                                                                
+  453              END                                                                                                              
+
+       0 DIAGNOSTICS GENERATED
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)                              30-SEP-83      07:36:15      PAGE   14
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  454                                                                                                                              
+  455              SUBROUTINE TMAST2                                                                                                
+  456       C                                       C                                                                               
+  457       C                                       C****************************************************************************** 
+  458       C                                       C*********************************   TMAST2   ********************************* 
+  459       C                                       C****************************************************************************** 
+  460       C                                       C                                                                               
+  461       C                                       C                                                                               
+  462       C                                       CDM   This routine is simply a means for TIMAST to refer to itself.  All it     
+  463       C                                       CDM   does is call TIMAST.                                                      
+  464       C                                       CDM                                                                             
+  465       C                                       CDM   Programmer  Jon Vavrus -  3 SEP 1982                                      
+  466       C                                       CDM   Revised     Jon Vavrus - 21 SEP 1983 (changed name with TIMAST)           
+  467       C                                       C                                                                               
+  468       C                                       C***   CALLED ROUTINES                                                          
+  469       C                                       C                                                                               
+  470       C                                       C     TIMAST    - Routine to actually output the next message.                  
+  471       C                                       C                                                                               
+  472              CALL TIMAST                                                                                                      
+  473              RETURN                                                                                                           
+              <-----                                                                                                                
+  474              END                                                                                                              
+
+       0 DIAGNOSTICS GENERATED
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)                              30-SEP-83      07:36:15      PAGE   15
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  475                                                                                                                              
+  476              SUBROUTINE TIMAST                                                                                                
+  477       C                                       C                                                                               
+  478       C                                       C****************************************************************************** 
+  479       C                                       C*********************************   TIMAST   ********************************* 
+  480       C                                       C****************************************************************************** 
+  481       C                                       C                                                                               
+  482       C                                       CDM   This routine outputs the proper "WORKING" message at the bottom of the    
+  483       C                                       CDM   screen and requeues itself as a timer AST (through TMAST2).               
+  484       C                                       CDM                                                                             
+  485       C                                       CDM   Programmer  Jon Vavrus -  8 SEP 1982                                      
+  486       C                                       CDM   Revised     Jon Vavrus - 21 SEP 1983 (changed name with TMAST2)           
+  487       C                                       C                                                                               
+  488       C                                       C***   CALLED ROUTINES                                                          
+  489       C                                       C                                                                               
+  490       C                                       CC    TMAST2   - Routine which calls this one.                                  
+  491       C                                       C                                                                               
+  492       C                                       C***   COMMON AREAS                                                             
+  493       C                                       C                                                                               
+  494       C                                       CS    DOITNM  Contains information transferred from the main program:           
+  495       C                                       CS                 INCHAN - input channel of the terminal                       
+  496       C                                       CS                 TIME   - scrolling speed in -10000000*seconds/line           
+  497       C                                       CS                 SBFFLG - flag indicating whether there is a string           
+  498       C                                       CS                          in the search buffer                                
+  499       C                                       CS                 DIRECT - flag for reverse (-1 for reverse, else 1)           
+  500       C                                       CS                 EBK    - EBK of input file                                   
+  501       C                                       CS                 SBFLEN - length(s) of string(s) in search buffer(s)          
+  502       C                                       CS                 RECBLK - number of bytes used per block in FIX-BLK files     
+  503       C                                       CS                 RANGE  - beginning and ending block numbers and pointers     
+  504       C                                       CS                          of the print range                                  
+  505       C                                       CS                 VT100  - flag set .TRUE. if terminal is VT100.               
+  506       C                                       CS                 LRL    - length of the longest record in input file.         
+  507       C                                       CS                 LENLMT - maximum output length (if <0 then WRAP set)         
+  508       C                                       CS                 PAGEND - line number of last line output to screen           
+  509       C                                       CS                 PAGLEN - number of lines per page                            
+  510       C                                       CS                 COMLIN - line number for command input (bottom of screen)    
+  511       C                                       CS                 VT100A - flag set .TRUE. if VT100 has advanced video option  
+  512       C                                       C                                                                               
+  513       C                                       CS    TASTNM  Used to pass the ROW and COLUMN for the message, the flag         
+  514       C                                       CS            ONEFLG, the timer delta time DELTA, and the timer event flag      
+  515       C                                       CS            TIMREF.                                                           
+  516       C                                       C                                                                               
+  517              EXTERNAL TMAST2                                                                                                  
+  518              INTEGER*4 INCHAN,TIME,EBK,RANGE(2,2),PAGEND,TIMREF,DELTA(2)                                                      
+  519              INTEGER*2 SBFLEN(10),RECBLK,LENLMT,PAGLEN,COMLIN,DIRECT,ROW,COLUMN                                               
+  520              LOGICAL*1 SBFFLG,VT100,VT100A,START,ONEFLG                                                                       
+  521                                                                                                                               
+  522              COMMON /DOITNM/INCHAN,TIME,SBFFLG,DIRECT,EBK,SBFLEN,RECBLK,RANGE,                                                
+  523            1       VT100,LRL,LENLMT,PAGEND,PAGLEN,COMLIN,VT100A                                                               
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        TIMAST                30-SEP-83      07:36:15      PAGE   16
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  524              COMMON /TASTNM/ROW,COLUMN,ONEFLG,DELTA,TIMREF                                                                    
+  525                                                                                                                               
+  526     *        IF (ONEFLG) THEN                                                                                                 
+  527   1 *           IF (VT100A)                                                                                                   
+  528   2                CALL LIB$PUT_SCREEN(CHAR(27)//'[7mWORKING'//CHAR(27)//'[0m',                                               
+  529            1             ROW,COLUMN)                                                                                          
+  530   1 *           ELSE                                                                                                          
+  531   2                CALL LIB$PUT_SCREEN('WORKING',ROW,COLUMN)                                                                  
+  532   1 *           ENDIF                                                                                                         
+  533   1             ONEFLG = .FALSE.                                                                                              
+  534     *        ELSE                                                                                                             
+  535   1 *           IF (VT100A)                                                                                                   
+  536   2                CALL LIB$PUT_SCREEN(CHAR(27)//'[1mWORKING'//CHAR(27)//'[0m',                                               
+  537            1             ROW,COLUMN)                                                                                          
+  538   1 *           ELSE                                                                                                          
+  539   2                CALL LIB$PUT_SCREEN('working',ROW,COLUMN)                                                                  
+  540   1 *           ENDIF                                                                                                         
+  541   1             ONEFLG = .TRUE.                                                                                               
+  542     *        ENDIF                                                                                                            
+  543       C                                       C                                                                               
+  544       C                                       C***   Queue AST                                                                
+  545       C                                       C                                                                               
+  546              CALL SYS$SETIMR(%VAL(TIMREF),DELTA,TMAST2,%VAL(1))                                                               
+  547              RETURN                                                                                                           
+              <-----                                                                                                                
+  548              END                                                                                                              
+
+       0 DIAGNOSTICS GENERATED
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)                              30-SEP-83      07:36:15      PAGE   17
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  549                                                                                                                              
+  550              SUBROUTINE WORKNG(START)                                                                                         
+  551       C                                       C                                                                               
+  552       C                                       C****************************************************************************** 
+  553       C                                       C*********************************   WORKNG   ********************************* 
+  554       C                                       C****************************************************************************** 
+  555       C                                       C                                                                               
+  556       C                                       CDM   This subroutine puts out the flashing "WORKING" message.                  
+  557       C                                       CDM                                                                             
+  558       C                                       CDM   Programmer  Jon Vavrus -  8 SEP 1982                                      
+  559       C                                       CM                                                                              
+  560       C                                       CM    The message is displayed at screen position COMLIN(from DOITNM),          
+  561       C                                       CM    IABS(LENLMT)-19(DOITNM also) if START (logical) is .TRUE., and is         
+  562       C                                       CM    stopped if START is .FALSE..  The changing of the display is done         
+  563       C                                       CM    through the use of a system timer AST.                                    
+  564       C                                       C                                                                               
+  565       C                                       C***   COMMON AREAS                                                             
+  566       C                                       C                                                                               
+  567       C                                       CS    DOITNM  Contains information transferred from the main program:           
+  568       C                                       CS                 INCHAN - input channel of the terminal                       
+  569       C                                       CS                 TIME   - scrolling speed in -10000000*seconds/line           
+  570       C                                       CS                 SBFFLG - flag indicating whether there is a string           
+  571       C                                       CS                          in the search buffer                                
+  572       C                                       CS                 DIRECT - flag for reverse (-1 for reverse, else 1)           
+  573       C                                       CS                 EBK    - EBK of input file                                   
+  574       C                                       CS                 SBFLEN - length(s) of string(s) in search buffer(s)          
+  575       C                                       CS                 RECBLK - number of bytes used per block in FIX-BLK files     
+  576       C                                       CS                 RANGE  - beginning and ending block numbers and pointers     
+  577       C                                       CS                          of the print range                                  
+  578       C                                       CS                 VT100  - flag set .TRUE. if terminal is VT100.               
+  579       C                                       CS                 LRL    - length of the longest record in input file.         
+  580       C                                       CS                 LENLMT - maximum output length (if <0 then WRAP set)         
+  581       C                                       CS                 PAGEND - line number of last line output to screen           
+  582       C                                       CS                 PAGLEN - number of lines per page                            
+  583       C                                       CS                 COMLIN - line number for command input (bottom of screen)    
+  584       C                                       CS                 VT100A - flag set .TRUE. if VT100 has advanced video option  
+  585       C                                       C                                                                               
+  586       C                                       CS    TASTNM  Used to pass the ROW and COLUMN for the message, the flag         
+  587       C                                       CS            ONEFLG, the timer delta time DELTA, and the timer event flag      
+  588       C                                       CS            TIMREF.                                                           
+  589       C                                       C                                                                               
+  590       C                                       C***   CALLED ROUTINES                                                          
+  591       C                                       C                                                                               
+  592       C                                       CC    TIMAST  Timer AST.                                                        
+  593       C                                       C                                                                               
+  594              EXTERNAL TIMAST                                                                                                  
+  595              INTEGER*4 INCHAN,TIME,EBK,RANGE(2,2),PAGEND,TIMREF,DELTA(2)                                                      
+  596              INTEGER*2 SBFLEN(10),RECBLK,LENLMT,PAGLEN,COMLIN,DIRECT,ROW,COLUMN                                               
+  597              LOGICAL*1 SBFFLG,VT100,VT100A,START,ONEFLG                                                                       
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        WORKNG                30-SEP-83      07:36:15      PAGE   18
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  598                                                                                                                               
+  599              COMMON /DOITNM/INCHAN,TIME,SBFFLG,DIRECT,EBK,SBFLEN,RECBLK,RANGE,                                                
+  600            1       VT100,LRL,LENLMT,PAGEND,PAGLEN,COMLIN,VT100A                                                               
+  601              COMMON /TASTNM/ROW,COLUMN,ONEFLG,DELTA,TIMREF                                                                    
+  602                                                                                                                               
+  603              DATA DELTA/-20000000,-1/                                                                                         
+  604                                                                                                                               
+  605     *        IF (START) THEN                                                                                                  
+  606       C                                       C                                                                               
+  607       C                                       C***   Set up to start                                                          
+  608       C                                       C                                                                               
+  609   1             ONEFLG = .FALSE.                                                                                              
+  610   1             CALL LIB$GET_EF(TIMREF)                                                                                       
+  611   1             ROW = COMLIN                                                                                                  
+  612   1             COLUMN = IABS(LENLMT) - 19                                                                                    
+  613       C                                       C                                                                               
+  614       C                                       C***   Output message                                                           
+  615       C                                       C                                                                               
+  616   1 *           IF (VT100A)                                                                                                   
+  617   2                CALL LIB$PUT_SCREEN(CHAR(27)//'[7mWORKING'//CHAR(27)//'[0m',                                               
+  618            1             ROW,COLUMN)                                                                                          
+  619   1 *           ELSE                                                                                                          
+  620   2                CALL LIB$PUT_SCREEN('WORKING',ROW,COLUMN)                                                                  
+  621   1 *           ENDIF                                                                                                         
+  622       C                                       C                                                                               
+  623       C                                       C***   Queue AST                                                                
+  624       C                                       C                                                                               
+  625   1             CALL SYS$SETIMR(%VAL(TIMREF),DELTA,TIMAST,%VAL(1))                                                            
+  626     *        ELSE                                                                                                             
+  627   1 *           IF (TIMREF .GT. 0)                                                                                            
+  628       C                                       C                                                                               
+  629       C                                       C***   Make sure not invoked at wrong time by EXITR                             
+  630       C                                       C                                                                               
+  631       C                                       C***   Done working, cancel timer requests and clear message                    
+  632       C                                       C                                                                               
+  633   2                CALL SYS$CANTIM(%VAL(1),)                                                                                  
+  634   2                CALL LIB$PUT_SCREEN('       ',ROW,COLUMN)                                                                  
+  635   2                CALL LIB$SET_CURSOR(1,1)                                                                                   
+  636   2                CALL LIB$FREE_EF(TIMREF)                                                                                   
+  637   1 *           ENDIF                                                                                                         
+  638     *        ENDIF                                                                                                            
+  639              RETURN                                                                                                           
+              <-----                                                                                                                
+  640              END                                                                                                              
+
+       0 DIAGNOSTICS GENERATED

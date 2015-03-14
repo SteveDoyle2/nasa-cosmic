@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+~~~form.hlp
+
+The format menu allows changing of the current formats which will be used to
+draw the chart.  The formats are saved with each chart so that each time the
+chart is viewed, it looks the same.  To change the default options enter the
+new value and it will replace the old value.  To move from field to field, use
+the up and down arrows or the return key.  When two columns are used, the down
+arrow moves from the bottom of the one column to the top of the other and the
+up arrow moves from the top of the one column to the bottom of the other.  The
+return key works the same as the down arrow.  The right arrow is used to obtain
+the next character in the default value and the left arrow or backspace is used
+to remove the last character in the default value.  When any key is pressed the
+values which are being displayed are the values used to draw the chart.
+
+To recieve more help on the individual format options use the Chart Character-
+istics option from the first menu or use F9 to proceed to the format help
+screen.  Since the function keys are the same as the Main Screen, see the help
+given there for more information.
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+        F9  More Help (First insert Specific Help disk if not using hard disk)
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

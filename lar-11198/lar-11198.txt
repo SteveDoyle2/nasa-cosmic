@@ -1,0 +1,46 @@
+ DETERMINATION OF FLOW FIELD IN A NONEQUILIBRIUM SHOCK LAYER ABOUT A
+SMOOTH SYMMETRIC BODY TRAVELING AT HYPERSONIC SPEEDS USING AN INVERSE
+TECHNIQUE
+
+( NASA Langley Research Center )
+
+     An approximate inverse solution is presented for the nonequilibrium
+flow in the inviscid shock layer about a vehicle in hypersonic flight. The
+method is based upon a thin-shock-layer approximation and has the advantage
+of being applicable to both subsonic and supersonic regions of the shock
+layer. The relative simplicity of the method makes it ideally suited for
+programming on a digital computer with a significant reduction in storage
+capacity and computing time required by other more exact methods. Compari-
+son of nonequilibrium solutions for an air mixture obtained by the present
+method is made with solutions obtained by two other methods. Additional
+cases are presented for entry of spherical nose cones into representative
+Venusian and Matrian atmospheres. A digital computer program written in
+FORTRAN language is presented that permits an arbitrary gas mixture to be
+employed in the solution. The effects of vibration, dissociation, recom-
+bination, electronic excitation, and ionization are included in the pro-
+gram.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC 6000 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 3,000 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-11198
+
+DOMESTIC - DOCUMENTATION PRICE: $29.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $58.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

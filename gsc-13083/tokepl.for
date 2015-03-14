@@ -1,0 +1,145 @@
+      SUBROUTINE TOKEPL(U,R,V,ELEM,TFROMP,TRANOM)
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+C THIS ROUTINE WAS ORIGINALLY CALLED RECEL. MINOR MODS WERE MADE AND
+C THE ROUTINE NAMED TOKEPL.
+C 
+C  THE PURPOSE OF TOKEPL IS TO TRANSFORM THE CARTESIAN COORDINATES
+C  OF A VEHICLE IN A CIRCULAR, ELLIPTIC, OR HYPERBOLIC ORBIT INTO
+C  KEPLERIAN ELEMENTS.
+C
+C
+C  INPUT:    (U AND R/V HAVE SAME UNITS. OTHERWISE NO UNIT REQMT.) 
+C
+C  VAR   DIM   TYPE   I/O   DESCRIPTION
+C  ---   ---   ----   ---   -----------
+C
+C  U      1    R*8    I     CENTRAL BODY GRAVITATIONAL COEFFICIENT
+C                           IN SAME UNITS AS POSITION AND VELOCITY.
+C                           EX: U=398601.2D0 KM**3/SEC**2
+C
+C  R      3    R*8    I     CARTESIAN POSITION VECTOR. 
+C
+C  V      3    R*8    I     CARTESIAN VELOCITY VECTOR.
+C
+C  ELEM   6    R*8    O     KEPLERIAN ELEMENTS. LENGTH UNITS ARE THE
+C                           SAME AS FOR U, R, AND V. ANGLE UNITS ARE
+C                           RADIANS. ORDER IS: SMA, ECC, INCL, NODE,
+C                           ARGP, MEANANOM.
+C
+C  TFROMP 1    R*8    O     TIME FROM PERIAPSIS. SAME TIME UNITS AS
+C                           FOR U AND V.
+C
+C  TRANOM 1    R*8    O     TRUE ANOMALY. RADIANS.
+C
+C
+C*******************************************************************
+C 
+C  MODIFIED:  C PETRUZZO. 9/81. WAS RECEL BEFORE MODS.
+C             CJP. 7/83. WHEN FINDING ELEM(5), DID CHECK FOR 
+C                        DNUL/(XNUM*XLM) > 1.D0 
+C
+C********************************************************************
+C
+C
+      DIMENSION R(3),V(3),WW(3),XL(3)
+      DIMENSION ELEM(6),XNU(2),XNUP(3)
+      REAL*8 TWOPI/ 6.283185307179586D0 /
+      REAL*8 DEGRAD/ 57.29577951308232D0 /
+      REAL*8 ONE/1.D0/,TWO/2.D0/
+C
+      EPSINC=1.D-6/DEGRAD
+      WW(1)=R(2)*V(3)-R(3)*V(2)
+      WW(2)=R(3)*V(1)-R(1)*V(3)
+      WW(3)=R(1)*V(2)-R(2)*V(1)
+      C=DSQRT(WW(1)**2+WW(2)**2+WW(3)**2)
+      WW(1)=WW(1)/C
+      WW(2)=WW(2)/C
+      WW(3)=WW(3)/C
+      XNU(1)=-WW(2)
+      XNU(2)=WW(1)
+      XNUM=DSQRT(WW(2)**2+WW(1)**2)
+      P=C*C/U
+      RM=DSQRT(R(1)**2+R(2)**2+R(3)**2)
+      VM=DSQRT(V(1)**2+V(2)**2+V(3)**2)
+      RD=(R(1)*V(1)+R(2)*V(2)+R(3)*V(3))
+C********SOLVE FOR ELEM(1)
+      ELEM(1)=RM/(TWO-RM*VM*VM/U)
+C********SOLVE FOR ELEM(2)
+      ELEM(2)=DSQRT(DABS(ONE-P/ELEM(1)))
+C********SOLVE FOR ELEM(3)
+      ELEM(3)=DACOS(WW(3))
+C********SOLVE FOR ELEM(6)
+      IF(ELEM(2).LT.1.D-06) GO TO 11
+      CTA=(P-RM)/(ELEM(2)*RM)
+      STA=RD*C/(ELEM(2)*U*RM)
+      GO TO 8
+   11 ELEM(2)=0.D0
+      IF(DABS(ELEM(3)).LT.EPSINC) GO TO 9
+      XNUP(1)=-WW(3)*WW(1)
+      XNUP(2)=-WW(3)*WW(2)
+      XNUP(3)=WW(1)**2+WW(2)**2
+      XNUPM=DSQRT(XNUP(1)**2+XNUP(2)**2+XNUP(3)**2)
+      CTA=(R(1)*XNU(1)+R(2)*XNU(2))/(RM*XNUM)
+      STA=(R(1)*XNUP(1)+R(2)*XNUP(2)+R(3)*XNUP(3))/(RM*XNUPM)
+      GO TO 8
+    9 CTA=R(1)/RM
+      STA=R(2)/RM
+    8 ELEM(6)=DATAN2(STA,CTA)
+      IF(ELEM(6).LT.0.D0) ELEM(6)=ELEM(6)+TWOPI
+C
+C********SOLVE FOR ELEM(4)
+C********IF ELEM(3)=0, ELEM(4)=0
+C
+      ELEM(4)=0.D0
+      IF(DABS(ELEM(3)).LT.EPSINC) GO TO 4
+      ELEM(4)=DATAN2(WW(1),-WW(2))
+      IF(ELEM(4).LT.0.D0) ELEM(4)=ELEM(4)+TWOPI
+C
+C********SOLVE FOR ELEM(5)
+C********IF ELEM(2)=0, ELEM(5)=0
+C
+    4 ELEM(5)=0.D0
+      IF(ELEM(2).LT.1.D-06) GO TO 7
+      F=VM**2-U/RM
+      DO 10 I=1,3
+   10 XL(I)=F*R(I)-RD*V(I)
+      DNUL=XNU(1)*XL(1)+XNU(2)*XL(2)
+      XLM=DSQRT(XL(1)**2+XL(2)**2+XL(3)**2)
+      IF(DABS(ELEM(3)).LT.EPSINC) GO TO 5
+      TEMP=DNUL/(XNUM*XLM)
+      IF(DABS(TEMP).GT.1.D0) TEMP=DSIGN(1.D0,TEMP)
+      ELEM(5)=DACOS(TEMP)
+      ELEM(5)=DSIGN(ELEM(5),XL(3))
+      GO TO 7
+    5 CW=XL(1)/XLM
+      SW=XL(2)/XLM
+      ELEM(5)=DATAN2(SW,CW)
+    7 IF(ELEM(5).LT.0.D0) ELEM(5)=ELEM(5)+TWOPI
+      Q=ELEM(6)
+      IF(ELEM(1)) 110,50,50
+C********SOLVE FOR TFROMP ON AN ELLIPTIC ORBIT
+   50 CONTINUE
+      DIV=ONE+ELEM(2)*DCOS(Q)
+      COSEA=(ELEM(2)+DCOS(Q))/DIV
+      SINEA=DSQRT(ONE-ELEM(2)**2)*DSIN(Q)/DIV
+      EA=DATAN2(SINEA,COSEA)
+      AVA=EA-ELEM(2)*DSIN(EA)
+      IF(AVA.LT.0.D0) AVA=AVA+TWOPI
+      XM=AVA
+      TFROMP=AVA/DSQRT(U/ELEM(1)**3)
+      GO TO 20
+C********SOLVE FOR TFROMP ON A HYPERBOLIC ORBIT
+  110 CONTINUE
+      TANG=DSQRT((ELEM(2)-ONE)/(ELEM(2)+ONE))*DSIN(Q/TWO)/DCOS(Q/TWO)
+      SINHF=(TWO*TANG)/(ONE-TANG*TANG)
+      AUXF=DLOG(SINHF+DSQRT(SINHF*SINHF+ONE))
+      Z=ELEM(2)*SINHF-AUXF
+      XM=Z
+      TFROMP=DSQRT(-ELEM(1)**3/U)*Z
+   20 CONTINUE
+C     ELEM(6) HAS BEEN CALCULATED AS TRUE ANOMALY. PUT MEAN ANOM THERE.
+      TRANOM=ELEM(6)
+      ELEM(6)=XM
+      RETURN
+      END

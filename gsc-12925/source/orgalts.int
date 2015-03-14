@@ -1,0 +1,39 @@
+  interface;
+
+  unit orgalts ( alter_screen, move, first_item, first_line,
+                 last_item, last_line, dimension, current_level,
+                 current_sub_level,
+                 topnode, leftnode, irow, icol, imids, istfs,
+                 nmids, nlows, delkey, tnode, lnode );
+
+  USES getparam;
+
+  USES utility;
+
+  var
+      first_line: integer;
+      last_line : integer;
+      first_item: entity;
+      last_item : entity;
+      dimension : array[-1..20] of integer;
+      current_level     : integer;
+      current_sub_level : integer;
+      topnode           : integer;
+      leftnode          : integer;
+      irow, icol        : integer;
+      delkey            : boolean;
+      lnode,tnode,istfs : integer;
+      nmids,imids,nlows : integer;
+
+  procedure alter_screen ( var first         : entity;
+                           var current       : entity;
+                           mode              : integer );
+
+  procedure move ( var current : entity;
+                   direction   : char;
+                   ntimes      : byte );
+
+
+  begin
+  end;
+

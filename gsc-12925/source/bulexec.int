@@ -1,0 +1,31 @@
+  interface;
+
+  unit bulexec ( perform2, exit, enter, redraw, draw_count,
+                 last_ins, add2, destroy, sldredraw );
+
+  USES utility;
+
+  var
+      add2           : boolean;
+      destroy        : boolean;
+      last_ins       : integer;
+      draw_count     : integer;
+
+
+  procedure exit ( var current, first : entity );
+
+  procedure enter ( var current, first : entity );
+
+  procedure redraw ( code : integer;var current, first : entity );
+
+  procedure sldredraw ( var current, first  : entity );
+
+  procedure perform2 ( var inkey         : byte;
+                       var current       : entity;
+                       var current_node  : byte;
+                       var first         : entity );
+
+
+  begin
+  end;
+

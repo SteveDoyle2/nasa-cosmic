@@ -1,0 +1,20 @@
+   interface;
+ unit sfpas(wdupdate,window,rtype,
+      reduce,dscopy,rdeupd,rdtupd,rdbupd,adsbyte,wx1,wy1,color);
+
+
+   type      adsbyte   = ads of byte;
+
+   var       wx1,wy1,color,rtype : integer;
+
+   procedure wdupdate(x1,y1,u1,v1,npix,nline,updmode : integer);
+   procedure window(number,bcolor : integer);
+   procedure reduce(rtype,bcolor : integer);
+   procedure dscopy;
+   procedure rdeupd(rtype,stline,etline : integer);
+   procedure rdtupd(rtype,x,y,size,nochar:integer);
+   procedure rdbupd(rtype,x,y,npix,nline:integer);
+
+   begin
+   end;
+

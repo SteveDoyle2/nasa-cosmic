@@ -1,0 +1,5 @@
+      DOUBLE PRECISION FUNCTION DARCOS(X)
+      REAL*8 X
+      DARCOS=DACOS(X)
+      RETURN
+      END

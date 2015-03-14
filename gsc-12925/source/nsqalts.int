@@ -1,0 +1,25 @@
+  interface;
+
+  unit nsqalts ( alter_screen, first_line, last_line,
+                 topnode, leftnode, irow, icol, imids,
+                 nmids, nlows, delkey, tnode, lnode );
+
+  USES utility;
+
+  var
+      first_line: integer;
+      last_line : integer;
+      topnode           : integer;
+      leftnode          : integer;
+      irow, icol        : integer;
+      delkey            : boolean;
+      lnode, tnode      : integer;
+      nmids,imids,nlows : integer;
+
+  procedure alter_screen ( var first         : entity;
+                           var current       : entity;
+                           mode              : integer );
+
+  begin
+  end;
+

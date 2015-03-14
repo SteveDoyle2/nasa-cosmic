@@ -1,0 +1,52 @@
+ SOAR- SOFTWARE FOR OPTICAL ARCHIVE AND RETRIEVAL
+
+( SAR INCORPORATED )
+
+     Software for Optical Archive and Retrieval, SOAR, is an interface be-
+tween the VAX computer's VMS operating system and a WORM optical disk drive.
+The Write-Once-Read-Many optical disk technology (WORM) does not permit
+the overwriting of files. SOAR creates a seamless user interface for this
+new device, allowing the user to write data files using commands very sim-
+ilar to the ones already used in VMS. The optical disk can be read using the
+standard VMS commands for file access. SOAR maintains a directory list on
+the magnetic drive until the optical disk is filled with data, then perma-
+nently writes this directory list to the optical disk.
+
+     The development of SOAR was accomplished by using a hardware interface
+that converts the DEC MSCP protocol into the SCSI protocol of the optical
+disk. To meet this need, a pseudo-device driver is created in software upon
+initialization and used during the write phase. Required hardware includes
+a bus adapter and an optical disk drive. The optical disk drives that SOAR
+supports are the 1 Gbyte 12-inch drives made by OSI, ATG, and Optimem. Mul-
+tiple drives can be configured using a single controller. Examples of hard-
+ware configurations are given in the user's manual.
+
+     SOAR is written in VAX MACRO ASSEMBLER (67%), VAX FORTRAN 77 (22%), and
+VAX DCL (11%). It was developed to run on a DEC VAX or MicroVAX computer op-
+erating under VAX/VMS and has a central memory requirement of 18K. SOAR was
+developed in 1987 and updated in 1988.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: ASSEMBLER ( 67 %); FORTRAN 77 ( 22 %); DEC VAX DCL ( 11 %);
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 4,303 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX FILES-11 Format Magnetic Tape
+
+PROGRAM NUMBER: GSC-13121
+
+DOMESTIC - DOCUMENTATION PRICE: $13.00    PROGRAM PRICE: $600.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $26.00   PROGRAM PRICE: $1200.00
+
+
+
+                                        1
+

@@ -1,0 +1,35 @@
+mlstext.hlp
+mlsform.hlp
+mlsdesc.hlp
+mlsgraph.hlp
+
+
+
+
+
+
+The following selections describe the specific characteristics which are unique
+for the milestone chart.  Text Mode describes the available function keys when
+in text mode and is split into two sections: the header and milestone/footnote.
+The individual format options are explained in Format descriptions.  A brief
+description of the milestone chart itself can be found in General description.
+Also, the Graphics Mode, which is found only in the milestone chart, is
+described when F4 is pressed.
+
+
+To obtain help for any of the following subjects,  press the function key next
+to the desired subject.
+
+        F1  Text Mode
+        F2  Format descriptions
+        F3  General description
+        F4  Graphics Mode
+ 
+ 
+ 
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

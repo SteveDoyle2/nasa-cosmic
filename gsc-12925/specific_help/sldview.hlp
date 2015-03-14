@@ -1,0 +1,35 @@
+cancel.hlp
+view.hlp
+
+cngdrive.hlp
+
+
+ 
+
+
+
+The VIEW a Slide Show menu allows for viewing a show or just one slide.  To
+view a show move the cursor to the name of the desired show and press F2 to
+view.  If viewing, the F2 Continue key must be pressed between each slide.  To
+view one slide, move the cursor to the filename in the directory section and
+press F2 to view.
+
+
+
+
+To obtain help for any of the following subjects,  press the function key next
+to the desired subject.
+
+        F1  Cancel
+        F2  View
+
+        F4  Change Drive
+
+
+ 
+        F8  Return to Previous Menu
+
+        F10 Exit from Help
+
+Press F8 to return to the last help screen or F10 to leave the help mode
+

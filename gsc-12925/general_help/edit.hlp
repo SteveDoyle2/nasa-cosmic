@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+The edit key is used to change the use of the left and right arrow keys from
+moving from field to field to moving character to character.  When the edit
+key is first pressed, the prompt for F2 changes from Edit to End Edit.  This
+is to allow the user to know that the left or right arrow keys will move to the
+previous or the next character.  If F2 is pressed while the End Edit is 
+displayed the prompt for F2 will show Edit again allowing the user to know that
+the left and right arrow keys will move the cursor to the left or right one
+field.  Anytime the cursor is moved from one field to the next the left and
+right arrow keys will be reset to move from field to field and the F2 prompt
+will display Edit.
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

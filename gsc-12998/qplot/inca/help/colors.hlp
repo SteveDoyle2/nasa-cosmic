@@ -1,0 +1,315 @@
+4 BOUNDARY          
+
+     The stability boundaries and points on root locus, nyquist, 
+nichols, and popov plots are drawn in this color.
+
+     Format:     UTILITIES  COLOR  SET  BOUNDARY  [color-spec]
+     Default:    RED
+
+4 C1                
+
+     The curves that are plotted on root locus and frequency response
+plots (except combined bode) are plotted using one of these Cn colors.
+
+     Format:     UTILITIES  COLOR  SET  C1  [color-spec]
+     Default:    GREEN
+
+4 C2                
+
+     The curves that are plotted on root locus and frequency response
+plots (except combined bode) are plotted using one of these Cn colors.
+
+     Format:     UTILITIES  COLOR  SET  C2  [color-spec]
+     Default:    BLUE
+
+4 C3                
+
+     The curves that are plotted on root locus and frequency response
+plots (except combined bode) are plotted using one of these Cn colors.
+
+     Format:     UTILITIES  COLOR  SET  C3  [color-spec]
+     Default:    CYAN
+
+4 C4                
+
+     The curves that are plotted on root locus and frequency response
+plots (except combined bode) are plotted using one of these Cn colors.
+
+     Format:     UTILITIES  COLOR  SET  C4  [color-spec]
+     Default:    MAGENTA
+
+4 C5                
+
+     The curves that are plotted on root locus and frequency response
+plots (except combined bode) are plotted using one of these Cn colors.
+
+     Format:     UTILITIES  COLOR  SET  C5  [color-spec]
+     Default:    BLUE MAGENTA
+
+4 C6                
+
+     The curves that are plotted on root locus and frequency response
+plots (except combined bode) are plotted using one of these Cn colors.
+
+     Format:     UTILITIES  COLOR  SET  C6  [color-spec]
+     Default:    BLUE CYAN
+
+4 C7                
+
+     The curves that are plotted on root locus and frequency response
+plots (except combined bode) are plotted using one of these Cn colors.
+
+     Format:     UTILITIES  COLOR  SET  C7  [color-spec]
+     Default:    GREEN CYAN
+
+4 C8                
+
+     The curves that are plotted on root locus and frequency response
+plots (except combined bode) are plotted using one of these Cn colors.
+
+     Format:     UTILITIES  COLOR  SET  C8  [color-spec]
+     Default:    GREEN YELLOW
+
+4 C9                
+
+     The curves that are plotted on root locus and frequency response
+plots (except combined bode) are plotted using one of these Cn colors.
+
+     Format:     UTILITIES  COLOR  SET  C9  [color-spec]
+     Default:    YELLOW
+
+4 C10               
+
+     The curves that are plotted on root locus and frequency response
+plots (except combined bode) are plotted using one of these Cn colors.
+
+     Format:     UTILITIES  COLOR  SET  C10  [color-spec]
+     Default:    RED
+
+4 C11               
+
+     The curves that are plotted on root locus and frequency response
+plots (except combined bode) are plotted using one of these Cn colors.
+
+     Format:     UTILITIES  COLOR  SET  C11  [color-spec]
+     Default:    LAVENDER
+
+4 C12               
+
+     The curves that are plotted on root locus and frequency response
+plots (except combined bode) are plotted using one of these Cn colors.
+
+     Format:     UTILITIES  COLOR  SET  C12  [color-spec]
+     Default:    LIGHT BLUE
+
+4 C13               
+
+     The curves that are plotted on root locus and frequency response
+plots (except combined bode) are plotted using one of these Cn colors.
+
+     Format:     UTILITIES  COLOR  SET  C13  [color-spec]
+     Default:    PURPLE
+
+4 C14               
+
+     The curves that are plotted on root locus and frequency response
+plots (except combined bode) are plotted using one of these Cn colors.
+
+     Format:     UTILITIES  COLOR  SET  C14  [color-spec]
+     Default:    BROWN
+
+4 C15               
+
+     The curves that are plotted on root locus and frequency response
+plots (except combined bode) are plotted using one of these Cn colors.
+
+     Format:     UTILITIES  COLOR  SET  C15  [color-spec]
+     Default:    PINK
+
+4 FIND              
+
+     The information printed with the "F" command.  
+
+     Format:     UTILITIES  COLOR  SET  FIND  [color-spec]
+     Default:    MAGENTA
+
+4 GIN_SELECT        
+
+     The graphics cursor is changed to this color after the S (Select) 
+graphics mode command is selected.
+
+     Format:     UTILITIES  COLOR  SET  GIN_SELECT  [color-spec]
+     Default:    GREEN
+
+4 GIN_WINDOW        
+
+     The graphics cursor is changed to this color after the W (Window) 
+graphics mode command is selected.
+
+     Format:     UTILITIES  COLOR  SET  GIN_WINDOW  [color-spec]
+     Default:    MAGENTA
+
+4 HELP              
+
+     The list of grafmode commands produced by the "H" command.
+
+     Format:     UTILITIES  COLOR  SET  HELP  [color-spec]
+     Default:    RED
+
+4 LOGOEDGE          
+
+     The edge of the INCA logo is drawn in this color.
+
+     Format:     UTILITIES  COLOR  SET  LOGOEDGE  [color-spec]
+     Default:    YELLOW
+
+4 LOGOFILL          
+
+     The filled area of the INCA logo is drawn in this color.
+
+     Format:     UTILITIES  COLOR  SET  LOGOFILL  [color-spec]
+     Default:    RED
+
+4 LOGOLINE          
+
+     The center lines in the INCA logo is drawn in this color.
+
+     Format:     UTILITIES  COLOR  SET  LOGOLINE  [color-spec]
+     Default:    ORANGE
+
+4 MAGNITUDE         
+
+     The curves that are plotted in a frequency response combined
+Bode plot use this color for the magnitude plot.
+
+     Format:     UTILITIES  COLOR  SET  MAGNITUDE  [color-spec]
+     Default:    GREEN
+
+4 PHASE             
+
+     The curves that are plotted in a frequency response combined
+Bode plot use this color for the phase plot.
+
+     Format:     UTILITIES  COLOR  SET  PHASE  [color-spec]
+     Default:    BLUE
+
+4 POLE              
+
+     If a single curve is plotted in a root locus plot, this color is
+used for the small cross that indicates the poles.
+
+     Format:     UTILITIES  COLOR  SET  POLE  [color-spec]
+     Default:    BLUE CYAN
+
+4 PROJECT           
+
+     The project name.
+
+     Format:     UTILITIES  COLOR  SET  PROJECT  [color-spec]
+     Default:    CYAN
+
+4 T1                
+
+     The curves that are plotted in a time response plot use the
+following colors in the sequence given.  The default colors are listed
+below. 
+
+     Format:     UTILITIES  COLOR  SET  T1  [color-spec]
+     Default:    GREEN
+
+4 T2                
+
+     The curves that are plotted in a time response plot use the
+following colors in the sequence given.  The default colors are listed
+below. 
+
+     Format:     UTILITIES  COLOR  SET  T2  [color-spec]
+     Default:    GREEN 2 CYAN
+
+4 T3                
+
+     The curves that are plotted in a time response plot use the
+following colors in the sequence given.  The default colors are listed
+below. 
+
+     Format:     UTILITIES  COLOR  SET  T3  [color-spec]
+     Default:    CYAN
+
+4 T4                
+
+     The curves that are plotted in a time response plot use the
+following colors in the sequence given.  The default colors are listed
+below. 
+
+     Format:     UTILITIES  COLOR  SET  T4  [color-spec]
+     Default:    BLUE CYAN
+
+4 T5                
+
+     The curves that are plotted in a time response plot use the
+following colors in the sequence given.  The default colors are listed
+below. 
+
+     Format:     UTILITIES  COLOR  SET  T5  [color-spec]
+     Default:    BLUE
+
+4 T6                
+
+     The curves that are plotted in a time response plot use the
+following colors in the sequence given.  The default colors are listed
+below. 
+
+     Format:     UTILITIES  COLOR  SET  T6  [color-spec]
+     Default:    BLUE MAGENTA
+
+4 T7                
+
+     The curves that are plotted in a time response plot use the
+following colors in the sequence given.  The default colors are listed
+below. 
+
+     Format:     UTILITIES  COLOR  SET  T7  [color-spec]
+     Default:    MAGENTA
+
+4 T8                
+
+     The curves that are plotted in a time response plot use the
+following colors in the sequence given.  The default colors are listed
+below. 
+
+     Format:     UTILITIES  COLOR  SET  T8  [color-spec]
+     Default:    RED
+
+4 T9                
+
+     The curves that are plotted in a time response plot use the
+following colors in the sequence given.  The default colors are listed
+below. 
+
+     Format:     UTILITIES  COLOR  SET  T9  [color-spec]
+     Default:    ORANGE
+
+4 T10               
+
+     The curves that are plotted in a time response plot use the
+following colors in the sequence given.  The default colors are listed
+below. 
+
+     Format:     UTILITIES  COLOR  SET  T10  [color-spec]
+     Default:    BROWN
+
+4 TIME              
+
+     The current time.
+
+     Format:     UTILITIES  COLOR  SET  TIME  [color-spec]
+     Default:    RED
+
+4 ZERO              
+
+     If a single curve is plotted in a root locus plot, this color is
+used for the small octogon that indicates the zeros.
+
+     Format:     UTILITIES  COLOR  SET  ZERO  [color-spec]
+     Default:    CYAN
+

@@ -1,0 +1,65 @@
+      SUBROUTINE FNDGAM(K,NKN,YIZK)
+C
+C     CONSTRUCTS THE COUPLING MATRIX,GAMMA,BETWEEN THE ELEMENT HIGHEST
+C     DERIVATIVES AND THE SYSTEM TRANSLATIONAL AND ROTATIONAL HIGHEST
+C     DERIVATIVES
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      COMMON/IPOOL1/ IGRAV,IDAMP,IK,K1,ITIM,IAB,IAPS,IBB,IBPS,NK(10),
+     .               LK(10),LLK(10)
+C
+      COMMON/RPOOL1/ RHOK(10),TIME,SA(3,3),FM1(3,3),ZLK(10),OMEG(3),
+     .               ZLKP(10),ZLKDP(10),CMAT(3,3),GBAR(3,3),YBCM(3),
+     .               ZBZK(3,10),FCM(3,3),DTO,PHID,PHI
+C
+      COMMON/RPOOL7/ X1A(3),X1B(3),X2A(3),X3B(3),X1AX(3,3),X1BX(3,3),
+     .               X2AX(3,3),X3BX(3,3)
+C
+      COMMON/RPOOL9/ RT1(7),RT2(10,9),ALP(7,7),GAM(10,9,7),DEL(10,9,9)
+C
+      DIMENSION TERM2(3),YIZK(3)
+       DO 4 I=1,NKN
+        INK = I+ NKN
+        X1AI = X1A(I)
+        X2AI = X2A(I)
+       X1BI = X1B(I)
+       X3BI = X3B(I)
+       DO 5 J=1,3
+       WS4 = X2AX(I,1)-X1AX(I,2)
+       TERM2(J) = -FCM(J,1)*X2AX(I,3)+FCM(J,2)*X1AX(I,3)+FCM(J,3)* WS4
+        GAM(K,INK,J) = FCM(J,1) * X1BI + FCM(J,3) * X3BI
+    5  GAM(K,I,J) = FCM(J,1)* X1AI   + FCM(J,2) * X2AI
+       WS1 = FCM(2,1)* X1AI + FCM(2,2)* X2AI
+       WS2 = FCM(1,1)* X1AI + FCM(1,2)* X2AI
+       WS3 = FCM(3,1)* X1AI + FCM(3,2)* X2AI
+       GAM(K,I,4) =(-YIZK(3)* WS1 + YIZK(2)* WS3) + TERM2(1)
+       GAM(K,I,5) =( YIZK(3)* WS2 - YIZK(1)* WS3) + TERM2(2)
+       GAM(K,I,6) =(-YIZK(2)* WS2 + YIZK(1)* WS1) + TERM2(3)
+       WS4 = X1BX(I,3) - X3BX(I,1)
+       X3B2= X3BX(I,2)
+       X1B2= X1BX(I,2)
+       DO 6 J=1,3
+    6   TERM2(J)= FCM(J,1)*X3B2 +FCM(J,2)* WS4 - FCM(J,3)* X1B2
+        WS1 = FCM(2,1)* X1BI + FCM(2,3) * X3BI
+        WS2 = FCM(1,1)* X1BI + FCM(1,3) * X3BI
+        WS3 = FCM(3,1)* X1BI + FCM(3,3) * X3BI
+       GAM(K,INK,4)= -YIZK(3)* WS1 +YIZK(2) * WS3 + TERM2(1)
+       GAM(K,INK,5)=  YIZK(3)* WS2 -YIZK(1) * WS3 + TERM2(2)
+       GAM(K,INK,6)= -YIZK(2)* WS2 +YIZK(1) * WS1 + TERM2(3)
+      IF (IDAMP.EQ.0) GO TO 4
+       IF(K-K1)7,7,8
+    7   ZB3 = ZBZK(3,K)
+       ZB1 = ZBZK(1,K)
+       GAM(K,I,7) = ZB3    *(CMAT(1,1)* X1AI+CMAT(1,2)* X2AI) -
+     1ZB1*(CMAT(3,1)*X1AI+CMAT(3,2)*X2AI)-CMAT(2,1)*X2AX(I,3)+CMAT(2,2)
+     2*X1AX(I,3)+CMAT(2,3)*(X2AX(I,1)-X1AX(I,2))
+       GAM(K,INK,7)=ZB3    *(CMAT(1,1)* X1BI+CMAT(1,3)* X3BI) -
+     1ZB1*(CMAT(3,1)*X1BI+CMAT(3,3)*X3BI)+CMAT(2,1)*X3BX(I,2)+CMAT(2,2)
+     2*(X1BX(I,3)-X3BX(I,1))-CMAT(2,3)*X1BX(I,2)
+       GO TO 4
+    8  GAM(K,I,7) = 0.0D0
+       GAM(K,INK,7)=0.0D0
+    4 CONTINUE
+      RETURN
+      END

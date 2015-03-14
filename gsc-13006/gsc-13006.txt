@@ -1,0 +1,71 @@
+ FSD- FLEXIBLE SPACECRAFT DYNAMICS
+
+( NASA Goddard Space Flight Center )
+
+     The Flexible Spacecraft Dynamics and Control program (FSD) was devel-
+oped to aid in the simulation of a large class of flexible and rigid space-
+craft. FSD is extremely versatile and can be used in attitude dynamics and
+control analysis as well as in-orbit support of deployment and control of
+spacecraft. FSD has been used to analyze the in-orbit attitude performance
+and antenna deployment of the RAE and IMP class satellites, and the HAWKEYE,
+SCATHA, EXOS-B, and Dynamics Explorer flight programs.
+
+     FSD is applicable to inertially-oriented spinning, earth oriented,
+or gravity gradient stabilized spacecraft. The spacecraft flexibility is
+treated in a continuous manner (instead of finite element) by employing a
+series of shape functions for the flexible elements. Torsion, bending, and
+three flexible modes can be simulated for every flexible element. FSD can
+handle up to ten tubular elements in an arbitrary orientation. FSD is ap-
+propriate for studies involving the active control of pointed instruments,
+with options for digital PID (proportional, integral, derivative) error
+feedback controllers and control actuators such as thrusters and momentum
+wheels.
+
+     The input to FSD is in four parts: 1) Orbit Construction FSD calcu-
+lates a Keplerian orbit with environmental effects such as drag, magnetic
+torque, solar pressure, thermal effects, and thruster adjustments; or the
+user can supply a GTDS format orbit tape for a particular satellite/time-
+span; 2) Control words - for options such as gravity gradient effects, con-
+trol torques, and integration ranges; 3) Mathematical descriptions of
+spacecraft, appendages, and control systems- including element geometry,
+properties, attitudes, libration damping, tip mass inertia, thermal ex-
+pansion, magnetic tracking, and gimbal simulation options; and 4) Desired
+state variables to output, i.e., geometries, bending moments, fast Fourier
+transform plots, gimbal rotation, filter vectors, etc. All FSD input is of
+free format, namelist construction.
+
+     FSD is written in FORTRAN 77, PASCAL, and MACRO assembler for batch ex-
+ecution and has been implemented on a DEC VAX series computer operating un-
+der VMS. The PASCAL and MACRO routines (in addition to the FORTRAN program)
+are supplied as both source and object code, so the PASCAL compiler is not
+required for implementation. This program was last updated in 1985.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: FORTRAN 77 ( 99 %); PASCAL ( 01 %); ASSEMBLER ( 00 %);
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 31,449 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX BACKUP Format Magnetic Tape
+
+PROGRAM NUMBER: GSC-13006
+
+DOMESTIC - DOCUMENTATION PRICE: $113.00    PROGRAM PRICE: $4000.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $226.00   PROGRAM PRICE: $8000.00
+
+
+
+                                        2
+

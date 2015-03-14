@@ -1,0 +1,90 @@
+ SPAM- SPECTRAL ANALYSIS MANAGER
+
+( Cal Tech/Jet Propulsion Lab. )
+
+     The Spectral Analysis Manager (SPAM) was developed to allow easy qual-
+itative analysis of multi-dimensional imaging spectrometer data. Imag-
+ing spectrometers provide sufficient spectral sampling to define unique
+spectral signatures on a per pixel basis. Thus direct material identifi-
+cation becomes possible for geologic studies. SPAM provides a variety of
+capabilities for carrying out interactive analysis of the massive and com-
+plex datasets associated with multispectral remote sensing observations.
+In addition to normal image processing functions, SPAM provides multiple
+levels of on-line help, a flexible command interpretation, graceful error
+recovery, and a program structure which can be implemented in a variety of
+environments. SPAM was designed to be visually oriented and user friendly
+with the liberal employment of graphics for rapid and efficient exploratory
+analysis of imaging spectrometry data.
+
+     SPAM provides functions to enable arithmetic manipulations of the
+data, such as normalization, linear mixing, band ratio discrimination, and
+low-pass filtering. SPAM can be used to examine the spectra of an individ-
+ual pixel or the average spectra over a number of pixels. SPAM also supports
+image segmentation, fast spectral signature matching, spectral library us-
+age, mixture analysis, and feature extraction. High speed spectral signa-
+ture matching is performed by using a binary spectral encoding algorithm to
+separate and identify mineral components present in the scene. The same bi-
+nary encoding allows automatic spectral clustering. Spectral data may be
+entered from a digitizing tablet, stored in a user library, compared to the
+master library containing mineral standards, and then displayed as a time-
+sequence spectral movie. The output plots, histograms, and stretched his-
+tograms produced by SPAM can be sent to a lineprinter, stored as separate
+RGB disk files, or sent to a Quick Color Recorder.
+
+     SPAM is written in C for interactive execution and is available for
+two different machine environments. There is a DEC VAX/VMS version with a
+central memory requirement of approximately 242K of 8 bit bytes and a ma-
+chine independent UNIX 4.2 version. The display device currently supported
+is the Raster Technologies display processor. Other 512 x 512 resolution
+color display devices, such as De Anza, may be added with minor code modi-
+fications. This program was developed in 1986.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+                              DEC VAX/VMS VERSION
+
+LANGUAGE: C-LANGUAGE
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 11,700 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX BACKUP Format Magnetic Tape
+
+PROGRAM NUMBER: NPO-17180
+
+DOMESTIC - DOCUMENTATION PRICE: $33.00    PROGRAM PRICE: $1500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $66.00   PROGRAM PRICE: $3000.00
+
+
+
+                                  UNIX VERSION
+
+LANGUAGE: C-LANGUAGE
+
+MACHINE REQUIREMENTS: UNIX OP SYS
+
+PROGRAM SIZE: APPROXIMATELY 11,700 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI UNIX TAR Format Magnetic Tape
+
+PROGRAM NUMBER: NPO-17182
+
+DOMESTIC - DOCUMENTATION PRICE: $33.00    PROGRAM PRICE: $1500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $66.00   PROGRAM PRICE: $3000.00
+
+
+
+                                        2
+

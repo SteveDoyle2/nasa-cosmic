@@ -1,0 +1,70 @@
+ PAFAC- PLASTIC AND FAILURE ANALYSIS OF COMPOSITES
+
+( NASA Langley Research Center )
+
+     The increasing number of applications of fiber-reinforced composites
+in industry demands a detailed understanding of their material properties
+and behavior. A three-dimensional finite-element computer program called
+PAFAC (Plastic and Failure Analysis of Composites) has been developed for
+the elastic-plastic analysis of fiber-reinforced composite materials and
+structures. The evaluation of stresses and deformations at edges, cut-
+outs, and joints is essential in understanding the strength and failure
+for metal-matrix composites since the onset of plastic yielding starts
+very early in the loading process as compared to the composite's ultimate
+strength. Such comprehensive analysis can only be achieved by a finite-
+element program like PAFAC. PAFAC is particularly suited for the analysis
+of laminated metal-matrix composites. It can model the elastic-plastic be-
+havior of the matrix phase while the fibers remain elastic. Since the PAFAC
+program uses a three-dimensional element, the program can also model the
+individual layers of the laminate to account for thickness effects.
+
+     In PAFAC, the composite is modeled as a continuum reinforced by cylin-
+drical fibers of vanishingly small diameter which occupy a finite volume
+fraction of the composite. In this way, the essential axial constraint of
+the phases is retained. Furthermore, the local stress and strain fields are
+uniform. The PAFAC finite-element solution is obtained using the displace-
+ment method. Solution of the nonlinear equilibrium equations is obtained
+with a Newton-Raphson iteration technique. The elastic-plastic behavior
+of composites consisting of aligned, continuous elastic filaments and an
+elastic-plastic matrix is described in terms of the constituent proper-
+ties, their volume fractions, and mutual constraints between phases indi-
+cated by the geometry of the microstructure. The program uses an iterative
+procedure to determine the overall response of the laminate, then from the
+overall response determines the stress state in each phase of the composite
+material. Failure of the fibers or matrix within an element can also be mod-
+eled by PAFAC.
+
+     PAFAC is written in FORTRAN IV for batch execution and has been imple-
+mented on a CDC CYBER 170 series computer with a segmented memory require-
+ment of approximately 66K (octal) of 60 bit words. PAFAC was developed in
+1982.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC CYBER 170 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 7,069 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI CDC NOS Internal Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-13183
+
+DOMESTIC - DOCUMENTATION PRICE: $27.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $54.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

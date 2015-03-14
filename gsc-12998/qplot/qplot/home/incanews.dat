@@ -1,0 +1,17 @@
+
+                           WELCOME TO INCA
+
+      We have fixed a few bugs in the Nearness/Closeness area, including
+      one that caused incomplete cancellation of slightly imaginary 
+      factors.  The default values for nearness and closeness have
+      been swapped, back to the way they were in INCA 2.0x.  I.e.:
+
+                       Nearness            = 1e-6
+                       Closeness to zero   = 1e-12
+
+      This is Version 3.13, with a new feature allowing GOTO's and
+      IF-THEN-ELSE's in source files, hopefully without screwing up 
+      anything else too much.  Working on the documentation.
+      IF you want to help alpha-test this, give me a call.
+
+      Report any problems that are found to user QPLOT immediately!!!!!

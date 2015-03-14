@@ -1,0 +1,75 @@
+ GREMEX- GODDARD RESEARCH AND ENGINEERING MANAGEMENT EXERCISE SIMULATION
+SYSTEM
+
+( NASA Goddard Space Flight Center )
+
+     GREMEX is a man-machine management simulation game of a research and
+development project. It can be used to depict a project from just after the
+development of the project plan through the final construction phase. The
+GREMEX computer programs are basically a program evaluation and review
+technique (PERT) reporting system. In the usual PERT program, the opera-
+tor inputs each month the amount of work performed on each activity and the
+computer does the bookkeeping to determine the expected completion date
+of the project. GREMEX automatically assumes that all activities due to be
+worked in the current month will be worked. GREMEX predicts new durations
+(and costs) each month based on management actions taken by the players and
+the contractor's abilities. Each activity is assigned the usual cost and
+duration estimates but must also be assigned three parameters that relate
+to the probability that the time estimate is correct, the probability that
+the cost estimate is correct, and the probability of technical success.
+Management actions usually can be expected to change these probabilities.
+For example, use of overtime or double shifts in research and development
+work will decrease duration and increase cost by known proportions and will
+also decrease the probability of technical success due to an increase in the
+likelihood of accidents or mistakes. These re-estimating future events and
+assigning probability factors provides life to the model.
+
+     GREMEX is not a production job for project management. GREMEX is a game
+that can be used to train management personnel in the administration of re-
+search and development type projects. GREMEX poses no 'best way' to man-
+age a project. The emphasis of GREMEX is to expose participants to many of
+the factors involved in decision making when managing a project in a gov-
+ernment research and development environment. A management team can win
+the game by surpassing cost, schedule, and technical performance goals es-
+tablished when the simulation began. The serious management experimenter
+can use GREMEX to explore the results of management methods they could not
+risk in real life. GREMEX can operate with any research and development
+type project with up to 15 subcontractors and produces reports simulating
+monthly or quarterly updates of the project PERT network. Included with the
+program is a data deck for simulation of a fictitious spacecraft project.
+Instructions for substituting other projects are also included.
+
+     GREMEX is written in FORTRAN IV for execution in the batch mode and has
+been implemented on an IBM 360 with a central memory requirement of approx-
+imately 350K (decimal) of 8 bit bytes. The GREMEX system was developed in
+1973.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: IBM 360 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 4,846 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: GSC-11512
+
+DOMESTIC - DOCUMENTATION PRICE: $83.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $166.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

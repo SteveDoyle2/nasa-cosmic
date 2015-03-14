@@ -1,0 +1,15 @@
+STUB
+
+STUB is a program for automatically creating prologues for FORTRAN programs.
+The program will create just prologues or entire program stubs complete with
+duplicate code in every subprogram. To execute enter:
+
+         STUB filespec
+
+where 'filespec' is the name of the FORTRAN source code to be created(less the
+.FOR suffix). Prologues can be created after a source code exists, the pro-
+loguse would then be merged using the EDT 'INCLUDE' command.
+
+For more information see Art Ragosta.
+
+--EOF

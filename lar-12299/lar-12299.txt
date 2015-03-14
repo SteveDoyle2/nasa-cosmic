@@ -1,0 +1,60 @@
+ NSEG- A SEGMENTED MISSION ANALYSIS PROGRAM FOR LOW AND HIGH SPEED AIR-
+CRAFT
+
+( AEROPHYSICS RESEARCH CORP. )
+
+     NSEG was developed to perform rapid aircraft mission analyses. It is
+based upon the use of approximate equations of motion whose form varies with
+the type of flight segment. Flight segments considered are takeoff, accel-
+erations, climbs, cruises, descents, decelerations, and landings. Layered
+atmosphere options are available. The program can also be used for flight
+envelope mapping. NSEG provides the capability to analyze aircraft mis-
+sions from low to hypersonic speeds.
+
+     Realistic and detailed vehicle characteristics are input to NSEG to
+permit accurate mission analysis. NSEG allows engine scaling so as to fit
+the design under analysis. NSEG contains several approximate flight path
+optimization capabilities based on Rutowski energy-like criteria for con-
+sidering minimum time or fuel flight segments and maximum range segments
+during climb or descent. Takeoff and landing analysis is based on the Air
+Force Flight Dynamics Laboratory DATCOM method of high lift aerodynamic
+modelling. There are three main atmosphere options available; the 1962
+U.S. Standard atmosphere, a stratified atmosphere model, and an external
+atmosphere model supplied by the user. The stratified atmosphere model re-
+quires the input of the number of layers (maximum 25), altitudes, tempera-
+tures, and pressures. The mission specification is open-ended in that the
+upper limit on the number of flight segments to be included in a mission pro-
+file can be increased with a simple program change. Input consists of ve-
+hicle characteristic data, data to specify details of the mission, and se-
+lection of program options. Output can be printer-generated tabular data
+or contour plots on a Calcomp plotter, CRT, or Houston plotter.
+
+     NSEG is written in FORTRAN IV and Assembler, and has been implemented
+on a CDC 6000 Series computer with a central memory requirement of approxi-
+mately 130K octal 60 bit words and is overlayed. This program was developed
+in 1977.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV ( 96 %); ASSEMBLER ( 04 %);
+
+MACHINE REQUIREMENTS: CDC CYBER 70 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 17,926 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-12299
+
+DOMESTIC - DOCUMENTATION PRICE: $69.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $138.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

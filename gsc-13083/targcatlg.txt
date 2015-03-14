@@ -1,0 +1,522 @@
+TARGCATLG.TXT                             CJP/GSFC/742   AUG 8, 1985
+-------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              *****************************
+              *                           *
+              *  TARGET CATALOGUE FORMAT  *
+              *                           *
+              *****************************
+
+
+
+
+
+
+
+
+
+
+******************
+*  INTRODUCTION  *
+******************
+
+
+
+
+
+The TOSS target catalogue is a data file containing data about objects,
+places, and regions. The data is to be operated upon in some way,
+usually in computing observation information. The catalogue data
+consists of: 
+
+        - the target ID
+
+        - the target name
+
+        - an indicator telling what kind of target this is
+
+        - location data for certain kinds of targets
+
+        - miscellaneous data for certain kinds of targets
+
+
+
+Typically, programs follow the following sequence:
+
+        1) Indicate which targets are of interest, or specify 'ALL'
+
+           Some programs may use the Observation Requirements File
+           to define the targets, others may use direct user input.
+           The requirements file is read via subroutine RDEXP.
+
+        2) Retrieve target information from the catalogue
+
+           Programs retrieve target information from the catalogue
+           using a reader, RDCAT.  This format description assumed
+           that RDCAT will be used to retrieve the data.
+
+        3) Use TGLOC to get the target location in the coordinate system
+           appropriate for the problem
+
+        4) Use the target coordinates as required by the problem.
+ 
+************
+*  FORMAT  *
+************
+
+The file format is given below. The target catalogue is a text file
+suitable for text-editing and for reading in a list-directed manner.
+
+
+        BE SURE TO END EACH TARGET'S DATA WITH A SLASH(/).
+
+
+
+              ***** SAMPLE DATA FILE *****
+
+        IDTARG  TARGNAME    KTARGTYP   TARGDATA
+        ------  --------    --------   --------
+
+RECORD 1 ->  3, 'VENUS',       1/
+             4, 'NORTHPOLE',   3,      0., 90., 1./
+             6, 'MARS',        1/
+            10, 'GSFC',        2,      39., 283., 0., 0./
+            -4, 'EXAMPLE',     8/
+            15, '+ORBNORM',    4,      270., 0./
+            21, 'TDRS1',       7,      0./
+            25, 'OTHER-SAT',   7,      2., 24./
+            51, 'NOONZENITH1', 5/
+            53, 'MIDZENITH1',  5/
+            54, 'MIDZENITH2',  5/
+            55, 'MIDZENITH2',  5/
+           -19, /
+            60, 'NEEDANAME',   6,      90., 150., 0./
+           201, 'MYTOWN',      2,      38., 282.,0.,0./
+           202, 'MYTOWN',      2,      38., 283.,0.,0./
+           203, 'MYTOWN',      2,      39., 283.,0.,0./
+           204, 'MYTOWN',      2,      39., 282.,0.,0./
+           900, 'IN-SITU',     8,/
+
+
+
+  VARIABLE   DIM  TYPE  DESCRIPTION
+  --------   ---  ----  -----------
+
+  IDTARG      1   I*4   This is the target I.D.  An integer quantity.
+                        There are no reserved I.D.'s, so any convenient
+                        one will do.
+
+                        RESTRICTION:
+
+                          Target ID's must be in ascending order
+                          on the file, but gaps in the sequence are
+                          permitted. Target ID's may not be repeated.
+                          Violation is an error and RDCAT will stop
+                          the program.
+
+                        If the TOSS observation requirements file is
+                        being used, IDTARG is the same as the target
+                        I.D. used there.
+
+                        Records with zero or negative target I.D.'s are
+                        ignored. The above restriction does not apply
+                        to them.
+
+
+  TARGNAME    1  CH*16  This is the target name. For target types 1 and
+                        5, the name is used to define the target
+                        position when the TGLOC is called by the
+                        application program(RDCAT never calls TGLOC).
+
+                        The target name is enclosed in single quotes, 
+                        left justified(ie, no leading blanks).
+
+                        See the notes on target names at the end of this
+                        document.
+
+
+                       ( continued )
+
+
+
+  VARIABLE   DIM  TYPE  DESCRIPTION
+  --------   ---  ----  -----------
+
+  KTARGTYP    1   I*4   This indicates the type of target. Some targets
+                        have their positions specified in the TARGDATA
+                        array of this record.  Some target types are
+                        directional only, others have position(ie, both
+                        direction and distance).
+
+                        Assignments:
+
+                        < 1 Ignore this catalogue record. The record is
+                            treated as though IDTARG were zero or 
+                            negative.
+
+                        = 1 Moving celestial target(sun, moon, planet,
+                            comet, anti-solar point,.....). The target
+                            has both direction and distance.
+
+
+                        = 2 Earth-fixed target. Target has both
+                            direction and distance.
+
+
+                        = 3 Non-moving celestial target(star,...).
+                            Target has direction only.
+
+
+                        = 4 Target fixed in local orbital coordinates.
+                            (examples: zenith, nadir, +/- orbit normal).
+                            Target has direction only.
+
+
+                        = 5 Noon or midnight zenith. The direction
+                            defined by the vector from the earth center
+                            to the spacecraft at the time computed by
+                            the algorithm identified by the suffix 1 or
+                            2 in the target name. The target has
+                            direction only.
+
+                            The user's program must sense the type, 
+                            recognize the name NOONZENITHx or
+                            MIDZENITHx(x=1 or 2)and compute the
+                            position. The suffix in the target name
+                            indicates how the target direction is
+                            computed. In each case, the target is in
+                            the orbit plane, but its longitude in the
+                            plane may differ. The user's program can
+                            call TGLOC to compute the location.
+ 
+                            x= 1, zenith is half way in time between
+                                  sunrise and sunset(noon zenith) or
+                                  sunset and sunrise(midnight zenith)
+
+                            x= 2, zenith is on the sun meridian(noon
+                                  zenith) or opposite it(midnight
+                                  zenith)
+
+                            x= otherwise, an error. RDCAT will not
+                                  sense the error, but TGLOC will.
+
+
+                   ( continued )
+
+
+
+
+            ( continuation of KTARGTYP description )
+
+
+
+                        = 6 Horizon (a point on or above the earth's 
+                            horizon as seen from a satellite). Target
+                            has both direction and distance.
+
+
+                        = 7 A satellite. Target has both direction and 
+                            distance.
+
+
+                        = 8 Non-specific. Not a specific target, but 
+                            allows the user's program to check 
+                            constraints such as sunlight/shadow, 
+                            SAA, etc.
+
+ 
+                        > 8 Error.  RDCAT will stop the program.
+
+
+  VARIABLE   DIM  TYPE  DESCRIPTION
+  --------   ---  ----  -----------
+
+  TARGDATA   AS   R*8   This is an array containing location and
+            MANY        miscellaneous data.
+             AS
+           NEEDED       TARGDATA array elements are interpreted
+                        according to the target type.  If data elements
+                        are needed but not supplied, then RDCAT will
+                        produce an error message and return no data
+                        for that target.
+
+   Comment:  This file description identifies information that must
+             be present.  Additional information may be present and
+             will be returned by RDCAT to the caller for non-standard
+             use.  The program that calls RDCAT must give it enough
+             array space to contain both the required and additional
+             information.  RDCAT does error checks to verify that there
+             is enough array space.
+
+
+
+  TARGDATA CONTENTS DEPEND ON TARGET TYPE
+  ---------------------------------------
+
+
+    KTARGTYP = 1 (moving celestial target)
+
+          No TARGDATA values are required.
+
+
+    KTARGTYP = 2 (earth-fixed target)
+
+          Four TARGDATA values are required.
+
+          TARGDATA(1) = latitude(deg)
+          TARGDATA(2) = longitude(deg, +=east)
+          TARGDATA(3) = altitude above surface(km)
+          TARGDATA(4) = sphere/ellipsoid flag
+
+                         = 0., earth is spherical and latitude is 
+                               geocentric
+                         = otherwise, earth oblate and latitude is 
+                               geodetic.
+
+    KTARGTYP = 3 (fixed celestial target)
+
+          Three TARGDATA values are required.
+
+          TARGDATA(1) = right ascension, Mean of 1950.0
+          TARGDATA(2) = declination, Mean of 1950.0
+          TARGDATA(3) = flag indicating units in which angles are given
+
+                        = 0., right ascension and declination are
+                              in radians
+                        = 1., right ascension and declination are
+                              in degrees
+                        = otherwise, right ascension is in hours,
+                              minutes, seconds, and declination is in
+                              degrees, minutes, and seconds;
+                              formats are HHMMSS.SSS and +/-DDMMSS.SSS
+
+
+
+
+
+
+                  ( continued )
+
+            ( continuation of TARGDATA description )
+
+
+
+    KTARGTYP = 4 (fixed in local orbital coords)
+
+
+          Two TARGDATA values are required.
+
+          TARGDATA(1) = azimuth(deg) from X-axis, positive toward +Y.
+          TARGDATA(2) = elevation(deg), positive toward earth center.
+
+          SPECIFIC:  zenith         az=   0.   el=  -90.
+                     nadir          az=   0.   el=  +90.
+                     pos orb norm   az= 270.   el=    0.
+                     neg orb norm   az=  90.   el=    0.
+
+                (note that nadir direction is independent of
+                      whether or not the earth is oblate)
+
+
+    KTARGTYP = 5 (noon or midnight zenith)
+
+          No TARGDATA values are required.
+
+
+    KTARGTYP = 6 (horizon)
+
+
+          Three TARGDATA values are required.
+
+          TARGDATA(1) = azimuth, in local orbital coordinates, of a
+                        vector from the satellite to the target.
+                        Positive from X toward Y.  In degrees.
+
+          TARGDATA(2) = target altitude above the edge of the disk as
+                        seen from the satellite.  In kilometers.
+
+          TARGDATA(3) = sphere/ellipsoid flag
+
+                        = 0., earth is spherical
+                        = otherwise, earth is oblate
+
+
+
+                  ( continued )
+
+                 ( continuation of TARGDATA description )
+
+    KTARGTYP = 7 (the target is a satellite)
+
+          The number of TARGDATA values required varies according to
+          the contents of TARGDATA(1).
+
+          RDCAT uses TARGDATA(1) to determine whether orbit
+          parameters, an Ephem File unit number, or neither have been
+          supplied in the remainder of the TARGDATA array.
+
+          TARGDATA(1) = flag indicating the source of the target
+                        satellite's location data.
+
+               = 0, no info present about target satellite's orbit;
+                    target name may be used by the application program
+                    to compute the position, as would be done for
+                    TDRS1 and TDRS2.
+               = 1, target satellite's orbit info is in TARGDATA(2-10)
+               = 2, target satellite's ephemeris information is on an
+                    Ephem File; file's unit number is in TARGDATA(2)
+               = otherwise, an error. RDCAT will produce an error
+                    message and return no data for that target.
+
+
+        SITUATION 1: TARGDATA(1) = 0.0
+
+             Your program must provide its own code to get the target
+             satellite's orbit information. TGLOC recognizes names TDRS1
+             and TDRS2 and computes the location.
+
+             One TARGDATA value is required.  Any addiditional
+             parameters begin with TARGDATA(2).
+
+
+        SITUATION 2: TARGDATA(1) = 1.0
+
+             TARGDATA(2)   = Coordinate system(1=M50, 2=MDT, 3=TOD)
+
+             TARGDATA(3)   = epoch for the initial conditions.
+                             Format is YYMMDD.HHMMSS
+
+             TARGDATA(4)   = orbital parameter type
+                             (1=Keplerian, 2=Cartesian)
+
+             -- WHEN TARGDATA(4) = 1 (ie, parameters are Keplerian)
+
+                   TARGDATA(5-10) = sma, ecc, incl, node, argp,
+                                    mean anom (kilometers, degrees)
+
+             -- WHEN TARGDATA(4) = 2 (ie, parameters are Cartesian)
+
+                   TARGDATA(5-10) = x, y, z, xdot, ydot, zdot  
+                                      (km, km/sec)
+
+             Ten TARGDATA values are required.  Any addiditional
+             parameters begin with TARGDATA(11).
+
+
+        SITUATION 3: TARGDATA(1) = 2.0
+
+             TARGDATA(2) = Fortran unit number of target's Ephem File
+
+             Two TARGDATA values are required.  Any addiditional
+             parameters begin with TARGDATA(2).
+
+
+    KTARGTYP = 8 (non-specific)
+
+          No TARGDATA values are required.
+
+
+
+***************************
+*  NOTES ON TARGET NAMES  *
+***************************
+
+
+
+1. There is no error check for valid target names in the
+   catalogue reader. Error checks are done by the target
+   location package, TGLOC.
+
+
+   
+2. Target names may be repeated in the catalogue, but the
+   id's may not be repeated. This may be useful when a
+   target is a polygon and the target catalogue contains
+   the vertices. A single name makes sense here. See the
+   MYTOWN target in the example.
+   
+
+
+3. When using TGLOC, the following target names are reserved 
+   within the target types indicated. 
+
+   One can have a target target type 6 named SUN, 
+   for example, and TGLOC will not interpret it 
+   as the celestial body of the same name because 
+   the name SUN is reserved only within target 
+   type 1.
+
+
+       NAME       TYPE
+       ----       ----
+
+       SUN         1
+       -SUN        1  (= -1 * SUN POSITION)
+       MOON        1
+       -MOON       1  (= -1 * MOON POSITION)
+
+       MERCURY     1
+       VENUS       1
+       EARTH       1
+       MARS        1
+       JUPITER     1
+       SATURN      1
+       URANUS      1
+       NEPTUNE     1
+       PLUTO       1
+
+       HALLEY      1 (Halley comet)
+
+       NOONZENITH1 5
+       NOONZENITH2 5
+
+       MIDZENITH1  5
+       MIDZENITH2  5
+
+       TDRS1       7
+       TDRS2       7
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                 ********************************
+                 *                              *
+                 *             END              *
+                 *                              *
+                 *           OF  THE            *
+                 *                              *
+                 *       TARGET CATALOGUE       *
+                 *                              *
+                 *      FORMAT  DEFINITION      *
+                 *                              *
+                 *           DOCUMENT           *
+                 *                              *
+                 ********************************

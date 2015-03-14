@@ -1,0 +1,505 @@
+  { $INCLUDE : 'compile.inc' }
+  { $INCLUDE : 'vbpas.int' }
+  { $INCLUDE : 'getparam.int' }
+  { $INCLUDE : 'dialog.int' }
+  { $INCLUDE : 'utility.int' }
+  { $INCLUDE : 'sfpas.int' }
+  { $INCLUDE : 'dspas.int' }
+  { $INCLUDE : 'display.int' }
+  { $INCLUDE : 'alterl.int' }
+  { $INCLUDE : 'piealtd.int' }
+  { $INCLUDE : 'ldb.int'     }
+  { $INCLUDE : 'execute.int' }
+  { $INCLUDE : 'pieexec.int' }
+
+  implementation of pieexec;
+
+  USES vbpas;
+
+  USES getparam;
+
+  USES dialog;
+
+  USES utility;
+
+  USES sfpas;
+
+  USES dspas;
+
+  USES display;
+
+  USES alterl;
+
+  USES ldb;
+
+  USES execute;
+
+  USES piealtd;
+
+  const
+      prompt_line = 22;
+
+  var
+      temp  : entity;
+
+  procedure exit;
+
+  begin
+    current := first^.up ;
+    add_node ( current, 16 ) ;
+    with current^ do
+	begin
+	   field^.len := 3 ;
+	   field^[1] := chr ( form + 48 ) ;
+	   field^[2] := chr ( symbol + 48 ) ;
+	   field^[3] := chr ( color + 48 ) ;
+	end ;
+  end;
+  procedure enter;
+
+    begin
+      current := first^.up;
+      delete ( current );
+    end;
+
+  procedure redraw;
+
+  begin
+      if code <> 2 then dsinit;
+      alter_display_space ( first );
+      if code <> 2 then
+	 begin
+	   rtype := 2;
+	   reduce ( rtype, color );
+	 end;
+  end;
+
+(******************************************************************)
+
+  procedure sldredraw;
+
+  begin
+      rtype    := 2;
+      color    := skeleton^[1];
+      current  := first^.up ;
+      with current^ do begin
+	   form  := ord ( field^[1] ) - 48;
+	   symbol:= ord ( field^[2] ) - 48;
+	   color := ord ( field^[3] ) - 48;
+      end; (* with *)
+      delete ( current );
+      redraw ( 1, current, first );
+ end; (* sldredraw *)
+
+(******************************************************************)
+
+  procedure format;
+
+  var
+       n, m  : integer;
+       msg   : suplstring(25);
+       reply : supinteger(4);
+       i     : byte;
+       def   : suplstring2(4);
+       x,y   : supinteger(4);
+       range : supset(8);
+       error : boolean;
+       buf   : lstring(1);
+       current_node : byte;
+       cnt   : array[0..11] of real;
+
+  begin
+     msg[1] := '                           Pie Chart Format Options';
+     msg[2] := '                                                   ';
+     msg[3] := '                                                                        Default';
+     msg[4] := '                                                   ';
+     msg[5] := '                                          Values to be entered :';
+     msg[6] := '                                           c=component count  p=percentage';
+     msg[7] := ' ';
+     msg[8] := ' ';
+     msg[9] := ' ';
+     msg[10] := ' ';
+     msg[11] := ' ';
+     msg[12] := ' ';
+     msg[13] := ' ';
+     msg[14] := '                                          GSFC symbol ( n = no, y = yes ):';
+     msg[15] := ' ';
+     msg[16] := '                                          Background Color';
+     msg[17] := '                                            x = black      w = white';
+     msg[18] := '                                            r = red        m = magenta';
+     msg[19] := '                                            b = blue       c = cyan';
+     msg[20] := '                                            g = green      y = yellow';
+     msg[21] := ' ';
+     msg[22] := 'Modify default options as needed - press return key for next option.';
+     msg[23] := 'Select F2 to begin creating chart';
+     msg[24] := ' ';
+     msg[25] := null
+     buf.len := 1;
+
+     for i := 1 to 10 do
+	if fctn_map^[1][i] <> 0 then
+	   begin
+	     if i < 10 then [ buf[1] := chr(i+48); concat (msg[25], buf); ]
+		       else concat ( msg[25], '10' );
+	     if fctn_map^[1][i] = 7 then concat ( msg[25], 'End ' );
+	     concat ( msg[25], fctn_tag^[fctn_map^[1][i]] );
+	     if i < 10 then concat (msg[25], ' ');
+	     if i = 2 then while msg[25].len < 21 do concat ( msg[25], ' ');
+	     if i = 7 then while msg[25].len < 60 do concat ( msg[25], ' ');
+	end;
+      if form = 1 then def[1][2] := 'c' else def[1][2] := 'p';
+      if symbol = 1 then def[2][2] := 'n' else def[2][2] := 'y';
+      case color of
+	0 : def[3][2] := 'x';
+	1 : def[3][2] := 'b';
+	2 : def[3][2] := 'g';
+	3 : def[3][2] := 'c';
+	4 : def[3][2] := 'r';
+	5 : def[3][2] := 'm';
+	6 : def[3][2] := 'y';
+	7 : def[3][2] := 'w';
+	otherwise
+      end;
+      for i := 1 to 3 do [def[i][1]:=' ';def[i].len:=2];
+      y[1] := 4;
+      y[2] := 13;
+      y[3] := 15;
+      x[1] := 76;
+      x[2] := 76;
+      x[3] := 76;
+      range[1]:=[' '];
+      range[3]:=[' '];
+      range[5]:=[' '];
+      range[2]:=['c','C','p','P'];
+      range[4]:=['y','Y','n','N'];
+      range[6]:=['x','X','r','R','b','B','g','G','w','W','m','M','c','C','y','Y'];
+	multimenu ( msg, 25, 0, 3, def, x, y, range, inkey, 2 );
+	for n := 1 to 3 do
+	  case n of
+	    1 : begin
+		if (def[1][2] in ['p','P'])and(form=1) then
+		  begin
+		    saved := false;
+		    current:=first;
+		    while current^.etype<>9 do current:=current^.down;
+		    m:=1;
+		    cnt[0]:=0;
+		    while current^.etype in [9..11] do
+		      begin
+			if current^.etype=9 then
+			  begin
+			    cnt[m] := 0;
+			    error:=not decode(current^.field^,cnt[m]);
+			    if error then cnt[m]:=0;
+			    cnt[0]:=cnt[0]+cnt[m];
+			    m:=m+1;
+			  end;
+			current:=current^.down;
+		      end;
+		    for m:=1 to 10 do
+		      if (cnt[m]<.001)and(cnt[m]>-.001) then cnt[m]:=0
+			else cnt[m]:=(cnt[m]/cnt[0])*100.0;
+		    current:=first;
+		    m := 1;
+		    while current^.etype<>9 do current:=current^.down;
+		    while current^.etype in [9..11] do
+		      begin
+			current^.etype:=current^.etype+3;
+			current^.x := node_data^[current^.etype].x;
+			if current^.etype=12 then
+			  begin
+			    if (current^.field^.len=0)or(current^.field^='        ') then error := true
+			      else error:=not encode(current^.field^,cnt[m]:5:1);
+			    if error then current^.field^.len:=0
+			      else current^.field^.len := 5;
+			    m := m + 1;
+			  end;
+			current:=current^.down;
+		      end;
+		    current:=current^.up;
+		    add_node ( current, 15 );
+		    error:=not encode(current^.field^,cnt[0]:8:1);
+		    if error then current^.field^.len := 0
+		      else current^.field^.len := 8;
+		  end;
+		if (def[1][2] in ['c','C'])and(form=2) then
+		  begin
+		    saved := false;
+		    current:=first;
+		    while current^.etype<>12 do current:=current^.down;
+		    m:=1;
+		    cnt[0]:=0;
+		    while current^.etype in [12..14] do
+		      begin
+			if current^.etype=12 then
+			  begin
+			    cnt[m] := 0;
+			    error:=not decode(current^.field^,cnt[m]);
+			    if error then cnt[m]:=0;
+			    cnt[0]:=cnt[0]+cnt[m];
+			    m:=m+1;
+			  end;
+			current:=current^.down;
+		      end;
+		    cnt[11] := 0;
+		    error:=not decode(current^.field^,cnt[11]);
+		    for m:=1 to 10 do
+		      if (error)or((cnt[11]<.001)and(cnt[11]>-.001))or((cnt[m]<.001)and(cnt[m]>-.001) then cnt[m]:= 0
+			else cnt[m]:=((cnt[11]*cnt[m]/100.0));
+		    current:=first;
+		    m := 1;
+		    while current^.etype<>12 do current:=current^.down;
+		    while current^.etype in [12..14] do
+		      begin
+			current^.etype:=current^.etype-3;
+			current^.x := node_data^[current^.etype].x;
+			if current^.etype=9 then
+			  begin
+			    if (current^.field^.len=0)or(current^.field^='     ') then error := true
+			    else error:=not encode(current^.field^,cnt[m]:8:1);
+			    if (error)or((cnt[11]<.001)and(cnt[11]>-.001)) then current^.field^.len := 0
+			      else current^.field^.len:=8;
+			    m := m + 1;
+			  end;
+			current := current^.down;
+		      end;
+		    delete ( current );
+		  end;
+		case def[1][2] of
+		  'c','C' : form := 1;
+		  'p','P' : form := 2;
+		  otherwise
+		end;
+		end;
+	    2 : case def[2][2] of
+		  'y','Y' : symbol := 2;
+		  'n','N' : symbol := 1;
+		  otherwise
+		end;
+	    3 : case def[3][2] of
+		  'x','X' : color := 0;
+		  'b','B' : color := 1;
+		  'g','G' : color := 2;
+		  'c','C' : color := 3;
+		  'r','R' : color := 4;
+		  'm','M' : color := 5;
+		  'y','Y' : color := 6;
+		  'w','W' : color := 7;
+		  otherwise
+		end;
+	    otherwise
+	  end;
+      inkey := fctn_map^[1][inkey-58];
+      if inkey in [1,4,5] then current_node := 0
+			  else current_node := current^.etype;
+      if inkey = 7 then inkey := 3;
+      if not (inkey in [1,2,4,5,7,41]) then redraw(1,current,first);
+      perform2 ( inkey, current, current_node, first );
+      perform  ( inkey, current, current_node, first );
+      if inkey in [4,5] then redraw (1, current, first );
+    end;
+
+
+  (********************************************************)
+
+  procedure perform2;
+
+  var
+       k	  : integer;
+       n	  : integer;
+       status	  : mode;
+       buffer	  : lstring(127);
+       length	  : byte;
+       buf	  : lstring(80);
+
+  procedure pie_upd;
+
+  var
+
+     size   : integer;
+     width  : integer;
+     max    : integer;
+     color  : integer;
+     i, j   : integer;
+     temp   : real;
+     buffer2: lstring(255);
+     inkey2 : byte;
+
+  begin
+      if length > 0 then
+	 begin
+	   with current^ do begin
+		if buffer.len <> field^.len then
+		   saved := false
+		else
+		   for i := 1 to buffer.len do
+		       if buffer[i] <> field^[i] then saved := false;
+	    end;  (* with *)
+
+	   j := 0;
+	   if ( current^.etype=9 ) or ( current^.etype=12 )
+	      or ( current^.etype=15 ) then  j := 3;
+
+	   alter_entity_list ( current, buffer, length, j );
+	   if j = 3 then [there(current^.xtext,current^.ytext);
+			  write(current^.field^);];
+	 end;
+       if status=txt then inkey := 36;
+       if inkey in [1,4,5] then current_node := 0;
+  end;
+
+  procedure inloop;
+
+    var
+      i : integer;
+      last_node : byte;
+
+    begin
+	last_node  := 0;
+	current_node  := current^.etype;
+	  while not ( inkey in [1,3..5,42] ) do
+	    begin
+	      if (node_data^[current_node].valid_key_set_id=node_data^[last_node].valid_key_set_id) and
+		 (node_data^[current_node].prtmsg=node_data^[last_node].prtmsg)and
+		 (promptupd=2)and(inkey in [0,22..28,36]) then
+		promptupd := 3 else last_node := current_node;
+	      inkey := 0;
+	      with current^ do
+		begin
+		  length := field^.len;
+		  buffer.len := length;
+		  for i := 1 to length do buffer[i] := field^[i];
+		end;
+	      with node_data^[current_node] do
+		incom(prompt_line,prtmsg,buf,-1,rtype,character_size,
+		      current^.xtext,current^.ytext,data_type,
+		      input_length,valid_key_set_id,esc,backspace,
+		      cursor_left,cursor_right,ins,del,status,buffer,
+		      length,inkey);
+	      pie_upd;
+
+	      perform2 ( inkey, current, current_node, first );
+	      perform  ( inkey, current, current_node, first )
+	    end;
+    end;
+
+  procedure header;
+
+    var
+      label1 : array[1..7] of lstring(20);
+      i     : integer;
+
+    begin
+      screen (2);
+      colors(0,color);
+      there ( (80-cname.len) div 2, 0 ); write (cname, ' Chart');
+      label1[1] := 'Title:    ';
+      label1[2] := 'Subtitle: ';
+      label1[3] := 'Author:   ';
+      label1[4] := 'Date: ';
+      label1[5] := 'Column Headings:';
+      label1[6] := 'Total: ';
+      label1[7] := 'Footnotes:';
+      for i := 1 to 4 do
+	begin
+	  there(node_data^[i].xtext-label1[i].len,node_data^[i].ytext);
+	  write(label1[i]);
+	end;
+      there(node_data^[5].xtext,node_data^[5].ytext-1);
+      write(label1[5]);
+      there(node_data^[15].xtext-label1[6].len,node_data^[15].ytext);
+      write(label1[6]);
+      there(node_data^[16].xtext,node_data^[16].ytext-1);
+      write(label1[7]);
+      label1[1]:='A';
+      for i := 1 to 10 do
+	begin
+	  there(ord(i>5)*40+1,node_data^[9].ytext+(i-1)*2-ord(i>5)*10);
+	  write(label1[1]);
+	  label1[1][1]:=chr(ord(label1[1][1])+1);
+	end;
+      buf := null;
+      current := first;
+      repeat
+	there(current^.xtext,current^.ytext);
+	write(current^.field^);
+	repeat
+	  current:=current^.down;
+	until not (current^.etype in skipfield);
+      until current = first;
+      inloop;
+    end;
+
+  begin
+
+     case inkey of
+
+	41: begin
+	      header;
+	      if not ( inkey in [1,3,0] ) then
+		  redraw ( 1, current, first );
+	      if inkey in [4,5] then inkey := 0;
+	    end;
+(*	31: begin
+	      there ( 0, 24 );
+	      write ( 'Drawing in progress...' );
+	      alter_display_space ( first );
+	      if erro then
+		 begin
+		    there ( 0, 24 ) ;
+		    write ('ERROR... total percentage > 100%, press any key to continue');
+		    erro := false ;
+		    get_input ( inchar ) ;
+		    dsinit;
+		    alter_display_space ( first );
+		    reduce ( rtype, color ) ;
+		 end;
+
+	      else
+		begin
+		  rtype := 2;
+		  reduce ( rtype, color );
+		  repeat
+		     incom ( 21, messages^[3], 0, rtype, 1, 0, 0, 4, 0, 3,
+		       1, 1, 1, 1, 1, 1, status, buffer, length, inkey);
+		     perform(inkey, current, current_node,first);
+		  until (inkey=32) or (inkey=2);
+
+		  if inkey=32 then
+		     begin
+		       dsinit;
+		       drawing := 1;
+		       alter_display_space (first,rtype,0,form,symbol,erro );
+		       rtype := 2;
+		       reduce ( 2, color );
+		     end;
+
+		 end;
+	    end;
+
+	     33 : begin
+		    assign (f,'graph.hlp');
+		    f.trap :=true;
+		    f.errs :=0;
+		    reset (f);
+		    if f.errs =0 then
+		      begin
+			for n :=1 to 14 do
+			  read (f,helppage);
+			help (helppage);
+		      end
+		    else
+		      begin
+			there (0,23);
+			writeln ( 'Graph.hlp not found ... press any key to continue                              ');
+			get_input (inchar);
+		      end;
+		    close (f);
+		    reduce (rtype,color)
+		  end;*)
+     otherwise
+     end; {case}
+     if not (inkey in [1,4,5]) then current_node := current^.etype;
+  end;
+  end.
+

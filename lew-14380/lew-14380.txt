@@ -1,0 +1,52 @@
+ MISER2- MISTUNING EFFECTS ON TURBOFAN CASCADES
+
+( NASA Lewis Research Center )
+
+     In the development of modern aircraft turbofan engines, the aeroelas-
+tic stability and response of bladed-disk assemblies have been among the
+most difficult problems encountered. The study of stability and response
+in these assemblies is complicated by the presence of small differences be-
+tween the individual blades, known as mistuning. The Mistuning Effects on
+Turbofan Cascades program, MISER2, was developed to improve the basic un-
+derstanding of the effects of mistuning on aeroelastic stability and re-
+sponse.
+
+     The MISER2 program calculates the flutter boundaries and aeroelas-
+tic response of a cascade of arbitrarily mistuned airfoils. It is based on
+a formulation incorporating incompressible subsonic and supersonic, un-
+steady, two-dimensional aerodynamic theories. Each blade is modeled as
+a two degree-of-freedom oscillator having inertial coupling between the
+bending and torsional motions. It is possible to consider any type of un-
+coupled bending and torsional frequencies, damping ratios, mass ratios,
+and elastic axis and center of gravity positions. Special cases which can
+be treated by MISER2 include: tuned and mistuned cases; uncoupled bending
+and uncoupled torsion cases; and the tuned coupled bending-torsion case.
+
+     MISER2 was developed for the IBM 370 with VM/SP and requires 200K of
+memory. The program was written in FORTRAN 77. The IMSL subroutines are re-
+quired. MISER2 was developed in 1986.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN 77
+
+MACHINE REQUIREMENTS: IBM 370 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 2,623 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LEW-14380
+
+DOMESTIC - DOCUMENTATION PRICE: $17.00    PROGRAM PRICE: $700.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $34.00   PROGRAM PRICE: $1400.00
+
+
+
+                                        1
+

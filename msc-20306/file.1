@@ -1,0 +1,519 @@
+      PROGRAM SON(INPUT,OUTPUT,TAPE5 = INPUT,TAPE6 = OUTPUT)            00000010
+      CALL GFDP
+      END
+      SUBROUTINE GFDP                                                         10
+      COMMON FLORATE
+      COMMON /LB1/DH(1000),A(1000),EORL(1000),EV(1000),TEMP(1000),FLOW        20
+     *       (1000),PRESS(500),PUDATA(40),TDVDATA(60),G,ICOUNT                30
+      COMMON /LB2/LINE(1000),NODFRM(1000),NODETO(1000),NODE(500),FB,RE,       40
+     *       DENS,NPOINT                                                      50
+      REAL ERR(500),NETFLO(500),AVEFLO(500),SIGN(1000),DELTP(1000,2),K1,      60
+     *     K2                                                                 70
+      INTEGER TOL,LPRINT(1000),OUTLET                                         80
+      CHARACTER*10 PROCED,FLUID,OPTION,COMNT*80,END*80,ENDBLOK*3,             90
+     *       PRINTL*3,FACT1*6,FACT2*6                                         91
+      DATA G/417312000./,TOL/3/,SIGN/1000*0./,DELTP/2000*0./                 100
+      DATA FACT1/'O     '/,FACT2/'O     '/                                   101
+      DATA END/'END                                                          110
+     *                        '/                                             120
+1     FORMAT ('1',///)                                                       130
+      WRITE (6,1)                                                            140
+      WRITE (6,2)                                                            141
+C     START READING INPUT DATA
+2     FORMAT (40X,'*** CONTROL PARAMETERS ***'///)                           142
+      CALL READC                                                             150
+      WRITE (6,'(//)')
+C     INPUT OPERATING PRESSURE
+      READ *, AMBP                                                           160
+      PRINT *, AMBP                                                          170
+C     INPUT TYPE OF PROCEDURE. 'FIXFLO' OR 'PUMP'
+      READ (5,'(A10)') PROCED                                                180
+      WRITE (6,'(1X,A10)') PROCED                                            190
+C     INPUT TYPE OF FLUID. 'GAS' OR 'LIQUID'
+      READ (5,'(A10)') FLUID                                                 200
+      WRITE (6,'(1X,A10)') FLUID                                             210
+      READ (5,'(A10)') OPTION                                                220
+      WRITE (6,'(1X,A10)') OPTION                                            230
+      IF (OPTION.EQ.'ADJUST    ') GO TO 30                                   240
+      IF (OPTION.EQ.'END       ') GO TO 40                                   250
+20    PRINT *, ' **WARNING**  UNIDENTIFIED DATA.  END CARD RESSUMED'         260
+      GO TO 40                                                               270
+30    READ (5,'(A80)') COMNT                                                 280
+      WRITE (6,'(1X,A80)') COMNT                                             290
+      IF (COMNT.NE.END) GO TO 20                                             300
+40    WRITE (6,1)                                                            310
+      WRITE (6,41)                                                           311
+41    FORMAT (40X,'*** NETWORK ELEMENTS ***'///)                             312
+      CALL READC                                                             320
+      WRITE (6,'(//)')
+      PRINT *,'   LINE     N1     N2      DH       AREA       M/L            321
+     *    EV      TEMP '                                                     322
+50    DO 60 L = 1,1000+1                                                     330
+        READ (5,'(A3)') ENDBLOK                                              340
+        IF (ENDBLOK.EQ.'END') GO TO 70                                       350
+        BACKSPACE 5                                                          360
+C     INPUT NETWORK ELEMENTS
+        READ *, LINE(L),NODFRM(LINE(L)),NODETO(LINE(L)),DH(LINE(L)),A(       370
+     *      LINE(L)),EORL(LINE(L)),EV(LINE(L)),TEMP(LINE(L))                 380
+        WRITE (6,'(I8,2I7,2F10.5,2F12.5,F10.3)') LINE(L),NODFRM(LINE(        390
+     *    L)),NODETO(LINE(L)),DH(LINE(L)),A(LINE(L)),EORL(LINE(L)),          391
+     *    EV(LINE(L)),TEMP(LINE(L))                                          400
+60    CONTINUE                                                               410
+70    WRITE (6,'(1X,A3)') ENDBLOK                                            420
+      LINES = L-1                                                            430
+      WRITE (6,1)                                                            440
+      WRITE (6,71)                                                           441
+71    FORMAT (40X,'*** INITIAL PRESSURES ***'///)                            442
+      CALL READC                                                             450
+      WRITE (6,'(//)')
+      PRINT *,'    NODE    PRESSURE'                                         451
+80    DO 90 N = 1,500+1                                                      460
+        READ (5,'(A3)') ENDBLOK                                              470
+        IF (ENDBLOK.EQ.'END') GO TO 100                                      480
+        BACKSPACE 5                                                          490
+C     INPUT NODE'S INITIAL PRESSURES
+        READ *,NODE(N),PRESS(NODE(N))                                        500
+        WRITE (6,'(I8,1F13.3)') NODE(N),PRESS(NODE(N))                       510
+90    CONTINUE                                                               520
+100   WRITE (6,'(1X,A3)') ENDBLOK                                            530
+      NODES = N-1                                                            540
+      WRITE (6,1)                                                            550
+      WRITE (6,101)                                                          551
+101   FORMAT (40X,'*** BOUNDARY PRESSURES ***'///)                           552
+      CALL READC                                                             560
+      WRITE (6,'(//)')
+      PRINT *,'    NODE    PRESSURE'                                         561
+110   DO 120 K = NODES+1,500+1                                               570
+        READ (5,'(A3)') ENDBLOK                                              580
+        IF (ENDBLOK.EQ.'END') GO TO 130                                      590
+        BACKSPACE 5                                                          600
+C     DECLARE BOUNDARY NODES AND CORRESPONDING PRESSURES
+        READ *, NODE(K),PRESS(NODE(K))                                       610
+        WRITE (6,'(I8,1F10.3)') NODE(K),PRESS(NODE(K))                       620
+120   CONTINUE                                                               630
+130   WRITE (6,'(1X,A3)') ENDBLOK                                            640
+      WRITE (6,1)                                                            650
+      WRITE (6,131)                                                          651
+131   FORMAT (40X,'*** CURVE DATA ***'///)                                   652
+      CALL READC                                                             660
+      WRITE (6,'(//)')
+      IF (PROCED.EQ.'FIXFLO    ') GO TO 150                                  670
+      IF (PROCED.NE.'PUMP      ') GO TO 490                                  680
+C     INPUT CURVE DATA FOR A CLOSED LOOP
+      READ *, INLET,OUTLET                                                   690
+      PRINT *,' PUMP INLET NODE ID = ',INLET                                 691
+      PRINT *,' PUMP DISCHARGE NODE ID = ',OUTLET                            692
+      WRITE (6,'(//)')
+      CALL READC                                                             710
+      WRITE (6,'(//)')
+      READ (*,*,ERR=132) FACT1 ,XFACT,YFACT                                  711
+      PRINT*, FACT1 ,XFACT,YFACT                                             712
+      IF (FACT1.NE.'FACTOR') GO TO 505                                       713
+      GO TO 133                                                              714
+132   BACKSPACE 5                                                            715
+C     INPUT PUMP/FAN' S CHARACTERISTICS CURVE
+133   READ *,MPOINT,(PUDATA(I),I=1,2*MPOINT)                                 7
+      PRINT *, ' PUMP CURVE DATA WITH ',MPOINT,' POINTS'                     730
+      WRITE (6,134)                                                          740
+134   FORMAT (//5X,'DEL P',7X,'RATE')                                        750
+      DO 140 K =1,2*MPOINT,2                                                 760
+       WRITE (6,'(F10.3,F11.3)')PUDATA(K),PUDATA(K+1)                        770
+       IF (FACT1 .NE.'FACTOR') GO TO 140                                     771
+C     REVISE CURVE BY XFACT AND YFACT
+       PUDATA(K) = PUDATA(K)*XFACT                                           772
+       PUDATA(K+1) = PUDATA(K+1)*YFACT                                       773
+140   CONTINUE                                                               780
+      WRITE (6,'(//)')
+      GO TO 152                                                              790
+C     INPUT DATA FOR AN OPEN LOOP
+150   READ *, NODEIN,NODEOUT,FLORATE                                         800
+      PRINT *,' FIXFLO INLET NODE ID = ',NODEIN                              820
+      PRINT *,' FIXFLO OUTLET NODE ID = ',NODEOUT                            830
+      PRINT *,' FLORATE = ',FLORATE                                          831
+      WRITE (6,'(//)')
+152   CALL READC                                                             840
+      WRITE (6,'(//)')
+C     INPUT FLUID' S PROPERTIES
+      READ (*,*,ERR=153) FACT2 ,XFACT,YFACT,ZFACT                            841
+      PRINT *,FACT2 ,XFACT,YFACT,ZFACT                                       842
+      IF (FACT2 .NE.'FACTOR') GO TO 505                                      843
+      GO TO 154                                                              844
+153   BACKSPACE 5                                                            845
+154   READ *,NPOINT,P,(TDVDATA(I),I=1,3*NPOINT)                              850
+      WRITE (6,155) P,NPOINT                                                 860
+155   FORMAT (///1X,'CURVE DATA OF RHO+MU .VS. TEMP AT P= ',F10.3,' . ',     870
+     *      I2,' POINTS ENTERED')                                            880
+      WRITE (6,156)                                                          890
+156   FORMAT (//5X,' TEMP',5X,' RHO',5X,'   MU')                             900
+      DO 160 K = 1,3*NPOINT,3                                                910
+         WRITE (6,'(F10.2,2F10.5)') TDVDATA(K),TDVDATA(K+1),TDVDATA(K+2)     920
+C     REVISE CURVE BY XFACT,YFACT AND ZFACT
+         IF (FACT2 .NE.'FACTOR') GO TO 160                                   921
+         TDVDATA(K) = TDVDATA(K)*XFACT                                       922
+         TDVDATA(K+1) = TDVDATA(K+1)*YFACT                                   923
+         TDVDATA(K+2) = TDVDATA(K+2)*ZFACT                                   924
+160   CONTINUE                                                               930
+      READ (5,'(A3)') ENDBLOK                                                940
+      WRITE (6,'(1X,A3)') ENDBLOK                                            950
+      IF (ENDBLOK.NE.'END') PRINT *, ' **WARNING** UNIDENTIFIED DATA.        960
+     *   END OF BLOCK RESSUMED'                                              970
+      WRITE (6,1)                                                            971
+      WRITE (6,161)                                                          972
+161   FORMAT (40X,'*** OUTPUT ELEMENTS ***'///)                              973
+      CALL READC                                                             974
+      WRITE (6,'(//)')
+C     INPUT OUTPUT COMMANDS
+      READ (*,*,ERR=162) PL,(LPRINT(I),I=1,INT(PL))                          975
+      PRINT *,' LINE ',(LPRINT(I),I=1,INT(PL))                               976
+      GO TO 163                                                              985
+162   BACKSPACE 5
+      READ *,PRINTL
+      PRINT *, PRINTL                                                        987
+      IF (PRINTL.NE.'ALL') GO TO 505                                         988
+163   READ (5,'(A3)') ENDBLOK                                                989
+      WRITE (6,'(1X,A3)') ENDBLOK                                            990
+      IF (ENDBLOK.NE.'END') PRINT *,' ** WARNING ** UNIDETIFIED DATA.        991
+     *   END OF BLOCK RESUMED'                                               992
+      WRITE (6,1)
+      IF (P.EQ.AMBP.OR.FLUID.NE.'GAS       ') GO TO 201                     1110
+      IF (FLUID.NE.'GAS       '.AND.FLUID.NE.'LIQUID    ') GO TO 500        1120
+      DO 200 K= 2,3*NPOINT,3                                                1130
+C     CORRECT FLUIF' S DENSITY IF GAS IS USED AND P .NE. OPERTAING PRESSURE
+         TDVDATA(K) = TDVDATA(K)*AMBP/P                                     1140
+200   CONTINUE                                                              1150
+C     END OF INPUT DATA
+201   IF (PROCED.EQ.'PUMP      ') GO TO 210
+C     CONVERT AN OPEN SYSTEM TO A CLOSED SYSTEM WITH A SIMULATED PUMP/FAN
+      INLET = NODEOUT
+      OUTLET = NODEIN
+      JCOUNT = 0
+205   PI = PRESS(INLET)
+      PO = PRESS(OUTLET)
+      IF (JCOUNT .NE. 0) GO TO 220
+210   ICOUNT = 0                                                            1160
+220   IF (OPTION.EQ.'ADJUST    ') CALL ADJUST                               1180
+      DO 370 I = 1,NODES                                                    1190
+C     LOOP TO CALCULATE P FOR EACH NODE                                     1200
+        SUMPJK = 0.                                                         1210
+        TOTK1  = 0.                                                         1220
+        TOTK2  = 0.                                                         1230
+          DO 300 J = 1,LINES                                                1240
+C         SEARCHING FOR LINES ASSOCIATED WITH NODE(I)                       1250
+            K = LINE(J)                                                     1260
+            IF (NODE(I).NE.NODFRM(K).AND.NODE(I).NE.NODETO(K)) GO TO 300    1270
+            CALL FLRTE(I,K)                                                 1280
+            IF (EORL(K).GT.0.) GO TO 250                                    1290
+C           CALCULATE K'S FOR NON-DUCT COMPONENT                            1300
+            IF (ICOUNT.LE.1.OR.SIGN(J).LE.0.) GO TO 240                     1310
+            K1 = 2.*DENS*G*A(K)**2/(ABS(EORL(K))*EV(K)*ABS(FLOW(K))**       1320
+     *           (ABS(EORL(K))-1.))                                         1330
+            IF (NODE(I).EQ.NODFRM(K).AND.PRESS(NODFRM(K)).GT.PRESS(         1340
+     *          NODETO(K))) GO TO 230                                       1350
+            IF (NODE(I).EQ.NODETO(K).AND.PRESS(NODETO(K)).GT.PRESS(         1360
+     *          NODFRM(K))) GO TO 230                                       1370
+            K2 = ABS(FLOW(K))*(ABS(EORL(K))-1.)/ABS(EORL(K))                1380
+            GO TO 270                                                       1390
+230         K2 = -ABS(FLOW(K))*(ABS(EORL(K))-1.)/ABS(EORL(K))               1400
+            GO TO 270                                                       1410
+240         K1 = 2.*DENS*G*A(K)**2/(EV(K)*ABS(FLOW(K))**(ABS(EORL(K))-      1420
+     *           1.))                                                       1430
+            K2 = 0.0                                                        1440
+            GO TO 270                                                       1450
+250         IF (ICOUNT.LE.1.OR.SIGN(J).LE.0.) GO TO 260                     1460
+C           CALCULATE K'S FOR DUCT ELEMENT                                  1470
+            IF (RE.LE.2000.) Y = -FB                                        148
+            IF (RE.GT.2000.) Y = -10.04*FB*ALOG10(2.718)/(2.51/SQRT(FB)+    1490
+     *         5.02*ALOG10(2.718))                                          1500
+            IF (RE.LE.3800.) Y = ((RE-2000.)*Y+RE*FB-243200./RE)/1800.      1510
+            K1 = 2.*DENS*G*A(K)**2/(ABS(FLOW(K))*(2.*EV(K)+(2.*FB + Y)*     1520
+     *          EORL(K)/DH(K)))                                             1530
+            IF (NODE(I).EQ.NODFRM(K).AND.PRESS(NODFRM(K)).GT.PRESS(         1540
+     *          NODETO(K))) FLOW(K) = -FLOW(K)                              1550
+            IF (NODE(I).EQ.NODETO(K).AND.PRESS(NODETO(K)).GT.PRESS(         1560
+     *          NODFRM(K))) FLOW(K) = -FLOW(K)                              1570
+            K2 = FLOW(K)*(EV(K)+(FB+Y)*EORL(K)/DH(K))/(2.*EV(K)+(2.*FB +    1580
+     *          Y)*EORL(K)/DH(K))                                           1590
+            GO TO 270                                                       1600
+260         K1 = 2.*DENS*G*A(K)**2/(ABS(FLOW(K))*(EV(K)+FB*EORL(K)/         1610
+     *           DH(K)))                                                    1620
+            K2 = 0.0                                                        1630
+270         IF (NODE(I)-NODFRM(K))290,280,290                               1640
+280         SUMPJK = SUMPJK + PRESS(NODETO(K))*K1                           1650
+            TOTK1  = TOTK1 + K1                                             1660
+            TOTK2  = TOTK2 + K2                                             1670
+            GO TO 300                                                       1680
+290         SUMPJK = SUMPJK + PRESS(NODFRM(K))*K1                           1690
+            TOTK1  = TOTK1 + K1                                             1700
+            TOTK2  = TOTK2 + K2                                             1710
+300       CONTINUE                                                          1720
+          IF (PROCED.EQ.'PUMP      ') GO TO 330                             1730
+          IF (NODE(I).NE.NODEIN.AND.NODE(I).NE.NODEOUT) GO TO 360           1740
+C         CALCULATE K'S FOR FIXFLO NODES                                    1750
+      PRISE = ABS(PRESS(INLET)-PRESS(OUTLET))
+      PUFLO = RATE(PRISE,PI,PO)
+      GO TO 335
+330       IF (NODE(I).NE.INLET.AND.NODE(I).NE.OUTLET) GO TO 360             1850
+C         CALCULATE K'S FOR PUMP NODES                                      1860
+          PRISE = ABS(PRESS(INLET)-PRESS(OUTLET))                           1870
+          PUFLO = SLI(PRISE,MPOINT,PUDATA,2,1)                              1880
+335       IF (NODE(I)-INLET)350,340,350                                     1890
+340       K1 = PUFLO/PRISE                                                  1900
+          K2 = -2.*PUFLO                                                    1910
+          SUMPJK = SUMPJK + PRESS(OUTLET)*K1                                1920
+          TOTK1  = TOTK1 + K1                                               1930
+          TOTK2  = TOTK2 + K2                                               1940
+          GO TO 360                                                         1950
+350       K1 = PUFLO/PRISE                                                  1960
+          K2 = 2.*PUFLO                                                     1970
+          SUMPJK = SUMPJK + PRESS(INLET)*K1                                 1980
+          TOTK1  = TOTK1 + K1                                               1990
+          TOTK2  = TOTK2 + K2                                               2000
+360       PNEW = (SUMPJK + TOTK2)/TOTK1
+          ERR(NODE(I)) = ABS((PNEW-PRESS(NODE(I)))/PNEW)                    2020
+          PRESS(NODE(I)) = PNEW                                             2030
+370   CONTINUE                                                              2040
+C     ITERATION ACCOMPLISHED                                                2050
+      ICOUNT = ICOUNT + 1                                                   2060
+      DO 380 M = 1,LINES                                                    2070
+        DELTP(M,2) = PRESS(NODFRM(LINE(M))) - PRESS(NODETO(LINE(M)))        2080
+        SIGN(M) = DELTP(M,1)*DELTP(M,2)                                     2090
+        DELTP(M,1) = DELTP(M,2)                                             2100
+380   CONTINUE                                                              2110
+C     P CONVERGENCE TEST                                                    2120
+      DO 390 I = 1,NODES                                                    2130
+        IF (ERR(NODE(I)).GT.(1./10.**TOL)) GO TO 220                        2140
+390   CONTINUE                                                              2150
+C     P TEST SATISFIED. FLOW BALANCE TEST NEXT                              2160
+      FLODEL = 0.                                                           2170
+      FLOAVE = 0.                                                           2180
+      DO 430 I = 1,NODES                                                    2190
+        NETFLO(NODE(I)) = 0.                                                2200
+        AVEFLO(NODE(I)) = 0.                                                2210
+        DO 400 L = 1,LINES                                                  2220
+          J = LINE(L)                                                       2230
+          IF (NODE(I).NE.NODFRM(J).AND.NODE(I).NE.NODETO(J)) GO TO 400      2240
+            CALL FLRTE(I,J)                                                 2241
+          IF (NODE(I).EQ.NODFRM(J).AND.PRESS(NODE(I)).GT.PRESS(NODETO(J)    2250
+     *       )) FLOW(J) = -FLOW(J)                                          2260
+          IF (NODE(I).EQ.NODETO(J).AND.PRESS(NODE(I)).GT.PRESS(NODFRM(J)    2270
+     *       )) FLOW(J) = -FLOW(J)                                          2280
+          NETFLO(NODE(I)) = NETFLO(NODE(I)) + FLOW(J)                       2290
+          AVEFLO(NODE(I)) = AVEFLO(NODE(I)) + ABS(FLOW(J))                  2300
+400     CONTINUE                                                            2310
+        IF (PROCED.EQ.'PUMP      ') GO TO 410                               2320
+        IF (NODE(I).NE.NODEIN.AND.NODE(I).NE.NODEOUT) GO TO 420             2330
+        PRISE = ABS(PRESS(INLET)-PRESS(OUTLET))                             2331
+        PUFLO = RATE(PRISE,PI,PO)                                           2332
+      GO TO 415
+410     IF (NODE(I).NE.INLET.AND.NODE(I).NE.OUTLET) GO TO 420               2380
+        PRISE = ABS(PRESS(INLET) - PRESS(OUTLET))                           2390
+        PUFLO = SLI(PRISE,MPOINT,PUDATA,2,1)                                2400
+415     IF (NODE(I).EQ.INLET) NETFLO(NODE(I)) = NETFLO(NODE(I))-PUFLO       2410
+        IF (NODE(I).EQ.OUTLET)NETFLO(NODE(I)) = NETFLO(NODE(I))+PUFLO       2420
+        AVEFLO(NODE(I)) = AVEFLO(NODE(I)) + PUFLO                           2430
+420     FLODEL = ABS(NETFLO(NODE(I))) + FLODEL                              2440
+        FLOAVE = AVEFLO(NODE(I)) + FLOAVE                                   2450
+430   CONTINUE                                                              2460
+      ILOG = ALOG10(FLOAVE/(2.*NODES))                                      2470
+      IF (FLODEL.LE.(5.*NODES*(10.**(ILOG - TOL)))) GO TO 436               2480
+C     IF FALSE , REITERATE                                                  2490
+435   GO TO 220
+436   IF (PROCED.EQ.'PUMP      ') GO TO 440
+      PRISE = ABS(PRESS(INLET)-PRESS(OUTLET))
+      PUFLO = RATE(PRISE,PI,PO)
+      JCOUNT = JCOUNT + 1
+C     CHECK IF THE OPEN LOOP' S ACTUAL OPERATING POINT IS REACHED
+      IF (ABS(FLORATE-PUFLO)/PUFLO .LE. .001)GO TO 440
+      GO TO 205
+C     FLOW DISTRIBUTION ANALYSIS COMPLETED. NETWORK OUTPUT
+440   WRITE (6,450)                                                         250
+450   FORMAT ('               ***** NETWORK *****')                         2520
+      MLINE = INT(PL)
+      IF (PRINTL.EQ.'ALL') MLINE = LINES
+      DO 470 L = 1,MLINE
+        IF (PRINTL.NE.'ALL') J = LPRINT(L)
+        IF (PRINTL.EQ.'ALL')J = LINE(L)
+        WRITE (6,451)                                                       2550
+451     FORMAT (///' ****')                                                  55
+        PRINT *,'  LINE ',J                                                 2560
+        WRITE (6,'(/)')                                                     2570
+        WRITE (6,452) NODFRM(J),NODETO(J)                                   2580
+452     FORMAT (10X,'NODE',I8,32X,'NODE',I8)                                2581
+        WRITE (6,453)                                                       2590
+453     FORMAT (15X,'0*****************************************0')          2591
+        FLOW(J) = ABS(FLOW(J))                                              2592
+        WRITE (6,454) PRESS(NODFRM(J)),FLOW(J),PRESS(NODETO(J))             2600
+454     FORMAT (10X,'P=',F10.3,6X,'W=',F10.3,T55,'P=',F10.3)                2601
+        IF (EORL(J).GT.0.) WRITE (6,455) DH(J),A(J),EORL(J),EV(J)           2620
+455     FORMAT (//7X,'DH= ',F8.3,5X,'AREA= ',F8.5,                          2630
+     *         5X,'L= ',F8.3,5X,'EV= ',F10.5)                               2631
+        IF (EORL(J).LE.0.) WRITE (6,456)DH(J),A(J),EORL(J),EV(J)            2640
+456     FORMAT (//7X,'DH= ',F8.3,5X,'AREA= ',F8.5,                          2650
+     *      5X,'EXP= ',F8.5,5X,'EV= ',F10.5)                                2651
+        DENS = SLI(TEMP(J),NPOINT,TDVDATA,3,1)                              2660
+        IF (EORL(J).GT.0.) GO TO 460                                        2670
+        WRITE (6,457)TEMP(J),DENS                                           2680
+457     FORMAT (7X,'TMP= ',F7.2,5X,'DENS= ',F8.5)                           2681
+        GO TO 470                                                           2690
+460     VIS= SLI (TEMP(J),NPOINT,TDVDATA,3,2)                               2700
+        FB =  DH(J)/EORL(J)*(2.*DENS*G*A(J)**2*(ABS(PRESS(NODFRM(J)) -      2710
+     *        PRESS(NODETO(J))))/FLOW(J)**2 - EV(J))                        2720
+        WRITE (6,461)TEMP(J),DENS,VIS,FB                                    2730
+461     FORMAT (7X,'TMP= ',F7.2,5X,'DENS= ',F8.5,5X,'MU= ',F7.5,5X,         2731
+     *        'FB= ',F10.5)                                                 2742
+470   CONTINUE                                                              2750
+      WRITE (6,471)                                                         2751
+471   FORMAT (///' *** TOTAL SYSTEM ***'/)                                  2752
+      IF (PROCED .EQ. 'PUMP      ') GO TO 473                               2753
+      PRINT *,'         FIXFLO INLET NODE ID = ',NODEIN                     2754
+      PRINT *,'         FIXFLO OUTLET NODE ID = ',NODEOUT                   2755
+      GO TO 475                                                             2756
+473   PRINT *,'         PUMP INLET NODE ID = ',INLET                        2757
+      PRINT *,'         PUMP DISCHARGE NODE ID = ',OUTLET                   2758
+475   PRINT *,'         TOTAL FLOW = ',PUFLO                                2759
+      WRITE (6,477)
+477   FORMAT (/////'              *** END ***')
+      GO TO 520                                                             2760
+480   PRINT *, ' **FATAL ERROR**  NO COMMENT ALLOWED HERE.  END  SHOULD     2770
+     *BE ENCOUNTERED'                                                       2780
+      GO TO 510                                                             2790
+490   PRINT *,'  **FATAL ERROR**  ERROR IN CONTROL DATA. PUMP OR FIXFLO'    2800
+      GO TO 510                                                             2810
+500   PRINT *,'  **FATAL ERROR**  ERROR IN CONTROL DATA. GAS OR LIQUID?'    2820
+      GO TO 510
+505   PRINT *,' ** FATAL ERROR ** ILLEGAL DATA'
+510   STOP                                                                  2830
+520   RETURN                                                                2840
+      END                                                                   2850
+      SUBROUTINE FLRTE(I,J)
+C     THIS SUBROUTINE IS TO CALCULATE FLOW RATE IN A LINE ELEMENT
+      COMMON /LB1/DH(1000),A(1000),EORL(1000),EV(1000),TEMP(1000),FLOW      3010
+     * (1000),PRESS(500),PUDATA(40),TDVDATA(60),G,ICOUNT                    3020
+      COMMON /LB2/LINE(1000),NODFRM(1000),NODETO(1000),NODE(500),FB,RE,     3030
+     *       DENS,NPOINT                                                    3040
+        DENS = SLI(TEMP(J),NPOINT,TDVDATA,3,1)                              3050
+        IF (EORL(J).GT.0.) GO TO 10                                         3060
+C       FLOW IN NON-DUCT ELEMENT
+        IF (EORL(J).EQ.0.) EORL(J)=-2.                                      3070
+C       FLOW IN NON-DUCT ELEMENT                                            3080
+        FLOW(J) = ((ABS(PRESS(NODFRM(J))-PRESS(NODETO(J)))*2.*DENS*G*(A(    3090
+     *              J)**2.))/EV(J))**(1./ABS(EORL(J)))                      3100
+        GO TO 20                                                            3110
+C       FLOW IN DUCT ELEMENT                                                3120
+10      VIS = SLI(TEMP(J),NPOINT,TDVDATA,3,2)                               3130
+C       GO TO EITHER SUB 'FBRE' OR 'FBRE0' FOR DUCT'S FRICTION FACTOR
+        IF (EV(J).GT.0.) CALL FBRE (PRESS(NODFRM(J)),PRESS(NODETO(J)),      3140
+     *      EV(J),DENS,VIS,EORL(J),DH(J),A(J),G,FB,RE)                      3150
+        IF (EV(J).EQ.0.) CALL FBRE0(PRESS(NODFRM(J)),PRESS(NODETO(J)),      3160
+     *      EV(J),DENS,VIS,EORL(J),DH(J),A(J),G,FB,RE)                      3170
+        FLOW(J) = VIS*A(J)*RE/DH(J)                                         3180
+20      RETURN                                                              3190
+        END                                                                 3200
+      FUNCTION RATE(PRISE,PI,PO)
+      COMMON FLORATE
+C     SIMULATE A PUMP FOR THE CONVERTED OPEN LOOP
+      RATE = -PRISE + FLORATE+ ABS(PI - PO)
+      RETURN
+      END
+      SUBROUTINE FBRE (PRESSF,PRESST,EV,DENS,VIS,D,DH,AREA,G,FB,RE)     00004000
+C       SUBROUTIN TO CALCULATE FRICTION FACTOR IN DUCT ELEMENT HAVING EV .NE. 0.
+        RE = -32.*D/(DH*EV) + SQRT((32.*D/(DH*EV))**2. +((2.*DENS*G*DH**00004010
+     *       2.)/(EV*VIS**2.))*ABS(PRESSF - PRESST))                    00004020
+        IF (RE.GT.2000.)GO TO 10                                        00004030
+C       LAMINAR FLOW
+        FB = 64./RE                                                     00004040
+      RETURN                                                            00004050
+10      FBTEST = DH/D*((2.*DENS*G*(DH**2.)*ABS(PRESSF - PRESST)/        00004060
+     *              (3800.**2.)/(VIS**2.)) - EV)                        00004061
+        IF (FBTEST.LT.0.) GO TO 40                                      00004062
+        FTEST = 1./SQRT(FBTEST)+ 2.*ALOG10(2.51/SQRT(FBTEST)/3800.)     00004063
+        IF (FTEST.GT.0.) GO TO 40                                       00004064
+20      FB = (DH/D)*((2.*DENS*G*(DH**2.)*ABS(PRESSF - PRESST)/((VIS**2.)00004070
+     *  *(RE**2.))) - EV)                                               00004080
+        A = ALOG10(2.51/(RE*SQRT(FB)))                                  00004090
+        B = 2.51*EV*ALOG10(2.718)/(2.51/RE/SQRT(FB))                    00004100
+        C = DENS*G*(DH**2.)*ABS(PRESSF - PRESST)/(RE*VIS**2.)           00004110
+        RENEW =RE*(1.- (D*RE*FB*(1.+(2.*SQRT(FB)*A))/(2.*DH*(B+C))))    00004120
+        IF (ABS((RENEW - RE)/RENEW).LE..001)GO TO 30                    00004130
+        RE = RENEW                                                      00004140
+        GO TO 20                                                        00004150
+30      RE = RENEW                                                      00004160
+C       FINISH CALCULATION OF FB ' RE IN TURBULENT REGION               00004170
+      RETURN                                                            00004180
+40      RE = 1500.                                                          418
+        CALL TRANS(PRESSF,PRESST,EV,DENS,VIS,D,DH,AREA,G,FB,RE)         00004190
+C       CALLING SUB TRANS TO DO CALCULATION FOR TRANSITION REGION       00004200
+      RETURN                                                            00004210
+      END                                                               00004220
+      SUBROUTINE FBRE0(PRESSF,PRESST,EV,DENS,VIS,D,DH,AREA,G,FB,RE)     00005000
+C       SUBROUTINE TO CALCULATE FRICTION FACTOR FOR DUCT ELEMENT HAVING EV .= 0.
+        RE =  DENS*G*(DH**3.)*ABS(PRESSF - PRESST)/(32.*D*VIS**2.)      00005010
+        IF (RE.GT.2000.)GO TO 10                                        00005020
+C       LAMINAR FLOW                                                    00005030
+        FB = 64./RE                                                     00005040
+      RETURN                                                            00005050
+10      A=ALOG10(2.51*VIS/(DH*SQRT(2.*DENS*G*DH*ABS(PRESSF-PRESST)/D))) 00005060
+        RETEST = -2.*DH*SQRT(2.*DENS*G*DH*ABS(PRESSF-PRESST)/D)*A/VIS   00005070
+        IF (RETEST.LT.3800.) GO TO 20                                   00005080
+        RE = RETEST                                                     00005080
+        FB = 2.*DENS*G*(DH**3.)*ABS(PRESSF-PRESST)/(D*(VIS**2.)*RE**2.) 00005090
+      RETURN                                                            00005100
+20      RE = 1500.
+        CALL TRANS(PRESSF,PRESST,EV,DENS,VIS,D,DH,AREA,G,FB,RE)         00005110
+C       CALLING TRANS SUB FOR TRANSITIONAL FLOW                         00005120
+      RETURN                                                            00005130
+      END                                                               00005140
+      SUBROUTINE TRANS(PRESSF,PRESST,EV,DENS,VIS,D,DH,AREA,G,FB,RE)     00006000
+C       SUBROUTINE TO CALCULATE FRICTION FACTOR WHEN FLOW IS TRANSITIONAL
+        REINIT = RE                                                         6001
+1       REINIT = REINIT + 3.                                                6002
+        IF (REINIT.EQ.2000.) REINIT = 1999.                                 6002
+        RE = REINIT                                                         6003
+10      FB = (DH/D)*((2.*DENS*G*(DH**2.)*ABS(PRESSF-PRESST)/((VIS*RE)** 00006010
+     *        2.)) - EV)                                                00006020
+        IF (FB.LT.0.) GO TO 25
+        FBPRIM = -4.*DENS*G*(DH**3.)*ABS(PRESSF-PRESST)/(D*(VIS**2.)*   00006030
+     *            (RE**3.))                                             00006040
+        FBT = ((1800.*FB)-(243200./RE)+64.)/(RE-2000.)                  00006050
+        IF (FBT.LE.0.) GO TO 1                                              6051
+        FBTPRI =  ((1800.*FBPRIM)+(243200./RE**2.)-FBT)/(RE-2000.)      00006060
+        A =  ALOG10(2.51/SQRT(FBT)/RE)                                  00006070
+        B = 5.02*ALOG10(2.718)*(FBTPRI+(2.*FBT/RE))/(2.5/(RE*SQRT(FBT)))00006080
+        RENEW = RE*(1.+((2.*FBT*(1.+(2.*SQRT(FBT)*A)))/((FBTPRI*RE)+B)))00006090
+        IF (ABS((RENEW-RE)/RENEW).LE..001)GO TO 20                      00006100
+        RE = RENEW                                                      00006110
+          GO TO 10
+20      RE = RENEW                                                      00006140
+      RETURN                                                            00006150
+25    PRINT *,'     FB = ',FB,'     NEGATIVE BLASSIUSS FRICTION FACTOR.
+     *    REINITIALIZE PRESSURES RECOMMENDED'
+      STOP
+      END                                                               00006160
+      FUNCTION SLI(ARG,NX,X,M,N)                                            7000
+C     LINEAR INTERPOLATION SUBROUTINE
+      DIMENSION X(M*NX)                                                     7010
+      IF (ARG.LT.X(1).OR.ARG.GT.X(M*NX-M+1)) GO TO 30                       7020
+      DO 10 I = 1,M*NX-M+1,M                                                7030
+        IF (I.EQ.1) GO TO 10                                                7040
+        IF (ARG.GE.X(I-M).AND.ARG.LE.X(I)) GO TO 20
+C       LOOKING FOR POSITION OF ARGUMENT ON ARAY X                          7060
+10    CONTINUE                                                              7070
+20    SLI =  (ARG-X(I-M))*(X(I+N)-X(I-M+N))/(X(I)-X(I-M)) + X(I-M+N)        7080
+      RETURN                                                                7090
+30    WRITE (6,40)                                                          7100
+40    FORMAT (' *** ARGUMENT OUT OF CURVE RANGE. EXECUTION TERMINATED.')
+      STOP                                                                  7110
+      END                                                                   7120
+      SUBROUTINE READC                                                      8000
+C     SUBROUTINE TO READ COMMENTS IF ANY
+      CHARACTER C*1,COMNT*80                                                8010
+10    READ (5,'(A1)') C                                                     8020
+      IF (C.EQ.'C') GO TO 20                                                8030
+      BACKSPACE 5                                                           8040
+      GO TO 30                                                              8050
+20    BACKSPACE 5                                                           8060
+      READ (5,'(A80)') COMNT                                                8070
+      WRITE (6,'(1X,A80)') COMNT                                            8080
+      GO TO 10                                                              8100
+30    RETURN                                                                8110
+      END                                                                   8120

@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+ 
+
+The Bar/Line chart allows you to compare actual versus planned cost values.
+A bar graph is used to represent incremental figures.  Cumulative values may be
+computed and plotted using curves.  These curves may be plotted overlaying the
+bar graph or in a separate chart.  The allocation may be represented with a
+horizontal line.
+
+The fields which are to be entered are as follows:
+        Title       : Centered at top of chart
+        Subtitle    : Centered below title
+        Date        : 8 characters, if none given today's date displayed
+        Allocation  : Total budgeted allocation
+        Data values : 2 lines of 13 or 14 values, one initial value each line
+        Footnotes   : Up to 3, located at bottom of chart
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

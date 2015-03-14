@@ -1,0 +1,12 @@
+; Configure TEK 4510 for small letter viewgraphs.
+UTILITIES TERMINAL /CONFIG
+24
+B
+V
+C
+N
+2
+1
+L
+D
+MISC ZAP

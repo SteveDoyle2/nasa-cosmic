@@ -1,0 +1,44 @@
+/*****************************************************************************/
+/*                                                                           */
+/*  Eval_list                                                                */
+/*                                                                           */
+/*  This function scans all of the conditions required for a single rule     */
+/*  and evaluates those which are undefined.                                 */
+/*                                                                           */
+/*  Input:  rule - pointer to a rule.                                        */
+/*  Output: none.                                                            */
+/*                                                                           */
+/*  Method: For each condition which the rule depends on                     */
+/*              if the condition is undefined                                */
+/*                  evaluate the condition                                   */
+/*                  if the condition is false                                */
+/*                      stop                                                 */
+/*                                                                           */
+/*  Programmer: G R Goodrum, MDTSCO, June 1984                               */
+/*                                                                           */
+/*****************************************************************************/
+
+#include "structures.inc"
+
+eval_list ( list )
+struct cond_info **list;
+{
+    struct cond_info *cond;
+
+    while  ( ( cond = *list++ ) != NULL )
+    {
+        count ( 0, 0 );                                         /* debug */
+        if  ( cond -> last_value < 0 )
+        {
+            count ( 0, 2 );                                     /* debug */
+            if  ( evaluate ( cond ) == FALSE )
+            {
+                count ( 0, 4 );                                 /* debug */
+                return;
+            }
+            else count ( 0, 5 );                                /* debug */
+        }
+        else count ( 0, 3 );                                    /* debug */
+    }
+    count ( 0, 1 );                                             /* debug */
+}

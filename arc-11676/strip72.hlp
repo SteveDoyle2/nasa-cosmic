@@ -1,0 +1,10 @@
+1 STRIP72
+
+STRIP72 is a program that removes all characters after column 72 and all 
+trailing blanks from an input file.  It is useful for removing the identi-
+fication field from FORTRAN and DATA files.
+
+Enter:   STRIP72 filespec
+
+where 'filespec' is the name of the file to be stripped.  A new version of
+'filespec' will be created.

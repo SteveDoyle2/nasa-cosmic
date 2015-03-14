@@ -1,0 +1,29 @@
+interface;
+  unit nsqdraw (draw2,funcnum,form,fbheight,fbwidth,
+               cbheight,cbwidth,fletheight,cletheight,letwidth,
+               numlines,color1,size,flin_lin,t_first,symbol);
+
+    USES utility;
+
+  var
+    funcnum     : byte;
+    form        : byte;
+    fbheight    : integer;
+    cbheight    : integer;
+    cbwidth     : integer;
+    fbwidth     : integer;
+    fletheight  : byte;
+    cletheight  : byte;
+    letwidth    : byte;
+    numlines    : byte;
+    color1      : byte;
+    size        : byte;
+    flin_lin    : byte;
+    t_first     : byte;
+    symbol      : integer;
+
+  procedure draw2 (var first : entity );
+
+  begin
+  end;
+

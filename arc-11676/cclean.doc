@@ -1,0 +1,22 @@
+CCLEAN
+
+ComClean is a program which cleans up COMMON blocks in a FORTRAN source code.
+It is especially useful after a program has been "TIDYed". All COMMON blocks
+and NAMELISTs are cleaned up in the following manner:
+     1. The name of the COMMON block or NAMELIST is padded with blanks to make
+it six characters long.
+     2. The variable names are aligned in columns 8 characters wide. If a sub-
+script results in a name of more than 8 characters, the next name will be moved
+to the next column.
+     3. If this expansion results in more than 19 continuation cards, the
+comment 'C$$$$$$' is placed after the last continuation card.
+
+To execute the program enter :
+
+         CCLEAN filespec
+
+where 'filespec' does not include the '.FOR' suffix. A new version of 
+'filespec'.FOR will be created. If the program ends abnormally for any
+reason, there will be a file named 'TEMP.CLN' on your directory.
+
+---EOF

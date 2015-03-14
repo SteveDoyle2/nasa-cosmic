@@ -1,0 +1,116 @@
+(setq *hypotheses '(
+       (we should automate *) (humans should do *)))
+;
+(setq *rules '(
+((we should automate * )
+   (or
+       (7.0 * requires perceptual abilities outside the range of human limits)
+       (6.0 * involves safety or health risks outside tolerable limits for humans)
+       (6.0 * requires computing ability) 
+       (5.0 it is technically feasible to automate *)
+       (5.0 it is economically feasible to automate *)
+       (3.0 * involves storing and recalling large 
+              amounts of precise data for short periods of time) 
+       (3.0 * involves routine repetetive precise tasks) 
+       (3.0 * requires regularly an attention span of more than 20 mins)
+       (3.0 * entails detection of infrequent or rare events)
+       (3.0 humans dont like to do *)
+       (2.0 * requires monitoring men or machines) 
+       (2.0 * requires handling of highly complex operations
+              such as doing many things at once)       
+       (1.0 * requires EVA)
+       (1.0 * requires quick response to signals) 
+       (1.0 * requires deductive reasoning ability) 
+       (1.0 * requires exerting large amounts of force smoothly)))
+
+
+((humans should do *) 
+   (or  (8.0 humans like to do *) 
+        (7.0 * requires the ability to arrive at new and completely
+               different solutions to problems)
+        (6.0 * requires ability to detect signals in high noise envirnoments)
+        (5.0 * requires the ability to profit from experience)
+        (5.0 * entails the ability to reason inductively)
+        (5.0 and (* requires ability to perceive patterns) 
+                 (* requires ability to generalize about patterns))
+        (5.0 and (* requires ability to store large amounts 
+                    of information for long periods) 
+                 (* requires ability to remember relevant facts 
+                    at the appropriate time))
+        (4.0 operations in * cannot be reduced to a series
+             of preset procedures)
+        (4.0 * entails many unexpected or unpredictable events)
+        (4.0 * requires ability to improvise and adopt flexible procedures)
+        (3.0 * requires sensitivity to a wide variety of stimuli)
+        (3.0 * requires ability to use judgement)
+        (1.0 * entails the ability to perform fine manipulations)
+        (1.0 * entails the ability to perform when overloaded)
+        (1.0 * involves the ability to track in a wide variety of
+               situations)
+        (1.0 * requires ability to detect certain forms of energy)))
+
+((* requires exerting large amounts of force smoothly)
+    (or (9.0 * requires delivery of force greater than 3000 nt)))
+
+((it is economically feasible to automate *)
+    (or (8.0 and (automation of * will be more cost-effective
+                  than using a human to perform that task)
+                 (all the necessary costs of development design
+                  testing installation and automation can
+                  be covered by known financial resources))))
+
+((it is technically feasible to automate *)
+    (or (8.0 and (the necessary hardware and software components
+                  for * are available off-the-shelf)
+                 (the final development of an automated system for *
+                  can be done within the scheduled life-cycle
+                  development for the system or that limit
+                  can be revised)
+                 (systems events for * can be predicted and handled
+                  by automation)
+                 (the expected reliability of the proposed system for *
+                  meets system performance requirements)
+                 (consequences of expected system failures can be 
+                  compensated for by automatic back-up or
+                  otherwise prevented from exceeding 
+                  acceptable limits)
+                 (adequate safeguards against dangers to health from *
+                  can be fully automated))))
+
+((humans in space should do *) 
+     (or (9.0 and (* is necessarily done in space)
+                  (humans should do *))))
+
+((humans on the ground should do *) 
+     (or (9.0 and (humans should do *)
+                  (* requires more than 8 persons))))
+
+
+((* requires perceptual abilities outside the range of human limits) 
+     (or (9.0 * requires visual perception outside human limits) 
+         (8.0 * requires tactile perception outside human limits)
+         (8.0 * requires aural perception outside human limits)))
+
+
+((* requires tactile perception outside human limits)
+     (or (8.0 * requires detection for force more finely than 1 nt)
+         (8.0 * requires texture discrimination finer than 1 cm)
+         (8.0 * requires detection of vibration finer than 10K Hz)))
+
+((* requires visual perception outside human limits) 
+     (or (8.0 * requires perception of intensity outside the
+                range 3e-10 to 0.3 cd per m**2)
+         (8.0 * requieres perception of light wavelengths outside
+                the range 300 nm to 1500 nm)))
+
+((* requires aural perception outside human limits)
+     (or (8.0 * requires perception of sonic intensity outside
+                the range 10E-16 to 10E-2 J per cm**2)
+         (8.0 * requires perception of sonic frequency outside the
+                range 20 to 20000 HZ)))))
+;
+(setq *opposites '())
+;
+(defun initial-prompt ()
+   (princ '"     What is the task under consideration?")
+)

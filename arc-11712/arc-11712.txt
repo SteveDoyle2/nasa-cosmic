@@ -1,0 +1,54 @@
+ IBASE- THE IMAGE DATABASE
+
+( INFORMATICS, INC. )
+
+     The Image Database program, IBASE, is a general purpose imagery infor-
+mation system. The system includes functions for cataloging and managing
+digital imagery files, and for conducting analyses of these images. Use of
+the system may be accomplished either by commands or through a hierarchy of
+menus. The analytical capabilities of IBASE include contingency tables,
+image filtering (low-, high-, and bandpass), proximity maps, clustering,
+histograms, regression, slope calculations, scaling, and Boolean manipu-
+lations.
+
+     All information stored by IBASE is considered part of a GeoCube. A
+GeoCube is a rectangular region defined by the coordinates of two opposite
+corners, and can store many images called layers. Each layer contains in-
+formation such as name, date, and layer type. An IBASE layer can contain re-
+port or data information. Report layers hold text information, or the re-
+sults of an IBASE analysis. Data layers hold the image specifications such
+as pixel size, number of samples, and the actual continuous/discrete, inte-
+ger/byte image data samples. The various analyses are performed by speci-
+fying input data layers and output report layers. Typical IBASE operations
+include listing GeoCubes, printing data or report layers, mapping data lay-
+ers using a line printer gray scale, editing data, and routine file manage-
+ment with procedures such as copy, delete, list, print, and summarize.
+
+     IBASE is written in FORTRAN 77 for interactive execution and has been
+implemented on a DEC VAX 11/780 series computer operating under VMS 2.4.
+This program was developed in 1986.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN 77
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 14,838 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX FILES-11 Format Magnetic Tape
+
+PROGRAM NUMBER: ARC-11712
+
+DOMESTIC - DOCUMENTATION PRICE: $18.00    PROGRAM PRICE: $2000.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $36.00   PROGRAM PRICE: $4000.00
+
+
+
+                                        1
+

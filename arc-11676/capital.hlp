@@ -1,0 +1,13 @@
+1 CAPITAL
+
+CAPITALize is a program to convert files with lower case letters to the same
+file with only capital letters.  All symbols other than lower case letters are
+echoed without modification.
+
+Enter :
+
+CAPITAL filespec
+
+where 'filespec' is the name of the input file.  A new version of 'filespec'
+will be created.  If the program ends abnormally for any reason, a file named
+TEMP.CAP will exist on your directory with the partially converted file.

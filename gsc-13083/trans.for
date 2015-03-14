@@ -1,0 +1,38 @@
+      SUBROUTINE TRANS(R,V,T)
+C
+C
+C      THE PURPOSE OF TRANS IS TO COMPUTE THE TRANSFORMATION
+C      MATRIX FROM GEOCENTRIC INERTIAL TO LOCAL ORBITAL COORDINATES
+C
+C      ARGUMENTS IN THE CALLING SEQUENCE ARE DEFINED AS FOLLOWS--
+C
+C      ARGUMENT   TYPE   DIMENSION   I/O      DEFINITION
+C
+C         R        R*8      3         I        POSITION (INERTIAL)
+C         V        R*8      3         I        VELOCITY (INERTIAL)
+C         T        R*8     3,3        O        TRANSFORMATION MATRIX
+C                                              (INERTIAL TO LOCAL
+C                                                 ORBITAL)
+      IMPLICIT REAL*8(A-H,O-Z)
+      DIMENSION R(3),V(3),C(3),T1(3),T(3,3),R1(3),V1(3)
+C  T IS TRANSFORMATION MATRIX FROM GEOCENTRIC INERTIAL
+C  TO LOCAL ORBITAL SYSTEM
+C
+C   SAVE INITIAL VALUES
+C
+      DO 10 I=1,3
+      R1(I)=R(I)
+      V1(I)=V(I)
+   10 CONTINUE
+      CALL UNIVEC(R1)
+      CALL UNIVEC(V1)
+      CALL CROSS(V1,R1,C)
+      CALL UNIVEC(C)
+      CALL CROSS(R1,C,T1)
+      DO 1 I=1,3
+      T(1,I)=T1(I)
+      T(2,I)=C(I)
+      T(3,I)=-R1(I)
+    1 CONTINUE
+      RETURN
+      END

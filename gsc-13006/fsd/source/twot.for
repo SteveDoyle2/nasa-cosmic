@@ -1,0 +1,54 @@
+      FUNCTION TWOT(OM,S,ZMS,TBM2)
+C
+C     'TWOT' IS A FUNCTION WHICH SUMMARIZES THE TOTAL KINETIC ENERGY
+C     OF THE SYSTEM.
+C
+      IMPLICIT REAL*8 (A-H,O-Z)
+      REAL*8 J1,J2,J3
+C
+      COMMON/RNRGY3/ J1(3,3),J2(3,3),J3(3,3),XICODT(3),W(3),ETA(3),
+     .               ZETA(3)
+C
+      DIMENSION OM(3),S(3,3),OMT(3),ST(3,3),WT(3),OJ1(3),WJ2(3),WJ3(3)
+C
+C
+      CALL MATRAN(OM,OMT,1,3)
+      CALL MATRAN(S,ST,3,3)
+      CALL MATRAN(W,WT,1,3)
+C
+      XSQR=0.0D0
+      OMTE=0.0D0
+      WTZ=0.0D0
+C
+      DO 10 I=1,3
+      XSQR=XSQR + XICODT(I)**2
+      OMTE=OMTE + OMT(I)*ETA(I)
+   10 WTZ=WTZ + WT(I)*ZETA(I)
+C
+      XSQR=-ZMS*XSQR
+      OMTE=2.D0*OMTE
+      WTZ=2.D0*WTZ
+C
+      DO 20 I=1,3
+      OJ1(I)=0.0D0
+      WJ2(I)=0.0D0
+      WJ3(I)=0.0D0
+      DO 20 J=1,3
+      OJ1(I)=OJ1(I) + OM(J)*J1(J,I)
+      WJ2(I)=WJ2(I) + WT(J)*J2(J,I)
+   20 WJ3(I)=WJ3(I) + WT(J)*J3(J,I)
+C
+      OJ1O=0.0D0
+      WJ2W=0.0D0
+      WJ3O=0.0D0
+C
+      DO 30 I=1,3
+      OJ1O=OJ1O + OJ1(I)*OM(I)
+      WJ2W=WJ2W + WJ2(I)*W(I)
+   30 WJ3O=WJ3O + WJ3(I)*OM(I)
+C
+      TWOT=XSQR + OJ1O + WJ2W + TBM2 + 2.D0*WJ3O + OMTE + WTZ
+      TWOT=TWOT/2.D0
+C
+      RETURN
+      END

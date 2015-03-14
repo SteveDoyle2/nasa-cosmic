@@ -1,0 +1,103 @@
+      SUBROUTINE XYZSPH(KEY,ANG1,ANG2,MAG,CART,FACTR)
+      IMPLICIT REAL*8 (A-H,O-Z)
+C
+C  THIS ROUTINE DOES CONVERSIONS BETWEEN SPHERICAL AND CARTESIAN COORDS.
+C
+C     THE ANG1/ANG2 PAIR IS RACN/DECL, AZ/EL, LONG/LAT,........
+C
+C  KEY=NEGATIVE -- GET ANG1, ANG2, AND MAGNITUDE OF THE
+C                  VECTOR FACTR*CART.
+C
+C  KEY=ZERO OR POSITIVE -- GET THE CARTESIAN VECTOR XCART FROM THE
+C                  VECTOR HAVING DIRECTION ANG1/ANG2, AND
+C                  HAVING MAGNITUDE MAG. RETURN CART=FACTR*XCART.
+C
+C*********************************************************************
+C
+C  INPUT/OUTPUT....
+C
+C  VARIABLE  DIM  TYPE  I/O    DESCRIPTION
+C  --------  ---  ----  ---    -----------
+C
+C     WHEN CONVERTING A CARTESIAN VECTOR TO ANGLES AND MAGNITUDE:
+C
+C  KEY       1    I*4    I     MUST BE NEGATIVE. INDICATES THAT ANGLES
+C                              AND MAGNITUDE ARE BEING COMPUTED.
+C
+C  ANG1      1    R*8    O     FIRST ANGLE IN RACN/DECL, AZ/EL, 
+C                              LONG/LAT, ETC., PAIR. RADIANS.
+C                              ANG1/ANG2 ARE COMPUTED FOR THE VECTOR
+C                              FACTR*CART. USUALLY ONE USES FACTR=1.D0
+C
+C  ANG2      1    R*8    O     SECOND ANGLE IN THE PAIR. RADIANS.
+C
+C  MAG       1    R*8    O     MAGNITUDE OF THE VECTOR THAT WAS INPUT.
+C
+C  CART      3    R*8    I     THE CARTESIAN VECTOR INPUT.
+C
+C  FACTR     1    R*8    I     THE FACTOR BY WHICH CART IS MULTIPLIED
+C                              BEFORE THE ANG1/ANG2/MAG VALUES FOR THE
+C                              FACTR*CART PRODUCT ARE COMPUTED. USUALLY
+C                              FACTR=1.D0 IS USED.
+C
+C+ + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + + +
+C
+C     WHEN CONVERTING ANGLES AND MAGNITUDE TO CARTESIAN VECTOR:
+C
+C  KEY       1    I*4    I     MUST BE ZERO OR POSITIVE. THIS INDICATES
+C                              THAT A CARTESIAN VECTOR IS BEING COMPUTED
+C
+C  ANG1      1    R*8    I     FIRST ANGLE IN THE ANGLE PAIR. RADIANS.
+C
+C  ANG2      1    R*8    I     SECOND ANGLE IN THE PAIR. RADIANS.
+C
+C  MAG       1    R*8    I     MAGNITUDE OF THE VECTOR TO BE OUTPUT.
+C
+C  CART      3    R*8    O     CARTESIAN VECTOR COMPUTED FROM PRODUCT
+C                              OF FACTR AND THE VECTOR DESCRIBED BY
+C                              THE ANGLES AND MAGNITUDE INPUT. USUALLY
+C                              FACTR=1.D0 IS USED.
+C
+C  FACTR     1    R*8    I     MULTIPLICATION FACTOR FOR THE OUTPUT
+C                              VECTOR. USUALLY 1.D0 IS USED.
+C
+C********************************************************************
+C
+C   CODED BY CHARLIE PETRUZZO   6/81.
+C     MODIFIED......
+C
+C
+C
+      REAL*8 TWOPI/  6.283185307179586D0    /
+      REAL*8 CART(3),MAG,TEMP(3)
+C
+      IF(KEY.LT.0) GO TO 100
+C
+C     KEY IS ZERO OR POSITIVE.  GET CARTESIAN VECTOR.
+C
+      FACTX=MAG*FACTR
+      COSDEC=DCOS(ANG2)
+      CART(1) = COSDEC * DCOS(ANG1) * FACTX
+      CART(2) = COSDEC * DSIN(ANG1) * FACTX
+      CART(3) = DSIN(ANG2) * FACTX
+      GO TO 900
+C
+C
+  100 CONTINUE
+C
+C     KEY IS NEGATIVE. GET ANGLES AND MAGNITUDE.
+C
+      TEMP(1) = CART(1) * FACTR
+      TEMP(2) = CART(2) * FACTR
+      TEMP(3) = CART(3) * FACTR
+      MAG=DSQRT(TEMP(1)**2+TEMP(2)**2+TEMP(3)**2)
+      ANG2=0.D0
+      IF(MAG.NE.0.D0) ANG2=DASIN(TEMP(3)/MAG)
+      ANG1=0.D0
+      IF(TEMP(1).NE.0.D0 .OR. TEMP(2).NE.0.D0) ANG1=DMOD(DATAN2(TEMP(2),
+     1           TEMP(1))+TWOPI,TWOPI)
+C
+C
+  900 CONTINUE
+      RETURN
+      END

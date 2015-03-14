@@ -1,0 +1,245 @@
+         FILE NAME = TAPEDESCR.TXT       7/29/86
+                                 revised 6/12/87
+
+
+
+
+
+
+
+
+                  TAPE DESCRIPTION
+                  ----------------
+
+                    ACCOMPANYING
+
+                        THE
+ 
+            SUBMITTAL PACKAGE DOCUMENTATION
+
+                      FOR THE
+
+                   QUIKVIS PROGRAM
+
+
+
+
+
+
+
+
+              Charles J Petruzzo
+              Code 742.1
+              Goddard Space Flight Center
+              Greenbelt, MD  20771
+
+              Telephone: 301-286-4969
+
+
+SECTION 1.  INTRODUCTION
+------------------------
+
+The tape is a standard 9-track, half-inch, magnetic tape recorded
+at 1600 BPI.  It was created on a VAX-11/785 using version 4.2 of
+VAX/VMS.
+
+
+The tape was created by the command procedure MAKETAPE.COM listed
+in section 3.  The tape was read back for testing using the command
+procedure DUMPTAPE.COM listed in section 4.
+
+
+The program tape has several file types.  The file name suffix
+describes the kind of file involved: 
+
+  TXT - text files that comprise the program's documentation;
+        all can be read by a text editor
+
+  COM - DCL command files for compiling, linking, and
+        executing the program;  all can be read by a text
+        editor
+                  
+  FOR - FORTRAN source code(all code is FORTRAN);  all can
+        be read by a text editor;  there are 187 such files;
+
+  INC - FORTRAN 'include' files referenced by one or more
+        source files during compilation;  all can be read
+        by a text editor;  there are 3 such files;
+
+  EXE - an executable image;  this file cannot be read by a
+        text editor
+
+  Uxx - data files used as input to the program or output
+        by the program;  Uxx values on the tape are U05, U06,
+        U08, U19, U25, U26, U27, and U30;  the user guide
+        describes the files;  all can be read by a text
+        editor
+
+
+
+SECTION 2.  MORE DETAILS ON EACH FILE TYPE
+------------------------------------------
+
+
+  TXT - COSMIC1.TXT is the Submittal Package Document described
+           on pages 1 to 3 of the COSMIC Software Submittal Guidelines
+           document.
+
+        TAPEDESCR.TXT is this document.
+
+        QUIKVIS.TXT is the program user guide.
+
+        FMT2526.TXT describes the format for output units 25 and 26.
+
+        OBSREQMT.TXT describes the file format for input unit 30.  The
+           format given in QUIKVIS.TXT is sufficient for QUIKVIS use but
+           the reader routines(those whose names begin with RDREQMT) are
+           coded for a wider range of inputs than QUIKVIS permits.
+           Full documentation has been included for completeness.
+
+        TARGCATLG.TXT describes the file format for input unit 30.  The
+           format given in QUIKVIS.TXT is sufficient for QUIKVIS use but
+           the reader routines(those whose names begin with RDCAT) are
+           coded for a wider range of inputs than QUIKVIS permits.
+           Full documentation has been included for completeness.
+
+        SWCHANGES.TXT contains a brief description of the changes that
+           have occurred in QUIKVIS since the original COSMIC submittal
+           in the summer of 1986.
+
+
+  COM - MAKEOBJ.COM compiles all source routines and produces an
+           object library
+
+        QVLINK.COM links the program using the object library
+           created by MAKEOBJ.COM
+
+        EXAMPLE1.COM executes the first of the two sample runs
+
+        EXAMPLE2.COM executes the second of the two sample runs
+
+        BIGTEST.COM executes MAKEOBJ.COM, QVLINK.COM, EXAMPLE1.COM
+           and EXAMPLE2.COM in one run
+
+                  
+  FOR - these are FORTRAN source code files
+
+  INC - these are FORTRAN 'include' files referenced by the compiler
+           when certain routines are compiled
+
+  EXE - this is the executable image used to create the two sample
+           runs supplied with the tape
+
+  Uxx - these are input and output data files associated with the
+           two sample runs supplied with the tape
+
+
+
+SECTION 3.  PROCEDURE THAT WROTE THE TAPE
+-----------------------------------------
+
+
+$!                     FILE NAME = MAKETAPE.COM
+$!
+$ SET VERIFY
+$!
+$!
+$!              ****************************************
+$!              *      THIS PROCEDURE CREATED THE      *
+$!              *          QUIKVIS PROGRAM'S           *
+$!              *        COSMIC SUBMITTAL TAPE         *
+$!              ****************************************
+$!
+$!
+$ SHOW TIME
+$!
+$ SET DEFAULT [NQCJP.QUIKVIS.TAPE8706]
+$!
+$ DRIVE = "MTA0:"
+$!
+$!
+$ ALLOCATE    'DRIVE'  TAPE
+$ INITIALIZE  'DRIVE'  QVTAPE
+$ MOUNT       'DRIVE'  QVTAPE  TAPE
+$!
+$ FILES1 = "COSMIC1.TXT,TECHBRIEF.TXT,TAPEDESCR.TXT,FMT2526.TXT"
+$ FILES2 = "[TOSS.DOC...]QUIKVIS.TXT,OBSREQMT.TXT,TARGCATLG.TXT'
+$ FILES3 = "BIGTEST.COM,MAKEOBJ.COM,QVLINK.COM,EXAMPLE*.COM"
+$ FILES4 = "*.FOR"
+$ FILES5 = "*.INC"
+$ FILES6 = "*.EXE"
+$ FILES7 = "*.U*"
+!
+$ DIR/SIZE/DATE 'FILES1'
+$ DIR/SIZE/DATE 'FILES2'
+$ DIR/SIZE/DATE 'FILES3'
+$ DIR/SIZE/DATE 'FILES4'
+$ DIR/SIZE/DATE 'FILES5'
+$ DIR/SIZE/DATE 'FILES6'
+$ DIR/SIZE/DATE 'FILES7'
+$!
+$!
+$ COPY/LOG  'FILES1'  'DRIVE'
+$ COPY/LOG  'FILES2'  'DRIVE'
+$ COPY/LOG  'FILES3'  'DRIVE'
+$ COPY/LOG  'FILES4'  'DRIVE'
+$ COPY/LOG  'FILES5'  'DRIVE'
+$ COPY/LOG  'FILES6'  'DRIVE'
+$ COPY/LOG  'FILES7'  'DRIVE'
+$!
+$!
+$ DIR/SIZE/DATE TAPE
+$!
+$ DISMOUNT/UNLOAD 'DRIVE'
+$ DEALLOC 'DRIVE'
+$!
+$ SHOW TIME
+
+
+
+SECTION 4.  PROCEDURE THAT READ THE TAPE IN TESTS
+-------------------------------------------------
+
+
+
+$!                     FILE NAME = DUMPTAPE.COM
+$!
+$!
+$!              *******************************************
+$!              *  THIS PROCEDURE DUMPS ALL FILES ON THE  *
+$!              *   QUIKVIS PROGRAM'S SUBMITTAL TAPE TO   *
+$!              *       THE SUBDIRECTORY SET BELOW        *
+$!              *******************************************
+$!
+$!
+$!
+$ SET DEF [NQCJP.COSMIC.TEST]
+$ DELETE *.*.*
+$!
+$!
+$ DRIVE = "MTA0:"
+$ ALLOCATE 'DRIVE'   TAPE
+$ MOUNT    'DRIVE'  QVTAPE   TAPE
+$ !
+$ COPY/LOG  'DRIVE'*.*   *
+$ !
+$ DISMOUNT/UNLOAD 'DRIVE'
+$ DEALLOC 'DRIVE'
+$!
+$ DIR/SIZE/DATE
+
+
+
+
+
+
+
+
+
+
+
+        *******************************************
+        *                                         *
+        *  END OF THE SUBMITTAL TAPE DESCRIPTION  *
+        *                                         *
+        *******************************************

@@ -1,0 +1,741 @@
+MATH                                                            23-Dec-1988 09:53:46    VAX Pascal V3.7-254                Page    1
+QPLOT                           Source Listing                  22-Jan-1988 14:39:05    DUA1:[QPLOT.QPLOT.SOURCE]MATH.PAS;83 (1)
+
+-LINE-IDC-PL-SL-
+
+00001      0  0 [ IDENT       ('QPLOT'),
+00002      0  0   INHERIT     ('QLIBHOME:STARLETQ',
+00003      0  0                'QLIBHOME:STANDARD'),
+00004      0  0   ENVIRONMENT ('QLIBHOME:MATH')]
+00005      0  0 MODULE math;
+00006      0  0 CONST
+00007      0  0    LOGINFINITY   = 1D6;
+00008   C  0  0 {=============================================================================}
+00009   C  0  0 {-- SUBMODULE INTEGER MATH ---------------------------------------------------}
+00010   C  0  0 {=============================================================================}
+00011      0  0 [ EXTERNAL (MTH$JMIN0) ]
+00012      1  0 FUNCTION imin (intlist : [LIST] integer) : integer;
+00013   C  1  0 { Purpose -- Find the minimum of two or more integers }
+00014      0  0 EXTERN;
+00015   C  0  0 {-----------------------------------------------------------------------------}
+00016      0  0 [ EXTERNAL (MTH$JMAX0) ]
+00017      1  0 FUNCTION imax (intlist : [LIST] integer) : integer;
+00018   C  1  0 { Purpose -- Find the maximum of two or more integers }
+00019      0  0 EXTERN;
+00020   C  0  0 {-----------------------------------------------------------------------------}
+00021      0  0 [ GLOBAL ]
+00022      1  0 FUNCTION factorial (n : integer) : integer;
+00023      1  0 VAR
+00024      1  0    i,out : integer;
+00025      1  1 BEGIN
+00026      1  1 out := 1;
+00027      1  1 FOR i := 1 TO n DO out := out * i;
+00028      1  1 factorial := out;
+00029      0  0 END;
+00030   C  0  0 {=============================================================================}
+00031   C  0  0 {-- SUBMODULE REAL MATH ------------------------------------------------------}
+00032   C  0  0 {=============================================================================}
+00033      0  0 [ EXTERNAL (MTH$DMIN1) ]
+00034      1  0 FUNCTION rmin (reallist : [LIST] real) : real;
+00035   C  1  0 { Purpose -- Find the minimum of two or more reals }
+00036      0  0 EXTERN;
+00037   C  0  0 {-----------------------------------------------------------------------------}
+00038      0  0 [ EXTERNAL (MTH$DMAX1) ]
+00039      1  0 FUNCTION rmax (reallist : [LIST] real) : real;
+00040   C  1  0 { Purpose -- Find the maximum of two or more reals }
+00041      0  0 EXTERN;
+00042   C  0  0 {-----------------------------------------------------------------------------}
+00043      0  0 [ EXTERNAL (MTH$DMOD) ]
+00044      1  0 FUNCTION rmod (x,y : real) : real; 
+00045   C  1  0 { Purpose -- Compute the real mod function }
+00046      0  0 EXTERN;
+00047   C  0  0 {-----------------------------------------------------------------------------}
+00048      0  0 [ EXTERNAL (MTH$DSINH) ]
+00049      1  0 FUNCTION sinh (x : real) : real; 
+00050      0  0 EXTERN;
+00051   C  0  0 {-----------------------------------------------------------------------------}
+00052      0  0 [ EXTERNAL (MTH$DCOSH) ]
+00053      1  0 FUNCTION cosh (x : real) : real; 
+00054      0  0 EXTERN;
+00055   C  0  0 {-----------------------------------------------------------------------------}
+
+MATH                                                            23-Dec-1988 09:53:46    VAX Pascal V3.7-254                Page    2
+QPLOT                           Source Listing                  22-Jan-1988 14:39:05    DUA1:[QPLOT.QPLOT.SOURCE]MATH.PAS;83 (1)
+
+-LINE-IDC-PL-SL-
+
+00056      0  0 [ GLOBAL ]
+00057      1  0 FUNCTION arcsinh (x : real) : real; 
+00058      1  1 BEGIN
+00059      1  1 arcsinh := ln (x + sqrt (sqr(x)+1));
+00060      0  0 END;
+00061   C  0  0 {-----------------------------------------------------------------------------}
+00062      0  0 [ GLOBAL ]
+00063      1  0 FUNCTION arccosh (x : real) : real; 
+00064      1  1 BEGIN
+00065      1  1 IF abs (x) >= 1
+00066      1  1  THEN arccosh := ln (x + sqrt (sqr(x)-1))
+00067      1  1  ELSE raise ('Arc Hyperpolic Cosine of argument < 1');
+00068      0  0 END;
+00069   C  0  0 {-----------------------------------------------------------------------------}
+00070      0  0 [ EXTERNAL (MTH$DASIN) ]
+00071      1  0 FUNCTION arcsin (x : real) : real; 
+00072      0  0 EXTERN;
+00073   C  0  0 {-----------------------------------------------------------------------------}
+00074      0  0 [ EXTERNAL (MTH$DACOS) ]
+00075      1  0 FUNCTION arccos (x : real) : real; 
+00076      0  0 EXTERN;
+00077   C  0  0 {-----------------------------------------------------------------------------}
+00078      0  0 [ EXTERNAL (MTH$DATAN2) ]
+00079      1  0 FUNCTION arctan2 (x,y : real) : real; 
+00080   C  1  0 { Purpose -- Compute the arctangent using two inputs }
+00081      0  0 EXTERN;
+00082   C  0  0 {-----------------------------------------------------------------------------}
+00083      0  0 [ GLOBAL ]
+00084      1  0 FUNCTION log10 (x : real) : real;
+00085   C  1  0 { Purpose -- Find the logarithm to the base 10 }
+00086      1  1 BEGIN
+00087      1  1 IF x = UNDEFINED_REAL
+00088      1  1  THEN log10 := UNDEFINED_REAL
+00089      1  1 ELSE IF x <= 0 
+00090      1  1  THEN log10 := -LOGINFINITY 
+00091      1  1  ELSE log10 := MTH$DLOG10 (x);
+00092      0  0 END;
+00093   C  0  0 {-----------------------------------------------------------------------------}
+00094      0  0 [ GLOBAL ]
+00095      1  0 FUNCTION exp10 (x : real) : real;
+00096   C  1  0 { Purpose -- Find 10**r bulletproof }
+00097      1  1 BEGIN
+00098      1  1 IF x = UNDEFINED_REAL
+00099      1  1  THEN exp10 := UNDEFINED_REAL
+00100      1  1 ELSE IF x < -80d0
+00101      1  1  THEN exp10 := 0
+00102      1  1 ELSE IF x > log10(BIG)
+00103      1  1  THEN exp10 := BIG
+00104      1  1  ELSE exp10 := 10d0**x;
+00105      0  0 END;
+00106   C  0  0 {-----------------------------------------------------------------------------}
+00107      0  0 [ GLOBAL ]
+00108      1  0 FUNCTION interpolate (x,x1,x2,y1,y2 : real) : real;
+00109      1  1 BEGIN
+00110      1  1 IF x1=x2
+
+MATH                                                            23-Dec-1988 09:53:46    VAX Pascal V3.7-254                Page    3
+QPLOT                           Source Listing                  22-Jan-1988 14:39:05    DUA1:[QPLOT.QPLOT.SOURCE]MATH.PAS;83 (1)
+
+-LINE-IDC-PL-SL-
+
+00111      1  1  THEN interpolate := y1
+00112      1  1  ELSE interpolate := y1 + (x-x1) * (y1-y2) / (x1-x2);
+00113      0  0 END;
+00114   C  0  0 {-----------------------------------------------------------------------------}
+00115      0  0 [ GLOBAL ]
+00116      1  0 FUNCTION gile (r : real) : integer;
+00117   C  1  0 { Purpose -- Find the greatest integer less than or equal to a real number }
+00118      1  0 VAR
+00119      1  0    i : integer;
+00120      1  1 BEGIN
+00121      1  1 i := trunc (r);
+00122      1  1 IF (r < 0) AND (r <> i) THEN i := i - 1;
+00123      1  1 gile := i;
+00124      0  0 END;
+00125   C  0  0 {=============================================================================}
+00126      0  0 END.
+
+MATH                                                            23-Dec-1988 09:53:46    VAX Pascal V3.7-254                Page    4
+QPLOT                           Pascal Compilation Statistics   22-Jan-1988 14:39:05    DUA1:[QPLOT.QPLOT.SOURCE]MATH.PAS;83 (1)
+
+PSECT SUMMARY
+
+        Name                     Bytes                         Attributes
+
+$CODE                                 523  NOVEC,NOWRT,  RD,  EXE,  SHR,  LCL,  REL,  CON,  PIC,ALIGN(2)
+
+
+ENVIRONMENT STATISTICS
+
+                                                       -------- Symbols --------
+        File                                           Total    Loaded   Percent
+
+DUA1:[QPLOT.QPLOT.SOURCE]STARLETQ.PEN;1                  260         3         1
+DUA1:[QPLOT.QPLOT.SOURCE]STANDARD.PEN;1                  124        11         9
+
+
+
+COMPLEX                                                         23-Dec-1988 09:54:00    VAX Pascal V3.7-254                Page    1
+QPLOT                           Source Listing                  23-Jul-1987 10:47:45    [QPLOT.QPLOT.SOURCE]COMPLEX.PAS;20 (1)
+
+-LINE-IDC-PL-SL-
+
+00001      0  0 [ IDENT       ('QPLOT'),
+00002      0  0   INHERIT     ('QLIBHOME:STARLETQ',
+00003      0  0                'QLIBHOME:STANDARD'),
+00004      0  0   ENVIRONMENT ('QLIBHOME:COMPLEX')]
+00005      0  0 MODULE complex;
+00006   C  0  0 {=============================================================================}
+00007   C  0  0 { Purpose -- This module defines the complex data type.  Note that only       }
+00008   C  0  0 {            double precision complex numberts are supported.                 }
+00009   C  0  0 {=============================================================================}
+00010      0  0 TYPE
+00011      0  0    complex      = RECORD        { Complex number type }
+00012      0  0                   re  : real;
+00013      0  0                   im  : real;
+00014      0  0                   END;
+00015   C  0  0 {=============================================================================}
+00016      0  0 [ GLOBAL ]
+00017      1  0 FUNCTION ceq (z1,z2 : complex) : boolean;
+00018      1  1 BEGIN
+00019      1  1 ceq := (z1.re = z2.re) AND (z1.im = z2.im);
+00020      0  0 END;
+00021   C  0  0 {-----------------------------------------------------------------------------}
+00022      0  0 [ EXTERNAL (MTH$CDABS) ]
+00023      1  0 FUNCTION cabs (z : complex ) : real;
+00024   C  1  0 { Purpose -- Compute absolute value of a complex number }
+00025      0  0 EXTERN;
+00026   C  0  0 {-----------------------------------------------------------------------------}
+00027      0  0 [ GLOBAL ]
+00028      1  0 FUNCTION cabssq (x : complex ) : real;
+00029      1  1 BEGIN
+00030      1  1 cabssq := x.re*x.re + x.im*x.im;
+00031      0  0 END;
+00032   C  0  0 {-----------------------------------------------------------------------------}
+00033      0  0 [ GLOBAL ]
+00034      1  0 FUNCTION cabsdif (x,y : complex ) : real;
+00035   C  1  0 { Purpose -- Compute absolute value of difference of  complex numbers }
+00036      1  0 VAR
+00037      1  0    ctemp : complex;
+00038      1  1 BEGIN
+00039      1  1 ctemp.re := x.re - y.re;
+00040      1  1 ctemp.im := x.im - y.im;
+00041      1  1 cabsdif  := cabs(ctemp);
+00042      0  0 END;
+00043   C  0  0 {-----------------------------------------------------------------------------}
+00044      0  0 [ GLOBAL ]
+00045      1  0 FUNCTION angle (z : complex) : real;
+00046   C  1  0 { Purpose -- Determine argument of a complex number in radians }
+00047   C  1  0 {  +real = 0 or 2*PI, +imag = PI/2, -real = PI, -imag = 3*PI/2 }
+00048      1  1 BEGIN
+00049      1  1 IF (z.re = 0d0) AND (z.im = 0d0) 
+00050      1  1  THEN angle := 0
+00051      1  1  ELSE angle := MTH$DMOD ( 2*PI + MTH$DATAN2 (z.im,z.re), 2*PI);
+00052      0  0 END;
+00053   C  0  0 {-----------------------------------------------------------------------------}
+00054      0  0 [ GLOBAL ]
+00055      1  0 FUNCTION clog (a : complex ) : complex;
+
+COMPLEX                                                         23-Dec-1988 09:54:00    VAX Pascal V3.7-254                Page    2
+QPLOT                           Source Listing                  23-Jul-1987 10:47:45    [QPLOT.QPLOT.SOURCE]COMPLEX.PAS;20 (1)
+
+-LINE-IDC-PL-SL-
+
+00056   C  1  0 { Purpose -- Compute natural logarithm of a complex number }
+00057      1  0 VAR
+00058      1  0    out : complex;
+00059      1  1 BEGIN
+00060      1  1 out.re := MTH$DLOG (cabs (a));
+00061      1  1 out.im := angle (a);
+00062      1  1 clog := out;
+00063      0  0 END;
+00064   C  0  0 {-----------------------------------------------------------------------------}
+00065      0  0 [ GLOBAL ]
+00066      1  0 FUNCTION cexp (a : complex) : complex;
+00067   C  1  0 { Purpose -- Compute exponential (e**a) of a complex number }
+00068      1  0 VAR
+00069      1  0    out : complex;
+00070      1  1 BEGIN
+00071      1  1 MTH$CDEXP (out,a);
+00072      1  1 cexp := out;
+00073      0  0 END;
+00074   C  0  0 {-----------------------------------------------------------------------------}
+00075      0  0 [ GLOBAL ]
+00076      1  0 FUNCTION cneg (a : complex ) : complex;
+00077   C  1  0 { Purpose -- Compute negative of a complex number }
+00078      1  0 VAR
+00079      1  0    out : complex;
+00080      1  1 BEGIN
+00081      1  1 out.re := -a.re;
+00082      1  1 out.im := -a.im;
+00083      1  1 cneg := out;
+00084      0  0 END;
+00085   C  0  0 {-----------------------------------------------------------------------------}
+00086      0  0 [ GLOBAL ]
+00087      1  0 FUNCTION ccnj (a : complex) : complex;
+00088   C  1  0 { Purpose -- Compute complex conjugate of a complex number }
+00089      1  0 VAR
+00090      1  0    out : complex;
+00091      1  1 BEGIN
+00092      1  1 out.re := a.re;
+00093      1  1 out.im := -a.im;
+00094      1  1 ccnj := out;
+00095      0  0 END;
+00096   C  0  0 {-----------------------------------------------------------------------------}
+00097      0  0 [ GLOBAL ]
+00098      1  0 FUNCTION cofi (i : integer) : complex;
+00099   C  1  0 { Purpose -- Convert from integer to complex }
+00100      1  0 VAR
+00101      1  0    out : complex;
+00102      1  1 BEGIN
+00103      1  1 out.re := i;
+00104      1  1 out.im := 0;
+00105      1  1 cofi := out;
+00106      0  0 END;
+00107   C  0  0 {-----------------------------------------------------------------------------}
+00108      0  0 [ GLOBAL ]
+00109      1  0 FUNCTION cofr (x : real) : complex;
+00110   C  1  0 { Purpose -- Convert from real to complex }
+
+COMPLEX                                                         23-Dec-1988 09:54:00    VAX Pascal V3.7-254                Page    3
+QPLOT                           Source Listing                  23-Jul-1987 10:47:45    [QPLOT.QPLOT.SOURCE]COMPLEX.PAS;20 (1)
+
+-LINE-IDC-PL-SL-
+
+00111      1  0 VAR
+00112      1  0    out : complex;
+00113      1  1 BEGIN
+00114      1  1 out.re := x;
+00115      1  1 out.im := 0;
+00116      1  1 cofr := out;
+00117      0  0 END;
+00118   C  0  0 {-----------------------------------------------------------------------------}
+00119      0  0 [ GLOBAL ]
+00120      1  0 FUNCTION cadd (x,y : complex) : complex;
+00121   C  1  0 { Purpose -- Add two complex numbers }
+00122      1  0 VAR
+00123      1  0    out : complex;
+00124      1  1 BEGIN
+00125      1  1 out.re := x.re + y.re;
+00126      1  1 out.im := x.im + y.im;
+00127      1  1 cadd := out;
+00128      0  0 END;
+00129   C  0  0 {-----------------------------------------------------------------------------}
+00130      0  0 [ GLOBAL ]
+00131      1  0 FUNCTION csub (x,y : complex) : complex;
+00132   C  1  0 { Purpose -- Subtract two complex numbers }
+00133      1  0 VAR
+00134      1  0    out : complex;
+00135      1  1 BEGIN
+00136      1  1 out.re := x.re - y.re;
+00137      1  1 out.im := x.im - y.im;
+00138      1  1 csub := out;
+00139      0  0 END;
+00140   C  0  0 {-----------------------------------------------------------------------------}
+00141      0  0 [ GLOBAL ]
+00142      1  0 FUNCTION cmul (x,y : complex) : complex;
+00143   C  1  0 { Purpose -- Multiply two complex numbers }
+00144      1  0 VAR
+00145      1  0    out : complex;
+00146      1  1 BEGIN
+00147      1  1 out.re := (x.re*y.re) - (x.im*y.im);
+00148      1  1 out.im := (x.re*y.im) + (x.im*y.re);
+00149      1  1 cmul := out;
+00150      0  0 END;
+00151   C  0  0 {-----------------------------------------------------------------------------}
+00152      0  0 [ GLOBAL ]
+00153      1  0 FUNCTION cdiv (x,y : complex) : complex;
+00154   C  1  0 { Purpose -- Divide two complex numbers }
+00155      1  0 VAR
+00156      1  0    norm : real;
+00157      1  0    out  : complex;
+00158      1  1 BEGIN
+00159      1  1 norm := cabs (y);
+00160      1  1 y.re := y.re/norm;
+00161      1  1 y.im := -y.im/norm;
+00162      1  1 out := cmul(x,y);
+00163      1  1 out.re := out.re/norm;
+00164      1  1 out.im := out.im/norm;
+00165      1  1 cdiv := out;
+
+COMPLEX                                                         23-Dec-1988 09:54:00    VAX Pascal V3.7-254                Page    4
+QPLOT                           Source Listing                  23-Jul-1987 10:47:45    [QPLOT.QPLOT.SOURCE]COMPLEX.PAS;20 (1)
+
+-LINE-IDC-PL-SL-
+
+00166      0  0 END;
+00167   C  0  0 {-----------------------------------------------------------------------------}
+00168      0  0 [ GLOBAL ]
+00169      1  0 FUNCTION cinv (x : complex) : complex;
+00170   C  1  0 { Purpose -- Determine the reciprocal of a complex number }
+00171      1  1 BEGIN
+00172      1  1 cinv := cdiv (complex(1,0),x);
+00173      0  0 END;
+00174   C  0  0 {-----------------------------------------------------------------------------}
+00175      0  0 [ GLOBAL ]
+00176      1  0 FUNCTION cpower (a : complex;  p : integer) : complex;
+00177   C  1  0 { Purpose -- Raise a complex number to a power (Exponentiation) }
+00178      1  0 VAR
+00179      1  0    i   : integer;
+00180      1  0    out : complex;
+00181      1  1 BEGIN
+00182      1  1 out := complex(1,0);
+00183      1  1 FOR i := 1 TO p DO out := cmul (out,a);
+00184      1  1 cpower := out;
+00185      0  0 END;
+00186   C  0  0 {=============================================================================}
+00187      0  0 END.
+
+COMPLEX                                                         23-Dec-1988 09:54:00    VAX Pascal V3.7-254                Page    5
+QPLOT                           Pascal Compilation Statistics   23-Jul-1987 10:47:45    [QPLOT.QPLOT.SOURCE]COMPLEX.PAS;20 (1)
+
+PSECT SUMMARY
+
+        Name                     Bytes                         Attributes
+
+$CODE                                 837  NOVEC,NOWRT,  RD,  EXE,  SHR,  LCL,  REL,  CON,  PIC,ALIGN(2)
+
+
+ENVIRONMENT STATISTICS
+
+                                                       -------- Symbols --------
+        File                                           Total    Loaded   Percent
+
+DUA1:[QPLOT.QPLOT.SOURCE]STARLETQ.PEN;1                  260        17         7
+DUA1:[QPLOT.QPLOT.SOURCE]STANDARD.PEN;1                  124         3         2
+
+
+
+ROTATION                                                        23-Dec-1988 09:54:21    VAX Pascal V3.7-254                Page    1
+QPLOT                           Source Listing                   8-Oct-1987 11:19:39    [QPLOT.QPLOT.SOURCE]ROTATION.PAS;14 (1)
+
+-LINE-IDC-PL-SL-
+
+00001      0  0 [ IDENT       ('QPLOT'),
+00002      0  0   INHERIT     ('QLIBHOME:STANDARD'),
+00003      0  0   ENVIRONMENT ('QLIBHOME:ROTATION')]
+00004      0  0 MODULE rotation;
+00005   C  0  0 {=============================================================================}
+00006   C  0  0 {-- VECTOR MATH SUBMODULE ----------------------------------------------------}
+00007   C  0  0 {=============================================================================}
+00008      0  0 TYPE
+00009      0  0    vector          = ARRAY [1..3] OF real;
+00010   C  0  0 {-----------------------------------------------------------------------------}
+00011      0  0 [ GLOBAL ]
+00012      1  0 FUNCTION vabs (v : vector) : real;
+00013   C  1  0 { Returns the magnitude of a vector }
+00014      1  1 BEGIN
+00015      1  1 vabs := sqrt (v[1]**2 + v[2]**2 + v[3]**2);
+00016      0  0 END;
+00017   C  0  0 {-----------------------------------------------------------------------------}
+00018      0  0 [ GLOBAL ]
+00019      1  0 FUNCTION vnorm (v : vector) : vector;
+00020   C  1  0 { Returns the normalized vector }
+00021      1  0 VAR
+00022      1  0    i   : integer;
+00023      1  0    r   : real;
+00024      1  0    out : vector;
+00025      1  1 BEGIN
+00026      1  1 r := vabs (v);
+00027      1  1 IF r = 0
+00028      1  1  THEN out := vector(0,0,1)
+00029      1  1  ELSE FOR i := 1 TO 3 DO out[i] := v[i]/r;  
+00030      1  1 vnorm := out;
+00031      0  0 END;
+00032   C  0  0 {-----------------------------------------------------------------------------}
+00033      0  0 [ GLOBAL ]
+00034      1  0 FUNCTION vadd (v1,v2 : vector) : vector;
+00035   C  1  0 { Returns the sum of two vectors. }
+00036      1  0 VAR
+00037      1  0    i   : integer;
+00038      1  0    out : vector;
+00039      1  1 BEGIN
+00040      1  1 FOR i := 1 TO 3 DO out[i] := v1[i] + v2[i];
+00041      1  1 vadd := out;
+00042      0  0 END;
+00043   C  0  0 {-----------------------------------------------------------------------------}
+00044      0  0 [ GLOBAL ]
+00045      1  0 FUNCTION vsub (v1,v2 : vector) : vector;
+00046   C  1  0 { Returns the difference of two vectors. }
+00047      1  0 VAR
+00048      1  0    i   : integer;
+00049      1  0    out : vector;
+00050      1  1 BEGIN
+00051      1  1 FOR i := 1 TO 3 DO out[i] := v1[i] - v2[i];
+00052      1  1 vsub := out;
+00053      0  0 END;
+00054   C  0  0 {-----------------------------------------------------------------------------}
+00055      0  0 [ GLOBAL ]
+
+ROTATION                                                        23-Dec-1988 09:54:21    VAX Pascal V3.7-254                Page    2
+QPLOT                           Source Listing                   8-Oct-1987 11:19:39    [QPLOT.QPLOT.SOURCE]ROTATION.PAS;14 (1)
+
+-LINE-IDC-PL-SL-
+
+00056      1  0 FUNCTION vdot (v1,v2 : vector) : real;
+00057   C  1  0 { Returns the dot product of two vectors. }
+00058      1  1 BEGIN
+00059      1  1 vdot := v1[1]*v2[1] + v1[2]*v2[2] + v1[3]*v2[3];
+00060      0  0 END;
+00061   C  0  0 {-----------------------------------------------------------------------------}
+00062      0  0 [ GLOBAL ]
+00063      1  0 FUNCTION vcross (v1,v2 : vector) : vector;
+00064   C  1  0 { Returns the cross product of two vectors. }
+00065      1  0 VAR
+00066      1  0    out : vector;
+00067      1  1 BEGIN
+00068      1  1 out[1] := v1[2] * v2[3] - v1[3] * v2[2];
+00069      1  1 out[2] := v1[3] * v2[1] - v1[1] * v2[3];
+00070      1  1 out[3] := v1[1] * v2[2] - v1[2] * v2[1];
+00071      1  1 vcross := out;
+00072      0  0 END;
+00073   C  0  0 {-----------------------------------------------------------------------------}
+00074      0  0 [ GLOBAL ]
+00075      1  0 FUNCTION vkmul (v : vector;  k : real) : vector;
+00076   C  1  0 { Returns the product of a vector and a constant. }
+00077      1  0 VAR
+00078      1  0    i   : integer;
+00079      1  0    out : vector;
+00080      1  1 BEGIN
+00081      1  1 FOR i := 1 TO 3 DO
+00082      1  1    out[i] := v[i] * k;
+00083      1  1 vkmul := out;
+00084      0  0 END;
+00085   C  0  0 {=============================================================================}
+00086   C  0  0 { -- ROTATION SUBMODULE ------------------------------------------------------}
+00087   C  0  0 {=============================================================================}
+00088      0  0 TYPE
+00089      0  0    rotation        = ARRAY [1..3,1..3] OF real;
+00090   C  0  0 {-----------------------------------------------------------------------------}
+00091      0  0 [ GLOBAL ]
+00092      1  0 FUNCTION determinant (matrix : rotation) : real;
+00093   C  1  0 { Returns the determinant of a rotation matrix. }
+00094      1  1 BEGIN
+00095      1  1 determinant := matrix[1,1] * matrix[2,2] * matrix[3,3] +
+00096      1  1                matrix[2,1] * matrix[3,2] * matrix[1,3] +
+00097      1  1                matrix[3,1] * matrix[1,2] * matrix[2,3] -
+00098      1  1                matrix[3,1] * matrix[2,2] * matrix[1,3] -
+00099      1  1                matrix[1,1] * matrix[3,2] * matrix[2,3] -
+00100      1  1                matrix[2,1] * matrix[1,2] * matrix[3,3];
+00101      0  0 END;
+00102   C  0  0 {-----------------------------------------------------------------------------}
+00103      0  0 [ GLOBAL ]
+00104      1  0 FUNCTION rotinv (rot : rotation) : rotation;
+00105   C  1  0 { Transposes (inverts) a rotation matrix. }
+00106      1  0 VAR
+00107      1  0    out : rotation;
+00108      1  1 BEGIN
+00109      1  1 out := rot;
+00110      1  1 out[2,1] := rot[1,2];
+
+ROTATION                                                        23-Dec-1988 09:54:21    VAX Pascal V3.7-254                Page    3
+QPLOT                           Source Listing                   8-Oct-1987 11:19:39    [QPLOT.QPLOT.SOURCE]ROTATION.PAS;14 (1)
+
+-LINE-IDC-PL-SL-
+
+00111      1  1 out[1,2] := rot[2,1];
+00112      1  1 out[3,1] := rot[1,3];
+00113      1  1 out[1,3] := rot[3,1];
+00114      1  1 out[3,2] := rot[2,3];
+00115      1  1 out[2,3] := rot[3,2];
+00116      1  1 rotinv := out;
+00117      0  0 END;
+00118   C  0  0 {-----------------------------------------------------------------------------}
+00119      0  0 [ GLOBAL ]
+00120      1  0 FUNCTION rotate (rot : rotation;  v : vector) : vector;
+00121   C  1  0 { Passes a vector thru a rotation matrix. }
+00122      1  0 VAR
+00123      1  0    i,j : integer;
+00124      1  0    out : vector;
+00125      1  1 BEGIN
+00126      1  1 FOR i := 1 TO 3 DO
+00127      1  2    BEGIN
+00128      1  2    out[i] := 0;
+00129      1  2    FOR j := 1 TO 3 DO
+00130      1  2      out[i] := out[i] + rot[i,j] * v[j];
+00131      1  1    END;
+00132      1  1 rotate := out;
+00133      0  0 END;
+00134   C  0  0 {-----------------------------------------------------------------------------}
+00135      0  0 [ GLOBAL ]
+00136      1  0 FUNCTION rmul (r1,r2 : rotation) : rotation;
+00137   C  1  0 { Returns the product of two rotation matrices. }
+00138      1  0 VAR
+00139      1  0    i,j,k : integer;
+00140      1  0    out   : rotation;
+00141      1  1 BEGIN
+00142      1  1 FOR i := 1 TO 3 DO
+00143      1  1    FOR j := 1 TO 3 DO
+00144      1  2       BEGIN
+00145      1  2       out[i,j] := 0;
+00146      1  2       FOR k := 1 TO 3 DO
+00147      1  2          out[i,j] := out[i,j] + r1[i,k] * r2[k,j];
+00148      1  1       END;
+00149      1  1 rmul := out;
+00150      0  0 END;
+00151   C  0  0 {-----------------------------------------------------------------------------}
+00152      0  0 [ GLOBAL ]
+00153      1  0 FUNCTION raxisd (i : integer;  th : real) : rotation;
+00154   C  1  0 { Returns a rotation matrix for an axis and an angle. }
+00155      1  0 VAR
+00156      1  0    j,k   : integer;
+00157      1  0    out   : rotation;
+00158      1  1 BEGIN
+00159      1  1 j := i MOD 3 + 1;
+00160      1  1 k := j MOD 3 + 1;
+00161      1  1 out[i,i] := 1;
+00162      1  1 out[i,j] := 0;
+00163      1  1 out[i,k] := 0;
+00164      1  1 out[j,i] := 0;
+00165      1  1 out[k,i] := 0;
+
+ROTATION                                                        23-Dec-1988 09:54:21    VAX Pascal V3.7-254                Page    4
+QPLOT                           Source Listing                   8-Oct-1987 11:19:39    [QPLOT.QPLOT.SOURCE]ROTATION.PAS;14 (1)
+
+-LINE-IDC-PL-SL-
+
+00166      1  1 out[j,j] := cos (th * PI / 180);   
+00167      1  1 out[k,k] := cos (th * PI / 180);   
+00168      1  1 out[j,k] :=-sin (th * PI / 180);   
+00169      1  1 out[k,j] := sin (th * PI / 180);   
+00170      1  1 raxisd := out;
+00171      0  0 END;
+00172   C  0  0 {=============================================================================}
+00173   C  0  0 {  QUATERNION SUBMODULE ------------------------------------------------------}
+00174   C  0  0 {=============================================================================}
+00175      0  0 TYPE
+00176      0  0    quaternion      = ARRAY [0..3] OF real;
+00177   C  0  0 {-----------------------------------------------------------------------------}
+00178      0  0 [ GLOBAL ]
+00179      1  0 FUNCTION qabs (q : quaternion) : real;
+00180   C  1  0 { Returns the magnitude of a quaternion (should be almost 1 in all cases). }
+00181      1  1 BEGIN
+00182      1  1 qabs := sqrt (q[0]**2 + q[1]**2 + q[2]**2 + q[3]**2);
+00183      0  0 END;
+00184   C  0  0 {-----------------------------------------------------------------------------}
+00185      0  0 [ GLOBAL ]
+00186      1  0 FUNCTION qnorm (q : quaternion) : quaternion;
+00187   C  1  0 { Returns the normalized quaternion. }
+00188      1  0 VAR
+00189      1  0    i   : integer;
+00190      1  0    r   : real;
+00191      1  0    out : quaternion;
+00192      1  1 BEGIN
+00193      1  1 r := qabs (q);
+00194      1  1 IF r = 0
+00195      1  1  THEN out := quaternion(1,0,0,0)
+00196      1  1  ELSE FOR i := 0 TO 3 DO out[i] := q[i]/r;  
+00197      1  1 qnorm := out;
+00198      0  0 END;
+00199   C  0  0 {-----------------------------------------------------------------------------}
+00200      0  0 [ GLOBAL ]
+00201      1  0 FUNCTION qinv (q : quaternion) : quaternion;
+00202   C  1  0 { Given a quaternion, returns it's conjugate. }
+00203      1  0 VAR
+00204      1  0    out : quaternion;
+00205      1  1 BEGIN
+00206      1  1 out[0] := q[0];
+00207      1  1 out[1] := - q[1];
+00208      1  1 out[2] := - q[2];
+00209      1  1 out[3] := - q[3];
+00210      1  1 qinv := out;
+00211      0  0 END;
+00212   C  0  0 {-----------------------------------------------------------------------------}
+00213      0  0 [ GLOBAL ]
+00214      1  0 FUNCTION qmul (q1,q2 : quaternion) : quaternion;
+00215   C  1  0 { Given two quaternions, returns their product. }
+00216      1  0 VAR
+00217      1  0    qm   : ARRAY [0..3,0..3] OF real;  
+00218      1  0    i,j  : INTEGER;
+00219      1  0    out  : quaternion;
+00220      1  1 BEGIN
+
+ROTATION                                                        23-Dec-1988 09:54:21    VAX Pascal V3.7-254                Page    5
+QPLOT                           Source Listing                   8-Oct-1987 11:19:39    [QPLOT.QPLOT.SOURCE]ROTATION.PAS;14 (1)
+
+-LINE-IDC-PL-SL-
+
+00221      1  1 qm[0,0] := q2[0];  
+00222      1  1 qm[0,1] := q2[1];  
+00223      1  1 qm[0,2] := q2[2];  
+00224      1  1 qm[0,3] := q2[3];  
+00225      1  1 qm[1,0] := - q2[1];  
+00226      1  1 qm[1,1] := q2[0];  
+00227      1  1 qm[1,2] := - q2[3];  
+00228      1  1 qm[1,3] := q2[2];  
+00229      1  1 qm[2,0] := - q2[2];  
+00230      1  1 qm[2,1] := q2[3];  
+00231      1  1 qm[2,2] := q2[0];  
+00232      1  1 qm[2,3] := - q2[1];  
+00233      1  1 qm[3,0] := - q2[3];  
+00234      1  1 qm[3,1] := - q2[2];  
+00235      1  1 qm[3,2] := q2[1];  
+00236      1  1 qm[3,3] := q2[0];  
+00237      1  1 
+00238      1  1 FOR i := 0 TO 3 DO
+00239      1  2    BEGIN
+00240      1  2    out[i] := 0;
+00241      1  2    FOR j := 0 TO 3 DO
+00242      1  2       out[i] := out[i] + qm[i,j] * q1[j];
+00243      1  1    END; 
+00244      1  1 qmul := qnorm (out);
+00245      0  0 END;
+00246   C  0  0 {-----------------------------------------------------------------------------}
+00247      0  0 [ GLOBAL ]
+00248      1  0 FUNCTION rotofq (q : quaternion) : rotation;
+00249   C  1  0 { Given a quaternion, returns a rotation matrix. }
+00250      1  0 VAR
+00251      1  0    out : rotation;
+00252      1  1 BEGIN
+00253   C  1  1 { Quaternion : transposed rotation matrix }
+00254      1  1 out[1,1] := q[1]**2-q[2]**2-q[3]**2+q[0]**2 ; 
+00255      1  1 out[1,2] := 2*(q[1]*q[2]+q[3]*q[0]) ; 
+00256      1  1 out[1,3] := 2*(q[1]*q[3]-q[2]*q[0]) ;	
+00257      1  1 out[2,1] := 2*(q[1]*q[2]-q[3]*q[0]) ; 
+00258      1  1 out[2,2] := -q[1]**2+q[2]**2-q[3]**2+q[0]**2 ; 
+00259      1  1 out[2,3] := 2*(q[2]*q[3]+q[1]*q[0]) ;	
+00260      1  1 out[3,1] := 2*(q[1]*q[3]+q[2]*q[0]) ; 
+00261      1  1 out[3,2] := 2*(q[2]*q[3]-q[1]*q[0]) ; 
+00262      1  1 out[3,3] := -q[1]**2-q[2]**2+q[3]**2+q[0]**2 ;
+00263      1  1 rotofq := out;
+00264      0  0 END;
+00265   C  0  0 {-----------------------------------------------------------------------------}
+00266      0  0 [ GLOBAL ]
+00267      1  0 FUNCTION qofvv (v1,v2 : vector) : quaternion;
+00268   C  1  0 { Given two vectors, returns a quaternion that will   }
+00269   C  1  0 { rotate one into the other via the shortest path.    }
+00270      1  0 VAR
+00271      1  0   v   : vector;
+00272      1  0   a   : real;
+00273      1  0   out : quaternion;
+00274      1  1 BEGIN
+00275      1  1 v1 := vnorm (v1);
+
+ROTATION                                                        23-Dec-1988 09:54:21    VAX Pascal V3.7-254                Page    6
+QPLOT                           Source Listing                   8-Oct-1987 11:19:39    [QPLOT.QPLOT.SOURCE]ROTATION.PAS;14 (1)
+
+-LINE-IDC-PL-SL-
+
+00276      1  1 v2 := vnorm (v2);
+00277      1  1 out[0] := ( 1 + vdot (v1,v2)) / 2;
+00278      1  1 IF out[0] = 0 
+00279      1  1  THEN out := quaternion (-1,0,0,0)
+00280      1  1  ELSE
+00281      1  2   BEGIN
+00282      1  2   out[0] := sqrt(out[0]);
+00283      1  2   v := vcross (v1,v2);
+00284      1  2   out[1] := (v[1] / (2 * out[0]));
+00285      1  2   out[2] := (v[2] / (2 * out[0]));
+00286      1  2   out[3] := (v[3] / (2 * out[0]));
+00287      1  1   END;
+00288      1  1 qofvv := qnorm (out);
+00289      0  0 END;
+00290   C  0  0 {-----------------------------------------------------------------------------}
+00291      0  0 END.
+
+ROTATION                                                        23-Dec-1988 09:54:21    VAX Pascal V3.7-254                Page    7
+QPLOT                           Pascal Compilation Statistics    8-Oct-1987 11:19:39    [QPLOT.QPLOT.SOURCE]ROTATION.PAS;14 (1)
+
+PSECT SUMMARY
+
+        Name                     Bytes                         Attributes
+
+$CODE                                2191  NOVEC,NOWRT,  RD,  EXE,  SHR,  LCL,  REL,  CON,  PIC,ALIGN(2)
+
+
+ENVIRONMENT STATISTICS
+
+                                                       -------- Symbols --------
+        File                                           Total    Loaded   Percent
+
+DUA1:[QPLOT.QPLOT.SOURCE]STANDARD.PEN;1                  124         3         2
+
+
+

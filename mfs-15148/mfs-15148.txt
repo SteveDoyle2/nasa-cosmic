@@ -1,0 +1,49 @@
+ THERMAL ANALYSIS OF FLUID FLOW IN A PIPE
+
+( BOEING CO. )
+
+     Differential equations governing the thermal transient of fluid and
+wall temperatures for flow in an exposed constant diameter pipe are devel-
+oped.
+
+     These equations are solved with an IBM 360 computer to obtain fluid and
+wall temperatures for increments of pipe length at time increments during a
+thermal transient.
+
+     The computer program has the capability of solving heat transfer prob-
+lems for fluid flow systems with a variable external thermal environment
+for the pipe and variable inlet fluid temperature and flow rate.
+
+     This item may be used for the heat transfer analysis of fluid flow sys-
+tems with a variable external thermal environment for the pipe and variable
+inlet fluid temperature and flow rate.
+
+     Possible extensions include the analysis of vacuum-jacketed and insu-
+lated piping systems. The techniques used could also be extended to include
+the thermal analysis of exposed cryogenic piping systems during cooldown
+and frost formation.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: IBM 360 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 300 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: MFS-15148
+
+DOMESTIC - DOCUMENTATION PRICE: $28.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $56.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

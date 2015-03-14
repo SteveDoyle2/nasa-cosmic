@@ -1,0 +1,1501 @@
+        
+PROGRAM LALRGEN(INPUT,OUTPUT,PDATA,SCANINFO,GENERS,SEMAFILE,TABS);  
+(*      
+    THIS IS AN EXPANDED VERSION OF THE GRAMMAR ANALYZER   
+    WHICH WILL MERGE SEMANTICS IN WITH THE RULES
+        
+    THE INPUT IS SIMILAR TO BEFORE EXCEPT FOR THE FOLLOWING%  
+        
+    RULES MUST BEGIN IN COLUMN 1 OF A CARD AND THERE      
+    CAN ONLY BE ONE RULE PER CARD     
+    SEMANTIC ROUTINES APPEAR AFTER THE CORRESPONDING      
+    RULES AND MUST HAVE A BLANK IN COLUMN 1.    
+    THE END OF FILE MARKER IS A PERIOD (.) IN COLUMN 1.   
+*)      
+        
+(*      
+    NEXT TO COME ARE SUBSTITUTIONS FOR THE SEMANTICS      
+    SO THAT NO REFERENCES TO THE SEMANTIC STACK NEED      
+    BE MADE EXPLICITLY      
+*)      
+        
+(*$L+,K-,M+,T+*)  
+        
+  LABEL 999,      
+        100;   (* BLM *)    
+        
+        
+  CONST RULECT=100; RULESIZE=100; STRNGSIZE=4095; 
+ (* RULECT WAS 500, RULESIZE 1900 AND STRNGSIZE 8191 *)   
+  TWENTYBLANKS = '                    '; (* BLM *)
+  BLANK = ' ';  (* BLM *)   
+  WAS16383 = 2047;
+  WAS1023  =  511;
+  WAS511   =  255;
+        STSIZE=409; 
+        NOSYMBS=409;
+        MAXSTATES=100;      
+        SYMBSETUB=8; STATESETUB = 15; 
+        RMARGIN=72; 
+        
+        
+  TYPE PRODARRAY=ARRAY[0..40] OF INTEGER;       
+       STRING=ARRAY[1..25] OF CHAR;   
+       SYMBSET=ARRAY[0..SYMBSETUB] OF SET OF 0..58;       
+       BOOLMAT=ARRAY[0..WAS511] OF SYMBSET;     
+       HALFWORD = -1..32767;
+       STATESET = ARRAY[0..STATESETUB] OF SET OF 0..58;   
+       SYMCLASS = (KEYWORD,PSEUDO,SPECIAL);     
+       SLISTENTRY = PACKED RECORD     
+          LHSCHAIN, STATEHEAD, HASHVAL %HALFWORD; 
+          CLASS % SYMCLASS; OLDINX%0..STSIZE;   
+          END;    
+       IBMCARD = PACKED ARRAY[1..80] OF CHAR;   
+    TOGGLES=(SEMANTICS,PRINT_TABS,GENSHIFTRED); 
+        
+        
+   VAR  
+   ENABLED%SET OF TOGGLES;  
+     BLMINC, GLOBALLENGTH % INTEGER;   (* BLM *)
+     TABS%FILE OF ARRAY[0..99] OF INTEGER;      
+     PDATA % TEXT;
+     CURCARD % IBMCARD;     
+     CURCHAR%CHAR;
+     CURSOR%INTEGER;
+        
+     SCANINFO % TEXT;       
+     GENERS % TEXT; 
+     SEMAFILE % FILE OF IBMCARD;      
+     G_TERMORG, FREESTATE, SIX, SYMCT, I % INTEGER;       
+     ERCBITS% ARRAY[0..100] OF INTEGER; 
+     STATBITS % STATESET; TERMSET % SYMBSET;    
+     RULES%ARRAY[0..RULESIZE] OF INTEGER;       
+     RULEEND%0..RULESIZE;   
+     RULELIST%ARRAY[0..RULECT] OF PACKED RECORD 
+          RULESTART%0..RULESIZE; LHSSYMBOL%0..NOSYMBS;    
+          SEMABIT%BOOLEAN; NOOFSEMAS%0..500;    
+          END;    
+        
+     NEXTRULE%0..RULECT;    
+     SA%ARRAY[0..STRNGSIZE] OF CHAR;  
+     SAEND%0..STRNGSIZE;    
+     ST%ARRAY[0..STSIZE] OF PACKED RECORD       
+           START, LENGTH, SNO%HALFWORD; 
+           END;   
+     SLIST % ARRAY [0..STSIZE] OF SLISTENTRY;   
+     EMPTYS % SYMBSET;      
+        
+(*****************************************************************) 
+(* THE GRAMMAR IS STORED IN THE TABLES DEFINED ABOVE IN THE 
+   FOLLOWING WAY% 
+        
+   THE SYMBOLS OF THE GRAMMAR ARE STORED IN ST USING A    
+   LINEAR QUOTIENT HASH  --  ACTUALLY ST JUST HOLDS A     
+   DESCRIPTOR FOR THE SYMBOL'S REPRESENTATION AS A
+   START INDEX AND LENGTH IN SA.  THE ACTUAL SYMBOL STRINGS 
+   ARE STORED IN SA AS CHARACTERS.    
+        
+   IN ADDITION TO THE DESCRIPTOR, THE ST FIELD LHSCHAIN   
+     CHAINS ALL RULES WHICH HAVE THE SYMBOL AS A LEFT-HAND-SIDE.    
+        
+   RULELIST CONTAINS A POINTER TO EACH RULE AND THE CHAIN 
+     POINTER REFERRED TO ABOVE
+        
+   THE ACTUAL RULES ARE STORED IN RULES WHICH IS JUST A LIST
+   OF VARIABLE LENGTH SYMBOL (IN ST) INDICES.  THE FIRST  
+   COMPONENT OF A RULE IN 'RULES' IS THE NUMBER OF SYMBOLS IN THE   
+   RULE (INCLUDING THE LHS SYMBOL) FOLLOWED BY THE LHS AND
+   THEN THE RHS.  FOR EXAMPLE% AN EMPTY PRODUCTION WOULD  
+   HAVE A LENGTH OF 1 AND ONLY A LHS. 
+        
+   THE PROCEDURES BELOW ARE USED TO BUILD THE GRAMMAR -   
+        
+   ADDSTRING(R,C,L)  --  ADD STRING C OF LENGTH L TO THE SYMBOL AT  
+                            LOCATION R
+        
+   SKIPBLANKS --  SKIPS OVER INPUT CHARACTERS UNTIL A NON-BLANK     
+                  IS FOUND. 
+        
+   GETNEXT -- GRABS THE NEXT SYMBOL FROM THE INPUT -- A SYMBOL IS   
+              DEFINED TO BE ALL CHARACTERS (EXCEPT BLANKS) UP TO THE
+              NEXT "FOLLOWED BY SYMBOL" (,) OR "END OF RULE SYMBOL" (.)       
+              OR "ALTERNATIVE SYMBOL" (;) OR "IS DEFINED TO BE SYMBOL"
+              (%).
+        
+  READPRODS -- READS AND STORES PRODUCTIONS UNTIL TWO END-OF-RULES IN 
+               A ROW ARE ENCOUNTERED. 
+        
+  WRITESYMBOL(S) -- S IS A SYMBOL TABLE INDEX.  PRINTS THE TEXT OF THE
+                     SYMBOL.
+        
+  PRINTRULES -- PRINTS A NUMBERED LISTING OF ALL THE RULES SEEN SO FAR.       
+        
+*)      
+(**********************************************************************)      
+   FOLLOWS % BOOLMAT;       
+        
+   STATEIX%ARRAY[0..MAXSTATES] OF PACKED RECORD 
+                              STARTIX%0..WAS16383; INSYMB%0..NOSYMBS; 
+                                 NEXTSTATE%0..MAXSTATES;  
+                                 KERNEL_SIZE%0..127;      
+                                 END; 
+        
+   STATES% ARRAY[0..WAS16383] OF PACKED RECORD  
+                     RULENO%0..RULECT;
+                     GOTONO%0..MAXSTATES;       
+                     MARKER%0..15;    
+                     SYMBOL%0..NOSYMBS; 
+                     USED, ERCBIT, SHIFTRED % BOOLEAN;    
+                     END;   
+        
+   GOTOGRAPH%ARRAY[0..WAS1023] OF STATESET;     
+        
+        
+        
+   PROCEDURE NEWCARD;      (* BLM *)  
+   VAR I % INTEGER; 
+        
+   BEGIN
+  FOR BLMINC %= 1 TO 80 DO CURCARD[BLMINC]%= BLANK;       
+   I %= 0;
+   REPEAT 
+      I %= I + 1; 
+      CURCARD[I] %= INPUT^; 
+      GET (INPUT);
+   UNTIL (EOLN) OR (I>=80); 
+   END; 
+   (* NEWCARD *)  
+        
+        
+        
+PROCEDURE NEXTCHAR; 
+  BEGIN 
+    IF CURSOR>RMARGIN THEN  
+    BEGIN 
+      CURSOR%=1; NEWCARD      ;  READLN;
+    END;
+    CURCHAR%=CURCARD[CURSOR]; CURSOR%=CURSOR+1  
+  END;  
+        
+        
+     FUNCTION ISEMPTY(N%INTEGER)%BOOLEAN;       
+       BEGIN ISEMPTY%=N MOD 59 IN EMPTYS[N DIV 59]
+       END;       
+        
+        
+    FUNCTION ISIDCHAR(C%CHAR)%BOOLEAN;
+      BEGIN ISIDCHAR%=FALSE; (*UNTIL PROVEN TRUE*)
+        IF C>='A' THEN IF C<='Z' THEN ISIDCHAR%=TRUE      
+        ELSE IF C<='9' THEN IF C>='0' THEN ISIDCHAR%=TRUE;
+      END;
+        
+        
+     PROCEDURE ADDSTRING(R%INTEGER;C%STRING;L%INTEGER);   
+          VAR I % INTEGER;  
+            CL % SYMCLASS; ALLALFA%BOOLEAN;     
+        BEGIN WITH ST[R] DO BEGIN START%=SAEND; LENGTH%=L;
+                    SNO %= SYMCT END; 
+          WITH SLIST[SYMCT] DO
+             BEGIN LHSCHAIN %= 0; STATEHEAD %= 0; HASHVAL %= R;     
+                   OLDINX %= SYMCT    
+             END; 
+          ALLALFA %= TRUE;  
+                FOR I%=1 TO L DO BEGIN SA[SAEND-1+I]%=C[I]; 
+                     ALLALFA%=ALLALFA&(C[I]>='A')&(C[I]<='Z');      
+                   END;     
+                SAEND%=SAEND+L;       
+     WITH SLIST[SYMCT] DO IF ALLALFA THEN CLASS %= KEYWORD
+        ELSE BEGIN CLASS%=SPECIAL;    
+            IF C[1]='<' THEN IF C[L]='>' THEN   
+              IF L>2 THEN CLASS%=PSEUDO 
+              END;
+         SYMCT %= SYMCT + 1;
+        END;      
+        
+        
+  FUNCTION INSERT(C%STRING; L%INTEGER) %INTEGER;
+   LABEL  1;  (* BLM *)     
+       VAR T,R,Q%INTEGER; I%INTEGER;  
+        
+        
+       FUNCTION NOTIT(R%INTEGER; C%STRING; L % INTEGER)%BOOLEAN;    
+     LABEL  1;  (* BLM *)   
+          VAR I,ORG%INTEGER;
+          BEGIN   
+          IF ST[R].LENGTH <> L THEN NOTIT%=ST[R].LENGTH<>0
+             ELSE BEGIN ORG%=ST[R].START-1;     
+               NOTIT%=TRUE; 
+                       FOR I%=1 TO L DO 
+                            IF C[I]<>SA[ORG+I] THEN GOTO 1; 
+                       NOTIT%=FALSE;  
+                    END;    
+           1%     
+      END;
+        
+        
+       BEGIN      
+         T%=0; FOR I%=1 TO L DO T%=T+ORD(C[I]); 
+         Q%=T DIV STSIZE; IF Q MOD STSIZE=0 THEN Q%=1;    
+         R%=T MOD STSIZE;   
+         WHILE NOTIT(R,C,L) DO
+            REPEAT R%=(R+Q) MOD STSIZE UNTIL R<>0;
+         IF ST[R].LENGTH<>0 THEN GOTO 1;
+         ADDSTRING(R,C,L);  
+ 1%     
+         INSERT%=ST[R].SNO  
+       END;       
+        
+        
+  PROCEDURE SKIPBLANKS;     
+     BEGIN WHILE CURCHAR=' ' DO       
+         IF EOF THEN GOTO      999 ELSE NEXTCHAR
+                       (* EXIT *)     
+     END; 
+        
+        
+  PROCEDURE GETNEXT(VAR C%STRING; VAR L%INTEGER); 
+      VAR I%INTEGER;
+      BEGIN  SKIPBLANKS; I%=1;
+           WHILE (CURCHAR<>'%') AND (CURCHAR<>';')
+                 AND (CURCHAR<>',') AND (CURCHAR<>'.') DO 
+            BEGIN 
+              IF CURCHAR='$' THEN NEXTCHAR;     
+             IF CURCHAR<>' ' THEN IF I<26 THEN BEGIN      
+                  C[I]%=CURCHAR; I%=I+1 END;    
+             IF EOF THEN GOTO      999 ELSE     
+                           (* EXIT *) 
+               NEXTCHAR     
+            END;  
+              L%=I-1;       
+           END;   
+        
+        
+  PROCEDURE WRITESYMBOL(S%INTEGER);   
+    VAR I%INTEGER;
+   BEGIN IF S<>0 THEN WITH ST[SLIST[S].HASHVAL] DO
+    BEGIN 
+      FOR I%=1 TO LENGTH DO 
+          WRITE(SA[START-1+I]);       
+       GLOBALLENGTH %= LENGTH;
+     END; 
+   END; 
+        
+        
+        
+  PROCEDURE WRITE_SYMBSET(VAR S%SYMBSET);       
+    VAR K,L % INTEGER;      
+    BEGIN 
+      FOR K%=0 TO (SYMCT-1) DIV 59 DO 
+        IF S[K]<> []  THEN  
+          FOR L%=ORD(K=0) TO 58 DO    
+              IF L IN S[K] THEN       
+        
+                 BEGIN WRITESYMBOL(K*59+L); WRITE('  ') END;
+      WRITELN;    
+    END;
+        
+        
+  PROCEDURE PRINT_MAT(VAR A%BOOLMAT;N%INTEGER); 
+   LABEL  1,3,4,99;  (* BLM *)
+    VAR I,J,K%INTEGER;      
+    ALLBLANKS%BOOLEAN;      
+    BEGIN J%= 1;  
+      WHILE J<=N DO BEGIN   
+      PAGE(OUTPUT);        (*FOR EACH GROUP OF 100*)      
+        FOR I%=1 TO 20  DO BEGIN      
+         (* WRITE(' '   );   *)  (*FOR EACH CHARACTER IN SYMBOL*)   
+        WRITE (TWENTYBLANKS);  (* BLM *)   WRITE('  ');   
+      (* COL % 20 *)
+           FOR K%=J TO J+99 DO
+        BEGIN     
+            IF K>G_TERMORG-1 THEN GOTO 3 ELSE   
+             WITH ST[SLIST[K].HASHVAL] DO       
+         IF LENGTH>=I THEN  
+               BEGIN
+                 WRITE(SA[START-1+I]);ALLBLANKS%=FALSE;   
+                END 
+                  ELSE WRITE(' ');    
+      END;
+3%         WRITELN; 
+        END;      
+       4%WRITELN(' ');      
+   IF J>=G_TERMORG THEN GOTO 99 ELSE  
+        FOR I%=1 TO N DO BEGIN
+          WRITE(' ');       
+            WRITESYMBOL(I); (* WRITE(' '  ); *) 
+         FOR BLMINC %= GLOBALLENGTH TO 20 DO WRITE (BLANK); 
+  (* COL % 20 *)  
+          FOR K%=J TO J+99 DO BEGIN IF K>=G_TERMORG THEN GOTO 1;    
+              IF K MOD 59 IN A[I,K DIV 59] THEN WRITE('X')
+                 ELSE WRITE('.');     
+         END;     
+1%      
+            WRITELN;
+          END;    
+          J%=J+100; 
+        END;      
+ 99% END; (*PRINT_MAT*)     
+        
+        
+        
+  PROCEDURE PRINTRULES;     
+    VAR I, FIRST, J, K%INTEGER;       
+        C % CHAR; 
+        
+        
+PROCEDURE WSCANS(S%INTEGER);
+  VAR I%INTEGER;  
+  BEGIN 
+    IF S<>0 THEN  
+      WITH ST[SLIST[S].HASHVAL] DO    
+        FOR I%=1 TO LENGTH DO 
+          WRITE(SCANINFO,SA[START-1+I]) 
+  END;  
+        
+        
+    BEGIN 
+       WRITELN;   
+       WRITELN('1 INPUT GRAMMAR');    
+       WRITELN('-');
+        WRITELN(SCANINFO,'PROCEDURE SYNTHESIZE(N%INTEGER);');       
+        WRITELN(SCANINFO,' BEGIN CASE N OF ');  
+        
+      FOR I%=1 TO NEXTRULE-1 DO       
+        BEGIN FIRST%=RULELIST[I].RULESTART;     
+       K%=RULES[FIRST]-1;   
+        WRITE(PDATA,RULES[FIRST+1]%6,K%6);      
+          WRITE(' ','[',I%3,']',' '); 
+           WRITE(SCANINFO,I%0);       
+          IF RULELIST[I].SEMABIT THEN C%='%' ELSE C%=','; 
+        
+          WRITELN(SCANINFO,C);
+          WRITESYMBOL(RULES[FIRST+1]); WRITE('. ');       
+           WRITE(SCANINFO,'   (*');   
+           WSCANS(RULES[FIRST+1]); WRITE(SCANINFO,'. ');  
+          IF RULES[FIRST]=1 THEN BEGIN WRITELN('.');      
+                WRITELN(SCANINFO,'. *)') END;   
+          FOR J%=FIRST+2 TO RULES[FIRST]+FIRST DO 
+             BEGIN WRITESYMBOL(RULES[J]);       
+                   WSCANS(RULES[J]);  
+                   IF J=FIRST+RULES[FIRST] THEN 
+                   BEGIN WRITELN('.'); WRITELN(SCANINFO,'. *)') END 
+                   ELSE BEGIN WRITE(', '); WRITE(SCANINFO,', ') END 
+             END; 
+             IF C='%' THEN  
+                FOR J%=1 TO RULELIST[I].NOOFSEMAS DO BEGIN
+                   WRITELN(SCANINFO,SEMAFILE^ );
+                   GET(SEMAFILE)      
+                END;
+        
+        END;      
+        WRITELN(SCANINFO,' END');     
+        WRITELN(SCANINFO,' END;');    
+    END;
+        
+        
+   PROCEDURE WARSH(VAR A%BOOLMAT; N%INTEGER); FORWARD;    
+   PROCEDURE TIMES(VAR A,B,C%BOOLMAT; N%INTEGER); FORWARD;
+        
+        
+  PROCEDURE COMPUTE_FOLLOWS;
+    VAR BEGINS,ENDS,EQUALS,TEMP % BOOLMAT;      
+        I,J,K,FIRST%INTEGER;
+        
+        
+   PROCEDURE SETS(VAR A%BOOLMAT; I,J%INTEGER);  
+     VAR JDIV59%INTEGER;    
+     BEGIN JDIV59%=J DIV 59;
+        A[I,JDIV59]%= [J MOD 59] +A[I,JDIV59]   
+     END; 
+        
+    BEGIN 
+      FOR I%=1 TO SYMCT-1 DO
+        FOR J%=SYMBSETUB DOWNTO 0 DO BEGIN      
+          BEGINS[I,J]%= [] ; ENDS[I,J]%= [] ; EQUALS[I,J]%= [] ;    
+        END;      
+      FOR I%=1 TO NEXTRULE-1 DO       
+      BEGIN       
+        FIRST %= RULELIST[I].RULESTART; 
+        FOR J%=FIRST+2 TO RULES[FIRST]+FIRST-1 DO 
+        BEGIN     
+          SETS(EQUALS,RULES[J+1],RULES[J]);     
+          K%=J+2; 
+          WHILE (K<RULES[FIRST]+FIRST) AND ISEMPTY(RULES[K-1]) DO   
+            BEGIN SETS(EQUALS,RULES[K],RULES[J]); K%=K+1 END
+        END;      
+        IF RULES[FIRST]<>1 THEN BEGIN 
+          SETS(BEGINS,RULES[FIRST+2],RULES[FIRST+1]);     
+           K%=FIRST+3;      
+           WHILE (K<FIRST+RULES[FIRST]) AND (ISEMPTY(RULES[K-1])) DO
+           BEGIN SETS(BEGINS,RULES[K],RULES[FIRST+1]); K%=K+1 END;  
+          SETS(ENDS,RULES[RULES[FIRST]+FIRST],RULES[FIRST+1]);      
+           K%=RULES[FIRST]+FIRST-1;   
+           WHILE (K>FIRST+1) AND ISEMPTY(RULES[K+1]) DO   
+            BEGIN SETS(ENDS,RULES[K],RULES[FIRST+1]); K%=K-1 END;   
+        
+        END;      
+      END;
+      WARSH(BEGINS,SYMCT-1); WARSH(ENDS,SYMCT-1); 
+      FOR I%=1 TO SYMCT DO  
+        BEGIN SETS(BEGINS,I,I); SETS(ENDS,I,I); 
+        END;      
+      TIMES(ENDS,EQUALS,TEMP,SYMCT-1);
+      TIMES(TEMP,BEGINS,FOLLOWS,SYMCT-1);       
+      PRINT_MAT(FOLLOWS,SYMCT-1);     
+    END;
+        
+        
+        
+  PROCEDURE READPRODS;      
+  LABEL 100;  (* BLM *)     
+      VAR Q%ARRAY[0..15] OF INTEGER;  
+          QNEXT, HEAD%INTEGER;
+          I,J,JDIV59,L,FIRST%INTEGER; 
+          C%STRING; CH%CHAR;
+          OK,NOMORE % BOOLEAN;
+        
+  PROCEDURE RENUMBER;  (*RENUMBERS SYMBOLS SO THAT TERMINALS*)      
+                       (*PRECEDE NON-TERMINALS          *)
+    VAR I,IDIV59,J,K,CT,SYM,TERM_ORIGIN % INTEGER;
+        PERM%ARRAY [1..NOSYMBS] OF INTEGER;     
+        TEMP%SLISTENTRY;    
+       XREF % BOOLMAT;      
+        
+     FUNCTION OUTOFORDER(I,J%INTEGER)%BOOLEAN;  
+     VAR ANS%BOOLEAN;       
+       ISTART,JSTART,LI,LJ,K % INTEGER; 
+     BEGIN ANS%=SLIST[I].CLASS>SLIST[J].CLASS;  
+       IF NOT ANS THEN      
+       IF SLIST[I].CLASS=SLIST[J].CLASS THEN    
+       BEGIN      
+       WITH ST[SLIST[I].HASHVAL] DO BEGIN LI%=LENGTH; ISTART%=START END;      
+       WITH ST[SLIST[J].HASHVAL] DO BEGIN LJ%=LENGTH; JSTART%=START END;      
+         IF LJ<LI THEN LI%=LJ; (*LI IS MINIMUM LENGTH*)   
+       K%=0;      
+       WHILE (K<LI)&(SA[ISTART+K]=SA[JSTART+K]) DO
+          K%=K+1; 
+       IF K>=LI THEN ANS%=LI>=LJ      
+       ELSE ANS%=SA[ISTART+K]>SA[JSTART+K];     
+     END; 
+  OUTOFORDER%=ANS 
+ END;   
+    BEGIN 
+      TERM_ORIGIN %= 1; I%=SYMCT-1;   
+      REPEAT  (*UNTIL WE MEET IN THE MIDDLE*)   
+        WHILE SLIST[TERM_ORIGIN].LHSCHAIN=0 DO  
+           TERM_ORIGIN%=TERM_ORIGIN+1;
+        WHILE SLIST[I].LHSCHAIN<>0 DO 
+           I%=I-1;
+        (*ALL SYMBOLS IN SLIST WITH INDEX<TERM_ORIGIN ARE TERMINAL *) 
+        (*ALL SYMBOLS IN SLIST WITH INDEX>I ARE NON_TERMINAL       *) 
+        (*SLIST(TERM_ORIGIN) IS NON-TERMINAL   *) 
+        (* SLIST(I) IS TERMINAL                 *)
+        (*IF TERM_ORIGIN < I THEN SWITCH THEM *)
+        (* IF TERM_ORIGIN > I THEN WE ARE DONE       *)   
+        (* ISN'T THIS A GROOVY ALGORITHM???????????? *)   
+        
+          IF TERM_ORIGIN < I THEN     
+        
+          BEGIN (*EXCHANGE THEM*)     
+             TEMP%=SLIST[I];
+               SLIST[I]%=SLIST[TERM_ORIGIN];    
+               SLIST[TERM_ORIGIN] %= TEMP;      
+            I %= I-1; TERM_ORIGIN %= TERM_ORIGIN+1;       
+             (* THE LINE ABOVE IS NOT NEEDED BUT IT *)    
+            (* ELIMINATES A COMPARISON               *)   
+          END     
+      UNTIL TERM_ORIGIN > I;
+     (*FINISH WITH RENUMBERING SO GO FIX THE RULES*)      
+     (* SO THAT THEY REFLECT THE NEW NUMBERING *) 
+      G_TERMORG%=TERM_ORIGIN; 
+      FOR I%=1 TO TERM_ORIGIN-1 DO    
+         BEGIN IDIV59%=I DIV 59;      
+         TERMSET[IDIV59]%= [I MOD 59 ]+TERMSET[IDIV59]    
+        END;      
+    FOR I%=1 TO TERM_ORIGIN-2 DO      
+         IF OUTOFORDER(I,I+1) THEN    
+         BEGIN  SLIST[0]%=SLIST[I+1]; 
+               SLIST[I+1]%=SLIST[I];  
+               J%=I-1;      
+               WHILE J>=1 DO
+                 IF OUTOFORDER(J,0) THEN
+                 BEGIN SLIST[J+1]%=SLIST[J];    
+                        J%=J-1
+                 END
+                 ELSE BEGIN SLIST[J+1]%=SLIST[0]; 
+                           J%=-1 END; 
+             IF J=0 THEN SLIST[1]%=SLIST[0];    
+         END;     
+    FOR I%=TERM_ORIGIN TO SYMCT-2 DO  
+      IF OUTOFORDER(I,I+1) THEN       
+      BEGIN SLIST[0]%=SLIST[I+1]; SLIST[I+1]%=SLIST[I];   
+            J%=I-1; 
+            WHILE J>=TERM_ORIGIN DO   
+              IF OUTOFORDER(J,0) THEN 
+                BEGIN SLIST[J+1]%=SLIST[J];     
+                      J%=J-1
+                END 
+              ELSE BEGIN SLIST[J+1]%=SLIST[0]; J%=-1 END; 
+            IF J=TERM_ORIGIN-1 THEN SLIST[TERM_ORIGIN]%=SLIST[0]    
+      END;
+       FOR I%=1 TO SYMCT-1 DO 
+         FOR J%=0 TO (RULECT-1) DIV 59 DO       
+           XREF[I,J]%= [] ; 
+        FOR I%=1 TO SYMCT-1 DO
+        WITH SLIST[I], ST[HASHVAL] DO 
+        BEGIN SNO%=I; PERM[OLDINX]%=I END;      
+        
+      FOR I%=1 TO NEXTRULE-1 DO       
+      BEGIN FIRST %= RULELIST[I].RULESTART;     
+        FOR J%=FIRST+1 TO RULES[FIRST]+FIRST DO BEGIN     
+             SYM%=PERM[RULES[J]];     
+             RULES[J] %= SYM; 
+              IDIV59 %= I DIV 59;     
+             XREF[SYM,IDIV59]%= [I MOD 59] +XREF[SYM,IDIV59]
+      END;
+    END;
+     WRITELN; WRITELN('1 SYMBOL CROSS REFERENCE'); WRITELN('0');    
+        
+     FOR I%=1 TO SYMCT-1 DO BEGIN     
+       WRITE(' '); WRITESYMBOL(I);    
+       CT%=0;  (* NO. OF REFERENCES PRINTED *)  
+       FOR J%=0 TO (RULECT-1) DIV 59 DO 
+          FOR K%=0 TO 58 DO 
+               IF K IN XREF[I,J] THEN 
+             BEGIN
+             IF CT=0 THEN (* WRITE(' '   ); *)  
+                  FOR BLMINC %= GLOBALLENGTH TO 20 DO WRITE (BLANK);
+   (* COL % 20 *) 
+             WRITE((J*59+K)%5);       
+             CT%=CT+1;      
+             IF CT=20 THEN CT%=0      
+             END; 
+      WRITELN     
+     END; 
+  END;  
+PROCEDURE SAVESEMAS;
+  VAR I%INTEGER;  
+  BEGIN 
+    I%=0; 
+    REPEAT
+      SEMAFILE^ %=CURCARD; PUT(SEMAFILE);       
+      I%=I+1;     
+     NEWCARD;   READLN;   (* BLM *)   
+    UNTIL CURCARD[1]<>' ';  
+    WITH RULELIST[NEXTRULE-1] DO      
+    BEGIN 
+      SEMABIT%=TRUE; NOOFSEMAS%=I     
+    END;
+   CURCHAR%=CURCARD[1];     
+  END;  
+        
+      BEGIN       
+      REPEAT      
+        GETNEXT(C,L);       
+        HEAD%=INSERT(C,L);  
+        IF CURCHAR<>'%' THEN
+            WRITELN(' ERROR*** MISSING % AROUND RULE# ',NEXTRULE%0) 
+                        ELSE NEXTCHAR;
+        Q[0]%=HEAD; QNEXT%=1; 
+      REPEAT      
+        REPEAT    
+           GETNEXT(C,L);    
+           IF L<>0 THEN     
+             BEGIN Q[QNEXT]%=INSERT(C,L); QNEXT%=QNEXT+1 END;       
+           CH%=CURCHAR;     
+           NEXTCHAR;
+        UNTIL (CH<>',');    
+        
+  (*    
+  WRITELN;WRITELN(' ******************************************');   
+  WRITELN(' NEXTRULE% ',NEXTRULE%0,' RULEEND% ',RULEEND%0,
+    ' SLIST[HEAD].LHSCHAIN% ',SLIST[HEAD].LHSCHAIN);      
+   WRITELN(' ........................................ '); 
+  *)    
+        
+            WITH RULELIST[NEXTRULE] DO BEGIN    
+              RULESTART%=RULEEND; LHSSYMBOL%=SLIST[HEAD].LHSCHAIN;  
+            END;  
+            FOR I%=1 TO QNEXT DO      
+               BEGIN RULES[RULEEND+I]%=Q[I-1];  
+               END; 
+            RULES[RULEEND]%=QNEXT; RULEEND%=RULEEND+1+QNEXT;
+            WITH SLIST[HEAD] DO LHSCHAIN%=NEXTRULE;       
+            NEXTRULE%=NEXTRULE+1;     
+            QNEXT%=1;       
+         UNTIL CH='.';      
+        
+         CURSOR%=RMARGIN+1;  (* FORCE NEW CARD *) 
+        NEXTCHAR; 
+     IF SEMANTICS IN ENABLED THEN     
+         IF (CURCHAR<>'<') AND (CURCHAR <> '.')  THEN SAVESEMAS;    
+                          (* SECOND CONDITION AND 'AND'- BLM *)     
+               (* NEXT CARD NOT A RULE CARD SO SAVE       
+                  THE SEMANTICS ON TEMPORARY FILE 
+                  TO BE MERGED IN WITH SYNTHESIZE *)      
+         UNTIL CURCHAR='.'; 
+         RENUMBER;
+         REPEAT   
+           NOMORE %= TRUE;  
+           FOR I%=1 TO NEXTRULE-1 DO  
+           BEGIN FIRST%=RULELIST[I].RULESTART;  
+             IF NOT ISEMPTY(RULES[FIRST+1]) THEN BEGIN    
+                IF RULES[FIRST]<>1 THEN 
+                FOR J%=FIRST+2 TO RULES[FIRST]+FIRST DO   
+                   IF NOT ISEMPTY(RULES[J]) THEN GOTO 100;
+                J%=RULES[FIRST+1]; JDIV59%=J DIV 59;      
+                EMPTYS[JDIV59]%= [J MOD 59] +EMPTYS[JDIV59];
+                NOMORE%=FALSE 
+             END; 
+ 100%      END    
+         UNTIL NOMORE;      
+        END;      
+        
+   PROCEDURE GETPRODS(VAR PRODS%PRODARRAY; T%INTEGER);    
+       VAR I,S%INTEGER;     
+     BEGIN I%=1;  
+          S%=SLIST[T].LHSCHAIN;       
+          WHILE S<>0 DO BEGIN 
+             PRODS[I]%=S; I%=I+1;     
+             S%=RULELIST[S].LHSSYMBOL;
+          END;    
+          PRODS[0]%=I-1;    
+(*      
+   WRITE(' GETPRODS');      
+      FOR I%=1 TO PRODS(0) DO 
+         WRITE(PRODS(I));   
+     WRITELN;     
+ *)     
+       END;       
+        
+  PROCEDURE PRINT_STATE(N%INTEGER);   
+      BEGIN       
+        WRITE(' ',STATES[N].USED,     
+          STATES[N].GOTONO%5, STATES[N].RULENO%5);
+          WRITESYMBOL(STATES[N].SYMBOL);
+          WRITELN(STATES[N].MARKER%3) 
+       END;       
+        
+  FUNCTION EQSTATE(X,Y%INTEGER)%BOOLEAN;
+      BEGIN EQSTATE%=FALSE; 
+       IF STATES[Y].RULENO=STATES[X].RULENO THEN
+        IF STATES[Y].MARKER=STATES[X].MARKER THEN EQSTATE%=TRUE;    
+      END;
+        
+  PROCEDURE WARSH (*(VAR A%BOOLMAT)*);
+   LABEL 1; (* BLM *)       
+    VAR I,J,K,L,M % INTEGER;
+    (*COMPUTE  TRANSITIVE CLOSURE*)   
+    BEGIN  L%=0;  
+        
+      FOR J%=0 TO SYMBSETUB DO
+        FOR K %= ORD(J=0) TO 58 DO BEGIN L%=L+1; IF L>N THEN GOTO 1;
+          FOR I %= 1 TO N DO
+            IF K IN A[I,J] THEN       
+              FOR M%=N DIV 59 DOWNTO 0 DO       
+                 A[I,M] %= A[I,M] + A[L,M];     
+           END;   
+1%      
+    END;
+        
+  PROCEDURE TIMES (*(VAR A,B,C%BOOLMAT)*);      
+  LABEL 1,2;  (* BLM *)     
+    VAR I,J,K,L,M%INTEGER;  
+    (* COMPUTE A TIMES B-TRANSPOSE IN C*)       
+    BEGIN 
+      FOR I%=1 TO N DO BEGIN  L%=0;   
+        FOR J %= 0 TO SYMBSETUB DO BEGIN C[I,J]%= [] ;    
+          FOR K%=ORD(J=0) TO 58 DO    
+          BEGIN L%= L+1; IF L>N THEN GOTO 2;    
+             FOR M%=N DIV 59 DOWNTO 0 DO
+                IF A[I,M]*B[L,M]<> []  THEN     
+                  BEGIN C[I,J] %= C[I,J] + [ K ]; GOTO 1 END;       
+         1%       
+        
+          END     
+        END;      
+  2%    END       
+    END;
+        
+  PROCEDURE PRINT_SYMS;     
+  LABEL 10,20;    
+    VAR I,J,K,SX%INTEGER; CH % CHAR;  
+        
+        
+     FUNCTION SUBCHAR(I,J%INTEGER)%CHAR;
+     BEGIN
+       WITH ST[SLIST[I].HASHVAL] DO   
+       IF J>LENGTH THEN SUBCHAR%=' '  
+       ELSE SUBCHAR%=SA[START+J-1]    
+     END; 
+        
+        
+       PROCEDURE MATCH(I,N%INTEGER);  
+          VAR CT,LENG,K % INTEGER;    
+         BEGIN    
+          LENG %= ST[SLIST[I].HASHVAL].LENGTH;  
+          IF N>LENG THEN    
+              WRITELN(SCANINFO,'  SYM%=',I%0)   
+           ELSE   
+          IF N=LENG THEN    
+          WRITELN(SCANINFO,'  IF CH=''',SUBCHAR(I,N),''' THEN ',    
+ 'BEGIN NEXTCH; SYM %= ',I%0,' END ELSE SCANERR') 
+        ELSE      
+           BEGIN  
+             CT%=0; 
+             K%=N;
+             WHILE K<LENG DO BEGIN    
+               WRITELN(SCANINFO,' IF CH = ''',SUBCHAR(I,K),''' THEN ',
+                'BEGIN NEXTCH;');     
+               K%=K+1; CT%=CT+1       
+             END; 
+        
+            WRITELN(SCANINFO,'SYM %= ',I%0);    
+             WHILE CT>0 DO BEGIN      
+               WRITELN(SCANINFO,' END ELSE SCANERR ');    
+               CT %= CT-1;  
+             END; 
+          END     
+        END;      
+     PROCEDURE RESOLVE(I,J,N%INTEGER);
+       (* RESOLVE THE I'TH THRU THE J'TH SYMBOL ON THE    
+          N'TH CHARACTER  *)
+     VAR K,L %INTEGER;      
+     BEGIN
+       FOR K%=J DOWNTO I DO BEGIN     
+         IF N>ST[SLIST[K].HASHVAL].LENGTH THEN  
+            WRITELN(SCANINFO,'  SYM %= ',K%0 )  
+         ELSE     
+           IF (SUBCHAR(K,N)<>SUBCHAR(K-1,N)) OR 
+              (K=I) THEN    
+          BEGIN   
+            WRITELN(SCANINFO,' IF CH=''',SUBCHAR(K,N),''' THEN',    
+       ' BEGIN NEXTCH;');   
+            MATCH(K,N+1);   
+           WRITELN(SCANINFO,' END');  
+         END      
+         ELSE BEGIN 
+           L%=K-2;
+           WHILE (L>=I)&(SUBCHAR(L,N)=SUBCHAR(K,N)) DO L%=L-1;      
+             L%=L+1;
+             WRITELN(SCANINFO,'  IF CH=''',SUBCHAR(K,N),''' THEN',  
+              ' BEGIN NEXTCH;');      
+              RESOLVE(L,K,N+1);       
+             WRITELN(SCANINFO,'  END'); 
+             K%=L;
+          END;    
+          IF K<>I THEN WRITELN(SCANINFO,' ELSE')
+         END      
+        END;      
+        
+        
+        
+   BEGIN   PAGE(OUTPUT);    
+           (* WRITELN(    '   NON-TERMINALS'      , ' TERMINALS'); *) 
+          (*   BLM   *)     
+   (* COL % 50 *) 
+        I%=1; J%=1; K%=1;   
+        REWRITE(SCANINFO);  
+        WRITELN(SCANINFO,'PROCEDURE SCANINIT;');
+        WRITELN(SCANINFO,'BEGIN');    
+        REPEAT    
+          WHILE (I<SYMCT) AND (SLIST[I].LHSCHAIN=0) DO I%=I+1;      
+          WHILE (J<SYMCT) AND (SLIST[J].LHSCHAIN<>0) DO J%=J+1;     
+          IF I<SYMCT THEN BEGIN WRITE(' ',I%4,' '); WRITESYMBOL(I) ;
+                 WRITE(' NON-TERMINAL');
+                                 I%=I+1 END;    
+          IF J<SYMCT THEN BEGIN WRITE(' '   ,J%4,' ');    
+   (* COL % 50 *) 
+                                WRITESYMBOL(J); 
+                                WRITE('     TERMINAL');   
+          IF SLIST[J].CLASS=KEYWORD THEN BEGIN  
+                                WRITE(SCANINFO, 
+           ' RESWD(',K%3,') %= ''');  
+         WITH ST[SLIST[J].HASHVAL] DO 
+            FOR SX%=1 TO 12 DO BEGIN  
+              IF SX>LENGTH THEN CH %= ' '       
+              ELSE CH %= SA[START-1+SX];
+        
+             WRITE(SCANINFO,CH)       
+           END;   
+         WRITELN(SCANINFO,''';  RESNO(',K%3,') %= ',      
+             J%0,';');      
+                K%=K+1 END; 
+                                J%=J+1
+                          END;
+          WRITELN 
+        UNTIL I=J;
+        WRITELN(SCANINFO,'END;');     
+        WRITELN(SCANINFO,'PROCEDURE NEXTSYM;'); 
+        WRITELN(SCANINFO,'BEGIN');    
+        WRITELN(SCANINFO,'  WHILE CH='' '' DO NEXTCH;');  
+        WRITELN(SCANINFO,'  CASE CH OF');       
+        WRITELN(SCANINFO,   
+    '''A'',''B'',''C'',''D'',''E'',''F'',''G'',''H'',''I'',');      
+        WRITELN(SCANINFO,   
+    '''J'',''K'',''L'',''M'',''N'',''O'',''P'',''Q'',''R'',');      
+          WRITELN(SCANINFO, 
+     '''S'',''T'',''U'',''V'',''W'',''X'',''Y'',''Z''%'); 
+        WRITELN(SCANINFO,   
+     '''0'',''1'',''2'',''3'',''4'',''5'',''6'',''7'',''8'',''9''%'); 
+  FOR I%=1 TO SYMCT-1 DO    
+    IF SLIST[I].CLASS=SPECIAL THEN (*EXITLOOP*) GOTO 10;  
+  GOTO 20;
+        
+      10%REPEAT   
+       IF (SUBCHAR(I,1)<>SUBCHAR(I+1,1)) OR (SLIST[I+1].CLASS<>SPECIAL)       
+       THEN BEGIN 
+         WRITELN(SCANINFO,'''',SUBCHAR(I,1),'''% BEGIN NEXTCH; ');  
+         MATCH(I,2);
+         WRITELN(SCANINFO,'END;');    
+     END
+       ELSE BEGIN 
+           J%=I+2;
+           WHILE (SUBCHAR(I,1)=SUBCHAR(J,1))&(SLIST[J].CLASS=SPECIAL) 
+              DO J%=J+1;    
+           J%=J-1;
+           WRITELN(SCANINFO,'''',SUBCHAR(I,1),'''% BEGIN NEXTCH;'); 
+           RESOLVE(I,J,2);  
+           WRITELN(SCANINFO,'  END;');
+           I%=J;  
+       END;       
+       I%=I+1;    
+     UNTIL SLIST[I].CLASS<>SPECIAL;   
+      20%WRITELN(SCANINFO,' END (* CASE *)');   
+      WRITELN(SCANINFO,' END (* NEXTSYM *);')   
+   END; 
+        
+        
+PROCEDURE BUILDLR0; 
+   LABEL 2,3;  (* BLM *)    
+  VAR CURRENTSTATE, ENDSTATE%INTEGER; 
+      I,J,K,L,T,R,RS,OLDSIX % INTEGER;
+      GOTOSTATE,GDIV59%INTEGER;       
+      THOSEUSED%ARRAY[1..80] OF INTEGER;
+      TUIX%INTEGER;  (*INDEX INTO THOSEUSED*)   
+      GOTOROW%STATESET;     
+        
+  PROCEDURE EXPAND(START%INTEGER; VAR NEXT%INTEGER);      
+    VAR I,J,T%INTEGER;      
+        
+        CONSIDERED%ARRAY[1..80] OF INTEGER;     
+        CIX%INTEGER; PRODS%PRODARRAY; 
+        
+        
+    FUNCTION NOTCONSIDERED(T%INTEGER)%BOOLEAN;  
+   LABEL 1; (* BLM *)       
+       VAR I%INTEGER;       
+       BEGIN FOR I%=1 TO CIX-1 DO     
+         IF CONSIDERED[I]=T THEN BEGIN NOTCONSIDERED%=FALSE;
+            GOTO 1 END;     
+         NOTCONSIDERED%=TRUE; 
+1%      
+       END;       
+        
+      BEGIN CIX%=1; I%=START; 
+         REPEAT (*UNTIL I=NEXT*)      
+            T%=STATES[I].SYMBOL;      
+            IF T<>0 THEN    
+            IF SLIST[T].LHSCHAIN<>0 THEN  (*NON-TERMINAL*)
+               IF NOTCONSIDERED(T) THEN BEGIN   
+                  CONSIDERED[CIX]%=T; 
+                  CIX%=CIX+1; 
+                  GETPRODS(PRODS,T);  
+                  FOR J%=1 TO PRODS[0] DO       
+                     WITH STATES[NEXT] DO BEGIN 
+                        RULENO%=PRODS[J];       
+                        GOTONO%=0; MARKER%=0;   
+                        RS %= RULELIST[RULENO].RULESTART; 
+                        IF RULES[RS]=1
+                        THEN SYMBOL%=0  (*EMPTY RHS*)     
+                        ELSE
+                        SYMBOL%=RULES[RS+2];    
+                        USED %= FALSE;
+        (* WRITE(' EXPAND',NEXT); PRINT_STATE(NEXT); *)   
+                        NEXT%=NEXT+1; 
+                     END;   
+               END; 
+            I%=I+1; 
+         UNTIL I=NEXT;      
+     END; 
+        
+   BEGIN (*BUILDLR0*)       
+  FOR BLMINC %= 0 TO MAXSTATES DO     
+    STATEIX[BLMINC].STARTIX %= 0;     
+    (* BLM *)     
+     WITH STATES[0] DO BEGIN
+        RULENO%=1; GOTONO%=0; MARKER%=0;
+        SYMBOL%=RULES[RULELIST[1].RULESTART+2]; 
+        USED %= FALSE; SHIFTRED %= FALSE;       
+        ERCBIT %= FALSE;    
+     END; 
+     SIX%=1;      
+     EXPAND(0,SIX); 
+     WITH STATEIX[1] DO BEGIN 
+        STARTIX%=0; INSYMB%=0; KERNEL_SIZE%=1; END;       
+     CURRENTSTATE%=1; FREESTATE%=2;   
+        
+     REPEAT (*UNTIL NO MORE STATES*)  
+       ENDSTATE%=STATEIX[CURRENTSTATE+1].STARTIX-1;       
+       IF ENDSTATE=-1 THEN ENDSTATE%=SIX-1;     
+     (* WRITE(' CURRENTSTAT',CURRENTSTATE); *)  
+      FOR I%=0 TO 7 DO GOTOROW[I]%= []; 
+        
+        
+       FOR I%=STATEIX[CURRENTSTATE].STARTIX TO ENDSTATE DO BEGIN    
+      (* WRITELN('  I',I); PRINT_STATE(I); *)   
+         IF NOT STATES[I].USED THEN BEGIN       
+           (*GET SYMBOL AND FIND ALL RULES WHICH HAVE THE SAME      
+             SYMBOL -- THESE MAKE UP THE KERNEL OF THE NEW STATE.   
+             IF THE STATE ALREADY EXISTS THEN JUST FIX THE GOTOS    
+             APPROPRIATELY -- OTHERWISE ADD NEW STATE*)   
+             T%=STATES[I].SYMBOL;     
+        
+           IF T<>0 THEN BEGIN 
+              (*THE PRODUCTION IS NOT ALREADY A REDUCTION 
+                CANDIDATE AND HENCE HAS A SUCCESSOR*)     
+        
+              OLDSIX %= SIX; TUIX %= 0; 
+        
+              FOR J%=I TO ENDSTATE DO 
+              WITH STATES[J] DO       
+                IF NOT USED THEN      
+                   IF T=SYMBOL THEN BEGIN       
+                      STATES[SIX]%=STATES[J];   
+                      TUIX%=TUIX+1;   
+                      THOSEUSED[TUIX]%=J;       
+                      WITH STATES[SIX] DO BEGIN 
+                          MARKER%=MARKER+1;     
+                          R%=RULELIST[RULENO].RULESTART;  
+                          IF MARKER+1=RULES[R]  
+                          THEN SYMBOL%=0
+                          ELSE SYMBOL%=RULES[R+2+MARKER]; 
+                          USED%=FALSE; SHIFTRED %= FALSE; 
+                          ERCBIT %= FALSE;      
+                      END;  
+                         (* WRITE(' SIX',SIX); PRINT_STATE(SIX); *) 
+                      SIX %= SIX +  1;
+                      USED %= TRUE    
+                   END;     
+            IF(GENSHIFTRED IN ENABLED)&(TUIX=1) 
+         &(STATES[OLDSIX].SYMBOL=0) THEN
+                      WITH STATES[THOSEUSED[1]] DO
+                         BEGIN SIX%=OLDSIX; SHIFTRED%=TRUE END      
+                   ELSE   BEGIN       
+                      K%=SLIST[T].STATEHEAD;    
+                      WHILE K<>0 DO   
+                        WITH STATEIX[K] DO BEGIN
+                          IF KERNEL_SIZE=TUIX THEN BEGIN  
+                          FOR L%=0 TO TUIX-1 DO 
+                         IF NOT EQSTATE(OLDSIX+L,STARTIX+L) THEN GOTO 2;      
+                          SIX %= OLDSIX; GOTOSTATE%=K; GOTO 3       
+                          END;
+                    2%    K%=STATEIX[K].NEXTSTATE;
+                        END;
+                         GOTOSTATE%=FREESTATE;  
+                         FREESTATE%=FREESTATE+1;
+                         EXPAND(OLDSIX,SIX);    
+                         WITH STATEIX[GOTOSTATE] DO       
+                           BEGIN STARTIX%=OLDSIX; INSYMB%=T;
+                                 KERNEL_SIZE%=TUIX;       
+                                 WITH SLIST[T] DO BEGIN   
+                                   NEXTSTATE %= STATEHEAD;
+                                   STATEHEAD%=GOTOSTATE   
+                                 END  
+        
+                           END;       
+3%                       FOR K%=1 TO TUIX DO    
+                            WITH STATES[THOSEUSED[K]] DO  
+                               GOTONO %= GOTOSTATE;       
+                            GDIV59%=GOTOSTATE DIV 59;     
+                          GOTOROW[GDIV59]%=     
+                            [ GOTOSTATE MOD 59 ]+GOTOROW[GDIV59];   
+                 END (*LOOP FOR SETTING GOTO ENTRIES*)    
+              END  (*CURRENT COLUMN IS NOT A REDUCE ENTRY*) 
+            END; (*CURRENT COLUMN HASN'T BEEN USED*)      
+        END; (*LOOP THRU CURRENT STATE*)
+        GOTOGRAPH[CURRENTSTATE]%=GOTOROW; (*COPY IN GOTO ROW*)      
+        
+        CURRENTSTATE%=CURRENTSTATE+1  
+     UNTIL CURRENTSTATE=FREESTATE;    
+     WRITELN(' ');
+     I%=FREESTATE-1;
+     WRITELN(' THERE ARE ',I%0,' STATES.');     
+     I%=SIX-1;    
+     WRITELN(' THERE ARE ',I%0,' ITEMS.');      
+     WRITELN(' ');
+     WRITELN(GENERS,' CONST TERMTH=',G_TERMORG-1%0,       
+      '; NTLO=',G_TERMORG%0,'; NTHI=',SYMCT-1%0,
+     '; STATECT=',FREESTATE-1%0,';'); 
+   END; 
+        
+  PROCEDURE PRINTSTATES;    
+    VAR I,J,K,FDIV59,FOLLOWER%INTEGER;
+        FIRST, LHS%INTEGER; 
+        SOMEREDUCE, ALLREDUCE % BOOLEAN;
+        SIMPLE_FOLLOW%SYMBSET;
+    PROCEDURE ERC(STATE,ITEM,LEVEL%INTEGER; VAR RC%SYMBSET);
+   LABEL  1,2,666;  (* BLM *) 
+      VAR PREDS % STATESET; 
+    I, J, Q, ITEMIX, K, PS, NS, L   % INTEGER;  
+        
+          LHS, DIV59 % INTEGER;       
+        
+      PROCEDURE GETPREDS(STATE,ITEM%INTEGER; VAR SS%STATESET);      
+   LABEL 1;  (* BLM *)      
+        VAR I,J,K,DIV59%INTEGER;      
+          Q % STATESET;     
+        BEGIN     
+        FOR I %= STATESETUB DOWNTO 0 DO SS[I] %= [];      
+        
+           DIV59%=STATE DIV 59;       
+          SS[DIV59]%= [STATE MOD 59] +SS[DIV59];
+        
+          FOR I%=1 TO STATES[ITEM].MARKER DO    
+          BEGIN   
+              FOR J%=STATESETUB DOWNTO 0 DO Q[J]%=[];     
+        
+              FOR J %= 1 TO  FREESTATE - 1 DO   
+        
+              BEGIN 
+                FOR K%=0 TO STATESETUB DO       
+                  IF GOTOGRAPH[J,K]*SS[K]<> []  THEN      
+                  BEGIN     
+                    Q[DIV59]%= [J MOD 59 ]+Q[DIV59];      
+                    GOTO 1; 
+                  END;      
+       1%     END;
+        
+        
+              SS%=Q;
+          END;    
+        END;      
+        
+    PROCEDURE SKIPLEV;      
+      VAR I%INTEGER;
+       BEGIN      
+          FOR I%=0 TO LEVEL DO WRITE('  ');     
+      END;
+        
+      BEGIN       
+       (*COMPUTE THE EXACT RIGHT CONTEXT OF THE 
+         STATE AND ITEM NO. GIVEN *)  
+        IF LEVEL = 0 THEN BEGIN       
+          FOR I%=SYMBSETUB DOWNTO 0 DO RC[I]%= [];
+          FOR I%=STATESETUB DOWNTO 0 DO STATBITS[I]%= [] ;
+        END;      
+        IF STATES[ITEM].ERCBIT THEN GOTO 1;     
+        WITH STATES[ITEM] DO ERCBIT%=TRUE;      
+        ERCBITS[0]%=ERCBITS[0]+1;     
+        ERCBITS[ERCBITS[0]]%=ITEM;    
+        LHS %= RULES[RULELIST[STATES[ITEM].RULENO].RULESTART+1];    
+        IF LEVEL<>0 THEN BEGIN
+          FOR I%=0 TO SYMBSETUB DO    
+            IF TERMSET[I]*FOLLOWS[LHS,I]-RC[I]<> []  THEN GOTO 2;   
+          GOTO 1; 
+        END;      
+  2%    
+   SKIPLEV;       
+     WRITELN(' FINDING ERC IN STATE ',STATE%0); 
+        GETPREDS(STATE,ITEM,PREDS); (*FIND ALL PREDECESSORS*)       
+        FOR I%=0 TO SYMBSETUB DO      
+          IF PREDS[I]<> []  THEN      
+          FOR J%=0 TO 58 DO 
+            IF J IN PREDS[I] THEN     
+            BEGIN 
+              Q%=I*59+J;  (*GET THE ACTUAL STATE NO*)     
+         SKIPLEV; 
+     WRITELN(' PREDECESSOR STATE IS ',Q%0);     
+                     (*GRAB THE LHS OF THE RULE GOVERNING ITEM*)    
+                     (*IT IS THE SYMBOL WE ARE LOOKING FOR*)
+              FOR ITEMIX%=STATEIX[Q].STARTIX TO 
+                          STATEIX[Q+1].STARTIX-1 DO       
+                IF STATES[ITEMIX].SYMBOL=LHS THEN 
+                BEGIN       
+                  IF STATES[ITEMIX].GOTONO<>0 THEN
+                 BEGIN      
+                    PS%=STATES[ITEMIX].GOTONO;  
+                    IF PS MOD 59 IN STATBITS[PS DIV 59] THEN
+                       GOTO 666;  (*NOTHING NEW HERE*)    
+                       DIV59%=PS DIV 59;
+                    STATBITS[DIV59]%= [PS MOD 59] +STATBITS[DIV59]; 
+                    FOR K%=STATEIX[PS].STARTIX TO 
+                           STATEIX[PS+1].STARTIX-1 DO     
+                       IF STATES[K].SYMBOL=0 THEN 
+                           ERC(PS,K,LEVEL+1,RC) 
+                       ELSE 
+                       BEGIN NS%=STATES[K].SYMBOL;
+                         IF SLIST[NS].LHSCHAIN=0 THEN BEGIN 
+        
+                               DIV59%=NS DIV 59;
+                            RC[DIV59]%= [NS MOD 59] +RC[DIV59];     
+       SKIPLEV;   
+   WRITE(' LEVEL ',LEVEL%0,' STATE ',STATE%0,' SYMBOL '); 
+   WRITESYMBOL(NS); WRITELN;
+                         END
+                       END  
+                  END       
+                  ELSE      
+                     ERC(Q,ITEMIX,LEVEL+1,RC);  
+                  GOTO 666  
+                END;
+   666%     (*COME HERE AFTER ONE LHS HAS BEEN FOUND*)    
+            END;  
+  1%   IF LEVEL=0 THEN BEGIN
+          FOR I%=1 TO ERCBITS[0] DO   
+             WITH STATES[ERCBITS[I]] DO ERCBIT%=FALSE;    
+         ERCBITS[0]%=0;     
+       END;       
+      END;
+        
+     PROCEDURE COLLIDE(X,Y%INTEGER);  
+       VAR XSYM,YSYM,I,IMOD59,IDIV59 % INTEGER; 
+           COLLIDESET%SYMBSET; COLLISION%BOOLEAN; 
+       BEGIN      
+    FOR I %= 0 TO SYMBSETUB DO COLLIDESET[I]  %= [];      
+          COLLISION%=FALSE; 
+         XSYM%=STATES[X].RULENO;      
+         XSYM%=RULES[RULELIST[XSYM].RULESTART+1]; 
+         YSYM%=STATES[Y].RULENO;      
+         YSYM%=RULES[RULELIST[YSYM].RULESTART+1]; 
+         (*NOW HAVE THE LEFT-HAND-SIDE SYMBOLS*)
+           IF XSYM=YSYM THEN COLLISION%=TRUE    
+           ELSE   
+         FOR I%=G_TERMORG-1 DOWNTO 1 DO 
+       BEGIN      
+       IDIV59%= I DIV 59;IMOD59%=I MOD 59;      
+       IF IMOD59 IN 
+          FOLLOWS[XSYM,IDIV59]*FOLLOWS[YSYM,IDIV59]       
+       THEN       
+          COLLIDESET[IDIV59]%=COLLIDESET[IDIV59]+[IMOD59];
+       COLLISION%=COLLISION OR (COLLIDESET[IDIV59]<>[]);  
+          COLLIDESET[IDIV59]%=COLLIDESET[IDIV59]+[IMOD59];
+       COLLISION%=COLLISION OR (COLLIDESET[IDIV59]<>[]);  
+       END;       
+     IF COLLISION THEN      
+      BEGIN       
+       WRITELN;   
+    WRITELN(' **********************************************');     
+        
+         WRITELN(' IN DETERMINING WHETHER TO REDUCE BY RULE ',      
+            STATES[X].RULENO%0,' OR RULE ',STATES[Y].RULENO%0,      
+            ' NO DECISION CAN BE MADE BECAUSE '); 
+         WRITE(' THEY'); IF XSYM=YSYM THEN      
+           BEGIN WRITE(' BOTH REDUCE TO ');     
+                  WRITESYMBOL(XSYM); WRITELN;   
+           END    
+           ELSE BEGIN       
+              WRITE(' REDUCE TO '); WRITESYMBOL(XSYM);    
+              WRITE(' AND '); WRITESYMBOL(YSYM);
+              WRITELN(', RESPECTIVELY.');       
+              WRITELN(' EACH CAN BE FOLLOWED LEGITIMATELY BY%');    
+              WRITE(' '); WRITE_SYMBSET(COLLIDESET);      
+        END;      
+    WRITELN(' ********************************************');       
+        
+       END;       
+     END; 
+        
+         PROCEDURE CHECKFOLLOW(ST,X%INTEGER);   
+            VAR COLLIDESET%SYMBSET;   
+                  XX,YY%SET OF 0..58; 
+                I%INTEGER;  
+        
+                COLLISION % BOOLEAN;  
+                XSYM%INTEGER; 
+                 PP % SYMBSET;
+            BEGIN 
+              XSYM%=STATES[X].RULENO; 
+              XSYM%=RULES[RULELIST[XSYM].RULESTART+1];    
+               COLLISION %= FALSE;    
+              FOR I%=(SYMCT-1) DIV 59 DOWNTO 0 DO 
+                 BEGIN XX%=FOLLOWS[XSYM,I]; YY%=
+                         SIMPLE_FOLLOW[I];      
+               XX%=XX*YY;   
+                      COLLIDESET[I]%=XX;
+                        IF COLLIDESET[I]<> []  THEN COLLISION%=TRUE;
+                 END;       
+              IF COLLISION THEN BEGIN 
+    WRITELN;      
+ WRITELN(' **********************************************');
+       WRITELN('  STATE CONTAINS A SHIFT-REDUCE CONFLICT ');
+                 WRITE(' BECAUSE AFTER REDUCING BY RULE '); 
+                 WRITE(STATES[X].RULENO%0,' TO OBTAIN '); 
+                 WRITESYMBOL(XSYM); WRITELN;    
+                 WRITELN(' ANY OF THE FOLLOWING SYMBOLS MAY OCCUR%'); 
+                 WRITE('  '); 
+                 WRITE_SYMBSET(COLLIDESET);     
+                 WRITELN;   
+               ERC(ST,X,0,PP);WRITE(' ');       
+               WRITE_SYMBSET(PP);     
+  WRITELN(' *********************************************');
+            END;  
+          END;    
+        
+    BEGIN 
+     (*******************************)
+     (*  PRINT STATES               *)
+     (*******************************)
+      WRITELN('1 STATE TABLES');      
+      WRITELN('-'); 
+      WITH STATEIX[FREESTATE] DO STARTIX%=SIX;  
+      FOR I%=1 TO FREESTATE-1 DO BEGIN
+        WRITELN(' ');       
+        WRITE(' STATE ',I%0,' '   ,'(');
+   (* COL % 15 *) 
+        WRITESYMBOL(STATEIX[I].INSYMB); WRITELN(')');     
+        SOMEREDUCE %= FALSE; ALLREDUCE %= TRUE; 
+        FOR K%=0 TO SYMBSETUB DO SIMPLE_FOLLOW[K]%= [] ;  
+        
+        FOR J%=STATEIX[I].STARTIX TO  
+               STATEIX[I+1].STARTIX-1 DO
+          BEGIN   
+    WITH STATES[J] DO USED%=FALSE;    
+            FIRST%=RULELIST[STATES[J].RULENO].RULESTART;  
+             IF STATES[J].SHIFTRED THEN BEGIN   
+                ALLREDUCE %= FALSE;   
+                WRITE ('  *SR* ',STATES[J].RULENO%3);     
+                 FOLLOWER%=STATES[J].SYMBOL;    
+                 IF SLIST[FOLLOWER].LHSCHAIN=0 THEN       
+                  BEGIN FDIV59%=FOLLOWER DIV 59;
+                    SIMPLE_FOLLOW[FDIV59]%=     
+                      [FOLLOWER MOD 59] +SIMPLE_FOLLOW[FDIV59]      
+                        END;
+        
+             END  
+             ELSE 
+            IF STATES[J].GOTONO<>0 THEN BEGIN ALLREDUCE%=FALSE;     
+               WRITE('  -> ',STATES[J].GOTONO%0); 
+                FOLLOWER%=STATES[J].SYMBOL;     
+                IF SLIST[FOLLOWER].LHSCHAIN=0 THEN
+                    BEGIN FDIV59%=FOLLOWER DIV 59;
+                   SIMPLE_FOLLOW[FDIV59]%=      
+                      [FOLLOWER MOD 59] +SIMPLE_FOLLOW[FDIV59]      
+                       END; 
+            END   
+            ELSE BEGIN WRITE('  REDUCE ',STATES[J].RULENO%0);       
+              SOMEREDUCE %= TRUE; LHS%= RULES[FIRST+1];   
+            END;  
+        
+            WRITE(' '   ,'[',STATES[J].RULENO%3,']',' '); 
+   (* COL % 13 *) 
+            WRITESYMBOL(RULES[FIRST+1]); WRITE('% ');     
+        
+            FOR K%=0 TO RULES[FIRST]-2 DO BEGIN 
+               IF K=STATES[J].MARKER THEN WRITE(' $ ');   
+               WRITESYMBOL(RULES[FIRST+2+K]);   
+               IF K<>RULES[FIRST]-2 THEN WRITE(', ');     
+            END;  
+             WRITELN('.')   
+          END;    
+          IF ALLREDUCE THEN (*MAY BE WE HAVE MULTIPLE RHS'S*)       
+            IF STATEIX[I].STARTIX <> STATEIX[I+1].STARTIX-1 THEN    
+            BEGIN FOR J%=STATEIX[I].STARTIX TO STATEIX[I+1].STARTIX-2 DO      
+              FOR K%=J+1 TO STATEIX[I+1].STARTIX-1 DO     
+                COLLIDE(J,K);  (*CHECK FOR FOLLOW COLLISION*)       
+            END   
+            ELSE  
+          ELSE    
+          IF SOMEREDUCE THEN
+          FOR J%=STATEIX[I].STARTIX TO STATEIX[I+1].STARTIX-1 DO    
+              IF STATES[J].SYMBOL=0 THEN
+                 (*WE HAVE FOUND A REDUCTION*)  
+                 BEGIN CHECKFOLLOW(I,J);
+                    FOR K%=J+1 TO STATEIX[I+1].STARTIX-1 DO 
+                        IF STATES[K].SYMBOL=0 THEN COLLIDE(J,K);    
+                 END;       
+      END 
+    END;
+PROCEDURE OUTSTATES;
+  VAR I,J,K,EMITIX,LHS  % INTEGER;    
+        
+  PROCEDURE EMIT(I%INTEGER);
+    BEGIN IF EMITIX>99 THEN 
+       BEGIN PUT(TABS); EMITIX%=0; END; 
+      TABS^ [EMITIX]%=I;    
+      EMITIX%=EMITIX+1;     
+      IF I=-3 THEN PUT (TABS);
+    END;
+        
+  BEGIN 
+    EMITIX%=0; REWRITE(TABS); 
+  IF PRINT_TABS IN ENABLED THEN       
+    WRITELN('1          PARSE TABLES ');
+  FOR I%=1 TO FREESTATE-1 DO (*FOR ALL STATES I*) 
+   BEGIN
+   EMIT(8192+I);  
+     IF PRINT_TABS IN ENABLED THEN WRITELN(' STATE NO. ',I);
+      FOR J%=STATEIX[I].STARTIX TO STATEIX[I+1].STARTIX-1 DO
+         (*FOR ALL ITEMS IN THIS STATE *)       
+        WITH STATES[J] DO   
+       IF NOT USED THEN     
+       BEGIN      
+      IF SYMBOL<>0 THEN     
+       BEGIN      
+      EMIT(SYMBOL); 
+  IF PRINT_TABS IN ENABLED THEN       
+     BEGIN
+      WRITE(' IF SYMBOL IS ');WRITESYMBOL(SYMBOL);
+      WRITELN;    
+     END; 
+       IF SHIFTRED THEN     
+        BEGIN     
+      EMIT(24576+RULENO);   
+      IF PRINT_TABS IN ENABLED THEN   
+        WRITELN(' SHIFTRED BY RULE ',RULENO);   
+       END
+    ELSE (* WE HAVE A SHIFT OR A GOTO *)
+      BEGIN       
+       IF SYMBOL MOD 59 IN TERMSET[SYMBOL DIV 59] 
+    THEN
+     BEGIN
+  EMIT(16384+GOTONO);       
+      IF PRINT_TABS IN ENABLED THEN BEGIN       
+             WRITE(' SHIFT ');
+             WRITESYMBOL(SYMBOL);     
+            END;  
+         END      
+       ELSE BEGIN 
+        EMIT(32768+GOTONO); 
+        IF PRINT_TABS IN ENABLED THEN  WRITE(' GOTO ');   
+     END; 
+     IF PRINT_TABS IN ENABLED THEN BEGIN WRITE(' ',GOTONO); 
+         WRITELN; 
+    END;
+      END;
+            USED%=TRUE;     
+            FOR K%=J+1 TO STATEIX[I+1].STARTIX-1 DO       
+              IF SYMBOL=STATES[K].SYMBOL THEN   
+             STATES[K].USED%=TRUE;    
+         END;     
+    END; (*OF SHIFT ENTRIES.REDUCE ENTRIES,IF ANY, ARE NEXT*)       
+   EMIT(-2);      
+     IF PRINT_TABS IN ENABLED THEN    
+      WRITELN(' END OF SHIFTS, START OF REDUCE ENTRIES ');
+   FOR J %= STATEIX[I].STARTIX TO STATEIX[I+1].STARTIX-1 DO 
+    WITH STATES[J] DO       
+    IF NOT USED THEN
+     BEGIN
+      IF SYMBOL=0 THEN      
+      BEGIN       
+    EMIT(40960+RULENO);     
+    IF PRINT_TABS IN ENABLED THEN     
+        WRITELN(' REDUCE ',RULENO);   
+     LHS%=RULES[RULELIST[RULENO].RULESTART+1];  
+         FOR K%=1 TO G_TERMORG-1 DO   
+       IF K MOD 59 IN FOLLOWS[LHS,K DIV 59] THEN
+      BEGIN       
+    EMIT(K);      
+    IF PRINT_TABS IN ENABLED THEN BEGIN 
+          WRITE(' SYMBOL ',K,'  ');WRITESYMBOL(K);
+    WRITELN;      
+  END;  
+    END;
+       FOR K%=J+1 TO STATEIX[I+1].STARTIX-1 DO  
+        IF EQSTATE(J,K) THEN STATES[K].USED%=TRUE; (*A DOUBLE CHECK FOR       
+                                                     DUPLICATE ITEMS*)
+      END;
+     END; 
+  EMIT(-1);       
+  IF PRINT_TABS IN ENABLED THEN BEGIN 
+      WRITELN(' END OF ROW.'); WRITELN; 
+   END; 
+   END; (*OF  LOOP THROUGH STATES*)   
+   EMIT(-3);      
+  IF PRINT_TABS IN ENABLED THEN  WRITELN(' END OF TABLE '); 
+END;(* OUTSTATES*)
+        
+        
+  PROCEDURE PRINTGOTOS;     
+    VAR I,J,SORG,CT,THEGOTO%INTEGER;  
+        GOTONE % BOOLEAN;   
+        BITS % ARRAY[0..255,0..3]OF SET OF 0..58; 
+        LINE, CLRLIN % PACKED ARRAY[1..120]OF CHAR;       
+      PROCEDURE SETBIT(I,J%INTEGER);  
+         VAR DIV59, MOD59%INTEGER;    
+               T%SET OF 0..58;
+        BEGIN     
+          DIV59%=J DIV 59; MOD59%=J MOD 59;     
+       T%=BITS[I,DIV59]; T%=T+ [MOD59] ;
+          BITS[I,DIV59]%=T; 
+          DIV59%=I DIV 59; MOD59%=I MOD 59;     
+       T%=BITS[J,DIV59]; T%=T+ [MOD59] ;
+              BITS[J,DIV59]%=T;       
+        END;      
+    BEGIN 
+         SORG%=1; 
+      FOR I%=1 TO 120 DO CLRLIN[I]%=' ';
+      LINE%=CLRLIN; 
+      WITH STATEIX[FREESTATE] DO STARTIX%=SIX;  
+       FOR I%=1 TO FREESTATE-1 DO     
+          FOR J%=0 TO 3 DO BITS[I,J]%= [] ;     
+      REPEAT      
+        WRITELN; WRITE('1');
+        FOR I%=1 TO FREESTATE-1 DO    
+        BEGIN     
+          FOR J%=STATEIX[I].STARTIX TO
+               STATEIX[I+1].STARTIX-1 DO
+          BEGIN THEGOTO%=STATES[J].GOTONO;      
+             IF THEGOTO >= SORG THEN  
+              IF THEGOTO<SORG+120 THEN
+                BEGIN LINE[THEGOTO-SORG+1]%='X';
+                      SETBIT(I,THEGOTO);
+                      GOTONE%=TRUE    
+                END;
+           END; (*FOR LOOP*)
+          WRITE(I%3,'   '); 
+          IF GOTONE THEN BEGIN WRITELN(LINE); LINE%=CLRLIN; 
+                               GOTONE%=FALSE    
+                         END
+          ELSE WRITELN;     
+          WRITE(' ');       
+        END;      
+        
+        SORG%=SORG+120      
+      UNTIL SORG>=FREESTATE;
+      FOR I%=1 TO FREESTATE-1 DO BEGIN
+        WRITELN; WRITE(' ');
+       CT%=0;     
+        FOR J%=1 TO FREESTATE-1 DO    
+          IF J MOD 59 IN BITS[I,J DIV 59] THEN BEGIN      
+         CT%=CT+1; IF CT=25 THEN BEGIN WRITELN; WRITE(' '); END;    
+         WRITE(J%3);
+     END; 
+     IF CT<=24 THEN BEGIN WRITELN; WRITE(' '); END;       
+      END;
+   END; 
+        
+        
+        
+    BEGIN 
+    ENABLED%=[PRINT_TABS];  
+       ERCBITS[0]%=0;       
+       FOR I%=0 TO SYMBSETUB DO BEGIN EMPTYS[I]%= [] ; TERMSET[I]%= [] ;
+       RULEEND%=0; SAEND%=0; NEXTRULE%=1;       
+       CURSOR%=RMARGIN+1;   
+       END;       
+        
+(* BLM -  INITIALIZE CURCHAR *)       
+ NEXTCHAR;
+        
+     LINELIMIT(OUTPUT,500*50);
+     LINELIMIT(GENERS,500*50);
+     LINELIMIT(PDATA,500*50); 
+       REWRITE(GENERS);     
+       REWRITE(PDATA);      
+       REWRITE(SEMAFILE);   
+       SYMCT %= 1;
+       READPRODS; 
+       PRINT_SYMS;
+       COMPUTE_FOLLOWS;     
+       RESET(SEMAFILE);     
+       PRINTRULES;
+       BUILDLR0;  
+       PRINTSTATES; 
+       OUTSTATES; 
+   GOTO 100;      
+  999 % WRITE(' UNEXPECTED END OF FILE. USE . TO INDICATE END');    
+  100%  
+    END.
+        
+        

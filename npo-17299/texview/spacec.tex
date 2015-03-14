@@ -1,0 +1,11 @@
+% Spacing control
+\newskip\currentlineskip
+% \baselineskip = \currentlineskip * \spacingfactor / 10
+\newcount\spacingfactor
+\def\shortlines{\spacingfactor=9\setbaselineskip}
+\def\standardlines{\spacingfactor=10\setbaselineskip}
+\def\setbaselineskip{\baselineskip=\currentlineskip
+ \multiply\baselineskip by\spacingfactor \divide\baselineskip by10}
+\def\talllines{\spacingfactor=12\setbaselineskip}
+\currentlineskip=\normalbaselineskip
+\standardlines

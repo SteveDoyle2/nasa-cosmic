@@ -1,0 +1,43 @@
+
+ABSTRACT
+
+1.	We found that screen editors had two inherent flaws: executing
+	complex multiple or conditional commands or batch processing
+	with fixed editing commands was cumbersome and inefficient, and
+	editing via slow modem lines was tedious.  The ZED editor
+	provides a simple yet powerful interface for line editing.
+
+2.	The program has only rudimentary support for exotic file types,
+	yet handles most file types correctly.  There is no full-screen
+	interface and no regular expression matching, yet there are
+	more search qualifiers than usually available with text editors.
+	ZED provides powerful global editing commands, conditional
+	commands (including multi-way conditional commands), "whenever"
+	commands, boolean combinations of search expressions, and versatile
+	search qualifiers.
+
+
+
+REQUIREMENTS
+
+1.	Problem: provide a simple interface for performing powerful
+	complicated edits of text files, and for editing efficiently
+	via slow modem lines.
+
+2.	Solution: ZED is a line-based editor with a simple and concise
+	syntax, yet capable of arbitrary complexity of processing in
+	expert hands.
+
+3.	Program language: C.  Source code is supplied.  Length: 6500 lines.
+                                                                           
+4.	Machine requirements: a VAX computer running VMS.  However, with
+	very little modification, ZED will run under any system, e.g. Unix.
+
+5.	User instructions: a complete specification (about 60 pages) is
+	supplied in printer format.  TeX source is provided for a quick-
+	reference card and a tutorial, which are included in the
+	documentation.
+
+6.	Operating instructions: install the command via the ZED.CLD
+	command definition file and then edit files using the command
+	syntax defined in the documentation.

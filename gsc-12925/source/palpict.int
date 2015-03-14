@@ -1,0 +1,25 @@
+   interface;
+      unit palpict ( skelepal, picture, chartinfo, get_list, format );
+
+      uses getparam;
+
+      uses utility;
+
+   procedure skelepal (     color  : integer; var xy : supinteger );
+
+   procedure picture  ( var first  : entity ; var xy : supinteger );
+
+   procedure chartinfo(     code   : byte;
+			var first  : entity;
+			var xy     : supinteger );
+
+   procedure get_list ( var first  : entity;
+			var total  : byte;
+			var xy	   : supinteger );
+
+   procedure format   ( var inkey   : byte;
+			var current, first : entity);
+
+   begin
+   end;
+

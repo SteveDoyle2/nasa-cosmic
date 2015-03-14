@@ -1,0 +1,59 @@
+ COMPSIZE - PRELIMINARY DESIGN METHOD FOR FIBER REINFORCED COMPOSITE
+STRUCTURES
+
+( NASA Marshall Space Flight Center )
+
+     The Composite Structure Preliminary Sizing program, COMPSIZE, is an
+analytical tool which structural designers can use when doing approximate
+stress analysis to select or verify preliminary sizing choices for compos-
+ite structural members. It is useful in the beginning stages of design con-
+cept definition, when it is helpful to have quick and convenient approxi-
+mate stress analysis tools available so that a wide variety of structural
+configurations can be sketched out and checked for feasibility. At this
+stage of the design process the stress/strain analysis does not need to be
+particularly accurate because any configurations tentatively defined as
+feasible will later be analyzed in detail by stress analysis specialists.
+The emphasis is on fast, user-friendly methods so that rough but techni-
+cally sound evaluation of a broad variety of conceptual designs can be ac-
+complished.
+
+     Analysis equations used are, in most cases, widely known basic struc-
+tural analysis methods. All the equations used in this program assume
+elastic deformation only. The default material selection is intermediate
+strength graphite/epoxy laid up in a quasi-isotropic laminate. A general
+flat laminate analysis subroutine is included for analyzing arbitrary lam-
+inates. However, COMPSIZE should be sufficient for most users to presume a
+quasi-isotropic layup and use the familiar basic structural analysis meth-
+ods for isotropic materials, after estimating an appropriate elastic modu-
+lus. Homogeneous materials can be analyzed as simplified cases.
+
+     The COMPSIZE program is written in IBM BASICA. The program format is
+interactive. It was designed on an IBM Personal Computer operating under
+DOS with a central memory requirement of approximately 128K. It has been
+implemented on an IBM compatible with GW-BASIC under DOS 3.2. COMPSIZE was
+developed in 1985.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: BASIC
+
+MACHINE REQUIREMENTS: IBM PC SERIES
+
+PROGRAM SIZE: APPROXIMATELY 2,038 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 5.25 Inch IBM PC DOS Format Diskette
+
+PROGRAM NUMBER: MFS-27153
+
+DOMESTIC - DOCUMENTATION PRICE: $19.00    PROGRAM PRICE: $350.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $38.00   PROGRAM PRICE: $700.00
+
+
+
+                                        1
+

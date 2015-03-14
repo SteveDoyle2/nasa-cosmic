@@ -1,0 +1,1551 @@
+      OVERLAY(LINK,0,0)
+      PROGRAM MAIN(INPUT=201,OUTPUT=201,TAPE5=INPUT,TAPE6=OUTPUT,TAPE2=1  A   1
+     1001)                                                                A   2
+      COMMON N,JCASE,D1(8,8),D2(8,1),CHIZER(8),CHIN1(8,1),CHIN2(8,1),CHN  A   3
+     1P11(8,1),CHNP12(8,1),CHIA(8,1),CHIB(8,1),CKAY(8,8)                  A   4
+      LINK=4LLINK                                                         A   5
+      N=1                                                                 A   6
+1     CALL OVERLAY (LINK,2,0,0)                                           A   7
+      CALL OVERLAY (LINK,1,0,0)                                           A   8
+      GO TO 1                                                             A   9
+      END                                                                 A  10-
+      OVERLAY(LINK,1,0)
+      PROGRAM ENPUT                                                       B   1
+C     THIS SECTION READS VARIABLE AND CONSTANT INPUT                      B   2
+C                                                                         B   3
+C                                                                         B   4
+C                                                                         B   5
+      DIMENSION HEAD(12)                                                  B   6
+      DIMENSION PARAM(4800), OUT(8), X(600), MASS(600), EI(600), DCLA(60  B   7
+     10), DCDA(600), K1(600), K2(600), II(7)                              B   8
+      DIMENSION DIA(600)                                                  B   9
+      REAL K1,K2,MASS                                                     B  10
+      EQUIVALENCE (II(1),I1), (II(2),I2), (II(3),I3), (II(4),I4), (II(5)  B  11
+     1,I5), (II(6),I6), (II(7),I7), (PARAM(1),X)                          B  12
+      NAMELIST /CNTRL/ JNT,KIT,KCASE                                      B  13
+      NAMELIST /IDENT/ NH                                                 B  14
+      NAMELIST /ENPAR/ JNCOL,JXSTA,EXPON,FCTRMS,DCLA,DCDA,K1,K2,DIA       B  15
+      NAMELIST /AERDIV/ X,MASS,EI                                         B  16
+      NAMELIST /MOVER/ INSPAN/LIMB/NLO,NUP,CAPPA                          B  17
+C                                                                         B  18
+C          READ IN CONTROLS FOR FLOW OF PROGRAM                           B  19
+C     CONTROL       1                             2                       B  20
+C     JNT      WITHOUT JOINTS                WITH JOINTS                  B  21
+C     KIT      ITERATE                       DONT ITERATE                 B  22
+C                                                                         B  23
+C                                                                         B  24
+1     READ (5,CNTRL)                                                      B  25
+      WRITE (6,CNTRL)                                                     B  26
+C                                                                         B  27
+C          CASE IDENTIFICATION                                            B  28
+C          NO OF LINES                                                    B  29
+      READ (5,IDENT)                                                      B  30
+      WRITE (6,16)                                                        B  31
+      DO 2 I=1,NH                                                         B  32
+      READ (5,17) HEAD                                                    B  33
+2     WRITE (6,18) HEAD                                                   B  34
+C                                                                         B  35
+C          READ INPUT PARAMETERS                                          B  36
+C          NO. OF COLUMNS,NO. OF STATIONS                                 B  37
+C          MULTIPLYING FACTOR FOR EI,INPUT DATA BY COLUMNS                B  38
+      READ (5,ENPAR)                                                      B  39
+      READ (5,AERDIV)                                                     B  40
+      DO 4 I=1,JXSTA                                                      B  41
+      DO 3 J=1,7                                                          B  42
+3     II(J)=JXSTA*(J)+I                                                   B  43
+      PARAM(I1)=MASS(I)                                                   B  44
+      PARAM(I2)=EI(I)                                                     B  45
+      PARAM(I3)=DCLA(I)                                                   B  46
+      PARAM(I4)=DCDA(I)                                                   B  47
+      PARAM(I5)=K1(I)                                                     B  48
+      PARAM(I6)=K2(I)                                                     B  49
+4     PARAM(I7)=DIA(I)                                                    B  50
+C     MULTIPLY MASS BY FACTOR                                             B  51
+      IM=JXSTA+1                                                          B  52
+      IE=2*JXSTA                                                          B  53
+      DO 5 J=IM,IE                                                        B  54
+5     PARAM(J)=PARAM(J)*FCTRMS                                            B  55
+C          MULTIPLY EI BY EXPONENT                                        B  56
+      IM=2*JXSTA+1                                                        B  57
+      IE=3*JXSTA                                                          B  58
+      DO 6 J=IM,IE                                                        B  59
+6     PARAM(J)=PARAM(J)*EXPON                                             B  60
+      GO TO (7,10), JNT                                                   B  61
+C                                                                         B  62
+C          NO JOINTS                                                      B  63
+C                                                                         B  64
+7     REWIND 2                                                            B  65
+      WRITE (2) JNCOL,JXSTA,JNT,KIT,KCASE,I7,(PARAM(I),I=1,I7)            B  66
+C          NO. OF COLUMNS,NO OF STATIONS                                  B  67
+      WRITE (6,13) JNCOL,JXSTA                                            B  68
+C         STATION,X,M,EI,DC(N)ALPHA /DX,DC(D)ALPHA/DX,K1,K2,DIAMETER      B  69
+      WRITE (6,14)                                                        B  70
+      DO 9 K=1,JXSTA                                                      B  71
+      IC=K-1                                                              B  72
+      DO 8 I=1,8                                                          B  73
+      ID=(I-1)*JXSTA+K                                                    B  74
+8     OUT(I)=PARAM(ID)                                                    B  75
+9     WRITE (6,15) IC,(OUT(J),J=1,8)                                      B  76
+      RETURN                                                              B  77
+C          ADDITIONAL INPUT FOR JOINT EFFECTS                             B  78
+C          INTERVALS OF SPAN IN EI                                        B  79
+10    READ (5,MOVER)                                                      B  80
+      WRITE (6,19) INSPAN                                                 B  81
+      DO 12 J=1,INSPAN                                                    B  82
+C          LOWER AND UPPER LIMITS OF EACH SPAN                            B  83
+      READ (5,LIMB)                                                       B  84
+      WRITE (6,LIMB)                                                      B  85
+      KXN=NLO+1                                                           B  86
+      KXNP1=NUP+1                                                         B  87
+      KEIN=2*JXSTA+KXN                                                    B  88
+      KX2=KXN+1                                                           B  89
+      KY2=KEIN+1                                                          B  90
+      EIGRL=0.0                                                           B  91
+      XDEL=ABS(PARAM(KXNP1)-PARAM(KXN))                                   B  92
+      DO 11 I=KX2,KXNP1                                                   B  93
+      H=ABS(PARAM(I)-PARAM(I-1))                                          B  94
+      EIGRL=EIGRL+H/PARAM(KEIN)                                           B  95
+11    KEIN=KEIN+1                                                         B  96
+      EIQV=XDEL/(CAPPA+EIGRL)                                             B  97
+      DO 12 K=KXN,KXNP1                                                   B  98
+      JE=2*JXSTA+K                                                        B  99
+12    PARAM(JE)=EIQV                                                      B 100
+      GO TO 7                                                             B 101
+C                                                                         B 102
+13    FORMAT (12H0COLUMNS    I4/12H STATIONS   I4)                        B 103
+14    FORMAT (1H02X,3HSTA9X,1HX13X,4HM(X)13X,2HEI13X,4HDCLA13X,4HDCDA13X  B 104
+     1,2HK114X,2HK211X,8HDIAMETER)                                        B 105
+15    FORMAT (I6,7E16.8,E15.7)                                            B 106
+16    FORMAT (1H1)                                                        B 107
+17    FORMAT (12A6)                                                       B 108
+18    FORMAT (1X12A6)                                                     B 109
+19    FORMAT (28H0EI EQUIVALENT COMPUTED FOR I2,7H JOINTS)                B 110
+      END                                                                 B 111-
+      OVERLAY(LINK,2,0)
+      PROGRAM R0863                                                       C   1
+C                                                                         C   2
+      COMMON N,JCASE,D1(8,8),D2(8,1),CHIZER(8),CHIN1(8,1),CHIN2(8,1),CHN  C   3
+     1P11(8,1),CHNP12(8,1),CHIA(8,1),CHIB(8,1),CKAY(8,8)                  C   4
+      COMMON /BKA/ KCASE,JNT,KIT,K000FX,KHOM,KIF,TEMP,TEMP2               C   5
+      COMMON /BKA/ ROOT,JNCOL,JXSTA,QCON,TCON,EMU,PZER,YZER,SMALK,TAU     C   6
+      COMMON /BKA/ ELMBDA,EN,KSUB,KIA,ASSUME,STEP,EPS1,EPS2,EPS3,TMASS    C   7
+      COMMON /BKA/ DEBUG,TMT,PROWN,JSET,NA,MA,KBO,KUP,COMPQ,COMPT,COMPPZ  C   8
+      COMMON /BKA/ QDIV,Q1,TCR,T1,PZCR,DIVK,EXN,EXNP1,JBRAN,DELC,DELC2,A  C   9
+     1LPHL                                                                C  10
+      COMMON /BKA/ SIGN1,SIGN2,SIGN3,ITCNT,FMEG,VZER,ALZER,MZER,R,FM,EMM  C  11
+     1N                                                                   C  12
+      COMMON /BKA/ EIMN,CNAMN,FMN,PNUMN,DPNUMN,ZPMN,ETAMN,ONEKMN,TWOKMN   C  13
+      COMMON /BKA/ PMMN,IANS,IALPH,EMZER,KY,ALA,ALB,ALC,ALD,ALE,SUMA      C  14
+      COMMON /BKB/ PARAM(10200),EMI(600),DCDI(600),PSUM(600),YSUM(600),D  C  15
+     1IA(600),SCDB,SHDCMA(600),PSHN                                       C  16
+      COMMON /BKC/ COND(8),KCOND(2),ROWN(7),SAVW(4),SAVFW(4),ANS(9)       C  17
+      COMMON /BKC/ KADD(11),OUT(10)                                       C  18
+      COMMON /KBLK/ JLO,JUP,KLO,KUPP,SUMEK,STEPK,LSUB,SK1,SK2,SK3,DIFF1   C  19
+      COMMON /KBLK/ DIFF2,DIFF3,SN1,SN2,SN3,EPSK,MSUB,ACOND(8),ACTK,FINK  C  20
+      COMMON /ROBLK/ JCR,JNEL,JK                                          C  21
+      COMMON /JBLK/ IF                                                    C  22
+      COMMON /ALY/ SUMAL1,SUMAL2,GRALAL,GRALYP                            C  23
+      COMMON /AD1/ TOTD,TOTW,DEE                                          C  24
+      COMMON /BLKT/ KTST,LTST                                             C  25
+      COMMON /BLKT/ I2CNT                                                 C  26
+      NAMELIST /ACASE/ JCASE                                              C  27
+      NAMELIST /CSTANT/ QCON,TCON,EMU,PZER,YZER,SMALK,TAU,ELMBDA,EN,SCDB  C  28
+      NAMELIST /NVAL/ COND                                                C  29
+      NAMELIST /SUME/ KSUB,ASSUME,STEP,EPS1,EPS2,EPS3                     C  30
+      NAMELIST /KASPAN/ JLO,JUP,ACTK                                      C  31
+C                                                                         C  32
+C     TGB 800  PN 8630F       LESSIE HUNTER FOR CLARENCE YOUNG            C  33
+C     AEROELASTIC DIVERGENCE PROBLEM                                      C  34
+C                                                                         C  35
+C     MAIN PROGRAM                                                        C  36
+C                                                                         C  37
+      GO TO (1,5), N                                                      C  38
+1     N=2                                                                 C  39
+      DO 2 LLL=1,8                                                        C  40
+      DO 2 LLM=1,8                                                        C  41
+      D1(LLL,LLM)=0.0                                                     C  42
+2     CKAY(LLL,LLM)=0.0                                                   C  43
+      DO 3 LLL=1,8                                                        C  44
+      CHIZER(LLL)=0.0                                                     C  45
+      CHIN1(LLL,1)=0.0                                                    C  46
+      CHIN2(LLL,1)=0.0                                                    C  47
+      CHNP11(LLL,1)=0.0                                                   C  48
+      CHNP12(LLL,1)=0.0                                                   C  49
+      CHIA(LLL,1)=0.0                                                     C  50
+      CHIB(LLL,1)=0.0                                                     C  51
+      D2(LLL,1)=0.0                                                       C  52
+3     D2(LLL,1)=0.0                                                       C  53
+C              NO OF CASES                                                C  54
+      READ (5,ACASE)                                                      C  55
+4     RETURN                                                              C  56
+5     REWIND 2                                                            C  57
+      READ (2) JNCOL,JXSTA,JNT,KIT,KCASE,I7,(PARAM(I),I=1,I7)             C  58
+C                                                                         C  59
+C          ENTRY TO BEGIN A CASE                                          C  60
+C          CONTROL CARD,IDENTIFICATION,DATA                               C  61
+C          NO OF COLUMNS TO ROWS                                          C  62
+      JCR=JNCOL-1                                                         C  63
+C          NO. OF INPUT VALUES TO ROWS                                    C  64
+      JNEL=JCR*JXSTA                                                      C  65
+C          READ INPUT CONSTANTS                                           C  66
+      READ (5,CSTANT)                                                     C  67
+C          INPUT CONSTANTS                                                C  68
+      WRITE (6,28) QCON,TCON,EMU,PZER,YZER,SMALK,TAU,ELMBDA,EN,SCDB       C  69
+C          FIND INTEGRALS FOR COMPUTING P                                 C  70
+      CALL PEA (1)                                                        C  71
+C                                                                         C  72
+C          START ROWS                                                     C  73
+      JK=JNCOL*JXSTA                                                      C  74
+C          PUT NECESSARY COLUMNS IN ROWS                                  C  75
+      CALL ROWS                                                           C  76
+C                                                                         C  77
+C                                                                         C  78
+C          DETERMINE SYSTEM                                               C  79
+      CALL SYST (1)                                                       C  80
+      LSUB=1                                                              C  81
+C                                                                         C  82
+C          READ INITIAL VALUES FOR THREE SOLUTIONS                        C  83
+C                                                                         C  84
+C          INITIAL VALUES(2 SOLUTIONS)                                    C  85
+C         V(A),ALPHA(A),M(A),1/R                                          C  86
+      READ (5,NVAL)                                                       C  87
+      WRITE (6,NVAL)                                                      C  88
+C          SAVE INITIAL VALUES                                            C  89
+      DO 6 J=1,8                                                          C  90
+6     ACOND(J)=COND(J)                                                    C  91
+C                                                                         C  92
+C          ENTRY TO BEGIN A SUBCASE                                       C  93
+C             SUBCASE 1      SEARCH FOR DIVERGENCE Q                      C  94
+C             SUBCASE 2      SEARCH FOR CRITICAL T                        C  95
+C             SUBCASE 3      SEARCH FOR CRITICAL PA                       C  96
+C             SUBCASE 4      SEARCH FOR DIVERGENCE K1                     C  97
+C          READ INITIAL VALUES FOR SUBCASE ITERATION                      C  98
+C                                                                         C  99
+C          ASSUMED VALUES FOR SUBCASE ITERATION                           C 100
+C     SUBCASE                                                             C 101
+C     1 QDIV   Q,DELQ,EPS1,EPS2,EPS3                                      C 102
+C     2 TCR    T,DELT,ETC.                                                C 103
+C     3 PZCR   P(A),DELP(A) ETC                                           C 104
+C     4 K1DIV  Q,DELQ,ETC.)))                                             C 105
+C                                                                         C 106
+7     READ (5,SUME)                                                       C 107
+      WRITE (6,SUME)                                                      C 108
+C                                                                         C 109
+C          SEE IF ITERATION IS FOR K1                                     C 110
+      GO TO (9,9,9,8), KSUB                                               C 111
+C                                                                         C 112
+C          READ LIMITS OF INTERVAL TO BE CHANGED(STATION NO)              C 113
+C          INTERVAL TO BE CHANGED FOR K1 ITERATION ONLY                   C 114
+C          READ LOWER STATION NO.,UPPER STATION NO.                       C 115
+C          ACTUAL K                                                       C 116
+8     READ (5,KASPAN)                                                     C 117
+      WRITE (6,KASPAN)                                                    C 118
+C          K(FIN)=K(ACTUAL)                                               C 119
+      FINK=ACTK                                                           C 120
+      KLO=JCR*JLO+JXSTA+5                                                 C 121
+      KUPP=JCR*JUP+JXSTA+5                                                C 122
+9     GO TO (11,10), KIT                                                  C 123
+C          NO ITERATION--COMPUTES THROUGH FINAL RUN ONLY                  C 124
+10    TEMP=ASSUME                                                         C 125
+      ROOT=ASSUME                                                         C 126
+      KIF=1                                                               C 127
+      GO TO 14                                                            C 128
+C                                                                         C 129
+C                                                                         C 130
+C          SETUP SUBCASE FOR ITERATION                                    C 131
+11    CALL QTPK (1)                                                       C 132
+C          SET FOR INITIAL RUN                                            C 133
+      KIF=1                                                               C 134
+C                                                                         C 135
+C              INITIAL RUN                                                C 136
+C          COMPUTE P                                                      C 137
+      CALL PEA (2)                                                        C 138
+      CALL BOUNLO                                                         C 139
+      CALL SPAN                                                           C 140
+      CALL FIND                                                           C 141
+C          SEE IF ROOT IS FOUND                                           C 142
+      GO TO (13,12), IF                                                   C 143
+C          NO ROOT FOUND IN SEARCH ROUTINE,DETOUR                         C 144
+12    GO TO 17                                                            C 145
+13    TEMP=ROOT                                                           C 146
+14    CALL QTPK (2)                                                       C 147
+      CALL PEA (2)                                                        C 148
+      CALL BOUNLO                                                         C 149
+      CALL SPAN                                                           C 150
+      MSUB=1                                                              C 151
+C          COMPUTE INITIAL VALUES FOR FINAL RUN                           C 152
+      CALL SYST (4)                                                       C 153
+C          SET FOR FINAL RUN                                              C 154
+      KIF=2                                                               C 155
+C                                                                         C 156
+C          FINAL RUN                                                      C 157
+C         PRINT DIVERGENCE VALUES,1/R                                     C 158
+      CALL QTPK (3)                                                       C 159
+      IF (MSUB.NE.4) GO TO 16                                             C 160
+C          FIND Q DIV FOR KDIV FOUND                                      C 161
+      DO 15 J=1,8                                                         C 162
+15    COND(J)=ACOND(J)                                                    C 163
+      GO TO 11                                                            C 164
+C          HEADINGS                                                       C 165
+16    CALL OUTPUT (1)                                                     C 166
+      CALL PEA (2)                                                        C 167
+      CALL BOUNLO                                                         C 168
+      CALL SPAN                                                           C 169
+C          WRITE P AND Y                                                  C 170
+      CALL OUTPUT (3)                                                     C 171
+C          CHECK FOR ALL SUBCASES                                         C 172
+17    IF (KCASE-1) 18,21,19                                               C 173
+18    WRITE (6,25)                                                        C 174
+      STOP                                                                C 175
+C          NO-GO FOR NEXT                                                 C 176
+19    KCASE=KCASE-1                                                       C 177
+      DO 20 J=1,8                                                         C 178
+20    COND(J)=ACOND(J)                                                    C 179
+      WRITE (6,27)                                                        C 180
+      GO TO 7                                                             C 181
+C          TO INTEGRAL SUBROUTINE                                         C 182
+21    CALL EXTRA                                                          C 183
+C          CHECK FOR ALL CASES                                            C 184
+      IF (JCASE-1) 22,24,23                                               C 185
+22    WRITE (6,26)                                                        C 186
+      STOP                                                                C 187
+C          NO- GO FOR NEXT                                                C 188
+23    JCASE=JCASE-1                                                       C 189
+      GO TO 4                                                             C 190
+C                                                                         C 191
+C          YES-EXIT FROM PROGRAM                                          C 192
+24    STOP                                                                C 193
+C                                                                         C 194
+25    FORMAT (14H SUBCASE COUNT)                                          C 195
+26    FORMAT (11H CASE COUNT)                                             C 196
+27    FORMAT (///)                                                        C 197
+28    FORMAT (8H0Q      E16.8,12H     T      E18.8,12H      U     E16.8/  C 198
+     18H0P(A)   E16.8,12H     Y(A)   E18.8,12H     K      E16.8/8H0TAU    C 199
+     2  E16.8,12H     LAMBDA E18.8,12H     N      E16.8/8H SCD(B) E16.8)  C 200
+      END                                                                 C 201-
+      SUBROUTINE ROWS                                                     D   1
+C     THIS SECTION PUTS NECESSARY COLUMNS IN ROWS. X IS LEFT IN COLS.     D   2
+C                                                                         D   3
+      COMMON N,JCASE,D1(8,8),D2(8,1),CHIZER(8),CHIN1(8,1),CHIN2(8,1),CHN  D   4
+     1P11(8,1),CHNP12(8,1),CHIA(8,1),CHIB(8,1),CKAY(8,8)                  D   5
+      COMMON /BKA/ KCASE,JNT,KIT,K000FX,KHOM,KIF,TEMP,TEMP2               D   6
+      COMMON /BKA/ ROOT,JNCOL,JXSTA,QCON,TCON,EMU,PZER,YZER,SMALK,TAU     D   7
+      COMMON /BKA/ ELMBDA,EN,KSUB,KIA,ASSUME,STEP,EPS1,EPS2,EPS3,TMASS    D   8
+      COMMON /BKA/ DEBUG,TMT,PROWN,JSET,NA,MA,KBO,KUP,COMPQ,COMPT,COMPPZ  D   9
+      COMMON /BKA/ QDIV,Q1,TCR,T1,PZCR,DIVK,EXN,EXNP1,JBRAN,DELC,DELC2,A  D  10
+     1LPHL                                                                D  11
+      COMMON /BKA/ SIGN1,SIGN2,SIGN3,ITCNT,FMEG,VZER,ALZER,MZER,R,FM,EMM  D  12
+     1N                                                                   D  13
+      COMMON /BKA/ EIMN,CNAMN,FMN,PNUMN,DPNUMN,ZPMN,ETAMN,ONEKMN,TWOKMN   D  14
+      COMMON /BKA/ PMMN,IANS,IALPH,EMZER,KY,ALA,ALB,ALC,ALD,ALE,SUMA      D  15
+      COMMON /BKB/ PARAM(10200),EMI(600),DCDI(600),PSUM(600),YSUM(600),D  D  16
+     1IA(600),SCDB,SHDCMA(600),PSHN                                       D  17
+      COMMON /BKC/ COND(8),KCOND(2),ROWN(7),SAVW(4),SAVFW(4),ANS(9)       D  18
+      COMMON /BKC/ KADD(11),OUT(10)                                       D  19
+      COMMON /KBLK/ JLO,JUP,KLO,KUPP,SUMEK,STEPK,LSUB,SK1,SK2,SK3,DIFF1   D  20
+      COMMON /KBLK/ DIFF2,DIFF3,SN1,SN2,SN3,EPSK,MSUB,ACOND(8),ACTK,FINK  D  21
+      COMMON /ROBLK/ JCR,JNEL,JK                                          D  22
+      COMMON /JBLK/ IF                                                    D  23
+      COMMON /ALY/ SUMAL1,SUMAL2,GRALAL,GRALYP                            D  24
+      COMMON /AD1/ TOTD,TOTW,DEE                                          D  25
+      COMMON /BLKT/ KTST,LTST                                             D  26
+      COMMON /BLKT/ I2CNT                                                 D  27
+C                                                                         D  28
+      L=JK+1                                                              D  29
+      DO 1 M=1,JXSTA                                                      D  30
+      DO 1 J=1,JCR                                                        D  31
+      K=(J*JXSTA)+M                                                       D  32
+      PARAM(L)=PARAM(K)                                                   D  33
+1     L=L+1                                                               D  34
+C          SHIFT TO FOLLOW X                                              D  35
+      DO 2 J=1,JNEL                                                       D  36
+      L1=JK+J                                                             D  37
+      K1=JXSTA+J                                                          D  38
+2     PARAM(K1)=PARAM(L1)                                                 D  39
+      RETURN                                                              D  40
+      END                                                                 D  41-
+      SUBROUTINE SYST (N)                                                 E   1
+C     THIS SECTION DETERMINES THE SYSTEM USED                             E   2
+C                                                                         E   3
+      COMMON M,JCASE,D1(8,8),D2(8,1),CHIZER(8),CHIN1(8,1),CHIN2(8,1),CHN  E   4
+     1P11(8,1),CHNP12(8,1),CHIA(8,1),CHIB(8,1),CKAY(8,8)                  E   5
+      COMMON /BKA/ KCASE,JNT,KIT,K000FX,KHOM,KIF,TEMP,TEMP2               E   6
+      COMMON /BKA/ ROOT,JNCOL,JXSTA,QCON,TCON,EMU,PZER,YZER,SMALK,TAU     E   7
+      COMMON /BKA/ ELMBDA,EN,KSUB,KIA,ASSUME,STEP,EPS1,EPS2,EPS3,TMASS    E   8
+      COMMON /BKA/ DEBUG,TMT,PROWN,JSET,NA,MA,KBO,KUP,COMPQ,COMPT,COMPPZ  E   9
+      COMMON /BKA/ QDIV,Q1,TCR,T1,PZCR,DIVK,EXN,EXNP1,JBRAN,DELC,DELC2,A  E  10
+     1LPHL                                                                E  11
+      COMMON /BKA/ SIGN1,SIGN2,SIGN3,ITCNT,FMEG,VZER,ALZER,MZER,R,FM,EMM  E  12
+     1N                                                                   E  13
+      COMMON /BKA/ EIMN,CNAMN,FMN,PNUMN,DPNUMN,ZPMN,ETAMN,ONEKMN,TWOKMN   E  14
+      COMMON /BKA/ PMMN,IANS,IALPH,EMZER,KY,ALA,ALB,ALC,ALD,ALE,SUMA      E  15
+      COMMON /BKB/ PARAM(10200),EMI(600),DCDI(600),PSUM(600),YSUM(600),D  E  16
+     1IA(600),SCDB,SHDCMA(600),PSHN                                       E  17
+      COMMON /BKC/ COND(8),KCOND(2),ROWN(7),SAVW(4),SAVFW(4),ANS(9)       E  18
+      COMMON /BKC/ KADD(11),OUT(10)                                       E  19
+      COMMON /KBLK/ JLO,JUP,KLO,KUPP,SUMEK,STEPK,LSUB,SK1,SK2,SK3,DIFF1   E  20
+      COMMON /KBLK/ DIFF2,DIFF3,SN1,SN2,SN3,EPSK,MSUB,ACOND(8),ACTK,FINK  E  21
+      COMMON /ROBLK/ JCR,JNEL,JK                                          E  22
+      COMMON /JBLK/ IF                                                    E  23
+      COMMON /ALY/ SUMAL1,SUMAL2,GRALAL,GRALYP                            E  24
+      COMMON /AD1/ TOTD,TOTW,DEE                                          E  25
+      COMMON /BLKT/ KTST,LTST                                             E  26
+      COMMON /BLKT/ I2CNT                                                 E  27
+C                                                                         E  28
+      GO TO (1,2,3,4), N                                                  E  29
+1     CALL FREE (1)                                                       E  30
+      RETURN                                                              E  31
+2     CALL FREE (2)                                                       E  32
+      RETURN                                                              E  33
+3     CALL FREE (3)                                                       E  34
+      RETURN                                                              E  35
+4     CALL FREE (4)                                                       E  36
+      RETURN                                                              E  37
+      END                                                                 E  38-
+      SUBROUTINE FREE (N)                                                 F   1
+C     THIS SECTION CONTAINS INFORMATION RELATIVE TO THE                   F   2
+C     FREE FREE THRUSTING SYSTEM                                          F   3
+C                                                                         F   4
+      COMMON M,JCASE,D1(8,8),D2(8,1),CHIZER(8),CHIN1(8,1),CHIN2(8,1),CHN  F   5
+     1P11(8,1),CHNP12(8,1),CHIA(8,1),CHIB(8,1),CKAY(8,8)                  F   6
+      COMMON /BKA/ KCASE,JNT,KIT,K000FX,KHOM,KIF,TEMP,TEMP2               F   7
+      COMMON /BKA/ ROOT,JNCOL,JXSTA,QCON,TCON,EMU,PZER,YZER,SMALK,TAU     F   8
+      COMMON /BKA/ ELMBDA,EN,KSUB,KIA,ASSUME,STEP,EPS1,EPS2,EPS3,TMASS    F   9
+      COMMON /BKA/ DEBUG,TMT,PROWN,JSET,NA,MA,KBO,KUP,COMPQ,COMPT,COMPPZ  F  10
+      COMMON /BKA/ QDIV,Q1,TCR,T1,PZCR,DIVK,EXN,EXNP1,JBRAN,DELC,DELC2,A  F  11
+     1LPHL                                                                F  12
+      COMMON /BKA/ SIGN1,SIGN2,SIGN3,ITCNT,FMEG,VZER,ALZER,MZER,R,FM,EMM  F  13
+     1N                                                                   F  14
+      COMMON /BKA/ EIMN,CNAMN,FMN,PNUMN,DPNUMN,ZPMN,ETAMN,ONEKMN,TWOKMN   F  15
+      COMMON /BKA/ PMMN,IANS,IALPH,EMZER,KY,ALA,ALB,ALC,ALD,ALE,SUMA      F  16
+      COMMON /BKB/ PARAM(10200),EMI(600),DCDI(600),PSUM(600),YSUM(600),D  F  17
+     1IA(600),SCDB,SHDCMA(600),PSHN                                       F  18
+      COMMON /BKC/ COND(8),KCOND(2),ROWN(7),SAVW(4),SAVFW(4),ANS(9)       F  19
+      COMMON /BKC/ KADD(11),OUT(10)                                       F  20
+      COMMON /KBLK/ JLO,JUP,KLO,KUPP,SUMEK,STEPK,LSUB,SK1,SK2,SK3,DIFF1   F  21
+      COMMON /KBLK/ DIFF2,DIFF3,SN1,SN2,SN3,EPSK,MSUB,ACOND(8),ACTK,FINK  F  22
+      COMMON /ROBLK/ JCR,JNEL,JK                                          F  23
+      COMMON /JBLK/ IF                                                    F  24
+      COMMON /ALY/ SUMAL1,SUMAL2,GRALAL,GRALYP                            F  25
+      COMMON /AD1/ TOTD,TOTW,DEE                                          F  26
+      COMMON /BLKT/ KTST,LTST                                             F  27
+      COMMON /BLKT/ I2CNT                                                 F  28
+C                                                                         F  29
+      GO TO (1,2,6,7), N                                                  F  30
+C          DETERMINE CASE AND CONDITIONS NEEDED                           F  31
+C              A CONDITION(SOLUTION 1)                                    F  32
+C                                                                         F  33
+1     KCOND(1)=2                                                          F  34
+C              B CONDITION(SOLUTION 2)                                    F  35
+      KCOND(2)=4                                                          F  36
+      RETURN                                                              F  37
+C                                                                         F  38
+C        CHI(A)   LOWER BOUNDARY                                          F  39
+C         CLEAR CHI(A)  STORAGE                                           F  40
+2     DO 3 I=1,8                                                          F  41
+3     CHIZER(I)=0.0                                                       F  42
+      GO TO (4,5), JBRAN                                                  F  43
+C          A SOLUTION                                                     F  44
+4     CHIZER(1)=ALZER*ROWN(5)*ROWN(3)*COMPQ                               F  45
+      CHIZER(2)=ALZER*COMPT                                               F  46
+      CHIZER(4)=ALZER                                                     F  47
+      CHIZER(5)=-SHDCMA(1)+SCDB*COMPQ                                     F  48
+      RETURN                                                              F  49
+C          B SOLUTION                                                     F  50
+5     CHIZER(1)=-R*ROWN(1)*EMU**2                                         F  51
+      CHIZER(3)=-R*ELMBDA                                                 F  52
+      CHIZER(5)=-CHIZER(3)*(-COMPT+SCDB*COMPQ)*PARAM(1)                   F  53
+      CHIZER(8)=R                                                         F  54
+      RETURN                                                              F  55
+C                                                                         F  56
+C          SOLVE STABILITY EQUATION                                       F  57
+6     FMEGA=CHNP11(2,1)*CHNP12(6,1)                                       F  58
+      FMEGB=CHNP11(6,1)*CHNP12(2,1)                                       F  59
+      FMEG=FMEGA-FMEGB                                                    F  60
+      WRITE (6,8) FMEG                                                    F  61
+      RETURN                                                              F  62
+C          INITIAL VALUES FOR FINAL RUN                                   F  63
+C         COMPUTE ALPHA (A)=-V2/V1 FOR FINAL RUN                          F  64
+7     COND(2)=-CHNP12(2,1)/CHNP11(2,1)*EN                                 F  65
+      COND(8)=EN                                                          F  66
+      RETURN                                                              F  67
+C                                                                         F  68
+8     FORMAT (14H DETERMINANT =,E16.8)                                    F  69
+      END                                                                 F  70-
+      SUBROUTINE QTPK (N)                                                 G   1
+C     THIS SECTION SELECTS VALUES NEEDED FOR A PARTICULAR SUBCASE.        G   2
+C                                                                         G   3
+      COMMON M,JCASE,D1(8,8),D2(8,1),CHIZER(8),CHIN1(8,1),CHIN2(8,1),CHN  G   4
+     1P11(8,1),CHNP12(8,1),CHIA(8,1),CHIB(8,1),CKAY(8,8)                  G   5
+      COMMON /BKA/ KCASE,JNT,KIT,K000FX,KHOM,KIF,TEMP,TEMP2               G   6
+      COMMON /BKA/ ROOT,JNCOL,JXSTA,QCON,TCON,EMU,PZER,YZER,SMALK,TAU     G   7
+      COMMON /BKA/ ELMBDA,EN,KSUB,KIA,ASSUME,STEP,EPS1,EPS2,EPS3,TMASS    G   8
+      COMMON /BKA/ DEBUG,TMT,PROWN,JSET,NA,MA,KBO,KUP,COMPQ,COMPT,COMPPZ  G   9
+      COMMON /BKA/ QDIV,Q1,TCR,T1,PZCR,DIVK,EXN,EXNP1,JBRAN,DELC,DELC2,A  G  10
+     1LPHL                                                                G  11
+      COMMON /BKA/ SIGN1,SIGN2,SIGN3,ITCNT,FMEG,VZER,ALZER,MZER,R,FM,EMM  G  12
+     1N                                                                   G  13
+      COMMON /BKA/ EIMN,CNAMN,FMN,PNUMN,DPNUMN,ZPMN,ETAMN,ONEKMN,TWOKMN   G  14
+      COMMON /BKA/ PMMN,IANS,IALPH,EMZER,KY,ALA,ALB,ALC,ALD,ALE,SUMA      G  15
+      COMMON /BKB/ PARAM(10200),EMI(600),DCDI(600),PSUM(600),YSUM(600),D  G  16
+     1IA(600),SCDB,SHDCMA(600),PSHN                                       G  17
+      COMMON /BKC/ COND(8),KCOND(2),ROWN(7),SAVW(4),SAVFW(4),ANS(9)       G  18
+      COMMON /BKC/ KADD(11),OUT(10)                                       G  19
+      COMMON /KBLK/ JLO,JUP,KLO,KUPP,SUMEK,STEPK,LSUB,SK1,SK2,SK3,DIFF1   G  20
+      COMMON /KBLK/ DIFF2,DIFF3,SN1,SN2,SN3,EPSK,MSUB,ACOND(8),ACTK,FINK  G  21
+      COMMON /ROBLK/ JCR,JNEL,JK                                          G  22
+      COMMON /JBLK/ IF                                                    G  23
+      COMMON /ALY/ SUMAL1,SUMAL2,GRALAL,GRALYP                            G  24
+      COMMON /AD1/ TOTD,TOTW,DEE                                          G  25
+      COMMON /BLKT/ KTST,LTST                                             G  26
+      COMMON /BLKT/ I2CNT                                                 G  27
+C                                                                         G  28
+C                                                                         G  29
+      GO TO (1,7,19), N                                                   G  30
+C                                                                         G  31
+C          DETERMINE SUBCASE                                              G  32
+C          SELECT Q,T,P(A),OR K1 TO FIND CHARACTERISTIC VALUES            G  33
+1     GO TO (2,3,4,5), KSUB                                               G  34
+C          ITERATE FOR QDIV                                               G  35
+C          T AND P(A) ARE CONSTANT                                        G  36
+2     COMPT=TCON                                                          G  37
+      COMPPZ=PZER                                                         G  38
+      TEMP2=STEP                                                          G  39
+C          ASSUMED Q                                                      G  40
+      COMPQ=ASSUME                                                        G  41
+      TEMP=COMPQ                                                          G  42
+      RETURN                                                              G  43
+C                                                                         G  44
+C          ITERATE FOR T                                                  G  45
+C          Q AND P(A) ARE CONSTANT                                        G  46
+3     COMPQ=QCON                                                          G  47
+      COMPPZ=PZER                                                         G  48
+      TEMP2=STEP                                                          G  49
+C          ASSUMED T                                                      G  50
+      COMPT=ASSUME                                                        G  51
+      TEMP=COMPT                                                          G  52
+      RETURN                                                              G  53
+C                                                                         G  54
+C          ITERATE FOR P(A)CR                                             G  55
+C          Q AND T ARE CONSTANT                                           G  56
+4     COMPQ=QCON                                                          G  57
+      COMPT=TCON                                                          G  58
+      TEMP2=STEP                                                          G  59
+C          ASSUMED P(A)                                                   G  60
+      COMPPZ=ASSUME                                                       G  61
+      TEMP=COMPPZ                                                         G  62
+      RETURN                                                              G  63
+C          ITERATE FOR K1DIV                                              G  64
+C          Q,T,P(A) ARE CONSTANT                                          G  65
+5     COMPQ=QCON                                                          G  66
+      COMPPZ=PZER                                                         G  67
+      COMPT=TCON                                                          G  68
+C          ASSUMED K1                                                     G  69
+      TEMP=ASSUME                                                         G  70
+C          MOVE TO INTERVAL                                               G  71
+      KLO=JCR*JLO+JXSTA+5                                                 G  72
+      KUPP=JCR*JUP+JXSTA+5                                                G  73
+      DO 6 I=KLO,KUPP,JCR                                                 G  74
+6     PARAM(I)=ASSUME                                                     G  75
+      TEMP2=STEP                                                          G  76
+      RETURN                                                              G  77
+C                                                                         G  78
+C          MOVE  Q,T,P(A),OR K1 TO COMPUTE                                G  79
+7     GO TO (8,11,14,17), KSUB                                            G  80
+8     COMPQ=TEMP                                                          G  81
+      GO TO (10,9), KIT                                                   G  82
+C          NO ITERATION(FINAL RUN)  QDIV GIVEN                            G  83
+9     COMPT=TCON                                                          G  84
+      COMPPZ=PZER                                                         G  85
+10    RETURN                                                              G  86
+11    COMPT=TEMP                                                          G  87
+      GO TO (13,12), KIT                                                  G  88
+C          NO ITERATION(FINAL RUN)   TCR GIVEN                            G  89
+12    COMPQ=QCON                                                          G  90
+      COMPPZ=PZER                                                         G  91
+13    RETURN                                                              G  92
+C                                                                         G  93
+14    COMPPZ=TEMP                                                         G  94
+      GO TO (16,15), KIT                                                  G  95
+C          NO ITERATION(FINAL RUN)   P(A)  GIVEN                          G  96
+15    COMPQ=QCON                                                          G  97
+      COMPT=TCON                                                          G  98
+16    RETURN                                                              G  99
+C                                                                         G 100
+C         NO ITERATION(FINAL RUN)   K1DIV GIVEN AND QDIV GIVEN            G 101
+17    DO 18 I=KLO,KUPP,JCR                                                G 102
+18    PARAM(I)=TEMP                                                       G 103
+      COMPQ=QCON                                                          G 104
+      COMPT=TCON                                                          G 105
+      COMPPZ=PZER                                                         G 106
+      RETURN                                                              G 107
+C                                                                         G 108
+C          OUTPUT                                                         G 109
+C          HOMOGENEOUS (CRITICAL VALUES,1/R)                              G 110
+19    GO TO (20,23,26,27), KSUB                                           G 111
+C                                                                         G 112
+20    QDIV=ROOT                                                           G 113
+      IF (QDIV) 22,21,22                                                  G 114
+21    WRITE (6,32)                                                        G 115
+      STOP                                                                G 116
+22    Q1=QCON/QDIV                                                        G 117
+      WRITE (6,28) COND(8),QDIV,Q1                                        G 118
+      RETURN                                                              G 119
+C                                                                         G 120
+23    TCR=ROOT                                                            G 121
+      IF (TCR) 25,24,25                                                   G 122
+24    WRITE (6,33)                                                        G 123
+      STOP                                                                G 124
+25    T1=TCON/TCR                                                         G 125
+      WRITE (6,29) COND(8),TCR,T1                                         G 126
+      RETURN                                                              G 127
+C                                                                         G 128
+26    PZCR=ROOT                                                           G 129
+      WRITE (6,30) COND(8),PZCR                                           G 130
+      RETURN                                                              G 131
+C                                                                         G 132
+27    DIVK=ROOT                                                           G 133
+      WRITE (6,31) PARAM(JLO+1),PARAM(JUP+1),DIVK                         G 134
+      LSUB=4                                                              G 135
+C         TO FIND QDIV FOR KDIV FOUND                                     G 136
+      KSUB=1                                                              G 137
+      MSUB=4                                                              G 138
+      ASSUME=QCON/2.                                                      G 139
+      STEP=QCON/4.                                                        G 140
+      RETURN                                                              G 141
+C                                                                         G 142
+28    FORMAT (8H01/R    E16.8/8H Q(DIV) E16.8,12H   Q/Q(DIV) E16.8)       G 143
+29    FORMAT (8H01/R    E16.8/8H TCR    E16.8,12H   T/TCR    E16.8)       G 144
+30    FORMAT (8H01/R    E16.8/8H PZCR   E16.8)                            G 145
+31    FORMAT (3H0X=E13.5,3H TOE13.5/7H K1DIV=E16.8)                       G 146
+32    FORMAT (26H Q(DIV) EQUALS ZERO  NO Q1)                              G 147
+33    FORMAT (23H TCR EQUALS ZERO  NO T1)                                 G 148
+      END                                                                 G 149-
+      SUBROUTINE PEA (N)                                                  H   1
+C     THIS SECTION FINDS TOTAL MASS AND INTEGRALS FOR COMPUTING P.        H   2
+C                                                                         H   3
+      COMMON M,JCASE,D1(8,8),D2(8,1),CHIZER(8),CHIN1(8,1),CHIN2(8,1),CHN  H   4
+     1P11(8,1),CHNP12(8,1),CHIA(8,1),CHIB(8,1),CKAY(8,8)                  H   5
+      COMMON /BKA/ KCASE,JNT,KIT,K000FX,KHOM,KIF,TEMP,TEMP2               H   6
+      COMMON /BKA/ ROOT,JNCOL,JXSTA,QCON,TCON,EMU,PZER,YZER,SMALK,TAU     H   7
+      COMMON /BKA/ ELMBDA,EN,KSUB,KIA,ASSUME,STEP,EPS1,EPS2,EPS3,TMASS    H   8
+      COMMON /BKA/ DEBUG,TMT,PROWN,JSET,NA,MA,KBO,KUP,COMPQ,COMPT,COMPPZ  H   9
+      COMMON /BKA/ QDIV,Q1,TCR,T1,PZCR,DIVK,EXN,EXNP1,JBRAN,DELC,DELC2,A  H  10
+     1LPHL                                                                H  11
+      COMMON /BKA/ SIGN1,SIGN2,SIGN3,ITCNT,FMEG,VZER,ALZER,MZER,R,FM,EMM  H  12
+     1N                                                                   H  13
+      COMMON /BKA/ EIMN,CNAMN,FMN,PNUMN,DPNUMN,ZPMN,ETAMN,ONEKMN,TWOKMN   H  14
+      COMMON /BKA/ PMMN,IANS,IALPH,EMZER,KY,ALA,ALB,ALC,ALD,ALE,SUMA      H  15
+      COMMON /BKB/ PARAM(10200),EMI(600),DCDI(600),PSUM(600),YSUM(600),D  H  16
+     1IA(600),SCDB,SHDCMA(600),PSHN                                       H  17
+      COMMON /BKC/ COND(8),KCOND(2),ROWN(7),SAVW(4),SAVFW(4),ANS(9)       H  18
+      COMMON /BKC/ KADD(11),OUT(10)                                       H  19
+      COMMON /KBLK/ JLO,JUP,KLO,KUPP,SUMEK,STEPK,LSUB,SK1,SK2,SK3,DIFF1   H  20
+      COMMON /KBLK/ DIFF2,DIFF3,SN1,SN2,SN3,EPSK,MSUB,ACOND(8),ACTK,FINK  H  21
+      COMMON /ROBLK/ JCR,JNEL,JK                                          H  22
+      COMMON /JBLK/ IF                                                    H  23
+      COMMON /ALY/ SUMAL1,SUMAL2,GRALAL,GRALYP                            H  24
+      COMMON /AD1/ TOTD,TOTW,DEE                                          H  25
+      COMMON /BLKT/ KTST,LTST                                             H  26
+      COMMON /BLKT/ I2CNT                                                 H  27
+C                                                                         H  28
+      GO TO (1,6), N                                                      H  29
+C          INTEGRAL M(X)                                                  H  30
+1     JX2=2                                                               H  31
+      JXL=JXSTA                                                           H  32
+      JY21=JXSTA+2                                                        H  33
+      CALL GRAL (PARAM(1),JX2,JXL,JY21,EMI(1))                            H  34
+C          TOTAL MASS                                                     H  35
+      JY21=JXSTA+2                                                        H  36
+      TMASS=SUM(PARAM(1),JX2,JXL,JY21)                                    H  37
+C          INTEGRAL D(CD)S/DX                                             H  38
+      JY21=4*JXSTA+2                                                      H  39
+      CALL GRAL (PARAM(1),JX2,JXL,JY21,DCDI(1))                           H  40
+C          TOTAL INTEGRAL D(CD)S/DX                                       H  41
+      JY21=4*JXSTA+2                                                      H  42
+      TOTD=SUM(PARAM,JX2,JXL,JY21)                                        H  43
+      TOTD=TOTD+SCDB                                                      H  44
+C          DIAMETER AND DD/DX                                             H  45
+      DO 2 J=1,JXSTA                                                      H  46
+      K=JNEL+J                                                            H  47
+2     DIA(J)=PARAM(K)                                                     H  48
+      JXM1=JXSTA-1                                                        H  49
+      DO 4 J=1,JXM1                                                       H  50
+      IF ((PARAM(J+1)-PARAM(J)).EQ.0.) GO TO 3                            H  51
+      SHDCMA(J)=(DIA(J+1)-DIA(J))/(PARAM(J+1)-PARAM(J))                   H  52
+      GO TO 4                                                             H  53
+3     SHDCMA(J)=0.                                                        H  54
+4     CONTINUE                                                            H  55
+      SHDCMA(JXSTA)=SHDCMA(JXM1)                                          H  56
+      DO 5 J=1,JXSTA                                                      H  57
+      K=J+3.*JXSTA                                                        H  58
+5     SHDCMA(J)=(DIA(J)*SHDCMA(J)*PARAM(K))/4.                            H  59
+      RETURN                                                              H  60
+C                                                                         H  61
+C          D                                                              H  62
+6     DEE=TOTD*COMPQ                                                      H  63
+C          T/M(T)                                                         H  64
+      TMT=(COMPT-DEE)/TMASS                                               H  65
+      GO TO (7,7,8,7), KSUB                                               H  66
+C          T/M(T)*INTEGRAL M(X),Q*INTEGRAL D(CD)S                         H  67
+7     CC=COMPT                                                            H  68
+      GO TO 9                                                             H  69
+8     CC=COMPPZ                                                           H  70
+9     DO 10 J=1,JXSTA                                                     H  71
+10    PSUM(J)=TMT*EMI(J)+COMPQ*DCDI(J)-CC                                 H  72
+      RETURN                                                              H  73
+      END                                                                 H  74-
+      SUBROUTINE BOUNLO                                                   I   1
+C     THIS SECTION COMPUTES AT THE LOWER BOUNDARY.                        I   2
+C                                                                         I   3
+      COMMON N,JCASE,D1(8,8),D2(8,1),CHIZER(8),CHIN1(8,1),CHIN2(8,1),CHN  I   4
+     1P11(8,1),CHNP12(8,1),CHIA(8,1),CHIB(8,1),CKAY(8,8)                  I   5
+      COMMON /BKA/ KCASE,JNT,KIT,K000FX,KHOM,KIF,TEMP,TEMP2               I   6
+      COMMON /BKA/ ROOT,JNCOL,JXSTA,QCON,TCON,EMU,PZER,YZER,SMALK,TAU     I   7
+      COMMON /BKA/ ELMBDA,EN,KSUB,KIA,ASSUME,STEP,EPS1,EPS2,EPS3,TMASS    I   8
+      COMMON /BKA/ DEBUG,TMT,PROWN,JSET,NA,MA,KBO,KUP,COMPQ,COMPT,COMPPZ  I   9
+      COMMON /BKA/ QDIV,Q1,TCR,T1,PZCR,DIVK,EXN,EXNP1,JBRAN,DELC,DELC2,A  I  10
+     1LPHL                                                                I  11
+      COMMON /BKA/ SIGN1,SIGN2,SIGN3,ITCNT,FMEG,VZER,ALZER,MZER,R,FM,EMM  I  12
+     1N                                                                   I  13
+      COMMON /BKA/ EIMN,CNAMN,FMN,PNUMN,DPNUMN,ZPMN,ETAMN,ONEKMN,TWOKMN   I  14
+      COMMON /BKA/ PMMN,IANS,IALPH,EMZER,KY,ALA,ALB,ALC,ALD,ALE,SUMA      I  15
+      COMMON /BKB/ PARAM(10200),EMI(600),DCDI(600),PSUM(600),YSUM(600),D  I  16
+     1IA(600),SCDB,SHDCMA(600),PSHN                                       I  17
+      COMMON /BKC/ COND(8),KCOND(2),ROWN(7),SAVW(4),SAVFW(4),ANS(9)       I  18
+      COMMON /BKC/ KADD(11),OUT(10)                                       I  19
+      COMMON /KBLK/ JLO,JUP,KLO,KUPP,SUMEK,STEPK,LSUB,SK1,SK2,SK3,DIFF1   I  20
+      COMMON /KBLK/ DIFF2,DIFF3,SN1,SN2,SN3,EPSK,MSUB,ACOND(8),ACTK,FINK  I  21
+      COMMON /ROBLK/ JCR,JNEL,JK                                          I  22
+      COMMON /JBLK/ IF                                                    I  23
+      COMMON /ALY/ SUMAL1,SUMAL2,GRALAL,GRALYP                            I  24
+      COMMON /AD1/ TOTD,TOTW,DEE                                          I  25
+      COMMON /BLKT/ KTST,LTST                                             I  26
+      COMMON /BLKT/ I2CNT                                                 I  27
+C                                                                         I  28
+C          CLEAR TEMPORARY STORAGE FOR PLUS VALUES                        I  29
+      DO 1 I=1,7                                                          I  30
+1     ROWN(I)=0.0                                                         I  31
+      PROWN=0.0                                                           I  32
+      JSET=1                                                              I  33
+      CALL PARMOV                                                         I  34
+      DO 6 J=1,2                                                          I  35
+      JBRAN=J                                                             I  36
+C          SELECT INITIAL CONDITIONS FOR SOLUTION 1 OR 2                  I  37
+C         V(A),ALPHA(A),M(A),1/R                                          I  38
+      VZER=COND(4*J-3)                                                    I  39
+      ALZER=COND(4*J-2)                                                   I  40
+      EMZER=COND(4*J-1)                                                   I  41
+      R=COND(4*J)                                                         I  42
+C              COMPUTE STARTING VECTOR FROM BOUNDARY CONDITIONS           I  43
+C              DETERMINE SYSTEM                                           I  44
+      CALL SYST (2)                                                       I  45
+C                                                                         I  46
+C         MOVE CHI(A) AND X(A) TO START RECURRENCE SOLUTION               I  47
+C            CHI(A) TO CHI(N)                                             I  48
+C          DETERMINE SOLUTION                                             I  49
+      GO TO (2,4), JBRAN                                                  I  50
+C          SOLUTION 1                                                     I  51
+2     DO 3 I=1,8                                                          I  52
+3     CHIN1(I,1)=CHIZER(I)                                                I  53
+      GO TO 6                                                             I  54
+C          SOLUTION 2                                                     I  55
+4     DO 5 I=1,8                                                          I  56
+5     CHIN2(I,1)=CHIZER(I)                                                I  57
+6     CONTINUE                                                            I  58
+C                                                                         I  59
+C         X(A) TO X(N)                                                    I  60
+      EXN=EXNP1                                                           I  61
+C                                                                         I  62
+      GO TO (8,7), KIF                                                    I  63
+C          FINAL RUN                                                      I  64
+C          TO OUTPUT ROUTINE                                              I  65
+7     CALL OUTPUT (2)                                                     I  66
+C          INITIAL RUN                                                    I  67
+8     RETURN                                                              I  68
+      END                                                                 I  69-
+      SUBROUTINE SPAN                                                     J   1
+C     THIS SECTION COMPUTES ACROSS THE SPAN FOR CONTINUOUS                J   2
+C     AND DISCONTINUOUS INTERVALS                                         J   3
+C                                                                         J   4
+      COMMON N,JCASE,D1(8,8),D2(8,1),CHIZER(8),CHIN1(8,1),CHIN2(8,1),CHN  J   5
+     1P11(8,1),CHNP12(8,1),CHIA(8,1),CHIB(8,1),CKAY(8,8)                  J   6
+      COMMON /BKA/ KCASE,JNT,KIT,K000FX,KHOM,KIF,TEMP,TEMP2               J   7
+      COMMON /BKA/ ROOT,JNCOL,JXSTA,QCON,TCON,EMU,PZER,YZER,SMALK,TAU     J   8
+      COMMON /BKA/ ELMBDA,EN,KSUB,KIA,ASSUME,STEP,EPS1,EPS2,EPS3,TMASS    J   9
+      COMMON /BKA/ DEBUG,TMT,PROWN,JSET,NA,MA,KBO,KUP,COMPQ,COMPT,COMPPZ  J  10
+      COMMON /BKA/ QDIV,Q1,TCR,T1,PZCR,DIVK,EXN,EXNP1,JBRAN,DELC,DELC2,A  J  11
+     1LPHL                                                                J  12
+      COMMON /BKA/ SIGN1,SIGN2,SIGN3,ITCNT,FMEG,VZER,ALZER,MZER,R,FM,EMM  J  13
+     1N                                                                   J  14
+      COMMON /BKA/ EIMN,CNAMN,FMN,PNUMN,DPNUMN,ZPMN,ETAMN,ONEKMN,TWOKMN   J  15
+      COMMON /BKA/ PMMN,IANS,IALPH,EMZER,KY,ALA,ALB,ALC,ALD,ALE,SUMA      J  16
+      COMMON /BKB/ PARAM(10200),EMI(600),DCDI(600),PSUM(600),YSUM(600),D  J  17
+     1IA(600),SCDB,SHDCMA(600),PSHN                                       J  18
+      COMMON /BKC/ COND(8),KCOND(2),ROWN(7),SAVW(4),SAVFW(4),ANS(9)       J  19
+      COMMON /BKC/ KADD(11),OUT(10)                                       J  20
+      COMMON /KBLK/ JLO,JUP,KLO,KUPP,SUMEK,STEPK,LSUB,SK1,SK2,SK3,DIFF1   J  21
+      COMMON /KBLK/ DIFF2,DIFF3,SN1,SN2,SN3,EPSK,MSUB,ACOND(8),ACTK,FINK  J  22
+      COMMON /ROBLK/ JCR,JNEL,JK                                          J  23
+      COMMON /JBLK/ IF                                                    J  24
+      COMMON /ALY/ SUMAL1,SUMAL2,GRALAL,GRALYP                            J  25
+      COMMON /AD1/ TOTD,TOTW,DEE                                          J  26
+      COMMON /BLKT/ KTST,LTST                                             J  27
+      COMMON /BLKT/ I2CNT                                                 J  28
+C                                                                         J  29
+C          BEGIN ALPHA INTEGRATION(SOLUTION 1)                            J  30
+      SUMAL1=0.0                                                          J  31
+C          BEGIN ALPHA INTEGRATION(SOLUTION 2)                            J  32
+      SUMAL2=0.0                                                          J  33
+C          BEGIN Y INTEGRAL                                               J  34
+      YSUM(1)=YZER                                                        J  35
+C          BEGIN RECURRENCE SOLUTION                                      J  36
+      DO 9 KLOOP=2,JXSTA                                                  J  37
+      KLOOY=KLOOP                                                         J  38
+C          MOVE X AND PARAMETERS AT NEXT STATION                          J  39
+      CALL PARMOV                                                         J  40
+C          TO Y SUBROUTINE                                                J  41
+      CALL Y (1,KLOOY)                                                    J  42
+C                                                                         J  43
+      DO 6 J=1,2                                                          J  44
+C          SELECTS BRANCH                                                 J  45
+      JBRAN=J                                                             J  46
+C          RESET INITIAL VALUES                                           J  47
+      VZER=COND(4*J-3)                                                    J  48
+      ALZER=COND(4*J-2)                                                   J  49
+      EMZER=COND(4*J-1)                                                   J  50
+      R=COND(4*J)                                                         J  51
+C          CONTINUOUS INTERVAL                                            J  52
+C              DELTA X                                                    J  53
+      DELC=ABS(EXNP1-EXN)                                                 J  54
+      DELC2=DELC/2.0                                                      J  55
+C          COMPUTE ELEMENTS OF (K)                                        J  56
+      CALL CLEMET                                                         J  57
+C                                                                         J  58
+C          FIND CHI(N+1)                                                  J  59
+      GO TO (1,3), JBRAN                                                  J  60
+C          SOLUTION 1                                                     J  61
+1     CALL EMULT (CKAY,CHIN1,CHIA,8,8,1)                                  J  62
+      DO 2 I=1,8                                                          J  63
+2     CHNP11(I,1)=CHIA(I,1)+CHIB(I,1)                                     J  64
+C          ALPHA(N+1)+ALPHA(N)                                            J  65
+      SUMA=CHNP11(4,1)+CHIN1(4,1)                                         J  66
+      GO TO 5                                                             J  67
+C          SOLUTION 2                                                     J  68
+3     CALL EMULT (CKAY,CHIN2,CHIA,8,8,1)                                  J  69
+      DO 4 I=1,8                                                          J  70
+4     CHNP12(I,1)=CHIA(I,1)+CHIB(I,1)                                     J  71
+C          ALPHA(N+1)+ALPHA(N)                                            J  72
+      SUMA=CHNP12(4,1)+CHIN2(4,1)                                         J  73
+C          TO Y SUBROUTINE                                                J  74
+5     CALL Y (2,KLOOY)                                                    J  75
+6     CONTINUE                                                            J  76
+C                                                                         J  77
+C          TO Y SUBROUTINE                                                J  78
+      CALL Y (3,KLOOY)                                                    J  79
+C          MOVE X(N+1) TO X(N)                                            J  80
+      EXN=EXNP1                                                           J  81
+C          MOVE CHI(N+1) TO CHI(N)                                        J  82
+      DO 7 I=1,8                                                          J  83
+      CHIN1(I,1)=CHNP11(I,1)                                              J  84
+7     CHIN2(I,1)=CHNP12(I,1)                                              J  85
+      GO TO (9,8), KIF                                                    J  86
+C                                                                         J  87
+C          FINAL RUN                                                      J  88
+8     CALL OUTPUT (2)                                                     J  89
+C          INITIAL RUN                                                    J  90
+9     CONTINUE                                                            J  91
+      RETURN                                                              J  92
+      END                                                                 J  93-
+      SUBROUTINE FIND                                                     K   1
+C     THIS SECTION SEARCHES FOR QDIV,TCR,P(A),OR K1DIV                    K   2
+C                                                                         K   3
+      COMMON N,JCASE,D1(8,8),D2(8,1),CHIZER(8),CHIN1(8,1),CHIN2(8,1),CHN  K   4
+     1P11(8,1),CHNP12(8,1),CHIA(8,1),CHIB(8,1),CKAY(8,8)                  K   5
+      COMMON /BKA/ KCASE,JNT,KIT,K000FX,KHOM,KIF,TEMP,TEMP2               K   6
+      COMMON /BKA/ ROOT,JNCOL,JXSTA,QCON,TCON,EMU,PZER,YZER,SMALK,TAU     K   7
+      COMMON /BKA/ ELMBDA,EN,KSUB,KIA,ASSUME,STEP,EPS1,EPS2,EPS3,TMASS    K   8
+      COMMON /BKA/ DEBUG,TMT,PROWN,JSET,NA,MA,KBO,KUP,COMPQ,COMPT,COMPPZ  K   9
+      COMMON /BKA/ QDIV,Q1,TCR,T1,PZCR,DIVK,EXN,EXNP1,JBRAN,DELC,DELC2,A  K  10
+     1LPHL                                                                K  11
+      COMMON /BKA/ SIGN1,SIGN2,SIGN3,ITCNT,FMEG,VZER,ALZER,MZER,R,FM,EMM  K  12
+     1N                                                                   K  13
+      COMMON /BKA/ EIMN,CNAMN,FMN,PNUMN,DPNUMN,ZPMN,ETAMN,ONEKMN,TWOKMN   K  14
+      COMMON /BKA/ PMMN,IANS,IALPH,EMZER,KY,ALA,ALB,ALC,ALD,ALE,SUMA      K  15
+      COMMON /BKB/ PARAM(10200),EMI(600),DCDI(600),PSUM(600),YSUM(600),D  K  16
+     1IA(600),SCDB,SHDCMA(600),PSHN                                       K  17
+      COMMON /BKC/ COND(8),KCOND(2),ROWN(7),SAVW(4),SAVFW(4),ANS(9)       K  18
+      COMMON /BKC/ KADD(11),OUT(10)                                       K  19
+      COMMON /KBLK/ JLO,JUP,KLO,KUPP,SUMEK,STEPK,LSUB,SK1,SK2,SK3,DIFF1   K  20
+      COMMON /KBLK/ DIFF2,DIFF3,SN1,SN2,SN3,EPSK,MSUB,ACOND(8),ACTK,FINK  K  21
+      COMMON /ROBLK/ JCR,JNEL,JK                                          K  22
+      COMMON /JBLK/ IF                                                    K  23
+      COMMON /ALY/ SUMAL1,SUMAL2,GRALAL,GRALYP                            K  24
+      COMMON /AD1/ TOTD,TOTW,DEE                                          K  25
+      COMMON /BLKT/ KTST,LTST                                             K  26
+      COMMON /BLKT/ I2CNT                                                 K  27
+C                                                                         K  28
+C                                                                         K  29
+C          ITERATION COUNT                                                K  30
+1     ITCNT=0                                                             K  31
+      LTST=100                                                            K  32
+      IF=1                                                                K  33
+C          ASSUME VALUES OF W UNTIL F(W1) AND F(W2) HAVE UNLIKE SIGNS     K  34
+C         W=Q,T,P(A),OR K1                                                K  35
+C          TO STABILITY EQUATION FOR F(W1)                                K  36
+      CALL SYST (3)                                                       K  37
+      SAVW(1)=TEMP                                                        K  38
+      SAVFW(1)=FMEG                                                       K  39
+      I2CNT=1                                                             K  40
+C          DETERMINE SIGN OF F(W1)                                        K  41
+      IF (SAVFW(1)) 3,2,3                                                 K  42
+2     SAVW(4)=SAVW(1)                                                     K  43
+      GO TO 29                                                            K  44
+3     SIGN1=ABS(SAVFW(1))/SAVFW(1)                                        K  45
+C          ASSUME NEXT W AND FIND F(W2)                                   K  46
+4     TEMP=SAVW(1)+TEMP2                                                  K  47
+C          MOVE FOR COMPUTING                                             K  48
+      CALL QTPK (2)                                                       K  49
+      CALL PEA (2)                                                        K  50
+      CALL BOUNLO                                                         K  51
+      CALL SPAN                                                           K  52
+      CALL SYST (3)                                                       K  53
+      SAVW(2)=TEMP                                                        K  54
+      SAVFW(2)=FMEG                                                       K  55
+C          DETERMINE SIGN OF F(W2)                                        K  56
+      IF (SAVFW(2)) 6,5,6                                                 K  57
+5     SAVW(4)=SAVW(2)                                                     K  58
+      GO TO 29                                                            K  59
+6     SIGN2=ABS(SAVFW(2))/SAVFW(2)                                        K  60
+C          CHECK FOR UNLIKE SIGNS                                         K  61
+      IF (SIGN1-SIGN2) 10,7,10                                            K  62
+C          LIKE SIGNS,TRY AGAIN                                           K  63
+7     SAVW(1)=SAVW(2)                                                     K  64
+      SAVFW(1)=SAVFW(2)                                                   K  65
+      SIGN1=SIGN2                                                         K  66
+      IF (I2CNT-LTST) 9,8,8                                               K  67
+C          NO CROSSING,EXIT FROM LOOP                                     K  68
+8     WRITE (6,33) I2CNT,TEMP,KSUB                                        K  69
+      IF (KSUB.EQ.4) LSUB=4                                               K  70
+      IF=2                                                                K  71
+      GO TO 30                                                            K  72
+9     I2CNT=I2CNT+1                                                       K  73
+      GO TO 4                                                             K  74
+C                                                                         K  75
+C          UNLIKE SIGNS,NARROWINTERVAL                                    K  76
+10    TEMP2=TEMP2/2.0                                                     K  77
+      TEMP=SAVW(1)+TEMP2                                                  K  78
+      CALL QTPK (2)                                                       K  79
+      CALL PEA (2)                                                        K  80
+      CALL BOUNLO                                                         K  81
+      CALL SPAN                                                           K  82
+      CALL SYST (3)                                                       K  83
+      SAVW(3)=TEMP                                                        K  84
+      SAVFW(3)=FMEG                                                       K  85
+      IF (SAVFW(3)) 12,11,12                                              K  86
+C          F(W3)=0                                                        K  87
+11    SAVW(4)=SAVW(3)                                                     K  88
+      GO TO 29                                                            K  89
+12    SIGN3=ABS(SAVFW(3))/SAVFW(3)                                        K  90
+C          COMPARE F(W3) WITH F(W1)                                       K  91
+      IF (SIGN1-SIGN3) 14,13,14                                           K  92
+C          LIKE SIGNS,MOVE LOWER LIMIT                                    K  93
+13    SAVW(1)=SAVW(3)                                                     K  94
+      SAVFW(1)=SAVFW(3)                                                   K  95
+      SIGN1=SIGN3                                                         K  96
+      GO TO 15                                                            K  97
+C          UNLIKE SIGNS,MOVE UPPER LIMIT                                  K  98
+14    SAVW(2)=SAVW(3)                                                     K  99
+      SAVFW(2)=SAVFW(3)                                                   K 100
+      SIGN2=SIGN3                                                         K 101
+15    IF (TEMP2-EPS1) 16,16,10                                            K 102
+C                                                                         K 103
+C          SAVE W3 AND DELTA W USED IN INTERVAL                           K 104
+16    TINT=TEMP2                                                          K 105
+      THRINT=SAVW(3)                                                      K 106
+C          W(N+1)=W(N)-F(W(N))/M                                          K 107
+C              M=(F(W1)-F(W2))/(W1-W2).THE SLOPE(M) IS                    K 108
+C              ASSUMED TO BE ALMOST CONSTANT IN THE INTERVAL.             K 109
+      SLOPE=(SAVFW(1)-SAVFW(2))/(SAVW(1)-SAVW(2))                         K 110
+C          F(W(N))/M                                                      K 111
+      CHANGE=SAVFW(1)/SLOPE                                               K 112
+      TEMPA=ABS(CHANGE)                                                   K 113
+C          TEST CHANGE FOR .1 OR LESS                                     K 114
+      IF (TEMPA-.1) 19,19,17                                              K 115
+C          NO---GREATER,GO TO NARROW INTERVAL                             K 116
+17    EPS1=EPS1/10.0                                                      K 117
+      IF (EPS1-.0000001) 18,10,10                                         K 118
+18    SAVW(4)=SAVW(3)                                                     K 119
+      GO TO 29                                                            K 120
+C                                                                         K 121
+C          W(N)=W1(STARTING VALUE IN INTERVAL)                            K 122
+C              DELTAW= F(W(N))/M                                          K 123
+C          BEGINNING DELTA W                                              K 124
+19    TEMP2=CHANGE                                                        K 125
+      TEMPB=0.0                                                           K 126
+      SAVW(3)=SAVW(1)                                                     K 127
+      SAVFW(3)=SAVFW(1)                                                   K 128
+C                                                                         K 129
+C          BEGIN ITERATION TO FIND W(N+1)                                 K 130
+20    TEMP=SAVW(3)-TEMP2                                                  K 131
+      CALL QTPK (2)                                                       K 132
+      IF (TEMP-SAVW(2)) 23,21,21                                          K 133
+C          ESTIMATE GREATER THAN UPPER LUMIT                              K 134
+C          PICK UP DELTA W USED IN INTERVAL AND REDUCE FURTHER            K 135
+21    TEMP2=TINT                                                          K 136
+      EPS1=EPS1/10.0                                                      K 137
+      IF (EPS1-.0000001) 22,10,10                                         K 138
+22    SAVW(4)=THRINT                                                      K 139
+      GO TO 29                                                            K 140
+C                                                                         K 141
+23    ITCNT=ITCNT+1                                                       K 142
+      IF (ITCNT-75) 25,25,24                                              K 143
+C          NON CONVERGENT ROOT.EXIT AFTER 75 TIMES                        K 144
+24    WRITE (6,32) SAVW(1),SAVW(2),SAVW(3),SAVW(4),TEMP,TEMP2,TEMPA,TEMP  K 145
+     1B,TEMPC,EPS1,EPS2,EPS3                                              K 146
+      IF=2                                                                K 147
+      GO TO 30                                                            K 148
+C                                                                         K 149
+25    TEMPB=TEMP2                                                         K 150
+      CALL PEA (2)                                                        K 151
+      CALL BOUNLO                                                         K 152
+      CALL SPAN                                                           K 153
+      CALL SYST (3)                                                       K 154
+C          W(N+1)                                                         K 155
+      SAVW(4)=TEMP                                                        K 156
+      SAVFW(4)=FMEG                                                       K 157
+C          W(N+1)-W(N)                                                    K 158
+      TEMPA=ABS(SAVW(4)-SAVW(3))                                          K 159
+C          IF LESS THAN EPS2,EXIT                                         K 160
+      IF (TEMPA-EPS2) 29,29,26                                            K 161
+C          (W(N+1)-W(N))/W(N+1)                                           K 162
+26    TEMPC=TEMPA/ABS(SAVW(4))                                            K 163
+C          IF LESS THAN EPS3,EXIT                                         K 164
+      IF (TEMPC-EPS3) 29,29,27                                            K 165
+C          GREATER,TRY NEXT                                               K 166
+27    TEMP2=SAVFW(4)/SLOPE                                                K 167
+      SAVW(3)=SAVW(4)                                                     K 168
+      SAVFW(3)=SAVFW(4)                                                   K 169
+C          COMPARE DELTA WITH PREVIOUS DELTA                              K 170
+      IF (TEMPB+TEMP2) 20,28,20                                           K 171
+C          IF ZERO,AVERAGE FOR ROOT                                       K 172
+28    SAVW(4)=(SAVW(4)+(SAVW(3)-TEMP2))/2.0                               K 173
+C                                                                         K 174
+C          ROOT FOUND                                                     K 175
+C          SET BEGINNING FOR NEXT W,THEN EXIT                             K 176
+29    ROOT=SAVW(4)                                                        K 177
+30    CONTINUE                                                            K 178
+C                                                                         K 179
+31    RETURN                                                              K 180
+C                                                                         K 181
+32    FORMAT (20H NON CONVERGENT ROOT/(4E16.8))                           K 182
+33    FORMAT (16H NO CROSSING IN I6,12H  ITERATIONS/15H LAST ESTIMATE=E1  K 183
+     16.8,13H FOR SUBCASE I2)                                             K 184
+      END                                                                 K 185-
+      SUBROUTINE PARMOV                                                   L   1
+C     THIS SECTION STORES MINUS VALUES AND MOVES PLUS VALUES TO           L   2
+C     TEMPORARY BLOCK.                                                    L   3
+C                                                                         L   4
+      COMMON N,JCASE,D1(8,8),D2(8,1),CHIZER(8),CHIN1(8,1),CHIN2(8,1),CHN  L   5
+     1P11(8,1),CHNP12(8,1),CHIA(8,1),CHIB(8,1),CKAY(8,8)                  L   6
+      COMMON /BKA/ KCASE,JNT,KIT,K000FX,KHOM,KIF,TEMP,TEMP2               L   7
+      COMMON /BKA/ ROOT,JNCOL,JXSTA,QCON,TCON,EMU,PZER,YZER,SMALK,TAU     L   8
+      COMMON /BKA/ ELMBDA,EN,KSUB,KIA,ASSUME,STEP,EPS1,EPS2,EPS3,TMASS    L   9
+      COMMON /BKA/ DEBUG,TMT,PROWN,JSET,NA,MA,KBO,KUP,COMPQ,COMPT,COMPPZ  L  10
+      COMMON /BKA/ QDIV,Q1,TCR,T1,PZCR,DIVK,EXN,EXNP1,JBRAN,DELC,DELC2,A  L  11
+     1LPHL                                                                L  12
+      COMMON /BKA/ SIGN1,SIGN2,SIGN3,ITCNT,FMEG,VZER,ALZER,MZER,R,FM,EMM  L  13
+     1N                                                                   L  14
+      COMMON /BKA/ EIMN,CNAMN,FMN,PNUMN,DPNUMN,ZPMN,ETAMN,ONEKMN,TWOKMN   L  15
+      COMMON /BKA/ PMMN,IANS,IALPH,EMZER,KY,ALA,ALB,ALC,ALD,ALE,SUMA      L  16
+      COMMON /BKB/ PARAM(10200),EMI(600),DCDI(600),PSUM(600),YSUM(600),D  L  17
+     1IA(600),SCDB,SHDCMA(600),PSHN                                       L  18
+      COMMON /BKC/ COND(8),KCOND(2),ROWN(7),SAVW(4),SAVFW(4),ANS(9)       L  19
+      COMMON /BKC/ KADD(11),OUT(10)                                       L  20
+      COMMON /KBLK/ JLO,JUP,KLO,KUPP,SUMEK,STEPK,LSUB,SK1,SK2,SK3,DIFF1   L  21
+      COMMON /KBLK/ DIFF2,DIFF3,SN1,SN2,SN3,EPSK,MSUB,ACOND(8),ACTK,FINK  L  22
+      COMMON /ROBLK/ JCR,JNEL,JK                                          L  23
+      COMMON /JBLK/ IF                                                    L  24
+      COMMON /ALY/ SUMAL1,SUMAL2,GRALAL,GRALYP                            L  25
+      COMMON /AD1/ TOTD,TOTW,DEE                                          L  26
+      COMMON /BLKT/ KTST,LTST                                             L  27
+      COMMON /BLKT/ I2CNT                                                 L  28
+C                                                                         L  29
+C          MOVE INPUT PARAMETERS AND P TO TEMPORARY BLOCK                 L  30
+      J=JSET                                                              L  31
+      K=(1+JXSTA)+(J-1)*JCR                                               L  32
+C          MOVE X                                                         L  33
+      EXNP1=PARAM(J)                                                      L  34
+C          MOVE OTHER PARAMETERS                                          L  35
+C          ROWN(1)=M,ROWN(2)=EI,ROWN(3)=DCLA                              L  36
+C          ROWN(4)=DCDA,ROWN(5)=K1,ROWN(6)=K2,ROWN(7)=DIA                 L  37
+      DO 1 I=1,JCR                                                        L  38
+      ROWN(I)=PARAM(K)                                                    L  39
+1     K=K+1                                                               L  40
+      PSHN=SHDCMA(J)                                                      L  41
+      IF (J-1) 3,2,3                                                      L  42
+C         P=P(A),IF A STATION                                             L  43
+2     PROWN=COMPPZ                                                        L  44
+      GO TO 4                                                             L  45
+3     PROWN=PSUM(J)                                                       L  46
+4     JSET=JSET+1                                                         L  47
+      RETURN                                                              L  48
+      END                                                                 L  49-
+      SUBROUTINE CLEMET                                                   M   1
+C     THIS SECTION COMPUTES ELEMENTS OF K MATRIX                          M   2
+C     FOR CONTINUOUS INTERVALS                                            M   3
+C                                                                         M   4
+      COMMON N,JCASE,D1(8,8),D2(8,1),CHIZER(8),CHIN1(8,1),CHIN2(8,1),CHN  M   5
+     1P11(8,1),CHNP12(8,1),CHIA(8,1),CHIB(8,1),CKAY(8,8)                  M   6
+      COMMON /BKA/ KCASE,JNT,KIT,K000FX,KHOM,KIF,TEMP,TEMP2               M   7
+      COMMON /BKA/ ROOT,JNCOL,JXSTA,QCON,TCON,EMU,PZER,YZER,SMALK,TAU     M   8
+      COMMON /BKA/ ELMBDA,EN,KSUB,KIA,ASSUME,STEP,EPS1,EPS2,EPS3,TMASS    M   9
+      COMMON /BKA/ DEBUG,TMT,PROWN,JSET,NA,MA,KBO,KUP,COMPQ,COMPT,COMPPZ  M  10
+      COMMON /BKA/ QDIV,Q1,TCR,T1,PZCR,DIVK,EXN,EXNP1,JBRAN,DELC,DELC2,A  M  11
+     1LPHL                                                                M  12
+      COMMON /BKA/ SIGN1,SIGN2,SIGN3,ITCNT,FMEG,VZER,ALZER,MZER,R,FM,EMM  M  13
+     1N                                                                   M  14
+      COMMON /BKA/ EIMN,CNAMN,FMN,PNUMN,DPNUMN,ZPMN,ETAMN,ONEKMN,TWOKMN   M  15
+      COMMON /BKA/ PMMN,IANS,IALPH,EMZER,KY,ALA,ALB,ALC,ALD,ALE,SUMA      M  16
+      COMMON /BKB/ PARAM(10200),EMI(600),DCDI(600),PSUM(600),YSUM(600),D  M  17
+     1IA(600),SCDB,SHDCMA(600),PSHN                                       M  18
+      COMMON /BKC/ COND(8),KCOND(2),ROWN(7),SAVW(4),SAVFW(4),ANS(9)       M  19
+      COMMON /BKC/ KADD(11),OUT(10)                                       M  20
+      COMMON /KBLK/ DIFF2,DIFF3,SN1,SN2,SN3,EPSK,MSUB,ACOND(8),ACTK,FINK  M  21
+      COMMON /KBLK/ JLO,JUP,KLO,KUPP,SUMEK,STEPK,LSUB,SK1,SK2,SK3,DIFF1   M  22
+      COMMON /ROBLK/ JCR,JNEL,JK                                          M  23
+      COMMON /JBLK/ IF                                                    M  24
+      COMMON /ALY/ SUMAL1,SUMAL2,GRALAL,GRALYP                            M  25
+      COMMON /AD1/ TOTD,TOTW,DEE                                          M  26
+      COMMON /BLKT/ KTST,LTST                                             M  27
+      COMMON /BLKT/ I2CNT                                                 M  28
+C                                                                         M  29
+      GKA=-ROWN(5)*ROWN(3)*COMPQ                                          M  30
+      GB=PROWN                                                            M  31
+      GKB=PROWN-PSHN*COMPQ                                                M  32
+      GKC=-1.0/(ROWN(6)*ROWN(2))                                          M  33
+      GKD=DELC2                                                           M  34
+      GKE=ROWN(1)*EMU**2                                                  M  35
+      GKK=EXNP1                                                           M  36
+      GCD=GKC*GKD                                                         M  37
+      GCD2=GKD*GCD                                                        M  38
+      GAD=GKA*GKD                                                         M  39
+      GAD2=GKD*GAD                                                        M  40
+      GACD=GKA*GCD2                                                       M  41
+      GBCD=1.0+GKB*GCD2                                                   M  42
+      GBAD=GKB-GAD                                                        M  43
+      GDBAD=GKD*GBAD                                                      M  44
+      G18=GKD*(GKA*ELMBDA*(1.+GB*GCD*GKK)-GKB*GCD*GKE)-GKE                M  45
+      G28=GKD*G18                                                         M  46
+      G38=GKD*(GCD*GKE-GB*GKC*GKK*ELMBDA)-ELMBDA                          M  47
+      G48=GKD*G38                                                         M  48
+      G58=GKD*(GKA*GKD*ELMBDA-GKB*ELMBDA-GKE)+GB*GKK*ELMBDA               M  49
+      G68=GKD*G58                                                         M  50
+      G78=0.                                                              M  51
+      G88=GCD2*GBAD+1.                                                    M  52
+C          1/D                                                            M  53
+      DCIP=1.0/(GCD2*GBAD+1.0)                                            M  54
+C           COLUMNS 2,4,6,8 OF K                                          M  55
+      CKAY(1,2)=GACD                                                      M  56
+      CKAY(2,2)=GBCD                                                      M  57
+      CKAY(3,2)=-GCD                                                      M  58
+      CKAY(4,2)=-GCD2                                                     M  59
+      CKAY(5,2)=1.0                                                       M  60
+      CKAY(6,2)=GKD                                                       M  61
+      CKAY(1,4)=-GKA                                                      M  62
+      CKAY(2,4)=-GAD                                                      M  63
+      CKAY(3,4)=-GCD*GBAD                                                 M  64
+      CKAY(4,4)=1.0                                                       M  65
+      CKAY(5,4)=GBAD                                                      M  66
+      CKAY(6,4)=GDBAD                                                     M  67
+      CKAY(1,6)=GAD*GKC                                                   M  68
+      CKAY(2,6)=GACD                                                      M  69
+      CKAY(3,6)=-GKC                                                      M  70
+      CKAY(4,6)=-GCD                                                      M  71
+      CKAY(5,6)=-GCD*GBAD                                                 M  72
+      CKAY(6,6)=1.0                                                       M  73
+      CKAY(1,8)=G18                                                       M  74
+      CKAY(2,8)=G28                                                       M  75
+      CKAY(3,8)=G38                                                       M  76
+      CKAY(4,8)=G48                                                       M  77
+      CKAY(5,8)=G58                                                       M  78
+      CKAY(6,8)=G68                                                       M  79
+      CKAY(7,8)=G78                                                       M  80
+      CKAY(8,8)=G88                                                       M  81
+C           COLUMNS 1,3,5,7 OF K                                          M  82
+      DO 1 J=1,7,2                                                        M  83
+      K=J+1                                                               M  84
+      DO 1 I=1,8                                                          M  85
+1     CKAY(I,J)=GKD*CKAY(I,K)                                             M  86
+C          MULTIPLY BY 1/D                                                M  87
+      DO 2 I=1,8                                                          M  88
+      DO 2 J=1,8                                                          M  89
+2     CKAY(I,J)=DCIP*CKAY(I,J)                                            M  90
+      GO TO (3,5), JBRAN                                                  M  91
+3     DO 4 I=1,8                                                          M  92
+C          SOLUTION 1                                                     M  93
+4     CHIB(I,1)=0.0                                                       M  94
+      RETURN                                                              M  95
+C          SOLUTION 2                                                     M  96
+5     DO 6 I=1,8                                                          M  97
+6     CHIB(I,1)=0.                                                        M  98
+      RETURN                                                              M  99
+      END                                                                 M 100-
+      SUBROUTINE OUTPUT (N)                                               N   1
+C     THIS SECTION PRINTS OUTPUT                                          N   2
+C                                                                         N   3
+      COMMON M,JCASE,D1(8,8),D2(8,1),CHIZER(8),CHIN1(8,1),CHIN2(8,1),CHN  N   4
+     1P11(8,1),CHNP12(8,1),CHIA(8,1),CHIB(8,1),CKAY(8,8)                  N   5
+      COMMON /BKA/ KCASE,JNT,KIT,K000FX,KHOM,KIF,TEMP,TEMP2               N   6
+      COMMON /BKA/ ROOT,JNCOL,JXSTA,QCON,TCON,EMU,PZER,YZER,SMALK,TAU     N   7
+      COMMON /BKA/ ELMBDA,EN,KSUB,KIA,ASSUME,STEP,EPS1,EPS2,EPS3,TMASS    N   8
+      COMMON /BKA/ DEBUG,TMT,PROWN,JSET,NA,MA,KBO,KUP,COMPQ,COMPT,COMPPZ  N   9
+      COMMON /BKA/ QDIV,Q1,TCR,T1,PZCR,DIVK,EXN,EXNP1,JBRAN,DELC,DELC2,A  N  10
+     1LPHL                                                                N  11
+      COMMON /BKA/ SIGN1,SIGN2,SIGN3,ITCNT,FMEG,VZER,ALZER,MZER,R,FM,EMM  N  12
+     1N                                                                   N  13
+      COMMON /BKA/ EIMN,CNAMN,FMN,PNUMN,DPNUMN,ZPMN,ETAMN,ONEKMN,TWOKMN   N  14
+      COMMON /BKA/ PMMN,IANS,IALPH,EMZER,KY,ALA,ALB,ALC,ALD,ALE,SUMA      N  15
+      COMMON /BKB/ PARAM(10200),EMI(600),DCDI(600),PSUM(600),YSUM(600),D  N  16
+     1IA(600),SCDB,SHDCMA(600),PSHN                                       N  17
+      COMMON /BKC/ COND(8),KCOND(2),ROWN(7),SAVW(4),SAVFW(4),ANS(9)       N  18
+      COMMON /BKC/ KADD(11),OUT(10)                                       N  19
+      COMMON /KBLK/ JLO,JUP,KLO,KUPP,SUMEK,STEPK,LSUB,SK1,SK2,SK3,DIFF1   N  20
+      COMMON /KBLK/ DIFF2,DIFF3,SN1,SN2,SN3,EPSK,MSUB,ACOND(8),ACTK,FINK  N  21
+      COMMON /ROBLK/ JCR,JNEL,JK                                          N  22
+      COMMON /JBLK/ IF                                                    N  23
+      COMMON /ALY/ SUMAL1,SUMAL2,GRALAL,GRALYP                            N  24
+      COMMON /AD1/ TOTD,TOTW,DEE                                          N  25
+      COMMON /BLKT/ KTST,LTST                                             N  26
+      COMMON /BLKT/ I2CNT                                                 N  27
+C                                                                         N  28
+      GO TO (1,2,3), N                                                    N  29
+C          HEADINGS                                                       N  30
+1     WRITE (6,5)                                                         N  31
+      IANS=0                                                              N  32
+      IALPH=JK+JXSTA+1                                                    N  33
+      RETURN                                                              N  34
+C          X,VPRIME,V,ALPHA PRIME,ALPHA,M PRIME,M,R PRIME,R               N  35
+2     ANS(1)=EXNP1                                                        N  36
+      ANS(2)=CHIN1(1,1)+CHIN2(1,1)                                        N  37
+      ANS(3)=CHIN1(2,1)+CHIN2(2,1)                                        N  38
+      ANS(4)=CHIN1(3,1)+CHIN2(3,1)                                        N  39
+      ANS(5)=CHIN1(4,1)+CHIN2(4,1)                                        N  40
+      ANS(6)=CHIN1(5,1)+CHIN2(5,1)                                        N  41
+      ANS(7)=CHIN1(6,1)+CHIN2(6,1)                                        N  42
+      ANS(8)=CHIN1(7,1)+CHIN2(7,1)                                        N  43
+      ANS(9)=CHIN1(8,1)+CHIN2(8,1)                                        N  44
+      WRITE (6,6) IANS,(ANS(I),I=1,7)                                     N  45
+C          SAVE ALPHA FOR AERODYNAMIC LIFT FORCE(INTEGRALS)               N  46
+      PARAM(IALPH)=ANS(5)                                                 N  47
+      IALPH=IALPH+1                                                       N  48
+      IANS=IANS+1                                                         N  49
+      RETURN                                                              N  50
+C                                                                         N  51
+3     IANS=0                                                              N  52
+C                                                                         N  53
+C          X,P,Y                                                          N  54
+      WRITE (6,7)                                                         N  55
+      DO 4 I=1,JXSTA                                                      N  56
+      WRITE (6,6) IANS,PARAM(I),PSUM(I),YSUM(I)                           N  57
+4     IANS=IANS+1                                                         N  58
+      RETURN                                                              N  59
+C                                                                         N  60
+5     FORMAT (1H03X,7HSTATION13X,1HX11X,7HV PRIME13X,1HV9X,11HALPHA PRIM  N  61
+     1E9X,5HALPHA10X,7HM PRIME12X,1HM7X)                                  N  62
+6     FORMAT (I8,E24.8,6E16.8)                                            N  63
+7     FORMAT (1H03X,7HSTATION13X,1HX15X,1HP15X,1HY7X)                     N  64
+      END                                                                 N  65-
+      FUNCTION SUM (A,NX2,NXL,NY21)                                       O   1
+      DIMENSION A(10200)                                                  O   2
+C     TOTAL INTEGRAL                                                      O   3
+      SUM=0.0                                                             O   4
+      DO 1 I=NX2,NXL                                                      O   5
+      H=ABS(A(I)-A(I-1))                                                  O   6
+      B=(A(NY21)+A(NY21-1))/2.0                                           O   7
+      SUM=SUM+H*B                                                         O   8
+1     NY21=NY21+1                                                         O   9
+      RETURN                                                              O  10
+      END                                                                 O  11-
+      SUBROUTINE GRAL (A,NX2,NXL,NY21,Q000FL)                             P   1
+C     RUNNING INTEGRAL                                                    P   2
+      DIMENSION Q000FL(600), A(10200)                                     P   3
+      M=1                                                                 P   4
+      Q000FL(M)=0.0                                                       P   5
+      DO 1 I=NX2,NXL                                                      P   6
+      M=M+1                                                               P   7
+      H=ABS(A(I)-A(I-1))                                                  P   8
+      B=(A(NY21)+A(NY21-1))/2.0                                           P   9
+      Q000FL(M)=Q000FL(M-1)+H*B                                           P  10
+1     NY21=NY21+1                                                         P  11
+      RETURN                                                              P  12
+      END                                                                 P  13-
+      SUBROUTINE EMULT (A,B,C,NRA,MRB,LCC)                                Q   1
+C     MATRIX MULTIPLICATION                                               Q   2
+      DIMENSION A(8,8), B(8,1), C(8,1)                                    Q   3
+      DO 1 I=1,NRA                                                        Q   4
+      DO 1 J=1,LCC                                                        Q   5
+      C(I,J)=0.0                                                          Q   6
+      DO 1 K=1,MRB                                                        Q   7
+1     C(I,J)=C(I,J)+A(I,K)*B(K,J)                                         Q   8
+      RETURN                                                              Q   9
+      END                                                                 Q  10-
+      SUBROUTINE Y (N,K)                                                  R   1
+C     THIS SECTION FINDS THE VALUE OF Y AND THE INTEGRAL OF ALPHA         R   2
+      COMMON M,JCASE,D1(8,8),D2(8,1),CHIZER(8),CHIN1(8,1),CHIN2(8,1),CHN  R   3
+     1P11(8,1),CHNP12(8,1),CHIA(8,1),CHIB(8,1),CKAY(8,8)                  R   4
+      COMMON /BKA/ KCASE,JNT,KIT,K000FX,KHOM,KIF,TEMP,TEMP2               R   5
+      COMMON /BKA/ ROOT,JNCOL,JXSTA,QCON,TCON,EMU,PZER,YZER,SMALK,TAU     R   6
+      COMMON /BKA/ ELMBDA,EN,KSUB,KIA,ASSUME,STEP,EPS1,EPS2,EPS3,TMASS    R   7
+      COMMON /BKA/ DEBUG,TMT,PROWN,JSET,NA,MA,KBO,KUP,COMPQ,COMPT,COMPPZ  R   8
+      COMMON /BKA/ QDIV,Q1,TCR,T1,PZCR,DIVK,EXN,EXNP1,JBRAN,DELC,DELC2,A  R   9
+     1LPHL                                                                R  10
+      COMMON /BKA/ SIGN1,SIGN2,SIGN3,ITCNT,FMEG,VZER,ALZER,MZER,R,FM,EMM  R  11
+     1N                                                                   R  12
+      COMMON /BKA/ EIMN,CNAMN,FMN,PNUMN,DPNUMN,ZPMN,ETAMN,ONEKMN,TWOKMN   R  13
+      COMMON /BKA/ PMMN,IANS,IALPH,EMZER,KY,ALA,ALB,ALC,ALD,ALE,SUMA      R  14
+      COMMON /BKB/ PARAM(10200),EMI(600),DCDI(600),PSUM(600),YSUM(600),D  R  15
+     1IA(600),SCDB,SHDCMA(600),PSHN                                       R  16
+      COMMON /BKC/ COND(8),KCOND(2),ROWN(7),SAVW(4),SAVFW(4),ANS(9)       R  17
+      COMMON /BKC/ KADD(11),OUT(10)                                       R  18
+      COMMON /KBLK/ JLO,JUP,KLO,KUPP,SUMEK,STEPK,LSUB,SK1,SK2,SK3,DIFF1   R  19
+      COMMON /KBLK/ DIFF2,DIFF3,SN1,SN2,SN3,EPSK,MSUB,ACOND(8),ACTK,FINK  R  20
+      COMMON /ROBLK/ JCR,JNEL,JK                                          R  21
+      COMMON /JBLK/ IF                                                    R  22
+      COMMON /ALY/ SUMAL1,SUMAL2,GRALAL,GRALYP                            R  23
+      COMMON /AD1/ TOTD,TOTW,DEE                                          R  24
+      COMMON /BLKT/ KTST,LTST                                             R  25
+      COMMON /BLKT/ I2CNT                                                 R  26
+      GO TO (1,2,7), N                                                    R  27
+C                                                                         R  28
+C          CLEAR TEMPORARY CELLS                                          R  29
+1     ALA=0.0                                                             R  30
+      ALB=0.0                                                             R  31
+      ALC=0.0                                                             R  32
+      ALD=0.0                                                             R  33
+      RETURN                                                              R  34
+C                                                                         R  35
+C          PICK SOLUTION AND STORE(ALPHA(N+1)+ALPHA(N))                   R  36
+2     KY=KCOND(JBRAN)                                                     R  37
+      GO TO (3,4,5,6), KY                                                 R  38
+C          V(A)(ALPHA(N)+ALPHA(N+1))                                      R  39
+3     ALA=SUMA                                                            R  40
+      RETURN                                                              R  41
+C          ALPHA(A)(ALPHA(N)+ALPHA(N+1))                                  R  42
+4     ALB=SUMA                                                            R  43
+      RETURN                                                              R  44
+C          M(A)(ALPHA(N)+ALPHA(N+1))                                      R  45
+5     ALC=SUMA                                                            R  46
+      RETURN                                                              R  47
+C         MOVE ALPHA FROM B SOLUTION                                      R  48
+C          1/R(ALPHA(N)+ALPHA(N+1))                                       R  49
+6     ALD=SUMA                                                            R  50
+      RETURN                                                              R  51
+C                                                                         R  52
+7     DELO2=ABS(EXNP1-EXN)/2.0                                            R  53
+C          Y                                                              R  54
+C          LAMBDA(X(N+1)+X(N))                                            R  55
+      SUMX=ELMBDA*(EXNP1+EXN)                                             R  56
+C          SUMMATION(N)TO(N+1)                                            R  57
+      SUMA=ALA+ALB+ALC                                                    R  58
+C          1/R(LAMBDA(X(N+1)+X(N)))                                       R  59
+      SUMB=COND(4)*SUMX+COND(8)*SUMX                                      R  60
+      SUMC=ALD+SUMB                                                       R  61
+      SUMA=DELO2*(SUMA+SUMC)                                              R  62
+      YSUM(K)=YSUM(K-1)+SUMA                                              R  63
+      IF (K.NE.JXSTA) RETURN                                              R  64
+      GRALYP=YSUM(K)                                                      R  65
+      GRALAL=SUMAL1+SUMAL2                                                R  66
+      RETURN                                                              R  67
+      END                                                                 R  68-
+      SUBROUTINE EXTRA                                                    S   1
+C     THIS SECTION COMPUTES PHYSICAL AND                                  S   2
+C     STABILITY CHARACTERISTICS                                           S   3
+C                                                                         S   4
+      COMMON N,JCASE,D1(8,8),D2(8,1),CHIZER(8),CHIN1(8,1),CHIN2(8,1),CHN  S   5
+     1P11(8,1),CHNP12(8,1),CHIA(8,1),CHIB(8,1),CKAY(8,8)                  S   6
+      COMMON /BKA/ KCASE,JNT,KIT,K000FX,KHOM,KIF,TEMP,TEMP2               S   7
+      COMMON /BKA/ ROOT,JNCOL,JXSTA,QCON,TCON,EMU,PZER,YZER,SMALK,TAU     S   8
+      COMMON /BKA/ ELMBDA,EN,KSUB,KIA,ASSUME,STEP,EPS1,EPS2,EPS3,TMASS    S   9
+      COMMON /BKA/ DEBUG,TMT,PROWN,JSET,NA,MA,KBO,KUP,COMPQ,COMPT,COMPPZ  S  10
+      COMMON /BKA/ QDIV,Q1,TCR,T1,PZCR,DIVK,EXN,EXNP1,JBRAN,DELC,DELC2,A  S  11
+     1LPHL                                                                S  12
+      COMMON /BKA/ SIGN1,SIGN2,SIGN3,ITCNT,FMEG,VZER,ALZER,MZER,R,FM,EMM  S  13
+     1N                                                                   S  14
+      COMMON /BKA/ EIMN,CNAMN,FMN,PNUMN,DPNUMN,ZPMN,ETAMN,ONEKMN,TWOKMN   S  15
+      COMMON /BKA/ PMMN,IANS,IALPH,EMZER,KY,ALA,ALB,ALC,ALD,ALE,SUMA      S  16
+      COMMON /BKB/ PARAM(10200),EMI(600),DCDI(600),PSUM(600),YSUM(600),D  S  17
+     1IA(600),SCDB,SHDCMA(600),PSHN                                       S  18
+      COMMON /BKC/ COND(8),KCOND(2),ROWN(7),SAVW(4),SAVFW(4),ANS(9)       S  19
+      COMMON /BKC/ KADD(11),OUT(10)                                       S  20
+      COMMON /KBLK/ JLO,JUP,KLO,KUPP,SUMEK,STEPK,LSUB,SK1,SK2,SK3,DIFF1   S  21
+      COMMON /KBLK/ DIFF2,DIFF3,SN1,SN2,SN3,EPSK,MSUB,ACOND(8),ACTK,FINK  S  22
+      COMMON /ROBLK/ JCR,JNEL,JK                                          S  23
+      COMMON /JBLK/ IF                                                    S  24
+      COMMON /ALY/ SUMAL1,SUMAL2,GRALAL,GRALYP                            S  25
+      COMMON /AD1/ TOTD,TOTW,DEE                                          S  26
+      COMMON /BLKT/ KTST,LTST                                             S  27
+      COMMON /BLKT/ I2CNT                                                 S  28
+      REAL NEWTER(2000)                                                   S  29
+C                                                                         S  30
+C          PUT INPUT DATA BACK IN COLUMNS                                 S  31
+      LE=JK+2*JXSTA                                                       S  32
+      DO 1 ME=1,JCR                                                       S  33
+      JE=JXSTA+ME                                                         S  34
+      KE=JE+(JXSTA-1)*JCR                                                 S  35
+      DO 1 IE=JE,KE,JCR                                                   S  36
+      LE=LE+1                                                             S  37
+1     PARAM(LE)=PARAM(IE)                                                 S  38
+C                                                                         S  39
+C          MOVE ALPHA                                                     S  40
+      IALPH=JK+JXSTA                                                      S  41
+      DO 2 ME=1,JXSTA                                                     S  42
+      JE=IALPH+ME                                                         S  43
+      LE=LE+1                                                             S  44
+2     PARAM(LE)=PARAM(JE)                                                 S  45
+C          SHIFT COLUMNS TO FOLLOW X                                      S  46
+      LE=JK+2*JXSTA+1                                                     S  47
+      JE=LE+JK-1                                                          S  48
+      KE=JXSTA                                                            S  49
+      DO 3 ME=LE,JE                                                       S  50
+      KE=KE+1                                                             S  51
+3     PARAM(KE)=PARAM(ME)                                                 S  52
+      IF (LSUB.NE.4) GO TO 5                                              S  53
+C          K1=ACTUAL K FOR EFFECTIVE STATIC MARGIN                        S  54
+      LE=5*JXSTA+JLO+1                                                    S  55
+      ME=5*JXSTA+JUP+1                                                    S  56
+C          INTERVAL IN K1                                                 S  57
+      DO 4 KE=LE,ME                                                       S  58
+4     PARAM(KE)=ACTK                                                      S  59
+C                                                                         S  60
+C          (X)*(M),(X**2)*(M)                                             S  61
+5     LE=14*JXSTA                                                         S  62
+      ME=15*JXSTA                                                         S  63
+      DO 6 IE=1,JXSTA                                                     S  64
+      JE=JXSTA+IE                                                         S  65
+      LE=LE+1                                                             S  66
+      ME=ME+1                                                             S  67
+      PARAM(LE)=PARAM(IE)*PARAM(JE)                                       S  68
+6     PARAM(ME)=PARAM(IE)*PARAM(LE)                                       S  69
+C                                                                         S  70
+C       CENTER OF GRAVITY                                                 S  71
+      JX2=2                                                               S  72
+      JY21=14*JXSTA+2                                                     S  73
+      ATOP=SUM(PARAM,JX2,JXSTA,JY21)                                      S  74
+      EXBAR=ATOP/TMASS                                                    S  75
+C                                                                         S  76
+C          MASS MOMENT OF INERTIA                                         S  77
+      JY21=15*JXSTA+2                                                     S  78
+      AJAY=SUM(PARAM,JX2,JXSTA,JY21)                                      S  79
+C                                                                         S  80
+C          RADIUS OF GYRATION                                             S  81
+      RBAR=SQRT(AJAY/TMASS)                                               S  82
+C                                                                         S  83
+C          MASS MOMENT OF INERTIA ABOUT THE CENTROID                      S  84
+      AJAYZ=AJAY-TMASS*EXBAR**2                                           S  85
+C                                                                         S  86
+C         (K1)*(DCLA), (K1)*(DCLA)*X                                      S  87
+      LE=14*JXSTA                                                         S  88
+      ME=15*JXSTA                                                         S  89
+      DO 7 IE=1,JXSTA                                                     S  90
+      JE=3*JXSTA+IE                                                       S  91
+      NE=5*JXSTA+IE                                                       S  92
+      LE=LE+1                                                             S  93
+      ME=ME+1                                                             S  94
+C         (K1)*(DCLA)                                                     S  95
+      PARAM(LE)=PARAM(NE)*PARAM(JE)                                       S  96
+C         (K1)*(DCLA)*X                                                   S  97
+7     PARAM(ME)=PARAM(IE)*PARAM(LE)                                       S  98
+C                                                                         S  99
+C          TOTAL AERODYNAMIC LIFT COEFFICIENTS                            S 100
+      JY21=14*JXSTA+2                                                     S 101
+      CNAS=SUM(PARAM,JX2,JXSTA,JY21)                                      S 102
+C                                                                         S 103
+C          AERODYNAMIC CENTER OF PRESSURE                                 S 104
+      JY21=15*JXSTA+2                                                     S 105
+      TOP=SUM(PARAM,JX2,JXSTA,JY21)                                       S 106
+      DO 8 I=1,JXSTA                                                      S 107
+8     NEWTER(I)=PARAM(I)                                                  S 108
+      DO 9 I=1,JXSTA                                                      S 109
+      K=JXSTA+I                                                           S 110
+9     NEWTER(K)=SHDCMA(I)                                                 S 111
+      K=JXSTA+2                                                           S 112
+      TOTNEW=SUM(NEWTER,JX2,JXSTA,K)                                      S 113
+      EXR=(TOP-TOTNEW)/CNAS                                               S 114
+C          SAVE INTEGRALS FOR SHORT PERIOD FREQUENCY                      S 115
+C         (INT K1*DCLA)                                                   S 116
+      BTOP=CNAS                                                           S 117
+C         (INT K1*DCLA*X)                                                 S 118
+      CTOP=TOP                                                            S 119
+C                                                                         S 120
+C          STATIC MARGIN                                                  S 121
+      SMR=EXBAR-EXR                                                       S 122
+C                                                                         S 123
+C          Q*ALPHA                                                        S 124
+      DO 10 IE=1,JXSTA                                                    S 125
+      ME=13*JXSTA+IE                                                      S 126
+      JE=7*JXSTA+IE                                                       S 127
+10    PARAM(ME)=QCON*PARAM(JE)                                            S 128
+      LEE=16*JXSTA                                                        S 129
+C          AERODYNAMIC LIFT FORCE                                         S 130
+      DO 11 IE=1,JXSTA                                                    S 131
+      LE=14*JXSTA+IE                                                      S 132
+      ME=13*JXSTA+IE                                                      S 133
+      LEE=LEE+1                                                           S 134
+11    PARAM(LEE)=PARAM(LE)*PARAM(ME)                                      S 135
+C                                                                         S 136
+      WRITE (6,18)                                                        S 137
+      WRITE (6,19) TMASS,EXBAR,CNAS,EXR,RBAR,SMR,AJAY,AJAYZ               S 138
+C                                                                         S 139
+C          SHORT PERIOD FREQUENCY                                         S 140
+C          (INT M)*(INT MX**2)-(INT MX)**2                                S 141
+      DEN=(TMASS*AJAY)-(ATOP*ATOP)                                        S 142
+C         (INT DCLA)*(INT MX)-(INT X*DCLA)*(INT M)                        S 143
+      ANUM=(BTOP*ATOP)-(CTOP*TMASS)                                       S 144
+      DEN=QCON*(ANUM/DEN)                                                 S 145
+      ANUM=((TCON+(QCON*BTOP))/((2.0*EMU)*TMASS))**2                      S 146
+      SA=DEN-ANUM                                                         S 147
+      IF (SA) 13,12,12                                                    S 148
+12    SB=SQRT(SA)                                                         S 149
+      FR=(1.0/6.2831854)*SB                                               S 150
+      WRITE (6,20) SB,FR                                                  S 151
+      IF (LSUB.EQ.4) GO TO 14                                             S 152
+      RETURN                                                              S 153
+C          EXIT IF NEGATIVE ARGUMENT FOR SQ.ROOT                          S 154
+13    WRITE (6,21) SA                                                     S 155
+      IF (LSUB.EQ.4) GO TO 14                                             S 156
+      RETURN                                                              S 157
+C                                                                         S 158
+C         EFFECTIVE STATIC MARGIN(K DIVERGENCE ONLY)                      S 159
+14    KXL=JLO+1                                                           S 160
+      KXU=JUP+1                                                           S 161
+C         DCLA(XBAR)                                                      S 162
+      DO 15 IE=KXL,KXU                                                    S 163
+      JE=3*JXSTA+IE                                                       S 164
+      LE=15*JXSTA+IE                                                      S 165
+      PARAM(LE)=PARAM(JE)*(EXBAR-PARAM(IE))                               S 166
+15    CONTINUE                                                            S 167
+C         (INT DCLA(XBAR))                                                S 168
+      JX2=KXL+1                                                           S 169
+      JY21=15*JXSTA+JX2                                                   S 170
+      DTOP=SUM(PARAM,JX2,KXU,JY21)                                        S 171
+      IF (I2CNT.GE.LTST) GO TO 17                                         S 172
+16    SMEF=((ACTK-DIVK)*DTOP-TOTNEW)/BTOP                                 S 173
+      WRITE (6,22) ACTK,DIVK,DTOP,TOTNEW,BTOP                             S 174
+      WRITE (6,23) SMEF                                                   S 175
+      RETURN                                                              S 176
+17    IF (MSUB.EQ.4) GO TO 16                                             S 177
+      WRITE (6,24)                                                        S 178
+      RETURN                                                              S 179
+C                                                                         S 180
+18    FORMAT (1H05X,4HMASS12X,5HX(CG)11X,5HC(LA)11X,5HX(CP)11X,4HRBAR10X  S 181
+     1,9HX(SM,RIG)11X,1HJ12X,5HJZERO6X)                                   S 182
+19    FORMAT (8E16.8)                                                     S 183
+20    FORMAT (7H0OMEGA E16.8/24H SHORT PERIOD FREQUENCY E16.8)            S 184
+21    FORMAT (26H0NO SHORT PERIOD FREQUENCY/12H SQ.ROOT OF E16.8)         S 185
+22    FORMAT (/5H K1 =,E15.7,8H K1 DIV=,E15.7,11H DCL(XC-X)=,E15.7,9H SH  S 186
+     1DCMA =,E15.7,8H K1DCL =,E15.7)                                      S 187
+23    FORMAT (16H0         X(GSM)/4XE16.8)                                S 188
+24    FORMAT (20H0NO K DIV ,NO X(GSM))                                    S 189
+      END                                                                 S 190-
+"

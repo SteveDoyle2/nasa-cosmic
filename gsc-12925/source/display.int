@@ -1,0 +1,36 @@
+  interface;
+
+  unit display(menu, suplstring2, supset, cpflg, help, multimenu);
+
+  USES getparam;
+
+  type
+      suplstring2 = super array[1..*] of lstring(2);
+      supset      = super array[1..*] of set of char;
+  var
+      cpflg : boolean;
+
+  procedure menu ( var msg         : suplstring;
+                   nlines          : integer;
+                   start_line      : integer;
+                   lower_bound     : integer;
+                   upper_bound     : integer;
+                   default         : integer;
+                   var n           : integer;
+                   var reply       : supinteger;
+                   helpcode        : word );
+
+  procedure multimenu ( var msg         : suplstring;
+                   nlines          : integer;
+                   sline,nvalues   : integer;
+                   var def         :suplstring2;
+                   var x,y         : supinteger;
+                   var range       : supset;
+                   var funckey     : byte;
+                   helpcode        : word );
+
+  procedure help ( code            : word );
+
+  begin
+  end;
+

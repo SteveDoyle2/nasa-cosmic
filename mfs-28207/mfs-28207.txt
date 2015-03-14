@@ -1,0 +1,75 @@
+ SCAT- SYSTEM COMMONALITY ANALYSIS TOOL
+
+( BOEING CO. )
+
+     The System Commonality Analysis Tool, SCAT, was designed to aid man-
+agers and engineers in identifying common, potentially common, and unique
+components of a system. Commonality lowers overall system cost through use
+of the smallest variety of items or subsystem types in the greatest num-
+ber of applications. SCAT, through utilization of a comprehensive parts
+database, determines cost effectiveness by comparing life cycle costs of
+unique part configurations and standard part configurations. The SCAT
+database reflects both engineering and financial data. SCAT was instituted
+as a commonality analysis for the Space Station, but is easily applicable to
+other projects such as software commonality, which is used as an example in
+the detailed documentation.
+
+     SCAT incorporates three major functions: 1) a database creation and
+maintenance program, 2) the commonality analysis, and 3) system utili-
+ties such as host operating system commands, database load, and unload. The
+parts database contains 'generic' attributes needed to calculate life cy-
+cle costs, and 'discriminating' attributes for engineering design data.
+SCAT selects parts which are similar based on user-defined selection cri-
+teria.
+
+     There are two analysis algorithms to choose from. The direct algo-
+rithm uses supplied cost figures for design, development, testing and first
+product calculations. The relational algorithm estimates these costs
+based on complexity factor (simple, medium, complex), item type (elec-
+trical, mechanical, etc.), and the percent new development needed. SCAT
+also contains a software commonality algorithm which requires package
+size, expected number of years of use, and whether the programs are mission-
+critical, developed in-house, or dependent on hardware which is not yet
+available. SCAT produces reports which tabulate maintenance, initial con-
+figuration, and expected total costs. By examining systems made of unique
+parts, and systems made of parts having comparable functions, SCAT can help
+determine which parts are good commonality candidates. SCAT is menu-driven
+and includes an on-line help facility.
+
+     SCAT is written in FORTRAN 77 for interactive execution. It has been
+implemented on an IBM PC/XT compatible computer operating under MS-DOS
+(V.2.0 and 3.0) with a central memory requirement of approximately 640K
+of 8 bit bytes. SCAT requires a 10MB hard disk, the commercial R:base 5000
+(V1.0 or 1.01) database, and the MicroRIM database interface package which
+is compatible with MicroSoft FORTRAN V.3.2 or 3.31. This program was devel-
+oped in 1987.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: FORTRAN 77
+
+MACHINE REQUIREMENTS: IBM PC SERIES
+
+PROGRAM SIZE: APPROXIMATELY 8,427 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 5.25 Inch IBM PC DOS Format Diskette
+
+PROGRAM NUMBER: MFS-28207
+
+DOMESTIC - DOCUMENTATION PRICE: $37.00    PROGRAM PRICE: $600.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $74.00   PROGRAM PRICE: $1200.00
+
+
+
+                                        2
+

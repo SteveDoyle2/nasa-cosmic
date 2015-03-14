@@ -1,0 +1,93 @@
+ STAR- A SIMPLE TOOL FOR AUTOMATED REASONING SUPPORTING HYBRID APPLICA-
+TIONS OF ARTIFICIAL INTELLIGENCE
+
+( Cal Tech/Jet Propulsion Lab. )
+
+     The Simple Tool for Automated Reasoning program (STAR) is an interac-
+tive, interpreted programming language for the development and operation
+of artificial intelligence (AI) application systems. STAR provides an en-
+vironment for integrating traditional AI symbolic processing with func-
+tions and data structures defined in compiled languages such as C, FORTRAN
+and PASCAL. This type of integration occurs in a number of AI applications
+including interpretation of numerical sensor data, construction of intel-
+ligent user interfaces to existing compiled software packages, and cou-
+pling AI techniques with numerical simulation techniques and control sys-
+tems software. The STAR language was created as part of an AI project for
+the evaluation of imaging spectrometer data at NASA's Jet Propulsion Lab-
+oratory.
+
+     Programming in STAR is similar to other symbolic processing languages
+such as LISP and CLIP. STAR includes seven primitive data types and associ-
+ated operations for the manipulation of these structures. A semantic net-
+work is used to organize data in STAR, with capabilities for inheritance of
+values and generation of side effects. The AI knowledge base of STAR can be
+a simple repository of records or it can be a highly interdependent associa-
+tion of implicit and explicit components. The symbolic processing environ-
+ment of STAR may be extended by linking the interpreter with functions de-
+fined in conventional compiled languages. These external routines inter-
+act with STAR through function calls in either direction, and through the
+exchange of references to data structures. The hybrid knowledge base may
+thus be accessed and processed in general by either side of the application.
+
+     STAR is initially used to link externally compiled routines and data
+structures. It is then invoked to interpret the STAR rules and symbolic
+structures. In a typical interactive session, the user enters an expres-
+sion to be evaluated, STAR parses the input, evaluates the expression, per-
+forms any file input/output required, and displays the results.
+
+     The STAR interpreter is written in the C language for interactive ex-
+ecution. It has been implemented on a VAX 11/780 computer operating under
+VMS, and the UNIX version has been implemented on a Sun Microsystems 2/170
+workstation. STAR has a memory requirement of approximately 200K of 8 bit
+bytes, excluding externally compiled functions and application-dependent
+symbolic definitions. This program was developed in 1985.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+                                  UNIX VERSION
+
+LANGUAGE: C-LANGUAGE
+
+MACHINE REQUIREMENTS: UNIX OPERATING SYSTEMS
+
+PROGRAM SIZE: APPROXIMATELY 14,300 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI UNIX TAR Format Magnetic Tape
+
+PROGRAM NUMBER: NPO-16832
+
+DOMESTIC - DOCUMENTATION PRICE: $41.00    PROGRAM PRICE: $2000.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $82.00   PROGRAM PRICE: $4000.00
+
+
+
+                                DEC VAX VERSION
+
+LANGUAGE: C-LANGUAGE
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 13,600 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX FILES-11 Format Magnetic Tape
+
+PROGRAM NUMBER: NPO-16965
+
+DOMESTIC - DOCUMENTATION PRICE: $41.00    PROGRAM PRICE: $2000.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $82.00   PROGRAM PRICE: $4000.00
+
+
+
+                                        2
+

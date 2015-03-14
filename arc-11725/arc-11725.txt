@@ -1,0 +1,53 @@
+ PITEST- MULTIPLE PRECISION ARITHMETIC
+
+( STERLING )
+
+     The PITEST program is a package of subroutines that perform arith-
+metic on floating-point numbers of arbitrarily high precision. PITEST can
+also work on very large integers by treating them as floating-point numbers
+with enough precision to exactly represent their integral values. Multi-
+precision computations are important in public key cryptography, Bessel
+function round-off, and as integrity tests for scientific computer systems
+(testing both hardware and FORTRAN compilers). PITEST calculates the value
+of pi using the Borwein quadratically convergent algorithm of 1983 and the
+quartically convergent algorithm obtained in 1985. PITEST is capable of
+calculating pi to several billion digits, although the program as delivered
+will calculate only 25,000 digits. This package also contains subroutines
+to perform multiplication, division, and square root extraction using so-
+phisticated techniques such as fast Fourier Transforms. Use of these sub-
+routines can dramatically cut computational resources when high precision
+arithmetic (over 400 digits) is required. This package includes single and
+double precision versions of all subroutines.
+
+     PITEST is written in FORTRAN 77 for batch execution and can be imple-
+mented on any computer with 64 bit floating-point arithmetic (or 60 bits for
+single precision). PITEST has been implemented on a CRAY-XMP supercomputer
+under COS with a central memory requirement of approximately 160K of 64 bit
+words. It has also run on an IBM PC with a math coprocessor. PITEST requires
+a machine dependent clock timing subroutine. This program was developed in
+1986.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN 77
+
+MACHINE REQUIREMENTS: MACHINE INDEPENDENT
+
+PROGRAM SIZE: APPROXIMATELY 4,870 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: ARC-11725
+
+DOMESTIC - DOCUMENTATION PRICE: $12.00    PROGRAM PRICE: $900.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $24.00   PROGRAM PRICE: $1800.00
+
+
+
+                                        1
+

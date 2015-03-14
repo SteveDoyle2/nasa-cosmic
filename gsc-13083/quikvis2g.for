@@ -1,0 +1,90 @@
+      SUBROUTINE QUIKVIS2G(IERR,IEND)
+      IMPLICIT REAL*8 (A-H,O-Z)
+C
+C THIS ROUTINE IS PART OF THE QUIKVIS PROGRAM.  IT IS THE ROUTINE BY
+C WHICH THE USER PROMPTS FOR MISCELLANEOUS PARAMETERS.
+C
+C VARIABLE DIM TYPE I/O DESCRIPTION
+C -------- --- ---- --- -----------
+C
+C IERR      1   I*4  O  ERROR RETURN FLAG
+C                       =0, NO ERRORS.
+C                       = OTHERWISE, ERROR PRESENT.
+C
+C IEND      1   I*4  O  END-FILE FLAG
+C                       =0, NO END-FILE ENCOUNTERED DURING USER INPUT.
+C                       =1, END-FILE ENCOUNTERED.
+C
+C***********************************************************************
+C
+C BY C PETRUZZO/GFSC/742.   2/86.
+C       MODIFIED.... 9/86. CJP. EVENT NAMES FORMERLY RESIDED IN FORMAT
+C                               STATEMENT 1001(QUIKVIS.INC'S ORBEVENT
+C                               ARRAY NOW SUPPLIES THE NAMES);  MAXORBEV
+C                               REPLACES HARD-CODED VALUE USED FOR ERROR
+C                               CHECK ON KRELTIME VALUE.
+C
+C***********************************************************************
+C
+      INCLUDE 'QUIKVIS.INC'
+C
+      LOGICAL OK
+      CHARACTER*12 ERRMSG(2)/ 'REPROMPTING.', 'STOPPING.' /
+C
+      IERR = 0
+      IEND = 1  ! WILL BE RESET TO ZERO IF READ IS DONE OK
+C
+C
+      CALL QUIKVIS999(-1,R8DATA,I4DATA,L4DATA)
+C
+C
+      WRITE(LUPROMPT,6756) '8'
+ 6756 FORMAT(//,
+     *   ' ***************** USER GUIDE TABLE ',A,' *****************'/)
+C
+C
+      OK = .FALSE.
+C
+      KSAVE = KRELTIME
+      DO WHILE (.NOT.OK)
+C
+        KRELTIME = KSAVE
+        VISMIN = VISMIN/60.D0   ! TO MINUTES
+C
+        WRITE(LUPROMPT,1001) KRELTIME,
+     *      (I, '= '//ORBEVENT(I), I=1,MAXORBEV),VISMIN
+        READ(LUINPUT,*,END=9999) KRELTIME,VISMIN
+C
+C      ERROR CHECK
+        OK = 1.LE.KRELTIME .AND. KRELTIME.LE.MAXORBEV
+        IF(.NOT.OK) THEN
+          INDEXERR = 1
+          IF(.NOT.INTERACTIVE) INDEXERR = 2
+          WRITE(LUPROMPT,7800) 'BAD VALUE',ERRMSG(INDEXERR)
+          IF(.NOT.INTERACTIVE) THEN
+            IERR = 1
+            GO TO 9999
+            END IF
+          END IF
+C
+        VISMIN = DMAX1(0.D0,VISMIN*60.D0)   ! TO SECONDS
+        END DO   ! ENDS THE 'DO WHILE(.NOT.OK)'
+C
+C
+      IEND = 0   ! NO END FILE, SO RESET IEND.
+C
+ 9999 CONTINUE
+C
+C WRAP UP. STORE DATA IN QUIKVIS999 ARRAYS FOR RETRIEVAL ELSEWHERE.
+C
+      CALL QUIKVIS999(1,R8DATA,I4DATA,L4DATA)
+C
+      RETURN
+ 1001 FORMAT(//,
+     *    ' ORBIT EVENT INDICATOR FOR RELATIVE TIME USE = ',I3//,
+     *    '    ASSIGNMENTS: ',<MAXORBEV>(T17,I2,A/),/
+     *    ' MINIMUM AVAILABILITY(MINUTES) FOR SUMMARY TABLE ENTRY = ',
+     *        G11.4//,
+     *    ' ENTER > ',$)
+ 7800 FORMAT(/,'   >>> USER INPUT ERROR. ',A,'.  ',A/)
+      END

@@ -1,0 +1,228 @@
+ID SFS,FRISCH
+APP DMAP
+TIME 30
+CEND
+TITLE = FLEXIBLE DECOUPLING FRAME
+SUBTITLE = ORIGINAL MODEL - PROBLEM FLXDFB
+LABEL = 35 MODES AND FREQUENCIES WITH MODAL OBSERVE/CONTROL -ABILITY
+METHOD = 40
+DISP = ALL
+BEGIN BULK
+$$
+PARAM   GRDPNT  0
+PARAM   WTMASS  .00259
+PARAM   MODOBCL 1
+PARAM   LMODES  35
+$$
+$$$              PEDESTAL WITH CONCEN MASS
+$$
+CONM2   1000    100             500.                                    +CM1000
++CM1000 750.+3          300.+3                  750.+3
+$
+EIGR    40      GIV                             35                      +EIG40
++EIG40  MAX
+$$$             GRID POINT ID'S AND COORDINATES
+$$
+GRID    100             0.      0.      0.
+GRID    102             0.      12.     0.
+GRID    104             0.      24.     0.
+GRID    106             0.      36.     0.
+GRID    108             0.      48.     0.
+GRID    110             0.      60.     0.
+GRID    112             6.      60.     0.
+GRID    114             18.     60.     0.
+GRID    116             30.     60.     0.
+GRID    118             42.     60.     0.
+GRID    120             54.     60.     0.
+GRID    122             66.     60.     0.
+GRID    124             78.     60.     0.
+GRID    126             90.     60.     0.
+GRID    128             90.     72.     0.
+GRID    130             90.     84.     0.
+GRID    132             90.     96.     0.
+GRID    134             90.     108.    0.
+GRID    136             90.     120.    0.
+GRID    138             90.     132.    0.
+GRID    140             90.     144.    0.
+GRID    142             90.     156.    0.
+GRID    144             90.     168.    0.
+GRID    146             90.     180.    0.
+GRID    148             78.     180.    0.
+GRID    150             66.     180.    0.
+GRID    152             54.     180.    0.
+GRID    154             42.     180.    0.
+GRID    156             30.     180.    0.
+GRID    160             18.     180.    0.
+GRID    162             6.      180.    0.
+GRID    164             0.      180.    0.
+GRID    166             -6.     180.    0.
+GRID    168             -18.    180.    0.
+GRID    170             -30.    180.    0.
+GRID    172             -42.    180.    0.
+GRID    174             -54.    180.    0.
+GRID    176             -66.    180.    0.
+GRID    178             -78.    180.    0.
+GRID    180             -90.    180.    0.
+GRID    182             -90.    168.    0.
+GRID    184             -90.    156.    0.
+GRID    186             -90.    144.    0.
+GRID    188             -90.    132.    0.
+GRID    190             -90.    120.    0.
+GRID    192             -90.    108.    0.
+GRID    194             -90.    96.     0.
+GRID    196             -90.    84.     0.
+GRID    198             -90.    72.     0.
+GRID    200             -90.    60.     0.
+GRID    202             -78.    60.     0.
+GRID    204             -66.    60.     0.
+GRID    206             -54.    60.     0.
+GRID    208             -42.    60.     0.
+GRID    210             -30.    60.     0.
+GRID    212             -18.    60.     0.
+GRID    214             -6.     60.     0.
+$$
+$$             OMIT1 CARDS
+$$
+OMIT1   456     102     104     106     108
+OMIT1   456     110     112     114     116     118
+OMIT1   456     120     122     124     126     128
+OMIT1   456     130     132     134     136     138
+OMIT1   456     140     142     144     146     148
+OMIT1   456     150     152     154     156
+OMIT1   456     160     162     164     166     168
+OMIT1   456     170     172     174     176     178
+OMIT1   456     180     182     184     186     188
+OMIT1   456     190     192     194     196     198
+OMIT1   456     200     202     204     206     208
+OMIT1   456     210     212     214
+$$
+OMIT1   123     102     106
+OMIT1   123     202     206     210
+OMIT1   123     124     120     116
+OMIT1   123     198     194     190     186     182
+OMIT1   123     128     132     136     140     144
+OMIT1   123     148     152     156     160
+OMIT1   123     178     174     170     166
+$$
+$$
+$$$            CONNECTING CBARS
+$$
+$$$               LOWER T-SECTION
+$
+CBAR    100     10      100     102     0.      0.      1.      1
+CBAR    102     10      102     104     0.      0.      1.      1
+CBAR    104     10      104     106     0.      0.      1.      1
+CBAR    106     10      106     108     0.      0.      1.      1
+CBAR    108     10      108     110     0.      0.      1.      1
+$$
+CBAR    110     10      110     112     0.      0.      1.      1
+CBAR    112     10      112     114     0.      0.      1.      1
+CBAR    114     10      114     116     0.      0.      1.      1
+CBAR    116     10      116     118     0.      0.      1.      1
+CBAR    118     10      118     120     0.      0.      1.      1
+CBAR    120     10      120     122     0.      0.      1.      1
+CBAR    122     10      122     124     0.      0.      1.      1
+CBAR    124     10      124     126     0.      0.      1.      1
+$$
+CBAR    200     10      200     202     0.      0.      1.      1
+CBAR    202     10      202     204     0.      0.      1.      1
+CBAR    204     10      204     206     0.      0.      1.      1
+CBAR    206     10      206     208     0.      0.      1.      1
+CBAR    208     10      208     210     0.      0.      1.      1
+CBAR    210     10      210     212     0.      0.      1.      1
+CBAR    212     10      212     214     0.      0.      1.      1
+CBAR    214     10      214     110     0.      0.      1.      1
+$$$          +Y VERTICAL
+$$
+CBAR    126     10      126     128     0.      0.      1.      1
+CBAR    128     10      128     130     0.      0.      1.      1
+CBAR    130     10      130     132     0.      0.      1.      1
+CBAR    132     10      132     134     0.      0.      1.      1
+CBAR    134     10      134     136     0.      0.      1.      1
+CBAR    136     10      136     138     0.      0.      1.      1
+CBAR    138     10      138     140     0.      0.      1.      1
+CBAR    140     10      140     142     0.      0.      1.      1
+CBAR    142     10      142     144     0.      0.      1.      1
+CBAR    144     10      144     146     0.      0.      1.      1
+$$$          UPPER HORIZONTAL
+$$
+CBAR    146     10      146     148     0.      0.      1.      1
+CBAR    148     10      148     150     0.      0.      1.      1
+CBAR    150     10      150     152     0.      0.      1.      1
+CBAR    152     10      152     154     0.      0.      1.      1
+CBAR    154     10      154     156     0.      0.      1.      1
+CBAR    156     10      156     160     0.      0.      1.      1
+CBAR    160     10      160     162     0.      0.      1.      1
+CBAR    162     10      162     164     0.      0.      1.      1
+CBAR    164     10      164     166     0.      0.      1.      1
+CBAR    166     10      166     168     0.      0.      1.      1
+CBAR    168     10      168     170     0.      0.      1.      1
+CBAR    170     10      170     172     0.      0.      1.      1
+CBAR    172     10      172     174     0.      0.      1.      1
+CBAR    174     10      174     176     0.      0.      1.      1
+CBAR    176     10      176     178     0.      0.      1.      1
+CBAR    178     10      178     180     0.      0.      1.      1
+$$$          -Y VERTICAL
+$$
+CBAR    180     10      180     182     0.      0.      1.      1
+CBAR    182     10      182     184     0.      0.      1.      1
+CBAR    184     10      184     186     0.      0.      1.      1
+CBAR    186     10      186     188     0.      0.      1.      1
+CBAR    188     10      188     190     0.      0.      1.      1
+CBAR    190     10      190     192     0.      0.      1.      1
+CBAR    192     10      192     194     0.      0.      1.      1
+CBAR    194     10      194     196     0.      0.      1.      1
+CBAR    196     10      196     198     0.      0.      1.      1
+CBAR    198     10      198     200     0.      0.      1.      1
+$$
+$$$           PROPERTY AND MATERIAL CARD 
+$$            ALUM BARS WITH CROSS SECT AREA=.309
+$
+PBAR    10      10      .309    .16     .16     .32
+MAT1    10      1.+7            .3      .098
+$$
+$
+$             DEFINE EXTRA POINTS FOR CONTROL POINTS
+EPOINT  1       2       3       4       5       6
+$
+$        ONLY 6 AXIS CONTROL FOR BUS, ALL ATTITUDE AND POSITION
+$        CONTROL OF SYSTEM CONCENTRATED IN BUS (GRID POINT 100)
+$
+$             DEFINE BMAT, COLUMNS ARE EXTRA POINTS
+DMIG    BMAT    0       1       1       1
+DMIG    BMAT    1                       100     1       1.0
+DMIG    BMAT    2                       100     2       1.0
+DMIG    BMAT    3                       100     3       1.0
+DMIG    BMAT    4                       100     4       1.0
+DMIG    BMAT    5                       100     5       1.0
+DMIG    BMAT    6                       100     6       1.0
+$
+$             DEFINE EXTRA POINTS FOR OBSERVERVATION
+EPOINT  51      52      53      54      55      56      57      58
+EPOINT  59      60      61      62      63      64      65
+$
+$        INSTRUMENT PACKAGES LOCATED AT EACH OF FOUR CORNERS
+$        3 AXIS ORIENTATION INFORMATION REQUIRED, INSTRUMENTS
+$        ARE INSENSITIVE TO 3 AXIS TRANSLATION. CORNER (HINGE
+$        POINTS ARE GRID POINTS 126, 146, 180 AND 200.
+$
+$             DEFINE CMAT, ROWS ARE EXTRA POINTS
+DMIG    CMAT    0       1       1       1
+DMIG    CMAT    100     4               51              1.0
+DMIG    CMAT    100     5               52              1.0
+DMIG    CMAT    100     6               53              1.0
+DMIG    CMAT    126     4               54              1.0
+DMIG    CMAT    126     5               55              1.0
+DMIG    CMAT    126     6               56              1.0
+DMIG    CMAT    180     4               57              1.0
+DMIG    CMAT    180     5               58              1.0
+DMIG    CMAT    180     6               59              1.0
+DMIG    CMAT    200     4               60              1.0
+DMIG    CMAT    200     5               61              1.0
+DMIG    CMAT    200     6               62              1.0
+DMIG    CMAT    146     4               63              1.0
+DMIG    CMAT    146     5               64              1.0
+DMIG    CMAT    146     6               65              1.0
+$
+$
+ENDDATA

@@ -1,0 +1,95 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STARLETQ',
+               'QLIBHOME:STANDARD',
+               'QLIBHOME:IO',
+               'QLIBHOME:COLOR',
+               'QLIBHOME:STRING',
+               'QLIBHOME:FIG',
+               'QLIBHOME:TERM_VAX'),
+  ENVIRONMENT ('QLIBHOME:BITMAP.TEN') ]
+MODULE hard_BITMAP;
+{=============================================================================}
+{-- PROCEDURES FOR HARDCOPY TYPE BITMAP --------------------------------------}
+{=============================================================================}
+[ HIDDEN ] VAR
+   hardfig : RECORD
+             commandline : VARYING [30] OF char;
+             END 
+           := ('');
+{=============================================================================}
+[ GLOBAL ]
+FUNCTION hardname_BITMAP (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0:  hardname_BITMAP := '1';
+   1:  hardname_BITMAP := 'BITMAP  ';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE hardmake_BITMAP;
+VAR
+   plotdata       : RECORD
+                    CASE integer OF
+                       1:  (data     : anystring);
+                       2:  (ii       : shortunsigned;
+                            ins      : ins_type;
+                            ix       : shortunsigned;
+                            iy       : shortunsigned;
+                            hlsa     : hlsa_type);
+                    END;
+BEGIN
+close (textfile,ERROR:=CONTINUE);
+open (textfile,'BITMAP.PLT',NEW,ERROR:=CONTINUE);
+rewrite (textfile);
+
+reset (plotitemfile);
+{ SET CHARACTER SIZE }
+plotdata.ins := I_siz;
+plotdata.ix  := config.ch.width;
+plotdata.iy  := config.ch.height;
+plotdata.data.length := 5;
+writeln (textfile,plotdata.data);
+
+{ SET CHARACTER MARGINS }
+plotdata.ins := I_mar;
+plotdata.ix  := config.ch.charspacing;
+plotdata.iy  := config.ch.linespacing;
+plotdata.data.length := 5;
+writeln (textfile,plotdata.data);
+
+WHILE NOT eof (plotitemfile) DO
+   BEGIN
+   readplotitem;
+   plotdata.ins := plotitem.ins;
+   plotdata.ix  := plotitem.ix;
+   plotdata.iy  := plotitem.iy;
+   plotdata.data.length := 5;
+   CASE plotdata.ins OF
+      I_col,
+      I_pan:  BEGIN
+              plotdata.hlsa := hlsaofcolor (plotitem.st);
+              plotdata.data.length := 18;
+              END;
+      I_pri:  plotdata.data := plotdata.data + plotitem.st;
+      END;
+   writeln (textfile,plotdata.data);
+   END;
+close (textfile);
+truncate (plotitemfile);
+
+IF hardfig.commandline <> ''
+ THEN LIB$SPAWN ((hardfig.commandline));
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE hardconfig_BITMAP (configcontrol : configcontrol_type);
+BEGIN
+WITH hardfig DO CASE configcontrol OF
+   CON:  ;
+   QUE:  readvary ('ENTER COMMAND LINE : ',commandline,commandline);
+   REP:  writeline (out,'Command line is ' + commandline);
+   END;
+END;
+{-----------------------------------------------------------------------------}
+END.

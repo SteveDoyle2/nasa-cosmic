@@ -1,0 +1,7 @@
+1 INCLUDER
+
+ The INCLUDER program processes FORTRAN source files which contain
+ FORTRAN INCLUDE files for the purpose of replacing the INCLUDE
+ statement with the source code of the INCLUDEd file.  INCLUDE 
+ statements may appear in INCLUDEd files.  A new file with type,
+ .NEW, will be created.

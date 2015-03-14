@@ -1,0 +1,35 @@
+
+
+
+
+mlshead.hlp
+mlsfoot.hlp
+
+
+
+
+The milestone text mode is different than any of the other text modes since the
+milestone text can not fit on one page.  Because of this, the milestone text
+mode has been broken up into two screens, Header and Milestone/Footnote
+with the Header screen appearing as soon as the F2(Text) key is pressed.  To
+recieve information on these two screens, press the appropriate key as shown
+below.
+When a number field is edited in text mode, it will be shifted to the left to
+make editing easier and then shifted to the right when done.
+
+To obtain help for any of the following subjects,  press the function key next
+to the desired subject.
+
+ 
+ 
+ 
+ 
+        F5  Header
+        F6  Milestone/Footnote
+ 
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

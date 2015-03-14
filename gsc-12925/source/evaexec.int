@@ -1,0 +1,47 @@
+interface;
+  unit evaexec (perform2, first_create, varno, color1, color3,pattern3,
+		fiscal_year, enter_mode, symbol, start, total, height,
+		period, year, size, enter, exit, redraw, sldredraw,
+                char3, integer3 );
+
+  USES getparam;
+
+  USES utility;
+
+  type    char3      = array [1..3] of char ;
+          integer3   = array [1..3] of integer;
+  var
+	  first_create : boolean;
+	  varno      : byte;
+	  color1     : integer;
+	  color3     : integer3;
+	  pattern3   : integer3;
+	  start      : byte;
+	  total      : byte;
+	  fiscal_year: byte;
+	  enter_mode : byte;
+	  height     : integer;
+	  period     : byte;
+	  year	     : lstring(2);
+	  size	     : byte;
+	  symbol     : integer;
+
+  procedure exit ( var current, first	: entity );
+
+  procedure enter (var current, first	: entity );
+
+  procedure redraw ( code : integer;var current, first : entity );
+
+  procedure sldredraw ( var current, first : entity );
+
+  procedure perform2( var inkey 	: byte;
+		      var first 	: entity;
+		      var name		: lstring;
+		      var xy		: supinteger );
+
+  begin
+  end;
+
+
+
+

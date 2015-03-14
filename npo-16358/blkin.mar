@@ -1,0 +1,236 @@
+	.TITLE	BLKIN - THESE ROUTINES ARE FOR BLOCK IO
+	.SUBTITLE	BLKIN - BLOCK INPUT ROUTINE
+
+;DM   This module contains routines for block I/O
+;DM        BLKOPN opens a file for block input
+;DM        BLKSIN inputs 7 blocks of data
+;DM        BLKIN  inputs one block of data
+;DM        BLKCLS closes the file
+;DM
+;DM   Programmer - Jon Vavrus  28 OCT 1980
+;DM   Revised    - Jon Vavrus  12 MAY 1981
+;DM   Revised    - Jon Vavrus  27 JUL 1981
+;DM   Revised    - Jon Vavrus  29 JUL 1981
+;DM   Revised    - Jon Vavrus  26 AUG 1981
+;DM
+;DM   BLKIN inputs the a single block of data from the file opened by
+;DM   BLKOPN.
+;M
+;M         The routine BLKIN inputs the Nth block of the file.  N is the
+;M    first argument in the call list, the second argument receives the
+;M    actual number of bytes input, and the third argument is the
+;M    address of the buffer to receive the input.
+;
+;	ENTRY POINTS
+;
+;E    BLKOPN  Opens a file for block input.
+;E    BLKSIN  Inputs seven blocks of data.
+;E    BLKIN   Inputs one block of data.
+;E    BLKCLS  Closes the file opened by BLKOPN.
+;
+;	COMMON AREAS USED
+;
+;S      Contains the number of bytes per block (in case of NOSPAN)
+
+		.PSECT	DOITNM,PIC,USR,OVR,REL,GBL,SHR,NOEXE,RD,WRT,LONG
+
+		.BLKB	35
+RECBLK:		.BLKW	1
+
+		.PSECT	BLKDAT,LONG
+
+BLKFABIN:	$FAB	FAC=<BIO,GET>,FOP=RCK,XAB=BLKXAB
+BLKRABIN:	$RAB	FAB=BLKFABIN,ROP=BIO,USZ=512
+BLKXAB:		$XABFHC	NXT=0
+EBK:		.LONG
+EBK_BYTES:	.WORD
+
+;
+;	BLKIN
+;
+	.PSECT		BLKIN,NOWRT
+	.ENTRY		BLKIN,^M<>
+	MOVL		@4(AP),<BLKRABIN+RAB$L_BKT>	; get block number
+	MOVL		12(AP),<BLKRABIN+RAB$L_UBF>	; get buffer address
+	CMPL		<BLKRABIN+RAB$L_BKT>,EBK	; last block?
+	BNEQ		190$
+	MOVW		EBK_BYTES,<BLKRABIN+RAB$W_USZ>	; set transfer size
+	BRB		195$
+190$:	MOVW		RECBLK,<BLKRABIN+RAB$W_USZ>	; set transfer size
+195$:	$READ		RAB=BLKRABIN			; read a block
+	CMPL		R0,#RMS$_NORMAL			; error ?
+	BEQL		200$
+	CLRL		@8(AP)				; if so clear arg. 2
+	RET
+200$:	MOVZWL		<BLKRABIN+RAB$W_RSZ>,@8(AP)	; move number of bytes
+							; to argument 2
+	CMPW		@8(AP),RECBLK			; test for >RECBLK
+	BLEQ		210$
+	MOVZWL		RECBLK,@8(AP)
+210$:	ADDL2		#1,@4(AP)			; increment block #
+	RET
+
+	.SUBTITLE	BLKOPN - OPENS A FILE FOR BLOCK INPUT
+;
+;	BLKOPN
+;
+;DM
+;DM   BLKOPN opens a file for block input.
+;M
+;M         The routine BLKOPN takes a seven element argument list:
+;M              The first contains the name of the file to be opened;
+;M              The second receives a completion code (1 is success);
+;M              The third receives the files RFM;
+;M              The fourth receives a value for the files RAT:
+;M                   1 = CR
+;M                   2 = FTN
+;M                   3 = PRN
+;M                   4 = none
+;M                   <0 indicates BLK is set;
+;M              The fifth receives the files FSZ for VFC files, or the
+;M                   files MRS for FIX files;
+;M              The sixth receives the files EBK;
+;M              And the seventh recieves the longest record's length.
+;M
+;M    If the file is not of sequential organization an RMS$_ORG error
+;M    code is returned.  If the records are either of unknown format or
+;M    of maximum record length greater than 132+FSZ an RMS$_RFM error
+;M    code is returned.
+
+	.PSECT		BLKOPN,NOWRT
+	.ENTRY		BLKOPN,^M<>
+
+	MOVL		4(AP),R0			; get filename
+	MOVB		(R0),<BLKFABIN+FAB$B_FNS>
+	MOVL		4(R0),<BLKFABIN+FAB$L_FNA>
+	$OPEN		FAB=BLKFABIN			; open file
+	CMPL		R0,#RMS$_NORMAL			; error ?
+	BEQL		OPENED
+	MOVL		R0,@8(AP)
+	RET
+
+OPENED:	CMPB		<BLKFABIN+FAB$B_RFM>,#FAB$C_UDF	; file UDF ?
+	BNEQ		TESTEM
+OUT:	MOVL		#RMS$_RFM,@8(AP)
+	$CLOSE		FAB=BLKFABIN
+	RET
+
+TESTEM:	CMPB		<BLKFABIN+FAB$B_ORG>,#FAB$C_SEQ	; Sequential org. ?
+	BEQL		CNCTEM
+	MOVL		#RMS$_ORG,@8(AP)
+	$CLOSE		FAB=BLKFABIN
+	RET
+
+CNCTEM:	$CONNECT	RAB=BLKRABIN			; connect record stream
+	CMPL		R0,#RMS$_NORMAL			; error ?
+	BEQL		CNCTED
+	MOVL		R0,@8(AP)
+	$CLOSE		FAB=BLKFABIN
+	RET
+
+CNCTED:	MOVL		#1,@8(AP)			; completion code of 1
+	MOVL		<BLKXAB+XAB$L_EBK>,@24(AP)	; get EBK
+	MOVL		<BLKXAB+XAB$L_EBK>,EBK
+						; store # of bytes in EBK
+	MOVW		<BLKXAB+XAB$W_FFB>,EBK_BYTES
+	TSTW		<BLKXAB+XAB$W_FFB>
+	BNEQ		2$
+	MOVW		#512,EBK_BYTES
+	DECL		EBK_BYTES
+	DECL		@24(AP)
+2$:	MOVZBL		<BLKFABIN+FAB$B_RFM>,@12(AP)	; get RFM
+	MOVZWL		<BLKXAB+XAB$W_LRL>,@28(AP)	; get LRL
+	BBS		#FAB$V_CR,<BLKFABIN+FAB$B_RAT>,10$ ; get RAT
+	BBS		#FAB$V_FTN,<BLKFABIN+FAB$B_RAT>,20$
+	BBS		#FAB$V_PRN,<BLKFABIN+FAB$B_RAT>,30$
+	MOVL		#4,@16(AP)
+5$:	BBC		#FAB$V_BLK,<BLKFABIN+FAB$B_RAT>,7$
+	MNEGL		@16(AP),@16(AP)
+7$:	CMPB		<BLKFABIN+FAB$B_RFM>,#FAB$C_VFC
+	BNEQ		8$
+	MOVZBL		<BLKFABIN+FAB$B_FSZ>,@20(AP)	; get FSZ
+	RET
+
+8$:	CMPB		<BLKFABIN+FAB$B_RFM>,#FAB$C_FIX
+	BNEQ		9$
+	MOVZWL		<BLKFABIN+FAB$W_MRS>,@20(AP)	; get MRS
+	RET
+9$:	CLRL		@20(AP)				; if VAR clear FSZ arg.
+	RET
+10$:	MOVL		#1,@16(AP)
+	BRB		5$
+20$:	MOVL		#2,@16(AP)
+	BRB		5$
+30$:	MOVL		#3,@16(AP)
+	BRB		5$
+
+	.SUBTITLE	BLKSIN - INPUTS 7 BLOCKS OF DATA
+;
+;	BLKSIN
+;
+;DM
+;DM   BLKSIN is used to input 7 blocks of data in a manner similiar to
+;DM   BLKIN.
+;M
+;M         The routine BLKSIN starts input from the Nth block of the file.
+;M    N is given as the first argument in the call list, the second argument
+;M    receives the actual number of bytes input, and the third argument
+;M    is the address used as the start of the input buffer.
+
+	.PSECT		BLKSIN,NOWRT
+	.ENTRY		BLKSIN,^M<R8,R9>
+
+	MOVL		@4(AP),<BLKRABIN+RAB$L_BKT>	; get block number
+	MOVL		12(AP),<BLKRABIN+RAB$L_UBF>	; get buffer address
+	CLRL		@8(AP)
+	CLRL		R8
+	MOVW		RECBLK,<BLKRABIN+RAB$W_USZ>	; set transfer size
+READMO:	$READ		RAB=BLKRABIN			; read a block
+	CMPL		R0,#RMS$_NORMAL			; error ?
+	BEQL		READIT
+	CLRL		@8(AP)				; if so clear argument 2
+	RET
+
+READIT:	CMPW		<BLKRABIN+RAB$W_RSZ>,RECBLK	; test for >RECBLK
+	BLEQ		100$
+	ADDW2		RECBLK,@8(AP)			; add bytes read
+	BRB		105$
+100$:	ADDW2		<BLKRABIN+RAB$W_RSZ>,@8(AP)	; add bytes read
+105$:	ADDL2		#1,@4(AP)			; increment block #
+	CMPW		<BLKRABIN+RAB$W_RSZ>,RECBLK	; if less than 512
+	BEQL		110$				; exit
+	RET
+
+110$:	MOVZWL		RECBLK,R9
+	ADDL2		R9,<BLKRABIN+RAB$L_UBF>		; move buffer pointer
+	CLRL		<BLKRABIN+RAB$L_BKT>		; set for next block
+	AOBLSS		#6,R8,READMO			; check if 6 blocks
+							; have been read
+	BLBC		R8,120$				; if only 6 read, read
+							; the last one
+	RET						; otherwise return
+
+120$:	INCL		<BLKRABIN+RAB$W_RFA>		; test if last block in
+	CMPL		<BLKRABIN+RAB$W_RFA>,EBK	; file
+	BNEQ		READMO
+	MOVW		EBK_BYTES,<BLKRABIN+RAB$W_USZ>	; if so set transfer size
+	BRW		READMO
+
+	.SUBTITLE	BLKCLS - CLOSES OPEN FILE
+;
+;	BLKCLS
+;
+;DM
+;DM   BLKCLS closes the input file.
+;M
+;M         The routine BLKCLS needs no argument list and simply closes the
+;M    file which BLKOPN has previously opened.
+
+	.PSECT		BLKCLS,NOWRT
+	.ENTRY		BLKCLS,^M<>
+
+	$DISCONNECT	RAB=BLKRABIN
+	$CLOSE		FAB=BLKFABIN
+	RET
+
+	.END

@@ -1,0 +1,542 @@
+1 UTILITIES         
+
+     The UTILITIES command level provides a number of commands that
+allow the user to configure the graphics package to his needs, and
+also setting the terminal type and plotting device.  UTILITIES commands
+must be given at the UTILITIES prompt, or after the UTILITIES built-in
+command is given. 
+
+     QPLOT provides a number of commands that allow the user to
+configure the graphics package to his needs and to provide useful
+services such as access to HOST operating system commands, HELP
+libraries, indirect file input, and Control-C interrupts.  These are
+available at all times, and must be spelled out in full, since all
+user input is scanned for these commands.  Once the command is
+completed, the prompt of the application program will be repeated. 
+The UTILITIES command itself is such a command, the others are 
+indicated in the Format specification.
+
+2 input-syntax      
+
+     QPLOT user input is handled by a set of common input routines.
+These input routines always convert lowercase letters to uppercase
+before use. There are routines to read a single character, character
+strings, logical names, integers, real and complex numbers, and
+answers to questions. Some special features of these routines are
+described under the various topics. 
+
+3 special input     
+
+     There are certain special input strings that are recognized by
+QPLOT and converted to a context-sensitive values.  These inputs are: 
+
+DEFAULT     -- Each input query has a default value.  This is usually 
+               either the current value or sometimes a null or zero
+               value. 
+LIMITS      -- If numeric input is expected, this string will cause 
+               the current input limits and default value to be 
+               printed.
+NEGATE      -- If numeric input is expected, this string will be 
+               converted to the negative of the default value.  This
+               string is not recognized for string input.
+NULL        -- If string input is expected, this string will be 
+               converted to a string of zero length.  Note that if
+               a string of zero length is entered, the default value 
+               will be used.
+PI          -- If real numeric input (floating point) is expected, 
+               this string will cause the value of PI (3.14159...)
+               to be given as the input string.
+UNDEFINED   -- If real numeric input (floating point) is expected,
+               this string will cause a special real value 
+               UNDEFINED to be assigned to the input string.
+
+3 character         
+
+     Character input consists of a single ASCII character.  If more 
+than one character is entered before pressing return, the first 
+character is used.  If no characters are given, or if the string 
+"DEFAULT" is typed, the default character is used.
+
+3 question          
+
+     If there is a question expecting a yes/no answer, the first
+character of the response is used as the answer. If this character is
+"Y" (or "y") the answer given is interpreted as "yes". If this
+character is "N" (or "n") the answer given is interpreted as "no". 
+Any other reponse will cause the question to be repeated. 
+
+3 string            
+
+     String input consists of a string of zero or more ASCII
+characters.  If no characters are given, or if the string "DEFAULT" is
+typed, the default character is used.  If the string "NULL" is typed,
+the null string (of length 0) is assumed.  Occasionally lower case 
+letters are allowed in string input, for example when titles or labels 
+are being entered.
+
+3 logical name      
+
+     Logical name input is used for the entry of strings which must
+contain no blanks, such as those used to name items that are later
+used by a parsing routine.  A logical name consists of a string of
+zero or more non-blank ASCII characters.  If no characters are given,
+or if the string "DEFAULT" is typed, the default character is used. 
+If the string "NULL" is typed, the null string (of length 0) is
+assumed. 
+
+3 integer           
+
+     Integer input is checked for proper format and compared to limits
+before being accepted.  The proper format for an integer consists of
+an optional sign ("+" or "-") and a string of digits.  No spaces are
+allowed within this sequence. If the format is improper, a conversion
+error is generated and the prompting message is repeated. 
+
+     Generally integer input is allowed only within certain limits --
+If a number outside the range is entered, a message is generated and
+the prompt is repeated. 
+
+     If the user enters no data (only blanks and a carriage return),
+the default value is used. The word "DEFAULT" may also be used to
+select the default value, and the word "NEGATE" (or "NEG") may be used
+to select the negative of the default value. The value of the limits
+and the default value may be displayed by typing "LIMITS" (or "LIM")
+instead of a numeric value. 
+
+3 real numbers      
+
+     Real number input is checked for proper format and compared to
+limits before being accepted.  No spaces are allowed within this
+sequence. If the format is improper, a conversion error is generated
+and the prompting message is repeated. 
+
+     Often real input is allowed only within certain limits -- If a
+number outside the range is entered, a message is generated and the
+prompt is repeated. 
+
+     If the user enters no data (only blanks and a carriage return)
+the default value is used. The word "DEFAULT" may also be used to
+select the default value, and the word "NEGATE" (or "NEG") may be used
+to select the negative of the default value. The value of the limits
+and the default value may be displayed by typing "LIMITS" (or "LIM")
+instead of a numeric value. 
+
+The proper format for a real number consists of: 
+
+          1)  An optional sign ("+" or "-")
+          2)  A string of digits (a decimal point may be present)
+          3)  An optional exponent, consisting of
+              3A)  A letter ("D", "d", "E", or "e")
+              3B)  An optional sign ("+" or "-")
+              3C)  A two-place string of digits 
+
+
+3 cursor-input      
+
+     Cursor input is used to activate commands that inspect and
+manipulate a plot, so as not to spoil the image with extraneous
+writing.  A single keystroke is used -- There is no need to hit the
+<return> or <enter> key. 
+
+     Many cursor mode commands use the position of the graphics cursor
+as additional input.  This might be a point on the plot to
+be examined, the corner of a window for a zoom operation, or the
+position at which to place a label.  If a non-graphics terminal is 
+being used, only the key pressed is signifcant.           
+
+     In batchmode, the cursor input is different.  The cursor position
+must be entered as a pair of numbers.  Three input items are required,
+separated by spaces.  These are: 
+
+          a)  Command, only first letter is significant.
+          b)  X-position, an integer between 0 and 65535.
+          c)  Y-position, an integer between 0 and 49151.     
+
+2 ABORT             
+
+     The ABORT command will cause an error to be "created".  The
+effect is similar to an overflow or other arithmetic error.  If the
+error handler is ON (it should be except in unusual circumstances),
+the current command will be terminated and control will return to the
+command level.  If the error handler is OFF, all of the present run
+will be abolished.  The error handler may be turned OFF using the
+MISC NO_ERROR_TRAP command. 
+
+     Format:      ABORT
+                  UTILITIES  ABORT
+
+This command can be given at any time!  There are no parameters or
+inputs. 
+
+2 BUG_REPORT        
+
+     This command is used to report a bug in a QPLOT application 
+program.  The user is placed in the EDT editor, and may then enter
+the problem.  If the user exits with EXIT, the report is completed, 
+otherwise the report is suppressed.
+
+     Format:     UTILITIES  BUG_REPORT
+
+2 control-C         
+
+     The CONTROL-C command will cause an error to be "created". The
+effect is similar to an overflow or other arithmetic error.  If the
+error handler is ON (it should be except in unusual circumstances),
+the current command will be terminated and control will return to the
+command level.  If the error handler is OFF, all of the present run
+will be abolished.  The error handler may be turned OFF using the
+NO_ERROR_TRAPPING command. 
+
+     To use the CONTROL-C command just press the CTRL and C keys at
+the same time.  There are no parameters or inputs.  The CONTROL-C
+command can be given at any time after the initialization phase. 
+
+     Format:     <ctrl-c>
+
+This command can be given at any time!
+
+2 COLOR             
+
+     QPLOT applications use different colors for different roles.
+For instance the time might be displayed in red while the graphic
+crosshairs might be shown in yellow.  Therefore various "logical" 
+colors have been defined so that the user can easily change them.  The 
+logical colors have names like "BOX" (the color of the box around the 
+plot) or perhaps "TIME" (the color that the time string is written 
+in).
+
+     Format:     UTILITIES  COLOR  [modifier]  [color  [color-spec]]
+
+     If no qulaifier or parameter is specified, QPLOT will prompt for
+the color and its new color assignment.  QPLOT recognizes all of the
+named colors listed by the command COLOR LIST.
+
+3 color-model       
+
+     Color definition and mixing is based on the hue-lightness-
+saturation (HLS) color model. Each color is described by three
+characteristics: hue, lightness, and saturation.  Hue is the basic
+color, such as red, green, or blue-magenta. This characteristic varies
+on a scale from 0 to 360 with blue at zero. Lightness varies from 0
+(black) to 100 (white).  A value of 50 will allow the hue to be most
+visible.  Saturation identifies the amount of color present, varying
+from 0 (gray) to 100 (full color).  A value of 100 makes the colors
+the brightest.  Some monochrome terminals display several shades of
+gray.  On these terminals, one of the shades will be chosen to match a
+given HLS value. 
+
+3 color-spec        
+
+     A color is specified in the following format:
+
+     color-spec:    [number]  color-name   [[[number]  color-name] ...]
+
+     That is, a color specification consists of a list of colors,
+each of which may be preceded by a real number.  The total length of 
+the string cannot exceed 30 characters.  Color names can be 
+abbreviated, as long as they remain distinct.  The number can be any 
+real number, and defaults to 1.00.  The color names can be colors that 
+have already been defined in terms of other colors.  Note that it is 
+possible create an endless recursion loop in this way.  For this 
+reason, a recursion limit of 10 has been imposed.
+
+3 LIST              
+
+     This modifier will list the predefined colors in QPLOT with the
+HLS values or definition strings that characterize them.  This list
+includes four pseudo-colors which can be used in altering or combining
+these named colors.  These are dark, light, clear, and blink.  The
+first two are identical to black and white.  The second two are the
+absence of color and are specified as if they were black, but have an
+attribute to distinguish between clear (C) and blink (B). 
+
+     Format:     UTILITIES  COLOR  LIST
+
+3 SET               
+
+     This modifier will allow the user to change the QPLOT and
+application defined logical colors.  The colors which can be set by
+the UTILITIES COLOR command include both those listed below plus any
+defined by the application program. Using the UTILITIES COLOR LIST
+command will list all colors currently defined.  A list of the QPLOT
+logical colors is given below. Some color definitions are application
+dependent, and will be found under the COLORS topic. 
+
+     Format:     UTILITIES  COLOR  SET  [color  [color-spec]]
+
+4 BOX               
+
+     This item defines the color for the border around a graphic
+display. For a monochrome terminal, the box will appear as a normal
+line.  
+
+     Format:     UTILITIES  COLOR  SET  BOX  [color-spec]
+     Default:    WHITE
+
+4 CURSOR_1          
+
+     This item defines the color for the first cursor.  For a
+monochrome terminal, the cursor will appear in the normal tint. Some
+color terminals may not allow the user to change the cursor color, and
+this command will have no effect.  
+
+     Format:     UTILITIES  COLOR  SET  CURSOR_1  [color-spec]
+     Default:    RED
+
+4 CURSOR_2          
+
+     This item defines the color for the second cursor. The
+cursor color alternates between the colors assigned to cursor 1 and
+cursor 2.  To prevent this blinking effect, set the two colors the
+same. For a monochrome terminal, the cursor will alternate between the
+normal tint and black.  Some color terminals may not allow the user to 
+change the cursor color, and this command will have no effect.  
+
+     Format:     UTILITIES  COLOR  SET  CURSOR_2  [color-spec]
+     Default:    YELLOW
+
+4 DARKGRAY          
+
+     This item defines a special shade of gray used for tick marks and
+grids.  The user can set the XGRID and YGRID colors to this value
+(the default is clear) and their color will match the tick marks.
+
+     Format:     UTILITIES  COLOR  SET  DARKGRAY  [color-spec]
+     Default:    DARK GRAY GRAY
+
+4 FILL              
+
+     This item defines the color of the area inside the box on a
+two dimensional plot.  For a monochrome terminal the fill will NOT be
+painted. 
+
+     Format:     UTILITIES  COLOR  SET  FILL  [color-spec]
+     Default:    DARK BLUE GRAY
+
+4 GIN_FRAMEALL      
+
+     This item defines the color for the crosshairs or graphics input
+cursor when the "all" frame selection has been made.  This selection
+(for the next input only) is made using the "*" commands.  On some color 
+terminals this color cannot be changed. For a monochrome terminal the 
+graphics cursor will appear in normal tint. 
+
+     Format:     UTILITIES  COLOR  SET  GIN_FRAMEALL  [color-spec]
+     Default:    CYAN
+
+4 GIN_FRAMELOCK     
+
+     This item defines the color for the crosshairs or graphics input
+cursor when a frame has been selected (locked) for the next input by
+using the "=" or "#" commands.  On some color terminals this color
+cannot be changed. For a monochrome terminal the graphics cursor will
+appear in normal tint. 
+
+     Format:     UTILITIES  COLOR  SET  GIN_FRAMELOCK  [color-spec]
+     Default:    LIGHT GREEN
+
+4 GIN_FRAMESELECT   
+
+     This item defines the color for the crosshairs or graphics input
+cursor when a frame is to be selected using the "#" command.  No other 
+command can be entered at this time.  On some color terminals this color
+cannot be changed. For a monochrome terminal the graphics cursor will
+appear in normal tint. 
+
+     Format:     UTILITIES  COLOR  SET  GIN_FRAMELOCK  [color-spec]
+     Default:    GRAY
+
+4 GIN_NORMAL        
+
+     This item defines the color for the crosshairs or graphics
+input cursor. On some color terminals this color cannot be changed.
+For a monochrome terminal the graphics cursor will appear in normal
+tint.  
+
+     Format:     UTILITIES  COLOR  SET  GIN_NORMAL  [color-spec]
+     Default:    LIGHT YELLOW
+
+4 HEADING           
+
+     This item defines the color in which the heading (title) of the
+plot is printed.  For a monochrome terminal the title will appear as
+normal print.  
+
+     Format:     UTILITIES  COLOR  SET  HEADING  [color-spec]
+     Default:    WHITE
+
+4 NUMBER            
+
+     This item defines the color in which the numbers beside the
+scale of a plot will be printed. For a monochrome terminal the numbers
+will appear as normal print.  
+
+     Format:     UTILITIES  COLOR  SET  NUMBER  [color-spec]
+     Default:    WHITE
+
+4 OVERBOX           
+
+     This item defines the color of the character cell in the
+text overlay mode, if it is available on the terminal in use.  For a
+monochrome terminal, the overbox will appear in clear or black. 
+
+     Format:     UTILITIES  COLOR  SET  OVERBOX  [color-spec]
+     Default:    CLEAR
+
+4 OVERCHAR          
+
+     This item defines the color for the characters printed in
+the text overlay mode, if it is available on the terminal in use. For
+a monochrome terminal, the characters will appear in their normal
+tint.  
+
+     Format:     UTILITIES  COLOR  SET  OVERCHAR  [color-spec]
+     Default:    LIGHT RED
+
+4 PANE              
+
+     This item defines the color of the background for each frame.  
+
+     Format:     UTILITIES  COLOR  SET  PANE  [color-spec]
+     Default:    CLEAR
+
+4 PLOTBACK          
+
+     This item defines the color of the graphics background.  For
+a monochrome terminal the background will always be black.  
+
+     Format:     UTILITIES  COLOR  SET  PLOTBACK  [color-spec]
+     Default:    BLACK
+
+4 POLARGRID         
+
+     This item defines the color of the grid on polar plots. For a
+monochrome terminal the grid will be drawn as normal lines. 
+
+     Format:     UTILITIES  COLOR  SET  POLARGRID  [color-spec]
+     Default:    CLEAR
+
+4 TEXTBACK          
+
+     This item defines the color for the background in the text
+mode. For a monochrome terminal and for color terminals which do not
+have this color capability, the background will be black.  
+
+     Format:     UTILITIES  COLOR  SET  TEXTBACK  [color-spec]
+     Default:    DARK BLUE
+
+4 TEXTBOX           
+
+     This item defines the color for the character cell in text
+mode. For a monochrome terminal, the character cell will be clear or
+black.  
+
+     Format:     UTILITIES  COLOR  SET  TEXTBOX  [color-spec]
+     Default:    BLUE
+
+4 TEXTCHAR          
+
+     This item defines the color of the characters printed in the
+text mode.  For a monochrome terminal, the characters will appear in
+their normal tint.  
+
+     Format:     UTILITIES  COLOR  SET  TEXTCHAR  [color-spec]
+     Default:    WHITE
+
+4 WINDOW            
+
+     This item defines the color of the border of each frame.  
+
+     Format:     UTILITIES  COLOR  SET  WINDOW  [color-spec]
+     Default:    BLACK
+
+4 XGRID             
+
+     This item defines the color of the primary grid in the X
+direction drawn on a plot. For a monochrome terminal the grid will be
+drawn as normal lines. 
+
+     Format:     UTILITIES  COLOR  SET  XGRID  [color-spec]
+     Default:    CLEAR
+
+4 XLABEL            
+
+     This item defines the color in which the label on the X axis
+is printed.  For a monochrome terminal the label will appear as normal
+print.  
+
+     Format:     UTILITIES  COLOR  SET  XLABEL  [color-spec]
+     Default:    WHITE
+
+4 XSUBGRID          
+
+     This item defines the color of the secondary grid lines in the X
+direction drawn between labeled ticks. For a monochrome terminal the
+subgrid will be drawn as normal lines. 
+
+     Format:     UTILITIES  COLOR  SET  XSUBGRID  [color-spec]
+     Default:    CLEAR
+
+4 XTICK             
+
+     This item defines the color of the tick marks in the X direction
+on the scale of a plot. For a monochrome terminal the tick marks will
+appear in normal tint. 
+
+     Format:     UTILITIES  COLOR  SET  XTICK  [color-spec]
+     Default:    DARKGRAY
+
+4 YGRID             
+
+     This item defines the color of the primary grid in the Y
+direction drawn on a plot. For a monochrome terminal the grid will be
+drawn as normal lines. 
+
+     Format:     UTILITIES  COLOR  SET  YGRID  [color-spec]
+     Default:    DARKGRAY
+
+4 YLABEL            
+
+     This item defines the color in which the label on the Y axis
+is printed.  For a monochrome terminal the label will appear as normal
+print.  
+
+     Format:     UTILITIES  COLOR  SET  YLABEL  [color-spec]
+     Default:    WHITE
+
+4 YSUBGRID          
+
+     This item defines the color of the secondary grid lines in the Y
+direction drawn between labeled ticks. For a monochrome terminal the
+subgrid will be drawn as normal lines. 
+
+     Format:     UTILITIES  COLOR  SET  YSUBGRID  [color-spec]
+     Default:    CLEAR
+
+4 YTICK             
+
+     This item defines the color of the tick marks in the Y direction
+on the scale of a plot. For a monochrome terminal the tick marks will
+appear in normal tint. 
+
+     Format:     UTILITIES  COLOR  SET  YTICK  [color-spec]
+     Default:    DARKGRAY
+
+4 ZOOMBOX           
+
+     This item defines the color of the box drawn to outline the zoom
+area after the upper and lower corners have been selected. 
+
+     Format:     UTILITIES  COLOR  SET  ZOOMBOX  [color-spec]
+     Default:    YELLOW
+
+4 ZOOMFILL          
+
+     This item defines the color of the box fill used after the Zoom 
+command ("Z") has been given.  This filling of the zoom box tells the 
+user that the zoom coordinates have been accepted.  The user may then 
+redraw, or manipulate other plotting frames and windows.
+
+     Format:     UTILITIES  COLOR  SET  ZOOMFILL  [color-spec]
+     Default:    BROWN
+

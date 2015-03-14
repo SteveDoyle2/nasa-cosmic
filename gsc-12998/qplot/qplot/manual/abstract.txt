@@ -1,0 +1,15 @@
+                            Abstract
+
+
+     QPLOT is a device-independent, interactive graphics library for
+the VAX computer.  While the system was designed around the graphics
+capability of the Tektronix 4109 terminal, it has been implemented on
+a range of terminals with widely differing capabilities.  In addition
+to graphics, the QPLOT library provides complex math capabilities and
+filters the user input for many commands, thus freeing the programmer
+from implementing his own commands to control the QPLOT options. 
+
+     The current version is written in Pascal for the VAX.  A number
+of non-standard features of the VAX Pascal compiler were used, and
+some effort will be required to convert the program to run on a
+different machine.  All features used have Ada equivalents. 

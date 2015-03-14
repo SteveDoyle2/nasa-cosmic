@@ -1,0 +1,95 @@
+      PROGRAM PIC2
+C
+C   Computes PI to any requested number of digits, up to a maximum of about
+C   ten million, depending on the floating-point precision available on the
+C   computer being used.  This program is intended for use as a supercomputer
+C   system check.  This is the quadratically convergent, double-precision,
+C   complex FFT version.
+C
+C   David H. Bailey    February 6, 1987
+C
+C   The algorithm used for computing PI is as follows:
+C
+C   Set  A(0) = SQRT (2),  B(0) = 0,  P(0) = 2 + SQRT (2)
+C
+C   Iterate the following operations:
+C
+C      S(N)    =  SQRT (A(N))
+C      A(N+1)  =  0.5 * (S(N) + 1 / S(N))
+C      B(N+1)  =  S(N) * ((B(N) + 1) / (B(N) + A(N)))
+C      P(N+1)  =  P(N) * B(N+1) * ((A(N+1) + 1) / (B(N+1) + 1))
+C
+C   Then  P(N) converges quadratically to PI.  To be specific,
+C
+C     |P(N) - PI|  <  10^-2^N
+C
+C   Reference:  Borwein & Borwein, "The arithmetic-geometric mean and fast
+C               computation of elementary functions", SIAM Review, July 84.
+C
+C   Set the parameter MX in the following PARAMETER statement to set the
+C   level of precision.  NDX is the number of digits of precision.
+C
+      IMPLICIT DOUBLE PRECISION (A-H, O-Z)
+      CHARACTER*1 PID
+      PARAMETER  (MX = 14, NX = 2 ** (MX-2) + 2, NDX = 6 * (NX - 3))
+      DIMENSION  A(NX), B(NX), P(NX), C1(NX), X1(NX), X2(NX), X3(NX),
+     $  X4(NX), A1(NX), S(15*NX), PID(NDX+100)
+      COMMON /MPCOM1/ ND, NW, MW, IDB, LDB, NDB
+      COMMON /MPCOM2/ U(10*NX/3)
+C
+C   Set multiprecision parameters and initialize U.
+C
+      ND = NDX
+      MW = MX
+      NW = NX - 2
+      IDB = 0
+      LDB = 6
+      NDB = 16
+      NI = MX
+      CALL MPCFFT (0, X1, X2)
+      CALL MPSMC (1.D0, 0, C1)
+      WRITE (LDB, 1)  MW, NW, ND
+1     FORMAT ('PI2 COMPUTATION TEST -- DP COMPLEX FFT MP VERSION'//
+     $  'MW =', I3, 3X, 'NW =', I10, 3X, 'ND =', I10/)
+      K = 0
+      TA = XTIME (TX)
+      CALL MPSMC (2.D0, 0, A)
+      CALL MPEQ (A, P)
+      CALL MPSMC (0.D0, 0, B)
+      CALL MPSQRX (P, A, S)
+      CALL MPADD (P, A, X1)
+      CALL MPEQ (X1, P)
+C
+C   Begin PI computation iterations.
+C
+      DO 100 K = 1, NI
+        WRITE (LDB, 2)  K, NI
+2       FORMAT ('ITERATION', 2I4)
+        CALL MPSQRX (A, X1, S)
+        CALL MPADD (X1, S(NW+3), X3)
+        CALL MPMUL1 (X3, 0.5D0, 0, A1)
+        CALL MPADD (B, C1, X2)
+        CALL MPMULX (X1, X2, X3, S)
+        CALL MPADD (B, A, X1)
+        CALL MPDIVX (X3, X1, B, S)
+        CALL MPEQ (A1, A)
+        CALL MPMULX (P, B, X1, S)
+        CALL MPADD (A, C1, X2)
+        CALL MPMULX (X1, X2, X3, S)
+        CALL MPADD (B, C1, X1)
+        CALL MPDIVX (X3, X1, P, S)
+100   CONTINUE
+C
+C   Iterations are complete.  PI is the final P value.
+C
+      TB = XTIME (TX)
+      T = TB - TA
+      WRITE (LDB, 3)  T
+3     FORMAT (/'CPU TIME = ', F12.4, ' SECONDS.')
+      CALL MPFMT (P, PID)
+      WRITE (1, 4) (PID(I), I = 1, 20)
+4     FORMAT (10(100A1/))
+      WRITE (1, 4) (PID(I), I = 21, ND+20)
+C
+      STOP
+      END

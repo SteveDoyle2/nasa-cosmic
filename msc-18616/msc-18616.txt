@@ -1,0 +1,88 @@
+ TPS MULTIDIMENSIONAL HEAT CONDUCTION PROGRAM
+
+( ROCKWELL INTERNATIONAL CORP. )
+
+     The Thermal Protection System (TPS) for the Space Shuttle consists of
+an outer layer of rigid surface insulation tiles. It is important that an
+accurate understanding of the thermal behavior of this system be obtained
+prior to usage. This computer program was developed to compute the tran-
+sient temperature history and the steady-state temperatures of complex
+body geometries in three dimensions. Emphasis has been placed on the type
+of problems associated with the TPS, but the program could be used in the
+thermal analysis of most three-dimensional systems.
+
+     The thermal model is subdivided into sections, or nodes, to a level of
+approximation which yields the desired level of accuracy. Input to the pro-
+gram consists of a geometrical description of the physical system, the ma-
+terial properties, and selected boundary conditions. The boundary con-
+ditions are used to account for heat flux, reradiation, radiation inter-
+change, convection, fixed temperatures, and phase changes. The program
+will accomodate a thermal model with as many as 500 nodes, 4000 conductors,
+3600 radiation interchange conductors, and 75 of each type of boundary con-
+dition. The program solves the differential equations describing the tran-
+sient and steady state behavior of the model using finite difference tech-
+niques. For the transient analysis, the user may select either a forward
+difference method, a midpoint difference (Crank-Nicolson) method, a back-
+ward difference method, or an alternating direction method to numerically
+solve the governing equations. For the steady-state analysis, a modified
+backward difference method is available. Program output is in the form of
+temperature versus time histories for each section of the thermal model.
+
+     This program is available in both IBM and CDC machine versions. The IBM
+version is written in FORTRAN IV and OS ASSEMBLER for batch execution and
+has been implemented on an IBM 370 series computer with a central memory re-
+quirement of approximately 450K of 8 bit bytes. The CDC version is written
+in all FORTRAN IV for batch execution and has been implemented on a CDC CYBER
+170 series computer with a segmented memory requirement of approximately
+230K (octal) of 60 bit words. This heat conduction program was originally
+developed in 1976 with the latest update occuring in 1979.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+                                  IBM VERSION
+
+LANGUAGE: FORTRAN IV ( 89 %); ASSEMBLER ( 11 %);
+
+MACHINE REQUIREMENTS: IBM 370 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 8,009 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI IBM IEHMOVE Format Magnetic Tape
+
+PROGRAM NUMBER: MSC-16159
+
+DOMESTIC - DOCUMENTATION PRICE: $37.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $74.00   PROGRAM PRICE: $1000.00
+
+
+
+                                  CDC VERSION
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC CYBER 70 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 8,140 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: MSC-18616
+
+DOMESTIC - DOCUMENTATION PRICE: $37.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $74.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

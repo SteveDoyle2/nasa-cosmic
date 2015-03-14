@@ -1,0 +1,35 @@
+   interface;
+
+   unit utility ( create, link, add_node, delete, initialize,
+                  load_chart, entity );
+
+   type
+         entity = ^chart;
+         chart  = record
+
+                     up, down : entity;
+                     field    : ^lstring;
+                     etype    : byte;
+                     x        : integer;
+                     y        : integer;
+                     xtext    : integer;
+                     ytext    : integer;
+
+                  end;
+
+
+   procedure create ( var current : entity; current_node : byte );
+
+   procedure link ( var current : entity; var newnode : entity );
+
+   procedure add_node ( var current : entity; node : byte );
+
+   procedure delete ( var current : entity );
+
+   procedure initialize ( var first : entity );
+
+   procedure load_chart ( var name  : lstring; var first : entity );
+
+   begin
+   end;
+

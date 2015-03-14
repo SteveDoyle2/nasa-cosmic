@@ -1,0 +1,14 @@
+  interface;
+
+  unit alterl ( alter_entity_list );
+
+  USES utility;
+
+  procedure alter_entity_list ( var current       : entity;
+                                var buffer        : lstring;
+                                var length        : byte;
+                                mode              : integer );
+
+  begin
+  end;
+

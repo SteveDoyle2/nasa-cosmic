@@ -1,0 +1,782 @@
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        COMLVL                29-SEP-83      15:15:23      PAGE    1
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+    1              SUBROUTINE COMLVL(CLINE,DONE)                                                                                    
+    2       C                                       CDM   This routine implements the "command" mode of look, by processing         
+    3       C                                       CDM   one command which is passed to it.                                        
+    4       C                                       CDM                                                                             
+    5       C                                       CDM    Programmer - Jon Vavrus  26 AUG 1981                                     
+    6       C                                       CDM    Revised    - Jon Vavrus   3 SEP 1981                                     
+    7       C                                       CDM    Revised    - Jon Vavrus  18 SEP 1981                                     
+    8       C                                       CDM    Revised    - Jon Vavrus   3 MAR 1982 (added SETNAR/SETWID)               
+    9       C                                       CDM    Revised    - Jon Vavrus   4 MAY 1982 (handles non-AVO VT100's)           
+   10       C                                       CDM    Revised    - Jon Vavrus  15 JUL 1982 (changed to handle only one         
+   11       C                                       CDM                                          command)                           
+   12       C                                       CDM    Revised    - Jon Vavrus  18 AUG 1982 (Bigger arrays)                     
+   13       C                                       CDM    Revised    - Jon Vavrus   9 SEP 1982                                     
+   14       C                                       CDM    Revised    - Jon Vavrus   4 APR 1983 (add broadcast and spawn stuff)     
+   15       C                                       CDM    Revised    - Jon Vavrus  17 MAY 1983                                     
+   16       C                                       CDM    Revised    - Jon Vavrus  28 MAY 1983 (check defined symbols)             
+   17       C                                       CDM    Revised    - Jon Vavrus  17 AUG 1983 (GETDEF changed)                    
+   18       C                                       CDM    Revised    - Jon Vavrus  27 SEP 1983                                     
+   19       C                                       CM                                                                              
+   20       C                                       CM         This routine allows the use of the following commands:               
+   21       C                                       CM              DEFINE s := a1 a2 ...                                           
+   22       C                                       CM                             - which defines a symbol s in the same man-      
+   23       C                                       CM                               ner as a line in the definitions file (see     
+   24       C                                       CM                               below), including line continuations.          
+   25       C                                       CM              EXIT           - returns to the normal "look" mode.             
+   26       C                                       CM              HELP a         - where a is one of the commands shown above.    
+   27       C                                       CM              READ           - outputs the broadcast messages (if any)        
+   28       C                                       CM                               which have been received.                      
+   29       C                                       CM              SET [NO]switch - with switch being any of WRAP, BOX, WIDE       
+   30       C                                       CM                               or NARROW.  These have the same affect as      
+   31       C                                       CM                               the command line switches of the same          
+   32       C                                       CM                               names (WIDE is the same as NONARROW),          
+   33       C                                       CM                               with the NO qualifier turning them off.        
+   34       C                                       CM              SHOW [s]       - where s is a defined symbol.  This will        
+   35       C                                       CM                               show what commands a symbol is defined         
+   36       C                                       CM                               as. (if s is omitted, all defined symbols      
+   37       C                                       CM                               are shown).                                    
+   38       C                                       CM              SPAWN          - starts a sub-process up to allow the user      
+   39       C                                       CM                               to do DCL commands.                            
+   40       C                                       CM              @filename      - Inputs the file filename as a definitions      
+   41       C                                       CM                               file.                                          
+   42       C                                       CM                                                                              
+   43       C                                       CM          Upon return DONE is set .TRUE. if the command was EXIT, .FALSE.     
+   44       C                                       CM      otherwise.                                                              
+   45       C                                       C                                                                               
+   46       C                                       C***   CALLED ROUTINES                                                          
+   47       C                                       C                                                                               
+   48       C                                       CC    CLRWRP  Sets the terminal NOWRAP                                          
+   49       C                                       CC    DODEF   Processes a symbol file                                           
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        COMLVL                29-SEP-83      15:15:23      PAGE    2
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+   50       C                                       CC    GETDEF  Translates a line into a symbol definition                        
+   51       C                                       CC    SETNAR  Set VT100 terminal to 80 columns                                  
+   52       C                                       CC    SETWID  Set VT100 terminal to 132 columns                                 
+   53       C                                       CC    SETWRP  Sets the terminal WRAP                                            
+   54       C                                       CC    TTSPAWN Spawns a sub-process (needed to get rid of broadcast              
+   55       C                                       CC            trap                                                              
+   56       C                                       C                                                                               
+   57       C                                       C***   COMMON AREAS                                                             
+   58       C                                       C                                                                               
+   59       C                                       CS    BRDCM1  Contains character variables for broadcast handling.              
+   60       C                                       CS              BRDNOT holds the notice to be displayed on the screen.          
+   61       C                                       CS              BRDMSG which holds broadcast messages.                          
+   62       C                                       C                                                                               
+   63       C                                       CS    BRDCM2  Contains non-character information for broadcast handling.        
+   64       C                                       CS              BRDLEN the length of strings in BRDMSG.                         
+   65       C                                       CS              BRDCNT the count of strings in BRDMSG.                          
+   66       C                                       CS              BRDFLG a flag telling if there are unread messages.             
+   67       C                                       C                                                                               
+   68       C                                       CS    CHARS   Used to pass character variables; contains LINES a character      
+   69       C                                       CS            array of the output lines, and SRCHBF the search buffer, and      
+   70       C                                       CS            CRLF which contains <CR><LF>, and REVVID + REGVID which are       
+   71       C                                       CS            the VT100 control sequences to set/unset reverse video            
+   72       C                                       C                                                                               
+   73       C                                       CS    DOITNM  Contains information transferred from the main program:           
+   74       C                                       CS                 INCHAN - input channel of the terminal                       
+   75       C                                       CS                 TIME   - scrolling speed in -10000000*seconds/line           
+   76       C                                       CS                 SBFFLG - flag indicating whether there is a string           
+   77       C                                       CS                          in the search buffer                                
+   78       C                                       CS                 DIRECT - flag for reverse (-1 for reverse, else 1)           
+   79       C                                       CS                 EBK    - EBK of input file                                   
+   80       C                                       CS                 SBFLEN - length of string(s) in search buffer(s)             
+   81       C                                       CS                 RECBLK - number of bytes used per block in FIX-BLK files     
+   82       C                                       CS                 RANGE  - beginning and ending block numbers and pointers     
+   83       C                                       CS                          of the print range                                  
+   84       C                                       CS                 VT100  - flag set .TRUE. if terminal is VT100.               
+   85       C                                       CS                 LRL    - length of the longest record in input file.         
+   86       C                                       CS                 LENLMT - maximum output length (if <0 then WRAP set)         
+   87       C                                       CS                 PAGEND - line number of last line output to screen           
+   88       C                                       CS                 PAGLEN - number of lines per page                            
+   89       C                                       CS                 COMLIN - line number for command input (bottom of screen)    
+   90       C                                       CS                 VT100A - flag set .TRUE. if VT100 has advanced video option  
+   91       C                                       C                                                                               
+   92       C                                       CS    INPUTC  Contains the input character buffer INLINE and the defined        
+   93       C                                       CS            symbols SYMS and the definition search buffers DEFBUF             
+   94       C                                       C                                                                               
+   95       C                                       CS    INPUTN  Contains the input character buffer length LENSAV, and the        
+   96       C                                       CS            symbol definitions DEFS, the number of such definitions           
+   97       C                                       CS            (NDEFS), the definition flags DEFFLG, and the definition          
+   98       C                                       CS            numbers NUDMEF                                                    
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        COMLVL                29-SEP-83      15:15:23      PAGE    3
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+   99       C                                       C                                                                               
+  100              CHARACTER*(*) CLINE                                                                                              
+  101              CHARACTER*1024 LINE                                                                                              
+  102              CHARACTER*132 LINES(600)                                                                                         
+  103              CHARACTER*128 INLINE,BRDMSG(20)                                                                                  
+  104              CHARACTER*64 IMAGE                                                                                               
+  105              CHARACTER*30 DEFBUF(10,10,60),SRCHBF(10)                                                                         
+  106              CHARACTER*22 BRDNOT                                                                                              
+  107              CHARACTER*6 DEFINE,NARROW                                                                                        
+  108              CHARACTER*5 SPAWN                                                                                                
+  109              CHARACTER*4 EXIT,HELP,SHOW,REVVID,REGVID,WRAP,WIDE,READ                                                          
+  110              CHARACTER*3 SET,BOX                                                                                              
+  111              CHARACTER*2 CRLF                                                                                                 
+  112              CHARACTER*1 SYMS(60),COMAND(13),ALLSYM(42)                                                                       
+  113              REAL*4 NUMDEF(10,60)                                                                                             
+  114              INTEGER*4 INCHAN,TIME,EBK,RANGE(2,2),PAGEND,GETLIS(4),TTSPAWN                                                    
+  115              INTEGER*2 DIRECT,SBFLEN(10),RECBLK,DEFS(11,10,60),LENLMT,PAGLEN,                                                 
+  116            1       LENSAV,COMLIN,BRDCNT,BRDLEN(20)                                                                            
+  117              LOGICAL GETDEF                                                                                                   
+  118              LOGICAL*1 SBFFLG,VT100,DEFFLG(3,10,60),NO,VT100A,DONE,BRDFLG,                                                    
+  119            1       OKFLAG                                                                                                     
+  120                                                                                                                               
+  121              COMMON /BRDCM1/BRDNOT,BRDMSG                                                                                     
+  122              COMMON /BRDCM2/BRDLEN,BRDCNT,BRDFLG                                                                              
+  123              COMMON /CHARS/LINES,SRCHBF,CRLF,REVVID,REGVID                                                                    
+  124              COMMON /DOITNM/INCHAN,TIME,SBFFLG,DIRECT,EBK,SBFLEN,RECBLK,RANGE,                                                
+  125            1       VT100,LRL,LENLMT,PAGEND,PAGLEN,COMLIN,VT100A                                                               
+  126              COMMON /INPUTC/INLINE,SYMS,DEFBUF                                                                                
+  127              COMMON /INPUTN/LENSAV,DEFS,NDEFS,DEFFLG,NUMDEF                                                                   
+  128                                                                                                                               
+  129              DATA NUMCOM,COMAND/13,'$','%','^','!','#','(',')','*',' ','&','@',                                               
+  130            1       '+','<'/                                                                                                   
+  131              DATA NUMALL,ALLSYM/42,'A','B','C','D','E','F','G','H','I','J','K',                                               
+  132            1       'L','M','N','O','P','Q','R','S','T','U','V',                                                               
+  133            2       'W','X','Y','Z','_','=','`','~','[',']','{',                                                               
+  134            3       '}',';',':',',','>','?','/','\','|'/                                                                       
+  135              DATA GETLIS(1),GETLIS(4)/'2070040'X,0/,IMAGE/'{'/                                                                
+  136              DATA BOX , SET , WRAP , EXIT , HELP , SHOW , WIDE , DEFINE/                                                      
+  137            1       'BOX','SET','WRAP','EXIT','HELP','SHOW','WIDE','DEFINE'/                                                   
+  138              DATA READ , SPAWN , NARROW/                                                                                      
+  139            1       'READ','SPAWN','NARROW'/                                                                                   
+  140                                                                                                                               
+  141     *        IF (LEN(CLINE) .EQ. 0)                                                                                           
+  142   1 *           EXECUTE (ERROR)                                                                                               
+  143     *        ENDIF                                                                                                            
+  144       C                                       C                                                                               
+  145       C                                       C***   Get any continuation lines                                               
+  146       C                                       C                                                                               
+  147              CALL STR$TRIM(LINE,CLINE,LENGTH)                                                                                 
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        COMLVL                29-SEP-83      15:15:23      PAGE    4
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+                  +-----------------------------------------------------------------------------------------------------------------
+  148     *       |DO FOREVER                                                                                                       
+  149   1 *       |   UNDO IF (LINE(LENGTH:LENGTH) .NE. '-')                                                                        
+                  <----                                                                                                             
+  150   1         |   CALL LIB$GET_INPUT(LINE(LENGTH:),'-',J)                                                                       
+  151   1         |   LENGTH = LENGTH + J                                                                                           
+  152     *       |END DO FOREVER                                                                                                   
+                  +-----------------------------------------------------------------------------------------------------------------
+  153              CALL STR$TRANSLATE(LINE(:LENGTH),LINE(:LENGTH),' ','	')                                                          
+  154              CALL STR$UPCASE(LINE(:LENGTH),LINE(:LENGTH))                                                                     
+  155       C                                       C                                                                               
+  156       C                                       C***   Trim leading blanks                                                      
+  157       C                                       C                                                                               
+  158              I = LIB$SKPC(' ',LINE)                                                                                           
+  159     *        IF (I .LE. LENGTH)                                                                                               
+  160   1             LINE = LINE(I:LENGTH)                                                                                         
+  161   1             I = INDEX(LINE,' ') - 1                                                                                       
+  162       C                                       C                                                                               
+  163       C                                       C***   Check for set                                                            
+  164       C                                       C                                                                               
+  165   1 *           IF (I .LE. 3)                                                                                                 
+  166   2 *              IF (LINE(:I) .EQ. SET(:I))                                                                                 
+  167   3                   J = LIB$SKPC(' ',LINE(I+1:)) + I                                                                        
+  168   3 *                 IF (J .LT. I)                                                                                           
+  169   4 *                    EXECUTE (ERROR)                                                                                      
+  170   3 *                 ENDIF                                                                                                   
+  171   3                   LINE = LINE(J:)                                                                                         
+  172   3                   I = INDEX(LINE,' ') - 1                                                                                 
+  173       C                                       C                                                                               
+  174       C                                       C---   NO?                                                                      
+  175       C                                       C                                                                               
+  176   3                   NO = .FALSE.                                                                                            
+  177   3 *                 IF (I .GT. 2)                                                                                           
+  178   4 *                    IF (LINE(:2) .EQ. 'NO')                                                                              
+  179   5                         NO = .TRUE.                                                                                       
+  180   5                         LINE = LINE(3:)                                                                                   
+  181   5                         I = I - 2                                                                                         
+  182   4 *                    ENDIF                                                                                                
+  183   3 *                 ENDIF                                                                                                   
+  184       C                                       C                                                                               
+  185       C                                       C---   BOX?                                                                     
+  186       C                                       C                                                                               
+  187   3 *                 IF (I .LE. 3)                                                                                           
+  188   4 *                    IF (LINE(:I) .EQ. BOX(:I))                                                                           
+  189   5 *                       IF (NO)                                                                                           
+  190   6                            PAGLEN = COMLIN - 1                                                                            
+  191   5 *                       ELSE                                                                                              
+  192   6                            PAGLEN = COMLIN - 2                                                                            
+  193   5 *                       ENDIF                                                                                             
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        COMLVL                29-SEP-83      15:15:23      PAGE    5
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  194   5 *                       EXECUTE (OK_RETURN)                                                                               
+  195   4 *                    ENDIF                                                                                                
+  196   3 *                 ENDIF                                                                                                   
+  197       C                                       C                                                                               
+  198       C                                       C---   WRAP?                                                                    
+  199       C                                       C                                                                               
+  200   3 *                 IF (I .LE. 4)                                                                                           
+  201   4 *                    IF (WRAP(:I) .EQ. LINE(:I))                                                                          
+  202   5 *                       IF (NO)                                                                                           
+  203   6                            LENLMT = IABS(LENLMT)                                                                          
+  204   6                            CALL CLRWRP(INCHAN)                                                                            
+  205   5 *                       ELSE                                                                                              
+  206   6                            LENLMT = -IABS(LENLMT)                                                                         
+  207   6                            CALL SETWRP(INCHAN)                                                                            
+  208   5 *                       ENDIF                                                                                             
+  209   5 *                       EXECUTE (OK_RETURN)                                                                               
+  210   4 *                    ENDIF                                                                                                
+  211       C                                       C                                                                               
+  212       C                                       C---   WIDE?                                                                    
+  213       C                                       C                                                                               
+  214   4 *                    IF (WIDE(:I) .EQ. LINE(:I) .AND. VT100)                                                              
+  215   5 *                       IF (NO)                                                                                           
+  216   6 *                          EXECUTE (SET_NARROW)                                                                           
+  217   5 *                       ELSE                                                                                              
+  218   6 *                          EXECUTE (SET_WIDE)                                                                             
+  219   5 *                       ENDIF                                                                                             
+  220   5 *                       EXECUTE (OK_RETURN)                                                                               
+  221   4 *                    ENDIF                                                                                                
+  222   3 *                 ENDIF                                                                                                   
+  223       C                                       C                                                                               
+  224       C                                       C---   NARROW?                                                                  
+  225       C                                       C                                                                               
+  226   3 *                 IF (I .LE. 6)                                                                                           
+  227   4 *                    IF (LINE(:I) .EQ. NARROW(:I) .AND. VT100)                                                            
+  228   5 *                       IF (NO)                                                                                           
+  229   6 *                          EXECUTE (SET_WIDE)                                                                             
+  230   5 *                       ELSE                                                                                              
+  231   6 *                          EXECUTE (SET_NARROW)                                                                           
+  232   5 *                       ENDIF                                                                                             
+  233   5 *                       EXECUTE (OK_RETURN)                                                                               
+  234   4 *                    ENDIF                                                                                                
+  235   3 *                 ENDIF                                                                                                   
+  236   3 *                 EXECUTE (ERROR)                                                                                         
+  237   2 *              ENDIF                                                                                                      
+  238   1 *           ENDIF                                                                                                         
+  239       C                                       C                                                                               
+  240       C                                       C***   Check for EXIT                                                           
+  241       C                                       C                                                                               
+  242   1 *           IF (I .LE. 4)                                                                                                 
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        COMLVL                29-SEP-83      15:15:23      PAGE    6
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  243   2 *              IF (LINE(:I) .EQ. EXIT(:I))                                                                                
+  244   3                   DONE = .TRUE.                                                                                           
+  245   3                   RETURN                                                                                                  
+              <--------------                                                                                                       
+  246   2 *              ENDIF                                                                                                      
+  247       C                                       C                                                                               
+  248       C                                       C***   Check for HELP                                                           
+  249       C                                       C                                                                               
+  250   2 *              IF (LINE(:I) .EQ. HELP(:I))                                                                                
+  251       C                                       C                                                                               
+  252       C                                       C---   Open help file                                                           
+  253       C                                       C                                                                               
+  254   3                   CALL LBR$INI_CONTROL(J,1)                                                                               
+  255   3 *                 IF (IMAGE .EQ. '{')                                                                                     
+  256   4                      GETLIS(2) = %LOC(IMAGE)                                                                              
+  257   4                      GETLIS(3) = %LOC(K)                                                                                  
+  258   4                      CALL SYS$GETJPI(,,,GETLIS,,,)                                                                        
+  259   4                      L = INDEX(IMAGE,']')                                                                                 
+  260   4 *                    IF (L .EQ. 0)                                                                                        
+  261   5                         IMAGE = 'LOOK.HLB'                                                                                
+  262   4 *                    ELSE                                                                                                 
+  263   5                         IMAGE = IMAGE(:L)//'LOOK.HLB'                                                                     
+  264   4 *                    ENDIF                                                                                                
+  265   3 *                 ENDIF                                                                                                   
+  266   3 *                 IF (.NOT.LBR$OPEN(J,IMAGE))                                                                             
+  267   4                      CALL LIB$PUT_OUTPUT('***   COULD NOT OPEN HELP LIBRARY')                                             
+  268   4                      DONE = .FALSE.                                                                                       
+  269   4                      RETURN                                                                                               
+              <-----------------                                                                                                    
+  270   3 *                 ENDIF                                                                                                   
+  271       C                                       C                                                                               
+  272       C                                       C---   Output message, close file                                               
+  273       C                                       C                                                                               
+  274   3                   K = INDEX(LINE(I+1:),'*') + I + 1                                                                       
+  275   3 *                 IF (K .NE. (I + 1))                                                                                     
+  276   4                      LINE = 'ASTERISK '//LINE(K:)                                                                         
+  277   3 *                 ELSE                                                                                                    
+  278   4                      K = INDEX(LINE(I+1:),'%') + I + 1                                                                    
+  279   4 *                    IF (K .NE. (I + 1))                                                                                  
+  280   5                         LINE = 'PERCENT '//LINE(K:)                                                                       
+  281   4 *                    ELSE                                                                                                 
+  282   5                         K = INDEX(LINE(I+1:),'!') + I + 1                                                                 
+  283   5 *                       IF (K .NE. (I + 1))                                                                               
+  284   6                            LINE = 'EXCLAMATION '//LINE(K:)                                                                
+  285   5 *                       ELSE                                                                                              
+  286   6                            K = LIB$SKPC(' ',LINE(I+1:)) + I                                                               
+  287   6 *                          IF (I .EQ. K)                                                                                  
+  288   7                               LINE = 'INFO'                                                                               
+  289   6 *                          ELSE                                                                                           
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        COMLVL                29-SEP-83      15:15:23      PAGE    7
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  290   7                               LINE = LINE(K:)                                                                             
+  291   6 *                          ENDIF                                                                                          
+  292   5 *                       ENDIF                                                                                             
+  293   4 *                    ENDIF                                                                                                
+  294   3 *                 ENDIF                                                                                                   
+  295   3                   CALL STR$TRIM(LINE,LINE,I)                                                                              
+  296   3                   K = INDEX(LINE,' ') - 1                                                                                 
+  297   3 *                 IF (K .EQ. I) THEN                                                                                      
+  298   4                      CALL LBR$GET_HELP(J,,,,LINE)                                                                         
+  299   3 *                 ELSE                                                                                                    
+  300   4                      I = LIB$SKPC(' ',LINE(K+1:)) + K                                                                     
+  301   4                      CALL LBR$GET_HELP(J,,,,LINE(:K),LINE(I:))                                                            
+  302   3 *                 ENDIF                                                                                                   
+  303   3                   CALL LBR$CLOSE(J)                                                                                       
+  304   3 *                 EXECUTE (OK_RETURN)                                                                                     
+  305   2 *              ENDIF                                                                                                      
+  306       C                                       C                                                                               
+  307       C                                       C***   Check for show                                                           
+  308       C                                       C                                                                               
+  309   2 *              IF (LINE(:I) .EQ. SHOW(:I))                                                                                
+  310   3                   J = LIB$SKPC(' ',LINE(I+1:)) + I                                                                        
+  311   3 *                 IF (LINE(J+1:) .NE. ' ')                                                                                
+  312   4 *                    EXECUTE (ERROR)                                                                                      
+  313   3 *                 ENDIF                                                                                                   
+  314   3 *                 IF (J .EQ. I)                                                                                           
+                              +-----------------------------------------------------------------------------------------------------
+  315   4 *                   |DO FOR ISYM=1,NDEFS                                                                                  
+  316   5 *                   |   EXECUTE (SHOW_SYMBOL)                                                                             
+  317   4 *                   |END DO FOR                                                                                           
+                              +-----------------------------------------------------------------------------------------------------
+  318   4 *                    EXECUTE (OK_RETURN)                                                                                  
+  319   3 *                 ELSE                                                                                                    
+                              +-----------------------------------------------------------------------------------------------------
+  320   4 *                   |DO FOR ISYM=1,NDEFS                                                                                  
+  321   5 *                   |   IF (LINE(J:J) .EQ. SYMS(ISYM))                                                                    
+  322   6 *                   |      EXECUTE (SHOW_SYMBOL)                                                                          
+  323   6 *                   |      EXECUTE (OK_RETURN)                                                                            
+  324   5 *                   |   ENDIF                                                                                             
+  325   4 *                   |END DO FOR                                                                                           
+                              +-----------------------------------------------------------------------------------------------------
+  326   4 *                    EXECUTE (ERROR)                                                                                      
+  327   3 *                 ENDIF                                                                                                   
+  328   2 *              ENDIF                                                                                                      
+  329       C                                       C                                                                               
+  330       C                                       C***   Check for read                                                           
+  331       C                                       C                                                                               
+  332   2 *              IF (LINE(:I) .EQ. READ(:I))                                                                                
+  333   3 *                 IF (BRDCNT .EQ. 0)                                                                                      
+  334   4                      CALL LIB$PUT_OUTPUT(CRLF//'No broadcast messages have '                                              
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        COMLVL                29-SEP-83      15:15:23      PAGE    8
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  335            1                   //'been received.'//CRLF)                                                                      
+  336   3 *                 ELSE                                                                                                    
+  337   4                      CALL LIB$PUT_OUTPUT(CRLF//'The following messages '//                                                
+  338            1                   'have been received:')                                                                         
+  339   4 *                    IF (BRDCNT .LE. 20)                                                                                  
+  340   5                         J = BRDCNT                                                                                        
+  341   4 *                    ELSE                                                                                                 
+  342   5                         J = 20                                                                                            
+  343   4 *                    ENDIF                                                                                                
+                              +-----------------------------------------------------------------------------------------------------
+  344   4 *                   |DO FOR I=1,J                                                                                         
+  345       C                 |                     C                                                                               
+  346       C                 |                     C---   Remove bells from message                                                
+  347       C                 |                     C                                                                               
+                              |  +--------------------------------------------------------------------------------------------------
+  348   5 *                   |  |DO FOREVER                                                                                        
+  349   6                     |  |   K = INDEX(BRDMSG(I)(:BRDLEN(I)),CHAR(7))                                                       
+  350   6 *                   |  |   UNDO IF (K .EQ. 0)                                                                             
+                              |  <----                                                                                              
+  351   6                     |  |   BRDMSG(I) = BRDMSG(I)(:K-1)//BRDMSG(I)(K+1:)                                                   
+  352   6                     |  |   BRDLEN(I) = BRDLEN(I) - 1                                                                      
+  353   5 *                   |  |END DO FOREVER                                                                                    
+                              |  +--------------------------------------------------------------------------------------------------
+  354       C                 |                     C                                                                               
+  355       C                 |                     C---   Output message                                                           
+  356       C                 |                     C                                                                               
+  357   5                     |   CALL LIB$PUT_OUTPUT(BRDMSG(I)(:BRDLEN(I)))                                                        
+  358   4 *                   |END DO FOR                                                                                           
+                              +-----------------------------------------------------------------------------------------------------
+  359   4 *                    IF (BRDCNT .GT. 20)                                                                                  
+  360   5                         CALL LIB$PUT_OUTPUT(CRLF//                                                                        
+  361            1                      'There were too many messages!  The buffer over-'                                           
+  362            2                      //'flowed, there were un-seen messages'//CRLF)                                              
+  363   4 *                    ELSE                                                                                                 
+  364   5                         CALL LIB$PUT_OUTPUT(CRLF)                                                                         
+  365   4 *                    ENDIF                                                                                                
+  366   4                      BRDCNT = 0                                                                                           
+  367   3 *                 ENDIF                                                                                                   
+  368   3                   BRDFLG = .FALSE.                                                                                        
+  369   3 *                 EXECUTE (OK_RETURN)                                                                                     
+  370   2 *              ENDIF                                                                                                      
+  371   1 *           ENDIF                                                                                                         
+  372       C                                       C                                                                               
+  373       C                                       C***  SPAWN?                                                                    
+  374       C                                       C                                                                               
+  375   1 *           IF (I .LE. 5)                                                                                                 
+  376   2 *              IF (SPAWN(:I) .EQ. LINE(:I))                                                                               
+  377   3                   IF (.NOT.TTSPAWN()) CALL LIB$PUT_OUTPUT                                                                 
+  378            1                ('Unable to spawn sub-process')                                                                   
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        COMLVL                29-SEP-83      15:15:23      PAGE    9
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  379   3 *                 EXECUTE (OK_RETURN)                                                                                     
+  380   2 *              ENDIF                                                                                                      
+  381   1 *           ENDIF                                                                                                         
+  382       C                                       C                                                                               
+  383       C                                       C***   DEFINE?                                                                  
+  384       C                                       C                                                                               
+  385   1 *           IF (I .LE. 6)                                                                                                 
+  386   2 *              IF (DEFINE(:I) .EQ. LINE(:I))                                                                              
+  387   3                   J = LIB$SKPC(' ',LINE(I+1:)) + I                                                                        
+  388   3 *                 IF (J .EQ. I)                                                                                           
+  389   4 *                    EXECUTE (ERROR)                                                                                      
+  390   3 *                 ENDIF                                                                                                   
+  391   3                   LINE = LINE(J:)                                                                                         
+  392   3                   CALL STR$TRIM(LINE,LINE,LENGTH)                                                                         
+  393   3                   I = INDEX(LINE,':=') - 1                                                                                
+  394   3                   J = INDEX(LINE,'"') - 1                                                                                 
+  395   3                   K = INDEX(LINE,'''') - 1                                                                                
+  396   3 *                 IF (I .LT. 1 .OR. (J .LT. I .AND. J .GE. 0) .OR. (K .LT. I                                              
+  397            1                .AND. K .GE. 0))                                                                                  
+  398       C                                       C                                                                               
+  399       C                                       C---   If no := then error                                                      
+  400       C                                       C                                                                               
+  401   4 *                    EXECUTE (ERROR)                                                                                      
+  402   3 *                 ENDIF                                                                                                   
+  403       C                                       C                                                                               
+  404       C                                       C---   Make sure that it is definable                                           
+  405       C                                       C                                                                               
+  406   3                   OKFLAG = .FALSE.                                                                                        
+                           +--------------------------------------------------------------------------------------------------------
+  407   3 *                |DO FOR L=1,NUMALL                                                                                       
+  408   4                  |   IF (LINE(1:1) .EQ. ALLSYM(L)) OKFLAG = .TRUE.                                                        
+  409   3 *                |END DO FOR                                                                                              
+                           +--------------------------------------------------------------------------------------------------------
+  410   3 *                 IF (OKFLAG)                                                                                             
+  411   4 *                    EXECUTE (DEFINE_SYMBOL)                                                                              
+  412   4 *                    EXECUTE (OK_RETURN)                                                                                  
+  413   3 *                 ELSE                                                                                                    
+  414   4 *                    EXECUTE (ERROR)                                                                                      
+  415   3 *                 ENDIF                                                                                                   
+  416   2 *              ENDIF                                                                                                      
+  417   1 *           ENDIF                                                                                                         
+  418       C                                       C                                                                               
+  419       C                                       C***   Check for @                                                              
+  420       C                                       C                                                                               
+  421   1 *           IF (LINE(1:1) .EQ. '@')                                                                                       
+  422   2                OPEN (UNIT=30,NAME=LINE(2:I),TYPE='OLD',ERR=700,READONLY)                                                  
+  423   2                CALL DODEF                                                                                                 
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        COMLVL                29-SEP-83      15:15:23      PAGE   10
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+                        +-----------------------------------------------------------------------------------------------------------
+  424   2 *             |DO LABEL                                                                                                   
+  425   3 *             |   LABEL 700                                                                                               
+  426   4               |      I = INDEX(LINE,' ') - 1                                                                              
+  427   4               |      CALL LIB$PUT_OUTPUT('***   UNABLE TO OPEN '//LINE(:I))                                               
+  428   2 *             |END DO LABEL                                                                                               
+                        +-----------------------------------------------------------------------------------------------------------
+  429   2 *              EXECUTE (OK_RETURN)                                                                                        
+  430   1 *           ENDIF                                                                                                         
+  431   1 *           EXECUTE (ERROR)                                                                                               
+  432     *        ENDIF                                                                                                            
+  433              DONE = .FALSE.                                                                                                   
+  434              RETURN                                                                                                           
+              <-----                                                                                                                
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        COMLVL                29-SEP-83      15:15:23      PAGE   11
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  435     *        PROCEDURE (DEFINE_SYMBOL)                                                                                        
+  436       C                                       CP    This procedure defines a symbol.                                          
+  437       C                                       C                                                                               
+  438       C                                       C***   See if symbol is already defined                                         
+  439       C                                       C                                                                               
+                     +--------------------------------------------------------------------------------------------------------------
+  440   1 * 900      |DO                                                                                                            
+                     |  +-----------------------------------------------------------------------------------------------------------
+  441   2 *          |  |DO FOR II=1,NDEFS                                                                                          
+  442   3 *          |  |   UNDO 900 IF (SYMS(II) .EQ. LINE(1:1))                                                                   
+                     <-------                                                                                                       
+  443   2 *          |  |END DO FOR                                                                                                 
+                     |  +-----------------------------------------------------------------------------------------------------------
+  444   2            |   NDEFS = NDEFS + 1                                                                                          
+  445   2            |   II = NDEFS                                                                                                 
+  446   2            |   SYMS(II) = LINE(1:1)                                                                                       
+  447   1 *          |END DO                                                                                                        
+                     +--------------------------------------------------------------------------------------------------------------
+  448   1             LINE = LINE(I+3:)                                                                                             
+  449   1             LENGTH = LENGTH - I - 2                                                                                       
+  450       C                                       C                                                                               
+  451       C                                       C***   Actually get definitions                                                 
+  452       C                                       C                                                                               
+  453   1 *           IF (.NOT.GETDEF(LINE(:LENGTH),II))                                                                            
+  454   2 *              EXECUTE (ERROR)                                                                                            
+  455   1 *           ENDIF                                                                                                         
+  456     *        END PROCEDURE                                                                                                    
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        COMLVL                29-SEP-83      15:15:23      PAGE   12
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  457     *        PROCEDURE (ERROR)                                                                                                
+  458       C                                       CP    This writes an error message                                              
+  459   1             CALL STR$TRIM(LINE,LINE,I)                                                                                    
+  460   1             IF (I .NE. 0) CALL LIB$PUT_OUTPUT(LINE(:I)//' ??')                                                            
+  461   1             DONE = .FALSE.                                                                                                
+  462   1             RETURN                                                                                                        
+              <--------                                                                                                             
+  463     *        END PROCEDURE                                                                                                    
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        COMLVL                29-SEP-83      15:15:23      PAGE   13
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  464     *        PROCEDURE (OK_RETURN)                                                                                            
+  465       C                                       CP    This procedure sets DONE to false and returns.                            
+  466   1             DONE = .FALSE.                                                                                                
+  467   1             RETURN                                                                                                        
+              <--------                                                                                                             
+  468     *        END PROCEDURE                                                                                                    
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        COMLVL                29-SEP-83      15:15:23      PAGE   14
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  469     *        PROCEDURE (SET_NARROW)                                                                                           
+  470       C                                       CP    This procedure sets the terminal to 80 column mode.                       
+  471   1             LENLMT = 80*LENLMT/IABS(LENLMT)                                                                               
+  472   1             CALL SETNAR(INCHAN)                                                                                           
+  473   1 *           IF (.NOT.VT100A)                                                                                              
+  474   2                COMLIN = 24                                                                                                
+  475   2                PAGLEN = PAGLEN + 10                                                                                       
+  476   1 *           ENDIF                                                                                                         
+  477     *        END PROCEDURE                                                                                                    
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        COMLVL                29-SEP-83      15:15:23      PAGE   15
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  478     *        PROCEDURE (SET_WIDE)                                                                                             
+  479       C                                       CP    This procedure sets the terminal to 132 column mode.                      
+  480   1             LENLMT = 132*LENLMT/IABS(LENLMT)                                                                              
+  481   1             CALL SETWID(INCHAN)                                                                                           
+  482   1 *           IF (.NOT.VT100A)                                                                                              
+  483   2                COMLIN = 14                                                                                                
+  484   2                PAGLEN = PAGLEN - 10                                                                                       
+  485   1 *           ENDIF                                                                                                         
+  486     *        END PROCEDURE                                                                                                    
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        COMLVL                29-SEP-83      15:15:23      PAGE   16
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  487     *        PROCEDURE (SHOW_SYMBOL)                                                                                          
+  488       C                                       CP    This procedure writes out the definition for one symbol                   
+  489   1             LINE = SYMS(ISYM)//' := '                                                                                     
+  490   1             L = 6                                                                                                         
+                     +--------------------------------------------------------------------------------------------------------------
+  491   1 *          |DO FOR K=1,10                                                                                                 
+  492   2 *          |   UNDO IF (DEFS(1,K,ISYM) .EQ. 0)                                                                            
+                     <----                                                                                                          
+  493       C        |                              C                                                                               
+  494       C        |                              C***   Convert the number                                                       
+  495       C        |                              C                                                                               
+  496   2 *          |   IF (DEFFLG(1,K,ISYM))                                                                                      
+  497   3            |      WRITE (UNIT=LINE(L:),FMT=1000)NUMDEF(K,ISYM)                                                            
+  498   3   1000     |      FORMAT (F10.3)                                                                                          
+  499   3            |      M = LIB$SKPC(' ',LINE(L:))                                                                              
+  500   3            |      LINE(L:) = LINE(L+M-1:)                                                                                 
+  501   3            |      L = 11 + L - M                                                                                          
+  502   3            |      IF (LINE(L-3:L-1) .EQ. '000') L = L - 4                                                                 
+  503   2 *          |   ENDIF                                                                                                      
+  504       C        |                              C                                                                               
+  505       C        |                              C***   Is it --&?                                                               
+  506       C        |                              C                                                                               
+  507   2 *          |   IF (DEFS(1,K,ISYM) .EQ. 9)                                                                                 
+  508   3            |      LINE(L:) = '--& '                                                                                       
+  509   3            |      L = L + 4                                                                                               
+  510   3 *          |      CYCLE                                                                                                   
+                     |<------                                                                                                       
+  511   2 *          |   ENDIF                                                                                                      
+  512       C        |                              C                                                                               
+  513       C        |                              C***   Set minus if necessary                                                   
+  514       C        |                              C                                                                               
+  515   2 *          |   IF (DEFFLG(2,K,ISYM))                                                                                      
+  516   3            |      LINE(L:) = '-'                                                                                          
+  517   3            |      L = L + 1                                                                                               
+  518   2 *          |   ENDIF                                                                                                      
+  519       C        |                              C                                                                               
+  520       C        |                              C***   Search?                                                                  
+  521       C        |                              C                                                                               
+  522   2 *          |   IF (DEFS(1,K,ISYM) .EQ. 3)                                                                                 
+  523   3 *          |      IF (DEFFLG(3,K,ISYM))                                                                                   
+  524   4            |         LINE(L:) = '"'//DEFBUF(1,K,ISYM)(:DEFS(2,K,ISYM))                                                    
+  525   4            |         KK = L                                                                                               
+  526   4            |         L = L + 3 + DEFS(2,K,ISYM)                                                                           
+                     |        +-----------------------------------------------------------------------------------------------------
+  527   4 *          |        |DO FOREVER                                                                                           
+  528   5            |        |   LL = INDEX(LINE(KK+1:),'"') + KK                                                                  
+  529   5 *          |        |   UNDO IF (LL .EQ. KK)                                                                              
+                     |        <----                                                                                                 
+  530   5            |        |   LINE(LL:) = '"'//LINE(LL:)                                                                        
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        COMLVL                29-SEP-83      15:15:23      PAGE   17
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  531   5            |        |   L = L + 1                                                                                         
+  532   5            |        |   KK = LL + 2                                                                                       
+  533   4 *          |        |END DO FOREVER                                                                                       
+                     |        +-----------------------------------------------------------------------------------------------------
+  534   4            |         LINE(L-2:L-2) = '"'                                                                                  
+                     |        +-----------------------------------------------------------------------------------------------------
+  535   4 *          |        |DO FOR JJ=2,10                                                                                       
+  536   5 *          |        |   UNDO IF (DEFS(1+JJ,K,ISYM) .EQ. 0)                                                                
+                     |        <----                                                                                                 
+  537   5            |        |   LINE(L:) = ''''//DEFBUF(JJ,K,ISYM)(:DEFS(1+JJ,K,ISYM))                                            
+  538   5            |        |   KK = L                                                                                            
+  539   5            |        |   L = L + 3 + DEFS(1+JJ,K,ISYM)                                                                     
+                     |        |  +--------------------------------------------------------------------------------------------------
+  540   5 *          |        |  |DO FOREVER                                                                                        
+  541   6            |        |  |   LL = INDEX(LINE(KK+1:),'''') + KK                                                              
+  542   6 *          |        |  |   UNDO IF (LL .EQ. KK)                                                                           
+                     |        |  <----                                                                                              
+  543   6            |        |  |   LINE(LL:) = ''''//LINE(LL:)                                                                    
+  544   6            |        |  |   L = L + 1                                                                                      
+  545   6            |        |  |   KK = LL + 2                                                                                    
+  546   5 *          |        |  |END DO FOREVER                                                                                    
+                     |        |  +--------------------------------------------------------------------------------------------------
+  547   5            |        |   LINE(L-2:L-2) = ''''                                                                              
+  548   4 *          |        |END DO FOR                                                                                           
+                     |        +-----------------------------------------------------------------------------------------------------
+  549   4            |         LINE(L-1:) = '^'                                                                                     
+  550   4            |         L = L + 1                                                                                            
+  551   3 *          |      ELSE                                                                                                    
+  552   4            |         LINE(L:) = '^ '                                                                                      
+  553   4            |         L = L + 2                                                                                            
+  554   3 *          |      ENDIF                                                                                                   
+  555   3 *          |      CYCLE                                                                                                   
+                     |<------                                                                                                       
+  556   2 *          |   ENDIF                                                                                                      
+  557       C        |                              C                                                                               
+  558       C        |                              C***   Set LINE                                                                 
+  559       C        |                              C                                                                               
+                     |  +-----------------------------------------------------------------------------------------------------------
+  560   2 *          |  |DO FOR M=1,NUMCOM                                                                                          
+  561   3 *          |  |   IF (DEFS(1,K,ISYM) .EQ. M)                                                                              
+  562   4            |  |      LINE(L:) = COMAND(M)                                                                                 
+  563   4            |  |      L = L + 2                                                                                            
+  564   4 *          |  |      UNDO                                                                                                 
+                     |  <-------                                                                                                    
+  565   3 *          |  |   ENDIF                                                                                                   
+  566   2 *          |  |END DO FOR                                                                                                 
+                     |  +-----------------------------------------------------------------------------------------------------------
+  567   1 *          |END DO FOR                                                                                                    
+                     +--------------------------------------------------------------------------------------------------------------
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        COMLVL                29-SEP-83      15:15:23      PAGE   18
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  568       C                                       C                                                                               
+  569       C                                       C***   Output line                                                              
+  570       C                                       C                                                                               
+  571   1             M = 1                                                                                                         
+  572   1             L = L - 1                                                                                                     
+                     +--------------------------------------------------------------------------------------------------------------
+  573   1 *          |DO FOREVER                                                                                                    
+  574   2 *          |   IF ((L - M) .LT. IABS(LENLMT))                                                                             
+  575   3            |      CALL LIB$PUT_OUTPUT(LINE(M:L-1))                                                                        
+  576   3 *          |      UNDO                                                                                                    
+                     <-------                                                                                                       
+  577   2 *          |   ELSE                                                                                                       
+  578   3            |      CALL LIB$PUT_OUTPUT(LINE(M:M+IABS(LENLMT)-1))                                                           
+  579   2 *          |   ENDIF                                                                                                      
+  580   2            |   M = M + IABS(LENLMT)                                                                                       
+  581   1 *          |END DO FOREVER                                                                                                
+                     +--------------------------------------------------------------------------------------------------------------
+  582     *        END PROCEDURE                                                                                                    
+  583              END                                                                                                              
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        COMLVL                29-SEP-83      15:15:23      PAGE   19
+
+
+                                        PROCEDURE CROSS-REFERENCE TABLE
+
+ LINE   PROCEDURE NAME                              REFERENCE LINES
+
+  435  DEFINE_SYMBOL                  
+                                411 
+
+  457  ERROR                          
+                                142   169   236   312   326   389   401   414   431   454 
+
+  464  OK_RETURN                      
+                                194   209   220   233   304   318   323   369   379   412   429 
+
+  469  SET_NARROW                     
+                                216   231 
+
+  478  SET_WIDE                       
+                                218   229 
+
+  487  SHOW_SYMBOL                    
+                                316   322 
+
+       0 DIAGNOSTICS GENERATED

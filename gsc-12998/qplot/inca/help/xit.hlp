@@ -1,0 +1,49 @@
+1 XIT               
+
+     This command terminates an INCA session.  The audit file may be
+printed, deleted, or printed and then deleted depending upon the
+modifier.  If no modifier is given, INCA will terminate and save the
+audit file.  Note that the INCA 2.0x EXIT command has been eliminated.
+
+     Format:     XIT [modifier]  
+
+2 PRINT_AUDIT_FILE  
+
+     This modifier will cause the audit file to be spooled to the
+line printer.  The file is not deleted. 
+
+     Format:     XIT  PRINT_AUDIT_FILE
+
+2 DELETE_AUDIT_FILE 
+
+     This modifier will cause the audit file to be deleted.  No
+"second chance" prompt is given.  Other audit files from previous INCA
+sessions will be unaffected. 
+
+     Format:     XIT  DELETE_AUDIT_FILE
+
+2 BOTH_PRINT_DELETE 
+
+     This modifier will cause the audit file to be printed and then
+deleted.  No "second chance" prompt is given.  Other audit files from
+previous INCA sessions will be unaffected. 
+
+     Format:     XIT  BOTH_PRINT_DELETE
+
+2 SAVE_AUDIT_FILE   
+
+     This modifier will cause the audit file to be saved.  This is
+the default modifier.  Other audit files from previous INCA sessions
+will be unaffected. 
+
+     Format:     XIT  [SAVE_AUDIT_FILE]
+
+2 REMOVE_OLD_VERSIONS
+
+     This modifier will cause the audit file to be saved, but older 
+versions (from previous INCA sessions in the same project) will be 
+deleted.  INCA issues a VAX/DCL "PURGE" command to accomplish this 
+action.
+
+     Format:     XIT  REMOVE_OLD_VERSIONS
+

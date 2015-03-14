@@ -1,0 +1,12 @@
+;	CALL POKEW (IADDR, IWORD)
+; C Where IADDR is the memory address to poke, and IWORD
+; C  is an INTEGER value to be poked.
+;
+	.TITLE	POKEW
+
+POKEW::
+	.WORD	^M<R4>
+        MOVL    @4(AP),R4
+	MOVL	@8(AP),(R4)
+	RET
+	.END

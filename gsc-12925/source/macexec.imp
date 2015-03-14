@@ -1,0 +1,316 @@
+  { $INCLUDE : 'compile.inc' }
+  { $INCLUDE : 'getparam.int' }
+  { $INCLUDE : 'utility.int' }
+  { $INCLUDE : 'vbpas.int' }
+  { $INCLUDE : 'dspas.int' }
+  { $INCLUDE : 'dialog.int' }
+  { $INCLUDE : 'sfpas.int' }
+  { $INCLUDE : 'ldb.int'     }
+  { $INCLUDE : 'execute.int' }
+  { $INCLUDE : 'alterl.int' }
+  { $INCLUDE : 'macpict.int' }
+  { $INCLUDE : 'macexec.int' }
+
+  implementation of macexec;
+
+  USES getparam;
+
+  USES dspas;
+
+  USES utility;
+
+  USES sfpas;
+
+  USES vbpas;
+
+  USES dialog;
+
+  USES ldb;
+
+  USES execute;
+
+  USES alterl;
+
+  USES macpict;
+
+  const
+    prompt_line := 22;
+
+  (**********************************************************)
+
+  procedure exit;
+
+  begin
+    chartinfo (1, first, skeleton^ );
+  end;
+
+  (**********************************************************)
+
+  procedure enter;
+
+    begin
+      current := first^.up;
+      delete ( current );
+    end;
+
+  (**********************************************************)
+
+  procedure redraw;
+
+  begin
+    if code <> 2 then dsinit;
+    skelemac ( color, skeleton^ );
+    picture  ( first, skeleton^ );
+    if code <> 2 then
+      begin
+	rtype := 2;
+	reduce ( rtype, color );
+      end;
+  end;
+
+ (*****************************************************************)
+
+  procedure sldredraw;
+
+  var i : integer;
+
+   begin
+      color	  :=  1 ;   color1	:= 3;
+      rtype := 2; screen(4); colors(0,color);
+      height := 240;
+      for  i := 1 to 4 do begin
+	   clr[i]   :=	skeleton^[i+14] ;
+	   ndon[i]  :=	skeleton^[i+18] ;
+	   ndoff[i] :=	skeleton^[i+22] ;
+	   fill[i]  :=	skeleton^[i+26] ;
+      end; (* for *)
+      chartinfo ( 2, first, skeleton^ );
+      skelemac	(    color, skeleton^ );
+      picture	(    first, skeleton^ );
+      reduce	(    rtype, color );
+  end;
+
+  (**********************************************************)
+
+  procedure perform2;
+
+  var
+       i,l,m,n,size : integer;
+       inchar	    : twobyte;
+       userkey	    : byte;
+       length	    : byte;
+       buffer	    : lstring(127);
+       buf	    : lstring(80);
+       yrs	    : lstring(2);
+       xc, x, y, yr : integer;
+       month	    : array [0..12] of lstring(3);
+       current_node : byte;
+       current	    : entity;
+       status	    : mode;
+
+ (* ----------------------------------------------------------------*)
+
+ procedure mac_upd;
+
+ var
+   i,j,k   : integer;
+   buffer2 : lstring(127);
+
+ begin
+   if length > 0  then
+     begin
+       with current^ do begin
+	  if buffer.len <> field^.len then
+	     saved := false
+	  else
+	     for i := 1 to buffer.len do
+		 if buffer[i] <> field^[i] then saved := false;
+       end; (* with *)
+
+       k := 0;
+       if current_node = 4  then k := 3 ;
+       alter_entity_list ( current, buffer, length, k);
+
+       with current^ do begin
+	    if etype = 4 then begin
+	       there ( xtext, ytext );
+	       write ( field^  );
+	    end;
+	    if (etype = 3) and (ord(total)>6)  then begin
+		buffer2.len := node_data^[current_node].input_length ;
+		j := field^.len;
+		for i := 1 to buffer2.len do buffer2[i] := ' ';
+		for i := 1 to  j  do buffer2[i] := field^[i] ;
+		there ( xtext, ytext+6);
+		write ( buffer2 );
+	    end;
+       end; (* with *)
+     end ;  (* if length *)
+     if status = txt  then  inkey := 36;
+     if inkey = 1 then current_node := 0 ;
+  end;(* mac_upd *)
+
+ (* ----------------------------------------------------------------*)
+
+  procedure inloop;
+
+    var
+      i : integer;
+      last_node : byte;
+
+    begin
+	last_node := 0;
+	current_node := current^.etype;
+	  while not ( inkey in [1,3..5,42] )  do
+	    begin
+	      if ( node_data^[current_node].valid_key_set_id =
+	           node_data^[last_node].valid_key_set_id ) and
+	         ( node_data^[last_node].prtmsg = 
+	           node_data^[current_node].prtmsg ) and
+		 (promptupd=2) and ( inkey in [0,22..28,36] ) then
+		   promptupd := 3 else last_node := current_node;
+	      inkey := 0;
+	      with current^  do
+		begin
+		  length := field^.len;
+		  buffer.len := length;
+		  for i := 1 to length	do  buffer[i] := field^[i];
+		end;
+	      with node_data^[current_node] do
+		incom ( prompt_line,prtmsg,buf,-1,rtype,character_size,
+			current^.xtext,current^.ytext,data_type,
+			input_length,valid_key_set_id,esc,backspace,
+			cursor_left,cursor_right,ins,del,status,buffer,
+			length,inkey);
+
+		mac_upd;
+
+		perform2 ( inkey, first, name, xy );
+		perform  ( inkey, current, current_node, first )
+	    end;
+    end;
+
+
+(*--------------------------------------------------------------------*)
+
+  begin
+     case inkey of
+	   41 : begin
+		  screen (2);
+		  colors (0,color);
+		  skipfield := [6];
+		  l := ord(total);
+		  there ( (80-cname.len-6) div 2, 0 );
+		  write ( cname, ' Chart' );
+		  there (0,1); write ('T i t l e :   ');
+		  for i := 1 to 3 do begin
+		      there ( (i-1)*27 , 2);
+		      for n := 1 to 8 do write ( chr(205) );
+		      write ( ' Subtitle ');
+		      for n := 1 to 8 do write ( chr(205) );
+		  end; (* for *)
+		  there (0,18);write ('Footnotes :');
+		  for n := 1 to 4  do
+		    begin
+		      there (0,n+7); write (n:1,'.  ');
+		      if l > 6	then
+			[ there (0,n+13); write (n:1,'.  '); ]
+		    end;
+		  case period of
+		    0	 : begin
+			   there (37,6); write ('Month');
+			   if l > 6  then
+			     [ there (37,12); write ('Month'); ];
+			   end;
+		    1..4 : begin
+			   there (36,6); write ('Quarter');
+			   if l > 6  then
+			     [ there (36,12); write ('Quarter'); ];
+			   end;
+		    5	 : begin
+			   there (38,6); write ('Year');
+			   if l > 6  then
+			     [ there (38,12); write ('Year'); ];
+			   end;
+		  end; (* case *)
+		  month[1] := ' 1/'; month[2] := ' 2/'; month[3] := ' 3/';
+		  month[4] := ' 4/'; month[5] := ' 5/'; month[6] := ' 6/';
+		  month[7] := ' 7/'; month[8] := ' 8/'; month[9] := ' 9/';
+		  month[10]:= '10/'; month[11]:= '11/'; month[12]:= '12/';
+		  month[0] := ' 19';
+		  yr := ( ord(year[1])-48 )*10 + ord(year[2]) - 48;
+		  xc := 12;
+		  for n := 1 to l  do
+		    begin
+		      case period of
+			0     : [ m := ((n+start-2)mod 12)+1;
+				  if (m=1) and (start <> 1) then
+				     yr := yr + 1; ];
+			1..4  : [ m := ((n+period-2)mod 4)+1;
+				  if (m=1) and (n<>1) then
+				     yr := yr + 1; ];
+			5     : [ m := 0;
+				  if n<>1  then  yr := yr + 1; ];
+			end; (* case *)
+		      if yr = 100  then [month[0] := ' 20'; yr := 0;];
+		      yrs.len := 2;
+		      yrs[2] := chr( (yr-10*(yr div 10))+48 );
+		      yrs[1] := chr( (yr div 10)+48 );
+		      if n <= 6  then y := 7;
+		      if n > 6	 then y := 13;
+		      if n = 7	 then xc := 12;
+		      xc := xc + 10;
+		      x  := xc;
+		      there ( x,y ); write ( month[m],yrs:2 );
+		  end; (* for *)
+
+		  current := first;
+		  repeat
+		    if current^.field^.len > 0 then
+		      with current^  do
+			begin
+			  there (xtext,ytext);
+			  write (field^);
+			  if (etype=3) and (total>6)  then
+			    begin
+			      there (xtext,ytext+6);
+			      write (field^);
+			    end;
+			end;
+		     current := current^.down;
+		  until (current^.etype=6) or (current=first);
+		  buf := messages^[39];
+		  current := first;
+		  inloop;
+
+		if not (inkey in [0,1,3]) then
+		   redraw (1, current, first);
+		if inkey in [4,5] then inkey := 0;
+		end; (* case inkey of 41 *)
+  (*	   xx : begin
+		  assign (f,'graph.hlp');
+		  f.trap := true;
+		  f.errs := 0;
+		  reset (f);
+		  if f.errs = 0 then
+		    begin
+		      for n:=1 to 12 do
+			read (f,helppage);
+		      help (helppage);
+		    end
+		   else
+		     begin
+		       there ( 0, 23 );
+		       writeln ( 'Graph.hlp not found ... Press any key to continue                              ');
+		       get_input ( inchar );
+		     end;
+		  close (f);
+		  reduce (rtype,color)
+		end; *)
+	   otherwise begin end;
+      end; (* case inkey *)
+
+  end;
+
+  end.
+

@@ -1,0 +1,35 @@
+cancel.hlp
+view.hlp
+
+cngdrive.hlp
+
+
+printss.hlp
+
+
+
+The PRINT/VIEW a Slide Show menu allows for printing or viewing a show or just
+one slide.  To view or print a show move the cursor to the name of the desired
+show and press F2 to view or F7 to print.  If printing, ready the printer and
+after pressing any key the show will be printed continuously unless F1 Cancel
+is pressed.  If viewing the F2 Continue key must be pressed between each slide.
+To view or print one slide, move the cursor to the filename in the directory
+section and press F2 to view or F7 to print.
+
+
+To obtain help for any of the following subjects,  press the function key next
+to the desired subject.
+
+        F1  Cancel
+        F2  View
+
+        F4  Change Drive
+
+
+        F7  Print
+        F8  Return to Previous Menu
+
+        F10 Exit from Help
+
+Press F8 to return to the last help screen or F10 to leave the help mode
+

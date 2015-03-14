@@ -1,0 +1,55 @@
+ GENERAL FLOW DISTRIBUTION PROGRAM
+
+( ROCKWELL INTERNATIONAL CORP. )
+
+     The General Flow Distribution Program was developed to analyze pres-
+sure drops and flow distribution in closed and open hydraulic systems. The
+program analyzes a system on the basis of incompressible flow even though
+the system may contain either compressible or incompressible fluid. The
+program has been used to analyze such orbiter hydraulic systems as the Air
+Revitalization System in the Environmental Control and Life Support Sys-
+tem. The General Flow Distribution Program is capable of solving fixed or
+variable flow problems for series, parallel, or series-parallel systems.
+
+     A flow system is represented by a nodal network with elements of flow
+resistance. Either a closed network with pumps and fans or an open network
+with a known total fixed flow rate may be analyzed. Adjustment of variables
+is permitted through the use of user supplied routines. The analytical
+method employed is generally based on the successive approximation method.
+Flow across a resistance, which may either be a duct, tube, or a black box
+with known characteristics, is calculated using the Bernoulli pressure
+drop equation. Starting with assumed pressures at active nodes, the pro-
+gram iteratively corrects the pressures and flows until pressure and flow
+balance tests are satisfied. The balanced pressure drops and flows com-
+puted are output as analysis results.
+
+     This program is written in FORTRAN V for batch execution and has been
+implemented on a CDC CYBER 170 series computer. As currently dimensioned
+to accommodate a network of up to 500 nodes and 1000 line elements, the pro-
+gram has a central memory requirement of approximately 77K (octal) of 60 bit
+words. This program was developed in 1980.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN V
+
+MACHINE REQUIREMENTS: CDC CYBER 170 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 520 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: MSC-20306
+
+DOMESTIC - DOCUMENTATION PRICE: $18.00    PROGRAM PRICE: $300.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $36.00   PROGRAM PRICE: $600.00
+
+
+
+                                        1
+

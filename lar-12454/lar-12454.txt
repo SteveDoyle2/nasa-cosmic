@@ -1,0 +1,60 @@
+ MASPROP- MASS PROPERTIES OF A RIGID STRUCTURE
+
+( NASA Langley Research Center )
+
+     The computer program MASPROP was developed to rapidly calculate the
+mass properties of complex rigid structural systems. This program's ba-
+sic premise is that complex systems can be adequately described by a com-
+bination of basic elementary structural shapes. Thirteen widely used ba-
+sic structural shapes are available in this program. They are as follows:
+Discrete Mass, Cylinder, Truncated Cone, Torus, Beam (arbitrary cross sec-
+tion), Circular Rod (arbitrary cross section), Spherical Segment, Sphere,
+Hemisphere, Parallelepiped, Swept Trapezoidal Panel, Symmetric Trape-
+zoidal Panels, and a Curved Rectangular Panel. MASPROP provides a designer
+with a simple technique that requires minimal input to calculate the mass
+properties of a complex rigid structure and should be useful in any situa-
+tion where one needs to calculate the center of gravity and moments of iner-
+tia of a complex structure.
+
+     Rigid body analysis is used to calculate mass properties. Mass proper-
+ties are calculated about component axes that have been rotated to be paral-
+lel to the system coordinate axes. Then the system center of gravity is cal-
+culated and the mass properties are transferred to axes through the system
+center of gravity by using the parallel axis theorem. System weight, mo-
+ments of inertia about the system origin, and the products of inertia about
+the system center of mass are calculated and printed. From the information
+about the system center of mass the principal axes of the system and the mo-
+ments of inertia about them are calculated and printed.
+
+     The only input required is simple geometric data describing the size
+and location of each element and the respective material density or weight
+of each element.
+
+     This program is written in FORTRAN for execution on a CDC 6000 series
+computer with a central memory requirement of approximately 62K (octal) of
+60 bit words. The development of this program was completed in 1978.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC 6000 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 857 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-12454
+
+DOMESTIC - DOCUMENTATION PRICE: $16.00    PROGRAM PRICE: $300.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $32.00   PROGRAM PRICE: $600.00
+
+
+
+                                        1
+

@@ -1,0 +1,149 @@
+ ORACLS- OPTIMAL REGULATOR ALGORITHMS FOR THE CONTROL OF LINEAR SYSTEMS
+
+( NASA Langley Research Center )
+
+     This control theory design package, called Optimal Regulator Algo-
+rithms for the Control of Linear Systems (ORACLS), was developed to aid in
+the design of controllers and optimal filters for systems which can be mod-
+eled by linear, time-invariant differential and difference equations.
+Optimal linear quadratic regulator theory, currently referred to as the
+Linear-Quadratic-Gaussian (LQG) problem, has become the most widely ac-
+cepted method of determining optimal control policy. Within this theory,
+the infinite duration time-invariant problems, which lead to constant
+gain feedback control laws and constant Kalman-Bucy filter gains for re-
+construction of the system state, exhibit high tractability and potential
+ease of implementation. A variety of new and efficient methods in the field
+of numerical linear algebra have been combined into the ORACLS program,
+which provides for the solution to time-invariant continuous or discrete
+LQG problems. The ORACLS package is particularly attractive to the con-
+trol system designer because it provides a rigorous tool for dealing with
+multi-input and multi-output dynamic systems in both continuous and dis-
+crete form.
+
+     The ORACLS programming system is a collection of subroutines which
+can be used to formulate, manipulate, and solve various LQG design prob-
+lems. The ORACLS program is constructed in a manner which permits the user
+to maintain considerable flexibility at each operational state. This flex-
+ibility is accomplished by providing primary operations, analysis of lin-
+ear time-invariant systems, and control synthesis based on LQG methodol-
+ogy. The input-output routines handle the reading and writing of numeri-
+cal matrices, printing heading information, and accumulating output in-
+formation. The basic vector-matrix operations include addition, subtrac-
+tion, multiplication, equation, norm construction, tracing, transposi-
+tion, scaling, juxtaposition, and construction of null and identity ma-
+trices. The analysis routines provide for the following computations: the
+eigenvalues and eigenvectors of real matrices; the relative stability of a
+given matrix; matrix factorization; the solution of linear constant coef-
+ficient vector-matrix algebraic equations; the controllability properties
+of a linear time-invariant system; the steady-state covariance matrix of an
+open-loop stable system forced by white noise; and the transient response
+of continuous linear time-invariant systems.
+
+     The control law design routines of ORACLS implement some of the more
+common techniques of time-invariant LQG methodology. For the finite-
+duration optimal linear regulator problem with noise-free measurements,
+continuous dynamics, and integral performance index, a routine is provided
+which implements the negative exponential method for finding both the tran-
+sient and steady-state solutions to the matrix Riccati equation. For the
+discrete version of this problem, the method of backwards differencing is
+applied to find the solutions to the discrete Riccati equation. A routine
+is also included to solve the steady-state Riccati equation by the Newton
+algorithms described by Klein, for continuous problems, and by Hewer, for
+
+
+
+                                        1
+
+discrete problems. Another routine calculates the prefilter gain to elim-
+inate control state cross-product terms in the quadratic performance in-
+dex and the weighting matrices for the sampled data optimal linear regula-
+tor problem. For cases with measurement noise, duality theory and optimal
+regulator algorithms are used to calculate solutions to the continuous and
+discrete Kalman-Bucy filter problems. Finally, routines are included to
+implement the continuous and discrete forms of the explicit (model-in-the-
+system) and implicit (model-in-the-performance-index) model following
+theory. These routines generate linear control laws which cause the out-
+put of a dynamic time-invariant system to track the output of a prescribed
+model.
+
+     In order to apply ORACLS, the user must write an executive (driver)
+program which inputs the problem coefficients, formulates and selects the
+routines to be used to solve the problem, and specifies the desired output.
+There are three versions of ORACLS source code available for implementa-
+tion: CDC, IBM, and DEC. The CDC version has been implemented on a CDC 6000
+series computer with a central memory of approximately 13K (octal) of 60 bit
+words. The CDC version is written in FORTRAN IV, was developed in 1978, and
+last updated in 1989. The IBM version has been implemented on an IBM 370 se-
+ries computer with a central memory requirement of approximately 300K of
+8 bit bytes. The IBM version is written in FORTRAN IV and was generated in
+1981. The DEC version has been implemented on a VAX series computer operat-
+ing under VMS. The VAX version is written in FORTRAN 77 and was generated in
+1986.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                DEC VAX VERSION
+
+LANGUAGE: FORTRAN 77
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 9,833 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX BACKUP Format Magnetic Tape
+
+PROGRAM NUMBER: GSC-13067
+
+DOMESTIC - DOCUMENTATION PRICE: $40.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $80.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+
+
+
+
+                                  CDC VERSION
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC CYBER 170 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 6,671 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-12313
+
+DOMESTIC - DOCUMENTATION PRICE: $40.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $80.00   PROGRAM PRICE: $1000.00
+
+
+
+                                  IBM VERSION
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: IBM 370 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 6,200 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-12953
+
+DOMESTIC - DOCUMENTATION PRICE: $40.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $80.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        3
+

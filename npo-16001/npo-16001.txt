@@ -1,0 +1,83 @@
+ LCP- LIFETIME COST AND PERFORMANCE MODEL FOR DISTRIBUTED PHOTOVOLTAIC
+SYSTEMS
+
+( Cal Tech/Jet Propulsion Lab. )
+
+     The Lifetime Cost and Performance (LCP) Model was developed to assist
+in the assessment of Photovoltaic (PV) system design options. LCP is a sim-
+ulation of the performance, cost, and revenue streams associated with dis-
+tributed PV power systems. LCP provides the user with substantial flexi-
+bility in specifying the technical and economic environment of the PV ap-
+plication. User-specified input parameters are available to describe PV
+system characteristics, site climatic conditions, utility purchase and
+sellback rate structures, discount and escalation rates, construction tim-
+ing, and lifetime of the system. Such details as PV array orientation and
+tilt angle, PV module and balance-of-system performance attributes, and
+the mode of utility interconnection are user-specified. LCP assumes that
+the distributed PV system is utility grid interactive without dedicated
+electrical storage. In combination with a suitable economic model, LCP
+can provide an estimate of the expected net present worth of a PV system to
+the owner, as compared to electricity purchased from a utility grid. Simi-
+larly, LCP might be used to perform sensitivity analyses to identify those
+PV system parameters having significant impact on net worth.
+
+     The user describes the PV system configuration to LCP via the basic
+electrical components. The module is the smallest entity in the PV sys-
+tem which is modeled. A PV module is defined in the simulation by its short
+circuit current, which varies over the system lifetime due to degradation
+and failure. Modules are wired in series to form a branch circuit. Bypass
+diodes are allowed between modules in the branch circuits. Branch circuits
+are then connected in parallel to form a bus. A collection of buses is con-
+nected in parallel to form an increment to capacity of the system. By choos-
+ing the appropriate series-parallel wiring design, the user can specify the
+current, voltage, and reliability characteristics of the system.
+
+     LCP simulation of system performance is site-specific and follows a
+three-step procedure. First the hourly power produced by the PV system is
+computed using a selected year's insolation and temperature profile. For
+this step it is assumed that there are no module failures or degradation.
+Next, the monthly simulation is performed involving a month to month pro-
+gression through the lifetime of the system. In this step, the effects of
+degradation, failure, dirt accumulation and operations/maintenance ef-
+forts on PV system performance over time are used to compute the monthly
+power capability fraction. The resulting monthly power capability frac-
+tions are applied to the hourly power matrix from the first step, giving the
+anticipated hourly energy output over the lifetime of the system. PV sys-
+tem energy output is compared with the PV system owner's electricity demand
+for each hour. The amount of energy to be purchased from or sold to the util-
+ity grid is then determined. Monthly expenditures on the PV system and the
+purchase of electricity from the utility grid are also calculated. LCP gen-
+erates output reports pertaining to the performance of the PV system, and
+system costs and revenues.
+
+
+
+                                        1
+
+     The LCP model, written in SIMSCRIPT 2.5 for batch execution on an IBM
+370 series computer, was developed in 1981.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: SIMSCRIPT
+
+MACHINE REQUIREMENTS: IBM 370 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 5,852 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: NPO-16001
+
+DOMESTIC - DOCUMENTATION PRICE: $76.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $152.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

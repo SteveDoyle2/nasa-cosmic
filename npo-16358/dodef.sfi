@@ -1,0 +1,116 @@
+      SUBROUTINE DODEF
+CDM   This routine processes the file open on unit 30 as a "symbol" file.
+CDM
+CDM   Programmer - Jon Vavrus  15 JUL 1982
+CDM   Revised    - Jon Vavrus   9 SEP 1982
+CDM   Revised    - Jon Vavrus  17 AUG 1983 (GETDEF changed)
+CDM   Revised    - Jon Vavrus  21 SEP 1983
+CM
+CM         The routine reads unit 30.  Each line is tested for:
+CM              s :=     which is taken as a symbol definition
+CM              {    }   which is taken as a "command" level command line
+CM              or anything else which is taken as a command line.
+C
+C***   COMMON AREAS
+C
+CS    INPUTC  Contains the input character buffer INLINE and the defined
+CS            symbols SYMS and the definition search buffers DEFBUF
+C
+CS    INPUTN  Contains the input character buffer length LENSAV, and the
+CS            symbol definitions DEFS, the number of such definitions
+CS            (NDEFS), the definition flags DEFFLG, and the definition
+CS            numbers NUMDEF
+C
+C***   CALLED ROUTINES
+C
+CC    DOIT    Executes a command.
+CC    GETDEF  Translates a line into a symbol definition
+CC    PRSCOM  Parses a command line
+C
+      CHARACTER*1024 LINE
+      CHARACTER*128 INLINE
+      CHARACTER*30 DEFBUF(10,10,60)
+      CHARACTER*1 SYMS(60)
+      REAL*4 NUMDEF(10,60)
+      INTEGER*2 DEFS(11,10,60),LENSAV
+      LOGICAL GETDEF
+      LOGICAL*1 DEFFLG(3,10,60)
+
+      COMMON /INPUTC/INLINE,SYMS,DEFBUF
+      COMMON /INPUTN/LENSAV,DEFS,NDEFS,DEFFLG,NUMDEF
+
+600   DO FOREVER
+       READ (30,700,END=800)LINE
+700    FORMAT (A)
+       DO LABEL
+         LABEL 800
+           UNDO 600
+       END DO LABEL
+       CALL STR$UPCASE(LINE,LINE)
+       CALL STR$TRANSLATE(LINE,LINE,' ','	')
+       CALL STR$TRIM(LINE,LINE,LENBUF)
+       I = INDEX(LINE(:LENBUF),':=') - 1
+       J = INDEX(LINE(:LENBUF),'"') - 1
+       K = INDEX(LINE(:LENBUF),'''') - 1
+       IF (I .LT. 1 .OR. (J .LT. I .AND. J .GE. 0) .OR. (K .LT. I .AND.
+     1     K .GE. 0))
+C
+C***   If no := then it must be a command line, or a " in front of :=
+C***   (this must mean a command line with a search, or the user screwed up)
+C
+C---   First test for { }
+C
+         I = INDEX(LINE(:LENBUF),'{') + 1
+         IF (I .EQ. 1 .OR. (J .LT. I .AND. J .GE. 0))
+           DO FOREVER
+            CALL PRSCOM(LINE,LENBUF,ICOM,NUMFLG,ANUMB,MINFLG,0,0)
+            UNDO IF (ICOM .EQ. 0)
+            CALL DOIT(ICOM,NUMFLG,ANUMB,MINFLG)
+           END DO FOREVER
+         ELSE
+           DO FOR J=LENBUF,I,-1
+            UNDO IF (LINE(J:J) .EQ. '}')
+           END DO FOR
+           IF (J .GT. I)
+             CALL COMLVL(LINE(I:J-1),I)
+             CALL DOIT(-1,.TRUE.,0.,.FALSE.)
+             CALL DOIT(-12,.FALSE.,0.,.FALSE.)
+           ENDIF
+         ENDIF
+       ELSE
+         DO FOREVER
+C
+C***   Take care of continuations
+C
+          UNDO IF (LINE(LENBUF:LENBUF) .NE. '-')
+          READ (30,700,END=800)LINE(LENBUF:)
+          CALL STR$UPCASE(LINE,LINE)
+          CALL STR$TRANSLATE(LINE,LINE,' ','	')
+          CALL STR$TRIM(LINE,LINE,LENBUF)
+         END DO FOREVER
+         J = LIB$SKPC(' ',LINE(:LENBUF))
+C
+C***   See if symbol is already defined
+C
+900      DO
+          DO FOR II=1,NDEFS
+           UNDO 900 IF (SYMS(II) .EQ. LINE(J:J))
+          END DO FOR
+          NDEFS = NDEFS + 1
+          II = NDEFS
+          SYMS(II) = LINE(J:J)
+         END DO
+         LINE = LINE(I+3:)
+         LENBUF = LENBUF - I - 2
+C
+C***   Actually get definitions
+C
+         CYCLE IF (.NOT.GETDEF(LINE(:LENBUF),II))
+       ENDIF
+      END DO FOREVER
+C
+C***   Close the symbol file
+C
+      CLOSE (UNIT=30)
+      RETURN
+      END

@@ -1,0 +1,1090 @@
+;
+ ; *** LAST REVISED ON  9-JUL-1986 08:01:52.13 
+ ; *** SOURCE FILE: [LONG.GRAPHICS.LONGLIB]LONGSHR.MAR 
+;
+.title xfrs - Transfer vectors for the LONGLIB graphics library shareable image
+;
+; July 26, 1985		DGL		JPL
+;
+; this file contains the transfer vectors for creation of the longlib graphics
+; library shareable image.  In order to keep library upward compatible do
+; not delete any transfer routines.  Replace with dummy routines if required.
+; Add new routines at the end of the file.
+;
+.psect    T_ABSPLT,EXE,NOWRT
+.transfer ABSPLT              ; begin transfer vector to ABSPLT
+.mask     ABSPLT              ; store register save mask
+jmp       L^ABSPLT+2          ; jump to routine beyond register save mask
+;
+.psect    T_ANXTVU,EXE,NOWRT
+.transfer ANXTVU
+.mask     ANXTVU
+jmp       L^ANXTVU+2
+;
+.psect    T_ARROW,EXE,NOWRT
+.transfer ARROW
+.mask     ARROW
+jmp       L^ARROW+2
+;
+.psect    T_AXIS,EXE,NOWRT
+.transfer AXIS
+.mask     AXIS
+jmp       L^AXIS+2
+;
+.psect    T_AXIS2,EXE,NOWRT
+.transfer AXIS2
+.mask     AXIS2
+jmp       L^AXIS2+2
+;
+.psect    T_AXIS3,EXE,NOWRT
+.transfer AXIS3
+.mask     AXIS3
+jmp       L^AXIS3+2
+;
+.psect    T_AXIS3D,EXE,NOWRT
+.transfer AXIS3D
+.mask     AXIS3D
+jmp       L^AXIS3D+2
+;
+.psect    T_BITCURSOR,EXE,NOWRT
+.transfer BITCURSOR
+.mask     BITCURSOR
+jmp       L^BITCURSOR+2
+;
+.psect    T_CHECK3D,EXE,NOWRT
+.transfer CHECK3D
+.mask     CHECK3D
+jmp       L^CHECK3D+2
+;
+.psect    T_CIRCLE,EXE,NOWRT
+.transfer CIRCLE
+.mask     CIRCLE
+jmp       L^CIRCLE+2
+;
+.psect    T_CLIP3D,EXE,NOWRT
+.transfer CLIP3D
+.mask     CLIP3D
+jmp       L^CLIP3D+2
+;
+.psect    T_IPCLIP,EXE,NOWRT
+.transfer IPCLIP
+.mask     IPCLIP
+jmp       L^IPCLIP+2
+;
+.psect    T_CNCELPLT,EXE,NOWRT
+.transfer CNCELPLT
+.mask     CNCELPLT
+jmp       L^CNCELPLT+2
+;
+.psect    T_CNCELPLT3D,EXE,NOWRT
+.transfer CNCELPLT3D
+.mask     CNCELPLT3D
+jmp       L^CNCELPLT3D+2
+;
+.psect    T_CNT3D,EXE,NOWRT
+.transfer CNT3D
+.mask     CNT3D
+jmp       L^CNT3D+2
+;
+.psect    T_CNT3DX,EXE,NOWRT
+.transfer CNT3DX
+.mask     CNT3DX
+jmp       L^CNT3DX+2
+;
+.psect    T_CNTRPLT,EXE,NOWRT
+.transfer CNTRPLT
+.mask     CNTRPLT
+jmp       L^CNTRPLT+2
+;
+.psect    T_CTERM,EXE,NOWRT
+.transfer CTERM
+.mask     CTERM
+jmp       L^CTERM+2
+;
+.psect    T_CURBAND,EXE,NOWRT
+.transfer CURBAND
+.mask     CURBAND
+jmp       L^CURBAND+2
+;
+.psect    T_CURLOCATE,EXE,NOWRT
+.transfer CURLOCATE
+.mask     CURLOCATE
+jmp       L^CURLOCATE+2
+;
+.psect    T_CURMOTION,EXE,NOWRT
+.transfer CURMOTION
+.mask     CURMOTION
+jmp       L^CURMOTION+2
+;
+.psect    T_CURRECT,EXE,NOWRT
+.transfer CURRECT
+.mask     CURRECT
+jmp       L^CURRECT+2
+;
+.psect    T_DASHL,EXE,NOWRT
+.transfer DASHL
+.mask     DASHL
+jmp       L^DASHL+2
+;
+.psect    T_DRAW3D,EXE,NOWRT
+.transfer DRAW3D
+.mask     DRAW3D
+jmp       L^DRAW3D+2
+;
+.psect    T_EARTH3D,EXE,NOWRT
+.transfer EARTH3D
+.mask     EARTH3D
+jmp       L^EARTH3D+2
+;
+.psect    T_ELLIPSE,EXE,NOWRT
+.transfer ELLIPSE
+.mask     ELLIPSE
+jmp       L^ELLIPSE+2
+;
+.psect    T_FACTOR,EXE,NOWRT
+.transfer FACTOR
+.mask     FACTOR
+jmp       L^FACTOR+2
+;
+.psect    T_FIXPR0,EXE,NOWRT
+.transfer FIXPR0
+.mask     FIXPR0
+jmp       L^FIXPR0+2
+;
+.psect    T_FIXRM0,EXE,NOWRT
+.transfer FIXRM0
+.mask     FIXRM0
+jmp       L^FIXRM0+2
+;
+.psect    T_FIXVT0,EXE,NOWRT
+.transfer FIXVT0
+.mask     FIXVT0
+jmp       L^FIXVT0+2
+;
+.psect    T_FRAME,EXE,NOWRT
+.transfer FRAME
+.mask     FRAME
+jmp       L^FRAME+2
+;
+.psect    T_GLPLOT,EXE,NOWRT
+.transfer GLPLOT
+.mask     GLPLOT
+jmp       L^GLPLOT+2
+;
+.psect    T_GRID,EXE,NOWRT
+.transfer GRID
+.mask     GRID
+jmp       L^GRID+2
+;
+.psect    T_HPLT,EXE,NOWRT
+.transfer HPLT
+.mask     HPLT
+jmp       L^HPLT+2
+;
+.psect    T_INIT3D,EXE,NOWRT
+.transfer INIT3D
+.mask     INIT3D
+jmp       L^INIT3D+2
+;
+.psect    T_INIT3DH,EXE,NOWRT
+.transfer INIT3DH
+.mask     INIT3DH
+jmp       L^INIT3DH+2
+;
+.psect    T_INTERSECT,EXE,NOWRT
+.transfer INTERSECT
+.mask     INTERSECT
+jmp       L^INTERSECT+2
+;
+.psect    T_IPCLP3,EXE,NOWRT
+.transfer IPCLP3
+.mask     IPCLP3
+jmp       L^IPCLP3+2
+;
+.psect    T_IRMCHAN,EXE,NOWRT
+.transfer IRMCHAN
+.mask     IRMCHAN
+jmp       L^IRMCHAN+2
+;
+.psect    T_ISEGCODE,EXE,NOWRT
+.transfer ISEGCODE
+.mask     ISEGCODE
+jmp       L^ISEGCODE+2
+;
+.psect    T_ISOL3D,EXE,NOWRT
+.transfer ISOL3D
+.mask     ISOL3D
+jmp       L^ISOL3D+2
+;
+.psect    T_JPLTAG,EXE,NOWRT
+.transfer JPLTAG
+.mask     JPLTAG
+jmp       L^JPLTAG+2
+;
+.psect    T_LANDMAP,EXE,NOWRT
+.transfer LANDMAP
+.mask     LANDMAP
+jmp       L^LANDMAP+2
+;
+.psect    T_LCOEF,EXE,NOWRT
+.transfer LCOEF
+.mask     LCOEF
+jmp       L^LCOEF+2
+;
+.psect    T_LGAXS,EXE,NOWRT
+.transfer LGAXS
+.mask     LGAXS
+jmp       L^LGAXS+2
+;
+.psect    T_LGLIN,EXE,NOWRT
+.transfer LGLIN
+.mask     LGLIN
+jmp       L^LGLIN+2
+;
+.psect    T_LGRID,EXE,NOWRT
+.transfer LGRID
+.mask     LGRID
+jmp       L^LGRID+2
+;
+.psect    T_LINE,EXE,NOWRT
+.transfer LINE
+.mask     LINE
+jmp       L^LINE+2
+;
+.psect    T_LINHID,EXE,NOWRT
+.transfer LINHID
+.mask     LINHID
+jmp       L^LINHID+2
+;
+.psect    T_MATMUL4,EXE,NOWRT
+.transfer MATMUL4
+.mask     MATMUL4
+jmp       L^MATMUL4+2
+;
+.psect    T_MTV4,EXE,NOWRT
+.transfer MTV4
+.mask     MTV4
+jmp       L^MTV4+2
+;
+.psect    T_NEWPAGE,EXE,NOWRT
+.transfer NEWPAGE
+.mask     NEWPAGE
+jmp       L^NEWPAGE+2
+;
+.psect    T_NEWPEN,EXE,NOWRT
+.transfer NEWPEN
+.mask     NEWPEN
+jmp       L^NEWPEN+2
+;
+.psect    T_NUM3D,EXE,NOWRT
+.transfer NUM3D
+.mask     NUM3D
+jmp       L^NUM3D+2
+;
+.psect    T_NUM3DH,EXE,NOWRT
+.transfer NUM3DH
+.mask     NUM3DH
+jmp       L^NUM3DH+2
+;
+.psect    T_NUMBER,EXE,NOWRT
+.transfer NUMBER
+.mask     NUMBER
+jmp       L^NUMBER+2
+;
+.psect    T_NXTVU,EXE,NOWRT
+.transfer NXTVU
+.mask     NXTVU
+jmp       L^NXTVU+2
+;
+.psect    T_OLDNUMB,EXE,NOWRT
+.transfer OLDNUMB
+.mask     OLDNUMB
+jmp       L^OLDNUMB+2
+;
+.psect    T_NXT0VU,EXE,NOWRT
+.transfer NXT0VU
+.mask     NXT0VU
+jmp       L^NXT0VU+2
+;
+.psect    T_PAUSE,EXE,NOWRT
+.transfer PAUSE
+.mask     PAUSE
+jmp       L^PAUSE+2
+;
+.psect    T_PAUSEP,EXE,NOWRT
+.transfer PAUSEP
+.mask     PAUSEP
+jmp       L^PAUSEP+2
+;
+.psect    T_PFACTOR,EXE,NOWRT
+.transfer PFACTOR
+.mask     PFACTOR
+jmp       L^PFACTOR+2
+;
+.psect    T_PHIST,EXE,NOWRT
+.transfer PHIST
+.mask     PHIST
+jmp       L^PHIST+2
+;
+.psect    T_PLOT,EXE,NOWRT
+.transfer PLOT
+.mask     PLOT
+jmp       L^PLOT+2
+;
+.psect    T_PLOT3D,EXE,NOWRT
+.transfer PLOT3D
+.mask     PLOT3D
+jmp       L^PLOT3D+2
+;
+.psect    T_PLOTLG,EXE,NOWRT
+.transfer PLOTLG
+.mask     PLOTLG
+jmp       L^PLOTLG+2
+;
+.psect    T_PLOTLG2,EXE,NOWRT
+.transfer PLOTLG2
+.mask     PLOTLG2
+jmp       L^PLOTLG2+2
+;
+.psect    T_PLOTLGX,EXE,NOWRT
+.transfer PLOTLGX
+.mask     PLOTLGX
+jmp       L^PLOTLGX+2
+;
+.psect    T_PLOTND,EXE,NOWRT
+.transfer PLOTND
+.mask     PLOTND
+jmp       L^PLOTND+2
+;
+.psect    T_PLOTRM,EXE,NOWRT
+.transfer PLOTRM
+.mask     PLOTRM
+jmp       L^PLOTRM+2
+;
+.psect    T_PLOTSC,EXE,NOWRT
+.transfer PLOTSC
+.mask     PLOTSC
+jmp       L^PLOTSC+2
+;
+.psect    T_PLOTSC2,EXE,NOWRT
+.transfer PLOTSC2
+.mask     PLOTSC2
+jmp       L^PLOTSC2+2
+;
+.psect    T_PLOTVT,EXE,NOWRT
+.transfer PLOTVT
+.mask     PLOTVT
+jmp       L^PLOTVT+2
+;
+.psect    T_PLRAX,EXE,NOWRT
+.transfer PLRAX
+.mask     PLRAX
+jmp       L^PLRAX+2
+;
+.psect    T_PLRLN,EXE,NOWRT
+.transfer PLRLN
+.mask     PLRLN
+jmp       L^PLRLN+2
+;
+.psect    T_PLT3D,EXE,NOWRT
+.transfer PLT3D
+.mask     PLT3D
+jmp       L^PLT3D+2
+;
+.psect    T_HLT3D,EXE,NOWRT
+.transfer HLT3D
+.mask     HLT3D
+jmp       L^HLT3D+2
+;
+.psect    T_PLT3DH,EXE,NOWRT
+.transfer PLT3DH
+.mask     PLT3DH
+jmp       L^PLT3DH+2
+;
+.psect    T_POLARMAP,EXE,NOWRT
+.transfer POLARMAP
+.mask     POLARMAP
+jmp       L^POLARMAP+2
+;
+.psect    T_POLY1INT,EXE,NOWRT
+.transfer POLY1INT
+.mask     POLY1INT
+jmp       L^POLY1INT+2
+;
+.psect    T_PPEN,EXE,NOWRT
+.transfer PPEN
+.mask     PPEN
+jmp       L^PPEN+2
+;
+.psect    T_PPLOT,EXE,NOWRT
+.transfer PPLOT
+.mask     PPLOT
+jmp       L^PPLOT+2
+;
+.psect    T_PPLOTP,EXE,NOWRT
+.transfer PPLOTP
+.mask     PPLOTP
+jmp       L^PPLOTP+2
+;
+.psect    T_PPLOTS,EXE,NOWRT
+.transfer PPLOTS
+.mask     PPLOTS
+jmp       L^PPLOTS+2
+;
+.psect    T_PSUBPRO,EXE,NOWRT
+.transfer PSUBPRO
+.mask     PSUBPRO
+jmp       L^PSUBPRO+2
+;
+.psect    T_PXPCGT,EXE,NOWRT
+.transfer PXPCGT
+.mask     PXPCGT
+jmp       L^PXPCGT+2
+;
+.psect    T_RECT,EXE,NOWRT
+.transfer RECT
+.mask     RECT
+jmp       L^RECT+2
+;
+.psect    T_RFACTOR,EXE,NOWRT
+.transfer RFACTOR
+.mask     RFACTOR
+jmp       L^RFACTOR+2
+;
+.psect    T_RMPEN,EXE,NOWRT
+.transfer RMPEN
+.mask     RMPEN
+jmp       L^RMPEN+2
+;
+.psect    T_ROTEM,EXE,NOWRT
+.transfer ROTEM
+.mask     ROTEM
+jmp       L^ROTEM+2
+;
+.psect    T_RPLOTS,EXE,NOWRT
+.transfer RPLOTS
+.mask     RPLOTS
+jmp       L^RPLOTS+2
+;
+.psect    T_RTERM,EXE,NOWRT
+.transfer RTERM
+.mask     RTERM
+jmp       L^RTERM+2
+;
+.psect    T_RVXPT3D,EXE,NOWRT
+.transfer RVXPT3D
+.mask     RVXPT3D
+jmp       L^RVXPT3D+2
+;
+.psect    T_SCALE,EXE,NOWRT
+.transfer SCALE
+.mask     SCALE
+jmp       L^SCALE+2
+;
+.psect    T_SCALG,EXE,NOWRT
+.transfer SCALG
+.mask     SCALG
+jmp       L^SCALG+2
+;
+.psect    T_SCATPL,EXE,NOWRT
+.transfer SCATPL
+.mask     SCATPL
+jmp       L^SCATPL+2
+;
+.psect    T_SEGCODE,EXE,NOWRT
+.transfer SEGCODE
+.mask     SEGCODE
+jmp       L^SEGCODE+2
+;
+.psect    T_SEISPL,EXE,NOWRT
+.transfer SEISPL
+.mask     SEISPL
+jmp       L^SEISPL+2
+;
+.psect    T_SHADE,EXE,NOWRT
+.transfer SHADE
+.mask     SHADE
+jmp       L^SHADE+2
+;
+.psect    T_CSHADE,EXE,NOWRT
+.transfer CSHADE
+.mask     CSHADE
+jmp       L^CSHADE+2
+;
+.psect    T_SKETCH,EXE,NOWRT
+.transfer SKETCH
+.mask     SKETCH
+jmp       L^SKETCH+2
+;
+.psect    T_SPLOTS,EXE,NOWRT
+.transfer SPLOTS
+.mask     SPLOTS
+jmp       L^SPLOTS+2
+;
+.psect    T_SPLOTSX,EXE,NOWRT
+.transfer SPLOTSX
+.mask     SPLOTSX
+jmp       L^SPLOTSX+2
+;
+.psect    T_SPRECT1,EXE,NOWRT
+.transfer SPRECT1
+.mask     SPRECT1
+jmp       L^SPRECT1+2
+;
+.psect    T_STAT3D,EXE,NOWRT
+.transfer STAT3D
+.mask     STAT3D
+jmp       L^STAT3D+2
+;
+.psect    T_STAT3D2,EXE,NOWRT
+.transfer STAT3D2
+.mask     STAT3D2
+jmp       L^STAT3D2+2
+;
+.psect    T_SUBPROC,EXE,NOWRT
+.transfer SUBPROC
+.mask     SUBPROC
+jmp       L^SUBPROC+2
+;
+.psect    T_SYM3D,EXE,NOWRT
+.transfer SYM3D
+.mask     SYM3D
+jmp       L^SYM3D+2
+;
+.psect    T_SYM3DH,EXE,NOWRT
+.transfer SYM3DH
+.mask     SYM3DH
+jmp       L^SYM3DH+2
+;
+.psect    T_SYMBOL,EXE,NOWRT
+.transfer SYMBOL
+.mask     SYMBOL
+jmp       L^SYMBOL+2
+;
+.psect    T_SYMS,EXE,NOWRT
+.transfer SYMS
+.mask     SYMS
+jmp       L^SYMS+2
+;
+.psect    T_TRCELPLT3D,EXE,NOWRT
+.transfer TRCELPLT3D
+.mask     TRCELPLT3D
+jmp       L^TRCELPLT3D+2
+;
+.psect    T_VAX3D,EXE,NOWRT
+.transfer VAX3D
+.mask     VAX3D
+jmp       L^VAX3D+2
+;
+.psect    T_VAX3DX,EXE,NOWRT
+.transfer VAX3DX
+.mask     VAX3DX
+jmp       L^VAX3DX+2
+;
+.psect    T_MESH3DX,EXE,NOWRT
+.transfer MESH3DX
+.mask     MESH3DX
+jmp       L^MESH3DX+2
+;
+.psect    T_MESH3D,EXE,NOWRT
+.transfer MESH3D
+.mask     MESH3D
+jmp       L^MESH3D+2
+;
+.psect    T_VCPY,EXE,NOWRT
+.transfer VCPY
+.mask     VCPY
+jmp       L^VCPY+2
+;
+.psect    T_VFACTOR,EXE,NOWRT
+.transfer VFACTOR
+.mask     VFACTOR
+jmp       L^VFACTOR+2
+;
+.psect    T_VPLOTS,EXE,NOWRT
+.transfer VPLOTS
+.mask     VPLOTS
+jmp       L^VPLOTS+2
+;
+.psect    T_VSRT1,EXE,NOWRT
+.transfer VSRT1
+.mask     VSRT1
+jmp       L^VSRT1+2
+;
+.psect    T_VSRTR,EXE,NOWRT
+.transfer VSRTR
+.mask     VSRTR
+jmp       L^VSRTR+2
+;
+.psect    T_VTPLOT,EXE,NOWRT
+.transfer VTPLOT
+.mask     VTPLOT
+jmp       L^VTPLOT+2
+;
+.psect    T_VXPT3D,EXE,NOWRT
+.transfer VXPT3D
+.mask     VXPT3D
+jmp       L^VXPT3D+2
+;
+.psect    T_WHERE,EXE,NOWRT
+.transfer WHERE
+.mask     WHERE
+jmp       L^WHERE+2
+;
+.psect    T_WHERE3D,EXE,NOWRT
+.transfer WHERE3D
+.mask     WHERE3D
+jmp       L^WHERE3D+2
+;
+.psect    T_WHERE3H,EXE,NOWRT
+.transfer WHERE3H
+.mask     WHERE3H
+jmp       L^WHERE3H+2
+;
+.psect    T_WHEREPR,EXE,NOWRT
+.transfer WHEREPR
+.mask     WHEREPR
+jmp       L^WHEREPR+2
+;
+.psect    T_WHERERM,EXE,NOWRT
+.transfer WHERERM
+.mask     WHERERM
+jmp       L^WHERERM+2
+;
+.psect    T_WHEREVT,EXE,NOWRT
+.transfer WHEREVT
+.mask     WHEREVT
+jmp       L^WHEREVT+2
+;
+.psect    T_XFRM3D,EXE,NOWRT
+.transfer XFRM3D
+.mask     XFRM3D
+jmp       L^XFRM3D+2
+;
+.psect    T_XVMUL3D,EXE,NOWRT
+.transfer XVMUL3D
+.mask     XVMUL3D
+jmp       L^XVMUL3D+2
+;
+; terminal routines
+;
+.psect    T_INXTCHR,EXE,NOWRT
+.transfer INXTCHR
+.mask     INXTCHR
+jmp       L^INXTCHR+2
+;
+.psect    T_ICHKCHR,EXE,NOWRT
+.transfer ICHKCHR
+.mask     ICHKCHR
+jmp       L^ICHKCHR+2
+;
+.psect    T_ICHRTIME,EXE,NOWRT
+.transfer ICHRTIME
+.mask     ICHRTIME
+jmp       L^ICHRTIME+2
+;
+; ramtek routines
+;
+.psect    T_RAMOPEN,EXE,NOWRT
+.transfer RAMOPEN
+.mask     RAMOPEN
+jmp       L^RAMOPEN+2
+;
+.psect    T_RAMCLOSE,EXE,NOWRT
+.transfer RAMCLOSE
+.mask     RAMCLOSE
+jmp       L^RAMCLOSE+2
+;
+.psect    T_RAMOUT,EXE,NOWRT
+.transfer RAMOUT
+.mask     RAMOUT
+jmp       L^RAMOUT+2
+;
+.psect    T_RAMOUTIN,EXE,NOWRT
+.transfer RAMOUTIN
+.mask     RAMOUTIN
+jmp       L^RAMOUTIN+2
+;
+.psect    T_RMDIR,EXE,NOWRT
+.transfer RMDIR
+.mask     RMDIR
+jmp       L^RMDIR+2
+;
+.psect    T_RMREADCOL,EXE,NOWRT
+.transfer RMREADCOL
+.mask     RMREADCOL
+jmp       L^RMREADCOL+2
+;
+.psect    T_RMWRITECOL,EXE,NOWRT
+.transfer RMWRITECOL
+.mask     RMWRITECOL
+jmp       L^RMWRITECOL+2
+;
+.psect    T_RMREADBYTE,EXE,NOWRT
+.transfer RMREADBYTE
+.mask     RMREADBYTE
+jmp       L^RMREADBYTE+2
+;
+.psect    T_RMREADWORD,EXE,NOWRT
+.transfer RMREADWORD
+.mask     RMREADWORD
+jmp       L^RMREADWORD+2
+;
+.psect    T_RMWRITEBYTE,EXE,NOWRT
+.transfer RMWRITEBYTE
+.mask     RMWRITEBYTE
+jmp       L^RMWRITEBYTE+2
+;
+.psect    T_RMWRITEWORD,EXE,NOWRT
+.transfer RMWRITEWORD
+.mask     RMWRITEWORD
+jmp       L^RMWRITEWORD+2
+;
+.psect    T_RMRESET,EXE,NOWRT
+.transfer RMRESET
+.mask     RMRESET
+jmp       L^RMRESET+2
+;
+.psect    T_RMSTART,EXE,NOWRT
+.transfer RMSTART
+.mask     RMSTART
+jmp       L^RMSTART+2
+;
+.psect    T_RMWIND,EXE,NOWRT
+.transfer RMWIND
+.mask     RMWIND
+jmp       L^RMWIND+2
+;
+.psect    T_RMPLOT,EXE,NOWRT
+.transfer RMPLOT
+.mask     RMPLOT
+jmp       L^RMPLOT+2
+;
+.psect    T_RMCLEAR,EXE,NOWRT
+.transfer RMCLEAR
+.mask     RMCLEAR
+jmp       L^RMCLEAR+2
+;
+.psect    T_RMTEXTURE,EXE,NOWRT
+.transfer RMTEXTURE
+.mask     RMTEXTURE
+jmp       L^RMTEXTURE+2
+;
+.psect    T_RMZOOM,EXE,NOWRT
+.transfer RMZOOM
+.mask     RMZOOM
+jmp       L^RMZOOM+2
+;
+.psect    T_RMPAN,EXE,NOWRT
+.transfer RMPAN
+.mask     RMPAN
+jmp       L^RMPAN+2
+;
+.psect    T_RMSETCUR,EXE,NOWRT
+.transfer RMSETCUR
+.mask     RMSETCUR
+jmp       L^RMSETCUR+2
+;
+.psect    T_RMREADCURSOR,EXE,NOWRT
+.transfer RMREADCURSOR
+.mask     RMREADCURSOR
+jmp       L^RMREADCURSOR+2
+;
+.psect    T_RMTEXT,EXE,NOWRT
+.transfer RMTEXT
+.mask     RMTEXT
+jmp       L^RMTEXT+2
+;
+.psect    T_RMFNTSIZE,EXE,NOWRT
+.transfer RMFNTSIZE
+.mask     RMFNTSIZE
+jmp       L^RMFNTSIZE+2
+;
+.psect    T_REFDIS,EXE,NOWRT
+.transfer REFDIS
+.mask     REFDIS
+jmp       L^REFDIS+2
+;
+.psect    T_GETCURSOR,EXE,NOWRT
+.transfer GETCURSOR
+.mask     GETCURSOR
+jmp       L^GETCURSOR+2
+;
+.psect    T_BITMAP,EXE,NOWRT
+.transfer BITMAP
+.mask     BITMAP
+jmp       L^BITMAP+2
+;
+.psect    T_LNDSEA,EXE,NOWRT
+.transfer LNDSEA
+.mask     LNDSEA
+jmp       L^LNDSEA+2
+;
+.psect    T_LINSEQ,EXE,NOWRT
+.transfer LINSEQ
+.mask     LINSEQ
+jmp       L^LINSEQ+2
+;
+.psect    T_ARCPLT,EXE,NOWRT
+.transfer ARCPLT
+.mask     ARCPLT
+jmp       L^ARCPLT+2
+;
+.psect    T_PRETRP,EXE,NOWRT
+.transfer PRETRP
+.mask     PRETRP
+jmp       L^PRETRP+2
+;
+.psect    T_SPISET,EXE,NOWRT
+.transfer SPISET
+.mask     SPISET
+jmp       L^SPISET+2
+;
+.psect    T_SPIFUN,EXE,NOWRT
+.transfer SPIFUN
+.mask     SPIFUN
+jmp       L^SPIFUN+2
+;
+.psect    T_SPIDER,EXE,NOWRT
+.transfer SPIDER
+.mask     SPIDER
+jmp       L^SPIDER+2
+;
+.psect    T_ARCSET,EXE,NOWRT
+.transfer ARCSET
+.mask     ARCSET
+jmp       L^ARCSET+2
+;
+.psect    T_SMOOTHC,EXE,NOWRT
+.transfer SMOOTHC
+.mask     SMOOTHC
+jmp       L^SMOOTHC+2
+;
+.psect    T_CHLSKYS,EXE,NOWRT
+.transfer CHLSKYS
+.mask     CHLSKYS
+jmp       L^CHLSKYS+2
+;
+.psect    T_ARCALC,EXE,NOWRT
+.transfer ARCALC
+.mask     ARCALC
+jmp       L^ARCALC+2
+;
+.psect    T_SYMSS,EXE,NOWRT
+.transfer SYMSS
+.mask     SYMSS
+jmp       L^SYMSS+2
+;
+.psect    T_SAVPL,EXE,NOWRT
+.transfer SAVPL
+.mask     SAVPL
+jmp       L^SAVPL+2
+;
+.psect    T_RESPL,EXE,NOWRT
+.transfer RESPL
+.mask     RESPL
+jmp       L^RESPL+2
+;
+.psect    T_PSAVPL,EXE,NOWRT
+.transfer PSAVPL
+.mask     PSAVPL
+jmp       L^PSAVPL+2
+;
+.psect    T_PRESPL,EXE,NOWRT
+.transfer PRESPL
+.mask     PRESPL
+jmp       L^PRESPL+2
+;
+.psect    T_RSAVPL,EXE,NOWRT
+.transfer RSAVPL
+.mask     RSAVPL
+jmp       L^RSAVPL+2
+;
+.psect    T_RRESPL,EXE,NOWRT
+.transfer RRESPL
+.mask     RRESPL
+jmp       L^RRESPL+2
+;
+.psect    T_VSAVPL,EXE,NOWRT
+.transfer VSAVPL
+.mask     VSAVPL
+jmp       L^VSAVPL+2
+;
+.psect    T_VRESPL,EXE,NOWRT
+.transfer VRESPL
+.mask     VRESPL
+jmp       L^VRESPL+2
+;
+.psect    T_NEWVPEN,EXE,NOWRT
+.transfer NEWVPEN
+.mask     NEWVPEN
+jmp       L^NEWVPEN+2
+;
+.psect    T_VPEN,EXE,NOWRT
+.transfer VPEN
+.mask     VPEN
+jmp       L^VPEN+2
+;
+; new routines FEB 1986
+;
+.psect    T_TRIG3DH,EXE,NOWRT
+.transfer TRIG3DH
+.mask     TRIG3DH
+jmp       L^TRIG3DH+2
+;
+.psect    T_T3DH,EXE,NOWRT
+.transfer T3DH
+.mask     T3DH
+jmp       L^T3DH+2
+;
+.psect    T_HIST3D,EXE,NOWRT
+.transfer HIST3D
+.mask     HIST3D
+jmp       L^HIST3D+2
+;
+.psect    T_CNTLN,EXE,NOWRT
+.transfer CNTLN
+.mask     CNTLN
+jmp       L^CNTLN+2
+;
+.psect    T_TRIANGC,EXE,NOWRT
+.transfer TRIANGC
+.mask     TRIANGC
+jmp       L^TRIANGC+2
+;
+.psect    T_CUBE,EXE,NOWRT
+.transfer CUBE
+.mask     CUBE
+jmp       L^CUBE+2
+;
+.psect    T_MIDC,EXE,NOWRT
+.transfer MIDC
+.mask     MIDC
+jmp       L^MIDC+2
+;
+.psect    T_INTERPC,EXE,NOWRT
+.transfer INTERPC
+.mask     INTERPC
+jmp       L^INTERPC+2
+;
+.psect    T_CNTOUR,EXE,NOWRT
+.transfer CNTOUR
+.mask     CNTOUR
+jmp       L^CNTOUR+2
+;
+.psect    T_AXIS3DH,EXE,NOWRT
+.transfer AXIS3DH
+.mask     AXIS3DH
+jmp       L^AXIS3DH+2
+;
+.psect    T_PLOTLGL,EXE,NOWRT
+.transfer PLOTLGL
+.mask     PLOTLGL
+jmp       L^PLOTLGL+2
+;
+.psect    T_LCNTR,EXE,NOWRT
+.transfer LCNTR
+.mask     LCNTR
+jmp       L^LCNTR+2
+;
+.psect    T_GCONTR,EXE,NOWRT
+.transfer GCONTR
+.mask     GCONTR
+jmp       L^GCONTR+2
+;
+.psect    T_CNDRAW,EXE,NOWRT
+.transfer CNDRAW
+.mask     CNDRAW
+jmp       L^CNDRAW+2
+;
+.psect    T_VAX5D,EXE,NOWRT
+.transfer VAX5D
+.mask     VAX5D
+jmp       L^VAX5D+2
+;
+.psect    T_MVAX5D,EXE,NOWRT
+.transfer MVAX5D
+.mask     MVAX5D
+jmp       L^MVAX5D+2
+;
+.psect    T_HELPME,EXE,NOWRT
+.transfer HELPME
+.mask     HELPME
+jmp       L^HELPME+2
+;
+.psect    T_NEWVCOL,EXE,NOWRT
+.transfer NEWVCOL
+.mask     NEWVCOL
+jmp       L^NEWVCOL+2
+;
+.psect    T_ASTINTER,EXE,NOWRT
+.transfer ASTINTER
+.mask     ASTINTER
+jmp       L^ASTINTER+2
+;
+.psect    T_ENAST,EXE,NOWRT
+.transfer ENAST
+.mask     ENAST
+jmp       L^ENAST+2
+;
+.psect    T_ASTEXIT,EXE,NOWRT
+.transfer ASTEXIT
+.mask     ASTEXIT
+jmp       L^ASTEXIT+2
+;
+.psect    T_ENABLEAST,EXE,NOWRT
+.transfer ENABLEAST
+.mask     ENABLEAST
+jmp       L^ENABLEAST+2
+;
+.psect    T_MVAX3DX,EXE,NOWRT
+.transfer MVAX3DX
+.mask     MVAX3DX
+jmp       L^MVAX3DX+2
+;
+.psect    T_MVAX3D,EXE,NOWRT
+.transfer MVAX3D
+.mask     MVAX3D
+jmp       L^MVAX3D+2
+;
+.psect    T_CVAX3DX,EXE,NOWRT
+.transfer CVAX3DX
+.mask     CVAX3DX
+jmp       L^CVAX3DX+2
+;
+.psect    T_CVAX3D,EXE,NOWRT
+.transfer CVAX3D
+.mask     CVAX3D
+jmp       L^CVAX3D+2
+;
+.psect    T_PLOTS,EXE,NOWRT
+.transfer PLOTS
+.mask     PLOTS
+jmp       L^PLOTS+2
+;
+.psect    T_CLPIT,EXE,NOWRT
+.transfer CLPIT
+.mask     CLPIT
+jmp       L^CLPIT+2
+;
+.psect    T_SFPLOT,EXE,NOWRT
+.transfer SFPLOT
+.mask     SFPLOT
+jmp       L^SFPLOT+2
+;
+.psect    T_PICHRT,EXE,NOWRT
+.transfer PICHRT
+.mask     PICHRT
+jmp       L^PICHRT+2
+;
+.psect    T_BARCHR,EXE,NOWRT
+.transfer BARCHR
+.mask     BARCHR
+jmp       L^BARCHR+2
+;
+.psect    T_LSPLOT,EXE,NOWRT
+.transfer LSPLOT
+.mask     LSPLOT
+jmp       L^LSPLOT+2
+;
+.end

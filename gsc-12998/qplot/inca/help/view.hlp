@@ -1,0 +1,64 @@
+1 VIEW              
+
+     This command is used to display the status of the INCA system.  A
+large number of modifiers are available, which fall into these
+categories.  There is no input for the VIEW command, since all
+required information is given in the command line.  Some of the 
+displays produced by the VIEW command can be printed by using the AUDIT 
+command.
+
+     Format:     VIEW  [modifier]
+
+2 AUDIT_FILE        
+
+     While you can use the UTILITIES EDIT command to look at files,
+you cannot look at your current audit file to see what you have just
+done, since this file is current open.  This modifier gets around
+that problem by temporaily closing the audit file, and then prompting
+for the name of an editor to use.  The audit file name is
+automatically supplied to the editor, and the user can examine the
+file as he pleases.  Exit the editor in the normal manner and you will
+be returned to INCA. 
+
+     While you can use the Vax TYPE command as an editor to just type
+the file on the terminal (use control-C or control-O to stop output),
+do not use the Vax PRINT command, as the Spooler may grab the file
+before INCA, and will lose it's audit file. 
+
+     Format:     VIEW  AUDIT_FILE  [editor-name]
+
+2 COMPOSITE         
+
+     This modifier will summarize the output of all VIEW modifiers.
+
+     Format:     VIEW  COMPOSITE
+
+2 LOGO              
+
+     This modifier will display the INCA logo normally shown at the 
+beginning of a session.  The user will then have an opportunity to 
+make a hardcopy if desired.
+
+     Format:     VIEW  LOGO
+
+2 NEWS              
+
+     This modifier will cause the current news page to be displayed. 
+This information is automatically displayed when you begin an INCA 
+session. 
+
+     Format:     VIEW  NEWS
+
+2 USED_CPU_TIME     
+
+     This modifier will cause the amount of CPU time used by the
+current INCA session to be displayed. 
+
+     Format:     VIEW  USED_CPU_TIME
+
+2 VERSION           
+
+     This modifier will display the current INCA version number.
+
+     Format:     VIEW /VERSION
+

@@ -1,0 +1,12 @@
+interface;
+  unit vdmintrp(vdmipt);
+
+  procedure vdmipt ( var name  : lstring;
+                     var back  : boolean;
+                     var inkey, curnum
+                               : byte    );
+
+begin
+end;
+
+

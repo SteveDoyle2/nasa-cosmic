@@ -1,0 +1,43 @@
+% Left margin = 1"
+% Page width = 9"
+% Top margin = .75"
+% Bottom footing = .75"
+% Page depth = 7" (after footline and bottomline)
+\magnification=\magstep2
+\hoffset=1truein
+\voffset=1.75truein
+\hsize=9truein
+\vsize=5.75truein
+% New output routine to put initials, date, etc at page bottom
+\def\plainoutput{\shipout\vbox{\makelogo\nointerlineskip\makeheadline
+  \vskip-5pt\pagebody
+  \makefootline
+  \makebottom}
+ \advancepageno
+ \ifnum\outputpenalty>-20000 \else\dosupereject\fi}
+% Take care of new formats for headline and footline
+ \newskip\headlineskip
+ \headlineskip=-40.5truept
+ \newskip\headlineheight
+ \headlineheight=8.5truept
+\font\jplfont=jpl_logo scaled694
+\def\makelogo{\vbox to0pt{\vskip-.65truein
+ \hbox{\jplfont JPL\hss}\vss}}
+\def\makeheadline{\vbox to0pt{\vskip\headlineskip
+  \line{\vbox to\headlineheight{}\the\headline}\vss}
+ \nointerlineskip}
+\footline={\hfil}
+\newskip\footlineskip
+\footlineskip=24truept
+\def\makefootline{\baselineskip=\footlineskip\line{\the\footline}}
+% Macro to output stuff on status line at bottom of every page
+\def\outputformatnumber#1{\ifx\pagenumformat\arabic \count255=#1%
+\else\count255=-#1\fi{\ifnum\count255<0%
+\ifx\pagenumformat\ROMAN\uppercase\expandafter{\romannumeral-\count255}%
+\else\romannumeral-\count255\fi\else\number\count255\fi%
+}}
+\def\makebottom{\bottomsize\bottomstyle\baselineskip=13truept%
+\line{\hfill\viewinitials\quad\viewdate}%
+\line{\hfill Page \outputformatnumber{\pageno}\ %
+of \outputformatnumber{\viewmaxpageno}}}
+\def\roman{roman}\def\arabic{arabic}\def\ROMAN{ROMAN}

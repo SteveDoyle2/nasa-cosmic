@@ -1,0 +1,32 @@
+1 EIGHTY
+
+ Eighty is a program that reformats an input file (must be ASCII) with line
+ lengths greater than 80 characters into a file with maximum line length of
+ 80 characters.  The length of the lines is maintained within the file so
+ that the file can be reconstituted later.  This program is useful in trans-
+ mitting listing files to St. Louis across HASP, since HASP will not accept
+ files with record lengths greater than 80 columns.  The program UNEIGHTY
+ must be used to restore the file to its original condition.
+
+ Enter :
+
+   @MERLIN:EIGHTY 'filespec'
+
+ where filespec is the full file specification for the listing file.  If the
+ file type is omitted, '.LIS' will be assumed.  You may not use a file type
+ of '.80' as this is the type of the new file which the EIGHTY program 
+ creates.
+2 UNEIGHTY
+
+ UnEighty is available on the MERLIN account, but its use is not very useful
+ on MERLIN.  UnEighty also exists on the St. Louis S&E computer. To use
+ UNEIGHTY on the S&E, follow these steps :
+
+   LINK RTLSDZ5 191 222 RR
+   ACCESS 222 Q/A
+   UNEIGHTY filename filetype
+
+ UNEIGHTY on the S&E assumes a filemode of 'A' and creates a file with the
+ same filename as input and filetype 'LISTING'.  The FORTRAN source code
+ of UNEIGHTY and EIGHTY are available for transportation to other systems
+ of interest.

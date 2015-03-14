@@ -1,0 +1,56 @@
+ SIMPLIFIED CALCULATION OF SOLAR FLUX ON THE SIDE WALL OF CYLINDRICAL CAV-
+ITY SOLAR RECEIVERS
+
+( Cal Tech/Jet Propulsion Lab. )
+
+     The Simplified Calculation of Solar Flux Distribution on the Side Wall
+of Cylindrical Cavity Solar Receivers program employs a simple solar flux
+calculation algorithm for a cylindrical cavity type solar receiver. Appli-
+cations of this program include the study of solar energy, heat transfer,
+and space power-solar dynamics engineering.
+
+     The aperture plate of the receiver is assumed to be located in the fo-
+cal plane of a paraboloidal concentrator, and the geometry is assumed to be
+axisymmetric. The concentrator slope error is assumed to be the only sur-
+face error; it is assumed that there are no pointing or misalignment errors.
+Using cone optics, the contour error method is utilized to handle the slope
+error of the concentrator. The flux distribution on the side wall is calcu-
+lated by integration of the energy incident from cones emanating from all
+the differential elements on the concentrator. The calculations are done
+for any set of dimensions and properties of the receiver and the concentra-
+tor, and account for any spillover on the aperture plate.
+
+     The results of this algorithm compared excellently with those pre-
+dicted by more complicated programs. Because of the utilization of axial
+symmetry and overall simplification, it is extremely fast. It can be easily
+extended to other axi-symmetric receiver geometries.
+
+     The program was written in Fortran 77, compiled using a Ryan McFarland
+compiler, and run on an IBM PC-AT with a math coprocessor. It requires 60K
+of memory and has been implemented under MS-DOS 3.2.1. The program was de-
+veloped in 1988.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN 77
+
+MACHINE REQUIREMENTS: IBM PC SERIES
+
+PROGRAM SIZE: APPROXIMATELY 364 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 5.25 Inch IBM PC DOS Format Diskette
+
+PROGRAM NUMBER: NPO-17732
+
+DOMESTIC - DOCUMENTATION PRICE: $12.00    PROGRAM PRICE: $200.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $24.00   PROGRAM PRICE: $400.00
+
+
+
+                                        1
+

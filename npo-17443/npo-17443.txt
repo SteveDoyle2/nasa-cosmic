@@ -1,0 +1,68 @@
+ LONGLIB - A GRAPHICS LIBRARY
+
+( Cal Tech/Jet Propulsion Lab. )
+
+     This library is a set of subroutines designed for vector plotting to
+CRT's, plotters, dot matrix, and laser printers. LONGLIB subroutines are
+invoked by program calls similar to standard CALCOMP routines. In addition
+to the basic plotting routines, LONGLIB contains an extensive set of rou-
+tines to allow viewport clipping, extended character sets, graphic input,
+shading, polar plots, and 3-D plotting with or without hidden line removal.
+
+     LONGLIB capabilities include surface plots, contours, histograms,
+logarithm axes, world maps, and seismic plots. LONGLIB includes master
+subroutines, which are self-contained series of commonly used individual
+subroutines. When invoked, the master routine will initialize the plot-
+ting package, and will plot multiple curves, scatter plots, log plots, 3-D
+plots, etc. and then close the plot package, all with a single call.
+
+     Supported devices include VT100 equipped with Selanar GR100 or GR100+
+boards, VT125s, VT240s, VT220 equipped with Selanar SG220, Tektronix
+4010/4014 or 4107/4109 and compatibles, and Graphon GO-235 terminals. Dot
+matrix printer output is available by using the provided raster scan con-
+version routines for DEC LA50, Printronix printers, and high or low res-
+olution Trilog printers. Other output devices include QMS laser print-
+ers, Postscript compatible laser printers, and HPGL compatible plotters.
+The LONGLIB package includes the graphics library source code, an on-line
+help library, scan converter and meta file conversion programs, and command
+files for installing, creating, and testing the library.
+
+     The latest version, 5.0, is significantly enhanced and has been made
+more portable. Also, the new version's meta file format has been changed
+and is incompatible with previous versions. A conversion utility is in-
+cluded to port the old meta files to the new format. Color terminal plotting
+has been incorporated.
+
+     LONGLIB is written in FORTRAN 77 for batch or interactive execution and
+has been implemented on a DEC VAX series computer operating under VMS. This
+program was developed in 1985, and last updated in 1988.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: FORTRAN 77
+
+MACHINE REQUIREMENTS: DEC VAX SERIES
+
+PROGRAM SIZE: APPROXIMATELY 28,191 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI DEC VAX BACKUP Format Magnetic Tape
+
+PROGRAM NUMBER: NPO-17443
+
+DOMESTIC - DOCUMENTATION PRICE: $48.00    PROGRAM PRICE: $2000.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $96.00   PROGRAM PRICE: $4000.00
+
+
+
+                                        2
+

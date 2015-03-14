@@ -1,0 +1,256 @@
+   { $INCLUDE : 'compile.inc' }
+{ $MESSAGE : 'Enter control file checking switch: 1=on' }
+{ $INCONST : switch }
+   { $INCLUDE : 'getparam.int' }
+
+   implementation of getparam;
+
+     function getmqq (x : word) : adsmem; extern;
+
+
+   procedure get_parameter;
+   
+   var  
+      i, k : integer;
+      nkeys  : byte;
+      nkey1  : byte;
+      nkey2  : byte;
+      nkey3  : byte;
+      nnodes : byte;
+      nsets  : byte;
+      nsets1 : byte;
+      nsets2 : byte;
+      nsets3 : byte;
+      nmsgs  : byte;
+      nmsgs1 : byte;
+      nmsgs2 : byte;
+      nmsgs3 : byte;
+      nxys   : byte;
+      j, l   : byte;
+      b : char;
+      f : text;
+  
+   begin
+         
+     assign ( f, name );
+     reset ( f );
+     readln ( f,nkey1,nkey2,nkey3,nnodes,nsets1,nsets2,nsets3,nmsgs1,nmsgs2,nmsgs3,nxys );
+{ $IF switch $then }
+  writeln (   nkey1,nkey2,nkey3,nnodes,nsets1,nsets2,nsets3,nmsgs1,nmsgs2,nmsgs3,nxys );
+{ $END }
+     nkeys := 100 + nkey3;
+     nsets := 100 + nsets3;
+     nmsgs := 100 + nmsgs3;
+
+     new ( node_data, nnodes );
+ {   new ( fctn_map, nsets );
+     for i := 1 to nsets do
+       new ( fctn_map^[i], 25 );
+     new ( fctn_tag, nkeys );
+     new ( valid_set, nsets );
+     new ( messages, nmsgs ); 
+  
+     node_data := getmqq ( sizeof( node_data^ ) );}
+     fctn_map  := getmqq ( sizeof( fctn_map^  ) );
+     fctn_tag  := getmqq ( sizeof( fctn_tag^  ) );
+     valid_set := getmqq ( sizeof( valid_set^ ) );
+     messages  := getmqq ( sizeof( messages^  ) );
+
+     if nxys=0 then nxys := 1;
+     new ( skeleton, nxys );
+
+
+    (* GET THE ASCII CODES OF THE  FUNCTIONS *)
+
+     i := 1;
+     for i := 1 to nkey1 do
+       begin
+         read ( f, j, b );
+         for k := 1 to j do
+           read ( f, fctn_tag^[i][k] );
+         fctn_tag^[i].len := j;
+{ $IF switch $then }
+  writeln ( i, fctn_tag^[i] );
+{ $END }
+         if (eoln(f)) and (i<>nkey1) then readln ( f );
+       end;
+     readln ( f );
+     for i := nkey1+1 to 40 do
+         begin
+           fctn_tag^[i] := null;
+         end;
+     for i := 41 to nkey2+40 do
+         begin
+           if (eoln(f)) and (i<>nkeys) then readln ( f );
+           read ( f, j, b );
+           for k := 1 to j do
+             read ( f, fctn_tag^[i][k] );
+           fctn_tag^[i].len := j;
+{ $IF switch $then }
+  writeln ( i, fctn_tag^[i] );
+{ $END }
+         end;
+
+     readln ( f );
+     for i := 41+nkey2 to 100 do
+         begin
+           fctn_tag^[i] := null;
+         end;
+     for i := 101 to nkeys do
+         begin
+           if (eoln(f)) and (i<>nkeys) then readln ( f );
+           read ( f, j, b );
+           for k := 1 to j do
+             read ( f, fctn_tag^[i][k] );
+           fctn_tag^[i].len := j;
+{ $IF switch $then }
+  writeln ( i, fctn_tag^[i] );
+{ $END }
+         end;
+
+     readln(f);
+
+
+     (* INFORMATION FOR EACH NODE *)
+
+
+     for i := 1 to nnodes do
+         begin
+           with node_data^[i] do
+             begin
+               readln ( f, prtmsg );
+               readln ( f,nfields,valid_key_set_id,x,y,xtext,ytext,
+                        input_length,character_size,text_color,
+                        data_type,esc,backspace,cursor_left,
+                        cursor_right,ins,del );
+{ $IF switch $then }
+          writeln ( prtmsg,nfields,valid_key_set_id,x,y,xtext,ytext,
+                    input_length,character_size,text_color,data_type,
+                    esc, backspace, cursor_left, cursor_right, ins,
+                    del );
+{ $END }
+             end;
+         end;
+         
+
+    (* SETS OF VALID FUNCTION KEYS *)
+
+    for i := 1 to nsets1 do
+        begin
+{ $IF switch $then }
+  write ( i:1,' ' );
+{ $END }
+          for k := 1 to 25 do
+            begin
+              read ( f, j );
+              fctn_map^[i][k] := j;
+{ $IF switch $then }
+  write ( k:1, ' ', fctn_map^[i][k]:1, ' ' );
+{ $END }
+             l := k + 58;
+              if j <> 0 then
+                valid_set^[i] := valid_set^[i] + [l];
+            end;
+          readln ( f );
+{ $IF switch $then }
+  writeln;
+{ $END }
+        end;
+
+    for i := nsets1+1 to 20 do
+      begin
+        for k := 1 to 25 do
+          fctn_map^[i][k] := 0;
+        valid_set^[i] := [];
+      end;
+
+    for i := 21 to nsets2+20 do
+        begin
+{ $IF switch $then }
+  write ( i:1,' ' );
+{ $END }
+
+          for k := 1 to 25 do
+            begin
+              read ( f, j );
+              fctn_map^[i][k] := j;
+{ $IF switch $then }
+  write ( k:1, ' ', fctn_map^[i][k]:1, ' ' );
+{ $END }
+             l := k + 58;
+              if j <> 0 then
+                valid_set^[i] := valid_set^[i] + [l];
+            end;
+          readln ( f );
+{ $IF switch $then }
+  writeln;
+{ $END }
+      end;
+    for i := 21+nsets2 to 100 do
+      begin
+        for k := 1 to 25 do
+          fctn_map^[i][k] := 0;
+        valid_set^[i] := [];
+      end;
+
+    for i := 101 to nsets do
+        begin
+{ $IF switch $then }
+  write ( i:1,' ' );
+{ $END }
+          for k := 1 to 25 do
+            begin
+              read ( f, j );
+              fctn_map^[i][k] := j;
+{ $IF switch $then }
+  write ( k:1, ' ', fctn_map^[i][k]:1, ' ' );
+{ $END }
+             l := k + 58;
+              if j <> 0 then
+                valid_set^[i] := valid_set^[i] + [l];
+            end;
+          readln ( f );
+{ $IF switch $then }
+  writeln;
+{ $END }
+        end;
+
+     (* LIST OF ALL THE ERROR MESSAGES *)
+
+     for i := 1 to nmsgs1 do
+[        readln ( f, messages^[i] );
+{ $IF switch $then }
+  writeln ( messages^[i] );
+{ $END }
+];
+     for i := nmsgs1+1 to 30 do
+       messages^[i] := null;
+     for i := 31 to nmsgs2+30 do
+[        readln ( f, messages^[i] );
+{ $IF switch $then }
+  writeln ( messages^[i] );
+{ $END }
+];
+     for i := nmsgs2+31 to 100 do
+       messages^[i] := null;
+     for i := 101 to nmsgs do
+[        readln ( f, messages^[i] );
+{ $IF switch $then }
+  writeln ( messages^[i] );
+{ $END }
+];
+
+    (* COORDINATES OF LINES OF THE SKELETON *)
+
+      for i := 1 to nxys do
+[         read ( f, skeleton^[i] );
+{ $IF switch $then }
+  writeln ( skeleton^[i] );
+{ $END }
+];
+
+      close ( f );
+
+   end;
+  end.
+

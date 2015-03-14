@@ -1,0 +1,147 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STANDARD',
+               'QLIBHOME:STARLETQ', 
+               'QLIBHOME:GENERAL',
+               'QLIBHOME:COLOR',
+               'QLIBHOME:IO',
+               'QLIBHOME:TERM_VAX',
+               'QLIBHOME:TERM_4010', 
+               'QLIBHOME:FIG'),
+  ENVIRONMENT ('QLIBHOME:TEK4014H.TEN') ]
+MODULE hard_TEK4014H;
+{=============================================================================}
+{-- PROCEDURES FOR HARDCOPY TYPE TEK4014H ------------------------------------}
+{=============================================================================}
+[ HIDDEN ] VAR
+   panelopen     : boolean := false;
+   hardfig       : RECORD
+                   commandline   : VARYING [80] OF char;
+                   charsize      : char;                  
+                   END
+                 := ('',';');
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+FUNCTION hardname_TEK4014H (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0:  hardname_TEK4014H := '1';
+   1:  hardname_TEK4014H := 'TEK4014H';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE hardmake_TEK4014H;
+VAR
+   hlsa : hlsa_type;
+{-----------------------------}
+PROCEDURE bufferempty;
+{ Purpose -- empty software plotting buffer }
+BEGIN 
+IF length(env.buffer) <> 0
+ THEN
+  BEGIN
+   IF terminal.hardname = 'LOCAL   '
+    THEN qiowwrite (env.buffer + CRLF)
+    ELSE writeln (textfile,env.buffer + CRLF);
+   env.buffer := '';
+  END;
+END;
+{-----------------------------}
+BEGIN
+IF terminal.hardname <> 'LOCAL   '
+ THEN 
+  BEGIN 
+  close (textfile,ERROR:=CONTINUE);
+  open (textfile,'TEK4014H.PLT',new);
+  rewrite (textfile);  
+  END;
+
+env.curch := config.ch;
+bufferempty;
+
+reset (plotitemfile);
+WHILE NOT eof (plotitemfile) DO 
+   BEGIN
+   readplotitem;
+   WITH plotitem DO CASE ins OF 
+      I_col:  BEGIN
+              bufferempty;
+              hlsa := hlsaofcolor (plotitem.st);
+              env.visible := (hlsa.attribute <> 'C') AND (hlsa.lightness > 0);
+              END;
+      I_pan:  ;
+      I_clo:  ;
+      I_pos:  BEGIN
+              bufferempty;
+              env.pos.ix := ix;
+              env.pos.iy := iy;
+              END;
+      I_dra:  draw_4010(ix,iy,false,bufferempty);
+      I_siz:  BEGIN
+              env.curch.width  := ix;
+              env.curch.height := iy;
+              END;
+      I_mar:  BEGIN
+              env.curch.charspacing := ix;
+              env.curch.linespacing := iy;
+              END;
+      I_pri:  IF env.visible AND (st <> '')
+               THEN
+                BEGIN
+                bufferempty;
+                env.buffer := ESC + hardfig.charsize
+                              + chr(29) + strofpos_4010 (env.pos)
+                              + chr(31) + st;
+                bufferempty;  
+                END;
+      I_emp:  bufferempty;
+      END;
+   END;
+reset (plotitemfile);
+truncate (plotitemfile);
+
+IF terminal.hardname <> 'LOCAL   '
+ THEN
+  BEGIN
+  close (textfile);
+  IF hardfig.commandline <> ''
+   THEN LIB$SPAWN ((hardfig.commandline));
+  END;
+END;
+{----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE hardconfig_TEK4014H (configcontrol : configcontrol_type);
+BEGIN
+WITH hardfig DO CASE configcontrol OF
+   CON:  BEGIN
+         CASE hardfig.charsize OF
+            ';':  config.ch := ch_type (496,768,96,208);
+            ':':  config.ch := ch_type (544,848,64,176);
+            '9':  config.ch := ch_type (816,1312,96,304);
+            '8':  config.ch := ch_type (896,1408,96,288);
+            END;
+         config.resolution := 64;
+         config.dotsize    := 64;
+         config.starsize   := 320;
+         config.ansi364    := true;   
+         END;
+   QUE:  BEGIN
+         IF terminal.hardname <> 'LOCAL   '
+          THEN readvary ('ENTER COMMAND LINE : ',commandline,commandline);
+         readch ('ENTER TEK CHARACTER SIZE CODE : ',charsize,'89:;',charsize);
+         CASE hardfig.charsize OF
+            ';':  config.ch := ch_type (496,768,96,208);
+            ':':  config.ch := ch_type (544,848,64,176);
+            '9':  config.ch := ch_type (816,1312,96,304);
+            '8':  config.ch := ch_type (896,1408,96,288);
+            END; 
+         END;
+   REP:  BEGIN
+         IF terminal.hardname <> 'LOCAL   '
+          THEN writeline (out,'Command line is ' + commandline);
+         writeline (out,'Character size code is "' + charsize + '"');
+         END;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+END.

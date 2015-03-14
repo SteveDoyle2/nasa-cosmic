@@ -1,0 +1,252 @@
+GERM                                                            11-Oct-1988 10:25:20    VAX Pascal V3.7-254                Page    1
+GERM                            Source Listing                   5-Oct-1988 11:38:49    DUA1:[QPLOT.GERM.SOURCE]MAIN.PAS;3 (1)
+
+-LINE-IDC-PL-SL-
+
+00001      0  0 [ IDENT   ('GERM'),
+00002      0  0   INHERIT ('QLIBHOME:STANDARD',
+00003      0  0            'QLIBHOME:GENERAL',
+00004      0  0            'QLIBHOME:DIRECTORY',
+00005      0  0            'QLIBHOME:IO',
+00006      0  0            'QLIBHOME:STRING',
+00007      0  0            'QLIBHOME:COLOR',
+00008      0  0            'QLIBHOME:FIG',
+00009      0  0            'QLIBHOME:UTILITIES',
+00010      0  0            'QLIBHOME:PLOT',
+00011      0  0            'QLIBHOME:HANDLER',
+00012      0  0            'QLIBHOME:IOBASE') ]
+00013      0  0 PROGRAM germ;
+00014      0  0 VAR
+00015      0  0    germfile       : FILE OF plotitem_type;
+00016   C  0  0 {-----------------------------------------------------------------------------}
+00017      1  0 PROCEDURE load;
+00018      1  0 VAR
+00019      1  0    filename       : command_type;
+00020      1  0    arg            : anystring;
+00021      1  0    plotdata       : RECORD
+00022      1  0                     CASE integer OF
+00023      1  0                        1:  (data     : anystring);
+00024      1  0                        2:  (ii       : shortunsigned;
+00025      1  0                             ins      : ins_type;
+00026      1  0                             ix       : shortunsigned;
+00027      1  0                             iy       : shortunsigned;
+00028      1  0                             hlsa     : hlsa_type);
+00029      1  0                     END;
+00030      1  1 BEGIN
+00031      1  1 startcommand ('Metafile selection',false);
+00032      1  1 startfilesearch ('*.META');
+00033      1  1 WHILE NOT endoffilesearch DO
+00034      1  2    BEGIN
+00035      1  2    filesearch (arg);
+00036      1  2    setcommand (fs.name + fs.typ);
+00037      1  1    END;
+00038      1  1 readcommand (filename,' ',false,'LOAD');
+00039      1  1 
+00040      1  1 close (textfile,ERROR:=CONTINUE);
+00041      1  1 IF filename <> ' '
+00042      1  1  THEN
+00043      1  2   BEGIN
+00044      1  2   open (textfile,filename,OLD);
+00045      1  2   reset (textfile);
+00046      1  2   rewrite (germfile);
+00047      1  2   WHILE NOT eof (textfile) DO
+00048      1  3      BEGIN
+00049      1  3      readln (textfile,plotdata.data);
+00050      1  3      plotitem.ins := plotdata.ins;
+00051      1  3      plotitem.ix  := plotdata.ix;
+00052      1  3      plotitem.iy  := plotdata.iy;
+00053      1  4      CASE plotitem.ins OF
+00054      1  4         I_col,
+00055      1  4         I_pan:  WITH plotdata.hlsa DO
+
+GERM                                                            11-Oct-1988 10:25:20    VAX Pascal V3.7-254                Page    2
+GERM                            Source Listing                   5-Oct-1988 11:38:49    DUA1:[QPLOT.GERM.SOURCE]MAIN.PAS;3 (1)
+
+-LINE-IDC-PL-SL-
+
+00056      1  5                    CASE attribute OF
+00057      1  5                       ' ':  plotitem.st := '#' + strofi (hue,4)
+00058      1  5                                                + strofi (lightness,4)
+00059      1  5                                                + strofi (saturation,4);
+00060      1  5                       'B':  plotitem.st := '*' + strofi (hue,4)
+00061      1  5                                                + strofi (lightness,4)
+00062      1  5                                                + strofi (saturation,4);
+00063      1  5                       'C':  plotitem.st := 'CLEAR';
+00064      1  4                       END;
+00065      1  4         I_pri:  plotitem.st := substr (plotdata.data,6,length(plotdata.data)-5);
+00066      1  4         OTHERWISE plotitem.st := '';
+00067      1  3         END;
+00068      1  3      write (germfile,plotitem);
+00069      1  2      END;
+00070      1  2   close (textfile);
+00071      1  1   END;
+00072      0  0 END;
+00073   C  0  0 {-----------------------------------------------------------------------------}
+00074      1  0 PROCEDURE plot;
+00075      1  1 BEGIN
+00076      1  1 clearscreen;
+00077      1  1 reset (germfile);
+00078      1  1 rewrite (plotitemfile);
+00079      1  1 WHILE NOT eof(germfile) DO
+00080      1  2    BEGIN
+00081      1  2    read (germfile,plotitem);
+00082      1  2    writeplotitem;
+00083      1  1    END;
+00084      1  1 replot;
+00085      1  1 graphicpause;
+00086      1  1 clearscreen;
+00087      0  0 END;
+00088   C  0  0 {-----------------------------------------------------------------------------}
+00089      1  0 PROCEDURE main;
+00090      1  0 VAR
+00091      1  0    go       : boolean;
+00092      1  0    com      : command_type;
+00093      1  0    arg      : anystring;
+00094      1  1 BEGIN   
+00095      1  1 arg := registerqplot ('GERM','QPLOTHOME:GERM.HLB','');
+00096      1  1 go := arg <> '';
+00097      1  1 IF NOT go
+00098      1  1  THEN
+00099      1  2   BEGIN
+00100      1  2   clearscreen;
+00101   C  1  2   { Draw Logo }
+00102      1  2   wait (2);
+00103      1  2   clearscreen;
+00104      1  1   END;
+00105      1  1 
+00106      1  1 opensourcefile ('GERM.SOU','.SOU');
+00107      1  1 
+00108      1  1 ESTABLISH (handler);
+00109      1  1 go := true;
+00110      1  2 REPEAT
+
+GERM                                                            11-Oct-1988 10:25:20    VAX Pascal V3.7-254                Page    3
+GERM                            Source Listing                   5-Oct-1988 11:38:49    DUA1:[QPLOT.GERM.SOURCE]MAIN.PAS;3 (1)
+
+-LINE-IDC-PL-SL-
+
+00111      1  2    startcommand ('GERM',true);
+00112      1  2    setcommand ('Load');
+00113      1  2    setcommand ('Misc');
+00114      1  2    setcommand ('Plot');
+00115      1  2    setcommand ('Utilities');
+00116      1  2    setcommand ('Xit');
+00117      1  2    readcommand (com,ESC,true,'');
+00118      1  3    CASE chofcom(com) OF
+00119      1  3       'L':  load;
+00120      1  4       'M':  BEGIN
+00121      1  4             startcommand ('MISC',true);
+00122      1  4             setcommand ('No_error_trap');
+00123      1  4             setcommand ('Zap_screen');
+00124      1  4             readcommand (com,ESC,false,'MISC');
+00125      1  5             CASE chofcom(com) OF
+00126      1  5                'N':  IF readyes ('Do you REALLY want NO error handling ? ')
+00127      1  5                       THEN REVERT;
+00128      1  6                'Z':  BEGIN
+00129      1  6                      writeline (out,' ');
+00130      1  6                      clearscreen;
+00131      1  5                      END;
+00132      1  5                ESC:  ;
+00133      1  4                END;
+00134      1  3             END;
+00135      1  3       'P':  plot;
+00136      1  3       'U':  utilities;
+00137      1  3       'X':  go := false;
+00138      1  3       ESC:  ;
+00139      1  3       OTHERWISE
+00140      1  4             BEGIN
+00141      1  4             writeline (out,'Bad command -- try "HELP"');
+00142      1  4             readargument (arg);
+00143      1  3             END;
+00144      1  2       END;
+00145      1  2    IF err <> ''
+00146      1  2     THEN 
+00147      1  3      BEGIN
+00148      1  3      clearscreen;
+00149      1  3      writeerror;
+00150      1  3      IF err = 'FATAL ERROR' THEN BEGIN  REVERT;  resignal;  END;
+00151      1  3      err := '';
+00152      1  2      END;
+00153      1  1    UNTIL NOT go;
+00154      1  1 deletejournal;
+00155      0  0 END;
+00156   C  0  0 {-----------------------------------------------------------------------------}
+00157      0  1 BEGIN
+00158      0  1 main;
+00159      0  0 END.
+
+GERM                                                            11-Oct-1988 10:25:20    VAX Pascal V3.7-254                Page    4
+GERM                            Pascal Compilation Statistics    5-Oct-1988 11:38:49    DUA1:[QPLOT.GERM.SOURCE]MAIN.PAS;3 (1)
+
+PSECT SUMMARY
+
+        Name                     Bytes                         Attributes
+
+$CODE                                2785  NOVEC,NOWRT,  RD,  EXE,  SHR,  LCL,  REL,  CON,  PIC,ALIGN(2)
+$LOCAL                                223  NOVEC,  WRT,  RD,NOEXE,NOSHR,  LCL,  REL,  CON,  PIC,ALIGN(2)
+
+
+ENVIRONMENT STATISTICS
+
+                                                       -------- Symbols --------
+        File                                           Total    Loaded   Percent
+
+DUA1:[QPLOT.QPLOT.SOURCE]STANDARD.PEN;1                  124        41        33
+DUA1:[QPLOT.QPLOT.SOURCE]GENERAL.PEN;1                    20         2        10
+DUA1:[QPLOT.QPLOT.SOURCE]DIRECTORY.PEN;1                  45        34        76
+DUA1:[QPLOT.QPLOT.SOURCE]IO.PEN;1                        204        51        25
+DUA1:[QPLOT.QPLOT.SOURCE]STRING.PEN;1                     72        15        21
+DUA1:[QPLOT.QPLOT.SOURCE]COLOR.PEN;1                      93         6         6
+DUA1:[QPLOT.QPLOT.SOURCE]FIG.PEN;1                       213        32        15
+DUA1:[QPLOT.QPLOT.SOURCE]UTILITIES.PEN;2                 105         9         9
+DUA1:[QPLOT.QPLOT.SOURCE]PLOT.PEN;1                      292         2         1
+DUA1:[QPLOT.QPLOT.SOURCE]HANDLER.PEN;1                    39         8        21
+DUA1:[QPLOT.QPLOT.SOURCE]IOBASE.PEN;1                    104         8         8
+
+
+COMMAND QUALIFIERS
+
+  PASCAL/USAGE=(UNINIT,UNUSED) MAIN
+
+  /CHECK=(BOUNDS,NOCASE_SELECTORS,NOOVERFLOW,NOPOINTERS,NOSUBRANGE)
+  /DEBUG=(NOSYMBOLS,TRACEBACK)
+  /SHOW=(DICTIONARY,INCLUDE,NOINLINE,HEADER,SOURCE,STATISTICS,TABLE_OF_CONTENTS)
+  /OPTIMIZE
+  /STANDARD=NONE
+  /TERMINAL=(NOFILE_NAME,NOROUTINE_NAME,NOSTATISTICS)
+  /USAGE=(UNUSED,UNINITIALIZED,NOUNCERTAIN)
+  /NOANALYSIS_DATA
+  /NOENVIRONMENT
+  /LIST=DUA1:[QPLOT.GERM.SOURCE]MAIN.LIS;1
+  /OBJECT=DUA1:[QPLOT.GERM.SOURCE]MAIN.OBJ;4
+  /NOCROSS_REFERENCE /ERROR_LIMIT=30 /NOG_FLOATING /NOMACHINE_CODE /NOOLD_VERSION /WARNINGS
+
+
+COMPILER INTERNAL TIMING
+
+  Phase                 Faults       CPU Time      Elapsed Time
+  Initialization          187        00:00.4          00:02.7
+  Source Analysis         398        00:04.4          00:48.1
+  Source Listing           12        00:00.3          00:01.4
+  Tree Construction       164        00:00.3          00:00.7
+  Flow Analysis            36        00:00.2          00:01.1
+  Value Propagation        12        00:00.0          00:00.1
+  Profit Analysis          49        00:00.1          00:00.5
+  Context Analysis        180        00:01.0          00:05.1
+  Name Packing              6        00:00.2          00:00.9
+  Code Selection          107        00:00.5          00:03.5
+
+GERM                                                            11-Oct-1988 10:25:20    VAX Pascal V3.7-254                Page    5
+GERM                            Pascal Compilation Statistics    5-Oct-1988 11:38:49    DUA1:[QPLOT.GERM.SOURCE]MAIN.PAS;3 (1)
+
+  Final                    62        00:01.1          00:05.8
+  TOTAL                  1217        00:08.4          01:09.9
+
+
+COMPILATION STATISTICS
+
+  CPU Time:       00:08.4         (1132 Lines/Minute)
+  Elapsed Time:   01:09.9
+  Page Faults:    1217
+  Pages Used:     833
+  Compilation Complete

@@ -1,0 +1,82 @@
+      SUBROUTINE M50MDT(TSEC50,KFLAG,ROTMTX)
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+C  THIS ROUTINE COMPUTES THE MATRICES USED TO ROTATE VECTORS BETWEEN
+C  MEAN OF 1950.0 AND MEAN OF DATE COORDINATES.
+C
+C  MEAN OF 1950.0 IS A COORDINATE SYSTEM ASSOCIATED WITH THE 
+C  BEGINNING OF THE BESSELIAN YEAR 1950. IT HAS JULIAN EPHEMERIS
+C  DATE 2433282.423, 0.077 DAYS BEFORE EPHEMERIS DATE 1/1/50, 0.0 HRS.
+C
+C  VARIABLE DIM TYPE I/O DESCRIPTION
+C  -------- --- ---- --- -----------
+C
+C  TSEC50    1  R*8   I  TIME ASSOCIATED WITH THE MEAN OF DATE
+C                        COORDINATE SYSTEM. I.E., ROTATION IS BETWEEN
+C                        THE MEAN OF 1950.0 AND THE MEAN OF TSEC50
+C                        COORDINATE SYSTEMS. IN SECONDS SINCE
+C                        0.0 HOURS, 1/1/50, ET. ACCURACY IS NOT HIGH
+C                        ENOUGH TO WARRANT ET-UT CORRECTION. TIME MAY BE
+C                        UT IF IT IS MORE CONVENIENT.
+C
+C  KFLAG     1  I*4   I  FLAG TELLING ROUTINE DIRECTION OF ROTATION.
+C                        = NEGATIVE, FROM MEAN OF DATE TO MEAN OF 1950.0
+C                        = OTHERWISE, FROM MEAN OF 1950.0 TO MEAN OF DATE.
+C
+C  ROTMTX   3,3 R*8   O  THE ROTATION MATRIX. ROTATION IS DONE 
+C                        EXTERNALLY BY:
+C                         VEC2(I)=ROTMTX(I,J)*VEC1(J), SUMMING ON J.
+C                         IF KFLAG IS NEGATIVE, VEC1 IS MEAN OF DATE.
+C                         OTHERWISE, VEC1 IS MEAN OF 1950.0
+C
+C**********************************************************************
+C
+C  BY C PETRUZZO, 12/82.
+C   MODIFIED.........
+C           7/83. CJP. CHANGED DAYCENT VALUE.
+C
+C**********************************************************************
+C 
+C  >> NOTE: FORMULAE AND CONSTANTS WERE TAKEN FROM THE EXPLANATORY
+C           SUPPLEMENT TO THE ASTRONOMICAL EPHEMERIS AND THE AMERICAN
+C           EPHEMERIS AND NAUTICAL ALMANAC, 1974(=1961 + AMMENDMENTS).
+C           IN THE GSFC LIBRARY, NUMBER= QB8.U5, E96.
+C
+      REAL*8  A(3,3),ROTMTX(3,3),SECDAY/86400.D0/,TLAST/-1.D30/
+C     SET NUMBER OF DAYS IN A TROPICAL CENTURY. SUPPLEMENT, PAGE 22.
+      REAL*8  DAYCENT/36524.21988D0/
+C
+      IF(TSEC50.EQ.TLAST) GO TO 800
+C
+      TLAST=TSEC50
+      T=TSEC50/SECDAY+0.077D0     ! DAYS SINCE BESSELIAN YEAR 1950.0
+      T1 = T/DAYCENT              ! TROPICAL CENTURIES SINCE BYR 1950.0
+      T2 = T1 * T1
+      T3 = T2 * T1
+C
+C     GET ROTATION MATRIX FOR MEAN OF 1950.0 TO MEAN OF DATE. PAGE 34.
+      A(1,1) = 1.D0                   - 29696.D-8 * T2  -  13.D-8 * T3
+      A(1,2) =      -2234941.D-8 * T1 -   676.D-8 * T2  + 221.D-8 * T3
+      A(1,3) =      - 971690.D-8 * T1 +   207.D-8 * T2  +  96.D-8 * T3
+      A(2,1) = -A(1,2)
+      A(2,2) = 1.D0                   - 24975.D-8 * T2  -  15.D-8 * T3
+      A(2,3) =                        - 10858.D-8 * T2 
+      A(3,1) = -A(1,3)
+      A(3,2) =  A(2,3)
+      A(3,3) = 1.D0                   -  4721.D-8 * T2  
+C
+  800 CONTINUE
+      IF(KFLAG.LT.0) THEN
+C       MEAN OF DATE TO MEAN OF 1950.
+        DO 20 I=1,3
+        DO 20 J=1,3
+   20   ROTMTX(I,J)=A(J,I)
+      ELSE
+C       MEAN OF 1950.0 TO MEAN OF DATE.
+        DO 30 I=1,3
+        DO 30 J=1,3
+   30   ROTMTX(I,J)=A(I,J)
+        END IF
+C
+      RETURN
+      END

@@ -1,0 +1,784 @@
+
+
+
+
+
+
+                                     AESOP
+
+
+
+             An Expert System engine with Operative Probabilities
+
+
+
+
+
+                                 Introduction
+                                 ____________
+
+
+
+
+
+
+
+     AESOP is a rule-based inference engine for an expert system, which can
+
+make decisions about a particular situation using user-supplied hypotheses
+
+(potential solutions), rules (guidelines to finding the correct solution), and
+
+answers to the questions drawn from the rules.  In this way, if a knowledge
+
+base is available containing the hypotheses and rules that govern an
+
+environment, almost any situation within that environment can be resolved by
+
+answering the questions asked by AESOP during the interactive session.
+
+
+
+     One of the most important features of AESOP is that questions do not have
+
+to be answered with only a yes or a no.  A probability factor ranging anywhere
+
+from zero to ten may be given instead, corresponding to how certain you are
+
+about a particular piece of information.  A zero represents a definite "no" and
+
+a ten represents a definite "yes," while a five represents "maybe" and a seven
+
+represents "probably."
+
+
+
+
+
+
+
+                               How to Run AESOP
+                               ___ __ ___ _____
+
+
+
+
+
+
+
+     There are a couple of different possible ways of invoking AESOP, depending
+
+on the system support that is available.  See the section on AESOP installation
+
+for details.  Once AESOP is invoked, it will print its opening message (this
+
+can be changed within the source code to reflect the acronym/description of the
+
+domain-specific implementation) and will ask for the name of the file
+
+containing the rules, the hypotheses, and the wording of the initial prompt
+
+(see below for the format of this file).  After the filename is entered, AESOP
+
+prints a message telling you what the acceptable responses are to the questions
+
+it will ask.  The "please wait..." message will also appear.  This means that
+
+AESOP is currently setting up the tree and subtree structure for the rules and
+
+hypotheses just read from the file.
+
+
+
+     When AESOP finishes the tree structure creation, the question and answer
+
+portion of the session begins.  Questions can be answered with yes, no, maybe,
+
+likely, nl (not likely), probably, dk (don't know), dc (don't care), or a
+
+probability factor ranging from 0.0 (lowest) to 10.0 (highest).  If you answer
+
+"dk" to a question, AESOP will check the rule base to see if questions exist to
+
+resolve the dilemma;  if none are found, a "no" is stored as the answer.  This
+
+capability is very powerful, allowing several levels of rules to exist with
+
+each additional level containing more specific criteria to help decide the
+
+appropriate response to a higher level question.  These questions must be
+
+structured "top-down," however, so that the criteria for resolving a "dk" are
+
+located below the original question.  AESOP will not jump backwards through the
+
+rules to resolve a "dk." A question may also be answered with "?" or "help",
+
+which will cause AESOP to print a list of all possible responses to a question.
+
+
+
+     When any hypothesis is awarded 90% probability or more, it is "confirmed"
+
+and printed to the screen with a message to this effect.  (This number of 90%
+
+can can be modified in the source code by changing the variable "max-prob").
+
+The status of all hypotheses is then stored in a file named "results." (The
+
+name of this output file can also be easily changed within the source code by
+
+changing the variable "results-file".  If all rule questions have been
+
+exhausted and no hypothesis has accrued a probability of 90% or more, then the
+
+message "no hypothesis can be confirmed with certainty" is printed.  The status
+
+of all hypotheses is still stored in "results.", however.  This allows you to
+
+examine how far each of the hypotheses actually progressed.
+
+
+
+     Another useful function that exists in AESOP is the "how" function.  Once
+
+a hypothesis has been confirmed (or none were confirmed), you may enter the
+
+"how" function, and AESOP will explain how it arrived at that conclusion.  This
+
+is basically a presentation of how much evidence there was to support each
+
+hypothesis that existed (including secondary hypotheses investigated to answer
+
+a "dk").
+
+
+
+
+
+
+
+                              The AESOP Rule File
+                              ___ _____ ____ ____
+
+
+
+
+
+Format
+______
+
+
+
+
+
+     The rule file contains (1) the rules to be used in decision making, (2)
+
+the hypotheses to be investigated, (3) the list of mutually exclusive rules (to
+
+avoid giving essentially the same information twice), and (4) the inital prompt
+
+function, whose answer appears in all of the subsequent questions (more on this
+
+later).  The general format of the file is as follows:
+
+
+
+
+
+(setq *rules '(
+
+   ((hypothesis1)
+
+      (or
+
+         (prob-factor1   rule1)
+
+         (prob-factor2   rule2)
+
+                   .
+
+                   .
+
+                   .
+
+         (prob-factorN   ruleN)))
+
+   ((hypothesis2)
+
+      (or
+
+         (prob-factor1   rule1)
+
+         (prob-factor2   rule2)
+
+                   .
+
+                   .
+
+                   .
+
+         (prob-factorN   ruleN)))
+
+
+
+         .
+
+         .
+
+         .
+
+
+
+   ((hypothesisN)
+
+      (or
+
+         (prob-factor1   rule1)
+
+         (prob-factor2   rule2)
+
+                   .
+
+                   .
+
+                   .
+
+         (prob-factorN   ruleN)))))
+
+;
+
+(setq *hypotheses '(
+
+   (hypothesis1)
+
+   (hypothesis2)
+
+         .
+
+         .
+
+         .
+
+   (hypothesisN)))
+
+;
+
+(setq *opposites  '(
+
+   ((ruleA) (ruleB))
+
+   ((ruleC) (ruleD))
+
+         .
+
+         .
+
+         .
+
+   ((ruleY) (ruleZ))))
+
+;
+
+(defun initial-prompt ()
+
+   (princ '"initial prompt message"))
+
+
+
+
+
+
+
+
+
+     When assigning probability factors to the rules, remember that once .90 or
+
+better is reached, the hypothesis is confirmed.  Therefore, if only one rule's
+
+truth is enough to establish the truth of a hypothesis, then give each rule
+
+within that hypothesis a probability factor of 9.0.  If, however, some
+
+combination of rules must be at least partialy true, then adjust the
+
+probability factors to reflect the desired combination (see below).
+
+
+
+
+
+
+
+
+
+
+
+Example file
+_______ ____
+
+
+
+
+
+     The following file is an example of a rules/hypotheses file that
+
+demonstrates AESOP's operation.  This particular rules file is domain-specific
+
+for determining if certain tasks in space should be automated or done by
+
+humans.  Note the use of the asterisk in the rule definition;  it serves as a
+
+wildcard for the response to the initial prompt.  In this way, you can denote
+
+individual cases and have the case name included nicely in the wording of each
+
+question asked by AESOP.  For an demonstration of this capability, see the
+
+section containing the partial AESOP session.
+
+
+
+
+
+(setq *rules '(
+
+((we should automate * )
+
+   (or
+
+       (7.0 * requires perceptual abilities outside the range of human limits)
+
+       (6.0 * involves safety or health risks outside tolerable limits for humans)
+
+       (6.0 * requires computing ability) 
+
+       (5.0 it is technically feasible to automate *)
+
+       (5.0 it is economically feasible to automate *)
+
+       (3.0 * involves storing and recalling large 
+
+              amounts of precise data for short periods of time) 
+
+       (3.0 * involves routine repetetive precise tasks) 
+
+       (3.0 * requires regularly an attention span of more than 20 mins)
+
+       (3.0 * entails detection of infrequent or rare events)
+
+       (3.0 humans dont like to do *)
+
+       (2.0 * requires monitoring men or machines) 
+
+       (2.0 * requires handling of highly complex operations
+
+              such as doing many things at once)       
+
+       (1.0 * requires EVA)
+
+       (1.0 * requires quick response to signals) 
+
+       (1.0 * requires deductive reasoning ability) 
+
+       (1.0 * requires exerting large amounts of force smoothly)))
+
+
+
+((humans should do *) 
+
+   (or  (8.0 humans like to do *) 
+
+        (7.0 * requires the ability to arrive at new and completely
+
+               different solutions to problems)
+
+        (6.0 * requires ability to detect signals in high noise environments)
+
+        (5.0 * requires the ability to profit from experience)
+
+        (5.0 * entails the ability to reason inductively)
+
+        (5.0 and (* requires ability to perceive patterns) 
+
+                 (* requires ability to generalize about patterns))
+
+        (5.0 and (* requires ability to store large amounts 
+
+                    of information for long periods) 
+
+                 (* requires ability to remember relevant facts 
+
+                    at the appropriate time))
+
+        (4.0 operations in * cannot be reduced to a series
+
+             of preset procedures)
+
+        (4.0 * entails many unexpected or unpredictable events)
+
+        (4.0 * requires ability to improvise and adopt flexible procedures)
+
+        (3.0 * requires sensitivity to a wide variety of stimuli)
+
+        (3.0 * requires ability to use judgement)
+
+        (1.0 * entails the ability to perform fine manipulations)
+
+        (1.0 * entails the ability to perform when overloaded)
+
+        (1.0 * involves the ability to track in a wide variety of
+
+               situations)
+
+        (1.0 * requires ability to detect certain forms of energy)))
+
+
+
+((* requires exerting large amounts of force smoothly)
+
+    (or (9.0 * requires delivery of force greater than 3000 nt)))
+
+
+
+((it is economically feasible to automate *)
+
+    (or (8.0 and (automation of * will be more cost-effective
+
+                  than using a human to perform that task)
+
+                 (all the necessary costs of development design
+
+                  testing installation and automation can
+
+                  be covered by known financial resources))))
+
+
+
+((it is technically feasible to automate *)
+
+    (or (8.0 and (the necessary hardware and software components
+
+                  for * are available off-the-shelf)
+
+                 (the final development of an automated system for *
+
+                  can be done within the scheduled life-cycle
+
+                  development for the system or that limit
+
+                  can be revised)
+
+                 (systems events for * can be predicted and handled
+
+                  by automation)
+
+                 (the expected reliability of the proposed system for *
+
+                  meets system performance requirements)
+
+                 (consequences of expected system failures can be 
+
+                  compensated for by automatic back-up or
+
+                  otherwise prevented from exceeding 
+
+                  acceptable limits)
+
+                 (adequate safeguards against dangers to health from *
+
+                  can be fully automated))))
+
+
+
+((humans in space should do *) 
+
+     (or (9.0 and (* is necessarily done in space)
+
+                  (humans should do *))))
+
+
+
+((humans on the ground should do *) 
+
+     (or (9.0 and (humans should do *)
+
+                  (* requires more than 8 persons))))
+
+
+
+
+
+((* requires perceptual abilities outside the range of human limits) 
+
+     (or (9.0 * requires visual perception outside human limits) 
+
+         (8.0 * requires tactile perception outside human limits)
+
+         (8.0 * requires aural perception outside human limits)))
+
+
+
+
+
+((* requires tactile perception outside human limits)
+
+     (or (8.0 * requires detection for force more finely than 1 nt)
+
+         (8.0 * requires texture discrimination finer than 1 cm)
+
+         (8.0 * requires detection of vibration finer than 10K Hz)))
+
+
+
+((* requires requires visual perception outside human limits) 
+
+     (or (8.0 * requires perception of intensity outside the
+
+                range 3e-10 to 0.3 cd per m**2)
+
+         (8.0 * requieres perception of light wavelengths outside
+
+                the range 300 nm to 1500 nm)))
+
+
+
+((* requires aural perception outside human limits)
+
+     (or (8.0 * requires perception of sonic intensity outside
+
+                the range 10E-16 to 10E-2 J per cm**2)
+
+         (8.0 * requires perception of sonic frequency outside the
+
+                range 20 to 20000 HZ)))))
+
+;
+
+(setq *hypotheses '(
+
+   (we should automate *)
+
+   (humans should do *)))
+
+;
+
+(setq *opposites '(
+
+                  ((humans like to do *) (humans dont like to do *)))
+
+;
+
+(defun initial-prompt ()
+
+   (princ '"     What is the task under consideration?")
+
+)
+
+
+
+
+
+
+
+                          An AESOP Session (Partial)
+                          __ _____ _______ _________
+
+
+
+
+
+$ run AESOP
+
+-> (start)
+
+
+
+
+
+*******************************************************************
+
+
+
+                            A E S O P
+
+
+
+        An Expert System engine Operative with Probabilities
+
+
+
+*******************************************************************
+
+
+
+
+
+    Enter name of rules/hypotheses file -->rules.
+
+[load rules.]
+
+
+
+    What is the task under consideration?
+
+    Please enter as a single string, with no spaces
+
+
+
+
+
+    > washing-the-windows
+
+
+
+
+
+       You may answer the following questions with a
+
+    y (yes), n (no), m (maybe), l (likely), nl (not
+
+    likely), p (probably), dk (don't know), dc (don't
+
+    care), or a probability factor ranging from 0
+
+    (least certain) to 10 (most certain).
+
+
+
+       Enter a how or a why to see an explanation,
+
+    and to get help, type HELP or ?
+
+
+
+       Please wait...
+
+
+
+
+
+   does washing-the-windows require perceptual abilities
+
+    outside the range of human limits ?
+
+
+
+
+
+   > maybe
+
+       .
+
+       .
+
+       .
+
+(program continues)
+
+
+
+
+
+                             How to Install AESOP
+
+
+
+     AESOP was developed in Franz Lisp on a VAX 11/750 running the VMS
+
+operating system.  The source code should be transferrable to any system with a
+
+Franz Lisp interpreter and can be modified and reloaded as desired.
+
+Alternatively, for those VAXen that do not have a Franz Lisp interpreter, a
+
+lispdump was done to create an executable version of the engine.  This will
+
+still run any user-developed, domain-specific rule base, but would not be
+
+modifiable.  Two different installation procedures are thus described.
+
+
+
+     Systems with a Franz Lisp interpreter:  The system comes with a lisprc.
+     _______ ____ _ _____ ____ ____________
+
+file that will automatically load, run and exit AESOP if LISP is invoked from
+
+the same directory as the lisprc.  file.
+
+
+
+     1.  Create/specify a device and directory to hold the AESOP source code
+
+         and the lisprc.  file and define it at the system level to be the
+
+         logical device AESOP:  For example, $DEFINE DRA0:[AESOP] AESOP:
+
+
+
+     2.  Copy AESOP.LSP, LISPRC., and AESOP.COM into this directory.
+
+
+
+     3.  Define a symbol AESOP :== @AESOP:AESOP.  This can be put in the system
+
+         login file, or defined at the user level.
+
+
+
+This procedure allows a user to type AESOP at the monitor level and invoke the
+
+system.  To specify a rule file not in the AESOP:  directory, the user will
+
+need to specify <directory>filename.ext when queried for the rule file.
+
+
+
+     VAXen without Lisp:
+     _____ _______ _____
+
+
+
+     1.  Create/specify a device and directory to hold the AESOP executable
+
+         image and symbol table file and define it at the system level to be
+
+         the logical device AESOP:  For example, $DEFINE DRA0:[AESOP] AESOP:
+
+
+
+     2.  Copy AESOP.EXE and AESOP.STB into this directory.
+
+
+
+     3.  Define a symbol AESOP :== RUN AESOP:AESOP .  This can be put in the
+
+         system login file, or defined at the user level.
+
+
+
+This procedure allows a user to type AESOP at the monitor level and invoke the
+
+system.  To specify a rule file not in the current default directory, the user
+
+will need to specify <directory>filename.ext when queried for the rule file.
+
+To begin a session, type AESOP at the VAX monitor level.
+
+
+
+          $ AESOP
+
+
+
+In a few seconds, a " -> " prompt will appear.  At this point, type:
+
+
+
+          (start)
+
+
+
+The system will continue as described above.
+

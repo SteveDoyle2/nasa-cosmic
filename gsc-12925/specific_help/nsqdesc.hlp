@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+The N-square chart is a diagram that show the functional breakdown of a project
+and the interrelations of its subtasks.  The number of functions is limited to
+10.  When these are drawn, they are displayed diagonally on the screen to allow
+connection of each box to each box.  Information on an N-square chart flows in
+a clockwise fashion.
+
+The fields which are to be entered are as follows:
+        Title      : Displayed at the top and centered
+        Functions  : Functions to be performed, up to 10, shown on the diagonal
+                     in boxes
+        Connectors : Data connections between functions, shown in boxes or
+                     circles with lines connected to related functions
+        Footnotes  : Up to 3, located at bottom of chart
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

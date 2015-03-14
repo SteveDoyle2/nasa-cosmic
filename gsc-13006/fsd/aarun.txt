@@ -1,0 +1,38 @@
+            *****************************************
+             FLEXIBLE SPACECRAFT DYNAMICS PROGRAM V
+            *****************************************
+
+
+    This is the Flexible Spacecraft Dynamics Program V, modified
+  to run on the VAX 11/780 VMS 3.7 . FSD was written by AVCO and
+  modified to run on the VAX by ODSI. 
+      
+    For questions concerning how to create an input data file see 
+  "A user's guide to the FLEXIBLE SPACECRAFT DYNAMICS PROGRAM-V".
+    
+    The executable image is called FSD.EXE . The image will look 
+  for the data in FOR004.DAT . An example of a data set can be 
+  found under EXAMPLE.DAT . An example of fsd output can be found 
+  under EXAMPLE.OUT .
+
+    To run fsd, you first assign the input data file to FOR004, 
+  then run FSD.
+
+    ASSIGN EXAMPLE.DAT FOR004
+    RUN FSD
+
+    To run as a sub-process, you type :
+
+    ASSIGN EXAMPLE.DAT FOR004
+    RUN FSD/OUTPUT=EXAMPLE.DAT
+ 
+    To run batch, you type :
+
+    SUBMIT SUBMITFSD/PARAMETER=([FSD]EXAMPLE.DAT)     
+
+    SUBMITFSD.COM is a very basic command procedure. It looks for
+  the FSD executeable in FSDHOME, and needs the directory the data
+  file is in as well as the name of the data file.
+
+    The command procedures needed to run FSD batch through a card
+  reader can be found under AACARDS.TXT and RUNFSD.COM .

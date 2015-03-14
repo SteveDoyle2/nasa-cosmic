@@ -1,0 +1,71 @@
+[NQCJP.COSMIC.TAPE8706]SWCHANGES.TXT             JUNE 12, 1987
+
+
+
+         QUIKVIS CHANGES:  JULY, 1986 TO THE PRESENT
+         -------------------------------------------
+
+
+The QUIKVIS version submitted to cosmic in the summer of
+1986 has been included in the COSMIC inventory(GSC-13083). 
+Changes since then have been in capability, formatting,
+error correction, and structure. 
+
+
+
+CAPABILITY CHANGES
+------------------
+
+The ability to create a 'Detailed Data File' has been added.
+Four levels of increasingly detailed information about
+program results are available.  This file can be used by
+special purpose programs to post-process intermediate
+results in ways not anticipated in the QUIKVIS design.  The
+file format is given in the user's guide. 
+
+
+
+
+FORMATTING
+----------
+
+The format of some user input has been changed to
+accommodate the new detailed data file option. 
+
+The formats of some prompt messages have been changed. 
+
+The format of printed detail data has had several minor
+changes for the sake of convenience in reading the results. 
+
+The format for reporting the values of program controls has
+been changed. 
+
+An explanation telling how to interpret sky survey output
+has been added to pages containing sky survey grids. 
+
+
+
+
+ERROR CORRECTION
+----------------
+
+A subroutine, ANGLAP, had a design error and has been
+replaced.  The error little or no chance of occurring, but
+if it had, it would have affected the results and gone
+undetected.  Such a routine should not be present.  Also,
+the erroneous routine could be used in later software and
+propagate the error. 
+
+
+
+
+STRUCTURE
+---------
+
+A scratch data file is used to save and retrieve
+intermediate results during processing.  Formerly, multiple
+routines wrote to and read from this file.  A new
+subroutine, QUIKVIS5U, has been written which contains one
+read statement and one write statement for the file. 
+Routines that formerly wrote or read the file directly now
+call the new subroutine. This was a minor structural change.

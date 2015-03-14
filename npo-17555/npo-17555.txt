@@ -1,0 +1,57 @@
+ CUMBIN - CUMULATIVE BINOMIAL PROGRAMS
+
+( Cal Tech/Jet Propulsion Lab. )
+
+     The cumulative binomial program, CUMBIN, is one of a set of three pro-
+grams which calculate cumulative binomial probability distributions for
+arbitrary inputs. The three programs, CUMBIN, NEWTONP (NPO-17556), and
+CROSSER (NPO-17557), can be used independently of one another. CUMBIN can
+be used by statisticians and users of statistical procedures, test plan-
+ners, designers, and numerical analysts. The program has been used for re-
+liability/availability calculations.
+
+     CUMBIN calculates the probability that a system of n components has
+at least k operating if the probability that any one operating is p and the
+components are independent. Equivalently, this is the reliability of a k-
+out-of-n system having independent components with common reliability p.
+CUMBIN can evaluate the incomplete beta distribution for two positive inte-
+ger arguments. CUMBIN can also evaluate the cumulative F distribution and
+the negative binomial distribution, and can determine the sample size in a
+test design. CUMBIN is designed to work well with all integer values 0 < k <=
+n. To run the program, the user simply runs the executable version and in-
+puts the information requested by the program. The program is not designed
+to weed out incorrect inputs, so the user must take care to make sure the in-
+puts are correct. Once all input has been entered, the program calculates
+and lists the result.
+
+     The CUMBIN program is written in C. It was developed on an IBM AT with
+a numeric co-processor using Microsoft C 5.0. Because the source code is
+written using standard C structures and functions, it should compile cor-
+rectly with most C compilers. The program format is interactive. It has
+been implemented under DOS 3.2 and has a memory requirement of 26K. CUMBIN
+was developed in 1988.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: C-LANGUAGE
+
+MACHINE REQUIREMENTS: IBM PC SERIES
+
+PROGRAM SIZE: APPROXIMATELY 89 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 5.25 Inch IBM PC DOS Format Diskette
+
+PROGRAM NUMBER: NPO-17555
+
+DOMESTIC - DOCUMENTATION PRICE: $15.00    PROGRAM PRICE: $150.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $30.00   PROGRAM PRICE: $300.00
+
+
+
+                                        1
+

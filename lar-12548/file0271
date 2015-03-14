@@ -1,0 +1,573 @@
+PROGRAM CGG(INPUT,OUTPUT);
+
+CONST MAXDOMS = 15; 
+      MAXCONDX = 15;
+      MAXSTATES = 250;
+      MAXTRANS = 15;
+      MAXTSTATES = 15;
+      MAXDSTATES = 15;
+      MAXCHARS = 1000;
+
+TYPE
+    DOMRNG = 1..MAXDOMS;
+    CONDRNG = -1..MAXCONDX; 
+    STATERNG = 0..MAXSTATES;
+    TRANSRNG = 0..MAXTRANS; 
+    TSTATERNG = 1..MAXTSTATES;
+    DSTATERNG = 1..MAXDSTATES;
+
+    TUPLE = ARRAY[DOMRNG] OF CONDRNG; 
+
+    TXT = RECORD
+            LEN % INTEGER;
+            LOC % INTEGER 
+          END;
+    
+    TREEPTR = ^TREENODE;
+
+    TREENODE = RECORD 
+                 TOSTATE,TRANUM % INTEGER;
+                 LINK % TREEPTR 
+               END; 
+
+VAR 
+   DEBUG%BOOLEAN; 
+
+   DOMS % ARRAY[DOMRNG] OF
+             RECORD 
+                DOMAIN % ALFA;
+                DOMCNDX % ARRAY[CONDRNG] OF BOOLEAN 
+             END; 
+
+   CONDX % ARRAY[CONDRNG] OF
+              RECORD
+                 CONDNAME % ALFA; 
+                 CONDTYPE % (INTERNAL,EXTERNAL) 
+              END;
+
+   TERMSTATES % ARRAY[TSTATERNG] OF 
+                   RECORD 
+                      TEXT % TXT; 
+                      NTUPLE % TUPLE
+                   END; 
+
+   DSTATES % ARRAY[DSTATERNG] OF TUPLE; 
+
+   TRANSTAB % ARRAY[TRANSRNG] OF
+                 RECORD 
+                    TRANTEXT % TXT; 
+                    FROMTUP,TOTUP % TUPLE 
+                 END; 
+
+   TEXTSTUFF % ARRAY[1..MAXCHARS] OF CHAR;
+
+   STS % ARRAY[STATERNG] OF 
+            RECORD
+              STATETABLE % TUPLE; 
+              TREEGUYS   % TREEPTR; 
+              CASE TERMSTATE % BOOLEAN OF 
+           TRUE % (TNUM % INTEGER); 
+          FALSE % (TRANS% TRANSRNG; 
+                  NEXTST% STATERNG) 
+            END;
+
+   NDOMS,NCONDS,NTSTATES,NTRANS,TPTR % INTEGER; 
+   NDSTATES,INITSIZE,STSIZE % INTEGER;
+   CH % CHAR; 
+
+  PROCEDURE ERROR(I % INTEGER); 
+  BEGIN 
+  WRITELN;WRITE(' ERROR ',I%5); 
+  CASE I OF 
+   1%WRITELN(' FROM GETUPLE% ILLEGAL PREDICATE-ARGUMENT COMBINATION');
+   2%WRITELN(' FROM SEARCHCONDS%PREDICATE NOT FOUND');
+   3%WRITELN(' FROM GETSTARTRANS% SYNTAX ERROR ');
+   100%WRITELN(' FROM SETPATHS% UNSOLVABLE INITIAL STATE ENCOUNTERED'); 
+  END; (* CASE *) 
+     HALT 
+  END (* ERROR *) ; 
+  
+  PROCEDURE NEXTCH; 
+  BEGIN 
+     CH %= INPUT^; GET(INPUT);
+     WRITE(CH)
+  END (* NEXTCH *) ;
+
+  PROCEDURE NEXTWORD(VAR X % ALFA); 
+  VAR I % INTEGER;
+  BEGIN 
+     X %= '          '; I %= 1; 
+     REPEAT 
+        IF I <= 10 THEN 
+           BEGIN X[I] %= CH; I %= I + 1 END;
+        NEXTCH
+     UNTIL NOT (CH IN ['A'..'Z','0'..'9','_']); 
+   IF DEBUG THEN WRITELN(' DBG%NEXTWORD%X = ',X); 
+  END (* NEXTWORD *) ;
+
+  PROCEDURE SEARCHCONDS(A % ALFA; VAR B % INTEGER); 
+  LABEL 1;
+  VAR I % INTEGER;
+  BEGIN 
+   IF DEBUG THEN WRITELN(' DBG%SEARCHCONDS%A = ',A);
+     FOR I %= 1 TO NCONDS DO
+        IF CONDX[I].CONDNAME = A THEN 
+           GOTO 1;
+     ERROR(2);
+  1%  
+     B %= I 
+  END (* SEARCHCONDS *) ; 
+
+  PROCEDURE GETUPLE(VAR T1 % TUPLE);
+  LABEL 1;
+  VAR 
+     Z % ALFA;
+     I,J % INTEGER; 
+  BEGIN 
+     FOR I %= 1 TO MAXDOMS DO 
+        T1[I] %= 0; 
+     I %= 1;
+     WHILE TRUE DO
+        BEGIN 
+        WHILE CH = ',' DO 
+           BEGIN I %= I + 1; NEXTCH END;
+        IF CH = ')' THEN
+           GOTO 1;
+        NEXTWORD(Z); SEARCHCONDS(Z , J);
+        IF NOT DOMS[I].DOMCNDX[J] THEN
+           ERROR(1);
+        T1[I] %= J; 
+        END;
+     1% 
+     READLN; WRITELN; WRITE(' '); 
+  END (* GETUPLE *) ; 
+  
+ PROCEDURE GETSTARTRANS(VAR PRED%ALFA); 
+ BEGIN
+  NEXTWORD(PRED); (* CH MUST CONTAIN 1ST CHAR OF THE PRED INITIALLY *)
+  IF DEBUG THEN WRITELN(' DBG%GETSTARTRANS%PRED= ',PRED); 
+  IF CH <> '*' THEN ERROR(3)
+  ELSE
+  BEGIN 
+  NEXTCH; 
+   READLN;WRITELN;WRITE(' '); 
+  END;
+ END; (*GETSTARTRANS*)
+  
+ PROCEDURE PUTUPLES(I%DOMRNG;PRED1IX,PRED2IX%CONDRNG;STARTXT%TXT);
+ VAR J%DOMRNG;
+ BEGIN
+  NTRANS%=NTRANS+1; 
+  WITH TRANSTAB[NTRANS] DO
+  BEGIN 
+   FOR J%=1 TO MAXDOMS DO 
+    BEGIN FROMTUP[J]%=0; TOTUP[J]%=0; END;
+   FROMTUP[I]%=PRED1IX; 
+   TOTUP[I]%=PRED2IX; 
+   TRANTEXT%=STARTXT; 
+  END;
+ END; (* PUTUPLES *)
+  
+
+
+  PROCEDURE ENTERDOMS;
+  BEGIN 
+     NDOMS %= 0;
+     REPEAT 
+        NDOMS %= NDOMS + 1; 
+        NEXTCH; 
+        NEXTWORD(DOMS[NDOMS].DOMAIN)
+     UNTIL CH <> ','; 
+     READLN; WRITELN; WRITE(' ')
+  END (* ENTERDOMS *) ; 
+
+  PROCEDURE ENTERCONDX; 
+  LABEL 1;
+  VAR I,J % INTEGER; T % ALFA;
+      INTFLAG % BOOLEAN;
+  BEGIN 
+     NCONDS %= 0; 
+     FOR I %= 1 TO NDOMS DO 
+        BEGIN 
+           INTFLAG %= FALSE;
+           FOR J %= 1 TO MAXCONDX DO
+              DOMS[I].DOMCNDX[J] %= FALSE;
+           REPEAT 
+              NEXTCH; 
+              IF CH = '(' THEN
+                 BEGIN NEXTCH; INTFLAG %= TRUE END; 
+              NEXTWORD(T);
+              FOR J %= 1 TO NCONDS DO 
+                 IF CONDX[J].CONDNAME = T THEN
+                    GOTO 1; 
+              NCONDS %= NCONDS + 1; 
+              WITH CONDX[NCONDS] DO 
+                 BEGIN
+                 CONDNAME %= T; 
+                 IF INTFLAG THEN
+                    CONDTYPE %= INTERNAL
+                 ELSE CONDTYPE %= EXTERNAL
+                 END; 
+              J %= NCONDS;
+            1%DOMS[I].DOMCNDX[J] %= TRUE; 
+           UNTIL CH <> ','; 
+           READLN; WRITELN; WRITE(' ')
+        END 
+  END (* ENTERCONDX *) ;
+
+  PROCEDURE GETEXT(VAR X % TXT);
+  VAR I % INTEGER;
+  BEGIN 
+     X.LOC %= TPTR; 
+     I %= 0;
+     NEXTCH;
+     WHILE CH <> ' ' DO 
+        BEGIN I%=I+1; TEXTSTUFF[TPTR]%=CH; TPTR%=TPTR+1;
+              NEXTCH END; 
+    X.LEN %= I; 
+    READLN; WRITELN; WRITE(' ') 
+  END (* GETEXT *) ;
+
+  PROCEDURE ENTERTERMSTATES;
+  BEGIN 
+     NTSTATES %= 0; NEXTCH; 
+     WHILE CH = '(' DO
+        BEGIN 
+        NTSTATES %= NTSTATES + 1; 
+        WITH TERMSTATES[NTSTATES] DO
+           BEGIN
+           NEXTCH; GETUPLE(NTUPLE); 
+           GETEXT(TEXT);
+           END; 
+        NEXTCH; 
+        END 
+  END (* ENTERTERMSTATES *) ; 
+
+  PROCEDURE ENTERTRANSITIONS; 
+  VAR PRED1,PRED2%ALFA; STARTXT%TXT;
+      PRED1IX,PRED2IX,I% INTEGER; 
+  BEGIN 
+     NTRANS %= 0; 
+     READLN; WRITELN; WRITE(' '); 
+     NEXTCH;
+     WHILE CH = '(' DO
+   BEGIN
+    NEXTCH; (* SKIP TO CHAR FOLLOWING THE (   *)
+    IF CH='*' THEN
+    BEGIN 
+     NEXTCH; (* SKIP TO CHAR AFTER *    *)
+     GETSTARTRANS(PRED1); 
+   NEXTCH;  (* CH IS '('  *)
+   NEXTCH;  (* CH IS *  *)
+   NEXTCH;  (* CH IS 1ST LETTER *)
+
+     GETSTARTRANS(PRED2); 
+     GETEXT(STARTXT);NEXTCH; (* CH IS '(' FROM NEXT LINE *) 
+     SEARCHCONDS(PRED1,PRED1IX);
+     SEARCHCONDS(PRED2,PRED2IX);
+     FOR I%=1 TO NDOMS DO 
+      BEGIN 
+       IF DOMS[I].DOMCNDX[PRED1IX] AND DOMS[I].DOMCNDX[PRED2IX] 
+       THEN PUTUPLES(I,PRED1IX,PRED2IX,STARTXT);
+      END;
+     END
+    ELSE
+        BEGIN 
+        NTRANS %= NTRANS + 1; 
+        WITH TRANSTAB[NTRANS] DO
+           BEGIN
+            GETUPLE(FROMTUP); 
+           NEXTCH; NEXTCH; GETUPLE(TOTUP);
+           GETEXT(TRANTEXT) 
+           END; 
+        NEXTCH
+        END;
+  END;
+     READLN; WRITELN; WRITE(' ')
+  END (* ENTERTRANSITIONS *) ;
+
+  PROCEDURE ENTERDSTATES; 
+  BEGIN 
+     NEXTCH; NDSTATES %= 0; 
+     WHILE CH = '(' DO
+        BEGIN 
+        NDSTATES %= NDSTATES + 1; 
+        NEXTCH; 
+        GETUPLE(DSTATES[NDSTATES]); 
+        NEXTCH
+        END 
+  END (* ENTERDSTATES *) ;
+
+  PROCEDURE INITSTS;
+  VAR 
+    IC,IK,IP,I,J,K % INTEGER; 
+   PERIOD%ARRAY[DOMRNG] OF STATERNG;
+  BEGIN 
+     IC %= 1; 
+     FOR I %= 1 TO NDOMS DO 
+        BEGIN 
+        IK %= 0;
+        FOR J %= 1 TO NCONDS DO 
+           IF DOMS[I].DOMCNDX[J] THEN 
+              IF CONDX[J].CONDTYPE = EXTERNAL THEN
+                 IK %= IK + 1;
+              PERIOD[I]%=IC;
+        IC %= IC * IK 
+        END;
+     STSIZE %= IC; INITSIZE %= STSIZE; IK %= 1; 
+     FOR I %= 1 TO NDOMS DO 
+        BEGIN 
+        IP %= 0;
+        REPEAT
+           FOR J %= 1 TO NCONDS DO
+              IF DOMS[I].DOMCNDX[J] THEN
+                 IF CONDX[J].CONDTYPE = EXTERNAL THEN 
+                    FOR K %= 1 TO PERIOD[I] DO
+                       BEGIN
+                       IP %= IP + 1;
+                       STS[IP].STATETABLE[I] %= J 
+                       END
+        UNTIL IP = STSIZE;
+        END 
+  END (* INITSTS *) ; 
+
+  PROCEDURE APPLYTRANSITIONS; 
+  CONST BADPATH = 10000;
+  VAR I % INTEGER;
+
+     FUNCTION EQUAL(P1,P2 % TUPLE) % BOOLEAN; 
+     LABEL 1; 
+     VAR I % INTEGER; 
+     BEGIN
+       FOR I %= 1 TO NDOMS DO 
+           IF (P1[I]<>0) AND (P2[I]<>0) THEN
+              IF P1[I] <> P2[I] THEN
+                 BEGIN EQUAL %= FALSE; GOTO 1 END;
+        EQUAL %= TRUE;
+     1% 
+     END (* EQUAL *) ;
+  
+     PROCEDURE EXPAND(P1 % INTEGER);
+     LABEL 1; 
+     VAR I % INTEGER; 
+
+        PROCEDURE APPLY(STATE,TRAN % INTEGER);
+        LABEL 1;
+        VAR 
+          X%TUPLE; TP%TREEPTR; I%INTEGER; 
+        BEGIN 
+           WITH TRANSTAB[TRAN] DO 
+              FOR I %= 1 TO NDOMS DO
+                 IF TOTUP[I] <> 0 THEN
+                    X[I] %= TOTUP[I]
+                 ELSE X[I] %= STS[STATE].STATETABLE[I]; 
+           FOR I %= 1 TO STSIZE DO
+              IF EQUAL(STS[I].STATETABLE,X) THEN
+                 GOTO 1;
+           STSIZE %= STSIZE + 1; I %= STSIZE; 
+           WITH STS[I] DO 
+              BEGIN 
+              STATETABLE %= X;
+              TREEGUYS %= NIL;
+              TERMSTATE %= FALSE; 
+              TRANS %= 0; 
+              NEXTST %= 0 
+              END;
+         1%NEW(TP); 
+           WITH TP^ DO
+              BEGIN 
+              TOSTATE %= I; 
+              TRANUM %= TRAN; 
+              LINK %= STS[STATE].TREEGUYS 
+              END;
+           STS[STATE].TREEGUYS %= TP
+        END (* APPLY *) ; 
+
+     BEGIN
+        WITH STS[P1] DO 
+        BEGIN 
+        FOR I %= 1 TO NDSTATES DO 
+           IF EQUAL(STATETABLE,DSTATES[I]) THEN 
+              GOTO 1; 
+        FOR I %= 1 TO NTSTATES DO 
+           IF EQUAL(STATETABLE,TERMSTATES[I].NTUPLE)
+              THEN BEGIN TERMSTATE%=TRUE; TNUM%=I; GOTO 1 END;
+        FOR I %= 1 TO NTRANS DO 
+           IF EQUAL(STATETABLE,TRANSTAB[I].FROMTUP) 
+              THEN APPLY(P1,I); 
+        END;
+     1% 
+     END (* EXPAND *) ; 
+
+     PROCEDURE SETPATHS;
+     VAR X,Y % TREEPTR; 
+         I,J,K % INTEGER; 
+  
+        PROCEDURE SHORTPATH(FROM%INTEGER; VAR COST % INTEGER);
+        LABEL 1;
+        VAR I,J%INTEGER;
+            X%TREEPTR;
+        BEGIN 
+           WITH STS[FROM] DO
+           BEGIN
+           X %= TREEGUYS; 
+           IF X = NIL THEN
+              BEGIN 
+              IF TERMSTATE THEN 
+                 COST %= 0
+              ELSE COST %= BADPATH; 
+              GOTO 1
+              END;
+           I %= BADPATH;
+           REPEAT 
+              SHORTPATH(X^.TOSTATE,J);
+              IF J < I THEN 
+                 I %= J;
+              X %= X^.LINK
+           UNTIL X = NIL; 
+           COST %= I + 1; 
+         1%END
+        END (* SHORTPATH *) ; 
+
+     BEGIN
+        FOR I %= 1 TO STSIZE DO 
+           WITH STS[I] DO 
+              BEGIN 
+              IF TREEGUYS <> NIL THEN 
+                 BEGIN
+                 X %= TREEGUYS; Y %= NIL; J %= BADPATH; 
+                 REPEAT 
+                    SHORTPATH(X^.TOSTATE,K);
+                    IF K < J THEN 
+                       BEGIN
+                       Y %= X;
+                       J %= K 
+                       END; 
+                     X %= X^.LINK 
+                 UNTIL X = NIL; 
+                 IF J < BADPATH THEN
+                    BEGIN 
+                    TRANS %= Y^.TRANUM; 
+                    NEXTST %= Y^.TOSTATE
+                    END 
+                 END; 
+              IF I < INITSIZE THEN
+                 (* CHECK THAT EVERY INITIAL STATE *)           
+                 (*         CAN BE SOLVED          *) 
+                 IF (TRANS = 0) AND NOT TERMSTATE THEN
+                    ERROR(100); 
+           END
+     END (* SETPATHS *) ; 
+  
+  BEGIN 
+     FOR I %= 1 TO STSIZE DO
+        STS[I].TREEGUYS %= NIL; 
+     I %= 1;
+     REPEAT 
+        EXPAND(I);
+        I %= I + 1
+     UNTIL I = STSIZE;
+     SETPATHS 
+  END (* APPLYTRANSITIONS *) ;
+
+  PROCEDURE PRINTSTS; 
+  VAR X % TREEPTR; I,J % INTEGER; 
+  BEGIN 
+     FOR I %= 1 TO STSIZE DO
+        WITH STS[I] DO
+        BEGIN 
+        WRITELN;
+        WRITE(I % 3, '   ');
+        FOR J %= 1 TO NDOMS DO
+           WRITE(STATETABLE[J] % 3);
+        WRITE(' '%5); 
+        X %= TREEGUYS;
+        WHILE X <> NIL DO 
+           WITH X^ DO 
+              BEGIN 
+                 WRITE('  (',TRANUM%0,',',TOSTATE%0,')'); 
+                 X %= LINK
+              END 
+        END;
+     WRITELN; WRITELN; WRITELN; 
+     FOR I %= 1 TO STSIZE DO
+        WITH STS[I] DO
+        BEGIN 
+        WRITELN;
+        WRITE(I % 3, '   ');
+        FOR J %= 1 TO NDOMS DO
+           WRITE(STATETABLE[J] % 3);
+        WRITE(' '%5); 
+        IF TERMSTATE THEN 
+           WRITE('*',TNUM % 0,'*')
+        ELSE
+        WRITE(TRANS%3,NEXTST%3) 
+        END 
+  END (* PRINTSTS *) ;
+
+  PROCEDURE DECIDE; 
+  VAR I,J % INTEGER;
+
+     PROCEDURE PUT(X % TXT);
+     VAR I % INTEGER; 
+     BEGIN
+        WITH X DO 
+        BEGIN 
+        WRITELN; WRITE(' ');
+        FOR I %= LOC TO LOC+LEN-1 DO
+           WRITE(TEXTSTUFF[I]); 
+        WRITE(';')
+        END 
+     END (* PUT *) ;
+
+     PROCEDURE TESTS(X % INTEGER);
+     VAR I % INTEGER; 
+         A % BOOLEAN; 
+     BEGIN
+         WITH STS[X] DO 
+        BEGIN 
+        A %= FALSE; WRITELN;
+        WRITE(' IF ');
+        FOR I %= 1 TO NDOMS DO
+           BEGIN
+           IF A THEN WRITE(' AND ') 
+                ELSE A %= TRUE; 
+           WRITE(CONDX[STATETABLE[I]].CONDNAME);
+           WRITE('(',DOMS[I].DOMAIN,')')
+           END; 
+     WRITELN(' THEN '); WRITELN(' BEGIN '); 
+        END 
+     END (* TESTS *) ;
+  
+  BEGIN 
+     WRITELN; WRITELN; WRITELN; 
+     FOR I %= 1 TO INITSIZE DO
+        WITH STS[I] DO
+        BEGIN 
+        TESTS(I); J %= I; 
+        WHILE NOT STS[J].TERMSTATE DO 
+           BEGIN
+           PUT(TRANSTAB[STS[J].TRANS].TRANTEXT);
+           J %= STS[J].NEXTST 
+           END; 
+        PUT(TERMSTATES[STS[J].TNUM].TEXT);
+        WRITELN; WRITE(' END'); 
+        IF I = INITSIZE THEN WRITE(';') 
+                        ELSE WRITE(' ELSE') 
+        END 
+  END (* DECIDE *) ;
+  
+BEGIN 
+   DEBUG%=FALSE;
+   TPTR %= 1; 
+   WRITE(' ');
+   ENTERDOMS; 
+   ENTERCONDX;
+   ENTERTERMSTATES; 
+   ENTERTRANSITIONS;
+   ENTERDSTATES;
+   INITSTS; 
+   APPLYTRANSITIONS;
+   PRINTSTS;
+   DECIDE 
+END.

@@ -1,0 +1,152 @@
+interface;
+  unit plpas(plinit,plpoint,plline,plbar,plsymbol,
+                                pltext,plcircle,plfinish);
+
+type data = lstring(255);
+
+procedure plinit;
+
+{ Initialization procedure for plotter; initializes serial interface,
+	turns plotter logically on.  }
+
+procedure plpoint(x1,y1,pcolor:integer);
+
+{ Move pen to coordinates (x1,y1).  }
+
+procedure plline(x1,y1,x2,y2,lcolor,ndon,ndoff:integer);
+
+{ Draw line between two points (x1,y1) and (x2,y2) with line type
+        PATTERN and length of dashes (if any) DASH_LENGTH.  The
+        different line types are:
+
+        1: solid line        ________________________________
+        2: dashed line       ____   ____   ____   ____   ____
+        3: modified dashes   ____ _ ____ _ ____ _ ____ _ ____
+}
+
+procedure plbar(x1,y1,x2,y2,bcolor,fill:integer);
+
+{ Draws bar with corners (x1,y1), (x2,y1), (x2,y2), (x1,y2), with
+        one of 7 different types of shading, with variable spacing.
+        The shadings are:
+
+          0: clear            ----------------------
+                              |                    |
+                              |                    |
+                              |                    |
+                              |                    |
+                              ----------------------
+
+
+          1: vertical         ----------------------
+                              |  |  |  |  |  |  |  |
+                              |  |  |  |  |  |  |  |
+                              |  |  |  |  |  |  |  |
+                              |  |  |  |  |  |  |  |
+                              ----------------------
+
+
+          2: horizontal       ----------------------
+                              |--------------------|
+                              |--------------------|
+                              |--------------------|
+                              |--------------------|
+                              ----------------------
+
+
+          3: plaid            ----------------------
+                              |--|--|--|--|--|--|--|
+                              |--|--|--|--|--|--|--|
+                              |--|--|--|--|--|--|--|
+                              |--|--|--|--|--|--|--|
+                              ----------------------
+
+
+          4: diagonal1        ----------------------
+                              |/ / / / / / / / / / |
+                              | / / / / / / / / / /|
+                              |/ / / / / / / / / / |
+                              | / / / / / / / / / /|
+                              ----------------------
+
+
+          5: diagonal2        ----------------------
+                              | \ \ \ \ \ \ \ \ \ \|
+                              |\ \ \ \ \ \ \ \ \ \ |
+                              | \ \ \ \ \ \ \ \ \ \|
+                              |\ \ \ \ \ \ \ \ \ \ |
+                              ----------------------
+
+
+          6: diagonal1,2      ----------------------
+                              |/\/\/\/\/\/\/\/\/\/\|
+                              |\/\/\/\/\/\/\/\/\/\/|
+                              |/\/\/\/\/\/\/\/\/\/\|
+                              |\/\/\/\/\/\/\/\/\/\/|
+                              ----------------------
+
+
+}
+
+
+procedure plsymbol(x1,y1,scolor,id1,id2,scale:integer);
+
+{ Draws one of 4 symbols with the lower left corner at (x1,y1),
+        and with height of HEIGHT.  The symbols are:
+ 
+          1: triangle 1:                 /\
+                                        /  \
+                                       /    \
+                                      /      \
+                                      --------
+
+
+          2: circle                    ------
+                                      /      \
+                                     |        |
+                                      \      /
+                                       ------
+
+
+          3: triangle2                --------
+                                      \      /
+                                       \    /
+                                        \  /
+                                         \/
+
+
+          4: star                      __/\__
+                                       \    /
+                                       /_/\_\
+
+
+}
+
+procedure pltext(x1,y1,size,tcolor:integer;chars:data;charslen,angle:integer);
+
+{ Write string CHARS on plot space, at point(x1,y1), with character
+        size (0-3), at an angle of ANGLE, and write charslen many characters  }
+
+procedure plcircle(cx,cy,radius,starting_angle,ending_angle,ccolor,fill:integer);
+
+{ Draws circle or pie shaped wedge with the center at cx,cy, having
+        a radius of RADIUS, with given STARTING_ANGLE and 
+        ENDING_ANGLE.  The degrees in the system are:
+
+                             90
+                              ^
+                              |
+                       180 ---+--- 0
+                              |
+                              v
+                             270
+
+}
+
+procedure plfinish;
+
+{ Plot completed.  Return pen, move pen to home position.  }
+
+begin
+end;
+

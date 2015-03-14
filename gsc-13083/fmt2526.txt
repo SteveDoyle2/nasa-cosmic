@@ -1,0 +1,158 @@
+   FILE NAME = FMT2526.TXT                7/25/86
+                              NO CHANGES  6/11/87
+
+
+
+
+
+      Plot Data File Format for QUIKVIS units 25 and 26
+      -------------------------------------------------
+
+
+
+The QUIKVIS output data files 25 and 26 were written according to the
+format described here.  One can change the file contents using a text
+editor. 
+
+
+The following is a sample data file taken from the user guide of the
+program that reads and plots the data in the system from which QUIKVIS
+comes.  Except for illustrating the file format, the example is
+unrelated to QUIKVIS. 
+
+
+
+   EXAMPLE
+   -------
+       
+               >        2
+   TITLE INFO  >        WEATHER INFORMATION
+               >        DATA TAKEN AT STATION 14
+                 >      1
+   COMMENT INFO  >      INSTRUMENT CALIBRATION BYPASSED
+                   >    4
+                   >    TIME IN HOURS
+   PARAMETER NAMES >    TEMPERATURE FARENHEIT           
+                   >    PRESSURE IN INCHES OF MERCURY   
+                   >    RELATIVE HUMIDITY IN PERCENT    
+                 >      MAY 1, 1984                         
+                 >      0., 49., 29.5, 53.1,                
+                 >      1., 48., 29.4, 53.0,                
+   DATA GROUP 1  >      3., 47., 29.4, 53.2,                
+                 :      :
+                 :      :
+                 :      :
+                 :      :
+                 >      24., 53., 30.2, 55.,                
+                 >      /                                   
+                   >    JUNE 1, 1984                
+                   >    0., 65., 30., 60.,          
+                   >    2., 63., 30., 58.,          
+   DATA GROUP 2    >    5., 62., 29.5, 58.,         
+                   :    :
+                   :    :
+                   :    :
+                   :    :
+                   >    23.,  68., 28., 57.,        
+                   >    /                           
+
+
+
+FORMAT
+------
+
+
+The data file consists of several header records containing title,
+comment, and parameter name information.  These are followed by one or
+more data groups.  Each group consists of a legend, one or more data
+records, and a slash(/) after the last data record in the group.  A data
+record contains as many values as there are parameter names defined,
+no more and no less. The format is designed to facilitate list-directed
+reading. 
+
+
+     1a. number of title records;  value = NTITLE
+     1b. title records (if NTITLE=0, no record is present);
+
+
+     2a. number of comment records, value = NCOMMENTS
+     2b. comment records (if NCOMMENTS=0, no record is present);
+
+
+     3a. number of parameter name records, value = NPARAMS
+     3b. parameter name records, one name per record;
+
+
+     4a. legend for data group 1;
+     4b. data for group 1 : (vi is value of i'th parameter in item 3)
+            4b.1    v1, v2, v3, ......, vNPARAMS, (first set of values)
+            4b.2    v1, v2, v3, ......, vNPARAMS, (second set of values)
+            4b.3    v1, v2, v3, ......, vNPARAMS, (third set of values)
+              :     :   :   :           :
+              :     :   :   :           :
+              :     :   :   :           :
+              :     :   :   :           :
+            4b.N    v1, v2, v3, ......, vNPARAMS, (N'set of values)
+     4c.            /   (the slash character)
+
+
+     5a. legend for data group 2;
+     5b. data for group 2 : (vi is value of i'th parameter in item 3)
+            5b.1    v1, v2, v3, ......, vNPARAMS, (first set of values)
+            5b.2    v1, v2, v3, ......, vNPARAMS, (second set of values)
+            5b.3    v1, v2, v3, ......, vNPARAMS, (third set of values)
+              :     :   :   :           :
+              :     :   :   :           :
+              :     :   :   :           :
+              :     :   :   :           :
+            5b.M    v1, v2, v3, ......, vNPARAMS, (M'set. Max M= MAXPTS)
+     5c.            /   (the slash character)
+
+
+     6a. legend for group 3;
+        ETC
+        ETC
+        ETC
+
+
+For QUIKVIS, the following applies:
+
+    unit     number    number    number          number
+               of        of        of              of
+              title   comment  parameter          data
+              lines    lines     lines           groups
+
+     25         3        3         3   (number dates)*(number targets)
+
+     26         2        3         2       2 * (number of targets)
+
+
+See the unit 25 and 26 examples in QUIKVIS.TXT for specific information
+on the actual titles, comments, parameter names, and legends.
+
+The title, comment, and parameter name information are written by
+subroutine QUIKVIS5A1.  The legend record and accompanying data values
+are written by subroutine QUIKVIS5A2B.
+
+
+
+
+
+
+
+
+                ***************************
+                *                         *
+                *         END             *
+                *                         *
+                *       of the            *
+                *                         *
+                *  Plot Data File Format  *
+                *                         *
+                *      Descripton         *
+                *                         *
+                *     for QUIKVIS         *
+                *                         *
+                *    units 25 and 26      *
+                *                         *
+                ***************************

@@ -1,0 +1,1032 @@
+      PROGRAM SOPAD
+C
+C     SEPARATION OF OVERLAPPING PEAKS AND ANALYSIS OF DERIVATIVES
+C
+C
+      COMMON/XYPPTS/NUPO,XPO(502),YPO(502),XPPO(502),YPPO(502),TERMI,
+     1DELW,NUPPO,MINSWI,SPRMAX,SPRMIN
+      COMMON/GUESS/NPAM,G(48),IP,POSI(30),KTIL(20)
+      COMMON/MINSQP/IFP,IWS2,IWS3,IWS4,IWS5,IFT,NFMT,NW,R,ALAM,DALAM
+      COMMON/WKAREA/TXPPO(1004),SECOND(502),EXTRA(3500)
+      INTEGER OP1, OP2, OP3, NIH, NISW, NIDW, NIFW
+      DIMENSION FPPO(502),IRAY(6)
+      COMMON/PARTS/IPARTS,NPART
+      CHARACTER XIH*80,XISW*80,XIDW*80,XIFW*80
+      DATA NIH/9/, NISW/18/, NIDW/18/, NIFW/9/, SPRMIN/0.0/, SPRMAX/.0/
+      DATA IRAY/6* -0/
+      DATA XIH/'TWO THETA'/,XISW/'SMOOTHED INTENSITY'/,
+     1XIDW/'SECOND DERIVATIVE'/,XIFW/'INTENSITY'/
+C
+      CALL PSEUDO
+      IRAY(4)=0
+      CALL SYSTEMC (35,IRAY)
+      OPEN (UNIT=5,FILE='PIN')
+      OPEN (UNIT=6,FILE='KOUT')
+C
+C
+      READ (5,170) AL1,AL2,R
+      READ (5,180) OP1,OP2,OP3
+      READ (5,180) NPEAR
+      DO 10 I=1,NPEAR
+   10 READ (5,170) G(4*I-3),G(4*I-2),G(4*I-1),G(4*I)
+      READ (5,170) BCKG
+      READ (5,180) NUPO
+      DO 20 I = 1,NUPO
+      READ (5,170) XPO(I),YPO(I)
+   20 YPO(I)=YPO(I)-BCKG
+C
+C     ABOVE READ IS THE FINAL READ STATEMENT IN PROGRAM                 00038
+C                                                                       00039
+      NPAM=4*NPEAR                                                      00040
+      ALAM=AL1                                                          00041
+      DALAM=AL1-AL2                                                     00042
+C     ******************************************************************00043
+C     *                                                                *00044
+C     * CALCULATE SMOOTHED INTENSITIES AND SECOND DERIVATIVE           *00045
+C     *                                                                *00046
+C     ******************************************************************00047
+C                                                                       00048
+      CALL SMTH2ND                                                      00049
+C                                                                       00050
+      DO 30 I=1,NUPPO-8                                                 00051
+   30 TXPPO(I)=XPPO(I+4)                                                00052
+C     ******************************************************************00053
+C     *                                                                *00054
+C     * PLOT INTENSITIES                                               *00055
+C     *                                                                *00056
+C     ******************************************************************00057
+      IF (OP1.NE.1) GOTO 60                                             00058
+      YMIN=YPPO(1)                                                      00059
+      YMAX=YPPO(1)                                                      00060
+      XMAX=XPPO(1)                                                      00061
+      XMIN=XPPO(1)                                                      00062
+      DO   40   I=1,NUPPO                                               00063
+      YMIN=AMIN1(YPPO(I),YMIN)                                          00064
+      YMAX=AMAX1(YPPO(I),YMAX)                                          00065
+      XMIN=AMIN1(XPPO(I),XMIN)                                          00066
+   40 XMAX=AMAX1(XPPO(I),XMAX)                                          00067
+      DO 50 I=1,NUPO                                                    00068
+      XMAX=AMAX1(XMAX,XPO(I))                                           00069
+      XMIN=AMIN1(XMIN,XPO(I))                                           00070
+      YMAX=AMAX1(YMAX,YPO(I))                                           00071
+   50 YMIN=AMIN1(YMIN,YPO(I))                                           00072
+C                                                                       00073
+      CALL SCALE(XMIN,XMAX,YMIN,YMAX,XA,YA)                             00074
+C                                                                       00075
+      CALL NFRAME (0.,15.)                                              00076
+      CALL LEROY                                                        00077
+      CALL CALPLT (1.,1.,-3)                                            00078
+      YD=(YMAX-YMIN)/6.180                                              00079
+      XD=(XMAX-XMIN)/10.                                                00080
+      CALL AXES (0.,0.,0.,10.,XMIN,XD,10./XA,.4*XA,XIH,.15,-NIH,2)      00081
+      CALL AXES (0.,0.,90.,6.18,YMIN,YD,6.180/YA,4.*YA/6.18,XISW,.15,   00082
+     1NISW,2)                                                           00083
+      XPPO(NUPPO+1)=XMIN                                                00084
+      XPPO(NUPPO+2)=XD                                                  00085
+      YPPO(NUPPO+1)=YMIN                                                00086
+      YPPO(NUPPO+2)=YD                                                  00087
+      CALL LINPLT (XPPO,YPPO,NUPPO,1,0,0)                               00088
+      XPO(NUPO+1)=XMIN                                                  00089
+      XPO(NUPO+2)=XD                                                    00090
+      YPO(NUPO+1)=YMIN                                                  00091
+      YPO(NUPO+2)=YD                                                    00092
+      CALL LINPLT (XPO,YPO,NUPO,1,-1,1)                                 00093
+   60 CONTINUE                                                          00094
+C     ******************************************************************00095
+C     *                                                                *00096
+C     * PLOT SECOND DERIVATIVE                                         *00097
+C     *                                                                *00098
+C     ******************************************************************00099
+      IF (OP2.NE.1) GOTO 80                                             00100
+      YMIN=SECOND(1)                                                    00101
+      YMAX=SECOND(1)                                                    00102
+      XMIN=XPO(NUPPO)                                                   00103
+      XMAX=XPO(NUPPO)                                                   00104
+      DO 70 I = 1, NUPPO-8                                              00105
+      YMIN=AMIN1(YMIN,SECOND(I))                                        00106
+      YMAX=AMAX1(YMAX,SECOND(I))                                        00107
+      XMIN=AMIN1(XMIN,XPO(I))                                           00108
+   70 XMAX=AMAX1(XMAX,XPO(I))                                           00109
+C                                                                       00110
+      CALL SCALE(XMIN,XMAX,YMIN,YMAX,XA,YA)                             00111
+C                                                                       00112
+      YD=(YMAX-YMIN)/6.180                                              00113
+      XD=(XMAX-XMIN)/10.                                                00114
+      CALL NFRAME (0.,15.)                                              00115
+      CALL LEROY                                                        00116
+      CALL CALPLT (1.0,1.0,-3)                                          00117
+      CALL AXES (0.,0.,0.,10.,XMIN,XD,10./XA,.4*XA,XIH,.15,-NIH,2)      00118
+      CALL AXES (0.,0.,90.,6.18,YMIN,YD,6.18/YA,4.*YA/6.18,XIDW,.15,    00119
+     1NIDW,2)                                                           00120
+      TXPPO(NUPPO-7)=XMIN                                               00121
+      TXPPO(NUPPO-6)=XD                                                 00122
+      SECOND(NUPPO-7)=YMIN                                              00123
+      SECOND(NUPPO-6)=YD                                                00124
+      CALL LINPLT (TXPPO,SECOND,NUPPO-8,1,0,0)                          00125
+   80 CONTINUE                                                          00126
+C     ******************************************************************00127
+C     *                                                                *00128
+C     * SEPARATE OVERLAPPED PEAKS                                      *00129
+C     *                                                                *00130
+C     ******************************************************************00131
+      IF (OP3.NE.1) GOTO 160                                            00132
+      IF (OP1.EQ.1) GOTO 110                                            00133
+   90 DO 100 I=1,NUPO                                                   00134
+      XPPO(I)=XPO(I)                                                    00135
+  100 YPPO(I)=YPO(I)                                                    00136
+      NUPPO=NUPO                                                        00137
+  110 IPARTS=0                                                          00138
+      WRITE (6,190)                                                     00139
+      WRITE (6,200)                                                     00140
+      WRITE (6,210)                                                     00141
+      WRITE (6,220) (G(I),I=1,NPEAR*4)                                  00142
+C                                                                       00143
+C     SET THE MAXIMUM NUMBER OF ITERATIONS FOR NLS                      00144
+C                                                                       00145
+      IWS4=25                                                           00146
+C                                                                       00147
+      CALL NLS                                                          00148
+C                                                                       00149
+      WRITE (6,230)                                                     00150
+      WRITE (6,240)                                                     00151
+      WRITE (6,210)                                                     00152
+      WRITE (6,220) (G(I),I=1,NPEAR*4)                                  00153
+      DO 120 I=1,NUPPO                                                  00154
+C                                                                       00155
+      CALL GENINT (XPPO,G,F,I,NPAM,R,ALAM,DALAM)                        00156
+C                                                                       00157
+  120 FPPO(I)=F                                                         00158
+      YMIN=0.                                                           00159
+      YMAX=YPPO(1)                                                      00160
+      XMIN=XPPO(1)                                                      00161
+      XMAX=XPPO(1)                                                      00162
+      WRITE(6,250)                                                      00163
+      WRITE(6,260)                                                      00164
+      DO 130 I=1, NUPPO                                                 00165
+      WRITE (6,270) XPPO(I),YPPO(I),FPPO(I),YPPO(I)-FPPO(I)             00166
+      YMIN=AMIN1(YMIN,YPPO(I),FPPO(I))                                  00167
+      YMAX=AMAX1(YMAX,YPPO(I),FPPO(I))                                  00168
+      XMAX=AMAX1(XMAX,XPPO(I))                                          00169
+  130 XMIN=AMIN1(XMIN,XPPO(I))                                          00170
+C                                                                       00171
+      CALL SCALE (XMIN,XMAX,YMIN,YMAX,XA,YA)                            00172
+C                                                                       00173
+      CALL NFRAME (0.,15.)                                              00174
+      CALL LEROY                                                        00175
+      CALL CALPLT (1.,1.,-3)                                            00176
+      YD=(YMAX-YMIN)/6.180                                              00177
+      XD=(XMAX-XMIN)/10.                                                00178
+      CALL AXES (0.,0.,0.,10.,XMIN,XD,10./XA,.4*XA,XIH,0.15,-NIH,2)     00179
+      CALL AXES (0.,0.,90.,6.18,YMIN,YD,6.18/YA,4.*YA/6.18,XIFW,.15,    00180
+     1NIFW,2)                                                           00181
+      XPPO(NUPPO+1)=XMIN                                                00182
+      XPPO(NUPPO+2)=XD                                                  00183
+      YPPO(NUPPO+1)=YMIN                                                00184
+      YPPO(NUPPO+2)=YD                                                  00185
+      FPPO(NUPPO+1)=YMIN                                                00186
+      FPPO(NUPPO+2)=YD                                                  00187
+      CALL LINPLT (XPPO,YPPO,NUPPO,1,-1,1)                              00188
+      CALL LINPLT (XPPO,FPPO,NUPPO,1,0,0)                               00189
+      IF (NPEAR.LT.2) GOTO 160                                          00190
+      IPARTS=1                                                          00191
+      DO 150 N=1,NPEAR                                                  00192
+      NPART=N                                                           00193
+      DO 140 I=1,NUPPO                                                  00194
+C                                                                       00195
+      CALL GENINT (XPPO,G,F,I,NPAM,R,ALAM,DALAM)                        00196
+C                                                                       00197
+  140 FPPO(I)=F                                                         00198
+  150 CALL LINPLT (XPPO,FPPO,NUPPO,1,0,0)                               00199
+  160 CALL NFRAME (0.,15.)                                              00200
+      CALL CALPLT (0.,0.,999)                                           00201
+      STOP                                                              00202
+  170 FORMAT(5X,F10.5,F10.5,F10.5,F10.5)                                00203
+  180 FORMAT(5X,I5,I5,I5)                                               00204
+  190 FORMAT (1H1,///,12X,'TABLE OF INITIAL ESTIMATES')                 00205
+  200 FORMAT (1H+,11X,'__________________________')                     00206
+  210 FORMAT (//,T6,'INTENSITY',T17,'POSITION',T26,'A-PARAMETER',T38,   00207
+     1'M-PARAMETER',/)                                                  00208
+  220 FORMAT (2X,F10.3,F10.3,F10.3,F10.1)                               00209
+  230 FORMAT (1H1,///,13X,'TABLE OF FINAL PARAMETERS')                  00210
+  240 FORMAT (1H+,12X,'_________________________')                      00211
+  250 FORMAT(1H1,///,7X,'COMPARISON OF FIT AND DATA INTENSITIES')       00212
+  260 FORMAT(//,T10,'IND. VAR.',T23,'DATA',T33,'FIT',T39,'DIFFERENCE',/)00213
+  270 FORMAT(5X,4F10.3)                                                 00214
+      END                                                               00215
+      SUBROUTINE SCALE (XMIN,XMAX,YMIN,YMAX,XA,YA)                      00216
+C                                                                       00217
+C     ******************************************************************00218
+C     *                                                                *00219
+C     * SCALING FOR PLOT                                               *00220
+C     *                                                                *00221
+C     ******************************************************************00222
+      AX=10.**IFIX(ALOG10(XMAX-XMIN))                                   00223
+      AY=10.**IFIX(ALOG10(YMAX-YMIN))                                   00225
+      IF ((XMAX-XMIN)/AX.LE.3.) AX=10.**IFIX(ALOG10(XMAX-XMIN)-1.)      00224
+      IF ((YMAX-YMIN)/AY.LE.3.) AY=10.**IFIX(ALOG10(YMAX-YMIN)-1.)      00226
+      IF (XMAX.LT.0.) GOTO 10                                           00227
+      XMAX=IFIX(XMAX/AX+1.)*AX                                          00228
+      GOTO 20                                                           00229
+   10 XMAX=IFIX(XMAX/AX)*AX                                             00230
+   20 IF (YMAX.LT.0.) GOTO 30                                           00231
+      YMAX=IFIX(YMAX/AY+1)*AY                                           00232
+      GOTO 40                                                           00233
+   30 YMAX=IFIX(YMAX/AX)*AX                                             00234
+   40 IF (XMIN.LT.0.) GOTO 50                                           00235
+      XMIN=IFIX(XMIN/AX)*AX                                             00236
+      GOTO 60                                                           00237
+   50 XMIN=IFIX(XMIN/AX-1.)*AX                                          00238
+   60 IF (YMIN.LT.0.) GOTO 70                                           00239
+      YMIN=IFIX(YMIN/AY)*AY                                             00240
+      GOTO 80                                                           00241
+   70 YMIN=IFIX(YMIN/AY-1.)*AY                                          00242
+   80 XA=IFIX((XMAX-XMIN)/AX+0.5)                                       00243
+      YA=IFIX((YMAX-YMIN)/AY+0.5)                                       00244
+      RETURN                                                            00245
+      END                                                               00246
+      SUBROUTINE GENINT (X,B,F,I,NPAR,R,ALAM,DALAM)                     00247
+C                                                                       00248
+C     ******************************************************************00249
+C     *                                                                *00250
+C     * GENERATES THE INTENSITY OF THE OVERLAPPED PEAKS                *00251
+C     *                                                                *00252
+C     ******************************************************************00253
+      COMMON/PARTS/IPARTS,NPART                                         00254
+      DIMENSION X(502),B(48)                                            00255
+      PI=4.*ATAN(1.)/180.                                               00256
+      F=0.                                                              00257
+      IF (IPARTS.EQ.0) GOTO 10                                          00258
+      NSTART=NPART                                                      00259
+      NSTOP=NPART                                                       00260
+      GOTO 20                                                           00261
+   10 NSTART=1                                                          00262
+      NSTOP=NPAR/4                                                      00263
+   20 DO 50 ITER=NSTART,NSTOP                                           00264
+      INC=(ITER-1)*4                                                    00265
+      I1=1+INC                                                          00266
+      I2=2+INC                                                          00267
+      I3=3+INC                                                          00268
+      I4=4+INC                                                          00269
+      DTETA1=2.*DALAM/ALAM*TAN(B(I2)*PI/2.)                             00270
+      H1=((DTETA1/PI)+B(I2))/B(I2)                                      00271
+      IF(B(I4).LE.0.) B(I4)=0.00001                                     00272
+      IF (B(I3).LE.0) B(I3)=0.01                                        00273
+      BIJ=(B(I3)**2)*B(I4)                                              00274
+      FP1=X(I)-B(I2)                                                    00275
+      FP1A=X(I)-H1*B(I2)                                                00276
+      FA1=1000.0                                                        00277
+      FA1A=1000.0                                                       00278
+      IF (FP1.GT.1000.) GOTO 30                                         00279
+      FA1=1.+((FP1**2)/BIJ)                                             00280
+   30 IF (FP1A.GT.10000.) GOTO 40                                       00281
+      FA1A=1.+((FP1A**2)/BIJ)                                           00282
+   40 FM1=FA1**(-1.*B(I4))                                              00283
+      FM1A=FA1A**(-1.*B(I4))                                            00284
+      F0=FM1+R*FM1A                                                     00285
+      IF (B(I4).LT.1.) B(I4)=1.0                                        00286
+      IF (B(I4).GT.20.) B(I4)=20.0                                      00287
+   50 F=F+F0*B(I1)                                                      00288
+      RETURN                                                            00289
+      END                                                               00290
+      SUBROUTINE SMTH2ND                                                00291
+C                                                                       00292
+C     SMOOTHS RAW DATA AND CALCULATES SECOND DERIVATIVE                 00293
+C                                                                       00294
+      COMMON/XYPPTS/NUPO,XPO(502),YPO(502),XPPO(502),YPPO(502),TERMI,   00295
+     1                DELW,NUPPO,MINSWI,SPRMAX,SPRMIN                   00296
+      COMMON/GUESS/NPAM,G(48),IP,POSI(30),KTIL(20)                      00297
+      COMMON/WKAREA/TT(502),DATA(502),SMDATA(502),P(502)                00298
+C                                                                       00299
+C     TWTHMI  =  TWO THETA MINIMUM                                      00300
+C     TWTHMA  =  TWO THETA MAXIMUM                                      00301
+C     TTSPAC  =  TWO THETA SPACING                                      00302
+C                                                                       00303
+   10 TWTHMI=XPO(1)                                                     00304
+      TWTHMA=XPO(NUPO)                                                  00305
+      TTSPAC=(TWTHMA-TWTHMI)/NUPO                                       00306
+      DELW=TTSPAC*7.                                                    00307
+      NPTS=IFIX((TWTHMA-TWTHMI)/TTSPAC)                                 00308
+      NUPPO=NPTS                                                        00309
+      XPPO(1)=TWTHMI                                                    00310
+      ND=1                                                              00311
+      DO 20 I=2,NPTS                                                    00312
+   20 XPPO(I)=XPPO(I-1)+TTSPAC                                          00313
+   30 DO 70 I =1,NPTS                                                   00314
+   40 IF(XPPO(I).EQ.XPO(ND)) GO TO 60                                   00315
+      IF(XPPO(I).GT.XPO(ND)) GO TO 50                                   00316
+      YPPO(I)=YPO(ND)+(((XPPO(I)-XPO(ND))/(XPO(ND)-XPO(ND-1)))*(YPO(ND)-00317
+     1YPO(ND-1)))                                                       00318
+      GO TO 70                                                          00319
+   50 ND=ND+1                                                           00320
+      GO TO 40                                                          00321
+   60 YPPO(I)=YPO(ND)                                                   00322
+   70 CONTINUE                                                          00323
+      NUMDA=NUPPO                                                       00324
+      ISTART=0                                                          00325
+      ILAST=NUPPO                                                       00326
+      DO 80 I = 1,NUMDA                                                 00327
+      N=ISTART+I                                                        00328
+      NN=N+4                                                            00329
+      TT(I)=XPPO(NN)                                                    00330
+      DATA(I)=YPPO(N)                                                   00331
+   80 CONTINUE                                                          00332
+      NUMSPT=NUMDA-8                                                    00333
+      DO 90 L=2,9                                                       00334
+      J=L-1                                                             00335
+   90 P(L)=DATA(J)                                                      00336
+      SPACE=DELW/7.                                                     00337
+      SPANOR=((SPACE**2)*(1716.))                                       00338
+      SPANR1=231.                                                       00339
+      DO 110 M = 1,NUMSPT                                               00340
+      J = M+ 8                                                          00341
+      DO 100 K = 1,8                                                    00342
+      KA = K + 1                                                        00343
+  100 P(K) = P(KA)                                                      00344
+      P(9) = DATA (J)                                                   00345
+      SUM = -370.*P(5)-211.*(P(4)+P(6))+151.*(P(3)+P(7))+               00346
+     1371.*(P(2)+P(8))-126.*(P(1)+P(9))                                 00347
+      SMDATA(M)=SUM/SPANOR                                              00348
+      SUM1 = 59.*P(5)+54.*(P(4)+P(6))+39.*(P(3)+P(7))+                  00349
+     114.*(P(2)+P(8))-21.*(P(1)+P(9))                                   00350
+  110 YPPO(M+4)=SUM1/SPANR1                                             00351
+C                                                                       00352
+C     YPPO IS THE SMOOTHED DATA                                         00353
+C                                                                       00354
+      NUMSP1=NUPO+1                                                     00355
+      NUMSP2=NUPO+2                                                     00356
+      NUMSP3=NUPPO+1                                                    00357
+  120 NUMSP1=NUMSPT+1                                                   00358
+      NUMSP2=NUMSPT+2                                                   00359
+      FIN=0.                                                            00360
+  130 RETURN                                                            00361
+      END                                                               00362
+      SUBROUTINE NLS                                                    00363
+C                                                                       00364
+C     NONLINEAR LEAST SQUARES  USING THE ALGORITHM OF D.W. MARQUARDT.   00365
+C     ALTERED AT PURDUE UNIVERSITY, AND AT VIRGINIA POLYTECHNIC         00366
+C     INSTITUTE AND STATE UNIVERSITY.                                   00367
+C                                                                       00368
+      COMMON/XYPPTS/NUPO,XPO(502),YPO(502),XPPO(502),YPPO(502),TERMI,   00369
+     1DELW,NUPPO,MINSWI,SPRMAX,SPRMIN                                   00370
+      COMMON/GUESS/NPAM,B(48),IP,IB(30),KTIL(20)                        00371
+      COMMON/MINSQP/IFP,IWS2,IWS3,IWS4,IWS6,IFWT,NFMT,NW,R,ALAM,DALAM   00372
+      COMMON/WKAREA/FMT(108),PRNT(5),SPRNT(5)                           00373
+     1,BS(48),DB(48),BA(48),G(48),W(49),SA(48),P(48),A(48,49)           00374
+     2,X(500,1),Y(500),WT(500),YF(500)                                  00375
+      CHARACTER IBCH*1,IOCH*1,IPCH*1,IXCH*1,IYCH*1,IP1*1,IP2*1          00376
+      DATA IBCH/' '/,IOCH/'O'/,IPCH/'P'/,IXCH/'X'/,IYCH/'Y'/            00377
+      DATA FF/0.0/,E/0.0/,TAU/0.0/,T/0.0/,XL/0./,IP/-1/                 00378
+      DATA GAMCR/0.0/,DEL/0.0/,ZETA/0.0/                                00379
+C                                                                       00380
+      MINSWI=1                                                          00381
+      WRITE (6,2560)                                                    00382
+      ICOUNT=IWS4                                                       00383
+      DUDA=0.                                                           00384
+   10 NPRNT=0                                                           00385
+   20 IWHER = 0                                                         00386
+   30 GO TO 100                                                         00387
+   40 IWHER = IWHER                                                     00388
+      IF (IWHER.GT.0)GO TO 60                                           00389
+      IF (IWHER.EQ.0)GO TO 90                                           00390
+   50 CONTINUE                                                          00391
+      IF (IBOUT.EQ.0) GO TO 100                                         00392
+      GO TO 20                                                          00393
+   60 CONTINUE                                                          00394
+      CALL GENINT(X,B,F,I,K,R,ALAM,DALAM)                               00395
+      IF (IWHER.NE.1)GO TO 100                                          00396
+   70 IF (IFSS2.NE.0) GO TO 100                                         00397
+   80 CONTINUE                                                          00398
+      CALL GENINT(X,B,F,I,K,R,ALAM,DALAM)                               00399
+      GO TO 100                                                         00400
+   90 RETURN                                                            00401
+  100 IWHER = IWHER                                                     00402
+      IF (IWHER.LT.0)GO TO 440                                          00403
+      IF (IWHER.EQ.0)GO TO 120                                          00404
+  110 GO TO (590,1840,640,700), IWHER                                   00405
+  120 ITCT=0                                                            00406
+      IBOUT=0                                                           00407
+      N=NUPPO                                                           00408
+      K=NPAM                                                            00409
+      M=1                                                               00410
+      IY = 1                                                            00411
+      IF(NFMT.GT.9) RETURN                                              00412
+      IF (IFWT.NE.0)  GO TO 140                                         00413
+      DO 130 IJK = 1,N                                                  00414
+  130 WT(IJK) = 1.0                                                     00415
+  140 IF(N.LE.0.OR.N.GT.1000) GO TO 170                                 00416
+      IFSS1=2                                                           00417
+  150 IWS5 = 0                                                          00418
+  160 GO TO 200                                                         00419
+  170 GO TO (  190,  180),IBKT                                          00420
+  180 REWIND 3                                                          00421
+  190 IWHER=0                                                           00422
+      GO TO 40                                                          00423
+  200 IF (IFP.LE.0)GO TO 220                                            00424
+  210 CONTINUE                                                          00425
+      YMN=SPRMIN*.96                                                    00426
+      SPRD=SPRMAX*1.02                                                  00427
+  220 IF(FF.GT.0.) GOTO 240                                             00428
+  230 FF=4.                                                             00429
+  240 IF(E.GT.0.) GOTO 260                                              00430
+  250 E=.00005                                                          00431
+  260 IF(TAU.GT.0.) GOTO 280                                            00432
+  270 TAU=.001                                                          00433
+  280 IF(T.GT.0.) GOTO 300                                              00434
+  290 T=2.                                                              00435
+  300 IF (K .GT.25)GO TO 320                                            00436
+  310 IBKT=1                                                            00437
+      GO TO 330                                                         00438
+  320 IBKT=2                                                            00439
+      REWIND 3                                                          00440
+  330 IF(GAMCR.GT. 0.) GOTO 350                                         00441
+  340 GAMCR = 45.                                                       00442
+  350 IF (DEL.GT. 0.) GO TO 360                                         00443
+      DEL=.00001                                                        00444
+  360 IF (ZETA.GT. 0.) GO TO 370                                        00445
+      ZETA=.1E-30                                                       00446
+  370 XKDB = 1.                                                         00447
+  380 CONTINUE                                                          00448
+      IF(NFMT.EQ.0)GO TO 390                                            00449
+  390 IF (IY.EQ.1) GOTO410                                              00450
+      DO  400 KLM=1,NUPPO                                               00451
+      X(KLM,1)=XPPO(KLM)                                                00452
+  400 Y(KLM)=YPPO(KLM)                                                  00453
+      GO TO 430                                                         00454
+  410 CONTINUE                                                          00455
+      DUDA=DUDA+1                                                       00456
+      IF(DUDA.EQ.2.)RETURN                                              00457
+      DO 420 I=1,N                                                      00458
+      X(I,1)=XPPO(I)                                                    00459
+  420 Y(I)=YPPO(I)                                                      00460
+C                                                                       00461
+  430 IWHER = -1                                                        00462
+      GO TO 40                                                          00463
+  440 IBKA=1                                                            00464
+  450 CONTINUE                                                          00465
+  460 CONTINUE                                                          00466
+      DO 470 I=1,K                                                      00467
+      G (I) =0.                                                         00468
+      DO 470 J=1,K                                                      00469
+  470 A (I,J)=0.                                                        00470
+      GO TO (480,490,490),IBKA                                          00471
+  480 IFSS3=IWS3                                                        00472
+      IFSS2=IWS2                                                        00473
+      GO TO 500                                                         00474
+  490 IFSS3=1                                                           00475
+  500 CONTINUE                                                          00476
+      KLM1=2                                                            00477
+      DO 520 KLM=1,K                                                    00478
+      GOTO 520                                                          00479
+  510 IF(KLM1.NE.KLM)GO TO 520                                          00480
+      KLM1=KLM1+4                                                       00481
+      IF((B(KLM).GT.XPO(1)).AND.(B(LKM).LT.XPO(NUPO)))GO TO 520         00482
+      STOP                                                              00483
+  520 CONTINUE                                                          00484
+      IF (IFSS3.EQ.0)GO TO 560                                          00485
+  530 IF (IFP.LE.0)GO TO 550                                            00486
+  540 WS = YMN+SPRD                                                     00487
+      GO TO 560                                                         00488
+  550 CONTINUE                                                          00489
+  560 I=1                                                               00490
+      PHI=0.                                                            00491
+C      UWP = UNWEIGHTED PHI                                             00492
+      UWP = 0.                                                          00493
+      IF (IFSS2.EQ.0) GO TO 580                                         00494
+      GO TO 620                                                         00495
+  570 IF (IFSS2.EQ.1)GO TO 630                                          00496
+  580 IWHER=1                                                           00497
+      GO TO 40                                                          00498
+  590 IF (IP.LE.0)GO TO 750                                             00499
+  600 DO 610 II=1,IP                                                    00500
+      IWS=IB(II)                                                        00501
+  610 P(IWS)=0.                                                         00502
+      GO TO 750                                                         00503
+  620 CONTINUE                                                          00504
+  630 IWHER=3                                                           00505
+      GO TO 40                                                          00506
+  640 FWS=F                                                             00507
+      DO 650 II=1,NPRNT                                                 00508
+  650 SPRNT(II)=PRNT(II)                                                00509
+      J=1                                                               00510
+  660 IF (IP.LE.0)GO TO 690                                             00511
+  670 DO 680 II=1,IP                                                    00512
+      IF ((J-IB(II)).EQ.0)GO TO 710                                     00513
+  680 CONTINUE                                                          00514
+  690 DBW=B(J)*DEL                                                      00515
+      TWS=B(J)                                                          00516
+      B(J)=B(J)+DBW                                                     00517
+      IWHER=4                                                           00518
+      GO TO 40                                                          00519
+  700 B(J)=TWS                                                          00520
+      P(J)=(F-FWS)/DBW                                                  00521
+      GO TO 720                                                         00522
+  710 P(J)=0.                                                           00523
+  720 J=J+1                                                             00524
+      IF ((J-K).LE.0)GO TO 660                                          00525
+  730 F=FWS                                                             00526
+      DO 740 II=1,NPRNT                                                 00527
+  740 PRNT(II)=SPRNT(II)                                                00528
+  750 DO 760 JJ=1,K                                                     00529
+      G(JJ)=G(JJ)+(Y(I)-F)*P(JJ)                                        00530
+      DO 760 II=JJ,K                                                    00531
+      A(II,JJ)=A(II,JJ)+P(II)*P(JJ)                                     00532
+  760 A(JJ,II)=A(II,JJ)                                                 00533
+      IF (IFP.LE.0)GO TO 960                                            00534
+  770 IF (IFSS3.EQ.0)GO TO 1000                                         00535
+  780 IO = (Y(I)-YMN)*100./SPRD                                         00536
+      IPP = (F-YMN)*100./SPRD                                           00537
+      IF (IO.EQ.IPP)GO TO 800                                           00538
+      IF (IO.GT. IPP)GO TO 810                                          00539
+  790 IP1=IOCH                                                          00540
+      IP2=IPCH                                                          00541
+      I1=IO                                                             00542
+      I2=IPP                                                            00543
+      GO TO 820                                                         00544
+  800 IP1=IYCH                                                          00545
+      IP2=IBCH                                                          00546
+      I1=IO                                                             00547
+      I2=IPP                                                            00548
+      GO TO 820                                                         00549
+  810 IP1=IPCH                                                          00550
+      IP2=IOCH                                                          00551
+      I1=IPP                                                            00552
+      I2=IO                                                             00553
+  820 IF (I2.LE.101)GO TO 850                                           00554
+  830 I2=101                                                            00555
+      IP2=IXCH                                                          00556
+      IF (I1.LT.101)GO TO 850                                           00557
+  840 I1=101                                                            00558
+      IP1=IXCH                                                          00559
+      IP2=IBCH                                                          00560
+      GO TO 880                                                         00561
+  850 IF (I1.GE.0)GO TO 880                                             00562
+  860 I1=0                                                              00563
+      IP1=IXCH                                                          00564
+      IF (I2.GT.0)GO TO 880                                             00565
+  870 I2=1                                                              00566
+      IP2=IBCH                                                          00567
+  880 I1M1=I1                                                           00568
+      I1M2=I2-I1-1                                                      00569
+      IF (I1M1.GT.0)GO TO 920                                           00570
+  890 IF (I1M2.GT.0)GO TO 910                                           00571
+  900 CONTINUE                                                          00572
+      GO TO 950                                                         00573
+  910 CONTINUE                                                          00574
+      GO TO 950                                                         00575
+  920 IF (I1M2.GT.0)GO TO 940                                           00576
+  930 CONTINUE                                                          00577
+      GO TO 950                                                         00578
+  940 CONTINUE                                                          00579
+  950 GO TO 1000                                                        00580
+  960 WS=Y(I)-F                                                         00581
+      IF (IFSS3.EQ.0)GO TO 1000                                         00582
+  970 IF (NPRNT.GT.0)GO TO 990                                          00583
+  980 CONTINUE                                                          00584
+      YF(I)=F                                                           00585
+      GO TO 1000                                                        00586
+  990 CONTINUE                                                          00587
+ 1000 WS=Y(I)-F                                                         00588
+      PHI=PHI+WS*WS*WT(I)                                               00589
+      UWP = UWP + WS*WS                                                 00590
+      I=I+1                                                             00591
+      IF (I.LE.N)GO TO 570                                              00592
+ 1010 IF (IP.LE.0)GO TO 1050                                            00593
+ 1020 DO 1040 JJ=1,IP                                                   00594
+      IWS=IB(JJ)                                                        00595
+      DO 1030 II=1,K                                                    00596
+      A(IWS,II)=0.                                                      00597
+ 1030 A(II,IWS)=0.                                                      00598
+ 1040 A(IWS,IWS)=1.                                                     00599
+ 1050 GO TO (1060,1880,1900),IBKA                                       00600
+C                  SAVE SQUARE ROOTS OF DIAGONAL ELEMENTS               00601
+ 1060 DO 1070 I=1,K                                                     00602
+ 1070 SA(I)=SQRT (A(I,I))                                               00603
+      DO 1130 I=1,K                                                     00604
+      DO 1100 J=1,K                                                     00605
+      WS = SA(I)*SA(J)                                                  00606
+      IF(WS.GT.0.) GOTO 1090                                            00607
+ 1080 A(I,J) =0.                                                        00608
+      GO TO 1100                                                        00609
+ 1090 A(I,J)=A(I,J)/WS                                                  00610
+ 1100 CONTINUE                                                          00611
+      IF(SA(I).GT.0.) GOTO 1120                                         00612
+ 1110 G(I)=0.                                                           00613
+      GO TO 1130                                                        00614
+ 1120 G(I)=G(I)/SA(I)                                                   00615
+ 1130 CONTINUE                                                          00616
+      DO 1140 I=1,K                                                     00617
+ 1140 A(I,I)=1.                                                         00618
+      PHIZ=PHI                                                          00619
+      GO TO (1160,1150),IBKT                                            00620
+ 1150 WRITE (3)A                                                        00621
+      REWIND 3                                                          00622
+      GO TO 1180                                                        00623
+ 1160 DO 1170 II=1,K                                                    00624
+      III=II+25                                                         00625
+      DO 1170 JJ=1,K                                                    00626
+ 1170 A(III,JJ)=A(II,JJ)                                                00627
+ 1180 CONTINUE                                                          00628
+      IF (ITCT.GT.0)GO TO 1230                                          00629
+C                  FIRST ITERATION                                      00630
+ 1190 IF(XL.GT.0.) GOTO 1210                                            00631
+ 1200 XL=0.01                                                           00632
+ 1210 ITCT=1                                                            00633
+      DO 1220 J=1,K                                                     00634
+ 1220 BS(J)=B(J)                                                        00635
+ 1230 IBK1=1                                                            00636
+      WS=N-K+IP                                                         00637
+      SE=SQRT(PHIZ/WS)                                                  00638
+      IF (IFSS3.GT.0)GO TO 1270                                         00639
+ 1240 IF (IFSS2.EQ.0) GO TO 1260                                        00640
+ 1250 CONTINUE                                                          00641
+      IF (IFWT.EQ.0)  GO TO 1300                                        00642
+      GO TO 1300                                                        00643
+ 1260 CONTINUE                                                          00644
+      IF (IFWT.EQ.0)  GO TO 1300                                        00645
+      GO TO 1300                                                        00646
+ 1270 IF (IFSS2.EQ.0)GO TO 1290                                         00647
+ 1280 CONTINUE                                                          00648
+      IF (IFWT.EQ.0)  GO TO 1300                                        00649
+      GO TO 1300                                                        00650
+ 1290 CONTINUE                                                          00651
+      IF (IFWT.EQ.0)  GO TO 1300                                        00652
+ 1300 GO TO 1610                                                        00653
+ 1310 PHIL=PHI                                                          00654
+      DO 1320 J=1,K                                                     00655
+      IF (ABS(DB(J)/(ABS(B(J)) + TAU)).GE.E) GOTO 1330                  00656
+ 1320 CONTINUE                                                          00657
+      GO TO 1860                                                        00658
+ 1330 IF (IWS4.EQ.0)GO TO 1350                                          00659
+      IF (IWS4.EQ.1)GO TO 1340                                          00660
+      IWS4=IWS4-1                                                       00661
+      WRITE (6,2570) ICOUNT-IWS4,PHI/N                                  00662
+      WRITE (6,2580)                                                    00663
+      WRITE (6,2590) (B(4*I-3),B(4*I-2),B(4*I-1),B(4*I),I=1,NPAM/4)     00664
+      GO TO 1350                                                        00665
+ 1340 CONTINUE                                                          00666
+      GO TO 1860                                                        00667
+ 1350 XKDB = 1.                                                         00668
+      IF (PHIL.GT.PHIZ)GO TO 1460                                       00669
+ 1360 XLS=XL                                                            00670
+      DO 1370 J=1,K                                                     00671
+      BA(J)=B(J)                                                        00672
+ 1370 B(J)=BS(J)                                                        00673
+      IF (XL.GT..00000001)GO TO 1400                                    00674
+ 1380 DO 1390 J=1,K                                                     00675
+      B(J)=BA(J)                                                        00676
+ 1390 BS(J)=B(J)                                                        00677
+      GO TO 460                                                         00678
+ 1400 XL=XL/10.                                                         00679
+      IBK1=2                                                            00680
+      GO TO 1610                                                        00681
+ 1410 PHL4=PHI                                                          00682
+      IF(PHL4.GT.PHIZ) GOTO 1440                                        00683
+ 1420 DO 1430 J=1,K                                                     00684
+ 1430 BS(J)=B(J)                                                        00685
+      GO TO 460                                                         00686
+ 1440 XL=XLS                                                            00687
+      DO 1450 J=1,K                                                     00688
+      BS(J)=BA(J)                                                       00689
+ 1450 B(J)=BA(J)                                                        00690
+      GO TO 460                                                         00691
+ 1460 IBK1=4                                                            00692
+      XLS=XL                                                            00693
+      XL=XL/10.                                                         00694
+      DO 1470 J=1,K                                                     00695
+ 1470 B(J)=BS(J)                                                        00696
+      GO TO 1610                                                        00697
+ 1480 IF (PHI.LE.PHIZ)GO TO 1550                                        00698
+ 1490 XL=XLS                                                            00699
+      IBK1=3                                                            00700
+ 1500 XL=XL*10.                                                         00701
+ 1510 DO 1520 J=1,K                                                     00702
+ 1520 B(J)=BS(J)                                                        00703
+      GO TO 1610                                                        00704
+ 1530 PHIT4=PHI                                                         00705
+ 1540 IF (PHIT4.GT.PHIZ)GO TO 1570                                      00706
+ 1550 DO 1560 J=1,K                                                     00707
+ 1560 BS(J)=B(J)                                                        00708
+      GO TO 460                                                         00709
+ 1570 IF (GAMMA.GE.GAMCR)GO TO 1500                                     00710
+ 1580 XKDB = XKDB/2.                                                    00711
+      DO 1590 J=1,K                                                     00712
+      IF (ABS(DB(J)/(ABS(B(J))+TAU)).GE.E)GO TO 1510                    00713
+ 1590 CONTINUE                                                          00714
+      DO 1600 J=1,K                                                     00715
+ 1600 B(J)=BS(J)                                                        00716
+      GO TO 1860                                                        00717
+ 1610 GO TO (1630,1620),IBKT                                            00718
+ 1620 READ (3)A                                                         00719
+      REWIND 3                                                          00720
+      GO TO 1650                                                        00721
+ 1630 DO 1640 II=1,K                                                    00722
+      III=II+25                                                         00723
+      DO 1640 JJ=1,K                                                    00724
+ 1640 A(II,JJ)=A(III,JJ)                                                00725
+ 1650 DO 1660 I=1,K                                                     00726
+ 1660 A(I,I)=A(I,I)+XL                                                  00727
+      IBKM=1                                                            00728
+ 1670 CALL GJR(A,K,ZETA,MSING)                                          00729
+      GO TO (1680,20), MSING                                            00730
+ 1680 GO TO (1690,2000), IBKM                                           00731
+ 1690 DO 1710 I=1,K                                                     00732
+      DB(I)=0.                                                          00733
+      DO 1700 J=1,K                                                     00734
+ 1700 DB(I)=A(I,J)*G(J)+DB(I)                                           00735
+ 1710 DB(I)=XKDB*DB(I)                                                  00736
+      XLL=0.                                                            00737
+      DTG = 0.                                                          00738
+      GTG = 0.                                                          00739
+      DO 1720 J=1,K                                                     00740
+      DB(J)=DB(J)/SA(J)                                                 00741
+      DTG = DTG + DB(J)*G(J)                                            00742
+      GTG = GTG + G(J)**2                                               00743
+      B(J)=B(J)+DB(J)                                                   00744
+ 1720 XLL=XLL+DB(J)*DB(J)                                               00745
+      KIP=K-IP                                                          00746
+      IF (KIP.EQ.1) GO TO 1770                                          00747
+      CGAM=DTG/SQRT(XLL*GTG)                                            00748
+      JGAM = 1                                                          00749
+      IF(CGAM.GT..0) GOTO 1740                                          00750
+ 1730 CGAM = ABS(CGAM)                                                  00751
+      JGAM = 2                                                          00752
+ 1740 GAMMA = 57.2957795*(1.5707288+CGAM*(-0.2121144+CGAM*(0.074261     00753
+     1-CGAM*.0187293)))*SQRT(1.-CGAM)                                   00754
+      GO TO (1780,1750), JGAM                                           00755
+ 1750 GAMMA = 180.-GAMMA                                                00756
+      IF (XL.LT.1.0)GO TO 1780                                          00757
+ 1760 CONTINUE                                                          00758
+      GO TO 1860                                                        00759
+ 1770 GAMMA=0.                                                          00760
+ 1780 XLL=SQRT(XLL)                                                     00761
+      IBK2=1                                                            00762
+      GO TO 1820                                                        00763
+ 1790 IF (IFSS3.EQ.0)GO TO 1810                                         00764
+ 1800 CONTINUE                                                          00765
+      IF (IFWT.EQ.0)  GO TO 1810                                        00766
+ 1810 GO TO (1310,1410,1530,1480),IBK1                                  00767
+ 1820 I=1                                                               00768
+      PHI=0.                                                            00769
+      UWP = 0.                                                          00770
+      IWHER=2                                                           00771
+ 1830 GO TO 40                                                          00772
+ 1840 PHI=PHI+(Y(I)-F)**2*WT(I)                                         00773
+      UWP = UWP + (Y(I)-F)**2                                           00774
+      I=I+1                                                             00775
+      IF (I.LE.N) GO TO 1830                                            00776
+ 1850 GO TO (1790,2420,1880,2310,2340,2370),IBK2                        00777
+ 1860 DO 1870 J=1,K                                                     00778
+ 1870 B(J)=BS(J)                                                        00779
+      IBKA=2                                                            00780
+      GO TO 460                                                         00781
+ 1880 IF (IFP.LE.0)GO TO 1900                                           00782
+ 1890 IBKA=3                                                            00783
+      IFP=0                                                             00784
+      GO TO 460                                                         00785
+ 1900 WS=N-K+IP                                                         00786
+      SE=SQRT(PHI/WS)                                                   00787
+      PHIZ=PHI                                                          00788
+      IF (IFSS2.EQ.0)GO TO 1920                                         00789
+ 1910 CONTINUE                                                          00790
+      IF (IFWT.EQ.0)  GO TO 1930                                        00791
+      GO TO 1930                                                        00792
+ 1920 CONTINUE                                                          00793
+      IF (IFWT.EQ.0)  GO TO 1930                                        00794
+ 1930 SWY = 0.                                                          00795
+      SW = 0.                                                           00796
+      DO 1940 IJ = 1,N                                                  00797
+      SWY = SWY + Y(IJ)*WT(IJ)                                          00798
+ 1940 SW = SW + WT(IJ)                                                  00799
+      YBAR = SWY/SW                                                     00800
+      SSY = 0.                                                          00801
+      DO 1950 IJ = 1,N                                                  00802
+ 1950 SSY = SSY + (Y(IJ) - YBAR)**2 * WT(IJ)                            00803
+      RSQ = 1.0-PHI/SSY                                                 00804
+      GO TO (1970,1960),IBKT                                            00805
+ 1960 WRITE (3)A                                                        00806
+      REWIND 3                                                          00807
+      GO TO 1990                                                        00808
+ 1970 DO 1980 II=1,K                                                    00809
+      III=II+25                                                         00810
+      DO 1980 JJ=1,K                                                    00811
+ 1980 A(III,JJ)=A(II,JJ)                                                00812
+ 1990 IBKM=2                                                            00813
+      GO TO 1670                                                        00814
+ 2000 DO 2010 J=1,K                                                     00815
+      IF(A(J,J).LT..0) GO TO 2020                                       00816
+ 2010 SA(J)=SQRT(A(J,J))                                                00817
+      GO TO 2030                                                        00818
+ 2020 IBOUT=1                                                           00819
+ 2030 KST=-4                                                            00820
+ 2040 KST=KST+5                                                         00821
+      KEND=KST+4                                                        00822
+      IF (KEND.LT.K) GO TO 2050                                         00823
+      KEND=K                                                            00824
+ 2050 DO 2060 I=1,K                                                     00825
+ 2060 CONTINUE                                                          00826
+      IF (KEND.LT.K) GO TO 2040                                         00827
+      IF (IBOUT.EQ.0) GO TO 2070                                        00828
+      GO TO 20                                                          00829
+ 2070 DO 2100 I=1,K                                                     00830
+      DO 2100 J=1,K                                                     00831
+      WS=SA(I)*SA(J)                                                    00832
+      IF(WS.GT. 0.) GOTO 2090                                           00833
+ 2080 A(I,J) = 0.                                                       00834
+      GO TO 2100                                                        00835
+ 2090 A(I,J) = A(I,J)/WS                                                00836
+ 2100 CONTINUE                                                          00837
+      DO 2110 J=1,K                                                     00838
+ 2110 A(J,J)=1.                                                         00839
+      KST=-9                                                            00840
+ 2120 KST=KST+10                                                        00841
+      KEND=KST+9                                                        00842
+      IF (KEND.LT.K) GO TO 2130                                         00843
+      KEND=K                                                            00844
+ 2130 DO 2140 I=1,K                                                     00845
+ 2140 CONTINUE                                                          00846
+      IF (KEND.LT.K) GO TO 2120                                         00847
+C                  GET T*SE*SQRT(C(I,I))                                00848
+      DO 2150 J=1,K                                                     00849
+ 2150 SA(J)=  SE*SA(J)                                                  00850
+      GO TO (2170,2160),IBKT                                            00851
+ 2160 READ (3)A                                                         00852
+      REWIND 3                                                          00853
+      GO TO 2190                                                        00854
+ 2170 DO 2180 II=1,K                                                    00855
+      III=II+25                                                         00856
+      DO 2180 JJ=1,K                                                    00857
+ 2180 A(II,JJ)=A(III,JJ)                                                00858
+ 2190 CONTINUE                                                          00859
+ 2200 CONTINUE                                                          00860
+      WS=K-IP                                                           00861
+      DO 2250 J=1,K                                                     00862
+      IF (IP.LE.0)GO TO 2230                                            00863
+ 2210 DO 2220 I=1,IP                                                    00864
+      IF (J.EQ.IB(I))GO TO 2240                                         00865
+ 2220 CONTINUE                                                          00866
+ 2230 HJTD=SQRT(WS*FF)*SA(J)                                            00867
+      STE=SA(J)                                                         00868
+      OPL=BS(J)-SA(J)*T                                                 00869
+      OPU=BS(J)+SA(J)*T                                                 00870
+      SPL=BS(J)-HJTD                                                    00871
+      SPU=BS(J)+HJTD                                                    00872
+      GO TO 2250                                                        00873
+ 2240 CONTINUE                                                          00874
+ 2250 CONTINUE                                                          00875
+C                  NONLINEAR CONFIDENCE LIMIT                           00876
+      IF (IWS6.EQ.1) GO TO 20                                           00877
+      WS=K-IP                                                           00878
+      WS1=N-K+IP                                                        00879
+      PKN=WS/WS1                                                        00880
+      PC=PHIZ*(1.+FF*PKN)                                               00881
+      IFSS3=1                                                           00882
+      DO 2550 J=1,K                                                     00883
+      IBKP=1                                                            00884
+      DO 2260 JJ=1,K                                                    00885
+ 2260 B(JJ)=BS(JJ)                                                      00886
+      IF (IP.LE.0)GO TO 2290                                            00887
+ 2270 DO 2280 JJ=1,IP                                                   00888
+      IF (J.EQ.IB(JJ))GO TO 2480                                        00889
+ 2280 CONTINUE                                                          00890
+ 2290 DD=-1.                                                            00891
+      IBKN=1                                                            00892
+ 2300 D=DD                                                              00893
+      B(J)=BS(J)+D*SA(J)                                                00894
+      IBK2=4                                                            00895
+      GO TO 1820                                                        00896
+ 2310 PHI1=PHI                                                          00897
+      IF (PHI1.GE.PC)GO TO 2350                                         00898
+ 2320 D=D+DD                                                            00899
+      IF (D/DD.GE.5.)GO TO 2500                                         00900
+ 2330 B(J)=BS(J)+D*SA(J)                                                00901
+      IBK2=5                                                            00902
+      GO TO 1820                                                        00903
+ 2340 PHID=PHI                                                          00904
+      IF (PHID.LT.PC)GO TO 2320                                         00905
+      IF (PHID.GE.PC) GO TO 2380                                        00906
+ 2350 D=D/2.                                                            00907
+      IF (D/DD.LE..001)GO TO 2500                                       00908
+ 2360 B(J)=BS(J)+D*SA(J)                                                00909
+      IBK2=6                                                            00910
+      GO TO 1820                                                        00911
+ 2370 PHID=PHI                                                          00912
+      IF (PHID.GT.PC)GO TO 2350                                         00913
+ 2380 XK1=PHIZ/D+PHI1/(1.-D)+PHID/(D*(D-1.))                            00914
+      XK2=-(PHIZ*(1.+D)/D+D/(1.-D)*PHI1+PHID/(D*(D-1.)))                00915
+      XK3=PHIZ-PC                                                       00916
+      BC = (SQRT(XK2*XK2-4.*XK1*XK3)-XK2)/(2.*XK1)                      00917
+      GO TO (2390,2400),IBKN                                            00918
+ 2390 B(J)=BS(J)-SA(J)*BC                                               00919
+      GO TO 2410                                                        00920
+ 2400 B(J)=BS(J)+SA(J)*BC                                               00921
+ 2410 IBK2=2                                                            00922
+      GO TO 1820                                                        00923
+ 2420 GO TO (2430,2440),IBKN                                            00924
+ 2430 IBKN=2                                                            00925
+      DD=1.                                                             00926
+      BL=B(J)                                                           00927
+      PL=PHI                                                            00928
+      GO TO 2300                                                        00929
+ 2440 BU=B(J)                                                           00930
+      PU=PHI                                                            00931
+      GO TO (2450,2460,2470,2490),IBKP                                  00932
+ 2450 CONTINUE                                                          00933
+      GO TO 2550                                                        00934
+ 2460 CONTINUE                                                          00935
+      GO TO 2550                                                        00936
+ 2470 CONTINUE                                                          00937
+ 2480 CONTINUE                                                          00938
+      GO TO 2550                                                        00939
+ 2490 CONTINUE                                                          00940
+      GO TO 2550                                                        00941
+ 2500 GO TO (2510,2520),IBKN                                            00942
+C                  DELETE LOWER PRINT                                   00943
+ 2510 IBKP=2                                                            00944
+      GO TO 2420                                                        00945
+ 2520 GO TO (2530,2540),IBKP                                            00946
+C                  DELETE UPPER PRINT                                   00947
+ 2530 IBKP=3                                                            00948
+      GO TO 2420                                                        00949
+C                  LOWER IS ALREADY DELETED, SO DELETE BOTH             00950
+ 2540 IBKP=4                                                            00951
+      GO TO 2420                                                        00952
+ 2550 CONTINUE                                                          00953
+      GO TO 120                                                         00954
+ 2560 FORMAT (1H1,/)                                                    00955
+ 2570 FORMAT (//,5X,'ITERATION ',I3,3X,'MEAN SQUARE ERROR=',F10.5)      00956
+ 2580 FORMAT(/,T6,'INTENSITY',T17,'POSITION',T26,'A-PARAMETER',T38,     00957
+     1'M-PARAMETER')                                                    00958
+ 2590 FORMAT (5X,4F10.5)                                                00959
+      END                                                               00960
+      SUBROUTINE GJR(A,N,EPS,MSING)                                     00961
+C                                                                       00962
+C     GAUSS-JORDAN-RUTISHAUSER MATRIX INVERSION WITH DOUBLE PIVOTING.   00963
+C                                                                       00964
+      DIMENSION A(48,48),B(48),C(48),P(48),Q(48)                        00965
+      INTEGER P,Q                                                       00966
+      MSING=1                                                           00967
+      DO 140 K=1,N                                                      00968
+C     DETERMINATION OF THE PIVOT ELEMENT                                00969
+      PIVOT=0.                                                          00970
+      DO 20 I=K,N                                                       00971
+      DO 20 J=K,N                                                       00972
+      IF(ABS(A(I,J))-ABS(PIVOT))20,20,10                                00973
+   10 PIVOT=A(I,J)                                                      00974
+      P(K)=I                                                            00975
+      Q(K)=J                                                            00976
+   20 CONTINUE                                                          00977
+      IF(ABS(PIVOT)-EPS)220,220,30                                      00978
+C     EXCHANGE OF THE PIVOTAL ROW WITH THE KTH ROW                      00979
+   30 IF(P(K)-K)40,60,40                                                00980
+   40 DO 50 J=1,N                                                       00981
+      L=P(K)                                                            00982
+      Z=A(L,J)                                                          00983
+      A(L,J)=A(K,J)                                                     00984
+   50 A(K,J)=Z                                                          00985
+C     EXCHANGE OF THE PIVOTAL COLUMN WITH THE KTH COLUMN                00986
+   60 IF(Q(K)-K)70,90,70                                                00987
+   70 DO 80 I=1,N                                                       00988
+      L=Q(K)                                                            00989
+      Z=A(I,L)                                                          00990
+      A(I,L)=A(I,K)                                                     00991
+   80 A(I,K)=Z                                                          00992
+   90 CONTINUE                                                          00993
+C     JORDAN STEP                                                       00994
+      DO 130 J=1,N                                                      00995
+      IF(J-K)110,100,110                                                00996
+  100 B(J)=1./PIVOT                                                     00997
+      C(J)=1.                                                           00998
+      GO TO 120                                                         00999
+  110 B(J)=-A(K,J)/PIVOT                                                01000
+      C(J)=A(J,K)                                                       01001
+  120 A(K,J)=0.                                                         01002
+  130 A(J,K)=0.                                                         01003
+      DO 140 I=1,N                                                      01004
+      DO 140 J=1,N                                                      01005
+  140 A(I,J)=A(I,J)+C(I)*B(J)                                           01006
+C     REORDERING THE MATRIX                                             01007
+      DO 200 M=1,N                                                      01008
+      K=N-M+1                                                           01009
+      IF(P(K)-K)150,170,150                                             01010
+  150 DO 160 I=1,N                                                      01011
+      L=P(K)                                                            01012
+      Z=A(I,L)                                                          01013
+      A(I,L)=A(I,K)                                                     01014
+  160 A(I,K)=Z                                                          01015
+  170 IF(Q(K)-K)180,200,180                                             01016
+  180 DO 190 J=1,N                                                      01017
+      L=Q(K)                                                            01018
+      Z=A(L,J)                                                          01019
+      A(L,J)=A(K,J)                                                     01020
+  190 A(K,J)=Z                                                          01021
+  200 CONTINUE                                                          01022
+  210 RETURN                                                            01023
+  220 CONTINUE                                                          01024
+      MSING=2                                                           01025
+      GO TO 210                                                         01026
+  230 FORMAT(16H0SINGULAR MATRIX,3H I=,I3,3H J=,I3,7H PIVOT=,E16.8/)    01027
+      END                                                               01028
+      BLOCK DATA                                                        01029
+      COMMON/MINSQP/IFP,IWS2,IWS3,IWS4,IWS6,IFWT,NFMT,NW,R,ALAM,DALAM   01030
+      DATA IFP,IWS2,IWS3,IWS4,IWS6,IFWT,NFMT/1,1,0,25,1,0,1/            01031
+      END                                                               01032

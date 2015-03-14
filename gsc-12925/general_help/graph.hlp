@@ -1,0 +1,35 @@
+mainm.hlp
+mains.hlp
+~~~.hlp
+
+
+
+
+
+
+
+The help screens follow the same pattern as the program.  Whenever the help key
+is pressed, this help screen will be displayed.  To recieve help on a
+particular subject, follow the path which was taken when running the program
+until coming to the screen of your choice.
+
+In help, F8 will return to the previous menu, F9 is used for more help, and F10
+exits from help.
+
+
+
+To obtain help for any of the following subjects, press the function key next
+to the desired choice.
+
+        F1  Main Menu
+        F2  Main Screen
+        F3  Chart Characteristics (First insert Specific Help diskette if not
+            using hard disk)
+
+
+
+
+        F10 Exit from Help
+
+Press F10 to leave the help mode
+

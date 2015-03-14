@@ -1,0 +1,647 @@
+   {  $INCLUDE : 'compile.inc'  }
+   (* $INCLUDE : 'vbpas.int' *)
+   (* $INCLUDE : 'dspas.int' *)
+   (* $INCLUDE : 'dialog.int' *)
+   (* $INCLUDE : 'sfpas.int' *)
+
+   implementation of sfpas;
+      uses vbpas;
+      uses dspas;
+      uses dialog;
+
+   procedure rdlupd1(dsseg,osetby:word;osetbi,u,v,npix:integer);extern;
+   procedure rdlupd2(dsseg,osetby:word;rtype,osetbi,u,v,npix:integer);extern;
+
+   const   wdpix = 320;  wdline = 200;
+
+
+   procedure wdupdate;
+
+
+   var dsmem,vsmem : ads of byte;
+       i,j,nbyte,test : integer;
+       vsnext1,vsnext2,dsnext : word;
+
+
+   (* $mathck- *)
+
+   begin
+         
+      test := v1;
+      dsmem.s := DSSEG;
+      vsmem.s := #b800;
+      dsmem.r := wrd(y1) * wrd(160) + wrd(x1 div 4);
+      vsmem.r := wrd(v1 div 2) * wrd(80) + wrd(u1 div 4);
+   
+      if odd(test) = true then vsmem.r := vsmem.r + wrd(#2000);
+
+      nbyte := npix div 4;
+      vsnext1 := wrd(#2000-nbyte);
+      vsnext2 := wrd(#2000+nbyte-80);
+      dsnext  := wrd(160-nbyte);
+
+      for i := 1 to nline do
+         begin
+            if updmode = 0 then
+               if odd(test) = false then 
+                  begin
+            	      for j := 1 to nbyte do 
+                         begin
+                            vsmem^ := dsmem^;
+                            vsmem.r := vsmem.r + wrd(1);
+                            dsmem.r := dsmem.r + wrd(1);
+                         end;
+                      vsmem.r := vsmem.r + vsnext1;
+                      dsmem.r := dsmem.r + dsnext;
+                      test := test + 1;
+                  end
+               else
+                   begin
+                      for j := 1 to nbyte do 
+                         begin
+                            vsmem^ := dsmem^;
+                            vsmem.r := vsmem.r + wrd(1);
+                            dsmem.r := dsmem.r + wrd(1);
+                         end;
+                      vsmem.r := vsmem.r - vsnext2;
+                      dsmem.r := dsmem.r + dsnext;
+                      test := test + 1;
+                   end
+            else
+               begin
+                  if odd(test) = false then 
+                     begin
+                        for j := 1 to nbyte do
+                           begin
+                              dsmem^ := vsmem^;
+                              dsmem.r := dsmem.r + wrd(1);
+                              vsmem.r := vsmem.r + wrd(1);
+                           end;
+                        vsmem.r := vsmem.r + vsnext1;
+                        dsmem.r := dsmem.r + dsnext;
+                        test := test + 1;
+                     end
+                  else
+                     begin
+                        for j := 1 to nbyte do
+                           begin
+                              dsmem^ := vsmem^;
+                              dsmem.r := dsmem.r + wrd(1);
+                              vsmem.r := vsmem.r + wrd(1);
+                           end;
+                           vsmem.r := vsmem.r - vsnext2;
+                           dsmem.r := dsmem.r + dsnext;
+                           test := test + 1;
+                     end;
+               end;
+         end;
+   end;
+
+
+
+   procedure window;
+
+
+      begin
+	screen(4);
+         colors(0,bcolor);
+         case number of
+            
+            1 : [ wx1 :=   0; wy1 :=   0];
+            2 : [ wx1 := 320; wy1 :=   0];
+            3 : [ wx1 :=   0; wy1 := 200];
+            4 : [ wx1 := 320; wy1 := 200];
+            otherwise return  end;
+
+         wdupdate(wx1,wy1,0,0,wdpix,wdline,0)
+      end;
+
+
+
+   procedure squeeze1 ( var dsmen, vsmen : adsbyte );
+
+      var
+           byte1,byte2,byte3   : byte;
+           i : integer;
+
+      begin
+       for i := 1 to 80 do
+        begin
+         byte1 := dsmen^;
+         dsmen.r := dsmen.r + wrd(1);
+         byte2 := dsmen^;
+         dsmen.r := dsmen.r + wrd(1);
+         byte3 := 0;
+         byte3 := byte3 + (byte1 and 192);
+         byte3 := byte3 + ((byte1 and 12) * 4);
+         byte3 := byte3 + ((byte2 and 192) div 16);
+         byte3 := byte3 + ((byte2 and 12) div 4);
+         vsmen^ := byte3;
+         vsmen.r := vsmen.r + wrd(1)
+        end;
+      end;
+
+   procedure squeeze2 ( var dsmen, vsmen : adsbyte );
+
+      var
+           byte1,byte2,byte3   : byte;
+           i : integer;
+
+      begin
+       for i := 1 to 80 do
+        begin
+         byte1 := dsmen^;
+         dsmen.r := dsmen.r + wrd(1);
+         byte2 := dsmen^;
+         dsmen.r := dsmen.r + wrd(1);
+         byte3 := 0;
+         if byte1>=64 then [byte3:=byte3+128;byte1:=byte1 mod 64];
+         if byte1>=16 then [byte3:=byte3+64 ;byte1:=byte1 mod 16];
+         if byte1>=4  then [byte3:=byte3+32 ;byte1:=byte1 mod 4 ];
+         if byte1>=1  then [byte3:=byte3+16                     ];
+         if byte2>=64 then [byte3:=byte3+8  ;byte2:=byte2 mod 64];
+         if byte2>=16 then [byte3:=byte3+4  ;byte2:=byte2 mod 16];
+         if byte2>=4  then [byte3:=byte3+2  ;byte2:=byte2 mod 4 ];
+         if byte2>=1  then [byte3:=byte3+1                      ];
+         vsmen^ := byte3;
+         vsmen.r := vsmen.r + wrd(1)
+        end;
+      end;
+
+
+
+   procedure squeeze3 ( var dsmen, vsmen : adsbyte );
+
+      var
+           byte1,byte2,byte3   : byte;
+           i : integer;
+
+      begin
+       for i := 1 to 80 do
+        begin
+         byte1 := dsmen^;
+         dsmen.r := dsmen.r + wrd(1);
+         byte2 := dsmen^;
+         dsmen.r := dsmen.r + wrd(1);
+         byte3 := 0;
+         if byte1 < 64 then byte3:=byte3+128  else byte1:=byte1 mod 64;
+         if byte1 < 16 then byte3:=byte3+64   else byte1:=byte1 mod 16;
+         if byte1 < 4  then byte3:=byte3+32   else byte1:=byte1 mod 4 ;
+         if byte1 < 1  then byte3:=byte3+16 ;
+         if byte2 < 64 then byte3:=byte3+8    else byte2:=byte2 mod 64;
+         if byte2 < 16 then byte3:=byte3+4    else byte2:=byte2 mod 16;
+         if byte2 < 4  then byte3:=byte3+2    else byte2:=byte2 mod 4 ;
+         if byte2 < 1  then byte3:=byte3+1  ;
+         vsmen^ := byte3;
+         vsmen.r := vsmen.r + wrd(1)
+        end;
+      end;
+
+
+   procedure reduce;
+
+      var
+           dsmen, vsmen : adsbyte;
+           i            : integer;
+           vsnext1,vsnext2,dsnext : word;
+
+      (* $mathck- *)
+      
+      begin
+         case rtype of
+           1 : [screen(4); colors(0,bcolor)];
+           2,3 : screen(6);
+           otherwise return end;
+         dsmen.s := DSSEG;
+         vsmen.s := #B800;
+         dsmen.r := 0;
+         vsmen.r := 0;
+         vsnext1 := wrd(#2000-80);
+         vsnext2 := wrd(#2000);
+         dsnext  := wrd(160);
+
+         for i := 1 to 100 do
+            begin
+               case rtype of
+                 1 : squeeze1(dsmen,vsmen);
+                 2 : squeeze2(dsmen,vsmen);
+                 3 : squeeze3(dsmen,vsmen);
+                 otherwise return    end;
+               dsmen.r := dsmen.r + dsnext;
+               vsmen.r := vsmen.r + vsnext1;
+               case rtype of
+                 1 : squeeze1(dsmen,vsmen);
+                 2 : squeeze2(dsmen,vsmen);
+                 3 : squeeze3(dsmen,vsmen);
+                 otherwise return    end;
+               dsmen.r := dsmen.r + dsnext;
+               vsmen.r := vsmen.r - vsnext2
+            end;
+        promptupd := 2;
+      end;
+
+      (* $mathck+ *)
+
+
+procedure dscopy;
+ 
+var mem : ads of byte;
+      i,col,h,k : integer;
+      nbits,row,byte1,byte2,byte3,byte4 : byte;
+      w : text;
+      j : word;
+     inchar : twobyte;
+      buffer : string(800);
+    
+procedure dscopy2;
+var 
+  bit, bit2, nbyte, i, col : integer;
+  j, k : word;
+  cmp,rem : array [1..4] of integer;
+begin
+  j := #f960;
+  cmp[1] := 64;
+  cmp[2] := 16;
+  cmp[3] := 4;
+  cmp[4] := 1;
+  rem[1] := 128;
+  rem[2] := 32;
+  rem[3] := 8;
+  rem[4] := 2;
+  row := 1;
+  while row <= 80 do 
+  begin
+    if row >1 then j := j + 2;
+    for bit :=1 to 8 do
+    begin
+      if bit > 4 then bit2 := bit - 4 
+      else bit2 := bit;
+      write (w, equipprt[2]);
+      if bit >4 then k := j+1 else k := j;
+      for col := 1 to 50 do 
+      begin
+        byte2 := 0;
+        byte3 := 0;
+        for nbyte := 1 to 8 do
+        begin
+          mem.r := wrd(k);
+          byte1 := mem^;
+          if byte1 mod (rem[bit2]*2) >= cmp[bit2] then
+          if nbyte mod 2 = 1 then
+            byte3 := byte3 + rem[(nbyte+1) div 2]
+          else
+            byte3 := byte3 + cmp[(nbyte+1) div 2];
+          if k >= 160 then k := k -160;
+        end; {nbyte}
+        if byte3 =26 then byte3 := 24;
+        write (w,chr(byte3));
+      end;  {1 raster line}
+      if key_board_status then
+        begin
+          get_input(inchar);
+          if (inchar[1]=0) and (inchar[2]=59) then
+            row := 80;
+        end
+     end;  { 8 raster line, 1 row}
+     row := row + 1
+  end;
+end;
+
+begin
+   assign (w,'lpt1');
+   rewrite(w);
+   write (w,equipprt[1]);
+   mem.s := DSSEG;
+
+   if prtnum='5' then dscopy2
+   else
+   begin
+    if equipprt[1][1] <> chr(27) then nbits := 7 else nbits := 8;
+   j := 0;
+   row := 1;
+   k := 1;
+   while row <= (639 div nbits)+1 do begin
+       j := #f960+j;
+       if row>1 then if (nbits=7)and(k=2) then j:=j+1 else j:=j+2;
+       h := 0;
+       write (w,equipprt[2]);
+       for col :=  1 to 400 do begin
+         if nbits = 7 then
+           begin
+	   mem.r := wrd(j);
+	   byte1 := mem^;
+	   mem.r := wrd(j+1);
+	   byte2 := mem^;
+           mem.r := wrd(j+2);
+           byte4 := mem^;
+	      byte3 := 0;
+           if row>640 div nbits then [byte2:=0;byte4:=0;];
+           case k of
+             1 : begin
+         if byte1>=64 then [byte3:=byte3+1  ;byte1:=byte1 mod 64];
+         if byte1>=16 then [byte3:=byte3+2  ;byte1:=byte1 mod 16];
+         if byte1>=4  then [byte3:=byte3+4  ;byte1:=byte1 mod 4 ];
+         if byte1>=1  then [byte3:=byte3+8                      ];
+         byte2 := byte2 div 4;
+         if byte2>=16 then [byte3:=byte3+16 ;byte2:=byte2 mod 16];
+         if byte2>=4  then [byte3:=byte3+32 ;byte2:=byte2 mod 4 ];
+         if byte2>=1  then [byte3:=byte3+64                     ];
+                 end;
+             2 : begin
+         byte1 := byte1 mod 4;
+         if byte1>=1  then [byte3:=byte3+1  ;                   ];
+         if byte2>=64 then [byte3:=byte3+2  ;byte2:=byte2 mod 64];
+         if byte2>=16 then [byte3:=byte3+4  ;byte2:=byte2 mod 16];
+         if byte2>=4  then [byte3:=byte3+8  ;byte2:=byte2 mod 4 ];
+         if byte2>=1  then [byte3:=byte3+16                     ];
+         byte4 := byte4 div 16;
+         if byte4>=4  then [byte3:=byte3+32 ;byte4:=byte4 mod 4 ];
+         if byte4>=1  then [byte3:=byte3+64 ;                   ];
+                 end;
+             3 : begin
+         byte1 := byte1 mod 16;
+         if byte1>=4  then [byte3:=byte3+1  ;byte1:=byte1 mod 4 ];
+         if byte1>=1  then [byte3:=byte3+2  ;                   ];
+         if byte2>=64 then [byte3:=byte3+4  ;byte2:=byte2 mod 64];
+         if byte2>=16 then [byte3:=byte3+8  ;byte2:=byte2 mod 16];
+         if byte2>=4  then [byte3:=byte3+16 ;byte2:=byte2 mod 4 ];
+         if byte2>=1  then [byte3:=byte3+32                     ];
+         byte4 := byte4 div 64;
+         if byte4>=1  then [byte3:=byte3+64 ;                   ];
+                 end;
+             0 : begin
+         byte1 := byte1 mod 64;
+         if byte1>=16 then [byte3:=byte3+1  ;byte1:=byte1 mod 16];
+         if byte1>=4  then [byte3:=byte3+2  ;byte1:=byte1 mod 4 ];
+         if byte1>=1  then [byte3:=byte3+4  ;                   ];
+         if byte2>=64 then [byte3:=byte3+8  ;byte2:=byte2 mod 64];
+         if byte2>=16 then [byte3:=byte3+16 ;byte2:=byte2 mod 16];
+         if byte2>=4  then [byte3:=byte3+32 ;byte2:=byte2 mod 4 ];
+         if byte2>=1  then [byte3:=byte3+64                     ];
+                 end;
+            otherwise byte3 := 127;
+            end;
+           end
+          else begin
+	   mem.r := wrd(j);
+	   byte1 := mem^;
+	   mem.r := wrd(j+1);
+	   byte2 := mem^;
+	      byte3 := 0;
+         if byte1>=64 then [byte3:=byte3+128;byte1:=byte1 mod 64];
+         if byte1>=16 then [byte3:=byte3+64 ;byte1:=byte1 mod 16];
+         if byte1>=4  then [byte3:=byte3+32 ;byte1:=byte1 mod 4 ];
+         if byte1>=1  then [byte3:=byte3+16                     ];
+         if byte2>=64 then [byte3:=byte3+8  ;byte2:=byte2 mod 64];
+         if byte2>=16 then [byte3:=byte3+4  ;byte2:=byte2 mod 16];
+         if byte2>=4  then [byte3:=byte3+2  ;byte2:=byte2 mod 4 ];
+         if byte2>=1  then [byte3:=byte3+1                      ];
+           end;
+              if byte3 = 26 then byte3 := 24;
+              h := h + 1;
+              buffer(h) := chr(byte3);
+              if (nbits = 8) or (byte3=3) then begin
+                  h := h + 1;
+                  buffer(h) := chr(byte3);
+                end;
+              if col < 400 then j := j - 160;
+        end; {screen col}
+        write(w,buffer:h);
+        if nbits = 8 then
+          begin
+            rewrite(w);
+            write (w,chr(13));
+          end;
+        if key_board_status then
+          begin
+            get_input(inchar);
+            if (inchar[1] = 0) and (inchar[2] = 59) then
+              row := 640 div nbits;
+          end;
+        row := row + 1;
+        k := (k+1) mod 4;
+    end; {screen}
+    end;
+    write (w,equipprt[3]);
+    write (w,chr(12));
+end; {dscopy}
+(*procedure dscopy;
+ 
+var mem : ads of byte;
+      i,col,h : integer;
+      row,byte1,byte2,byte3 : byte;
+      w : text;
+      j : word;
+     inchar : twobyte;
+      buffer : string(800);
+
+begin
+   assign (w,'lpt1');
+   rewrite(w);
+   write (w,equipprt[1]);
+   mem.s := DSSEG;
+
+   j := 0;
+   row := 1;
+   while row <=  80 do begin
+       j := j + #f960;
+       if row > 1 then j := j+2;
+       h := 0;
+       write (w,equipprt[2]);
+       for col :=  1 to 400 do begin
+	   mem.r := wrd(j);
+	   byte1 := mem^;
+	   mem.r := wrd(j+1);
+	   byte2 := mem^;
+	      byte3 := 0;
+         if byte1>=64 then [byte3:=byte3+128;byte1:=byte1 mod 64];
+         if byte1>=16 then [byte3:=byte3+64 ;byte1:=byte1 mod 16];
+         if byte1>=4  then [byte3:=byte3+32 ;byte1:=byte1 mod 4 ];
+         if byte1>=1  then [byte3:=byte3+16                     ];
+         if byte2>=64 then [byte3:=byte3+8  ;byte2:=byte2 mod 64];
+         if byte2>=16 then [byte3:=byte3+4  ;byte2:=byte2 mod 16];
+         if byte2>=4  then [byte3:=byte3+2  ;byte2:=byte2 mod 4 ];
+         if byte2>=1  then [byte3:=byte3+1                      ];
+              if byte3 = 26 then byte3 := 24;
+         h := h + 1;
+         buffer(h) := chr(byte3);
+         h := h + 1;
+         buffer(h) := chr(byte3);
+
+          if col < 400 then         j := j - 160;
+        end; {screen col}
+        writeln(w,buffer);
+        rewrite(w);
+        if key_board_status then
+          begin
+            get_input(inchar);
+            if (inchar[1] = 0) and (inchar[2] = 59) then
+              row := 80;
+          end;
+        row := row + 1;
+    end; {screen}
+    write (w,chr(12));
+    write (w,equipprt[3]);
+    write (chr(7));
+end; {dscopy}*)
+
+(*procedure vbcopy;
+var mem : ads of byte;
+      j : integer;
+      row,col: integer;
+      bim : byte;
+      w : text;
+      inchar : twobyte;
+    
+ 
+begin
+   assign (w,'lpt1');
+   rewrite(w);
+   write (w,chr(27),chr(65),chr(8));
+   mem.s := #b800;
+
+   j := -#1;
+   row := #1;
+   while row <= #50 do begin
+       j := j + #1ef1;
+       write (w,chr(27),'K',chr(144),chr(1));
+       for col := #1 to #64 do begin
+	   mem.r := wrd(j+#2000);
+	   bim := mem^;
+           if ord(bim) = 26 then bim := wrd(24);
+	   write (w,chr(bim),chr(bim));
+	      mem.r := wrd(j);
+	      bim := mem^;
+              if ord(bim) = 26 then bim := wrd(24);
+           write (w,chr(bim),chr(bim));
+           j := j - #50;
+        end; {screen col}
+        j := j + #50;
+        rewrite(w);
+        write (w,chr(13));
+        if key_board_status then
+          begin
+            get_input (inchar);
+            if (inchar[1] = 0) and (inchar[2] = 59) then
+              row := #50;
+          end;
+        row := row + 1;
+    end; {screen}
+    write (w,chr(12));
+    write (w,chr(27),chr(65),chr(12));
+end; {vbcopy}*)
+
+
+  procedure rdeupd;
+
+  { update vb under RTYPE from STLINE to ETLINE}
+
+  var sy,ey : integer;
+           dsmen, vsmen : adsbyte;
+           vsnext1,vsnext2,dsnext : word;
+
+  begin
+    sy := stline*8;
+    ey := etline*8;
+    case rtype of
+     1..3 : begin
+              sy:=sy*2;
+              ey:=ey*2+15;
+         dsmen.s := DSSEG;
+         vsmen.s := #B800;
+         vsnext1 := wrd(#2000-80);
+         vsnext2 := wrd(#2000);
+         dsnext  := wrd(160);
+         dsmen.r := wrd(wrd(sy)*wrd(dsnext));
+         vsmen.r := wrd(wrd(sy div 4)*wrd(80));
+              while (sy <= ey) do
+                  begin
+               case rtype of
+                 1 : squeeze1(dsmen,vsmen);
+                 2 : squeeze2(dsmen,vsmen);
+                 3 : squeeze3(dsmen,vsmen);
+                 otherwise return    end;
+               dsmen.r := dsmen.r + dsnext;
+               vsmen.r := vsmen.r + vsnext1;
+               case rtype of
+                 1 : squeeze1(dsmen,vsmen);
+                 2 : squeeze2(dsmen,vsmen);
+                 3 : squeeze3(dsmen,vsmen);
+                 otherwise return    end;
+               dsmen.r := dsmen.r + dsnext;
+               vsmen.r := vsmen.r - vsnext2
+{                    rdtupd(rtype,0,sy,0,80);}
+                     sy := sy+4;
+                  end;
+            end;
+     4..7 : wdupdate(wx1,wy1+sy,0,sy,320,ey-sy+8,0);
+        otherwise begin end; end;
+  end;
+
+
+  procedure rdtupd;
+
+  var i,width,height,npix,nline,u,v,osetbi : integer;
+      osetby : word;
+
+  begin
+    case size of
+      0 : [width :=  8; height :=  8];
+      1 : [width :=  6; height :=  8];
+      2 : [width := 10; height := 12];
+      3 : [width := 14; height := 16];
+      otherwise begin end; end;
+    npix := width * nochar;
+    case rtype of
+      1 : [x:=(x+1) div 2 * 2; u:=x div 2; npix:=npix div 2];
+      2,3 : u:=x;
+      otherwise begin end; end;
+    y := (y+1) div 2 * 2;
+    v := y div 2;
+    nline := height div 2;
+    osetbi := x div 4;
+    osetby := wrd(y) * wrd(160) + wrd(osetbi);
+    osetbi := x - osetbi * 4;
+    for i := 1 to nline do
+      begin
+      case rtype of
+        1 : rdlupd1(dsseg,osetby,osetbi,u,v,npix);
+        2,3 : rdlupd2(dsseg,osetby,rtype,osetbi,u,v,npix);
+        otherwise begin end; end;
+      y := y+2;
+      if y <= 638 then osetby := osetby + wrd(320);
+      v := v + 1;
+      end;
+  end;
+
+
+  procedure rdbupd;
+
+  var i,u,v,osetbi : integer;
+      osetby : word;
+
+  begin
+    case rtype of
+      1 : [x:=(x+1) div 2 * 2; u:=x div 2; npix:=npix div 2];
+      2,3 : u:=x;
+      otherwise begin end; end;
+    y := (y+1) div 2 * 2;
+    v := y div 2;
+    nline := nline div 2;
+    osetbi := x div 4;
+    osetby := wrd(y) * wrd(160) + wrd(osetbi);
+    osetbi := x - osetbi * 4;
+    for i := 1 to nline do
+      begin
+      case rtype of
+        1 : rdlupd1(dsseg,osetby,osetbi,u,v,npix);
+        2,3 : rdlupd2(dsseg,osetby,rtype,osetbi,u,v,npix);
+        otherwise begin end; end;
+      y := y+2;
+      if y <= 638 then osetby := osetby + wrd(320);
+      v := v + 1;
+      end;
+  end;
+
+end.
+

@@ -1,0 +1,53 @@
+ ONE-DIMENSIONAL NUMERICAL ANALYSIS OF THE TRANSIENT THERMAL RESPONSE OF
+MULTILAYER INSULATIVE SYSTEMS
+
+( NASA Langley Research Center )
+
+     This program performs a one-dimensional numerical analysis of the
+transient thermal response of multi-layer insulative systems. The analy-
+sis can determine the temperature distribution through a system consist-
+ing of from one to four layers, one of which can be an air gap. Concentrated
+heat sinks at any interface can be included. The computer program based on
+the analysis will determine the thickness of a specified layer that will
+satisfy a temperature limit criterion at any point in the insulative sys-
+tem. The program will also automatically calculate the thickness at sev-
+eral points on a system and determine the total system mass. This program
+was developed as a tool for designing thermal protection systems for high-
+speed aerospace vehicles but could be adapted to many areas of industry in-
+volved in thermal insulation systems.
+
+     In this package, the equations describing the transient thermal re-
+sponse of a system are developed. The governing differential equation for
+each layer and boundary condition are put in finite-difference form using a
+Taylor's series expansion. These equations yield an essentially tridiag-
+onal matrix of unknown temperatures. A procedure based on Gauss' elimina-
+tion method is used to solve the matrix.
+
+     This program is written in FORTRAN IV for the CDC RUN compiler and has
+been implemented on a CDC 6000 series machine operating under SCOPE 3.0.
+This program requires a minimum of 44K (octal) of 60 bit words of memory.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: CDC 6000 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 500 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-12057
+
+DOMESTIC - DOCUMENTATION PRICE: $17.00    PROGRAM PRICE: $300.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $34.00   PROGRAM PRICE: $600.00
+
+
+
+                                        1
+

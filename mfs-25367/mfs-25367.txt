@@ -1,0 +1,79 @@
+ EVALUATION OF REGISTRATION, COMPRESSION AND CLASSIFICATION ALGORITHMS
+
+( NASA Marshall Space Flight Center )
+
+     Several types of algorithms are generally used to process digital im-
+agery such as Landsat data. The most commonly used algorithms perform the
+task of registration, compression, and classification. Because there are
+different techniques available for performing registration, compression,
+and classification, imagery data users need a rationale for selecting a
+particular approach to meet their particular needs. This collection of
+registration, compression, and classification algorithms was developed
+so that different approaches could be evaluated and the best approach for
+a particular application determined. Routines are included for six regis-
+tration algorithms, six compression algorithms, and two classification al-
+gorithms. The package also includes routines for evaluating the effects of
+processing on the image data. This collection of routines should be useful
+to anyone using or developing image processing software.
+
+     Registration of image data involves the geometrical alteration of the
+imagery. Registration routines available in the evaluation package in-
+clude image magnification, mapping functions, partitioning, map overlay,
+and data interpolation. The compression of image data involves reducing
+the volume of data needed for a given image. Compression routines available
+in the package include adaptive differential pulse code modulation, two-
+dimensional transforms, clustering, vector reduction, and picture segmen-
+tation. Classification of image data involves analyzing the uncompressed
+or compressed image data to produce inventories and maps of areas of similar
+spectral properties within a scene. The classification routines available
+include a sequential linear technique and a maximum likelihood technique.
+
+     The choice of the appropriate evaluation criteria is quite important
+in evaluating the image processing functions. The user is therefore given
+a choice of evaluation criteria with which to investigate the available im-
+age processing functions. All of the available evaluation criteria basi-
+cally compare the observed results with the expected results. For the im-
+age reconstruction processes of registration and compression, the expected
+results are usually the original data or some selected characteristics of
+the original data. For classification processes the expected result is the
+ground truth of the scene. Thus, the comparison process consists of deter-
+mining what changes occur in processing, where the changes occur, how much
+change occurs, and the amplitude of the change. The package includes evalu-
+ation routines for performing such comparisons as average uncertainty, av-
+erage information transfer, chi-square statistics, multidimensional his-
+tograms, and computation of contingency matrices.
+
+     This collection of routines is written in FORTRAN IV for batch execu-
+tion and has been implemented on an IBM 360 computer with a central memory
+requirement of approximately 662K of 8 bit bytes. This collection of image
+processing and evaluation routines was developed in 1979.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: IBM 360 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 8,715 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: MFS-25367
+
+DOMESTIC - DOCUMENTATION PRICE: $54.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $108.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

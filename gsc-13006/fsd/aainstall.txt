@@ -1,0 +1,13 @@
+            *****************************************
+             FLEXIBLE SPACECRAFT DYNAMICS PROGRAM V
+            *****************************************
+
+
+    This is the Flexible Spacecraft Dynamics Program V, modified
+  to run on the VAX 11/780 VMS 3.7 . FSD was written by AVCO and
+  modified to run on the VAX by ODSI. 
+      
+    To install FSD, create a directory "[FSD]" and define FSDHOME as 
+  the FSD directory. The tape is a backup.
+    BACKUP MF:FSD.BCK/SELECT = [...] [...]/REWIND
+  will restore.

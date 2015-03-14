@@ -1,0 +1,164 @@
+  { $include : 'compile.inc' }
+  { $include : 'dspas.int' }
+  { $include : 'vbpas.int' }
+  { $include : 'sfpas.int' }
+  { $include : 'getparam.int' }
+  { $include : 'utility.int' }
+  { $include : 'execute.int' }
+  { $include : 'vdmgen.int' }
+  { $include : 'dialog.int' }
+  { $include : 'plpas.int' }
+  { $include : 'vdmintrp.int' }
+  { $include : 'slide.int' }
+  { $include : 'sldetc.int' }
+
+implementation of slide;
+
+  USES dspas;
+  USES vbpas;
+  USES sfpas;
+  USES getparam;
+  USES execute;
+  USES vdmgen;
+  USES utility;
+  USES dialog;
+  USES plpas;
+  USES vdmintrp;
+  USES sldetc;
+
+  var
+    i, j     	   : integer;
+    inchar	   : twobyte;
+    blk 	   : char;
+    inkey,curnum   : byte;
+
+  procedure exit;
+
+     begin
+     end;
+
+  procedure enter;
+
+     begin
+     end;
+
+  procedure format;
+
+     begin
+     end;
+
+  procedure redraw;
+
+    begin
+    end;
+
+  procedure sldredraw;
+
+    var
+      x1,y1,x2,y2      : integer;
+      ndon,ndoff       : integer;
+      fill,size,dir    : integer;
+      id1,id2,scale    : integer;
+      radius,sangle,eangle : integer;
+      textline	       : lstring(127);
+      f 	       : text;
+      command	       : integer;
+      done,back        : boolean;
+      j 	       : byte;
+      achar	       : char ;
+
+    begin
+      assign ( f, name );
+      reset ( f );
+      done := false;
+      if plotchoice = 2 then [plchoice:=2;plinit;]
+       else
+        begin
+          plchoice:=plotchoice;
+          dsinit;
+          plotchoice:=plchoice;
+        end;
+      read ( f, achar ) ;
+      close ( f ) ;
+
+      if plotchoice = 0 then plotchoice := 1;
+      if achar = chr(#54) then vdmipt ( name, back, inkey, curnum );
+      else
+	begin
+	  assign ( f, name ) ;
+	  reset ( f ) ;
+	  repeat
+	    read ( f, command );
+	    case command of
+	       1 : begin
+		     readln ( f, x1, y1, color );
+		     if plchoice <> 2 then
+		       dspoint ( x1, y1, color )
+		      else plpoint ( x1, y1, color );
+		   end;
+	       2 : begin
+		     readln ( f, x1, y1, x2, y2, color, ndon, ndoff );
+		     if plchoice <> 2 then
+		       dsline ( x1, y1, x2, y2, color, ndon, ndoff )
+		      else plline ( x1, y1, x2, y2, color, ndon, ndoff );
+		   end;
+	       3 : begin
+		     readln ( f, x1, y1, x2, y2, color, fill );
+		     if plchoice <> 2 then
+		       dsbar ( x1, y1, x2, y2, color, fill )
+		      else plbar ( x1, y1, x2, y2, color, fill );
+		   end;
+	       4 : begin
+		   readln ( f, x1, y1, size, color, dir, blk, textline );
+		    for j := 1 to textline.len do
+		     if textline[j]=chr(255) then textline[j]:=chr(26);
+		   if plchoice <> 2 then
+		     dstext(x1,y1,size,color,textline,textline.len,dir)
+		   else pltext(x1,y1,size,color,textline,textline.len,dir);
+		   end;
+	       5 : begin
+		     readln ( f, x1, y1, color, id1, id2, scale );
+		     if plchoice <> 2 then
+		       dsymbol ( x1, y1, color, id1, id2, scale )
+		      else plsymbol ( x1, y1, color, id1, id2, scale );
+		   end;
+	       6 : readln ( f );
+	       7 : readln ( f );
+	       8 : readln ( f );
+	       9 : begin
+		    readln ( f, x1, y1, radius, sangle, eangle, color, fill);
+		    if plchoice <> 2 then
+		      dscir (x1, y1, radius, sangle, eangle, color, fill)
+		     else plcircle(x1,y1,radius,sangle,eangle,color,fill);
+		   end;
+	       otherwise [done := true; if plchoice = 2 then plfinish;];
+	       end;
+           if key_board_status then
+             begin
+               get_input(inchar);
+               if (inchar[1]=0) and (inchar[2]=59) then
+                 done := true;
+             end;
+	  until done or eof ( f );
+	  close ( f );
+	end ;
+
+      plotchoice := plchoice;
+      if version <> 0 then
+	begin
+	  there ( 0, 23 );
+	  write ( messages^[7] );
+	  curnum := 1;
+	end
+       else
+	    if plchoice <> 2 then
+	      begin
+		reduce ( 2, 1 );
+		rtype := 2;
+		color := 1;
+		j := 1;
+	      end;
+    end;
+
+  end.
+

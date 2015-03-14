@@ -1,0 +1,75 @@
+ AESOP- INTERACTIVE DESIGN OF LINEAR QUADRATIC REGULATORS AND KALMAN FIL-
+TERS
+
+( NASA Lewis Research Center )
+
+     AESOP was developed to solve a number of problems associated with the
+design of controls and state estimators for linear time-invariant systems.
+The systems considered are modeled in state-variable form by a set of lin-
+ear differential and algebraic equations with constant coefficients. Two
+key problems solved by AESOP are the linear quadratic regulator (LQR) de-
+sign problem and the steady-state Kalman filter design problem. AESOP is
+designed to be used in an interactive manner.
+
+     The user can solve design problems and analyze the solutions in a sin-
+gle interactive session. Both numerical and graphical information are
+available to the user during the session.
+
+     The AESOP program is structured around a list of predefined functions.
+Each function performs a single computation associated with control, esti-
+mation, or system response determination. AESOP contains over sixty func-
+tions and permits the easy inclusion of user defined functions. The user
+accesses these functions either by inputting a list of desired functions
+in the order they are to be performed, or by specifying a single function to
+be performed. The latter case is used when the choice of function and func-
+tion order depends on the results of previous functions. The available AE-
+SOP functions are divided into several general areas including: 1) program
+control, 2) matrix input and revision, 3) matrix formation, 4) open-loop
+system analysis, 5) frequency response, 6) transient response, 7) tran-
+sient function zeros, 8) LQR and Kalman filter design, 9) eigenvalues and
+eigenvectors, 10) covariances, and 11) user-defined functions. The most
+important functions are those that design linear quadratic regulators and
+Kalman filters. The user interacts with AESOP when using these functions by
+inputting design weighting parameters and by viewing displays of designed
+system response. Support functions obtain system transient and frequency
+responses, transfer functions, and covariance matrices. AESOP can also
+provide the user with open-loop system information including stability,
+controllability, and observability.
+
+     The AESOP program is written in FORTRAN IV for interactive execution
+and has been implemented on an IBM 3033 computer using TSS 370. As currently
+configured, AESOP has a central memory requirement of approximately 2 Megs
+of 8 bit bytes. Memory requirements can be reduced by redimensioning arrays
+in the AESOP program. Graphical output requires adaptation of the AESOP
+plot routines to whatever device is available. The AESOP program was devel-
+oped in 1984.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                                        1
+
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: IBM 370 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 9,258 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LEW-14128
+
+DOMESTIC - DOCUMENTATION PRICE: $57.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $114.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        2
+

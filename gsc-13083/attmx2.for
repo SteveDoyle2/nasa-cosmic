@@ -1,0 +1,164 @@
+      SUBROUTINE ATTMX2(KEY,ZRA,ZDEC,CLOCK,IATTREF,MATRIX,SCPOS,SCVEL)
+      IMPLICIT REAL*8 (A-H,O-Z)
+C
+C  THIS ROUTINE COMPUTES THE MATRIX USED ROTATE A VECTOR BETWEEN
+C  THE ORBITER BODY AXIS SYSTEM AND THE INERTIAL REFERENCE SYSTEM.
+C
+C  THE BODY AXES ORIENTATION IS GIVEN BY 3 ANGLES REFERENCED TO A 
+C  SYSTEM CALLED THE ATTITUDE REFERENCE SYSTEM HERE. THE ATTITUDE 
+C  REFERENCE SYSTEMS ARE INERTIAL AND LOCAL ORBITAL.
+C  FOR EXAMPLE, IF LOCAL ORBITAL, THEN THESE ANGLES ARE REFERENCED TO
+C  LOCAL ORBITAL X,Y,Z AXES. IF INERTIAL, THEN REFERANCED TO INERTIAL
+C  X,Y,Z AXES.
+C
+C  THE ORBITER BODY AXES ARE: X IS THE ROLL AXIS. +X TO NOSE.
+C                             Y IS PITCH AXIS. +Y IS OUT THE STARBOARD
+C                               WING.
+C                             Z IS YAW AXIS. -Z IS UP FROM THE BAY.
+C
+C*********************************************************************
+C
+C  VARIABLES  DIM  TYPE   I/O   DESCRIPTION
+C  ---------  ---  ----   ---   -----------
+C
+C  KEY        1    I*4     I    FLAG INDICATING COORD SYSTEMS FROM AND
+C                               TO WHICH ROTATIONS WILL BE DONE USING
+C                               THE MATRIX COMPUTED HERE.
+C
+C                               = +: VEC(BODY) = MATRIX * VEC(INERTIAL)
+C                                    I.E.- ROTATING TO BODY COORDINATES.
+C                               = -: VEC(INERTIAL) = MATRIX * VEC(BODY)
+C                                    I.E.- ROTATING TO INERTIAL COORDS.
+C
+C
+C  ZRA        1    R*8     I    THE RIGHT ASCENSION OF THE ORBITER +Z
+C                               AXIS RELATIVE TO THE REFERENCE SYSTEM.
+C                               IF THE DECLINATION(ZDEC) IS +/- PI/2, 
+C                               THEN ANY ZRA MAY BE USED SINCE ALL WILL
+C                               PRODUCE THE SAME RESULT.
+C                               RADIANS.
+C
+C  ZDEC       1    R*8     I    THE DECLINATION OF THE ORBITER +Z AXIS
+C                               RELATIVE TO THE REFERENCE SYSTEM.
+C                               RADIANS.
+C
+C  CLOCK      1    R*8     I    NOSE CLOCK ANGLE. RADIANS.
+C                               FOR 0.0 ANGLE, THE ORBITER NOSE IS
+C                               POINTED ALONG THE VECTOR PRODUCT
+C                               (REFERENCE +Z AXIS) X (ORBITER +Z AXIS).
+C
+C                               IF ZDEC IS -PI/2, THEN CLOCK=0.0 PLACES
+C                               THE ORBITER +X AXIS ALONG THE REFERENCE
+C                               -X AXIS.
+C                               IF ZDEC IS +PI/2, THEN CLOCK=0.0 PLACES
+C                               THE ORBITER +X AXIS ALONG THE REFERENCE
+C                               +X AXIS.
+C
+C                               CLOCK ANGLE IS THE ANGLE THROUGH WHICH
+C                               THE ORBITER NOSE HAS BEEN ROTATED ABOUT
+C                               ITS Z-AXIS FROM THE 0.0 POSITION.
+C                               ROTATION IS FROM THE NOSE TOWARD THE
+C                               RIGHT WING.
+C
+C  IATTREF     1   I*4     I    FLAG INDICATING THE COORDINATE SYSTEM TO
+C                               WHICH THE ATTITUDE IS REFERENCED.
+C                               = 0, REFERENCED TO INERTIAL COORDINATES.
+C                               = 1, REFERENCED TO LOCAL ORBITAL COORDS.
+C                               = OTHERWISE, ERROR.
+C
+C  MATRIX     3,3  R*8     O    ROTATION MATRIX. 
+C                               ROTATES FROM VECTOR V1 TO VECTOR V2 :
+C                               V2(I) = MATRIX(I,J)*V1(J), SUMMING ON J.
+C                               IF AN INVALID IATTREF IS INPUT, MATRIX
+C                               IS FILLED WITH 999.D0'S
+C
+C  SCPOS      3    R*8     I    POSITION OF S/C IN INERTIAL COORDS. 
+C                               NOT USED IF THE ATTITUDE REFERENCE
+C                               SYSTEM IS THE INERTIAL SYSTEM.
+C                               MAY USE ANY LENGTH UNIT.
+C
+C  SCVEL      3    R*8     I    VELOCITY OF S/C IN INERTIAL COORDS.
+C                               NOT USED IF THE ATTITUDE REFERENCE
+C                               SYSTEM IS THE INERTIAL SYSTEM.
+C                               MAY USE ANY LENGTH AND TIME UNITS.
+C
+C**********************************************************************
+C
+C   CODED BY CHARLIE PETRUZZ0.  12/81.
+C    MODIFIED.............
+C               2/82. CJP. COMMENT CHANGES IN ZRA AND CLOCK DESCRIPTIONS
+C              12/82. CJP. IATTREF DESCRIPTION AND ERROR MESSAGE ADDED.
+C
+C***********************************************************************
+C
+C
+C
+      REAL*8 SCPOS(3),SCVEL(3),ROT1(3,3),ROT2(3,3),ROT3(3,3)
+      REAL*8 MATRIX(3,3)
+      REAL*8 POSROT2(3)/3*1.D10/,VELROT2(3)/3*1.D10/,
+     1       RALAST/1.D10/,DECLAST/1.D10/,CLOCKLAST/1.D10/
+      LOGICAL CALLIT
+      INTEGER NERR/0/
+C
+C
+C  NOW COMPUTE THE MATRIX ROT1 THAT ROTATES A VECTOR FROM THE 
+C  ATTITUDE REFERENCE COORDS TO THE S/C BODY AXIS COORDS.
+      CALLIT=  (RALAST.NE.ZRA) .OR. (DECLAST.NE.ZDEC) .OR.
+     1        (CLOCKLAST.NE.CLOCK)
+      IF(CALLIT) CALL ATTMX1(1,ZRA,ZDEC,CLOCK,ROT1)
+C
+C  NOW COMPUTE THE MATRIX ROT3 THAT ROTATES A VECTOR FROM THE
+C  INERTIAL REFERENCE COORDS TO THE S/C BODY AXIS COORDS.
+      IF(IATTREF.NE.0) GO TO 1200
+C     ATTITUDE REFERENCE SYSTEM IS INERTIAL. 
+      DO 1110 I=1,3
+      DO 1110 J=1,3
+ 1110 ROT3(I,J)=ROT1(I,J)
+      GO TO 5000
+C
+ 1200 CONTINUE
+      IF(IATTREF.NE.1) GO TO 1300
+C     ATTITUDE REFERENCE SYSTEM IS LOCAL ORBITAL.
+C     FIRST GET MATRIX ROT2 THAT ROTATES A VECTOR FROM INERTIAL COORDS
+C     TO LOCAL ORBITAL.
+      DO 1205 I=1,3
+      CALLIT=(SCPOS(I).NE.POSROT2(I)) .OR. (SCVEL(I).NE.VELROT2(I))
+      IF(CALLIT) GO TO 1206
+ 1205 CONTINUE
+ 1206 CONTINUE
+      IF(CALLIT) CALL TRANS(SCPOS,SCVEL,ROT2)
+      DO 1210 I=1,3
+      DO 1210 J=1,3
+      TEMP=0.D0
+      DO 1212 K=1,3
+ 1212 TEMP=TEMP+ROT1(I,K)*ROT2(K,J)
+ 1210 ROT3(I,J)=TEMP
+      DO 1215 I=1,3
+      POSROT2(I)=SCPOS(I)
+ 1215 VELROT2(I)=SCVEL(I)
+      GO TO 5000
+C
+ 1300 CONTINUE
+C     ERROR. INVALID IATTREF.
+      DO 100 I=1,3
+      DO 100 J=1,3
+  100 MATRIX(I,J)=999.D0
+      CALL MESAGE(1,NERR,25,0,1,0,6,
+     1   'ATTMX2. ERROR. INVALID ATTITUDE FLAG. BAD MATRIX RETURNED.')
+      GO TO 9999
+C
+C
+ 5000 CONTINUE
+      TEMP=888.D0
+      DO 5010 I=1,3
+      DO 5010 J=1,3
+      IF(KEY.GT.0) TEMP=ROT3(I,J)
+      IF(KEY.LT.0) TEMP=ROT3(J,I)
+ 5010 MATRIX(I,J)=TEMP
+C
+ 9999 CONTINUE
+      RALAST=ZRA
+      DECLAST=ZDEC
+      CLOCKLAST=CLOCK
+      RETURN
+      END

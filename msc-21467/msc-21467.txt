@@ -1,0 +1,128 @@
+ CLIPS - C LANGUAGE INTEGRATED PRODUCTION SYSTEM
+
+( NASA Johnson Space Center )
+
+     The C Language Integrated Production System, CLIPS, is a shell for de-
+veloping expert systems. It is designed to allow artificial intelligence
+research, development, and delivery on conventional computers. The pri-
+mary design goals for CLIPS are portability, efficiency, and functional-
+ity. For these reasons, the program is written in C. CLIPS meets or outper-
+forms most micro- and minicomputer based artificial intelligence tools.
+
+     CLIPS is a forward chaining rule-based language. The program contains
+an inference engine and a language syntax that provide a framework for the
+construction of an expert system. It also includes tools for debugging an
+application. CLIPS is based on the Rete algorithm, which enables very ef-
+ficient pattern matching. The collection of conditions and actions to be
+taken if the conditions are met is constructed into a rule network. As facts
+are asserted either prior to or during a session, CLIPS pattern-matches the
+number of fields. Wildcards and variables are supported for both single and
+multiple fields. CLIPS syntax allows the inclusion of externally defined
+functions (outside functions which are written in a language other than
+CLIPS). CLIPS itself can be embedded in a program such that the expert sys-
+tem is available as a simple subroutine call.
+
+     Advanced features found in CLIPS version 4.3 include an integrated mi-
+croEMACS editor, the ability to generate C source code from a CLIPS rule
+base to produce a dedicated executable, binary load and save capabilities
+for CLIPS rule bases, and the utility program CRSV (Cross-Reference, Style,
+and Verification) designed to facilitate the development and maintenance
+of large rule bases.
+
+     Five machine versions are available. Each machine version includes
+the source and the executable for that machine. The UNIX version includes
+the source and binaries for IBM RS/6000, Sun3 series, and Sun4 series com-
+puters. The UNIX, DEC VAX, and DEC RISC Workstation versions are line ori-
+ented. The PC version and the Macintosh version each contain a window-
+ing variant of CLIPS as well as the standard line oriented version. The
+mouse/window interface version for the PC works with a Microsoft compatible
+mouse or without a mouse. This window version uses the proprietary CURSES
+library for the PC, but a working executable of the window version is pro-
+vided. The window oriented version for the Macintosh includes a version
+which uses a full Macintosh-style interface, including an integrated edi-
+tor. This version allows the user to observe the changing fact base and rule
+activations in separate windows while a CLIPS program is executing. The IBM
+PC version is available bundled with CLIPSITS, The CLIPS Intelligent Tu-
+toring System for a special combined price (COS-10025). The goal of CLIP-
+SITS is to provide the student with a tool to practice the syntax and con-
+cepts covered in the CLIPS User's Guide. It attempts to provide expert di-
+agnosis and advice during problem solving which is typically not available
+without an instructor. CLIPSITS is divided into 10 lessons which mirror the
+first 10 chapters of the CLIPS User's Guide. The program was developed for
+the IBM PC series with a hard disk. CLIPSITS is also available separately as
+MSC-21679.
+
+
+
+                                        1
+
+     The CLIPS program is written in C for interactive execution and has
+been implemented on an IBM PC computer operating under DOS, a Macintosh and
+DEC VAX series computers operating under VMS or ULTRIX. The line oriented
+version should run on any computer system which supports a full (Kernighan
+and Ritchie) C compiler or the ANSI standard C language. CLIPS was devel-
+oped in 1986 and Version 4.2 was released in July of 1988. Version 4.3 was
+released in June of 1989.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+                          IBM PC VERSION WITH CLIPSITS
+
+LANGUAGE: C-LANGUAGE
+
+MACHINE REQUIREMENTS: IBM PC SERIES
+
+PROGRAM SIZE: APPROXIMATELY 80,820 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 5.25 Inch IBM PC DOS Format Diskette
+
+PROGRAM NUMBER: COS-10025
+
+DOMESTIC - DOCUMENTATION PRICE: $62.00    PROGRAM PRICE: $300.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $124.00   PROGRAM PRICE: $600.00
+
+
+
+                                 IBM PC VERSION
+
+LANGUAGE: C-LANGUAGE
+
+MACHINE REQUIREMENTS: MACHINE INDEPENDENT
+
+PROGRAM SIZE: APPROXIMATELY 80,820 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 5.25 Inch IBM PC DOS Format Diskette
+
+PROGRAM NUMBER: MSC-21208
+
+DOMESTIC - DOCUMENTATION PRICE: $62.00    PROGRAM PRICE: $250.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $124.00   PROGRAM PRICE: $500.00
+
+
+
+                               MACINTOSH VERSION
+
+LANGUAGE: C-LANGUAGE
+
+MACHINE REQUIREMENTS: MACINTOSH
+
+PROGRAM SIZE: APPROXIMATELY 57,232 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 3.5 Inch MACINTOSH Format Diskette
+
+PROGRAM NUMBER: MSC-21467
+
+DOMESTIC - DOCUMENTATION PRICE: $62.00    PROGRAM PRICE: $250.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $124.00   PROGRAM PRICE: $500.00
+
+
+
+                                        2
+

@@ -1,0 +1,48 @@
+ GRID3O- FAST GENERATION OF MULTILEVEL, THREE-DIMENSIONAL BOUNDARY-
+CONFORMING O-TYPE COMPUTATIONAL GRIDS
+
+( NASA Lewis Research Center )
+
+     A fast algorithm has been developed for accurately generating
+boundary-conforming, three-dimensional consecutively refined compu-
+tational grids applicable to arbitrary wing-body and axial turbomachin-
+ery geometries. This algorithm has been incorporated into the GRID3O com-
+puter program. The method employed in GRID3O is based on using an analytic
+function to generate two-dimensional grids on a number of coaxial axisym-
+metric surfaces positioned between the centerbody and the outer radial
+boundary. These grids are of the O-type and are characterized by quasi-
+orthogonality, geometric periodicity, and an adequate resolution through-
+out the flow field. Because the built-in nonorthogonal coordinate stretch-
+ing and shearing cause the grid lines leaving the blade or wing trailing-
+edge to end at downstream infinity, use of the generated grid simplifies the
+numerical treatment of three-dimensional trailing vortex sheets.
+
+     The GRID3O program is written in FORTRAN IV for batch execution and has
+been implemented on an IBM 370 series computer with a central memory re-
+quirement of approximately 450K of 8 bit bytes. The GRID3O program was de-
+veloped in 1981.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: IBM 370 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 1,346 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LEW-13818
+
+DOMESTIC - DOCUMENTATION PRICE: $14.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $28.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

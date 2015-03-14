@@ -1,0 +1,78 @@
+	The Fault Handling Models menu is used to collect information
+	needed to build the FLTTYP NAMELIST in the input file.  The
+	fault types built will be "pointed" to by the Fault Occurrence
+	Models which will you will enter in the section following this
+	one.
+
+	CARE3MENU will currently allow you to enter up to five (5)
+	fault types in this section.  If you wish to enter less
+	than five fault types, merely enter "END" when prompted
+	for a fault type, then finish out the menu.  The program
+	will proceed on to the next menu.
+
+	Each fault type you enter in this section will be given
+	the name you enter for it.  These names must be used when
+	referring to fault types in later input sections.	
+.page
+	The following parameters are input for each Fault Handling Model:
+
+	     FAULT TYPE - A string input used to identify the fault type.
+                Currently this string can be up to 20 characters long.
+                The name must be different from all other fault	type
+                names previously entered.
+
+	     ALPHA - The active-to-benign transition rate. This is a real
+                number greater than or equal to 0.0 with units events/ hour.
+
+	     BETA - Benign-to-active transition rate.  This value is also
+                a real number with the same range and units as that
+                specified by ALPHA.
+.page
+	     DELTA - Parameter for describing the rate function between
+                active fault state A to the active error state AD.  It is
+                a real value with the same range and units as ALPHA.
+
+	     DELTA FHM - Indicator variable defining if DELTA parameter
+                is used for an exponential or uniform rate function.  It
+                is a string input with the value EXPONENTIAL or UNIFORM.
+
+	     RHO - Parameter for describing the rate function from the
+                active fault state A to the active-error state AE.  Once
+                again, a real number greater than or equal to 0.0 with
+                units events/hour.
+
+	     RHO FHM - Indicator variable defining if RHO parameter is
+                used for an exponential or uniform rate function.  It is
+                a string input set to either EXPONENTIAL or UNIFORM.
+.page
+	     EPSILON - Parameter for describing the rate function from error
+                state AE to detected state AD, BD, or to the single-fault
+                system failure state F.  Another real number greater than or
+                equal to 0.0 with units events/hour.
+
+	     EPSILON FHM - Indicator variable defining if EPSILON parameter
+                is used for an exponential or a uniform rate function. It is
+                a string input which should be one of EXPONENTIAL or UNIFORM.
+
+	     PA - Probability that a fault detected in the active state is
+                identified as permanent.  A real number in the range of
+                0.0 - 1.0.
+
+	     PB - Probability that a fault detected in the benign state is
+                identified as permanent.  A real number in the range of
+                0.0 - 1.0.
+
+	     C - Probability that a faulty module in the AE or BE state
+                is not lethal to the system.  It is a real number in the
+                0.0 - 1.0 range.
+.page
+	One error which may occur is not very clearly explained.  This error
+	involves "Invalid Parameter Combinations".  There are certain 
+	combinations of parameters which are currently not allowed.
+	These are subject to change and expansion in the future, but
+	the list is currently:
+
+		if     (delta = 0) and (rho = 0)
+		or if  (delta = 0) and (epsilon = 0)
+		or if  (Pa = 0) and (alpha = 0)
+		or if  (Pa = 0) and (Pb = 0)

@@ -1,0 +1,56 @@
+ VASP- VARIABLE DIMENSION AUTOMATIC SYNTHESIS PROGRAM
+
+( NASA Ames Research Center )
+
+     VASP is a variable dimension Fortran version of the Automatic Synthe-
+sis Program, ASP. The program is used to implement Kalman filtering and con-
+trol theory. Basically, it consists of 31 subprograms for solving most mod-
+ern control problems in linear, time-variant (or time-invariant) control
+systems. These subprograms include operations of matrix algebra, compu-
+tation of the exponential of a matrix and its convolution integral, and the
+solution of the matrix Riccati equation. The user calls these subprograms
+by means of a FORTRAN main program, and so can easily obtain solutions to
+most general problems of extremization of a quadratic functional of the
+state of the linear dynamical system. Particularly, these problems include
+the synthesis of the Kalman filter gains and the optimal feedback gains for
+minimization of a quadratic performance index.
+
+     VASP, as an outgrowth of the Automatic Synthesis Program, has the fol-
+lowing improvements: more versatile programming language; more convenient
+input/output format; some new subprograms which consolidate certain groups
+of statements that are often repeated; and variable dimensioning. The per-
+tinent difference between the two programs is that VASP has variable dimen-
+sioning and more efficient storage. The documentation for the VASP program
+contains a VASP dictionary and example problems. The dictionary contains
+a description of each subroutine and instructions on its use. The example
+problems include dynamic response, optimal control gain, solution of the
+sampled data matrix Riccati equation, matrix decomposition, and a pseudo-
+inverse of a matrix.
+
+     This program is written in FORTRAN IV and has been implemented on the
+IBM 360. The VASP program was developed in 1971.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: IBM 360 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 2,040 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: ARC-10616
+
+DOMESTIC - DOCUMENTATION PRICE: $71.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $142.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

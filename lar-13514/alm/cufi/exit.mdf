@@ -1,0 +1,67 @@
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+C
+C   EXIT - Definitions for the Exit Menu of CARE3MENU
+C
+C   VERSION:  1.0
+C   AUTHOR:  A. Roberts; Tesseract Systems, Inc.
+C   CREATION DATE:  05/24/83
+C   LAST REVISION DATE:  06/08/83
+C   LAST REVISED BY:  A. Roberts
+C
+C FUNCTION: Defintions and declarations for CARE3MENU exit verify
+C		menu.
+C
+C USEAGE:  included in CARE3MENU
+C
+C ARGUMENTS:  NA
+C
+C ERRORS:   NA
+C
+C NOTES:  Written in VAX/VMS FORTRAN. 
+C
+C PROCESS:  NA
+C
+C REVISION HISTORY:  0.0 - Created on 05/24/83 by A. Roberts;
+C				Tesseract Systems, Inc.
+C					------
+C		     1.0 - First real release version.  06/08/83,
+C				A. Roberts
+C
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+
+C
+C Menu parameters
+C
+	parameter EX_MITEMS = 2			! Items in menu
+	parameter EX_H_LOGNAME = 'ex'		! Help logical name
+
+	parameter EX_SDT1 = NO_DAT .or. BOLD .or. RVID	! Special datatype for 
+							! Text
+
+	parameter EX_DPNTR = 2			! Location of command data
+
+C
+C Menu tables
+C
+	character*(MAX_STRING) ex_labs(EX_MITEMS)	! Item labels
+	integer*4 ex_lpos(2,EX_MITEMS)			! Item Positions
+	integer*4 ex_dtype(EX_MITEMS)			! Item Datatypes
+	integer*4 ex_idat(EX_MITEMS)			! INTEGER Data
+	real*4 ex_rdat(EX_MITEMS)			! REAL Data
+	character*(MAX_STRING) ex_sdat(EX_MITEMS)	! STRING Data
+
+C
+C Anything in the menu that is hardwired
+C
+	data ex_labs /' WARNING:  Exit Does NOT Implicitly Save Data ',
+	1		'Verify EXIT (Y or N):'/
+
+	data ex_lpos /10,18,
+	1		20,25/
+
+	data ex_dtype /EX_SDT1,
+	1			STR_DAT/
+
+C
+C End of Menu Definition
+C

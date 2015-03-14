@@ -1,0 +1,15 @@
+                            Acknowledgments   
+
+
+     QPLOT was written in conjuntion with the developement of the INCA
+program.  INCA was developed for use on the VAX computer at Goddard
+Space Flight Center by J. P. Downing (Old Dominion Systems, Inc.). The
+control system engineer responsible for the acquisition and
+development was F. H. Bauer (Code_712.3).  This project was carried
+out by Old Dominion Systems under contract NAS5-27242 under the
+direction of J. D. Azzolini (Code_712.1).  We want to thank A. H.
+Forbes (ODS) for developing several terminal drivers and providing
+valuable suggestions for further development.  In addition J. E.
+French (ODS) supplied extensive rewrite and editorial services. We
+also thank the other members of the Guidance and Control Branch
+(Code_712) for their help, ideas, comments, and debugging aid. 

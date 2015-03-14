@@ -1,0 +1,746 @@
+  { $INCLUDE : 'compile.inc' }
+  { $INCLUDE : 'vbpas.int' }
+  { $INCLUDE : 'option.int' }
+  { $INCLUDE : 'getparam.int' }
+  { $INCLUDE : 'utility.int' }
+  { $INCLUDE : 'dspas.int' }
+  { $INCLUDE : 'sfpas.int' }
+  { $INCLUDE : 'display.int' }
+  { $INCLUDE : 'ldb.int' }
+  { $INCLUDE : 'execute.int' }
+  { $INCLUDE : 'mlsexec.int' }
+  { $INCLUDE : 'mlsdraw.int' }
+  { $INCLUDE : 'mlsaltd.int' }
+
+  implementation of mlsaltd;
+
+  USES vbpas;
+
+  USES option;
+
+  USES getparam;
+
+  USES utility;
+
+  USES dspas;
+
+  USES sfpas;
+
+  USES display;
+
+  USES execute;
+
+  USES mlsexec;
+
+  USES mlsdraw;
+
+  (***************************************************************)
+
+  procedure format;
+
+    var
+      i,j,k,n,x1: integer;
+      msg	  : suplstring(25);
+      reply	: supinteger(9);
+      def	: suplstring2(9);
+      x,y	: supinteger(9);
+      range	: supset(18);
+      width	: integer;
+      current_node:byte;
+      buf       : lstring(1);
+      error     : boolean;
+
+    begin
+	 msg[1] := '                         Milestone Chart Format Options';
+	 msg[2] := ' ';
+	 msg[3] := '                                Default                                 Default';
+	 msg[4] := '                                       ';
+	 msg[5] := 'Starting Year  (yy):                   ';
+	 msg[6] := '                                       ';
+	 msg[7] := 'Starting Month (mm):                   ';
+	 msg[8] := '                                       ';
+	 msg[9] := 'Type of Period :                       ';
+	 msg[10]:= '     y = years                         ';
+	 msg[11]:= '     m = months                        ';
+	 msg[12]:= '                                       ';
+	 msg[13]:= 'Number of Periods (1 to 10):           ';
+	 msg[14]:= '                                       ';
+	 msg[15]:= 'If 6 month period, week format:        ';
+	 msg[16]:= '     4 = 4-4-5      5 = 5-4-4          ';
+	 msg[17]:= '                                       ';
+	 msg[18]:= 'Fiscal Year Start:                     ';
+	 msg[19]:= '     c = calendar   j = july           ';
+	 msg[20]:= '     a = april      o = october        ';
+	 for i := 4 to 20 do concat ( msg[i], chr(219) );
+	 concat (msg[5],' Nowline Shown:');
+	 concat (msg[6],'      y = yes      n = no');
+         concat (msg[8],' Organization :');
+         concat (msg[9],'      g = Goddard Space Flight Center');
+         concat (msg[10],'      h = NASA Headquarters');
+	 concat (msg[11],'      f = To be filled in');
+	 concat (msg[16],' Background Color');
+	 concat (msg[17],'      x = black     w = white');
+	 concat (msg[18],'      r = red       m = magenta');
+	 concat (msg[19],'      b = blue      c = cyan');
+	 concat (msg[20],'      g = green     y = yellow');
+	 msg[21]:= ' ';
+	 msg[22]:= 'Modify default options as needed - press return key for next option.';
+	 msg[23]:= 'Select F2 to begin creating chart.';
+	 msg[24] := ' ';
+	 msg[25] := null;
+	 buf.len := 1;
+	 for i := 1 to 10 do
+	   if fctn_map^[1][i] <> 0 then
+	     begin
+	       if i < 10 then [buf[1]:=chr(i+48);concat(msg[25],buf);]
+		 else concat ( msg[25], '10' );
+	       if fctn_map^[1][i] = 7 then concat ( msg[25], 'End ' );
+	       concat ( msg[25], fctn_tag^[fctn_map^[1][i]] );
+	       if i < 10 then concat ( msg[25], ' ' );
+	       if i = 7 then while msg[25].len < 60 do concat (msg[25], ' ');
+	     end;
+	 def[1][1] := chr ( ( skeleton^[5] div 10 ) + 48 );
+	 def[1][2] := chr ( ( skeleton^[5] mod 10 ) + 48 );
+	 def[2][1] := chr ( ( skeleton^[6] div 10 ) + 48 );
+	 def[2][2] := chr ( ( skeleton^[6] mod 10 ) + 48 );
+	 if def[2][1] = '0' then def[2][1] := ' ';
+	 def[3][1] := ' ';
+	 if skeleton^[2] = 2 then def[3][2] := 'y'
+	   else def[3][2] := 'm';
+	 def[4][1] := chr ( ( skeleton^[3] div 10 ) + 48 );
+	 if def[4][1] = '0' then def[4][1] := ' ';
+	 def[4][2] := chr ( ( skeleton^[3] mod 10 ) + 48 );
+         def[5][1] := ' ';
+         if weekdiv then def[5][2] := '4' else def[5][2] := '5';
+	 def[6][1] := ' ';
+	 case skeleton^[4] of
+	   0 : def[6][2] := 'c';
+	   1 : def[6][2] := 'a';
+	   2 : def[6][2] := 'j';
+	   3 : def[6][2] := 'o';
+	   otherwise
+	  end;
+	 def[7][1] := ' ';
+	 if add2 then def[7][2] := 'y' else def[7][2] := 'n';
+	 def[8][1] := ' ';
+	 case skeleton^[7] of
+	   1 : def[8][2] := 'g';
+	   2 : def[8][2] := 'h';
+	   3 : def[8][2] := 'f';
+	   otherwise
+	  end;
+	 def[9][1] := ' ';
+	 case skeleton^[1] of
+	   0 : def[9][2] := 'x';
+	   1 : def[9][2] := 'b';
+	   2 : def[9][2] := 'g';
+	   3 : def[9][2] := 'c';
+	   4 : def[9][2] := 'r';
+	   5 : def[9][2] := 'm';
+	   6 : def[9][2] := 'y';
+	   7 : def[9][2] := 'w';
+	   otherwise
+	  end;
+	 for i := 1 to 9 do
+	   def[i].len := 2;
+	 y[1] := 4;
+	 y[2] := 6;
+	 y[3] := 8;
+	 y[4] := 12;
+	 y[5] := 14;
+	 y[6] := 17;
+	 y[7] := 4;
+	 y[8] := 7;
+         y[9] := 15;
+	 x[1] := 36;
+	 x[2] := 36;
+	 x[3] := 36;
+	 x[4] := 36;
+	 x[5] := 36;
+	 x[6] := 36;
+	 x[7] := 76;
+	 x[8] := 76;
+         x[9] := 76;
+	 range[1] := ['0'..'9'];
+	 range[2] := ['1'..chr(48+99)];
+	 range[3] := ['0'..'9'];
+	 range[4] := ['1'..chr(48+12)];
+	 range[5] := [' '];
+	 range[6] := ['y','Y','m','M'];
+	 range[7] := ['0'..'9'];
+	 range[8] := ['1'..chr(48+10)];
+         range[9] := [' '];
+         range[10]:= ['4','5'];
+	 range[11]:= [' '];
+	 range[12]:= ['c','C','a','A','j','J','o','O'];
+	 range[13]:= [' '];
+	 range[14]:= ['n','N','y','Y'];
+	 range[15]:= [' '];
+	 range[16]:= ['g','G','h','H','f','F'];
+	 range[17]:= [' '];
+	 range[18]:= ['x','X','r','R','b','B','g','G','w','W','m','M','c','C','y','Y'];
+	 color := skeleton^[1];
+         cpflg := false;
+       repeat
+	 multimenu ( msg, 25, 0, 9, def, x, y, range, inkey, 2 );
+	for n := 1 to 9 do
+	  case n of
+	    1 : if def[1][1] = ' ' then
+		  skeleton^[5] := ord ( def[1][2] ) - 48
+		 else
+		  skeleton^[5]:=ord(def[1][2])-48+(ord(def[1][1])-48)*10;
+	    2 : begin
+		if def[2][1] = ' ' then
+		  skeleton^[6] := ord ( def[2][2] ) - 48
+		 else
+		  skeleton^[6]:=ord(def[2][2])-48+(ord(def[2][1])-48)*10;
+		end;
+	    3 : case def[3][2] of
+		  'y','Y' : skeleton^[2] := 2;
+		  'm','M' : skeleton^[2] := 1;
+		  otherwise
+		 end;
+	    4 : begin
+		if def[4][1] = ' ' then
+		  skeleton^[3] := ord ( def[4][2] ) - 48
+		 else
+		  skeleton^[3]:=ord(def[4][2])-48+(ord(def[4][1])-48)*10;
+		end;
+            5 : case def[5][2] of
+                  '5' : weekdiv := false;
+                  '4' : weekdiv := true;
+                  otherwise
+                 end;
+	    6 : case def[6][2] of
+		  'c','C' : skeleton^[4] := 0;
+		  'a','A' : skeleton^[4] := 1;
+		  'j','J' : skeleton^[4] := 2;
+		  'o','O' : skeleton^[4] := 3;
+		  otherwise
+		 end;
+	    7 : case def[7][2] of
+		  'n','N' : add2 := false;
+		  'y','Y' : add2 := true;
+		  otherwise
+		end;
+	    8 : case def[8][2] of
+		  'g','G' : skeleton^[7] := 1;
+		  'h','H' : skeleton^[7] := 2;
+		  'f','F' : skeleton^[7] := 3;
+		  otherwise
+		 end;
+	    9 : case def[9][2] of
+		  'x','X' : skeleton^[1] := 0;
+		  'b','B' : skeleton^[1] := 1;
+		  'g','G' : skeleton^[1] := 2;
+		  'c','C' : skeleton^[1] := 3;
+		  'r','R' : skeleton^[1] := 4;
+		  'm','M' : skeleton^[1] := 5;
+		  'y','Y' : skeleton^[1] := 6;
+		  'w','W' : skeleton^[1] := 7;
+		  otherwise
+		 end;
+	    otherwise
+	   end;
+	 color := skeleton^[1];
+	 inkey := fctn_map^[1][inkey-58];
+	until inkey <> 0;
+	 current := first^.down;
+	 if skeleton^[2] = 1 then
+	   begin
+	     skeleton^[4] := 0;
+	     case skeleton^[3] of
+	       10,11,12 : begin
+			    skeleton^[2] := 2;
+			    skeleton^[3] := 1;
+			    width := 638;
+			    daysperx := 365.25/float(width-206);
+			  end;
+		  7,8,9 : [skeleton^[3] := 9;width:=638;];
+		  4,5,6 : [skeleton^[3] := 6;width:=622;];
+		      3 : width := 612;
+		    1,2 : width := 626;
+		    otherwise
+	       end;
+	     if skeleton^[2]=1 then daysperx:=float(skeleton^[3])*30.4/float(width-206);
+	   end
+	  else
+	   begin
+	     case skeleton^[3] of
+	       1..4,6,9 : width := 638;
+		      5 : width := 626;
+		      7 : width := 598;
+		      8 : width := 590;
+		     10 : width := 606;
+		 otherwise
+	       end;
+	     daysperx := float(skeleton^[3])*365.25/float(width-206);
+             if skeleton^[3]<6 then period_type:=12 else period_type:=4;
+	   end;
+	 if skeleton^[7] in [1,2] then
+	     case skeleton^[7] of
+	       1 : copylst ( 'GODDARD SPACE FLIGHT CENTER', current^.field^ );
+	       2 : copylst ( 'NASA HEADQUARTERS', current^.field^ );
+	      otherwise
+	       end;
+    if skeleton^[2] = 1 then
+      case skeleton^[3] of
+	1,2 : ncolumns := 30;
+	  3 : ncolumns := 15;
+	  6 : ncolumns := 26;
+	  9 : ncolumns := 9;
+        otherwise
+	end
+       else
+	ncolumns := period_type * skeleton^[3];
+    column_width := ( width - 206 ) div ncolumns;
+	  while current^.etype < 17 do current := current^.down;
+	  while current^.etype in [17,18] do
+	    begin
+	      with current^ do
+		begin
+		  j:=(ord(field^[1])-48)*10+ord(field^[2])-48;
+		  k:=(ord(field^[3])-48)*10+ord(field^[4])-48;
+		  n:=(ord(field^[5])-48)*10+ord(field^[6])-48;
+		  calcx(x1,j,k,n,skeleton^[6],skeleton^[5],daysperx,error);
+                  x:=x1;
+		  if etype = 17 then
+		  begin
+		  j:=(ord(field^[7])-48)*10+ord(field^[8])-48;
+		  k:=(ord(field^[9])-48)*10+ord(field^[10])-48;
+		  n:=(ord(field^[11])-48)*10+ord(field^[12])-48;
+		  calcx(x1,j,k,n,skeleton^[6],skeleton^[5],daysperx,error);
+                  xtext:=x1;
+		  if x<node_data^[17].x then x=x+1;
+		  if x>node_data^[17].x+ncolumns*column_width then x=x-1;
+		  if xtext<node_data^[17].x then xtext=xtext+1;
+		  if xtext>node_data^[17].x+ncolumns*column_width then xtext=xtext-1;
+		  end;
+		end;
+	      current := current^.down;
+	    end;
+	 if inkey in [1,4,5] then current_node := 0
+		             else current_node := current^.etype;
+	 if inkey = 7 then inkey = 3;
+	 if not (inkey in [1,2,4,5,7,41]) then redraw(1,current,first);
+	 perform2 ( inkey, current, current_node, first );
+	 perform  ( inkey,  current, current_node, first );
+	 if inkey in [4,5] then redraw( 1, current, first );
+    end;
+
+  (**************************************************************)
+
+  procedure draw_num;
+
+    var
+      i,k,n : integer;
+      buffer: lstring(2);
+
+    begin
+      i := 50;
+      {if (page > 1) and (page < 6) then n := (page-1)*20+1 else n:=1;}
+      n := 1;
+      for k := n to n + 19 do
+	begin
+	  if k >= 100 then buffer[1] := '0' else buffer[1] := chr ( (k div 10) + 48 );
+	  buffer[2]:=chr((k mod 10)+48);
+	  buffer.len := 2;
+	  dstext ( 2, i+4, 0, 3, buffer, 2, 0 );
+	  i := i + 16;
+	end;
+    end;
+
+  (**************************************************************)
+
+  procedure draw_skeleton;
+
+  var
+      period_label : lstring(104);
+      buffer	 : lstring(25);
+      i, j, k,l,n: integer;
+      start	 : integer;
+      width	 : integer;
+      ypix	 : integer;
+      ysum	 : integer;
+      cmonth	 : integer;
+      cyear	 : integer;
+      x1	 : integer;
+      temp	 : boolean;
+      current	 : entity;
+
+  begin
+
+    if plotchoice <> 2 then begin
+      screen ( 3 );
+      colors ( 0, skeleton^[1] );
+      there ( 0, 0 );
+      write ( 'Drawing in progress...' );
+    end;
+
+    period_type := 12;
+    start	:= skeleton^[6];
+    period_label:= 'JFMAMJJASOND';
+    if skeleton^[2] = 1 then
+      begin
+       if skeleton^[3] = 6 then
+	begin
+	period_type := 52;
+        if weekdiv then begin
+	start:=(skeleton^[6]-1)*4+((skeleton^[6]-1) div 3)+1;
+	period_label:='J1J2J3J4F1F2F3F4M1M2M3M4M5A1A2A3A4M1M2M3M4J1J2J3J4J5J1J2J3J4A1A2A3A4S1S2S3S4S5O1O2O3O4N1N2N3N4D1D2D3D4D5';
+        end else begin
+         start:=(skeleton^[6]-1)*4+((skeleton^[6]+1) div 3)+1;
+         period_label:='J1J2J3J4J5F1F2F3F4M1M2M3M4A1A2A3A4A5M1M2M3M4J1J2J3J4J1J2J3J4J5A1A2A3A4S1S2S3S4O1O2O3O4O5N1N2N3N4D1D2D3D4';
+         end
+	end
+       else
+	if skeleton^[3] <> 9 then
+	  begin
+	    period_type := 30;
+	    start := 1;
+	    period_label := ' 1 2 3 4 5 6 7 8 9101112131415161718192021222324252627282930';
+	  end;
+      end
+      else
+    if skeleton^[3] > 5 then
+       begin
+	 period_type := 4;
+	 start := (skeleton^[6] div 3) + ord (skeleton^[6] mod 3 <> 0);
+	 start := start - skeleton^[4] + 4;
+	 period_label := '1234';
+       end;
+
+     if skeleton^[2] = 2 then
+       case skeleton^[3] of
+
+     1,2,4: begin
+	      width := 638;
+	      nstops := 48;
+	      stop_width := 9;
+	    end;
+
+       3,9: begin
+	      width := 638;
+	      nstops := 36;
+	      stop_width := 12;
+	    end;
+
+	 6: begin
+	      width := 638;
+	      nstops := 48;
+	      stop_width := 9;
+	    end;
+
+	 5: begin
+	      width := 626;
+	      nstops := 60;
+	      stop_width := 7;
+	      period_label[1]  := chr(24);
+	      period_label[2]  := chr(25);
+	      period_label[3]  := chr(26);
+	      period_label[4]  := chr(27);
+	      period_label[5]  := chr(26);
+	      period_label[6]  := chr(24);
+	      period_label[7]  := chr(24);
+	      period_label[8]  := chr(27);
+	      period_label[9]  := chr(28);
+	      period_label[10] := chr(29);
+	      period_label[11] := chr(30);
+	      period_label[12] := chr(31);
+	    end;
+
+	 7: begin
+	      width := 598;
+	      nstops := 56;
+	      stop_width := 7;
+	    end;
+
+	 8: begin
+	      width := 590;
+	      nstops := 32;
+	      stop_width := 12;
+	    end;
+
+	10: begin
+	      width := 606;
+	      nstops := 40;
+	      stop_width := 10;
+	    end;
+
+       end
+     else
+       case skeleton^[3] of
+	 1,2 : begin
+		 width := 626;
+		 nstops := 60;
+		 stop_width := 7;
+	       end;
+	   3 : begin
+		 width := 612;
+		 nstops := 45;
+		 stop_width := 9;
+	       end;
+	   6 : begin
+		 width := 622;
+		 nstops := 52;
+		 stop_width := 8;
+	       end;
+	   9 : begin
+		 width := 638;
+		 nstops := 36;
+		 stop_width := 12;
+	       end;
+	 end;
+    if skeleton^[2] = 1 then
+      daysperx:=float(skeleton^[3])*30.4/float(width-206)
+     else daysperx := float(skeleton^[3])*365.25/float(width-206);
+    current := first;
+    repeat
+      with current^ do
+	 case etype of
+	   1: x := 206+(width-132-206-node_data^[1].input_length*8) div 2;
+      5,8,11: x := width - 54;
+      6,9,12: x := width - 54 + 18;
+      7,10,13: x := width - 54 + 18 + 18;
+	  14: x := width - 182;
+	  15: x := width - 182 + 36;
+	 otherwise
+	 end;
+      node_data^[current^.etype].x := current^.x;
+      current := current^.down;
+    until current^.etype=16;
+    dsbar ( 0, 0, width, 398, 3, 0 );
+    write ( 'co' );
+    { horizontal lines }
+
+    dsline ( 0, 30, width, 30, 3, 1, 0 );
+    dsline ( 206, 40, width, 40, 3, 1, 0 );
+    dsline ( 0, 50, width, 50, 3, 1, 0 );
+    dsline ( 0, 370, width, 370, 3, 1, 0 );
+    write ( 'm' );
+
+    { vertical lines }
+
+    dsline ( 18, 50, 18, 370, 3, 1, 0 );
+    dsline ( 206, 0, 206, 30, 3, 1, 0 );
+    dsline ( width-132, 0, width-132, 30, 3, 1, 0 );
+
+
+    if skeleton^[2] = 1 then
+      case skeleton^[3] of
+	1,2 : ncolumns := 30;
+	  3 : ncolumns := 15;
+	  6 : ncolumns := 26;
+	  9 : ncolumns := 9;
+	end
+       else
+	ncolumns := period_type * skeleton^[3];
+    column_width := ( width - 206 ) div ncolumns;
+    j := 206;
+    ysum := 0;
+    ypix := 206;
+    cmonth := skeleton^[6];
+    cyear := skeleton^[5];
+    if (skeleton^[4]<>0)and(skeleton^[4]*3<skeleton^[6]) then
+	   cyear := cyear + 1;
+  (*writeln;*)
+    for i := start to ncolumns+start-1 do
+	begin
+	  k := 40;
+	  n := 1;
+	  if (skeleton^[2]=1) then
+	    if skeleton^[3] = 2 then n := 2
+	     else if skeleton^[3] = 3 then n := 6;
+	  if (skeleton^[3] > 5) or (skeleton^[2] <> 2) then
+	    temp := ((i-1)*n+1) mod period_type = 1
+	   else temp := i mod period_type = skeleton^[4]*3+1;
+	  temp := (i=start) or temp;
+	  if temp then
+	     begin
+	       k := 30;
+	       if ((ysum>17) and (i<>start))and((skeleton^[2]=2)or(skeleton^[3]>3)) then
+		  begin
+		    buffer[1] := chr ( (cyear div 10) + 48 );
+		    buffer[2] := chr ( (cyear mod 10) + 48 );
+		    l := ypix+(ysum-16) div 2;
+		    buffer.len := 2;
+		    dstext ( l, 32, 0, 3, buffer, 2, 0 );
+		    ypix := ypix + ysum;
+		    ysum := 0;
+		  end
+		else
+		  if (ysum > 42) and (i<>start) then
+		    begin
+		      if cmonth < 10 then
+			begin
+			  buffer[1] := chr ( cmonth + 48 );
+			  buffer[2] := '/';
+			  buffer[3] := chr ( (cyear div 10) + 48 );
+			  buffer[4] := chr ( (cyear mod 10) + 48 );
+			  buffer.len := 4;
+			  l := ypix + (ysum - 32) div 2;
+			end
+		       else
+			begin
+			  buffer[1] := chr ( (cmonth div 10) + 48 );
+			  buffer[2] := chr ( (cmonth mod 10) + 48 );
+			  buffer[3] := '/';
+			  buffer[4] := chr ( (cyear div 10) + 48 );
+			  buffer[5] := chr ( (cyear mod 10) + 48 );
+			  buffer.len := 5;
+			  l := ypix + (ysum - 40) div 2;
+			end;
+		      dstext ( l, 32, 0, 3, buffer, buffer.len, 0 );
+		      ypix := ypix + ysum;
+		      ysum := 0;
+		    end;
+	       if i<>start then
+		 if (skeleton^[2] = 2) or (skeleton^[3] > 3) then
+		   cyear := cyear + 1
+		  else
+		   begin
+		     cmonth := cmonth + 1;
+		     if cmonth > 12 then
+		       begin
+			 cmonth := 1;
+			 cyear := cyear + 1;
+		       end;
+		   end;
+	     end;
+	(*writeln ('i,start,mod,temp,k',i,start,i mod 12,temp,k );*)
+
+	  if i = start then dsline ( j, k, j, 370, 3, 1, 0 )
+	   else
+	     begin
+	      dsline ( j, k, j, 50, 3, 1, 0 );
+	      dsline ( j, 52, j, 369, 1, 1, 1 );
+	     end;
+
+	  ysum := ysum + column_width;
+	  j := j + column_width;
+	  x1 := j - column_width + ( column_width - 6 ) div 2 + 1;
+	  if ncolumns=60 then x1 := j-column_width+(column_width-5) div 2;
+	 if (skeleton^[2] = 1) and (skeleton^[3] <> 9) then
+	   begin
+	     x1 := x1 - 4;
+	     buffer[1] := period_label[((((i-1)*n+1) mod period_type)+period_type*ord((((i-1)*n+1) mod period_type)=0))*2-1];
+	     buffer[2] := period_label[((((i-1)*n+1) mod period_type)+period_type*ord((((i-1)*n+1) mod period_type)=0))*2];
+	     buffer.len := 2;
+	   end
+	  else
+	   begin
+	  buffer[1] := period_label[(i mod period_type) +
+		       period_type*ord(i mod period_type=0)];
+	  buffer.len := 1;
+	   end;
+	  dstext ( x1, 42, 1, 3, buffer, buffer.len, 0 );
+	end;
+	if ysum > 17 then
+	   begin
+	    if (skeleton^[2] = 2) or (skeleton^[3] > 3) then
+	     begin
+	     buffer[1] := chr ( (cyear div 10) + 48 );
+	     buffer[2] := chr ( (cyear mod 10) + 48 );
+	     l := ypix + (ysum-16) div 2;
+	     buffer.len := 2;
+	     dstext ( l, 32, 0, 3, buffer, 2, 0 );
+	     end
+	    else
+		  if (ysum > 42) and (i<>start) then
+		    begin
+		      if cmonth < 10 then
+			begin
+			  buffer[1] := chr ( cmonth + 48 );
+			  buffer[2] := '/';
+			  buffer[3] := chr ( (cyear div 10) + 48 );
+			  buffer[4] := chr ( (cyear mod 10) + 48 );
+			  buffer.len := 4;
+			  l := ypix + (ysum - 32) div 2;
+			end
+		       else
+			begin
+			  buffer[1] := chr ( (cmonth div 10) + 48 );
+			  buffer[2] := chr ( (cmonth mod 10) + 48 );
+			  buffer[3] := '/';
+			  buffer[4] := chr ( (cyear div 10) + 48 );
+			  buffer[5] := chr ( (cyear mod 10) + 48 );
+			  buffer.len := 5;
+			  l := ypix + (ysum - 40) div 2;
+			end;
+		      dstext ( l, 32, 0, 3, buffer, buffer.len, 0 );
+		   end;
+	   end;
+
+  (*readln;*)
+    write ( 'pl' );
+
+    { text and coordinates }
+
+    buffer := ' APPROVAL    ';
+    dstext ( 2, 12, 1, 3, buffer, 13, 0 );
+    buffer := ' ACCOMP.      ';
+    dstext ( 2, 22, 1, 3, buffer, 14, 0 );
+    buffer := 'Page ';
+    dstext ( width-212, 22, 1, 3, buffer, 5, 0 );
+    buffer := '   of   ';
+    dstext ( width-182, 22, 1, 3, buffer, 8, 0 );
+    buffer := 'ORIG. APPVL. ';
+    dstext ( width-130, 2, 1, 3, buffer, 13, 0 );
+    buffer := 'LAST CHANGE  ';
+    dstext ( width-130, 12, 1, 3, buffer, 13, 0 );
+    buffer := 'STATUS AS OF ';
+    dstext ( width-130, 22, 1, 3, buffer, 13, 0 );
+    buffer := '  /  /  ';
+    j := 2;
+    for i := 1 to 3 do
+	begin
+	  dstext ( width-54, j, 1, 3, buffer, 8, 0 );
+	  j := j + 10;
+	end;
+    buffer := 'MILESTONES';
+    dstext ( 72, 36, 0, 3, buffer, 10, 0 );
+     draw_num;
+    i := 50;
+    for k := 1 to 19 do
+	begin
+	  i := i + 16;
+	     dsline ( 0, i, 206, i, 3, 1, 0 );
+	     dsline ( 208, i, width-1, i, 1, 1, 1 );
+	end;
+     buffer := 'Note:';
+     dstext ( 2, 372, 1, 3, buffer, 5, 0 );
+     write ( 'ete' );
+
+  end;
+  procedure picture;
+
+  var
+     i,j,k	  : integer;
+     id1,id2	  : integer;
+
+  begin
+  draw_nowline ( first,0,1 );
+  current := first;
+  repeat
+     with node_data^[current^.etype] do
+	  begin
+	     i := 0;
+	     if current^.etype = 17 then dbars ( current )
+		else if current^.etype = 18 then dtriangle ( current )
+		      else
+		    begin
+		      if current^.etype = 1 then
+			begin
+			  i := ord ( input_length-current^.field^.len ) *8;
+			  i := ( i div 2 );
+			end;
+		      with current^ do
+			dstext ( x + i, y, character_size, text_color, field^, field^.len,0 );
+		   end;
+	     end;
+	  current := current^.down;
+  until current = first;
+  end;
+
+  end.
+

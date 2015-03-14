@@ -1,0 +1,1033 @@
+        
+PROGRAM DUMMY (FOO * ) ;
+
+PROCEDURE PRINT( TREE % TREEBKPTR ) ; 
+        
+(*   THIS PROCEDURE TAKES AS INPUT THE TREE STRUCTURE CREATED BY
+          PROCEDURE COUNT, AND USES THIS STRUCTURE TO DRIVE THE 
+          PRINTING OF THE FLOWCHART PROPER.  EACH TREEBKPTR IN
+          THE TREE POINTS TO A BLOCK OF DATA WHICH CONTAINS THE 
+          INFORMATION NECESSARY TO PRINT ONE BOX IN THE FLOWCHART.
+          PRINT CREATES TWO INTERMEDIATE DATA STRUCTURES FROM THE 
+          TREE, VIZ THE ARRAYS OF TREEBKPTRS CALLED REF AND ACTIV.
+          THESE ARRAYS HOLD THE TREEBKPTRS FOR THE BOXES WHICH
+          ARE CURRENTLY BEING PRINTED ( ARRAY ACTIV ) AND FOR THE 
+          CERTAIN OTHER BOXES FROM WHICH UNFINISHED LINES EXTEND
+          ( ARRAY REF - FOR REFERENCE ).  SUBMODULE PRINTBAND IS
+          THE MAIN WORKHORSE OF PRINT.  THIS MODULE FORMATS AND 
+          PRINTS ONE LINE AT A TIME, AND IN EACH LINE, ONE BOX
+          AT A TIME FROM LEFT TO RIGHT.  PRINTING OF MOST OUTPUT
+          COLUMNS ( BOXES ) IS CONTROLLED BY ONE OF SEVERAL FINITE
+          STATE MACHINES WHICH CAN BE FOUND BELOW ( PRINTTEXTBOX, 
+          PRINTNOTEXTBOX, PRINTOVERLABL ).             *) 
+
+TYPE    
+    STATE = ( LINE1, LINE2, LINE3, LINE4, LINE5, LINE6, LINE6A,     
+          LINEN, PENULTIM, ULTIM, CONECT1, CONECT2, CONECT3, CONECT, DONE ) ; 
+        
+VAR     
+    REF % ARRAY[ 1..BOXNOP1 ] OF TREEBKPTR ;    
+    ACTIV % ARRAY[ 0..BOXNOP1 ] OF TREEBKPTR ;  
+    BSTATE % ARRAY[ 0..BOXNOP1 ] OF STATE ;     
+    OVER % TRLSTLPTR ;      
+    LOVER % TRLSTLPTR ;     
+    OVEROVER % TRLSTLPTR ;  
+    LOVEROVER % TRLSTLPTR ; 
+    IACTIV % INTEGER ;      
+    J % INTEGER ;  (* THIS IS GLOBAL IN PRINT *)  
+        
+        
+        
+PROCEDURE CLEARBUF ;        
+        
+VAR     
+    J1 % INTEGER ;
+        
+BEGIN   
+    BUF[ 0 ] %= 'H' ;       
+    FOR J1 %= 1 TO NCOLS DO BUF[ J1 ] %= ' ' ;  
+    J %= 0        
+END ;   (*   CLEARBUF   *)  
+        
+        
+        
+        
+PROCEDURE STARBUF( WIDTH % INTEGER ) ;
+        
+VAR J1 % INTEGER ;
+        
+BEGIN   
+    FOR J1 %= 1 TO WIDTH DO 
+        BEGIN     
+            J %= J + 1 ;    
+            BUF[ J ] %= '*' 
+          END     
+END ;   (*   STARBUF   *)   
+        
+        
+PROCEDURE BLANKBUF( WIDTH % INTEGER ) ;         
+        
+VAR J1 % INTEGER ;
+        
+BEGIN   
+    J %= J + 1 ;  
+    BUF[ J ] %= '*' ;       
+    FOR J1 %= 2 TO WIDTH - 1 DO       
+        BEGIN     
+            J %= J + 1 ;    
+            BUF[ J ] %= ' ' 
+          END ;   
+    J %= J + 1 ;  
+    BUF[ J ] %= '*'         
+END ;   (*   BLANKBUF   *)  
+        
+        
+        
+        
+FUNCTION PUTTEXT (VAR THINGS% IDENTPTR; TEXTWIDTH% INTEGER) % BOOLEAN ;       
+        
+VAR     
+        
+   STR% UNSTRING20 ;        
+   TW% INTEGER ;  
+   I, K, N, CONTINUATION% INTEGER ;   
+   FILLED, FLAG% BOOLEAN ;  
+        
+        
+        
+FUNCTION FINDEND (STR% UNSTRING20) % INTEGER ;  
+        
+VAR I% INTEGER ; BLANK% BOOLEAN ;     
+        
+BEGIN   
+        
+   I %= IDENTMAX ;
+   BLANK %= TRUE ;
+   WHILE (I > 0) AND (BLANK) DO BEGIN 
+      BLANK %= (' ' = STR [I]) ;      
+      IF (BLANK) THEN I %= I - 1 ;    
+   END ;
+   FINDEND %= I ; 
+        
+END (* FINDEND *) ;         
+        
+        
+        
+        
+        
+FUNCTION ENDQ (STR% STRING20) % BOOLEAN ;       
+        
+BEGIN   
+        
+   ENDQ %= (STR [1] = ' ') AND (NE20 (STR, COMMA)) ;      
+        
+END (* ENDQ *) ;  
+        
+        
+        
+BEGIN   
+        
+   WHILE (EQ20 (THINGS^.NAME, COMMA)) DO THINGS %= THINGS^.NEXT ;   
+        
+   CONTINUATION %= 0 ;      
+        
+   IF EQ20 (THINGS^.NAME, BLANK20) THEN         
+      BEGIN       
+      FLSIDENT (THINGS) ;   
+      CONTINUATION %= UNKLUDGE (THINGS^.NAME) ; 
+      FLSIDENT (THINGS) ;   
+      END ;       
+        
+   TW %= TEXTWIDTH ;        
+   FILLED %= FALSE ;        
+        
+   WHILE NOT (ENDQ (THINGS^.NAME)) AND NOT (FILLED) DO BEGIN        
+        
+      UNPACK (THINGS^.NAME, STR, 1) ; 
+      N %= FINDEND (STR) ;  
+      I %= CONTINUATION ;   
+      CONTINUATION %= 0 ;   
+        
+           IF EQ20 (THINGS^.NAME, COMMA) THEN   
+              BEGIN         
+              FILLED %= TRUE ;        
+              END 
+        
+      ELSE IF ((N-I) <= TW) THEN      
+              BEGIN         
+              FOR K %= (I+1) TO N DO BEGIN J %= J+1 ; BUF[J] %= STR[K] END ;  
+              TW %= TW - (N-I) ;      
+              IF (TW > 1)   
+                  THEN BEGIN J %= J+1 ; BUF[J] %= ' ' ; TW %= TW-1 END        
+                  ELSE FILLED %= TRUE ;         
+              THINGS %= THINGS^.NEXT ;
+              END 
+        
+      ELSE IF ((N-I) <= TEXTWIDTH) THEN         
+              BEGIN         
+              FILLED %= TRUE ;        
+              END 
+        
+         ELSE BEGIN         
+              FOR K %= 1 TO TW DO BEGIN J %= J+1 ; BUF[J] %= STR[I+K] END ;   
+              I %= I + TW ; 
+              THINGS %= NEWIDENT (BLANK20, THINGS) ;      
+              KLUDGE (THINGS^.NAME, I) ;        
+              THINGS %= NEWIDENT (BLANK20, THINGS) ;      
+              J %= J + 1 ;  
+              BUF [J] %= '?' ;        
+              FILLED %= TRUE ;        
+              TW %= 0 ;     
+              END ;         
+        
+   END ;
+        
+   FOR K %= 1 TO TW DO BEGIN J %= J+1 ; BUF [J] %= ' ' END ;        
+        
+   PUTTEXT %= (TW <> TEXTWIDTH) ;     
+        
+END (* PUTTEXT *) ;         
+        
+PROCEDURE FLSTREE( VAR ROOT% TREEBKPTR );       
+        
+BEGIN IF ROOT <> NIL        
+        THEN BEGIN
+            FLSTREE( ROOT^.APPROACH );
+            FLSTREE( ROOT^.NAPPROACH );         
+            FLSTREE( ROOT^.DROP );    
+            ROOT^.TEXTP %= NIL ;      
+            ROOT^.LABELP %= NIL ;     
+            ROOT^.BOXTYP %= UNDEF;    
+            ROOT^.APPROACH %= DEADTREEBK;       
+            DEADTREEBK %= ROOT;       
+            ROOT %= NIL     
+          END     
+END   (*   FLSTREE   *)  ;  
+        
+        
+        
+FUNCTION NEWTRLSTL( OVLABEL% STRING10;
+      TREE% TREEBKPTR; NEXT% TRLSTLPTR ) % TRLSTLPTR;     
+        
+VAR P% TRLSTLPTR; 
+        
+BEGIN IF DEADTRLSTL = NIL THEN NEW(P) 
+        ELSE BEGIN P %= DEADTRLSTL;   
+            DEADTRLSTL %= DEADTRLSTL^.NEXT END; 
+    P^.OVLABEL %= OVLABEL;  
+    P^.TREE %= TREE;        
+    P^.NEXT %= NEXT;        
+    NEWTRLSTL %= P
+END   (*   NEWTRLSTL   *)  ;
+        
+        
+        
+PROCEDURE FLSTRLSTL( VAR P% TRLSTLPTR );        
+        
+VAR Q% TRLSTLPTR; 
+        
+BEGIN   
+  IF P <> NIL THEN BEGIN    
+    Q %= P^.NEXT ;
+    FLSTREE( P^.TREE );     
+    P^.OVLABEL %= BLANK10 ; 
+    P^.NEXT %= DEADTRLSTL;  
+    DEADTRLSTL %= P;        
+    P %= Q        
+   END  
+END   (*   FLSTRLSTL   *)  ;
+        
+        
+        
+FUNCTION NOTALLDONE % BOOLEAN ;       
+        
+VAR     
+    I1 % INTEGER ;
+        
+BEGIN   
+    NOTALLDONE %= FALSE ;   
+    FOR I1 %= 0 TO BOXNOP1 DO         
+        IF BSTATE[ I1 ] <> DONE THEN NOTALLDONE %= TRUE   
+END ;   (*   NOTALLDONE   *)
+        
+        
+        
+        
+FUNCTION GODOWN( I % INTEGER ) % BOOLEAN ;      
+        
+BEGIN   
+    GODOWN %= FALSE ;       
+    IF ACTIV[ I ]^.DROP <> NIL        
+        THEN      
+            BEGIN 
+                ACTIV[ I ] %= ACTIV[ I ]^.DROP ;
+                BSTATE[ I ] %= LINE1 ;
+                GODOWN %= TRUE        
+              END 
+    ELSE IF I > 0 
+        THEN IF REF[ I ]^.NAPPROACH <> NIL      
+            THEN  
+                BEGIN       
+                    REF[ I ] %= REF[ I ]^.NAPPROACH ;     
+                    ACTIV[ I ] %= REF[ I ] ;    
+                    BSTATE[ I ] %= LINE1 ;      
+                    GODOWN %= TRUE    
+                  END       
+            ELSE  
+        ELSE IF I = 0 THEN BSTATE[ I ] %= DONE  
+END ;   (*   GODOWN   *)    
+        
+        
+        
+PROCEDURE GORIGHT( VAR I % INTEGER ; VAR OV % TRLSTLPTR ; VAR OVL % TRLSTLPTR );        
+        
+VAR     
+    I1 % INTEGER ;
+        
+        
+        
+        
+PROCEDURE OFFSUBTREE( VAR CUTNODE % TREEBKPTR ; VAR OV % TRLSTLPTR ;
+      VAR OVL % TRLSTLPTR ) ;         
+        
+VAR     
+    TEMP % TRLSTLPTR ;      
+    HOLD % INTEGER ;        
+    I % INTEGER ; 
+        
+        
+FUNCTION NEXTLABEL % INTEGER ;        
+        
+BEGIN   
+    NEXTLBL %= NEXTLBL + 1 ;
+    NEXTLABEL %= NEXTLBL    
+END ;   (*   NEXTLABEL   *) 
+        
+        
+        
+BEGIN   
+    TEMP %= OVL ; 
+    OVL %= NEWTRLSTL( BLANK10, NIL, NIL ) ;     
+    OVL^.TREE %= NEWTREEBK( NIL, NIL, UNDEF, CUTNODE, NIL, NIL ) ;  
+    OVL^.NEXT %= NIL ;      
+        
+        
+   (*   THIS NONSENSE GETS AROUND THE FACT THAT PASCAL CANNOT PASS  
+            PACKED ARRAYS AS FUNCTION VALUES.   *)        
+    HOLD %= NEXTLABEL ;     
+    IF ( HOLD MOD 26 ) <> 0 THEN OVL^.OVLABEL[ 3 ] %= CHR( HOLD MOD 26 )      
+        ELSE OVL^.OVLABEL[ 3 ] %= 'Z' ;         
+    HOLD %= HOLD DIV 26 ;   
+    IF ( HOLD MOD 26 ) <> 0 THEN OVL^.OVLABEL[ 2 ] %= CHR( HOLD MOD 26 )      
+        ELSE OVL^.OVLABEL[ 2 ] %= 'Z' ;         
+    HOLD %= HOLD DIV 26 ;   
+    IF ( HOLD MOD 26 ) <> 0 THEN OVL^.OVLABEL[ 1 ] %= CHR( HOLD MOD 26 )      
+        ELSE OVL^.OVLABEL[ 1 ] %= 'Z' ;         
+        
+        
+    IF OV = NIL THEN OV %= OVL  (*   FIRST OVERFLOW   *)  
+        ELSE IF TEMP <> NIL THEN TEMP^.NEXT %= OVL  (*   LATER OVERFLOWS   *) 
+        ELSE ERROR( 13 ) ;  
+    CUTNODE %= NEWTREK( NIL, NIL, UNDEF )       
+END ;   (*   OFFSUBTREE   *)
+        
+        
+        
+BEGIN   
+    IF ACTIV[ I ]^.APPROACH <> NIL    
+        THEN      
+            BEGIN 
+                ACTIV[ I + 1 ] %= ACTIV[ I ]^.APPROACH ;  
+                I %= I + 1 ;
+                BSTATE[ I ] %= LINE1 ;
+                REF[ I ] %= ACTIV[ I ] ;        
+                IF I < BOXNOP1 THEN GORIGHT( I, OV, OVL ) 
+                    ELSE    
+                        BEGIN         
+                            OFFSUBTREE( ACTIV[ I - 1 ]^.APPROACH, OV, OVL ) ; 
+                            ACTIV[ I ] %= ACTIV[ I - 1 ]^.APPROACH ;
+                            REF[ I ] %= ACTIV[ I ]        
+                          END         
+              END 
+    ELSE
+        BEGIN     
+            FOR I1 %= I + 1 TO BOXNOP1 DO REF[ I1 ] %= NIL ;        
+            FOR I1 %= I + 1 TO BOXNOP1 DO ACTIV[ I1 ] %= NIL        
+          END     
+END ;   (*   GORIGHT   *)   
+        
+PROCEDURE GOLEFT( VAR I % INTEGER ; VAR OV % TRLSTLPTR ; VAR OVL % TRLSTLPTR ) ;        
+        
+        
+BEGIN   
+    IF I <= 0     
+        THEN ERROR( 10 )    
+        ELSE      
+            BEGIN 
+                I %= I - 1 ;
+                IF I = 0 THEN BSTATE[ I ] %= DONE         
+                ELSE IF ( BSTATE[ I ] = CONECT )
+                    THEN IF GODOWN( I ) THEN GORIGHT( I, OV, OVL )  
+                        ELSE ERROR( 9 )         
+                ELSE IF ( BSTATE[ I ] = DONE )  
+                    THEN GOLEFT( I, OV, OVL )   
+                (*   ELSE THIS MUST BE AN ACTIV BOX I E  T H E  ACTIV BOX   *)
+              END 
+END ;   (*   GOLEFT   *)    
+        
+        
+        
+        
+        
+        
+        
+        
+        
+PROCEDURE PRINTPROCBOX ;    
+        
+        
+        
+        
+PROCEDURE NSBLANKLINE ;     
+        
+BEGIN   
+    CLEARBUF ;    
+    BLANKBUF( PROCWIDTH ) ; 
+    J %= PROCMARGIN ;       
+    BLANKBUF( PROCWIDTH - 2 * PROCMARGIN ) ;    
+END ;   (*   NSBLANKLINE   *)         
+PROCEDURE SBLANKLINE ;      
+        
+BEGIN   
+    NSBLANKLINE ; 
+    WRITELN( BUF )
+END ;   (*   SBLANKLINE   *)
+        
+        
+PROCEDURE SSTARLINE ;       
+        
+BEGIN   
+    CLEARBUF ;    
+    BLANKBUF( PROCWIDTH ) ; 
+    J %= PROCMARGIN ;       
+    STARBUF( PROCWIDTH - 2 * PROCMARGIN ) ;     
+    WRITELN( BUF )
+END ;   (*   SSTARLINE   *) 
+        
+        
+PROCEDURE LBLANKLINE ;      
+        
+BEGIN   
+    CLEARBUF ;    
+    BLANKBUF( PROCWIDTH ) ; 
+    WRITELN( BUF )
+END ;   (*   LBLANKLINE  *) 
+        
+        
+PROCEDURE LSTARLINE ;       
+        
+BEGIN   
+    CLEARBUF ;    
+    STARBUF( PROCWIDTH ) ;  
+    WRITELN( BUF )
+END ;   (*   LSTARLINE   *) 
+        
+        
+PROCEDURE TXTLINES ;        
+        
+VAR     
+    P % IDENTPTR ;
+    DISREGARD % BOOLEAN ;   
+    BOOLE % BOOLEAN ;       
+        
+BEGIN   
+    CLEARBUF ;    
+    P %= ACTIV[ 1 ]^.TEXTP ;
+    NSBLANKLINE ; 
+    J %= PROCMARGIN + BOXSPACE ;      
+    DISREGARD %= NOT( PUTTEXT( P, PROCWIDTH - ( BOXSPACE +
+          PROCMARGIN + 1 ) * 2 ) ) ;  
+    WRITELN( BUF ) ;        
+    IF NE20( P^.NAME, PRMBEG ) THEN ERROR( 14 ) ;         
+    P %= P^.NEXT ;
+    SBLANKLINE ;  
+    REPEAT        
+        NSBLANKLINE ;       
+        J %= PROCMARGIN + BOXSPACE ;  
+        BOOLE %= NOT( PUTTEXT( P, PROCWIDTH - ( BOXSPACE +
+              PROCMARGIN + 1 ) * 2 ) ) ;        
+        WRITELN( BUF )      
+    UNTIL BOOLE ; 
+    WRITELN( BUF )
+END ;   (*   TXTLINES   *)  
+        
+        
+PROCEDURE DROPLINE ;        
+        
+BEGIN   
+    CLEARBUF ;    
+    IF TREE^.DROP <> NIL THEN BUF[ CONECTWIDTH + DROPCOL ] %= '*' ; 
+    WRITELN( BUF )
+END ;   (*   DROPLINE   *)  
+        
+        
+BEGIN   
+    LSTARLINE ;   
+    LBLANKLINE ;  
+    SSTARLINE ;   
+    SBLANKLINE ;  
+    SBLANKLINE ;  
+    TXTLINES ;    
+    SBLANKLINE ;  
+    SSTARLINE ;   
+    LBLANKLINE ;  
+    LSTARLINE ;   
+    DROPLINE ;    
+    DROPLINE ;    
+    DROPLINE ;    
+    IF TREE^.DROP <> NIL THEN BSTATE[ 1 ] %= CONECT       
+        ELSE BSTATE[ 1 ] %= DONE      
+END ;   (*   PRINTPROCBOX   *)        
+        
+        
+        
+        
+PROCEDURE PRINTBAND( I1 % INTEGER ; OVL % TRLSTLPTR ) ;   
+        
+TYPE    
+    BAPPTYPE = ( BNOTHING, BLABEL, BSTARS ) ;   
+        
+VAR     
+    IGLOBAL % INTEGER ;     
+    J1 % INTEGER ;
+        
+        
+        
+PROCEDURE FILLAPP( BAPP % BAPPTYPE ) ;
+        
+VAR     
+    J1 % INTEGER ;
+        
+        
+        
+PROCEDURE FILLABEL ;        
+        
+VAR     
+    DISREGARD % BOOLEAN ;   
+    P % IDENTPTR ;
+        
+BEGIN   
+    IF ACTIV[ IGLOBAL ]^.LABELP <> NIL THEN BEGIN         
+        J %= J + NAPPCOL ;  
+        P %= ACTIV[ IGLOBAL ]^.LABELP ;         
+        DISREGARD %= PUTTEXT( P, CONECTWIDTH - ( NAPPCOL + 1 ) )    
+      END         
+END ;   (*   FILLABEL   *)  
+        
+        
+        
+BEGIN   (*   FILLAPP   *)   
+    IF IGLOBAL > 0 THEN IF ACTIV[ IGLOBAL - 1 ] <> NIL THEN         
+        
+        CASE BAPP OF        
+        
+          BNOTHING % BEGIN  
+                         IF NOT( ( ACTIV[ IGLOBAL - 1 ]^.APPROACH = 
+                               ACTIV[ IGLOBAL ] ) AND     
+                               ( ACTIV[ IGLOBAL ] <> NIL ) ) AND    
+                               ( ( REF[ IGLOBAL ]^.NAPPROACH <> NIL ) OR      
+                               ( ( ACTIV[ IGLOBAL ] = REF[ IGLOBAL ] ) AND    
+                               ( ACTIV[ IGLOBAL ] <> NIL ) ) )      
+                             THEN BUF[ J + NAPPCOL ] %= '*' ;       
+                         J %= J + CONECTWIDTH   
+                       END ;
+        
+          BLABEL   % BEGIN  
+                         J1 %= J ;    
+                         IF NOT( ( ACTIV[ IGLOBAL - 1 ]^.APPROACH = 
+                               ACTIV[ IGLOBAL ] ) AND     
+                               ( ACTIV[ IGLOBAL ] <> NIL ) ) AND    
+                               ( ( REF[ IGLOBAL ]^.NAPPROACH <> NIL ) OR      
+                               ( ( ACTIV[ IGLOBAL ] = REF[ IGLOBAL ] ) AND    
+                               ( ACTIV[ IGLOBAL ] <> NIL ) ) )      
+                             THEN BUF[ J + NAPPCOL ] %= '*' ;       
+                         FILLABEL ;   
+                         J %= J1 + CONECTWIDTH  
+                       END ;
+        
+          BSTARS   % BEGIN  
+                         IF ( ACTIV[ IGLOBAL - 1 ]^.APPROACH =      
+                               ACTIV[ IGLOBAL ] ) AND     
+                               ( ACTIV[ IGLOBAL ] <> NIL )
+                             THEN BEGIN         
+                                 J1 %= J + CONECTWIDTH ;  
+                                 IF IGLOBAL <> BOXNOP1 THEN J1 %= J1 + DROPCOL ;        
+                                 WHILE ( BUF[ J1 ] <> '*' ) AND     
+                                       ( J1 > 0 ) DO      
+                                     BEGIN BUF[ J1 ] %= '*' ; J1 %= J1 - 1 END
+                               END    
+        
+                         ELSE IF ( ACTIV[ IGLOBAL ] = REF[ IGLOBAL ] ) AND    
+                               ( ACTIV[ IGLOBAL ] <> NIL )
+                             THEN FOR J1 %= 0 TO NAPPWIDTH + DROPCOL DO 
+                                 BUF[ J + NAPPCOL + J1 ] %= '*'     
+        
+                         ELSE IF REF[ IGLOBAL ]^.NAPPROACH <> NIL   
+                             THEN BUF[ J + NAPPCOL ] %= '*' ;       
+        
+                         J %= J + CONECTWIDTH   
+                       END  
+        
+           END    
+        
+        ELSE J %= J + CONECTWIDTH     
+        
+END ;   (*   FILLAPP   *)   
+        
+        
+        
+PROCEDURE FILLNAPP ;        
+        
+BEGIN   
+    IF REF[ IGLOBAL ] <> NIL
+        THEN IF REF[ IGLOBAL ]^.NAPPROACH <> NIL
+            THEN BUF[ J + NAPPCOL ] %= '*' ;    
+    J %= J + CONECTWIDTH    
+END ;   (*   FILLNAPP   *)  
+        
+        
+        
+PROCEDURE FILLDROP ;        
+        
+BEGIN   
+    IF ACTIV[ IGLOBAL ]^.DROP <> NIL  
+        THEN BUF[ J + DROPCOL ] %= '*' ;        
+    J %= J + BOXWIDTH + APPSPSIZE     
+END ;   (*   FILLDROP   *)  
+        
+        
+        
+PROCEDURE PRINTNOTEXTBOX ;  
+        
+PROCEDURE NBOXLINE( LINE % INTEGER ) ;
+        
+VAR     
+    J1 % INTEGER ;
+    FLAG % BOOLEAN ;    (*   PREVENT OVERWRITING APPROACH LINE UNTIL TIME   *)
+        
+BEGIN   
+    FLAG %= FALSE ;         
+    J %= J + NOTEXTLDISPL ; 
+    FOR J1 %= 1 TO 10 DO    
+        BEGIN     
+            J %= J + 1 ;    
+            IF ( BUF[ J ] <> '*' ) OR ( ( BUF[ J ] = '*' ) AND      
+                  ( NOTBOXES[ ACTIV[ IGLOBAL ]^.BOXTYP, LINE, J1 ] = '*' ) )  
+                THEN FLAG %= TRUE ;   
+            IF FLAG         
+                THEN BUF[ J ] %= NOTBOXES[ ACTIV[ IGLOBAL ]^.BOXTYP, LINE, J1 ]         
+          END ;   
+    J %= J + NOTEXTRDISPL + APPSPSIZE 
+END ;   (*   NBOXLINE   *)  
+        
+        
+        
+BEGIN   
+    CASE BSTATE[ IGLOBAL ] OF         
+        LINE1    % BEGIN    
+                       FILLAPP( BNOTHING ) ;    
+                       NBOXLINE( 1 ) ;
+                       BSTATE[ IGLOBAL ] %= LINE2         
+                     END ;  
+        
+        LINE2    % BEGIN    
+                       FILLAPP( BNOTHING ) ;    
+                       NBOXLINE( 2 ) ;
+                       BSTATE[ IGLOBAL ] %= LINE3         
+                     END ;  
+        
+        LINE3    % BEGIN    
+                       FILLAPP( BLABEL ) ;      
+                       NBOXLINE( 3 ) ;
+                       BSTATE[ IGLOBAL ] %= LINE4         
+                     END ;  
+        
+        LINE4    % BEGIN    
+                       FILLAPP( BSTARS ) ;      
+                       NBOXLINE( 4 ) ;
+                       BSTATE[ IGLOBAL ] %= LINE5         
+                     END ;  
+        
+        LINE5    % BEGIN    
+                       FILLNAPP ;     
+                       NBOXLINE( 5 ) ;
+                       BSTATE[ IGLOBAL ] %= LINE6         
+                     END ;  
+        
+        LINE6    % BEGIN    
+                       FILLNAPP ;     
+                       NBOXLINE( 6 ) ;
+                       BSTATE[ IGLOBAL ] %= ULTIM         
+                     END ;  
+        
+        ULTIM    % BEGIN    
+                       FILLNAPP ;     
+                       NBOXLINE( 7 ) ;
+                       BSTATE[ IGLOBAL ] %= CONECT1       
+                     END ;  
+        
+        CONECT1  % BEGIN    
+                       FILLNAPP ;     
+                       FILLDROP ;     
+                       BSTATE[ IGLOBAL ] %= CONECT2       
+                     END ;  
+        
+        CONECT2  % BEGIN    
+                       FILLNAPP ;     
+                       FILLDROP ;     
+                       BSTATE[ IGLOBAL ] %= CONECT3       
+                     END ;  
+        
+        CONECT3  % BEGIN    
+                       FILLNAPP ;     
+                       FILLDROP ;     
+                       IF ACTIV[ IGLOBAL ]^.DROP <> NIL   
+                           THEN BSTATE[ IGLOBAL ] %= CONECT         
+                       ELSE IF REF[ IGLOBAL ] = NIL       
+                           THEN BSTATE[ IGLOBAL ] %= DONE 
+                       ELSE IF REF[ IGLOBAL ]^.NAPPROACH = NIL      
+                           THEN BSTATE[ IGLOBAL ] %= DONE 
+                           ELSE BSTATE[ IGLOBAL ] %= CONECT         
+                     END ;  
+        
+        CONECT   % BEGIN    
+                       FILLNAPP ;     
+                       FILLDROP       
+                     END ;  
+        
+        DONE     % BEGIN    
+                       FILLNAPP ;     
+                       FILLDROP       
+                     END    
+        
+      END         
+END ;   (*   PRINTNOTEXTBOX   *)      
+        
+        
+        
+PROCEDURE PRINTTEXTBOX ;    
+        
+VAR     
+    DISREGARD % BOOLEAN ;   
+        
+        
+PROCEDURE FILAPPSPACE( K % INTEGER ) ;
+        
+(*  RELIES ON A TRICKY EXPRESSION TO GENERATE TRIANGULAR APPSPACES  *)        
+        
+VAR     
+    J1, K1 % INTEGER ;      
+        
+BEGIN   
+    J1 %= APPSPSIZE - ABS( K - 4 ) ;  
+    IF ACTIV[ IGLOBAL ]^.BOXTYP = CONDBOX       
+        THEN      
+            BEGIN 
+                BUF[ J ] %= ' ' ;   (*   OVERWRITE STARS   *)       
+                BUF[ J + J1 ] %= '*'  
+              END 
+    ELSE IF ACTIV[ IGLOBAL ]^.BOXTYP = ITNBOX   
+        THEN FOR K1 %= 1 TO J1 DO BUF[ J + K1 ] %= '*'    
+    ELSE IF ACTIV[ IGLOBAL ]^.BOXTYP <> RECTANG 
+        THEN ERROR( 6 ) ;   
+    J %= J + APPSPSIZE      
+END ;   (*   FILAPPSPACE   *)         
+        
+        
+        
+        
+        
+        
+FUNCTION LINEBUF % BOOLEAN ;
+        
+VAR P% IDENTPTR ; N% INTEGER ;        
+    L % INTEGER ; 
+    OJ % INTEGER ;
+    OOJ % INTEGER ;         
+        
+        
+        
+        
+        
+BEGIN   
+        
+    OOJ %= J ;    
+    BLANKBUF( BOXWIDTH ) ;  
+    OJ %= J ;     
+        
+    P %= ACTIV[ IGLOBAL ]^.TEXTP ;    
+        
+   IF (P = NIL) THEN        
+      BEGIN       
+      LINEBUF %= TRUE ;     
+      END         
+        
+   ELSE 
+      BEGIN       
+      J %= OOJ + 1 + BOXSPACE ;       
+      LINEBUF %= NOT( PUTTEXT( P, BOXWIDTH - BOXSPACE * 2 - 2 ) ) ; 
+        ACTIV[ IGLOBAL ]^.TEXTP %= P ;
+      J %= OJ     
+      END ;       
+        
+END (* LINEBUF *) ;         
+        
+        
+BEGIN   
+    CASE BSTATE[ IGLOBAL ] OF         
+        
+        LINE1    % BEGIN    
+                       FILLAPP( BNOTHING ) ;    
+                        STARBUF( BOXWIDTH ) ;   
+                       J %= J + APPSPSIZE ;  (*   BLANKS   *)       
+                       BSTATE[ IGLOBAL ] %= LINE2         
+                      END ; 
+        
+        LINE2    % BEGIN    
+                       FILLAPP( BNOTHING ) ;    
+                       BLANKBUF( BOXWIDTH ) ;   
+                       FILAPPSPACE( 2 ) ;       
+                       BSTATE[ IGLOBAL ] %= LINE3         
+                      END ; 
+        
+        LINE3    % BEGIN    
+                       FILLAPP( BLABEL ) ;      
+                       BLANKBUF( BOXWIDTH ) ;   
+                       FILAPPSPACE( 3 ) ;       
+                       BSTATE[ IGLOBAL ] %= LINE4         
+                     END ;  
+        
+        LINE4    % BEGIN    
+                       FILLAPP( BSTARS ) ;      
+                       DISREGARD %= LINEBUF ;   (*   SIDE EFFECT   *)         
+                       FILAPPSPACE( 4 ) ;       
+                       BSTATE[ IGLOBAL ] %= LINE5         
+                     END ;  
+        
+        LINE5    % BEGIN    
+                       FILLNAPP ;     
+                       IF LINEBUF THEN BSTATE[ IGLOBAL ] %= LINE6A  
+                           ELSE BSTATE[ IGLOBAL ] %= LINE6 ;        
+                       FILAPPSPACE( 5 )         
+                     END ;  
+        
+        LINE6    % BEGIN    
+                       FILLNAPP ;     
+                       IF LINEBUF THEN BSTATE[ IGLOBAL ] %= PENULTIM
+                           ELSE BSTATE[ IGLOBAL ] %= LINEN ;        
+                       FILAPPSPACE( 6 )         
+                     END ;  
+        
+        LINE6A   % BEGIN    
+                       FILLNAPP ;     
+                       BLANKBUF( BOXWIDTH ) ;   
+                       FILAPPSPACE( 6 ) ;       
+                       BSTATE[ IGLOBAL ] %= ULTIM         
+                     END ;  
+        
+        LINEN    % BEGIN    
+                       FILLNAPP  ;    
+                       IF LINEBUF THEN BSTATE[ IGLOBAL ] %= PENULTIM
+                           ELSE BSTATE[ IGLOBAL ] %= LINEN ;        
+                       J %= J + APPSPSIZE  (*   BLANKS   *)         
+                     END ;  
+        
+        PENULTIM % BEGIN    
+                       FILLNAPP ;     
+                       BLANKBUF( BOXWIDTH ) ;   
+                       J %= J + APPSPSIZE ;  (*   BLANKS   *)       
+                       BSTATE[ IGLOBAL ] %= ULTIM         
+                     END ;  
+        
+        ULTIM    % BEGIN    
+                       FILLNAPP ;     
+                        STARBUF( BOXWIDTH ) ;   
+                       J %= J + APPSPSIZE ;  (*   BLANKS   *)       
+                       BSTATE[ IGLOBAL ] %= CONECT1       
+                     END ;  
+        
+        CONECT1  % BEGIN    
+                       FILLNAPP ;     
+                       FILLDROP ;     
+                       BSTATE[ IGLOBAL ] %= CONECT2       
+                     END ;  
+        
+        CONECT2  % BEGIN    
+                       FILLNAPP ;     
+                       FILLDROP ;     
+                       BSTATE[ IGLOBAL ] %= CONECT3       
+                     END ;  
+        
+        CONECT3  % BEGIN    
+                       FILLNAPP ;     
+                       FILLDROP ;     
+                       IF ACTIV[ IGLOBAL ]^.DROP <> NIL   
+                           THEN BSTATE[ IGLOBAL ] %= CONECT         
+                       ELSE IF REF[ IGLOBAL ] = NIL       
+                           THEN BSTATE[ IGLOBAL ] %= DONE 
+                       ELSE IF REF[ IGLOBAL ]^.NAPPROACH = NIL      
+                           THEN BSTATE[ IGLOBAL ] %= DONE 
+                           ELSE BSTATE[ IGLOBAL ] %= CONECT         
+                     END ;  
+        
+        CONECT   % BEGIN    
+                       FILLNAPP ;     
+                       FILLDROP       
+                     END ;  
+        
+        DONE     % BEGIN    
+                       FILLNAPP ;     
+                       FILLDROP       
+                     END    
+        
+      END         
+        
+END ;   (*   PRINTTEXTBOX   *)        
+        
+        
+        
+        
+PROCEDURE PRINTOVERLABL( OVL % TRLSTLPTR ) ;    
+        
+BEGIN   
+    CASE BSTATE[ BOXNOP1 ] OF         
+        
+        LINE1    % BEGIN    
+                       FILLAPP( BNOTHING ) ;    
+                       BSTATE[ IGLOBAL ] %= LINE2         
+                     END ;  
+        
+        LINE2    % BEGIN    
+                       FILLAPP( BNOTHING ) ;    
+                       BSTATE[ IGLOBAL ] %= LINE3         
+                     END ;  
+        
+        LINE3    % BEGIN    
+                       FILLAPP( BLABEL ) ;      
+                       BSTATE[ IGLOBAL ] %= LINE4         
+                     END ;  
+        
+        LINE4    % BEGIN    
+                       FILLAPP( BSTARS ) ;      
+                       J %= J + 1 ;   
+                       BUF[ J ] %= OVL^.OVLABEL[ 1 ] ;    
+                       J %= J + 1 ;   
+                       BUF[ J ] %= OVL^.OVLABEL[ 2 ] ;    
+                       J %= J + 1 ;   
+                       BUF[ J ] %= OVL^.OVLABEL[ 3 ] ;    
+                       BSTATE[ IGLOBAL ] %= CONECT1       
+                     END ;  
+        
+        CONECT1  % BEGIN    
+                       FILLNAPP ;     
+                       BSTATE[ IGLOBAL ] %= CONECT2       
+                     END ;  
+        
+        CONECT2  % BEGIN    
+                       FILLNAPP ;     
+                       BSTATE[ IGLOBAL ] %= CONECT3       
+                     END ;  
+        
+        CONECT3  % BEGIN    
+                       FILLNAPP ;     
+                       BSTATE[ IGLOBAL ] %= DONE
+                     END ;  
+        
+        DONE     %  
+      END         
+END ;   (*   PRINTOVERLABL   *)       
+        
+        
+        
+        
+        
+        
+BEGIN   (*   PRINTBAND   *) 
+    REPEAT    (*   PRINT ONE LINE EACH TIME   *)
+        CLEARBUF ;
+        FOR IGLOBAL %= 1 TO IACTIV DO 
+            IF IGLOBAL <> BOXNOP1 THEN
+                IF ( ACTIV[ IGLOBAL ]^.BOXTYP = RECTANG ) OR        
+                      ( ACTIV[ IGLOBAL ]^.BOXTYP = CONDBOX ) OR     
+                      ( ACTIV[ IGLOBAL ]^.BOXTYP = ITNBOX )         
+                    THEN PRINTTEXTBOX 
+                    ELSE PRINTNOTEXTBOX         
+            ELSE PRINTOVERLABL( OVL ) ;         
+        WRITELN( BUF )      
+    UNTIL ( BSTATE[ IACTIV ] = DONE ) OR ( BSTATE[ IACTIV ] = CONECT )        
+END ;   (*   PRINTBAND   *) 
+        
+        
+        
+        
+PROCEDURE PRINTPANDPRUNE ;  
+        
+VAR     
+    I % INTEGER ; 
+    J1 % INTEGER ;
+    DUMMY % TRLSTLPTR ;     
+        
+BEGIN   
+    FOR I  %= 1 TO BOXNOP1 DO REF[ I  ] %= NIL ;
+    FOR I  %= 0 TO BOXNOP1 DO ACTIV[ I  ] %= NIL ;        
+    FOR I  %= 0 TO BOXNOP1 DO BSTATE[ I  ] %= DONE ;      
+    IACTIV %= 1 ; 
+    ACTIV[ 1 ] %= TREE;     
+    BSTATE[ 1 ] %= LINE1 ;  
+    PRINTPROCBOX ;
+    WHILE NOTALLDONE DO BEGIN         
+        IF GODOWN( IACTIV ) THEN GORIGHT( IACTIV, OVER, LOVER )     
+            ELSE GOLEFT( IACTIV, OVER, LOVER ) ;
+        PRINTBAND( IACTIV, LOVER ) ;  
+      END         
+END ;   (*   PRINTPANDPRUNE   *)      
+        
+        
+        
+        
+PROCEDURE PRINTOANDPRUNE ;  
+        
+VAR     
+    I % INTEGER ; 
+    J1 % INTEGER ;
+        
+BEGIN   
+    FOR I  %= 1 TO BOXNOP1 DO REF[ I  ] %= NIL ;
+    FOR I  %= 0 TO BOXNOP1 DO ACTIV[ I  ] %= NIL ;        
+    FOR I  %= 1 TO BOXNOP1 DO BSTATE[ I  ] %= DONE ;      
+    BSTATE[ 0 ] %= CONECT ; 
+    WRITELN( '      ', OVER^.OVLABEL ) ;        
+    IACTIV %= 0 ; 
+    WRITELN( '0' ) ;        
+    ACTIV[ 0 ] %= OVER^.TREE ;        
+    GORIGHT( IACTIV, OVEROVER, LOVEROVER ) ;    
+    PRINTBAND( IACTIV, LOVEROVER ) ;  
+    WHILE NOTALLDONE DO BEGIN         
+        IF GODOWN( IACTIV ) THEN GORIGHT( IACTIV, OVEROVER, LOVEROVER )       
+            ELSE GOLEFT( IACTIV, OVEROVER, LOVEROVER ) ;  
+        PRINTBAND( IACTIV, LOVEROVER )
+      END         
+END ;   (*   PRINTOANDPRUNE   *)      
+
+        
+        
+        
+        
+        
+BEGIN   (*   PRINT   *)     
+END   (*   PRINT   *) ; 
+
+BEGIN 
+END (* FOO *) . 
+
+KO%%E,

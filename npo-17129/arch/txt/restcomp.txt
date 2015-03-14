@@ -1,0 +1,2 @@
+To get a listing of the files restored from tape, print out the batch
+log file:  SYS$SCRATCH:RESTORE.LOG

@@ -1,0 +1,35 @@
+cancel.hlp
+~~~text.hlp
+graphics.hlp
+anno.hlp
+window.hlp
+format.hlp
+print.hlp
+
+mains2.hlp
+
+The main screen is the central area while working with a chart.  When in any
+other mode except format and this mode, pressing F8 a certain number of times
+will return you to this screen.  It displays what the current chart looks like.
+
+The following choices will explain what each of the available function keys
+will do when pressed.  To learn more about the save mode or exit mode use
+F9  More Help.
+
+
+To obtain help for any of the following subjects,  press the function key next
+to the desired subject.
+
+        F1  Cancel
+        F2  Text Mode (First insert Specific Help disk if not using hard disk)
+        F3  Graphics Mode (for Milestone only)
+        F4  Annotation Mode (not applicable to the Bullet chart)
+        F5  Window Mode
+        F6  Format Mode (F3 on first help menu allows more specific help)
+        F7  Printing
+        F8  Return to Previous Menu
+        F9  More Help
+        F10 Exit from Help
+
+Press F8 to return to the last help screen or F10 to leave the help mode
+

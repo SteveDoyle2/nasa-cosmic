@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+When the insert key is pressed from the Create Slide Show Menu, the prompt asks
+for the number of the slide to insert.  This means whatever number is entered
+the slide at that line and below in the show where the cursor was will be
+pushed down one line with the last line (10) being deleted and a new line will
+be placed at that number.  If a return is pressed when asking for the number,
+the line on which the cursor was located will be inserted to the show. To not
+insert a slide press F1(Cancel).
+
+
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

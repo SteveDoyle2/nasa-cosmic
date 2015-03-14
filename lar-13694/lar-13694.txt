@@ -1,0 +1,53 @@
+ RATIONAL SPLINE SUBROUTINES
+
+( NASA Langley Research Center )
+
+     Scientific data often contains random errors that make plotting and
+curve-fitting difficult. The Rational-Spline Approximation with Auto-
+matic Tension Adjustment algorithm lead to a flexible, smooth representa-
+tion of experimental data.
+
+     The user sets the conditions for each consecutive pair of knots:(knots
+are user-defined divisions in the data set) to apply no tension; to ap-
+ply fixed tension; or to determine tension with a tension adjustment al-
+gorithm. The user also selects the number of knots, the knot abscissas,
+and the allowed maximum deviations from line segments. The selection of
+these quantities depends on the actual data and on the requirements of a
+particular application. This program differs from the usual spline under
+tension in that it allows the user to specify different tension values be-
+tween each adjacent pair of knots rather than a constant tension over the
+entire data range. The subroutines use an automatic adjustment scheme that
+varies the tension parameter for each interval until the maximum deviation
+of the spline from the line joining the knots is less than or equal to a user-
+specified amount. This procedure frees the user from the drudgery of ad-
+justing individual tension parameters while still giving control over the
+local behavior of the spline
+
+     The Rational Spline program was written completely in FORTRAN for im-
+plementation on a CYBER 850 operating under NOS. It has a central memory re-
+quirement of approximately 1500 words. The program was released in 1988.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN V
+
+MACHINE REQUIREMENTS: CDC CYBER 170
+
+PROGRAM SIZE: APPROXIMATELY 2,312 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI ASCII Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LAR-13694
+
+DOMESTIC - DOCUMENTATION PRICE: $16.00    PROGRAM PRICE: $800.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $32.00   PROGRAM PRICE: $1600.00
+
+
+
+                                        1
+

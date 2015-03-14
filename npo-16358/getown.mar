@@ -1,0 +1,46 @@
+	.TITLE	GETOWN - FORTRAN USEROPEN PROCEDURE
+	.SUBTITLE	GETOWN - FORTRAN USEROPEN PROCEDURE
+
+;DM   This routine is used to get a file ownership.
+;DM
+;DM   Programmer - Jon Vavrus  28 OCT 1980
+;M
+;M         This routine is invoked as the USEROPEN qualifier in a FORTRAN
+;M    OPEN statement.  When invoked it will return the file owner's group
+;M    number as the first word of the common area OWNER, and the file
+;M    owner's member number as the second word.
+;
+;	COMMON AREAS
+;
+;S    OWNER  Used to return the owner UIC to the main program.
+
+	.PSECT		OWNER,PIC,USR,OVR,REL,GBL,SHR,NOEXE,RD,WRT,LONG
+
+GROUP:		.BLKW	1
+MEMBER:		.BLKW	1
+
+	.PSECT		GETDAT,NOEXE,LONG
+
+PROXAB:		$XABPRO	NXT=0
+
+	.PSECT		GETOWN,NOWRT
+	.ENTRY		GETOWN,^M<R2>
+
+	MOVL		4(AP),R2		; get address of FAB
+	MOVL		FAB$L_XAB(R2),R2	; get address of XABFHC
+	MOVAL		PROXAB,XAB$L_NXT(R2)	; add XABPRO to chain
+	$OPEN		FAB=@4(AP)		; actually open file
+	CMPL		R0,#RMS$_NORMAL
+	BEQL		10$
+	RET
+
+10$:	$CONNECT	RAB=@8(AP)
+	CMPL		R0,#RMS$_NORMAL
+	BEQL		20$
+	RET
+
+20$:	MOVW		<PROXAB+XAB$W_GRP>,GROUP ; get UIC
+	MOVW		<PROXAB+XAB$W_MBM>,MEMBER
+	RET
+
+	.END

@@ -1,0 +1,122 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STANDARD',
+               'QLIBHOME:FIG',
+               'QLIBHOME:TERM_4010',
+               'QLIBHOME:TERM_VAX'),
+  ENVIRONMENT ('QLIBHOME:TEK4010.TEN') ]
+MODULE term_TEK4010;
+{=============================================================================}
+{-- PROCEDURES FOR TERMINAL TYPE TEK4010 -------------------------------------}
+{=============================================================================}
+[ GLOBAL ]
+FUNCTION termname_TEK4010 (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0: termname_TEK4010 := '1';
+   1: termname_TEK4010 := 'TEK4010 ';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE colorsetup_TEK4010;
+BEGIN
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE executecom_TEK4010;
+VAR
+   h,l,s         : integer;
+   a             : char;
+   oldpos        : ipoint;
+{------------------------------}
+PROCEDURE bufferempty;
+BEGIN
+IF length(env.buffer) <> 0 
+ THEN 
+  BEGIN
+  env.mode := M_PLOT;
+  qiowwrite (env.buffer);
+  env.buffer := '';
+  END;
+END;
+{------------------------------}
+BEGIN
+WITH plotitem DO CASE ins OF
+   I_col:  bufferempty;
+   I_pan:  ;
+   I_clo:  ;
+   I_pos:  BEGIN
+           bufferempty;
+           env.pos.ix := ix;
+           env.pos.iy := iy;
+           END;
+   I_dra:  draw_4010 (ix,iy,true,bufferempty);
+   I_siz:  ;
+   I_mar:  ;
+   I_pri:  IF env.visible AND (st <> '') 
+            THEN 
+             BEGIN
+             bufferempty;
+             env.buffer := chr(29) + strofpos_4010 (env.pos) 
+                         + chr(31) + st;
+             bufferempty;
+             END;
+   I_emp:  bufferempty;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE writeterm_TEK4010 (str : VARYING [l2] OF char);
+BEGIN
+writeterm_4010 (str);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE readterm_TEK4010 (VAR outstr : VARYING [l2] OF char);  
+BEGIN
+readterm_vax (outstr);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screenerase_TEK4010;
+BEGIN
+screenerase_4010;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screencopy_TEK4010;
+BEGIN
+screencopy_4010;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE gin_TEK4010 (VAR key : char;  VAR ipt : ipoint;  color : color_type);
+BEGIN
+gin_4010 (key,ipt);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+FUNCTION readmenu_TEK4010 (default : char;  toplevel : boolean;
+   helpprefix : anystring) : command_type;
+BEGIN
+readmenu_TEK4010 := readmenu_4010 (default,toplevel,helpprefix,menuprep_4010);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE termconfig_TEK4010 (configcontrol : configcontrol_type);
+BEGIN
+CASE configcontrol OF
+   CON:  BEGIN
+         config.ch := ch_type (800,1475,300,300);
+         config.resolution := 64;
+         config.dotsize    := 64;
+         config.starsize   := 320;
+         config.ansi364    := false;
+         config.drawblack  := false;
+         END;
+   QUE:  ;
+   REP:  ;
+   END;
+END;
+{=============================================================================}
+END.

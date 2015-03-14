@@ -1,0 +1,85 @@
+1 MISC      
+
+     Some seldom used and unrelated routines are collected here.
+
+     Format:     MISC
+
+2 CONVERT_INCA_200  
+
+     This command will convert files from old INCA (Version 2.00 
+through 2.08 to the new INCA format.  The old files are retained 
+unchanged, except for the .SOU files, which are renamed with the 
+extension '.SOUOLD.
+
+     Format:     MISC  CONVERT_INCA_200  
+
+3 ALL_INCA_FILES    
+
+     Format:     MISC  CONVERT_INCA_200  ALL_INCA_FILES
+
+     All files are converted.
+
+3 FRE_FILES         
+
+     This modifier will allow the user to convert all or selected
+frequency response plot (.FRE) files.  The new version will be given
+the extension .FR, which is required by INCA 3.00.
+
+     Format:     MISC  CONVERT_INCA_200  FRE_FILES
+
+3 LOC_FILES         
+
+     This modifier will allow the user to convert all or selected root
+locus plot (.LOC) files.  The new version will be given the extension
+.RL, which is required by INCA 3.00. 
+
+     Format:     MISC  CONVERT_INCA_200  LOC_FILES
+
+3 SOU_FILES         
+
+     This modifier will allow the user to convert all or selected
+command source (.SOU) files.  The old file will be given a new
+extension (.SOUOLD) and the new source file will be given the
+extension .SOU, as required by INCA 3.00.  This conversion is
+difficult because of the new command structure, and many commands were
+not converted.  These have been commented out in the new version.  The
+user may wish to examine the new source files and complete the
+conversion by hand. 
+
+     Format:     MISC  CONVERT_INCA_200  SOU_FILES
+
+3 TIR_FILES         
+
+     This modifier will allow the user to convert all or selected
+time response plot (.TIR) files.  The new version will be given
+the extension .TR, which is required by INCA 3.00.
+
+     Format:     MISC  CONVERT_INCA_200  TIR_FILES
+
+3 WOR_FILES         
+
+     This modifier will allow the user to convert all or selected
+project workspace (.WOR) files.  The new project file will be given
+the extension .PRO, which is required by INCA 3.00.  In addition, 
+INCA 3.00 can directly read workspace files using the command 
+PROJECT OLD_INCA_LOAD workspace-name 
+
+     Format:     MISC  CONVERT_INCA_200  WOR_FILES
+
+2 NO_ERROR_TRAP     
+
+     The NO_ERROR_TRAP command will cause the QPLOT error handler to
+be disabled.  Thus any error will cause the application program to
+"crash". Since the system error report will then give the exact line
+number and procedure in which the error occured, this command is
+useful for debugging purposes. 
+
+     Format:     MISC  NO_ERROR_TRAP
+
+2 ZAP_SCREEN        
+
+      The ZAP_SCREEN command will erase the terminal screen, and 
+return terminal to normal text (VT100 if possible) mode.
+
+     Format:     MISC  ZAP_SCREEN
+

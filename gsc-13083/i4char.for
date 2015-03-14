@@ -1,0 +1,80 @@
+      CHARACTER*(*) FUNCTION I4CHAR(INTVAL,LENOUT,KFIRST)
+C
+C  THIS ROUTINE TAKES AN INTEGER VALUE AND CONVERTS IT TO
+C  CHARACTERS THAT ONE WOULD PRINT IF THE INTEGER WERE 
+C  WRITTEN. FOR EXAMPLE, IF INTVAL=-8765, AND 7 CHARACTERS ARE TO BE
+C  OUTPUT, THEN THIS ROUTINE RETURNS THE 7 CHARACTERS '  -8765'.
+C
+C VARIABLE  DIM  TYPE  I/O   DESCRIPTION
+C --------  ---  ----  ---   -----------
+C
+C INTVAL     1   I*4    I    INTEGER FOR WHICH CHARACTERS ARE WANTED.
+C
+C LENOUT     1   I*4    I    THE NUMBER OF CHARACTERS TO BE OUTPUT.
+C                            IF THE INTEGER REQUIRES MORE CHARACTERS
+C                            THAN ARE ALLOWED, THEN *'S ARE OUTPUT.
+C                            FOR EXAMPLE, IF LENOUT=3, THEN THIS 
+C                            ROUTINE CAN HANDLE INTEGERS IN THE RANGE
+C                            -99 TO 999. OUTSIDE OF THIS RANGE THIS
+C                            ROUTINE WILL OUTPUT '***'.
+C
+C                            VALUES FOR LENOUT MUST BE 1-9 FOR 
+C                            NON-NEGATIVE INTVAL'S AND 2-10 FOR NEGATIVE
+C                            ONES. OUTSIDE THIS RANGE, *'S ARE OUTPUT
+C                            REGARDLESS OF THE VALUE OF INTVAL.
+C
+C KFIRST     1   I*4    O    THE LOCATION OF THE FIRST NON-BLANK CHAR-
+C                            ACTER RETURNED. FOR EXAMPLE, IF LENOUT=8
+C                            AND INTVAL=-1234, THEN THIS ROUTINE
+C                            RETURNS '   -1234'. HERE, KFIRST=4.
+C
+C I4CHAR   *(*)  CHAR   O    STRING OF CHARACTERS BEING RETURNED.
+C                            I4CHAR MUST BE DECLARED A CHARACTER 
+C                            VARIABLE IN THE CALLING ROUTINE AND ITS
+C                            LENGTH MUST BE GE/EQ LENOUT.
+C
+C***********************************************************************
+C
+C  CODED BY C. PETRUZZO.  12/81.
+C  MODIFIED....
+C
+C***********************************************************************
+C
+      INTEGER DIGIT
+      CHARACTER BIT*1
+      CHARACTER*1 SYM(10)/'1','2','3','4','5','6','7','8','9','0'/
+C
+      IERR=1
+      INT=IABS(INTVAL)
+      LENTST=LENOUT
+      IF(INTVAL.LT.0) LENTST=LENOUT-1
+      IF(LENTST.LT.1 .OR. LENTST.GT.9) GO TO 990
+      IF (INT .GE. 10**LENTST) GO TO 990
+C
+      IERR=0
+      NEW = INT
+      KFIRST=0
+      DO 8 I = 1,LENOUT
+      I4CHAR(I:I)=' '
+      ITEMP = 10 ** (LENOUT-I)
+      DIGIT = NEW / ITEMP
+      IF(DIGIT.EQ.0 .AND. KFIRST.EQ.0) GO TO 8
+      IF(KFIRST.EQ.0) KFIRST=I
+      NEW = NEW - (DIGIT * ITEMP)
+      IF (DIGIT .EQ. 0) DIGIT=10
+      I4CHAR(I:I) = SYM(DIGIT)
+8     CONTINUE
+      IF(INTVAL.GE.0) GO TO 15
+      KFIRST=KFIRST-1
+      I4CHAR(KFIRST:KFIRST)='-'
+   15 CONTINUE
+      IF(KFIRST.EQ.0) KFIRST=LENOUT
+      IF(INTVAL.EQ.0) I4CHAR(LENOUT:LENOUT)='0'
+  990 CONTINUE
+      IF(IERR.NE.0) THEN
+      KFIRST=1
+      DO 20 I=1,LENOUT
+   20 I4CHAR(I:I)='*'
+      END IF
+      RETURN
+      END

@@ -1,0 +1,73 @@
+   interface;
+
+   unit getparam  ( get_parameter, node_data, fctn_map,
+                    fctn_tag, valid_set, messages, skeleton,
+                    supbyte, suppdata, supfctnset, suplstring,
+                    supstring, matrixbyte, fctnset, supinteger );
+
+   type
+
+           pdata  = record
+                      nfields          : byte;
+                      valid_key_set_id : byte;
+                      prtmsg           : lstring(80);
+                      x                : integer;
+                      y                : integer;
+                      xtext            : integer;
+                      ytext            : integer;
+                      input_length     : byte;
+                      character_size   : byte;
+                      text_color       : byte;
+                      data_type        : byte;
+                      esc              : byte;
+                      backspace        : byte;
+                      cursor_left      : byte;
+                      cursor_right     : byte;
+                      ins              : byte;
+                      del              : byte;
+                    end;
+
+
+ {         fctnset     = set of byte;
+           supbyte     = super array [1..*] of byte;
+           suppdata    = super array [1..*] of pdata;
+           supfctnset  = super array [1..*] of fctnset;
+           suplstring  = super array [1..*] of lstring(80);
+           matrixbyte = super array [1..*] of ^supbyte;
+           supstring   = super array [1..*] of string(12);
+           supinteger  = super array [1..*] of integer;
+
+
+
+   var
+       node_data  : ^suppdata;
+       fctn_map   : ^matrixbyte;
+       fctn_tag   : ^suplstring;
+       valid_set  : ^supfctnset;
+       messages   : ^suplstring;
+       skeleton   : ^supinteger; }
+
+       fctnset    = set of byte;
+       abyte      =       array [1..25]  of byte;
+       alstring   =       array [1..120] of lstring(80);
+       supbyte    = super array [1..*]   of byte;
+       suppdata   = super array [1..*]   of pdata;
+       supfctnset =       array [1..120] of fctnset;
+       suplstring = super array [1..*]   of lstring(80);
+       matrixbyte =       array [1..120] of abyte;
+       supstring  =       array [1..120] of string(12);
+       supinteger = super array [1..*]   of integer;
+
+   var
+       node_data  : ^suppdata;
+       fctn_map   : ads of matrixbyte;
+       fctn_tag   : ads of alstring;
+       valid_set  : ads of supfctnset;
+       messages   : ads of alstring;
+       skeleton   : ^supinteger;
+
+   procedure get_parameter ( var name: lstring );
+
+   begin
+   end;
+

@@ -1,0 +1,165 @@
+      SUBROUTINE GMBLRD
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      COMMON/CGIMBL/ AZIN(3,3),AZAX(3),AZCG(3),AZMS,AZYY(3,3),AZIAX(3,3)
+     1              ,ELIN(3,3),ELAX(3),ELCG(3),ELMS,ELYY(3,3),ELIAX(3,3)
+     2              ,ZZAZ(3,3)
+C
+      COMMON/CRSTGM/ DELA(3),TAUA(4,3),ANG20(3),ADD0(3),TC(3),TTAB(4,3)
+C
+      COMMON/GMBICS/ AZIM0,ROLL0,ELEV0,AZIMI,AZIMID,ELEVI,ELEVID
+     1              ,GMUP(2),GMDN(2)
+C
+      COMMON/GMINTF/ GMK1(2),GMK2(2),GMDMP(2),GMSTP(2)
+C
+      COMMON/GMPRPL/ GMBAZ,GMBAZD,GMBEL,GMBELD
+C
+      COMMON/IGIMBL/ IGMBL,NAZIM,NELEV,NA1,NE1
+C
+      COMMON/IRSTGM/ IGMRST,IARST(3),IRSCY(3)
+C
+      COMMON/JETDMP/ ZMS0,TANKCG(3),FUELPP(2),FUELM,DMDT(2)
+     1              ,RGYFL(3),IJTDMP
+C
+C
+      DIMENSION HEDGM(5)
+      DIMENSION HEDIC(5)
+      DIMENSION HEDR1(5)
+      DIMENSION HEDR2(5)
+      DIMENSION HEDJD(5)
+      REAL*4 BUFF(450)
+C
+      DATA I8/',A8,'/
+      DATA HEDGM/'TWO AXIS',' GIMBLE ','PHYSICAL',' PROPERT','IES     '/
+      DATA HEDR1/'TWO AXIS',' GIMBLE ','RASTERIN','G OPTION','        '/
+      DATA HEDIC/'GIMBLE I','NITIAL C','ONDITION','S       ','        '/
+      DATA HEDJD/'JET DAMP','ING OPTI','ON INVOK','ED      ','        '/
+C
+      CALL SETUP(8HAZIN    ,8,AZIN,3,3)
+      CALL SETUP(8HAZAX    ,8,AZAX,3)
+      CALL SETUP(8HAZCG    ,8,AZCG,3)
+      CALL SETUP(8HAZMS    ,8,AZMS)
+      CALL SETUP(8HELIN    ,8,ELIN,3,3)
+      CALL SETUP(8HELAX    ,8,ELAX,3)
+      CALL SETUP(8HELCG    ,8,ELCG,3)
+      CALL SETUP(8HELMS    ,8,ELMS)
+C
+      CALL SETUP(8HAZIM0   ,8,AZIM0)
+      CALL SETUP(8HROLL0   ,8,ROLL0)
+      CALL SETUP(8HELEV0   ,8,ELEV0)
+      CALL SETUP(8HAZIMI   ,8,AZIMI)
+      CALL SETUP(8HAZIMID  ,8,AZIMID)
+      CALL SETUP(8HELEVI   ,8,ELEVI)
+      CALL SETUP(8HELEVID  ,8,ELEVID)
+      CALL SETUP(8HGMUP    ,8,GMUP,2)
+      CALL SETUP(8HGMDN    ,8,GMDN,2)
+C
+      CALL SETUP(8HGMK1    ,8,GMK1,2)
+      CALL SETUP(8HGMK2    ,8,GMK2,2)
+      CALL SETUP(8HGMDMP   ,8,GMDMP,2)
+      CALL SETUP(8HGMSTP   ,8,GMSTP,2)
+C
+      CALL SETUP(8HGMDELA  ,8,DELA,3)
+      CALL SETUP(8HGMTAUA  ,8,TAUA,4,3)
+      CALL SETUP(8HGMAN20  ,8,ANG20,3)
+      CALL SETUP(8HGMADD0  ,8,ADD0,3)
+      CALL SETUP(8HGMTC    ,8,TC,3)
+      CALL SETUP(8HGMTTAB  ,8,TTAB,4,3)
+C
+      CALL SETUP(8HIGMBL   ,4,IGMBL)
+C
+      CALL SETUP(8HIGMRST  ,4,IGMRST)
+      CALL SETUP(8HIGARST  ,4,IARST,3)
+      CALL SETUP(8HIGRSCY  ,4,IRSCY,3)
+C
+      CALL SETUP(8HIJTDMP  ,4,IJTDMP)
+      CALL SETUP(8HZMS     ,8,ZMS0)
+      CALL SETUP(8HTANKCG  ,8,TANKCG,3)
+      CALL SETUP(8HFUELPP  ,8,FUELPP,2)
+      CALL SETUP(8HFUELM   ,8,FUELM)
+      CALL SETUP(8HRGYFL   ,8,RGYFL,3)
+C
+C
+      CALL PLATCS
+C
+C
+      RETURN
+C
+C    ***************************************************************
+      ENTRY ECHOGM
+C    ***************************************************************
+C
+      IF(IGMBL.EQ.0) GO TO 10
+C
+      CALL HVAL(HEDGM)
+C
+      CALL FVAL('AZIN    ',4,AZIN,3,3,2)
+      CALL FVAL('AZAX    ',4,AZAX,3,0,1)
+      CALL FVAL('AZCG    ',4,AZCG,3,0,1)
+      CALL FVAL('AZMS    ',4,AZMS,0,0,0)
+      CALL FVAL('ELIN    ',4,ELIN,3,3,2)
+      CALL FVAL('ELAX    ',4,ELAX,3,0,1)
+      CALL FVAL('ELCG    ',4,ELCG,3,0,1)
+      CALL FVAL('ELMS    ',4,ELMS,0,0,0)
+C
+      CALL HVAL(HEDIC)
+C
+      CALL FVAL('AZIMI   ',5,AZIMI,0,0,0)
+      CALL FVAL('AZIMID  ',6,AZIMID,0,0,0)
+      CALL FVAL('ELEVI   ',5,ELEVI,0,0,0)
+      CALL FVAL('ELEVID  ',6,ELEVID,0,0,0)
+C
+   10 CONTINUE
+C
+      IF(IJTDMP.EQ.0) GO TO 20
+C
+      CALL HVAL(HEDJD)
+      CALL FVAL('FUELM   ',5,FUELM,0,0,0)
+      CALL FVAL('TANKCG  ',6,TANKCG,3,0,1)
+C
+   20 CONTINUE
+C
+      IF(IGMRST.EQ.0) RETURN
+C
+      CALL HVAL(HEDR1)
+      CALL IVAL('IGMRST  ',6,IGMRST,0,0,0)
+      CALL IVAL('IGARST  ',6,IARST,3,0,1)
+C
+C
+      RETURN
+C
+C    ***************************************************************
+      ENTRY GMBPLT(BUFF,INDX)
+C    ***************************************************************
+C
+      INDEX=INDX-1
+      INDX=INDX+4
+C
+      IF(IGMBL.EQ.0) RETURN
+C
+      BUFF(INDEX+1)=GMBAZ
+      BUFF(INDEX+2)=GMBAZD
+      BUFF(INDEX+3)=GMBEL
+      BUFF(INDEX+4)=GMBELD
+      INDEX=INDEX+4
+C
+      RETURN
+C
+C    ***************************************************************
+      ENTRY GMPRNT
+C    ***************************************************************
+C
+      IF(IGMBL.EQ.0) RETURN
+C
+      CALL SET('GMBL AZ ',0,0,GMBAZ,I8)
+      CALL SET('GMBL AZD',0,0,GMBAZD,I8)
+      CALL SET('GMBL EL ',0,0,GMBEL,I8)
+      CALL SET('GMBL ELD',0,0,GMBELD,I8)
+C
+C
+      RETURN
+C
+C
+C
+      END

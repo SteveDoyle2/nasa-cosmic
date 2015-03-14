@@ -1,0 +1,11 @@
+        .TITLE NARG                                                             
+        .IDENT /VAX81/                                                          
+NARG::                                                                          
+; **** A PSEUDO-SYSTEM ROUTINE                                                  
+; **** VAX 780 VERSION                                                          
+;RETURNS NO. OF ARGS IN SUBROUTINE CALL                                         
+        .WORD   0                                                               
+        MOVL    8(SP),R0                                                        
+        MOVL    (R0),@4(AP)                                                     
+        RET                                                                     
+        .END                                                                    

@@ -1,0 +1,19 @@
+interface;
+
+  unit slide ( sldredraw,exit,enter,format,redraw );
+
+  USES utility;
+
+  procedure exit ( var current, first : entity );
+
+  procedure redraw ( code : integer; var current, first : entity );
+
+  procedure enter ( var current, first : entity );
+
+  procedure format( var inkey : byte; var current, first : entity );
+
+  procedure sldredraw ( var current, first : entity );
+
+  begin
+  end;
+

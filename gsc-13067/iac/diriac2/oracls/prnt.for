@@ -1,0 +1,74 @@
+	SUBROUTINE PRNT(A,NA,NAM,IOP)
+C
+C   PURPOSE:
+C      Print a single matrix with or without a descriptive heading
+C      either on the same page or on a new page.  Format for the print-
+C      ing is stored in the COMMON block FORM.
+C
+C   Subroutines employed by PRNT: LNCNT
+C   Subroutines employing PRNT: ASYFIL, ASYREG, BARSTW, BILIN, CNTREG,
+C      CSTAB, CTROL, DISREG, DSTAB, EXMDFL, EXPINT, EXPSER, FACTOR,
+C      IMMDFL, PREFIL, READ1, RICNWT, SAMPL, SUM, TESTST, TRNSIT,
+C      VARANC
+C
+	IMPLICIT REAL*8 (A-H,O-Z)
+	DIMENSION A(1),NA(2)
+	COMMON/FORM/NEPR,FMT1(2),FMT2(2)
+	COMMON/LINES/NLP,LIN,TITLE(10),TIL(2)
+C- NOTE NLP NO. LINES/PAGE VARIES WITH THE INSTALLATION.
+	DATA KZ,KW,KB /1H0,1H1,1H /
+
+	NAME = NAM
+	II = IOP
+	NR = NA(1)
+	NC = NA(2)
+	NLST = NR * NC
+	IF( NLST .LT. 1 .OR. NR .LT. 1 ) GO TO 999
+
+	IF(NAME  .EQ. 0) NAME = KB
+
+C- SKIP HEADLINE IF REQUESTED.
+	GO TO (20,10,40,30),      II
+   10	CALL LNCNT(100)
+   20	CALL LNCNT(2)
+    	WRITE(6,100) KZ,NAME,NR,NC
+  100	FORMAT(A1,5X,A4,'  MATRIX',5X,I3,' ROWS',5X,I3,' COLUMNS')
+	GO TO 50
+
+   30	CALL LNCNT(100)
+	GO TO 50
+
+   40	CALL LNCNT(2)
+	WRITE (6,150)
+  150	FORMAT (1H0)
+
+   50	CONTINUE
+	DO I = 1,NC,NEPR
+	   J = I + (NEPR-1)
+	   IF (J .GT. NC) J=NC
+
+	   IF (NC .GT. NEPR) THEN
+	      CALL LNCNT(2)
+	      IF (I .EQ. J) THEN
+	        WRITE(6,200) I
+  200	        FORMAT(/'    COL ',I4)
+	      ELSE
+	        WRITE(6,250) I,J
+  250	        FORMAT(/' 		COLS ',I4,' TO ',I4)
+	      END IF
+	   END IF
+
+	   DO K = 1,NR
+	      CALL LNCNT(1)
+	      WRITE(6,FMT1) (A(NR*(L-1)+K),L=I,J)
+	   END DO
+
+	END DO
+	RETURN
+
+C   * * * ERROR MESSAGE * * *
+  999	CALL LNCNT(1)
+	WRITE (6,300) NAM,NA
+  300	FORMAT  (' ERROR IN PRNT  MATRIX ',A4,' HAS NA=',2I6)
+	RETURN
+	END

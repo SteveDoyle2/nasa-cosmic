@@ -1,0 +1,148 @@
+/*****************************************************************************/
+/*                                                                           */
+/*  Set_true                                                                 */
+/*                                                                           */
+/*  This function sets one condition to true.  No assumption is made about   */
+/*  the state of the condition before the function is called.                */
+/*                                                                           */
+/*  Input:  cond - pointer to a condition.                                   */
+/*  Output: none.                                                            */
+/*                                                                           */
+/*  Method: If the last value was false                                      */
+/*              set the value to true.                                       */
+/*              adjust the false counters, etc. of all rules which depend    */
+/*                      on the condition.                                    */
+/*          If the last value was undefined                                  */
+/*              set the value to true.                                       */
+/*              adjust the undef counters, etc. of all rules which depend    */
+/*                      on the condition.                                    */
+/*                                                                           */
+/*  Programmer: G R Goodrum, MDTSCO, June 1984                               */
+/*                                                                           */
+/*****************************************************************************/
+
+#include "structures.inc"
+
+set_true ( cond )
+struct cond_info *cond;
+{
+    extern double time;
+    struct rule_info **r_list;
+    struct rule_info *set_rule;
+    struct cond_info *find_false();
+    int need_eval  =  0;
+#ifdef TRACE
+    extern struct rule_info rule[];
+    extern struct cond_info condition[];
+
+    if  ( cond -> trace )
+        trace ( cond, TRUE );
+#endif
+    cond -> mark  =  FALSE;
+
+    if  ( cond -> last_value == FALSE )
+    {
+        count ( 10, 0 );                                        /* debug */
+        cond -> last_value  =  TRUE;
+
+        r_list  =  cond -> rule_list;
+        while  ( ( set_rule = *r_list++ ) != NULL )
+        {
+            count ( 10, 3 );                                    /* debug */
+            if  ( --( set_rule -> false_count ) == 0 )
+            {
+                count ( 10, 5 );                                /* debug */
+                if  ( set_rule -> undef_count == 0 )
+                {
+                    count ( 10, 8 );                            /* debug */
+                    set_rule -> next_fire_time  =  time;
+                    add_to_queue ( set_rule );
+#ifdef TRACE
+                    if  ( set_rule -> trace )
+                    {
+                        printf ( "\nAdd rule %d to conflict set: %s\n",
+                            set_rule-&rule[0], set_rule->ri_tag );
+                        printf ( "    Because condition %d is true\n",
+                            cond-&condition[0] );
+                    }
+#endif
+                }
+                else
+                {                                               /* debug */
+                    count ( 10, 9 );                            /* debug */
+                    need_eval  =  1;
+                }                                               /* debug */
+                reqr_all ( set_rule );
+            }
+
+            else if  ( set_rule -> false_count == 1 )
+            {
+                count ( 10, 6 );                                /* debug */
+                set_rule -> only_false  =  find_false ( set_rule->cond_list );
+                set_rule -> only_false -> is_val_required  +=  1;
+            }
+            else count ( 10, 7 );                               /* debug */
+            check_rule ( set_rule );                            /* debug */
+        }
+        count ( 10, 4 );                                        /* debug */
+
+        if  ( need_eval )
+        {
+            count ( 10, 10 );                                   /* debug */
+            r_list  =  cond -> rule_list;
+            while  ( ( set_rule = *r_list++ ) != NULL )
+            {
+                count ( 10, 12 );                               /* debug */
+                if  ( set_rule -> false_count == 0  &&
+                        set_rule -> undef_count != 0 )
+                {
+                    count ( 10, 14 );                           /* debug */
+#ifdef TRACE
+                    push ( 3, set_rule-&rule[0] );
+#endif
+                    eval_list ( set_rule -> cond_list );
+#ifdef TRACE
+                    pop ();
+#endif
+                }
+                else count ( 10, 15 );                          /* debug */
+            }
+            count ( 10, 13 );                                   /* debug */
+        }
+        else count ( 10, 11 );                                  /* debug */
+    }
+
+    else if  ( cond -> last_value < 0 )         /* undefined */
+    {
+        count ( 10, 1 );                                        /* debug */
+        cond -> last_value  =  TRUE;
+
+        r_list  =  cond -> rule_list;
+        while  ( ( set_rule = *r_list++ ) != NULL )
+        {
+            count ( 10, 16 );                                   /* debug */
+            if  ( --( set_rule -> undef_count ) == 0  &&
+                        set_rule -> false_count == 0 )
+            {
+                count ( 10, 18 );                               /* debug */
+                set_rule -> next_fire_time  =  time;
+                add_to_queue ( set_rule );
+#ifdef TRACE
+                if  ( set_rule -> trace )
+                {
+                    printf ( "\nAdd rule %d to conflict set: %s\n",
+                        set_rule-&rule[0], set_rule->ri_tag );
+                    printf ( "    Because condition %d is true\n",
+                        cond-&condition[0] );
+                }
+#endif
+            }
+            else count ( 10, 19 );                              /* debug */
+            check_rule ( set_rule );                            /* debug */
+        }
+        count ( 10, 17 );                                       /* debug */
+    }
+    else count ( 10, 2 );                                       /* debug */
+
+    check_cond ( cond );                                        /* debug */
+}

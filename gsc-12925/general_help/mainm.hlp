@@ -1,0 +1,35 @@
+create.hlp
+rev_rev.hlp
+dir.hlp
+createex.hlp
+up_down.hlp
+sscom.hlp
+cngdef.hlp
+
+
+
+The main menu is the first menu displayed for each chart and also the last menu
+before exiting.  It gives the connection between working on the charts,
+maintaining the directory, communicating with the host, working with slide
+shows of this type of chart, and changing defaults.  To recieve information on
+any of the possible choices on the main menu, press the appropriate function
+key shown below.
+
+
+
+To obtain help for any of the following subjects,  press the function key next
+to the desired subject.
+
+        F1  CREATE a new chart
+        F2  REVIEW/REVISE an existing chart
+        F3  DIRECTORY of charts
+        F4  CREATE a new chart (for experienced user)
+        F5  UPLOAD/DOWNLOAD to/from the host
+        F6  Slide Show options
+        F7  CHANGE defaults (drive/printer)
+        F8  Return to Previous Menu
+
+        F10 Exit from Help
+
+Press F10 to leave the help mode
+

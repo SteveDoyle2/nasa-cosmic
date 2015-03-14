@@ -1,0 +1,1296 @@
+(*$U-*) 
+PROGRAM CODEGEN(OUTPUT,HALMATF,OBJFILE,SEVENUP,SYMTAB,LITFILE);     
+        
+LABEL 1,2;  (* USED FOR PREMATURE TERMINATION *)
+        
+CONST VAC_MAX = 25; 
+      BYTEMAX = $FFFF;      
+      INLMAX = 25;
+      MAX_DIMENSION = 2;    
+      X_PROC_MAX = 1;  (* EXTERNAL PROCEDURES *)
+      EXT_ARRAY_LIM = 300;  
+      SYTMAX = 100; 
+      LITMAX = 200; 
+        
+TYPE BIT3 =  0..7;
+     BIT4 =  0..$F; 
+     BIT8 =  0..$FF;
+     BIT12 = 0..$FFF;       
+     BIT16 = 0..$FFFF;      
+     BIT28 = 0..$FFFFFFF;   
+     INST_TYPE = (STORE,LOAD,HALT,JUMP,JFALSE,JTRUE,CALL,RETURN,ADD,
+                  SUB,MULT,CNEQ,CEQ,CNGT,CGT,CNLT,CLT,INIT,SUBSCR,  
+                  ENTER_IMMED,ADD_REG_IMMED,SAVE_ADDRESS,STORE_TEMP,
+                 GEN_LABEL);
+     X_REC = PACKED RECORD  
+              CALLED% BOOLEAN;
+              ADDR% BIT16;  
+             END; 
+     HALP = PACKED RECORD   
+               OPCODE% INST_TYPE;     
+               OPERAND_TAG% BIT4;     
+               OPERAND_NUMBER% BIT16; 
+              END;
+     HALWORD = PACKED RECORD
+                FILLER% BIT28;
+                CASE INTEGER OF       
+                 0% (T% BIT8;      (* OPERATOR *) 
+                     N% BIT8; 
+                     OP% BIT12;       
+                     P% BIT3; 
+                     TAG0% BOOLEAN);  
+                 1% (D% BIT16;     (* OPERAND *)
+                     T1% BIT8;
+                     Q% BIT4; 
+                     T2% BIT3;
+                     TAG1% BOOLEAN);  
+               END; 
+     VAC_REC = RECORD       
+                HAL% HALWORD; 
+                DSUB% BOOLEAN;
+               END; 
+        
+     HALPTR = ^HALSTACK;    
+     HALSTACK = RECORD      
+                 LINK% HALPTR;
+                 HAL% HALWORD;
+                END;
+     INL_REC = PACKED RECORD
+                NUMBER% BIT16;
+                ADDR% BIT16;
+                FREE% BOOLEAN;
+               END; 
+     SYTPTR = ^ SYT_REF;    
+     SYT_REF = PACKED RECORD
+                LINK% SYTPTR; 
+                REF% BIT16; 
+               END; 
+     SYT_REC = PACKED RECORD
+                ADDR% BIT16;
+                LINK% SYTPTR; 
+               END; 
+     LIT_REC = PACKED RECORD
+                DATA% INTEGER;
+                ADDR% BIT16;
+               END; 
+        
+VAR HALMATF% FILE OF HALWORD; (* INPUT FROM PHASE1 *)     
+    E_ARRAY_SIZE% INTEGER;  
+    EXT_ARRAY%  ARRAY[0..EXT_ARRAY_LIM] OF INTEGER;       
+    MF_ARRAY% ARRAY[0..EXT_ARRAY_LIM] OF INTEGER; 
+    SYT_NAME% ARRAY[0..SYTMAX] OF ALFA; 
+    SYT_FLAGS,SYT_ADDR % ARRAY[0..SYTMAX] OF INTEGER;     
+    SYT_XREF,VAR_LENGTH,SYT_ARRAY,SYT_PTR,SYT_LINK1,SYT_LINK2 %     
+                         ARRAY[0..SYTMAX] OF BIT16;       
+    SYT_NEST,SYT_SCOPE,SYT_CLASS,SYT_LOCK#,SYT_TYPE %   
+                         ARRAY[0..SYTMAX] OF BIT8 ;       
+    LITFILE % SEGMENTED FILE OF REAL; 
+    LIT1, LIT2, LIT3 % REAL;
+    NUM_LIT% INTEGER; (* NUMBER OF REFERENCED LITERALS *) 
+    SYMTAB% FILE OF INTEGER; (* SYMBOL TABLE FROM PHASE 1 *)
+    NDECSY% INTEGER; (* NUMBER OF SYMBOL TABLE ENTRIES *) 
+    SYT_MOD% ARRAY[0..SYTMAX] OF SYT_REC;       
+    INL_MOD% ARRAY[1..INLMAX] OF INL_REC;       
+    OUT% PACKED ARRAY[0..BYTEMAX] OF BIT8;      
+    OUTPTR % 0..BYTEMAX;    
+    PROG_ORG% BIT16;
+    LIT_ORG% BIT16; 
+    VAC_MOD% ARRAY[0..VAC_MAX] OF BIT16;
+    LIT_MOD% ARRAY[0..LITMAX] OF LIT_REC;       
+    HALACC% HALWORD; (* DESCRIPTION OF THE ACC IN HALMAT FORM *)    
+    I% INTEGER; (* LOOP INDEX *)      
+    SEVENUP% FILE OF HALP;  (* 7-UP INTERMEDIATE FILE *)  
+    VAC_ARRAY% ARRAY[0..VAC_MAX] OF VAC_REC;    
+    VAC_USED% INTEGER; (* MAXIMUM NUMBER OF TEMPORARIES USED *)     
+    X_PROC_REF% ARRAY[1..X_PROC_MAX] OF X_REC;  
+    LAST_BLOCK% BIT16;      
+    INT_NUM% BIT16; 
+    NOTEND% BOOLEAN;
+    PROGID% HALWORD;  (* PROGRAM NAME *)
+    INWORD% HALWORD;  (* CURRENT WORD *)
+    VAC_NUM% INTEGER;  (* NUMBER OF CURRENT OPERATOR/VAC *) 
+    HALMAT_NUM% INTEGER;  (* NUMBER OF CURRENT WORD *)    
+    OBJFILE% TEXT;  (* OBJECT MODULE *) 
+    ADDR16% BIT16;  (* OBJECT FILE ADDRESS POINTER *)     
+    CARDPTR% 10..70;  (* OBJECT FILE COLUMN POINTER *)    
+    CARD_DATA% ARRAY[10..71] OF BIT4; 
+    SMRK_NUM% BIT16;  (* MOST RECENTLY RESOLVED SMRK OPERATOR *)    
+    PC% INTEGER;  (* PROGRAM COUNTER IN BYTES *)
+    PRHEAD% HALPTR;  (* HEAD OF PROCEDURE STACK *)
+    DOHEAD% HALPTR;  (* HEAD OF DO STACK *)     
+    AVAIL% HALPTR;   (* AVAIL HALPTR LIST *)    
+        
+FUNCTION DECODE(TAG% BIT4; NUMBER% BIT16)% BIT16; 
+BEGIN   
+   CASE TAG OF    
+        
+        1% BEGIN (* SYT *)  
+             DECODE %= SYT_MOD[NUMBER].ADDR;    
+           END;   
+        
+        
+        2% BEGIN (* INL *)  
+           DECODE %= NUMBER;
+           END;   
+        
+        3% BEGIN (* VAC *)  
+             DECODE %= VAC_MOD[NUMBER]; 
+           END;   
+        
+        4% BEGIN (* XPT *)  
+           END;   
+        
+        5% BEGIN (* LIT *)  
+             DECODE %= LIT_MOD[NUMBER].DATA;    
+           END;   
+        
+        6% BEGIN (* IMD *)  
+             DECODE %= NUMBER;
+           END;   
+        
+        7% BEGIN (* AST *)  
+           END;   
+        
+        8% BEGIN (* CSZ *)  
+           END;   
+        
+        9% BEGIN (* ASZ *)  
+           END;   
+        
+        10% BEGIN (* OFF *) 
+           END;   
+        
+        15% BEGIN (* X_REF *) 
+             DECODE %= X_PROC_REF[NUMBER].ADDR; 
+           END;   
+        
+   END; (* CASE *)
+        
+END;  (* DECODE *)
+        
+FUNCTION TWOSCOMPL(P1% INTEGER)% INTEGER;       
+BEGIN   
+   IF P1 >= 0 THEN
+      TWOSCOMPL %= P1       
+      ELSE IF P1 = -1 THEN TWOSCOMPL %= $FFFFFFFFFFFF     
+              ELSE TWOSCOMPL %= P1 + 1; 
+END; (* TWOSCOMPL *)
+        
+FUNCTION TCAB8B(X% INTEGER)% BIT8;    
+VAR REC% PACKED RECORD      
+           CASE INTEGER OF  
+            1%  (F1% INTEGER);
+            2%  (F2% 0..$FFFFFFFFFFFFF; 
+                 F3%  0..$FF);
+           END;   
+BEGIN   
+   REC.F1 %= TWOSCOMPL(X);  
+   REC.F2 %= 0;   
+   TCAB8B %= REC.F3;
+END; (* TCAB8B *) 
+        
+PROCEDURE GET_HALMATF(VAR INTO% HALWORD);       
+BEGIN GET(HALMATF); 
+      INTO %= HALMATF^;     
+      HALMAT_NUM %= HALMAT_NUM + 1;   
+END; (* GET_HALMATF *)      
+        
+PROCEDURE SET_HALWORD(VAR WORD% HALWORD; F1% BIT16; F2% BIT8;       
+                      F3% BIT4; F4% BIT3; F5% BOOLEAN);   
+BEGIN   
+   WORD.D %= F1;  
+   WORD.T1 %= F2; 
+   WORD.Q %= F3;  
+   WORD.T2 %= F4; 
+   WORD.TAG1 %= F5; 
+END; (* SET_HALWORD *)      
+        
+PROCEDURE RE_GEN_SYM_TAB;   
+VAR I% INTEGER;   
+        
+   PROCEDURE X(VAR I% INTEGER);       
+   BEGIN
+      I %= SYMTAB^; 
+      GET(SYMTAB);
+   END; (* X *)   
+        
+   PROCEDURE GETALFA(VAR NAME% ALFA); 
+   VAR SWITCH % RECORD CASE INTEGER OF
+                   1% (A% ALFA);      
+                   2% (I% INTEGER);   
+                END;
+       I % INTEGER; 
+      BEGIN       
+         X(SWITCH.I);       
+         NAME %= SWITCH.A;  
+   END; (* GETALFA *)       
+        
+BEGIN (* RE_GEN_SYM_TAB *)  
+   RESET(SYMTAB); 
+   X(NDECSY);     
+   IF NDECSY > SYTMAX THEN  
+      BEGIN WRITELN(' SYMBOL TABLE OVERFLOW IN CODE GENERATOR ');   
+      GOTO 2; (* TERMINATE CODE GENERATION *)   
+      END; (* THEN *)       
+   FOR I %= 0 TO NDECSY DO  
+      BEGIN GETALFA(SYT_NAME[I]); X(SYT_ADDR[I]); X(SYT_XREF[I]);   
+      X(SYT_NEST[I]); X(SYT_SCOPE[I]); X(VAR_LENGTH[I]);  
+      X(SYT_ARRAY[I]); X(SYT_PTR[I]); X(SYT_LINK1[I]);    
+      X(SYT_LINK2[I]); X(SYT_CLASS[I]); X(SYT_FLAGS[I]);  
+      X(SYT_LOCK#[I]); X(SYT_TYPE[I]) 
+      END;
+   X(E_ARRAY_SIZE); 
+   FOR I %= 0 TO E_ARRAY_SIZE DO X(EXT_ARRAY[I]); 
+END; (* RE_GEN_SYM_TAB *)   
+        
+PROCEDURE GEN_MF_ARRAY;     
+VAR I,J,K% INTEGER; 
+    NUM_DIMENSIONS% 1..MAX_DIMENSION; 
+      (* BUILD MF_ARRAY - MULTIPLICATION FACTORS FOR ARRAY *)       
+      (* OFFSET CALCULATIONS                               *)       
+BEGIN   
+   I %= 1;
+   WHILE EXT_ARRAY[I] <> 0 DO 
+         BEGIN NUM_DIMENSIONS %= EXT_ARRAY[I];  
+         K %= I + NUM_DIMENSIONS;     
+         MF_ARRAY[K] %= 1;  
+         K %= K - 1;
+         FOR J %= K DOWNTO (I+1) DO   
+             MF_ARRAY[J] %= EXT_ARRAY[J+1] * MF_ARRAY[J +1];
+         I %= I + NUM_DIMENSIONS + 1; 
+   END; (* WHILE *) 
+END; (* GEN_MF_ARRAY *)     
+        
+PROCEDURE INITIALIZE;       
+BEGIN   
+   VAC_USED %= 0; 
+   FOR I %= 1 TO VAC_MAX DO 
+       VAC_ARRAY[I].HAL.Q %= 0;       
+   FOR I %= 1 TO X_PROC_MAX DO
+       X_PROC_REF[I].CALLED %= FALSE; 
+   FOR I %= 1 TO INLMAX DO  
+       INL_MOD[I].FREE %= TRUE;       
+   OUTPTR %= 0;   
+   FOR I %= 0 TO SYTMAX DO  
+       SYT_MOD[I].LINK %= NIL;
+   INT_NUM %= 1;  
+   REWRITE(SEVENUP);
+   HALACC.Q %= 0; 
+   NOTEND %= TRUE;
+   PRHEAD %= NIL; 
+   DOHEAD %= NIL; 
+   AVAIL %= NIL;  
+   SMRK_NUM %= 0; 
+   PC %= 0;       
+   HALMAT_NUM %= 0; 
+   NUM_LIT %= 0;  
+   RE_GEN_SYM_TAB;
+   GEN_MF_ARRAY;  
+END; (* INITIALIZE *)       
+        
+        
+PROCEDURE PUTCARD;
+VAR CHECK_SUM% INTEGER;     
+    NUM% INTEGER; 
+BEGIN   
+   CHECK_SUM %= 0;
+   FOR I %= 5 TO 34 DO      
+       CHECK_SUM %= CHECK_SUM + (16 * CARD_DATA[I*2]) +   
+                                    CARD_DATA[(I*2)+1];   
+   NUM %= (CARDPTR - 10) DIV 2;       
+   CHECK_SUM %= CHECK_SUM + NUM + (ADDR16 MOD 256) + (ADDR16 DIV 256);
+   CHECK_SUM %= TCAB8B(CHECK_SUM MOD 256);      
+   WRITE(OBJFILE,'%',NUM%2 HEX,ADDR16%4 HEX,'00');
+   FOR I %= 10 TO (CARDPTR - 1) DO WRITE(OBJFILE,CARD_DATA[I]%1 HEX); 
+   WRITELN(OBJFILE,CHECK_SUM%2 HEX);  
+   FOR I %= 10 TO 69 DO CARD_DATA[I] %= 0;      
+   CARDPTR %= 10; 
+   ADDR16 %= ADDR16 + NUM;  
+END; (* PUTCARD *)
+        
+PROCEDURE WRITBIT8(DATA% BIT8);       
+BEGIN   
+   OUT[OUTPTR] %= DATA;     
+   OUTPTR %= OUTPTR + 1;    
+END; (* WRITBIT8 *) 
+        
+PROCEDURE PUT_OUT;
+VAR DATA% BIT8;   
+      I% 0..BYTEMAX;
+BEGIN   
+   CARDPTR %= 10; 
+   ADDR16 %= PROG_ORG;      
+   FOR I %= 0 TO OUTPTR - 1 DO
+         BEGIN DATA %= OUT[I];
+            CARD_DATA[CARDPTR] %= DATA DIV 16;  
+            (* WRITE LOW ORDER 4 BITS *)
+            CARD_DATA[CARDPTR+1] %= DATA MOD 16;
+            CARDPTR %= CARDPTR + 2;   
+            IF CARDPTR = 70 THEN PUTCARD;       
+             END; 
+   IF CARDPTR <> 10 THEN PUTCARD;     
+END; (* PUT_OUT *)
+        
+PROCEDURE PUT_LIT;
+VAR VALUE% BIT8;  
+      I% 0..LITMAX; 
+BEGIN   
+   CARDPTR %= 10; 
+   ADDR16 %= LIT_ORG;       
+   FOR I %= 1 TO NUM_LIT DO 
+         BEGIN VALUE %= LIT_MOD[I].DATA;
+            CARD_DATA[CARDPTR] %= VALUE DIV 16; 
+            (* WRITE LOW ORDER 4 BITS *)
+            CARD_DATA[CARDPTR+1] %= VALUE MOD 16; 
+            CARDPTR %= CARDPTR + 2;   
+            IF CARDPTR = 70 THEN PUTCARD;       
+             END; 
+   IF CARDPTR <> 10 THEN PUTCARD;     
+END; (* PUT_LIT *)
+PROCEDURE WRITBIT16(ADDR% BIT16);     
+VAR LOBYTE,HIBYTE% BIT8;    
+BEGIN   
+   LOBYTE %= ADDR MOD 256;  
+   HIBYTE %= ADDR DIV 256;  
+   WRITBIT8(LOBYTE);
+   WRITBIT8(HIBYTE);
+END; (* WRITBIT16 *)
+        
+PROCEDURE GEN_VAC_MOD;      
+VAR I% INTEGER;   
+BEGIN   
+   FOR I %= 0 TO VAC_USED DO
+       BEGIN VAC_MOD[I] %= PC;
+         PC %= PC + 1;      
+         END; (* FOR *)     
+END; (* GEN_VAC_MOD *)      
+        
+PROCEDURE PRINT_BINARY;     
+BEGIN   
+   WRITELN('1 OBJECT MODULE');
+   RESET(OBJFILE);
+   WHILE NOT EOF(OBJFILE) DO
+         BEGIN WRITE(' ');  
+         WHILE NOT EOLN(OBJFILE) DO   
+               BEGIN WRITE(OBJFILE^); 
+                     GET(OBJFILE);    
+                END; (* WHILE *)      
+               READLN(OBJFILE);       
+               WRITELN;     
+         END; (* WHILE *)   
+END; (* PRINT_BINARY *)     
+        
+PROCEDURE GEN_SYT_MOD;      
+VAR I,J% INTEGER; (* LOOP INDICES *)  
+    E_ARRAY_INDEX% 1..EXT_ARRAY_LIM;  
+    ARRAY_SIZE% INTEGER;    
+    NUM_DIMENSIONS% 1..MAX_DIMENSION; 
+BEGIN   
+   FOR I %= 1 TO NDECSY DO (* PROCESS THE I'TH SYMBOL *)  
+       BEGIN IF SYT_TYPE[I] = 6 THEN (* INT_TYPE/INTEGER *) 
+                BEGIN IF SYT_ARRAY[I] = 0 THEN (* NO ARRAY *)       
+                   BEGIN SYT_MOD[I].ADDR %= PC; 
+                         PC %= PC + 1;
+                   END (* THEN *)     
+                   ELSE BEGIN E_ARRAY_INDEX %= SYT_ARRAY[I];
+                         SYT_MOD[I].ADDR %= PC; (* ALPHA IN PRATT *)
+                         NUM_DIMENSIONS %= EXT_ARRAY[E_ARRAY_INDEX];
+                         ARRAY_SIZE %= 1;       
+                         FOR J %= 1 TO NUM_DIMENSIONS DO  
+                             ARRAY_SIZE %= ARRAY_SIZE *   
+                                           EXT_ARRAY[E_ARRAY_INDEX + J];      
+                         PC %= PC+ ARRAY_SIZE;  
+                         (* CALCULATE LOGICAL ADDRESS 0 = ALPHA' IN PRATT *)  
+                         CASE NUM_DIMENSIONS OF 
+                              1% SYT_MOD[I].ADDR %= SYT_MOD[I].ADDR - 1;      
+                              2% SYT_MOD[I].ADDR %= SYT_MOD[I].ADDR - 
+                                     (EXT_ARRAY[E_ARRAY_INDEX +2] + 1);       
+                         END; (* CASE *)
+                   END; (* ELSE *)    
+          END (* THEN *)    
+          ELSE IF (SYT_TYPE[I] = 66) OR (* STMT_LABEL *)  
+                  (SYT_TYPE[I] = 71) THEN (* PROC_LABEL *)
+                          SYT_MOD[I].ADDR %= 0  (* CURRENTLY UNDEFINED *)     
+                  ELSE IF SYT_TYPE[I] <> 73 THEN (* PROG LABEL *)   
+                  BEGIN WRITELN('0 UNEXPECTED SYMTAB ENTRY NUMBER ',
+                                I%0,'  TERMINATE CODE GENERATION'); 
+                  GOTO 2; (* TERMINATE CODE GENERATION *) 
+                  END; (* ELSE *)     
+   END; (* FOR I *) 
+END; (* GEN_SYT_MOD *)      
+        
+PROCEDURE GEN_LIT_MOD;      
+VAR I% INTEGER; (* LOOP INDEX *)      
+BEGIN   
+   IF NUM_LIT > LITMAX THEN 
+      BEGIN WRITELN(' LITERAL TABLE OVERFLOW IN CODE GENERATOR ',   
+                    ' - NUMBER OF DECLARED LITERALS ',NUM_LIT%0);   
+            GOTO 2; 
+      END; (* THEN *)       
+      LIT_ORG %= PC;
+      RESET(LITFILE);       
+      FOR I %= 0 TO NUM_LIT DO
+          BEGIN IF EOS(LITFILE) THEN  
+                   GETSEG(LITFILE);   
+                LIT1 %= LITFILE^;     
+                GET(LITFILE); 
+                LIT2 %= LITFILE^;     
+                GET(LITFILE); 
+                LIT3 %= LITFILE^;     
+                GET(LITFILE); 
+                LIT_MOD[I].DATA %= TCAB8B(TRUNC(LIT2));   
+                IF I <> 0 THEN LIT_MOD[I].ADDR %= PC + I - 1
+                          ELSE LIT_MOD[I].ADDR %= PC;     
+                PC %= PC + 1; 
+          END; (* FOR *)    
+END; (* GEN_LIT_MOD *)      
+        
+PROCEDURE GETHALPTR(VAR NEXT%HALPTR);  (* NEXT HALPTR *)  
+BEGIN   
+   IF AVAIL <> NIL THEN     
+      BEGIN NEXT %= AVAIL;  
+      AVAIL %= AVAIL^.LINK; 
+           END  (* THEN *)  
+      ELSE NEW(NEXT);       
+END;  (* GETHALPTR *)       
+        
+FUNCTION HALEQUAL(V1,V2% HALWORD)%BOOLEAN;      
+VAR TEMP% BOOLEAN;
+BEGIN   
+   TEMP %= TRUE;  
+   IF (V1.T <> V2.T) OR (V1.N <> V2.N) OR (V1.OP <> V2.OP) OR       
+      (V1.P <> V2.P) OR (V1.TAG0 <> V2.TAG0) THEN 
+      TEMP %= FALSE;
+   HALEQUAL %= TEMP;
+END; (* HALEQUAL *) 
+        
+PROCEDURE COPE_WITH_VAC(OP% HALWORD; OPCODE%INST_TYPE; VAR ADDR% BIT16;       
+                        VAR SREF% BOOLEAN);     
+VAR J% INTEGER;   
+        
+PROCEDURE TEMP_ADDR(VAR J% INTEGER);  
+LABEL 5;
+VAR I%INTEGER;    
+BEGIN   
+   FOR I %= 0 TO (VAC_MAX - 1) DO     
+       BEGIN IF (VAC_ARRAY[I].HAL.Q = 0) AND (VAC_ARRAY[I+1].HAL.Q = 0) THEN  
+             BEGIN VAC_ARRAY[I].HAL %= OP;      
+                  VAC_ARRAY[I+1].HAL %= OP;     
+                  VAC_ARRAY[I].DSUB %= TRUE;    
+                  VAC_ARRAY[I+1].DSUB %= TRUE;  
+                  IF I + 1 > VAC_USED THEN VAC_USED %= I + 1;       
+                  SREF %= TRUE;       
+                  J %= I;   
+                  GOTO 5;   
+            END; (* THEN *) 
+      END; (* DO *) 
+      WRITELN(' TEMPORARY OVERFLOW - CODE GENERATION TERMINATED '); 
+      GOTO 1;     
+5% END; (* TEMP 16 *)       
+        
+PROCEDURE TEMP_DATA(VAR J% INTEGER);  
+LABEL 5;
+VAR I% INTEGER;   
+BEGIN   
+   FOR I %= 0 TO VAC_MAX DO 
+       BEGIN IF VAC_ARRAY[I].HAL.Q = 0 THEN     
+             BEGIN VAC_ARRAY[I].HAL %= OP;      
+                  VAC_ARRAY[I].DSUB %= FALSE;   
+                  IF I > VAC_USED THEN VAC_USED %= I;     
+                  J %= I;   
+                  GOTO 5;   
+            END; (* THEN *) 
+      END; (* DO *) 
+      WRITELN(' TEMPORARY OVERFLOW - CODE GENERATION TERMINATED');  
+      GOTO 1;     
+5% END; (* TEMP_DATA *)     
+        
+PROCEDURE NEW_TEMP(VAR J% INTEGER);   
+BEGIN   
+   IF OPCODE = SAVE_ADDRESS THEN      
+      TEMP_ADDR(J)
+   ELSE TEMP_DATA(J);       
+END; (* NEW_TEMP *) 
+        
+PROCEDURE OLD_TEMP(VAR J% INTEGER);   
+BEGIN   
+   J %= 0;
+   WHILE VAC_ARRAY[J].HAL.D <> OP.D DO J %=J + 1; 
+   VAC_ARRAY[J].HAL.Q %= 0; 
+   VAC_ARRAY[J].HAL.D %= 0; 
+   IF VAC_ARRAY[J].DSUB THEN (* 16 BIT *)       
+      BEGIN SREF %= TRUE;   
+      VAC_ARRAY[J+1].HAL.Q %= 0;      
+      VAC_ARRAY[J+1].HAL.D %= 0;      
+      VAC_ARRAY[J+1].DSUB %= FALSE;   
+      END; (* THEN *)       
+   VAC_ARRAY[J].DSUB %= FALSE;
+END; (* OLD_TEMP *) 
+        
+BEGIN (* COPE_WITH_VAC *)   
+   SREF %= FALSE; 
+   IF (OPCODE = STORE_TEMP) OR (OPCODE = SAVE_ADDRESS) THEN 
+      NEW_TEMP(J) 
+   ELSE OLD_TEMP(J);
+   ADDR %= J;     
+END; (* COPE_WITH_VAC *)    
+        
+PROCEDURE GEN8(OPCODE% BIT8); 
+BEGIN   
+   WRITBIT8(OPCODE);
+   PC %= PC + 1;  
+END; (* GEN8 *)   
+        
+PROCEDURE GEN16(OPCODE,OPERAND% BIT8);
+BEGIN   
+   WRITBIT8(OPCODE);
+   WRITBIT8(OPERAND);       
+   PC %= PC + 2;  
+END;  (* GEN16 *) 
+        
+PROCEDURE GEN24(OPCODE% BIT8; ADDRESS% BIT16);  
+BEGIN   
+   WRITBIT8(OPCODE);
+   WRITBIT16(ADDRESS);      
+   PC %= PC + 3;  
+END; (* GEN24 *)  
+        
+PROCEDURE DUMP_7UP; 
+BEGIN   
+   WRITELN('1 7UP FILE');   
+   RESET(SEVENUP);
+   WHILE NOT EOF(SEVENUP) DO
+         BEGIN WRITELN(' ',ORD(SEVENUP^.OPCODE)%4,
+                       SEVENUP^.OPERAND_TAG%4,SEVENUP^.OPERAND_NUMBER%4);     
+         GET(SEVENUP);      
+         END; (* WHILE *)   
+END; (* DUMP_7UP *) 
+        
+PROCEDURE PUSH_PRSTACK(PUSHED_PROC% HALWORD);   
+VAR TEMP% HALPTR; 
+BEGIN   
+   GETHALPTR(TEMP); 
+   TEMP^.HAL %= PUSHED_PROC;
+   TEMP^.LINK %= PRHEAD;    
+   PRHEAD %= TEMP;
+END; (* PUSH_PRSTACK *)     
+        
+PROCEDURE POP_PRSTACK(VAR POPPED_PROC% HALWORD);
+VAR TEMP% HALPTR; 
+BEGIN   
+   POPPED_PROC %= PRHEAD^.HAL;  (* GET INFORMATION *)     
+   TEMP %= PRHEAD;  (* FIX STACK *)   
+   PRHEAD %= PRHEAD^.LINK;  
+   TEMP^.LINK %= AVAIL;  (* RETURN STORAGE *)   
+   AVAIL %= TEMP; 
+END;  (* POP_PRSTACK *)     
+        
+PROCEDURE HALMATERROR;      
+BEGIN   
+   WRITELN('0    ERROR IN HALMAT FILE% OPERAND FOUND WHEN OPERATOR ', 
+           'EXPECTED');     
+   WRITELN('     APPROXIMATE LOCATION LINE ',SMRK_NUM%0); 
+   GOTO 1;
+END; (* HALMATERROR *)      
+        
+PROCEDURE SETACC(VAC_NUM% INTEGER);   
+BEGIN   
+   SET_HALWORD(HALACC,VAC_NUM,0,3,0,TRUE);      
+END;  (* SETACC *)
+        
+PROCEDURE PUSH_DOSTACK(BRANCH_BACK,JUMP_OUT%HALWORD);     
+VAR TEMP% HALPTR; 
+BEGIN   
+   GETHALPTR(TEMP); 
+   TEMP^.HAL %= BRANCH_BACK;  (* PUSH BRANCH_BACK *)      
+   TEMP^.LINK %= DOHEAD;    
+   DOHEAD %= TEMP;
+   GETHALPTR(TEMP); 
+   TEMP^.HAL %= JUMP_OUT;  (* PUSH JUMP_OUT *)  
+   TEMP^.LINK %= DOHEAD;    
+   DOHEAD %= TEMP;
+END; (* PUSH_DOSTACK *)     
+        
+PROCEDURE POP_DOSTACK(VAR ADDR%HALWORD);
+VAR TEMP% HALPTR; 
+BEGIN   
+   ADDR %= DOHEAD^.HAL;     
+   TEMP %= DOHEAD;     (* FIX STACK *)
+   DOHEAD %= DOHEAD^.LINK;  
+   TEMP^.LINK %= AVAIL;   (* RETURN STORAGE *)  
+   AVAIL %= TEMP; 
+END; (* POP_DOSTACK *)      
+        
+PROCEDURE PUT_7UP(OC% INST_TYPE; ADDR% HALWORD);
+VAR SREF% BOOLEAN;
+    K% BIT16;     
+BEGIN   
+   K %= ADDR.D;   
+   IF ADDR.Q = 3 THEN       
+      COPE_WITH_VAC(ADDR,OC,K,SREF);  
+  ADDR.D %= K;    
+   WITH SEVENUP^ DO 
+   BEGIN OPCODE %= OC;      
+         OPERAND_TAG %= ADDR.Q;       
+         OPERAND_NUMBER %= ADDR.D;    
+   END; (* WITH *)
+   IF (ADDR.Q = 5) AND (ADDR.D > NUM_LIT) THEN  
+      NUM_LIT %= ADDR.D;    
+   PUT(SEVENUP);  
+END; (* PUT_7UP *)
+        
+PROCEDURE GEN_MUL; (* GENERATE MULTIPLY PROCEDURE *)      
+BEGIN   
+   X_PROC_REF[1].ADDR %= PC;
+   GEN8($79);  (* MOV A,C *)
+   GEN8($93);  (* SUB E *)  
+   GEN8($78);  (* MOV A,B *)
+   GEN8($9A);  (* SBB D *)  
+   GEN24($F2,PC+8);  (* JP *) 
+   GEN8($60);  (* MOV H,B *)
+   GEN8($69);  (* MOV L,C *)
+   GEN8($EB);  (* XCHG *)   
+   GEN8($44);  (* MOV B,H *)
+   GEN8($4D);  (*MOV C,L *) 
+   GEN24($21,0);  (* LXI H, *)
+   GEN8($EB);  (* XCHG *)   
+   GEN8($78);  (* MOV A,B *)
+   GEN8($B1);  (* ORA C *)  
+   GEN8($C8);  (* RZ *)     
+   GEN8($EB);  (* XCHG *)   
+   GEN8($78);  (* MOV A,B *)
+   GEN8($1F);  (* RAR *)    
+   GEN8($47);  (* MOV B,A *)
+   GEN8($79);  (* MOV A,C *)
+   GEN8($1F);  (* RAR *)    
+   GEN8($4F);  (* MOV C,A *)
+   GEN24($D2,PC+4);  (* JNC *)
+   GEN8($19);  (* DAD D *)  
+   GEN8($EB);  (* XCHG *)   
+   GEN8($29);  (* DAD H *)  
+   GEN24($C3,PC-16);  (* JMP *)       
+END; (* GEN_MUL *)
+        
+PROCEDURE MAKEINST(CURRENT% HALP);    
+LABEL 7,8;
+VAR TEMP% SYTPTR; 
+    OPC% BIT8;    
+    ADDR% BIT16;  
+    SREF% BOOLEAN;
+     I,J% BIT16;  
+BEGIN   
+   ADDR %= DECODE(CURRENT.OPERAND_TAG,CURRENT.OPERAND_NUMBER);      
+   IF CURRENT.OPCODE IN [STORE,LOAD,ADD..CLT,STORE_TEMP] THEN       
+      BEGIN IF SREF THEN    
+               OPC %= $2A  (* LHLD *) 
+                    ELSE OPC %= $21; (* LXI H, *) 
+            GEN24(OPC,ADDR);
+      END; (* THEN *)       
+   CASE CURRENT.OPCODE OF   
+        
+  STORE_TEMP,     
+  STORE%   BEGIN (* STORE ACCUMULATOR *)
+            GEN8($77);  (* MOV M,A *) 
+           END; (* STORE *) 
+        
+  LOAD%    BEGIN (* LOAD ACCUMULATOR *) 
+            GEN8($7E);  (* MOV A,M *) 
+           END; (* LOAD *)  
+        
+  HALT%    BEGIN (* HALT *) 
+            GEN8($76);      
+           END; (* HALT *)  
+        
+  JUMP, 
+  JFALSE, 
+  JTRUE,
+  CALL%  BEGIN CASE CURRENT.OPERAND_TAG OF      
+           2% BEGIN (* INL *) 
+                FOR I %= 1 TO INLMAX DO 
+                    IF INL_MOD[I].FREE THEN     
+                       J %= I 
+                    ELSE IF INL_MOD[I].NUMBER = ADDR THEN 
+                            GOTO 7;   
+             7% IF I = INLMAX THEN (* FORWARD REFERENCE *)
+                   BEGIN INL_MOD[J].NUMBER %= ADDR;       
+                 INL_MOD[J].ADDR %= PC; 
+                 INL_MOD[J].FREE %= FALSE;      
+                 END
+               ELSE BEGIN INL_MOD[I].FREE %= TRUE;
+                    ADDR %= INL_MOD[I].ADDR;    
+                    END;    
+                    ADDR %= INL_MOD[I].ADDR;    
+                    END;    
+             END; (* INL *) 
+        
+           1% (* SYT *)     
+              IF ADDR = 0 THEN (* UNDEFINED LABEL *)      
+                 BEGIN NEW(TEMP);     
+                       TEMP^.LINK %= SYT_MOD[CURRENT.OPERAND_NUMBER].LINK;    
+                       SYT_MOD[CURRENT.OPERAND_NUMBER].LINK %= TEMP;
+                 END;       
+         END; (* OPERAND CASE *)      
+  CASE CURRENT.OPCODE OF    
+  JUMP%    BEGIN (* JUMP *) 
+            GEN24($C3,ADDR);
+           END; (* JUMP *)  
+        
+  JFALSE%  BEGIN (* JUMP - CONDITION = ZERO *)  
+            GEN24($CA,ADDR);
+           END; (* JFALSE *)
+        
+  JTRUE%   BEGIN (* JUMP - CONDITION = NOT ZERO *)
+            GEN24($C2,ADDR);
+           END; (* JTRUE *) 
+        
+  CALL%    BEGIN (* CALL *) 
+            GEN24($CD,ADDR);
+           END; (* CALL *)  
+   END; (* OPCODE CASE *)   
+  END; (* ALL BRANCHES *)   
+        
+  RETURN%  BEGIN (* RETURN *) 
+            GEN8($C9);      
+           END; (* RETURN *)
+        
+  ADD%     BEGIN (* ADD MEMORY *)     
+            GEN8($86);      
+           END; (* ADD *)   
+        
+  SUB%     BEGIN (* SUBTRACT MEMORY *)
+            GEN8($96);      
+           END; (* SUB *)   
+        
+  MULT%    BEGIN (* BASED ON IMPLEMENTATION IN PL/M *)    
+            X_PROC_REF[1].CALLED %= TRUE;       
+                 (* OPERANDS IN B AND E REGISTERS   *)    
+                 (* RESULT IN E REGISTER            *)    
+         (* LOAD FIRST OPERAND *)     
+            GEN8($4E);  (* MOV C,M *) 
+         (* LOAD SECOND OPERAND - ALREADY IN ACC *)       
+            GEN8($5F);  (* MOV E,A *) 
+         (* CLEAR B,D REGISTERS BEFORE CALL *)  
+            GEN16($06,0);  (* MVI , *)
+            GEN8($50);  (* MOV D,B *) 
+         (* CALL AND SET ACC TO ANSWER *)       
+            ADDR %= DECODE(15,1);  (* X_REF 1 *)
+            GEN24($CD,ADDR);  (* CALL *)
+            GEN8($7B);  (* MOV A,E *) 
+           END; (* MULT *)  
+        
+  (* FOR ALL THE COMPARISONS, THE FIRST OPERAND IS                    *)      
+  (* IN THE ACC, INWORD IS THE SECOND OPERAND.  CODE                  *)      
+  (* IS GENERATED SUCH THAT THE ACC = 0 FOR FALSE AND                 *)      
+  (* ACC = 1 FOR TRUE.  ZERO FLAG IS SET TO CONTROL                   *)      
+  (* CONDITIONAL BRANCHING.                                           *)      
+        
+  CNEQ, 
+  CEQ,  
+  CNGT, 
+  CGT,  
+  CNLT, 
+  CLT%     BEGIN (* COMPARE INSTRUCTIONS *)     
+            GEN8($46);  (* MOV B,M *) 
+            GEN8($B8);  (* CMP *)     
+        
+            CASE CURRENT.OPCODE OF    
+        
+             CNEQ%  BEGIN (* SPECIFIC BRANCHING *)
+                     GEN24($CA,PC+8);  (* JZ *) 
+                     GEN16($3E,2);  (* MVI A, *)
+                     GEN24($C3,PC+5);  (* JMP *)
+                     GEN16($3E,1); (* MVI A, *) 
+        
+                    END; (* CNEQ *)   
+        
+           CEQ%     BEGIN (* CEQ *)   
+                     GEN24($C2,PC+8);  (* JNZ *)
+                     GEN16($3E,2);  (* MVI A *) 
+                     GEN24($C3,PC+5);  (* JMP *)
+                     GEN16($3E,1);  (* MVI A *) 
+                    END; (* CEQ *)    
+        
+           CNGT%    BEGIN (* CNGT *)  
+                     GEN24($DA,PC+11);  (* JC *)
+                     GEN24($CA,PC+8);  (* JZ *) 
+                     GEN16($3E,1);  (* MVI A *) 
+                     GEN24($C3,PC+5);  (* JMP *)
+                     GEN16($3E,2);  (* MVI A *) 
+                    END; (* CNGT *)   
+        
+           CGT%     BEGIN (* CGT *)   
+                     GEN24($DA,PC+11);  (* JC *)
+                     GEN24($CA,PC+8);  (* JZ *) 
+                     GEN16($3E,2);  (* MVI A *) 
+                     GEN24($C3,PC+5);  (* JMP *)
+                     GEN16($3E,1);  (* MVI A *) 
+                    END; (* CGT *)    
+        
+           CNLT%    BEGIN (* CNLT *)  
+                     GEN24($D2,PC+11);  (* JNC *) 
+                     GEN24($CA,PC+8);  (* JZ *) 
+                     GEN16($3E,1);  (* MVI A *) 
+                     GEN24($C3,PC+5);  (* JMP *)
+                     GEN16($3E,2);  (* MVI A *) 
+                    END; (* CNLT *)   
+        
+           CLT%     BEGIN (* CLT *)   
+                     GEN24($DA,PC+8);  (* JC *) 
+                     GEN16($3E,1);  (* MVI A *) 
+                     GEN24($C3,PC+5);  (* JMP *)
+                     GEN16($3E,2);  (* MVI A *) 
+                    END; (* CLT *)    
+            END; (* CASE *) 
+        
+            GEN8($3D);  (* DCR A *)   
+           END;  (* COMPARE INSTRUCTIONS *)     
+        
+  INIT%    BEGIN (* INIT *) 
+            GEN24($31,$FFFF);  (* LXI SP *)     
+           END; (* INIT *)  
+        
+  SUBSCR%  BEGIN (* SUBSCR *) 
+            GEN24($21,ADDR);  (* LXI H, *)      
+            GEN8($4F);  (* MOV C,A *) 
+            GEN16($06,0);  (* MVI B, *) 
+            GEN8($09);  (* DAD B *)   
+           END;  (* SUBSCR *) 
+        
+  ENTER_IMMED% BEGIN
+            GEN16($3E,ADDR);
+           END; (* ENTER_IMMED *)     
+        
+  ADD_REG_IMMED% BEGIN      
+            GEN16($C6,ADDR);
+           END; (* ADD_REG_IMMED *)   
+        
+  SAVE_ADDRESS% BEGIN       
+            GEN24($22,ADDR);  (* SHLD *)
+          END; (* SAVE_ADDRESS *)     
+        
+  GEN_LABEL% BEGIN
+           CASE CURRENT.OPERAND_TAG OF
+                  2% BEGIN (* INL *)  
+                        J %= 0;       
+                        FOR I %= 1 TO INLMAX DO 
+                            IF INL_MOD[I].FREE THEN       
+                               J %= I 
+                            ELSE IF INL_MOD[I].NUMBER = ADDR THEN   
+                                    GOTO 8;     
+                        IF J = 0 THEN 
+                           BEGIN WRITELN(' INTERNAL LABEL STACK OVERFLOW');   
+                                 WRITELN(' CODE GENERATION TERMINATED');      
+                                 GOTO 2;
+                           END;       
+                     8% IF I = INLMAX THEN (* UNREFERENCE LABEL *)  
+                           BEGIN INL_MOD[J].NUMBER %= ADDR; 
+                           INL_MOD[J].ADDR %= PC; 
+                           INL_MOD[J].FREE %= FALSE;      
+                           END
+                         ELSE BEGIN (* REFERENCED LABEL *)
+                              INL_MOD[I].FREE %= TRUE;    
+                              OUT[INL_MOD[I].ADDR] %= PC MOD 16;    
+                              OUT[INL_MOD[I].ADDR + 1] %= PC DIV 16;
+                              END;    
+                END; (* INL *)
+             1% BEGIN (* SYT *)       
+                   I %= CURRENT.OPERAND_NUMBER; 
+                   SYT_MOD[I].ADDR %= PC;       
+                   IF SYT_MOD[I].LINK <> NIL THEN 
+                      REPEAT OUT[SYT_MOD[I].LINK^.REF] %= PC MOD 16;
+                             OUT[SYT_MOD[I].LINK^.REF + 1] %= PC DIV 16;      
+                             SYT_MOD[I].LINK %= SYT_MOD[I].LINK^.LINK;
+                      UNTIL SYT_MOD[I].LINK = NIL;
+                END; (* SYT *)
+           END; (* CASE *)  
+          END; (* GEN_LABEL *)
+        
+     END; (* CASE *)
+END; (* MAKEINST *) 
+        
+PROCEDURE GEN_8080; 
+BEGIN   
+   RESET(SEVENUP);
+   PROG_ORG %= PC;
+   WHILE NOT EOF(SEVENUP) DO
+         BEGIN MAKEINST(SEVENUP^);    
+         GET(SEVENUP);      
+         END;     
+END; (* GEN_8080 *) 
+        
+PROCEDURE TEMPLATE(INWORD%HALWORD);  (* INWORD IS CURRENT OPERATOR *) 
+VAR I,N% INTEGER;  (* LOOP PARAMETERS *)
+    OPCODE% BIT8; 
+    ADDR% ALFA;   
+    OPERATOR_TAG% BIT8;     
+    HALPC,NULL,OP1,OP2% HALWORD;      
+    CLASS% BIT4;  
+    OPERATOR% BIT8; 
+        
+PROCEDURE SAVEACC;
+BEGIN   (*  DON'T STORE AN EMPTY ACC OR A LITERAL *)      
+   IF (HALACC.Q <> 0) AND (HALACC.Q <> 5) THEN  
+      PUT_7UP(STORE_TEMP,HALACC);     
+   HALACC.Q %= 0; 
+END; (* SAVEACC *)
+        
+PROCEDURE LOADACC(VAR OP1,OP2% HALWORD);
+LABEL 1;  (* RETURN WHEN FINISHED *)  
+VAR TEMPWORD% HALWORD;      
+BEGIN  (* BASED ON GRIES - ASSUMES A SINGLE ACCUMULATOR *)
+   IF HALACC.Q = 0 THEN  (* LOAD OP1 *) 
+      BEGIN PUT_7UP(LOAD,OP1);
+      HALACC %= OP1;
+      GOTO 1;     
+      END;  (* THEN *)      
+   IF OP2.TAG0 THEN  (* OP2 <> NULL *)
+      IF HALEQUAL(HALACC,OP2) THEN    
+         BEGIN TEMPWORD %= OP1;       
+         OP1 %= OP2;
+         OP2 %= TEMPWORD;   
+         GOTO 1;  
+         END; (* THEN *)    
+   IF NOT(HALEQUAL(HALACC,OP1)) THEN  (* LOAD OP1 *)      
+      BEGIN SAVEACC;
+      PUT_7UP(LOAD,OP1);    
+      HALACC %= OP1;
+      END;  (* THEN *)      
+1%END; (* LOADACC *)
+        
+        
+PROCEDURE SETSUB(VAR OPERATOR% HALWORD);
+(* WHEN MORE THAN SIMPLE SUBSCRIPTS ARE ALLOWED, CHANGES *) 
+(* WILL BE REQUIRED - THIS ROUTINE ASSUMES THAT ONLY     *) 
+(* SIMPLE SUBSCRIPTS ARE ALLOWED *)   
+        
+VAR N% BIT8; (* NUMBER OF OPERANDS *) 
+    C_OFF_HAL,MF,VAR_OFFSET,INDEX,BASE% HALWORD;
+    E_ARRAY_PTR% INTEGER;   
+    I% INTEGER; (* LOOP INDEX *)      
+    CONST_OFFSET% BIT16;    
+    NUM_DIMENSIONS% 1..MAX_DIMENSION; 
+BEGIN   
+   N %= OPERATOR.N; 
+   GET_HALMATF(BASE);       
+(* INITIALIZE VARIABLE OFFSET *)      
+   SAVEACC; (* FROM EARLIER REFERENCE(S) *)     
+   SET_HALWORD(VAR_OFFSET,0,0,6,0,TRUE);
+   PUT_7UP(ENTER_IMMED,VAR_OFFSET);   
+        
+   E_ARRAY_PTR %= SYT_ARRAY[BASE.D];  
+   NUM_DIMENSIONS %= EXT_ARRAY[E_ARRAY_PTR];    
+   CONST_OFFSET %= 0;       
+(* CALCULATE THE I'TH OFFSET AND ACCUMULATE IT *) 
+   SET_HALWORD(VAR_OFFSET,VAC_NUM,0,3,0,TRUE);  
+   FOR I %= 1 TO NUM_DIMENSIONS DO    
+       BEGIN GET_HALMATF(INDEX);      
+       IF INDEX.Q = 6 THEN (* CONSTANT SUBSCRIPT *)       
+          CONST_OFFSET %= CONST_OFFSET + INDEX.D *
+                          MF_ARRAY[E_ARRAY_PTR+I] 
+          ELSE (* VARIABLE SUBSCRIPT *) 
+          BEGIN PUT_7UP(STORE_TEMP,VAR_OFFSET); 
+                SET_HALWORD(MF,MF_ARRAY[E_ARRAY_PTR+I],0,6,0,TRUE); 
+                PUT_7UP(ENTER_IMMED,MF);
+                PUT_7UP(MULT,INDEX);  
+                PUT_7UP(ADD,VAR_OFFSET);
+          END; (* ELSE *)   
+       END; (* FOR *)       
+ (* VAR_OFFSET IN IN THE A REGISTER *)
+   SET_HALWORD(C_OFF_HAL,CONST_OFFSET,0,6,0,TRUE);
+   PUT_7UP(ADD_REG_IMMED,C_OFF_HAL);  
+(* TOTAL OFFSET IS IN THE A REGISTER *) 
+   PUT_7UP(SUBSCR,BASE);    
+   SETACC(VAC_NUM); 
+   PUT_7UP(SAVE_ADDRESS,HALACC); (* FORCE THE RESULT INTO A TEMPORARY *)      
+   HALACC.Q %= 0; 
+END; (* SETSUB *) 
+        
+        
+BEGIN (* TEMPLATE *)
+   CLASS %= INWORD.OP DIV 256;
+   OPERATOR %= INWORD.OP MOD 256;     
+   VAC_NUM %= HALMAT_NUM;   
+        
+   CASE CLASS OF     (* ONLY CONSIDER RELEVANT SUBSET *)  
+  0% CASE OPERATOR OF       
+        
+    0% BEGIN  (* NOP $0 *)  
+        FOR I %= 1 TO INWORD.N DO GET_HALMATF(INWORD);    
+       END;       
+        
+    2% BEGIN  (* XREC $2 *) 
+        IF INWORD.T = 1 THEN
+           PUT_7UP(HALT,INWORD);      
+        IF INWORD.T = 0 THEN
+           FOR I %= LAST_BLOCK + 1 TO 1799 DO   
+               BEGIN GET(HALMATF);    
+                 INWORD %= HALMATF^;  
+        END  (* FOR *)      
+        ELSE NOTEND %= FALSE; 
+       END;       
+        
+    4% BEGIN  (* SMRK $4 *) 
+        OPERATOR_TAG %= INWORD.T;     
+        GET_HALMATF(INWORD);
+        SMRK_NUM %= INWORD.D; 
+        HALACC.Q %= 0;      
+        IF OPERATOR_TAG <> 0 THEN     
+           BEGIN WRITELN(' ERROR(S) IN HAL/S PROGRAM NEAR LINE ',SMRK_NUM%0); 
+           WRITELN(' CODE GENERATION TERMINATED');
+           GOTO 1;
+           END; (* THEN *)  
+       END;       
+        
+    5% BEGIN (* PXRC $5 *)  
+        GET_HALMATF(INWORD);
+        LAST_BLOCK %= INWORD.D;       
+       END;       
+        
+    7% BEGIN (* IFHD $7 *)  
+       END;       
+        
+    8% BEGIN  (* LBL $8 *)  
+        GET_HALMATF(INWORD);
+        IF INWORD.Q = 2 THEN
+           BEGIN INWORD.D %= INT_NUM; 
+           INT_NUM %= INT_NUM + 1;    
+           END;   
+        PUT_7UP(GEN_LABEL,INWORD);    
+       END;       
+        
+    9% BEGIN  (* BRA $9 *)  
+        GET_HALMATF(INWORD);
+        PUT_7UP(JUMP,INWORD); 
+       END;       
+        
+   10% BEGIN  (* FBRA *)    
+        GET_HALMATF(INWORD);
+        GET_HALMATF(OP2);   
+        NULL.TAG0 %= FALSE; 
+        LOADACC(OP2,NULL);  
+        PUT_7UP(JFALSE,INWORD);       
+       END;       
+        
+   14% BEGIN (* DTST *)     
+        GET_HALMATF(INWORD);
+        SET_HALWORD(HALPC,INT_NUM,0,2,0,TRUE);  
+        INT_NUM %= INT_NUM + 1;       
+        IF INWORD.Q = 2 THEN
+           BEGIN INWORD.D %= INT_NUM; 
+           INT_NUM %= INT_NUM + 1;    
+           END;   
+        PUSH_DOSTACK(HALPC,INWORD);   
+          PUT_7UP(GEN_LABEL,INWORD);  
+       END;       
+        
+   15% BEGIN (* ETST *)     
+        GET_HALMATF(INWORD);
+        POP_DOSTACK(HALPC); 
+        PUT_7UP(JUMP,HALPC);
+        IF INWORD.Q = 2 THEN
+           BEGIN INWORD.D %= INT_NUM; 
+           INT_NUM %= INT_NUM + 1;    
+           END;   
+        PUT_7UP(GEN_LABEL,INWORD);    
+       END;       
+        
+   19% BEGIN (* DSMP *)     
+        GET_HALMATF(INWORD);
+       END;       
+        
+   20% BEGIN (* ESMP *)     
+        GET_HALMATF(INWORD);
+       END;       
+        
+   22% BEGIN (* CTST *)     
+        OPERATOR_TAG %= INWORD.T;     
+        GET_HALMATF(INWORD);
+        NULL.TAG0 %= FALSE; 
+        LOADACC(INWORD,NULL); 
+        POP_DOSTACK(INWORD);
+        IF OPERATOR_TAG = 0 THEN      
+           PUT_7UP(JFALSE,INWORD)     (* DO WHILE *)      
+        ELSE PUT_7UP(JTRUE,INWORD); (* DO UNTIL *)
+       END;       
+   25% BEGIN (* DSUB *)     
+        SETSUB(INWORD);  (* THIS IS A MACHINE-DEPENDENT OPERATION *)
+        (* SETSUB CALCULATES THE OFFSET AND CALLS PUT_7UP TO DO  *) 
+        (* THE SUBSCRIPTING.                                      *)
+       END;       
+        
+   29% BEGIN (* PCAL *)     
+        SAVEACC;  
+        GET_HALMATF(INWORD);
+        PUT_7UP(CALL,INWORD); 
+       END;       
+        
+   37% BEGIN (* XXST *)     
+        GET_HALMATF(INWORD);  (* IGNORE OPERAND - GENERATE NO CODE *) 
+       END;       
+        
+   38% BEGIN (* XXND *)     
+       END;       
+        
+   43% BEGIN (* MDEF *)     
+        GET_HALMATF(PROGID);
+        PUT_7UP(INIT,PROGID); 
+       END;       
+        
+   45% BEGIN (* PDEF *)     
+        SET_HALWORD(INWORD,INT_NUM,0,2,0,TRUE); 
+        INT_NUM %= INT_NUM + 1;       
+        PUSH_PRSTACK(INWORD); 
+        PUT_7UP(JUMP,INWORD); 
+        GET_HALMATF(INWORD);
+        PUT_7UP(GEN_LABEL,INWORD);    
+       END;       
+        
+   48% BEGIN  (* CLOS *)    
+        GET_HALMATF(INWORD);
+        IF NOT HALEQUAL(INWORD,PROGID) THEN     
+           BEGIN PUT_7UP(RETURN,INWORD);
+           POP_PRSTACK(INWORD);       
+           PUT_7UP(GEN_LABEL,INWORD); 
+           END;  (* THEN *) 
+       END;       
+        
+   49% BEGIN  (* EDCL *)    
+       END;       
+     END; (* CLASS 0 CASE *)
+        
+  6% CASE OPERATOR OF       
+        
+    1% BEGIN (* IASN *)     
+        N %= INWORD.N;      
+        GET_HALMATF(INWORD);
+        NULL.TAG0 %= FALSE; 
+        LOADACC(INWORD,NULL); 
+        FOR I %= 1 TO N-1 DO
+            BEGIN GET_HALMATF(INWORD);
+                  PUT_7UP(STORE,INWORD);
+            END;  (* DO *)  
+       END;       
+        
+  203% BEGIN (* IADD *)     
+        GET_HALMATF(OP1);   
+        GET_HALMATF(OP2);   
+        LOADACC(OP1,OP2);   
+        PUT_7UP(ADD,OP2);   
+        SETACC(VAC_NUM);    
+       END;       
+        
+  204% BEGIN  (* ISUB *)    
+        GET_HALMATF(OP1);   
+        NULL.TAG0 %= FALSE; 
+        LOADACC(OP1,NULL);  
+        GET_HALMATF(OP2);   
+        PUT_7UP(SUB,OP2);   
+        SETACC(VAC_NUM);    
+       END;       
+        
+  205% BEGIN (* IIPR *)     
+        GET_HALMATF(OP1);   
+        GET_HALMATF(OP2);   
+        LOADACC(OP1,OP2);   
+        PUT_7UP(MULT,OP2);  
+        SETACC(VAC_NUM);    
+       END;       
+     END; (* CLASS 6 CASE *)
+        
+  7% CASE OPERATOR OF       
+        
+  197% BEGIN (* INEQ *)     
+        GET_HALMATF(INWORD);
+        NULL.TAG0 %= FALSE; 
+        LOADACC(INWORD,NULL); 
+        GET_HALMATF(INWORD);
+        PUT_7UP(CNEQ,INWORD); 
+        SETACC(VAC_NUM);    
+       END;       
+        
+  198% BEGIN (* IEQ *)      
+        GET_HALMATF(INWORD);
+        NULL.TAG0 %= FALSE; 
+        LOADACC(INWORD,NULL); 
+        GET_HALMATF(INWORD);
+        PUT_7UP(CEQ,INWORD);
+        SETACC(VAC_NUM);    
+       END;       
+        
+  199% BEGIN (* INGT *)     
+        GET_HALMATF(INWORD);
+        NULL.TAG0 %= FALSE; 
+        LOADACC(INWORD,NULL); 
+        GET_HALMATF(INWORD);
+        PUT_7UP(CNGT,INWORD); 
+        SETACC(VAC_NUM);    
+       END;       
+        
+  200% BEGIN (* IGT *)      
+        GET_HALMATF(INWORD);
+        NULL.TAG0 %= FALSE; 
+        LOADACC(INWORD,NULL); 
+        GET_HALMATF(INWORD);
+        PUT_7UP(CGT,INWORD);
+        SETACC(VAC_NUM);    
+       END;       
+        
+  201% BEGIN (* INLT *)     
+        GET_HALMATF(INWORD);
+        NULL.TAG0 %= FALSE; 
+        LOADACC(INWORD,NULL); 
+        GET_HALMATF(INWORD);
+        PUT_7UP(CNLT,INWORD); 
+        SETACC(VAC_NUM);    
+       END;       
+        
+  202% BEGIN (* ILT *)      
+        GET_HALMATF(INWORD);
+        NULL.TAG0 %= FALSE; 
+        LOADACC(INWORD,NULL); 
+        GET_HALMATF(INWORD);
+        PUT_7UP(CLT,INWORD);
+        SETACC(VAC_NUM);    
+       END;       
+     END; (* CLASS 7 CASE *)
+        
+END;  (* CASE *)  
+END;  (* TEMPLATE *)
+BEGIN  (* CODEGEN *)
+   INITIALIZE;    
+   RESET(HALMATF);
+   INWORD %= HALMATF^;      
+   TEMPLATE(INWORD);
+   GET(HALMATF);  
+   HALMAT_NUM %= HALMAT_NUM + 1;      
+   WHILE NOTEND DO
+         BEGIN INWORD %= HALMATF^;    
+         IF INWORD.TAG0 THEN
+            HALMATERROR     
+                        ELSE TEMPLATE(INWORD);  
+         GET(HALMATF);      
+         HALMAT_NUM %= HALMAT_NUM + 1;
+         END; (* FOR *)     
+   (* GENERATE "EXTERNAL" PROCEDURES *) 
+   FOR I %= 1 TO X_PROC_MAX DO
+       IF X_PROC_REF[I].CALLED THEN   
+          CASE I OF 
+           1%    GEN_MUL;   
+          END; (* CASE *)   
+   1%WRITELN('1');
+   GEN_LIT_MOD;   
+   GEN_SYT_MOD;   
+   DUMP_7UP;      
+   WRITELN('1');  
+   GEN_VAC_MOD;   
+   FOR I %= 1 TO NDECSY DO WRITELN(' SYT_MOD[',I%0,'] = ',
+       SYT_MOD[I].ADDR%4 HEX,' ',SYT_NAME[I]);  
+   WRITELN('1         ADDRESS     CONTENTS');   
+   FOR I %= 1 TO NUM_LIT DO WRITELN(' LIT_MOD[',I%0,'] = ', 
+       LIT_MOD[I].ADDR%4 HEX,' '%4,LIT_MOD[I].DATA%2 HEX);
+   GEN_8080;      
+   PUT_LIT;       
+   PUT_OUT;       
+   PRINT_BINARY;  
+   2%END.  (* CODEGEN *)    
+   2%END.  (* CODEGEN *)    

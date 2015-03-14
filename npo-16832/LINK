@@ -1,0 +1,20 @@
+cc -o star        \
+                  \
+      starcode.o  \
+      starbifs.o  \
+      starplus.o  \
+      starhack.o  \
+                  \
+      starini1.o  \
+      starini2.o  \
+      starini3.o  \
+      starini4.o  \
+      starini5.o  \
+      starini6.o  \
+                  \
+      starlink.o  \
+      starutil.o  \
+                  \
+      samplec.o   \
+      samplef.o   \
+      samplep.o

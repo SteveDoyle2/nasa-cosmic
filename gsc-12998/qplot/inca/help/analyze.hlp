@@ -1,0 +1,609 @@
+1 ANALYZE   
+
+     This command is used to perform various analyses on transfer 
+function.  The result of the analysis is stored in a data structure 
+called a curve.  The curve data can be manipulated using the CURVE 
+command and displayed using the PLOT command.  There are currently
+three types of analyses.  The NO_ERROR_TRAP command is used to turn
+off error trapping for debugging purposes. 
+
+     Format:     ANALYZE  command  modifier  [parameters]
+
+2 DESCRIBING_FUNCTION
+
+   The describing function is a method used to calculate the gain and
+phase characteristics of a nonlinear device. Different types of
+nonlinear devices are modelled differently according to their
+structure. Nonlinear devices are classified into two types: MEMORY and
+MEMORYLESS. The gain and phase of a nonlinear device are calculated by
+comparing the output of the nonlinear device to an sinusoidal input. 
+The nonlinear output is approximated as the first harmonic of a
+Fourier sine series. The gain and phase change between the two sine
+curves is referred to as the gain and phase of the nonlinear device.
+
+     The describing function is plotted in the frequency domain; it is
+used to evaluate a nonlinear control system's tendency toward limit
+cycling.  A limit cycle occurs when the following relation is met: 
+
+                      1 + N(X,w)*G(jw) = 0
+
+where N(X,w) is the complex describing function relation, X is the
+amplitude of the input sinusoid, w is frequency of the input sinusoid,
+G(jw) is the frequency response of the linear portion of the control
+system.  The above equation can be represented as: 
+
+                      G(jw) = -1 / N(X,w).
+
+The expression on the right-hand side of the equation is known as the
+inverse describing function.  INCA plots the gain and phase values
+derived from the inverse DF along with the linear frequency response;
+if the two curves intersect, the system may experience a limit cycle
+oscillation with amplitude X and frequency w. The describing function
+is plotted in the frequency domain; predictions for limit cycling are
+best evaluated in the Nichols or Nyquist plot forms. 
+
+     Format:     ANALYZE  DESCRIBING_FUNCTION  modifier  [parameters]
+
+3 MEMORYLESS_SYSTEM
+
+     The memoryless nonlinear device produces output which is
+independent of the input sinusoidal frequency. The describing function
+gain and phase are known in analytical form.  INCA increments the
+input amplitude X in the same way w is varied in the frequency
+response algorithm.  Currently, INCA supports four types of memoryless
+nonlinearities. 
+
+4 DEAD_ZONE
+
+     The deadzone nonlinearity is shown below.  It is found in many
+control systems. The user is queried for the deadzone width and slope.
+
+                                  f(X)
+
+                                    |      /
+                                    |     /
+                                    |    /
+                           ------------------- X
+                               /    |
+                              /     |
+                             /      |
+
+4 LIMITER
+
+     The limiter is found in many control systems.  As shown below,
+the output of the device is linear over a certain region but limited
+at a certain value. The user is queried for the the limiting amplitude
+and the linear slope of the device. 
+
+                                 f(X)
+
+                                    |   ------
+                                    |  /
+                                    | /
+                           ------------------- X
+                                  / |
+                                 /  |
+                           ------   |
+
+4 QUANTIZER
+
+     Many sensors obtain information in quantized form.  The user has
+the option of fixing three elements of the quantizer model: 
+
+                       1) No. of output levels
+                       2) Amplitude of first output state
+                       3) Enter quantization width
+
+This device is modelled as an odd symmetric nonlinearity; the number
+of output levels refers to the number of non-zero output levels for a
+positive input. Amplitudes of additional output states of the
+quantizer are multiples of the amplitude of the first output state.
+The quantization width is the lowest non-zero value of X. 
+
+4 SCHMITT_TRIGGER
+
+     The Schmitt trigger is often referred to as a hysteresis. This
+nonlinearity is an odd symmetric device.  INCA lets the user fix three
+of the Schmitt trigger parameters - u-on, u-off, and u-max.  U-on and
+u-off are the switching values of the Schmitt trigger.  When the rate
+of change of X is positive, u-on is the largest value of X that
+produces no output. Conversely, when the rate of change of X is
+negative, u-off is the smallest value of X that produces output. 
+U-max is the output level of the Schmitt trigger.  The INCA default
+for this value is 1. 
+
+
+
+                                   f(X)
+
+                                    |  ---------
+                                    |  |  |
+                                    |  |  |
+                           ------------------- X
+                              |  |  |
+                              |  |  |
+                         ---------  |
+
+3 MEMORY_SYSTEM    
+
+     A memory-type nonlinearity produces different output for
+different values of sinusoidal input frequency.  As a result, the
+describing functions for memory-type devices consist of multiple
+curves.  The roughly horizontal lines are lines of constant frequency
+where X is incremented and w is held constant.  The vertical curve to
+the right of the plot is the minimum amplitude line; this line is a
+function of both amplitude and frequency. 
+
+4 PWPF_MODULATOR
+
+     This device is a combination of a Schmitt trigger and a
+first-order filter inside a feedback loop.  The PWPF modulator has
+been used on several spacecraft attitude control systems as pulse
+modulator for reaction jets. The user is asked to supply the following
+information about the modulator: 
+
+           1) U-on
+           2) U-off
+           3) U-max (defined to be 1)
+           4) Km - Filter gain
+           5) Tm - Filter time constant
+           6) Minimum and maximum sinusoidal input frequency
+           7) Frequency increment
+
+2 FREQUENCY_RESPONSE
+
+     This procedure computes the frequency response of a function or
+expression by evaluating the function for various values of s =
+j*frequency. The stepping interval and range of the variable frequency
+may be entered by the user, or the default values determined by INCA
+may be used. 
+
+     The frequency response is plotted in one of several formats (Bode
+plot, (Bode) Magnitude plot, (Bode) Phase plot, Nyquist plot, Nichols
+plot, Popov plot, or (Bode) Strip plot), and with various scalings on
+the frequency and magnitude axes. Graphics mode is then entered. 
+Graphics mode commands allow manipulation of the plot and printing or
+saving of the data.  The commands are described in detail under the
+graphics-mode topic. 
+
+     Format:     ANALYZE  FREQUENCY_RESPONSE  modifier  [parameters]
+
+3 EXPRESSION        
+
+     This can be any valid INCA expression.  The expression is 
+evaluated and the resulting function used.  Otherwise this modifier 
+has the same effect as the FUNCTION modifier.
+
+     Format:     ANALYZE  FREQUENCY_RESPONSE  EXPRESSION  expression
+
+3 FUNCTION          
+
+     The frequency response is calculated by evaluating the function
+at various points in the complex plane.  The spacing of the evaluation
+points is variable, and decreases when the dB, phase, Nyquist 
+angle change rapidly, or when near a root of the function.
+
+     Format:     ANALYZE  FREQUENCY_RESPONSE  FUNCTION  function-name
+
+The user is queried for the following information:
+
+          1)  Sampling Period (if necessary).
+          2)  Minimum frequency.
+          3)  Maximum frequency.
+          4)  Maximum dB change.
+          5)  Maximum phase change.
+          6)  Maximum Nyquist angle change.
+
+4 Sampling Period   
+
+     This can be any valid INCA expression.  See the main topic
+Expressions for more details and examples.  The resulting function 
+must be in the K plane (i.e., a constant).
+
+4 Minimum Frequency 
+
+     This is the lowest value of the frequency to be used, and will be
+the first for which the frequency response will be calculated.  The
+value entered must be greater than zero.  The default value may be
+obtained by simply hitting <RETURN>.  This default value is 1/100 of
+the minimum absolute value of any non-zero root or pole, or 0 for a 
+sampled system. 
+
+4 Maximum Frequency 
+
+     This is the highest value of the frequency to be used.  The value
+entered must be greater than the minimum frequency.  The default value
+may be obtained by simply hitting <RETURN>.  This default value is 100
+times the maximum absolute value of any zero or pole, or the Nyquist
+frequency for a sampled system. 
+
+4 Maximum dB change 
+
+     The frequency stepping routine will only allow the amplitude of
+the evaluated function to change by a certain amount.  If the change
+is greater, the frequency step size is reduced and the function is
+evaluated again.  The default value for the maximum amplitude change
+is five dB. 
+
+4 Max. phase change 
+
+     The frequency stepping routine will only allow the phase of the
+evaluated function to change by a certain amount.  If the change is
+greater, the frequency step size is reduced and the function is
+evaluated again.  The default value for the maximum phase change is
+five degrees. 
+
+4 Max. Nyquist angle
+
+     The Nyquist angle is a special concept used by the frequency 
+stepping routine, and is given by
+
+     Ny.An.  =  arctan ( <amplitude in dB>  * 3 / <phase in degrees> )
+
+     The frequency stepping routine will only allow the Nyquist angle
+of the evaluated function to change by a certain amount.  If the
+change is greater, the frequency step size is reduced and the function
+is evaluated again.  The default value for the maximum Nyquist angle
+change is five degrees. 
+
+3 STAR              
+
+     When the star operator is used, a summation is made over various 
+values of frequency, as given by the expression
+
+                         +n
+                         --
+  GHSTAR (j * w)    =    >    GH (j * w + k * j * wsample)
+                         --
+                        k=-n
+
+     The evaluation is similar to that used with the EXPRESSION 
+modifier, except an additional check is made for the frequency-shifted 
+images of the zeroes and poles of the S plane function.
+
+     Format:     ANALYZE  FREQUENCY_RESPONSE  STAR
+
+Input for the STAR modifier includes:
+
+          1)  Plant function.
+          2)  Feedback function.
+          3)  Zero order hold.
+          4)  Delay time.
+          5)  Summation level.
+          6)  Remaining input is the same as in the EXPRESSION 
+              modifier
+
+4 Plant Function    
+
+     This can be any valid INCA expression or function.  See the main
+topic Expressions for more details and examples.  The resulting
+function must be in the S plane. 
+
+4 Feedback Function 
+
+     This can be any valid INCA expression or function.  See the main
+topic Expressions for more details and examples.  The resulting
+function must be in the Z or W plane. 
+
+4 Zero Order Hold   
+
+     Answer Yes or No to this question.  Only the first letter is 
+significant.  Any other response will result in the question being 
+repeated.
+
+4 Delay Time        
+
+     This can be any valid INCA expression or function.  See the main
+topic Expressions for more details and examples.  The resulting
+function must be in the K plane (i.e., a constant). 
+
+4 Evaluation Levels 
+
+     When the star operator is used, a summation is made over various 
+values of frequency, as given by the expression
+
+                         +n
+                         --
+  GHSTAR (j * w)    =    >    GH (j * w + k * j * wsample)
+                         --
+                        k=-n
+
+The evaluation level refers to the integer quantity n, which can be 
+any non-negative integer less than 50.
+
+2 ROOT_LOCUS        
+
+     This subcommand will compute the locus of roots of an expression.
+There are two varieties, the standard locus and the root contour.  The
+standard (Evans) locus is used for classical root locus problems.  The
+root locus of a function G are those points satisfying the following 
+equation: 1 + (k * G) = 0.  The locus is the set of roots for positive 
+values of the real variable k.  The function G may be in any plane,
+but the degree of the numerator must be less than or equal to the
+degree of the denominator. 
+
+     The root contour will compute the locus for ANY expression.  This 
+is done by calculating the expression for various values of the 
+independent variable, and the rooting the resulting transfer function.
+Obviously the use of a polynomial rooter places various limits on this 
+technique.
+
+     Format:     ANALYZE  ROOT_LOCUS  modifier  [expression]
+
+3 CONTOUR           
+
+     This command will calculate a root locus for a non-standard 
+expression:  1 + G(i) = 0.  In this case <i> is the independent 
+variable, and must appear in one or more of the dynamic functions or 
+expressions used to form the expression G(i).  
+
+     Format:     ANALYZE  ROOT_LOCUS  CONTOUR  [expression]
+
+The user is then queried for the expression if not entered, and for 
+the following information:
+
+          1)  Independent variable.
+          2)  Minimum value.
+          3)  Maximum value.
+
+The contour locus routine uses a polynomial rooter, and thus is not as 
+accurate as the routine used in the standard (Evans-type) root locus.
+
+4 Independent var.  
+
+     This can be any valid INCA function name, and should be an 
+element required for the evaluation of the expression G(i).
+
+4 Minimum value     
+
+     This is the minimum value used for the independent variable.
+
+4 Maximum value     
+
+     This is the maximum value used for the independent variable.
+Evaluation of g(i) will stop when <i> reaches this value.
+
+3 EXPRESSION        
+
+     This can be any valid INCA expression.  The expression is 
+evaluated and the resulting function used.  Otherwise this modifier 
+has the same effect as the FUNCTION modifier.
+
+     Format:     ANALYZE  ROOT_LOCUS  EXPRESSION  expression
+
+3 FUNCTION          
+
+     This qualifer is the default, and creates a root locus curve
+using the algorithm described in the INCA Theory Manual.  Because the
+poles of the function are used to determine the number of branches,
+the numerator of the function G must not have a greater degree than
+the denominator. 
+
+     Format:     ANALYZE  ROOT_LOCUS  FUNCTION  function-name
+
+The user is then queried for the following information:
+
+          1)  Phase angle.
+          2)  Radius Control.
+          3)  Maximum Bend.
+          4)  Window Size.
+
+Giving the default answer (press <RETURN>) will produce a satisfactory
+plot for almost all problems. 
+
+4 Description       
+
+     Each pole of the function is associated with a branch.  If there 
+is a multiple pole, there is an equivalent number of branches.  Each 
+branch starts at a pole and wanders through the complex plane, either 
+ending at a zero or leaving the field of view and continuing forever 
+in a specific direction.  However, if two or more branches intersect, 
+the point is called a breakpoint, and each segment of each branch is 
+considered by INCA to be a separate branch.  Thus the number of 
+branches in INCA may be more than the degree of the denominator.
+
+     The points where branches of the root locus intersect are called
+break points.  The angles between different branches at a breakpoint
+is always the same, and is 360 degrees divided by the number of
+branches. 
+
+     A list of branches ending near each break point is printed.  The
+midpoint of these branchends is also printed, and is presumed to be
+the location of the breakpoint. 
+
+4 Phase Angle       
+
+     Any angle can be given between -180 degrees and 360 degrees. 
+Of particular interest are 0 degree phase plots, although these can 
+also be generated by placing a minus sign in front of the input 
+expression.  Varying this parameter can also give the user an 
+indication of the system phase margin without performing a frequency 
+response analysis.
+
+4 Radius Control    
+
+     Parameter used to control maximum radius of the search circle. 
+The default value is 0.25.  The algorithm is structured to iteratively
+search for the loci crossing point on a circle centered at the last
+computed loci point.  The algorithm adjusts the circle radius in such
+a manner that sharp turns of the loci are prohibited within the search
+circle.  For more information, see the INCA Theory Manual.
+
+     If you get NUMERIC_PROB as a branch ending (instead of the normal
+BREAKPOINT, ZERO_FOUND, or  OUTSIDE_REG), chances are that this
+parameter or the maximum bend parameter should be reduced. If it
+appears that a break point has been stepped over decrease the value of
+the Radius Control. 
+
+4 Maximum Bend      
+
+     Maximum loci bending allowed in one step.  The default value is 
+five degrees, which should be adequate for most purposes.  If you get 
+NUMERIC_PROB as a branch ending (instead of the normal BREAKPOINT, 
+ZERO_FOUND, or  OUTSIDE_REG), chances are that this parameter or the 
+radius control parameter should be reduced.
+
+4 Window Size       
+
+     This parameter controls the size of the area viewed on the plot.
+The default value is two, which means that the plot is twice the
+radius of the square bounding the zeroes and poles.  If you wish to
+plot more of the root locus, increase the size of this parameter. 
+Note that data is generated for an area extending to twice the radius
+of the window size. 
+
+3 ROOTS_ONLY        
+
+     This command will suppress the calculation of the locus and
+display only the zeroes and poles of the function resulting when the
+expression is evaluated.  The expression can be any valid INCA
+expression.  See the main topic expression for more details. 
+
+     Format:     ANALYZE  ROOT_LOCUS  ROOTS_ONLY  [expression]
+
+2 TIME_RESPONSE     
+
+     This procedure computes the time response of one or more
+functions (either S, Z or W plane ) by computing the inverse Laplace
+or inverse Z transform.  The step size and time range may be entered
+by the user, or the default values may be used.  An input function is
+also required.  A series of curves derived from closed loop transfer
+functions with variable compensation gain may be generated. 
+
+     Format:     ANALYZE  TIME_RESPONSE  modifier  [expression]
+
+3 Input             
+
+     The input of the TIME_RESPONSE commands has many options, and to 
+describe them all would be too lengthy for inclusion here.  the use of 
+block diagrams should make the input requests largely self explanatory. 
+Note, however, that when a function is requested, it is often required 
+that the function be in a specific plane(s).  If the function is not 
+in that plane, the request will be repeated.  
+
+4 Functions         
+
+     These can be any valid INCA expression or function.  See the main
+topic Expressions for more details and examples. 
+
+4 Zero Order Hold   
+
+     Answer Yes or No to this question.  Only the first letter is 
+significant.  Any other response will result in the question being 
+repeated.
+
+4 Delay Time        
+
+     This can be any valid INCA expression.  See the main topic
+Expressions for more details and examples.  The resulting function 
+must be in the K plane (i.e., a constant).
+
+4 Type of Input     
+
+     The type of input function is indicated by one of the following 
+letters.  Additional input is required as indicated.
+
+         I   -- Impulse function
+         S   -- Step function, requires step coefficient.
+         R   -- Ramp function, requires ramp coefficient.
+         A   -- Acceleration function, requires acc. coefficient.
+         C   -- Combined function, requires step coefficient, ramp 
+                   coefficient, and acceleration coefficient.
+         S   -- Oscillator function, requires frequency.
+         U   -- User function, requires expression.
+
+4 Type Gain Control 
+
+     The type of gain control is indicated by one of the following 
+letters.  Additional input to specify the actual gain is required.
+
+         O   -- One gain
+         S   -- Sensitivity analysis, entry of compensation gains 
+                required as follows.  The compensation gains are 
+                either entered as a minimum and maximum, and the 
+                gains spaced equally, or each gain is entered 
+                individually.  In the latter case it is recommended 
+                that the gains be entered in ascending order.
+
+4 Sample Period     
+
+     This can be any valid INCA expression.  See the main topic
+Expressions for more details and examples.  The resulting function 
+must be in the K plane (i.e., a constant).
+
+4 Time Interval     
+
+     This is the interval between evaluation steps.  This input is 
+requested for continuous systems only.
+
+4 Number of Substeps
+
+     This is the number of steps for which the time response is
+evaluated during each sample period.  This input is requested for
+combined continuous/discrete systems only. 
+
+4 Stopping time     
+
+     This is the last value of time for which the time response is to
+be calculated.  The default stopping time is calulated using the steps
+size and 1/3 of the maximum number of steps available. 
+
+3 CLOSED_LOOP       
+
+     The time response procedure is capable of calculating for
+immediate plotting several closed loop transfer functions (with
+variable compensation gain) for a system of this form: 
+
+
+                ---       ---------     ----------     -------
+            +  /   \     | compen- |   |  compen- |   | plant |
+   ---------- ( SUM )----| sation  |---|  sation  |---| func- |-------->
+               \   /     |  gain   |   | function |   | tion  |   |
+                ---       ---------     ----------     -------    |
+                 ^                                                |
+                 |                                                |
+                 |                    ----------                  |
+                 |                   | feedback |                 |
+                  -------------------| function |-----------------
+                                      ----------
+
+     The closed loop transfer function must be defined in terms of
+previously defined functions.  The new function is computed using the
+following equation. 
+
+             CLTF = [K * CF * PF] / [1 + (K * CF * PF * FF)]            
+
+     The plant, feedback, and compensation functions are entered in
+response to queries.  The various compensation gains may be entered 
+either as a count and range or else the various steps may be entered
+individually. 
+
+     Format:     ANALYZE  TIME_RESPONSE  CLOSED_LOOP 
+
+3 FEEDBACK_SAMPLER  
+
+     This modifier is similar to the CLOSED_LOOP modifier except 
+that a sampler, time delay, discrete function and possible zero order 
+hold have been inserted in the feedback loop.  The capability for 
+intersample time response also exists, making use of the advanced Z 
+transform.  For more information see the INCA Theory Manual.
+
+     Format:     ANALYZE  TIME_RESPONSE  FEEDBACK_SAMPLER
+
+3 PLANT_SAMPLER     
+
+     This modifier is similar to the CLOSED_LOOP modifier except 
+that a sampler, time delay, discrete function and possible zero order 
+hold have been inserted in the plant loop.  The capability for 
+intersample time response also exists, making use of the advanced Z 
+transform.  For more information see the INCA Theory Manual.
+
+     Format:     ANALYZE  TIME_RESPONSE  PLANT_SAMPLER
+
+3 SIMPLE_SYSTEM     
+
+     This modifier calulates the time response of one function 
+combined with the user's choice of seven input functions.
+
+     Format:     ANALYZE  TIME_RESPONSE  SIMPLE_SYSTEM  [expression]
+

@@ -1,0 +1,443 @@
+*   HIGH PRESSURE GAS STORAGE SYSTEM BLOWDOWN AND CHARGING MODEL
+*
+*
+*    LIST OF VARIABLE NAME INPUTS
+*
+*     PROGRAM INDICATOR DEFINITIONS
+*
+*       FILL   = 0.0 INDICATES BLOWDOWN SIMULATION
+*       FILL   = 1.0 INDICATES CHARGING SIMULATION
+*       FILLED = 1.0 INDICATES FILLED CONDITION
+*       ALT    = 0.0 INDICATES CONSTANT AMBIENT TEMPERATURE
+*       ALT    = 1.0 INDICATES VARIABLE AMBIENT TEMPERATURE
+*       FORCE  = 0.0 INDICATES FREE CONVECTION
+*       FORCE  = 1.0 INDICATES FORCED CONVECTION
+*       AFC    = 0.35 BLOWDOWN SIMULATION
+*       AFC    = 0.70 CHARGING SIMULATION
+*
+*     STORAGE CONTAINER DESCRIPTION
+*
+*       VOL    = VOLUME (CU-FT)
+*       MCYL   = MASS (LBS)
+*       DI     = INSIDE DIAMETER (FT)
+*       DO     = OUTSIDE DIAMETER (FT)
+*       SAI    = INSIDE SURFACE AREA (SQ-FT)
+*       SAO    = OUTSIDE SURFACE AREA (SQ-FT)
+*       NTKS   = NUMBER OF CONTAINERS
+*       EMISS  = OUTSIDE SURFACE EMISSIVITY
+*       TCYLIC = INITIAL TEMPERATURE (R)
+*       TCYL   = TEMPERATURE (R)
+*       MFRAME = MOUNTING FRAME MASS (LBS)
+*       TFIC   = INITIAL MOUNTING FRAME TEMPERATURE (R)
+*       TFRAME = MOUNTING FRAME TEMPERATURE (R)
+*
+*     GAS PROPERTIES
+*
+*       RATE   = TOTAL INFLOW OR OUTFLOW (LB/HR)
+*       POI    = INLET PRESSURE (PSIA)
+*       PIC    = INITIAL PRESSURE (PSIG)
+*       PICA   = INITIAL PRESSURE (PSIA)
+*       TGAS   = TEMPERATURE (R)
+*       RHOG   = DENSITY (LBS/CU-FT)
+*       R      = GAS CONSTANT (FT-LB/LB-R)
+*       MGASI  = INITIAL MASS (LBS)
+*       MGASTI = INITIAL TOTAL MASS (LBS)
+*
+*     AMBIENT CONDITIONS
+*
+*       PAMB   = PRESSURE (PSIA)
+*       TAMB   = TEMPERATURE (R)
+*       RAIR   = GAS CONSTANT (FT-LB/LB-R)
+*       VAIR   = SURROUNDING AIR VELOCITY (FT/SEC)
+*
+*    LIST OF TABULAR INPUTS
+*
+*       GTP    = RATIO OF SPECIFIC HEATS
+*       HTP    = ENTHALPY (BTU/LB)
+*       RTP    = DENSITY (LBS/CU-FT)
+*       ZTP    = GAS COMPRESSIBILITY FACTOR
+*       TTP    = SPECIFIC HEAT INPUT (BTU/LB)
+*       PTP    = ENERGY DERIVATIVE (PSIA CU-FT/BTU)
+*       SPTP   = SPECIFIC HEAT CONSTANT PRESSURE (BTU/LB-R)
+*       KTP    = THERMAL CONDUCTIVITY (BTU/FT-HR-R)
+*       BTP    = VOLUME EXPANSION (1/R)
+*       MUTP   = VISCOSITY (LB/FT-HR)
+*       CPM    = SPECIFIC HEAT OF CONTAINER MATERIAL (BTU/LB-R)
+*       AMB    = AMBIENT TEMPERATURE HISTORY (R)
+*
+*    LIST OF PROGRAM CALCULATED VARIABLES
+*
+*     HEAT TRANSFER VARIABLES
+*
+*       DQRAD   = RADIATION - CONTAINER TO AMBIENT
+*       DQCCYF  = CONDUCTION - CONTAINER TO MOUNTING FRAME
+*       DQCO    = CONVECTION - CONTAINER TO AMBIENT
+*       DQCI    = CONVECTION - CONTAINER TO GAS
+*       DQRADF  = RADIATION - MOUNTING FRAME TO AMBIENT
+*       DQCFA   = CONDUCTION - MOUNTING FRAME TO AMBIENT
+*       DQFCV   = CONVECTION - MOUNTING FRAME TO AMBIENT
+*
+*     GAS FLOW VARIABLES
+*
+*       FLOW    = INFLOW OR OUTFLOW RATE PER CONTAINER (LB/HR)
+*       RATE    = TOTAL INFLOW  OR OUTFLOW (LBS/HR)
+*       DP      = PRESSURE RATE OF CHANGE (PSI/HR)
+*       P       = PRESSURE (PSIA)
+*       PGAGE   = PRESSURE (PSIG)
+*       MGAS    = MASS PER CONTAINER (LBS)
+*       MGAST   = TOTAL MASS (LBS)
+*       TGAS    = TEMPERATURE (R)
+*
+*
+*     ORBITER 101 FUEL CELL REACTANT HIGH PRESSURE STORAGE SYSTEM
+*     OXYGEN HIGH PRESSURE STORAGE CYLINDER BLOWDOWN PERFORMANCE
+*
+*     CASE INPUT DATA
+NOSORT
+PARAMETER VOL=1.736,MCYL=136.0,DI=0.73,DO=0.77,SAI=10.5,SAO=11.1,...
+      RATE=0.00,R=48.3,POI= 3000.0,FILL=0.0,ALT=1.0,FORCE=1.0,...
+      (600.,.002151), (750.,.001335)                                    2200 PSI
+      SIGMA=1.71E-9,EMISS=.95,MFRAME=70.0,...
+      NTKS=4.0,PAMB=14.7,RAIR=53.34,VAIR=5.0,...
+      FILLED=0.0,...
+      PIC=1929.0,...
+      TAMB=484.0
+*     SPECIFIC HEAT OF 4130 STEEL VERSUS TEMPERATURE
+*     INITIAL CONDITIONS
+*
+      P=PIC+14.7
+      PICA=PIC+14.7
+      PGAGE=P-14.7
+      FULL=23.07*NTKS
+      TGAS=TAMB
+      TCYLIC=TAMB
+      RHOG=TWOVAR(RTP,TGAS,P)
+      MGASI=RHOG*VOL
+      MGASTI=NTKS*MGASI
+      TCYL=TCYLIC
+      TFIC=TAMB
+      TFRAME=TFIC
+DYNAMIC
+*
+*     THERMOPHYSICAL PROPERTIES OF OXYGEN  REF; NBS TECH. NOTE 384
+*
+*     O2 GAMMA VERSUS TEMPERATURE AND PRESSURE
+FUNCTION GTP, 10. = (300.,1.4), (800.,1.4)                                10 PSI
+FUNCTION GTP, 200. = (300.,1.54), (400.,1.45), (600.,1.41), (800.,1.37)  200 PSI
+FUNCTION GTP, 600. = (300.,2.12), (400.,1.6), (500.,1.5),...             600 PSI
+      (600.,1.44), (800.,1.3837)                                         600 PSI
+FUNCTION GTP, 1000. = (300.,2.12), (400.,1.6), (500.,1.5),...           1000 PSI
+      (600.,1.51), (800.,1.45)                                          1000 PSI
+FUNCTION GTP, 1400. = (300.,4.55), (400.,1.97), (500.,1.65),...         1400 PSI
+      (600.,1.55), (800.,1.48)                                          1400 PSI
+FUNCTION GTP, 1800. = (300.,3.08), (400.,2.18), (500.,1.72),...         1800 PSI
+      (600.,1.60), (800.,1.51)                                          1800 PSI
+FUNCTION GTP, 2200. = (300.,2.71), (400.,2.34), (500.,1.79),...         2200 PSI
+      (600.,1.66), (800.,1.55)                                          2200 PSI
+FUNCTION GTP, 2600. = (300.,2.49), (400.,2.41), (500.,1.85),...         2600 PSI
+      (600.,1.71), (800.,1.59)                                          2600 PSI
+*
+*     ENTHALPY VERSUS TEMPERATURE AND PRESSURE
+*
+FUNCTION HTP, 10. = (300.,64.89), (340.,73.63), (380.,82.36),...          10 PSI
+      (420.,91.1), (460.,99.8), (500.,108.58), (540.,117.36),...          10 PSI
+      (600.,130.58), (700.,152.), (800.,174)                              10 PSI
+FUNCTION HTP, 200. = (300.,60.69), (340.,70.37), (380.,79.72),...        200 PSI
+      (420.,88.9), (460.,97.88), (500.,107.), (540.,115.98),...          200 PSI
+      (600.,129.45), (700.,151.5), (800.,173.9)                          200 PSI
+FUNCTION HTP, 600. = (300.,49.43), (340.,62.63), (380.,73.8),...         600 PSI
+      (420.,84.14), (460.,94.03), (500.,103.65), (540.,113.1),...        600 PSI
+      (600.,127.1), (700.,150.), (800.,173.0)                            600 PSI
+FUNCTION HTP, 1000.= (300.,28.29), (340.,53.34), (380.,67.39),...       1000 PSI
+      (420.,79.2), (460.,90.06), (500.,100.53), (540.,110.29),...       1000 PSI
+      (600.,124.83), (700.,148.0), (800.,172.0)                         1000 PSI
+FUNCTION HTP, 1400. = (300.,13.19), (340.,42.59), (380.,60.67),...      1400 PSI
+      (420.,74.3), (460.,86.15), (500.,97.13), (540.,107.57),...        1400 PSI
+      (600.,122.63), (700.,146.5), (800.,171.0)                         1400 PSI
+FUNCTION HTP, 1800. = (300.,6.78), (340.,33.18), (380.,54.15),...       1800 PSI
+      (420.,69.48), (460.,82.39), (500.,94.05), (540.,104.97),...       1800 PSI
+      (600.,120.53), (700.,145.0), (800.,170.0)                         1800 PSI
+FUNCTION HTP, 2200. = (300.,4.988), (340.,27.45), (380.,48.50),...      2200 PSI
+      (420.,65.11), (460.,78.90), (500.,91.19), (540.,102.53),...       2200 PSI
+      (600.,118.54), (700.,144.0), (800.,169.2)                         2200 PSI
+FUNCTION HTP, 2600. = (300.,4.02), (340.,24.21), (380.,44.25),...       2600 PSI
+      (420.,61.32), (460.,75.76), (500.,88.57), (540.,100.32),...       2600 PSI
+      (600.,116.6), (700.,142.5), (800.,168.6)                          2600 PSI
+FUNCTION HTP, 3000. = (300.,3.47), (340.,22.25), (380.,41.16),...       3000 PSI
+      (420.,58.2), (460.,73.04), (500.,86.23), (540.,98.32),...         3000 PSI
+      (600.,115.02), (700.,141.5), (800.,168.3)                         3000 PSI
+*
+*     O2 DENSITY VERSUS TEMPERATURE AND PRESSURE
+*
+FUNCTION RTP, 10. = (300.,.09975), (340.,.08791), (380.,.0786),...        10 PSI
+      (420.,.07108), (460.,.06488), (500.,.05967), (540.,.05524),...      10 PSI
+      (600.,.04971), (750.,.039768)                                       10 PSI
+FUNCTION RTP, 200. = (300.,2.15284), (340.,1.8477), (380.,1.62599),...   200 PSI
+      (420.,1.45544), (460.,1.3192), (500.,1.20744), (540.,1.1138),...   200 PSI
+      (600.,.99847), (750.,.79878)                                       200 PSI
+FUNCTION RTP, 600. = (300.,8.07339), (340.,6.2594), (380.,5.26205),...   600 PSI
+      (420.,4.59042), (460.,4.09417), (500.,3.7069), (540.,3.39348),...  600 PSI
+      (600.,3.01849), (750.,2.41479)                                     600 PSI
+FUNCTION RTP, 1000. = (300.,21.74985), (340.,12.11645), (380.,9.503),...1000 PSI
+      (420.,8.03457), (460.,7.04106), (500.,6.30502), (540.,5.72905),...1000 PSI
+      (600.,5.05834), (750.,4.04667)                                    1000 PSI
+FUNCTION RTP, 1400. = (300.,38.337), (340.,19.9692), (380.,14.3833),... 1400 PSI
+      (420.,11.7615), (460.,10.1294), (500.,8.9761), (540.,8.1002),...  1400 PSI
+      (600.,7.10385), (750.,5.8631)                                     1400 PSI
+FUNCTION RTP, 1800. = (300.,43.4584), (340.,28.251), (380.,19.6739),... 1800 PSI
+      (420.,15.6728), (460.,13.3052), (500.,11.685), (540.,10.48306),...1800 PSI
+      (600.,9.14042), (750.,7.3123)                                     1800 PSI
+FUNCTION RTP, 2200. = (300.,46.4171), (340.,34.306), (380.,24.80748),...2200 PSI
+      (420.,19.5852), (460.,16.4808), (500.,14.3856),(540.,12.85283),...2200 PSI
+      (600.,11.15409), (750.,8.923)                                     2200 PSI
+FUNCTION RTP, 2600. = (300.,48.5403), (340.,38.384), (380.,29.2703),... 2600 PSI
+      (420.,23.30799), (460.,19.5686), (500.,17.0289), (540.,15.174),...2600 PSI
+      (600.,13.1324), (750.,10.51)                                      2600 PSI
+FUNCTION RTP, 3000. = (300.,50.2158), (340.,41.334), (380.,32.9241),... 3000 PSI
+      (420.,29.5116), (460.,22.4906), (500.,19.5714), (540.,17.4259),...3000 PSI
+      (600.,15.0782), (750.,12.0625)                                    3000 PSI
+*
+*     O2 COMPRESSIBILITY FACTOR VERSUS PRESSURE AND TEMPERATURE
+*
+FUNCTION ZTP, 10. =  (300.,.99628), (350.,.99768), (400.,.99845),...      10 PSI
+      (450.,.99898), (500.,.99928), (550.,.99956), (600.,.99959),...      10 PSI
+      (700.,.99962), (800.,.9999)                                         10 PSI
+FUNCTION ZTP, 200. = (300.,.92324), (350.,.95383), (400.,.97076),...     200 PSI
+      (450.,.98102), (500.,.98766), (550.,.99216), (600.,.99847),...     200 PSI
+      (700.,.9990), (800.,.9997)                                         200 PSI
+FUNCTION ZTP, 600. = (300.,.73857), (350.,.85692), (400.,.91303),...     600 PSI
+      (450.,.94508), (500.,.96513), (550.,.97845), (600.,.9877),...      600 PSI
+      (700.,.995), (800.,.9995)                                          600 PSI
+FUNCTION ZTP, 1000. = (300.,.45692), (350.,.75588), (400.,.85805),...   1000 PSI
+      (450.,.91259), (500.,.94571), (550.,.96738), (600.,.98232),...    1000 PSI
+      (700.,.99), (800.,.9993)                                          1000 PSI
+FUNCTION ZTP, 1400. = (300.,.36291), (350.,.6625), (400.,.80951),...    1400 PSI
+      (450.,.884996), (500.,.93001), (550.,.95919), (600.,.97926),...   1400 PSI
+      (700.,.989), (800.,.9991)                                         1400 PSI
+FUNCTION ZTP, 1800. = (300.,.41162), (350.,.60484), (400.,.7725),...    1800 PSI
+      (450.,.86385), (500.,.91849), (550.,.95403), (600.,.97852),...    1800 PSI
+      (800.,.9988)                                                      1800 PSI
+FUNCTION ZTP, 2200. = (300.,.47102), (350.,.59585), (400.,.7515),...    2200 PSI
+      (450.,.85062), (500.,.911886), (550.,.95193), (600.,.98006),...   2200 PSI
+      (800.,.9985)                                                      2200 PSI
+FUNCTION ZTP, 2600. = (300.,.53231), (350.,.61768), (400.,.74735),...   2600 PSI
+      (450.,.84603), (500.,.9104), (550.,.95326), (600.,.98377),...     2600 PSI
+      (800.,.9982)                                                      2600 PSI
+FUNCTION ZTP, 3000. = (300.,.59371), (350.,.65369), (400.,.75768),...   3000 PSI
+      (450.,.84964), (500.,.914), (550.,.95792), (600.,.98864),...      3000 PSI
+      (800.,.9980)                                                      3000 PSI
+*
+*     O2 COEF. OF VOLUMETRIC EXPANSION VERSUS PRESSURE AND TEMPERATURE
+*
+FUNCTION BTP, 10. = (300.,.003371), (400.,.0025125), (500.,.00201),...    10 PSI
+      (600.,.0016693), (750.,.001335)                                     10 PSI
+FUNCTION BTP, 200. = (300.,.004244), (400.,.002766), (500.,.002109),...  200 PSI
+      (600.,.00172), (750.,.001335)                                      200 PSI
+FUNCTION BTP, 600. = (300.,.008393), (400.,.0033998), (500.,.002334),... 600 PSI
+      (600.,.001824), (750.,.001335)                                     600 PSI
+FUNCTION BTP, 1000. = (300.,.034529), (400.,.004483), (500.,.002557),...1000 PSI
+      (600.,.001922), (750.,.001335)                                    1000 PSI
+FUNCTION BTP, 1400. = (300.,.014488), (400.,.00497), (500.,.002765),... 1400 PSI
+      (600.,.0020103), (750.,0.001335)                                  1400 PSI
+FUNCTION BTP, 1800. = (300.,.008164), (400.,.005604), (500.,.002943),...1800 PSI
+      (600.,.002087), (750.,.001335)                                    1800 PSI
+FUNCTION BTP, 2200. = (300.,.006011), (400.,.005862), (500.,.003071),...2200 PSI
+      AFC = 0.35,...
+FUNCTION BTP, 2600. = (300.,.0049), (400.,.00569), (500.,.003143),...   2600 PSI
+      (600.,.0022), (750.,.001335)                                      2600 PSI
+*
+*     THETA VERSUS PRESSURE AND TEMPERATURE
+*
+FUNCTION TTP, 10. = (300.,64.89), (340.,73.67), (380.,82.46),...          10 PSI
+      (420.,91.3), (460.,100.21), (500.,109.23), (540.,118.4),...         10 PSI
+      (600.,132.45), (750.,158.0)                                         10 PSI
+FUNCTION TTP, 200. = (300.,58.38), (340.,68.45), (380.,78.18),...        200 PSI
+      (420.,87.71), (460.,97.17), (500.,106.63), (540.,116.15),...       200 PSI
+      (600.,130.65), (750.,157.0)                                        200 PSI
+FUNCTION TTP, 600. = (300.,45.68), (340.,58.76), (380.,70.40),...        600 PSI
+      (420.,81.32), (460.,91.79), (500.,102.03), (540.,112.15),...       600 PSI
+      (600.,127.35), (750.,156.5)                                        600 PSI
+FUNCTION TTP, 1000. = (300.,37.45), (340.,51.74), (380.,64.73),...      1000 PSI
+      (420.,76.66), (460.,87.87), (500.,98.64), (540.,109.15),...       1000 PSI
+      (600.,124.75), (750.,155.0)                                       1000 PSI
+FUNCTION TTP, 1400. = (300.,56.57), (340.,49.88), (380.,61.81),...      1400 PSI
+      (420.,73.96), (460.,85.47), (500.,96.46), (540.,107.11),...       1400 PSI
+      (600.,122.81), (750.,154.5)                                       1400 PSI
+FUNCTION TTP, 1800. = (300.,73.6), (340.,55.74), (380.,62.39),...       1800 PSI
+      (420.,73.41), (460.,84.55), (500.,95.43), (540.,105.97),...       1800 PSI
+      (600.,121.5), (750.,154.0)                                        1800 PSI
+FUNCTION TTP, 2200. = (300.,86.66), (340.,66.40), (380.,66.33),...      2200 PSI
+      (420.,74.98), (460.,85.30), (500.,95.73), (540.,105.64),...       2200 PSI
+      (600.,120.73), (750.,153.5)                                       2200 PSI
+FUNCTION TTP, 2600. = (300.,97.63), (340.,77.59), (380.,72.79),...      2600 PSI
+      (420.,78.36), (460.,87.42), (500.,97.20), (540.,106.85),...       2600 PSI
+      (600.,120.44), (750.,153.2)                                       2600 PSI
+*
+*     O2 PHI VERSUS PRESSURE AND TEMPERATURE
+*
+FUNCTION PTP, 10. = (300.,2.163), (400.,2.158), (500.,2.143),...          10 PSI
+      (600.,2.114), (750.,2.04)                                           10 PSI
+FUNCTION PTP, 200. = (300.,2.235), (400.,2.216), (500.,2.192),...        200 PSI
+      (600.,2.155), (750.,2.04)                                          200 PSI
+FUNCTION PTP, 600. = (300.,2.387), (400.,2.348), (500.,2.299),...        600 PSI
+      (600.,2.250), (750.,2.12)                                          600 PSI
+FUNCTION PTP, 1000. = (300.,2.554), (400.,2.495), (500.,2.414),...      1000 PSI
+      (600.,2.475), (750.,2.33)                                         1000 PSI
+FUNCTION PTP, 1400. = (300.,3.813), (400.,2.660), (500.,2.536),...      1400 PSI
+      (600.,2.475), (750.,2.45)                                         1400 PSI
+FUNCTION PTP, 1800. = (300.,4.606), (400.,2.850), (500.,2.664),...      1800 PSI
+      (600.,2.605), (750.,2.45)                                         1800 PSI
+FUNCTION PTP, 2200. = (300.,5.119), (400.,3.074), (500.,2.801),...      2200 PSI
+      (600.,2.747), (750.,2.70)                                         2200 PSI
+FUNCTION PTP, 2600. = (300.,5.496), (400.,3.319), (500.,2.935),...      2600 PSI
+      (600.,2.901), (750.,2.78)                                         2600 PSI
+*
+*     O2 SPECIFIC HEAT VERSUS PRESSURE AND TEMPERATURE
+*
+FUNCTION SPTP, 10. = (300.,.219), (400.,.218), (500.,.219),...            10 PSI
+      (600.,.221), (750.,.221)                                            10 PSI
+FUNCTION SPTP, 200. = (300.,.248), (400.,.229), (500.,.225), (750.,.225) 200 PSI
+FUNCTION SPTP, 600. = (300.,.383), (400.,.258), (500.,.238), (750.,.238) 600 PSI
+FUNCTION SPTP, 1000. = (300.,1.293), (320.,.548), (400.,.295),...       1000 PSI
+      (500.,.252), (600.,.240), (750.,.240)                             1000 PSI
+FUNCTION SPTP, 1400. = (300.,.924), (340.,.574), (400.,.338),...        1400 PSI
+      (500.,.267), (600.,.247), (750.,.247)                             1400 PSI
+FUNCTION SPTP, 1800. = (300.,.601), (400.,.380), (500.,.281),...        1800 PSI
+      (600.,.254), (750.,.254)                                          1800 PSI
+FUNCTION SPTP, 2200. = (300.,.521), (400.,.411), (500.,.294),...        2200 PSI
+      (600.,.260), (750.,.260)                                          2200 PSI
+FUNCTION SPTP, 2600. = (300.,.478), (340.,.520), (400.,.426),...        2600 PSI
+      (500.,.306), (600.,.265), (750.,.265)                             2600 PSI
+*
+*     O2 THERMAL CONDUCTIVITY VERSUS PRESSURE AND TEMPERATURE
+*
+FUNCTION KTP, 10. = (300.,.009), (400.,.0117), (500.,.01422),...          10 PSI
+      (600.,.0165), (750.,.0165)                                          10 PSI
+FUNCTION KTP, 200. = (300.,.01032), (400.,.01262), (500.,.01489),...     200 PSI
+      (600.,.01707), (750.,.01707)                                       200 PSI
+FUNCTION KTP, 600. = (300.,.01436), (400.,.01460), (500.,.01630),...     600 PSI
+      (600.,.0182), (750.,.0182)                                         600 PSI
+FUNCTION KTP, 1000. = (300.,.02862), (400.,.01684), (500.,.01774),...   1000 PSI
+      (600.,.01932), (750.,.01932)                                      1000 PSI
+FUNCTION KTP, 1400. = (300.,.03642), (400.,.01940), (500.,.01922),...   1400 PSI
+      (600.,.02043), (750.,.02043)                                      1400 PSI
+FUNCTION KTP, 1800.  = (300.,.03947), (400.,.02219), (500.,.02074),...  1800 PSI
+      (600.,.02154), (750.,.02154)                                      1800 PSI
+FUNCTION KTP, 2200. = (300.,.04213), (400.,.02501), (500.,.02228),...   2200 PSI
+      (600.,.02265), (750.,.02265)                                      2200 PSI
+FUNCTION KTP, 2600. = (300.,.04489), (400.,.02764), (500.,.02382),...   2600 PSI
+      (600.,.02377), (750.,.02377)                                      2600 PSI
+*
+*     O2 VISCOSITY VERSUS PRESSURE AND TEMPERATURE
+*
+FUNCTION MUTP, 10. = (300.,.03), (400.,.0391), (500.,.0471),...           10 PSI
+      (600.,.0545), (750.,.0615)                                          10 PSI
+FUNCTION MUTP, 200. = (300.,.03384), (400.,.04172), (500.,.04921),...    200 PSI
+      (600.,.056196), (750.,.0632)                                       200 PSI
+FUNCTION MUTP, 600. = (300.,.04435), (400.,.04770), (500.,.053676),...   600 PSI
+      (600.,.059796), (750.,.06592)                                      600 PSI
+FUNCTION MUTP, 1000. = (300.,.0708), (400.,.054396), (500.,.05828),...  1000 PSI
+      (600.,.0634), (750.,.0685)                                        1000 PSI
+FUNCTION MUTP, 1400. = (300.,.11794), (400.,.06203), (500.,.063),...    1400 PSI
+      (600.,.06703), (750.,.071)                                        1400 PSI
+FUNCTION MUTP, 1800. = (300.,.1381), (400.,.0706), (500.,.067896),...   1800 PSI
+      (600.,.07067), (750.,.07344)                                      1800 PSI
+FUNCTION MUTP, 2200. = (300.,.15138), (400.,.079956), (500.,.0729),...  2200 PSI
+      (600.,.07427), (750.,.07654)                                      2200 PSI
+FUNCTION MUTP, 2600. = (300.,.15678), (400.,.08478), (500.,.075456),... 2600 PSI
+      (600.,.0761), (750.,.0768)                                        2600 PSI
+*
+*     FUEL CELL POWER PROFILE
+*
+AFGEN KW=0.0,15.42,1.0,15.42,1.001,18.87,1.1,18.87,1.101,19.87,1.75,...
+      19.87,1.751,19.90,1.967,19.90,1.968,19.87,2.467,19.87,2.468,...
+      19.90,2.633,19.90,2.634,19.87,2.967,19.87,2.968,11.65,3.017,...
+      11.65,3.018,10.97,3.5,10.97
+*
+*     AMBIENT TEMPERATURE VERSUS TIME
+*
+AFGEN AMB=0.0,484.0,1.0,484.0,1.1,496.0,1.2,490.0,1.4,476.0,1.6,466.,...
+      1.8,461.0,1.9,457.0,2.1,459.0,2.3,454.0,2.4,453.0,2.6,448.0,...
+      2.7,450.0,2.9,458.0,3.0,465.0,3.4,477.0,3.8,485.0,4.0,488.0
+*
+*     SPECIFIC HEAT OF 4130 STEEL VERSUS TEMPERATURE
+*
+AFGEN CPM=210.,.096,460.,.106,710.,.118,960.,.13
+*
+NOSORT
+      CYLCP=AFGEN(CPM,TCYL)
+      IF(ALT .EQ. 0.0)GO TO 5
+      TAMB=AFGEN(AMB,TIME)
+    5 DELTO=TCYL-TAMB
+      DQRAD=0.6*EMISS*SAO*SIGMA*(TAMB**4-TCYL**4)
+      DQCCYF=0.35*(TAMB-TCYL)
+      IF(DELTO .EQ. 0.0)GO TO 10
+      IF(FORCE .EQ. 0.0) GO TO 8
+      TCYLA=(TCYL+TAMB)/2.0
+      HTCO=5.687*(PAMB*VAIR/TCYLA)**0.6
+      GO TO 9
+    8 HTCO=0.27*(ABS(DELTO)/DO)**0.25
+    9 CONTINUE
+      DQCO=HTCO*SAO*(TAMB-TCYL)
+   10 DELTI=TCYL-TGAS
+      IF(DELTI .EQ. 0.0)GO TO 20
+      TBL=0.5*(TCYL+TGAS)
+      BETA=TWOVAR(BTP,TBL,P)
+      GK=TWOVAR(KTP,TBL,P)
+      VISC=TWOVAR(MUTP,TBL,P)
+      GCP=TWOVAR(SPTP,TBL,P)
+      RHOBL=TWOVAR(RTP,TBL,P)
+      GR=((RHOBL)**2*32.2*BETA*ABS(DELTI)*(DI**3)*1.296E+7)/(VISC**2)
+      PR=GCP*VISC/GK
+      RAYN=GR*PR
+      NUBAR=AFC*(GR*(PR)**2/(1.0+PR))**0.25
+      HTCI=GK/DI*NUBAR
+      DQCI=HTCI*SAI*(TCYL-TGAS)
+   20 DTCYL=(DQCO+DQCCYF+DQRAD-DQCI)/(MCYL*CYLCP)
+      TCYL=INTGRL(TCYLIC,DTCYL)
+      DQRADF=0.025*5.64*SIGMA*(TAMB**4-TFRAME**4)
+      DQCFA=0.034*(TAMB-TFRAME)
+      TFRAA=.5*(TFRAME+TAMB)
+      HTCF=6.88*(PAMB*VAIR/TFRAA)**0.75
+      DQFCV=11.28*HTCF*(TAMB-TFRAME)
+      DTFRAM=(DQCFA+DQRADF+DQFCV-DQCCYF)/(0.213*MFRAME)
+      TFRAME=INTGRL(TFIC,DTFRAM)
+      PHI=TWOVAR(PTP,TGAS,P)
+      THETA=TWOVAR(TTP,TGAS,P)
+      IF(FILL .GT. 0.0) GO TO 30
+      KWH=AFGEN(KW,TIME)
+      FLOW=-0.7230*KWH/NTKS
+      RATE=-NTKS*FLOW
+      DP=PHI/VOL*(DQCI+FLOW*THETA)
+      GO TO 31
+   30 IF(FILLED .EQ. 1.0) GO TO 32
+      IF(MGAST .GE. FULL) GO TO 43
+      ENTHI=TWOVAR(HTP,TAMB,POI)
+      ENTHB=TWOVAR(HTP,TGAS,P)
+      FLOW=RATE/NTKS
+   32 DP=PHI/VOL*(DQCI+FLOW*(ENTHI-ENTHB)+FLOW*THETA)
+   31 P=INTGRL(PICA,DP)
+      PGAGE=P-14.7
+      MGAS=INTGRL(MGASI,FLOW)
+      RHOG=MGAS/VOL
+      Z=TWOVAR(ZTP,TGAS,P)
+      TGAS=(144.0/48.3)*P/(RHOG*Z)
+      MGAST=NTKS*MGAS
+      GO TO 40
+   43 FINTIM=TIME+1.0
+      FILLED=1.0
+      RATE=0.0
+      FLOW=0.0
+      AFC = 0.35
+   40 CONTINUE
+METHOD RKSFX
+TIMER FINTIM=3.47,DELT=0.0010,PRDEL=.100,OUTDEL=0.005
+PRINT P,PGAGE,TCYL,TAMB,RHOG,MGAST,RATE,FLOW,DQCI
+PAGE XYPLOT
+LABEL OV-101 O2 PRIMARY HPGS SYSTEM PERFORMANCE COLD ENVIRONMENT
+OUTPUT TIME,PGAGE,TGAS
+OUTPUT TIME,RATE,MGAST
+OUTPUT TIME,TCYL,TFRAME
+END
+      STOP
+ENDJOB

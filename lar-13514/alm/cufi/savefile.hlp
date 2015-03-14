@@ -1,0 +1,7 @@
+	The STore command will save a CARE III model in the file,
+	if a model has been entered.  This menu is requesting the
+	name of the file in which the model should be saved.  The
+	file name should be no more than nine characters in length.
+	The file will be created with a ".DAT" extension, unless
+	you specify an extension.  STORE will clear the model in
+	flag, allowing you to enter another model.

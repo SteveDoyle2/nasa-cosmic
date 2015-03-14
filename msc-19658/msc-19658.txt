@@ -1,0 +1,45 @@
+ HIGH PRESSURE GAS STORAGE SYSTEM BLOWDOWN AND CHARGING MODELS
+
+( ROCKWELL INTERNATIONAL CORP. )
+
+     This program is a simulation model for predicting the pressure and tem-
+perature histories occurring in recharge or blowdown processes for high
+pressure gas storage systems. The model allows for real gas effects as well
+as conductive, convective, and radiative heat transfer to the storage con-
+tainer walls for any environmental boundary conditions. The parameter val-
+ues currently encoded into the program code are those appropriate for siz-
+ing the fuel cell high pressure hydrogen and oxygen reactant gas storage
+subsystem for the Shuttle Orbiter 101 approach and landing test program.
+However the model can be applied with some modification to sizing and per-
+formance prediction of industrial high pressure gas storage systems sub-
+ject to time varying thermal environmental conditions.
+
+     The program as written utilizes the IBM Fortran G compiler and IBM Con-
+tinuous System Modeling Application Program (CSMP), Level 3 and has been
+successully implemented on an IBM 370/168 under OS Release 21.6 in a 180K of
+central memory.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: IBM 360 CSMP ( 85 %); FORTRAN IV ( 15 %);
+
+MACHINE REQUIREMENTS: IBM 370 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 443 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: MSC-19658
+
+DOMESTIC - DOCUMENTATION PRICE: $13.00    PROGRAM PRICE: $200.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $26.00   PROGRAM PRICE: $400.00
+
+
+
+                                        1
+

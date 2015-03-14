@@ -1,0 +1,220 @@
+% Font manipulation macros
+%  Change size of font
+%  SPACEC.TEX must be input before this
+\newcount\fontsize
+\newcount\fontmode
+\font\threerm=cmr8 scaled463
+\font\threebf=cmbx8 scaled463
+\font\threeit=cmti8 scaled463
+\font\threesl=cmsl8 scaled463
+\font\threei=cmmi8 scaled463
+\font\threett=cmtt8 scaled463
+\font\threesy=cmsy8 scaled463
+\font\threess=cmss8 scaled463
+\font\threessit=cmssi8 scaled463
+\font\fivesc=cmcsc10 scaled555
+\font\fivess=cmss10 scaled555
+\font\fivessbf=cmssbx10 scaled555
+\font\fivessit=cmssi10 scaled555
+\font\fiveit=cmti10 scaled555
+\font\fivesl=cmsl10 scaled555
+\font\fivett=cmtt10 scaled555
+\font\sevensc=cmcsc10 scaled694
+\font\sevenss=cmss10 scaled694
+\font\sevenssbf=cmssbx10 scaled694
+\font\sevenssit=cmssi10 scaled694
+\font\sevenit=cmti7
+\font\sevensl=cmsl10 scaled694
+\font\seventt=cmtt10 scaled694
+\font\tensc=cmcsc10
+\font\tenss=cmss10
+\font\tenssbf=cmssbx10
+\font\tenssit=cmssi10
+\font\twelvesc=cmcsc10 scaled1200
+\font\twelverm=cmr12
+\font\twelvebf=cmbx12
+\font\twelveit=cmti12
+\font\twelvesl=cmsl12
+\font\twelvei=cmmi12
+\font\twelvett=cmtt12
+\font\twelvesy=cmsy10 scaled1200
+\font\twelvess=cmss12
+\font\twelvessbf=cmssbx10 scaled1200
+\font\twelvessit=cmssi12
+\font\seventeensc=cmcsc10 scaled\magstep3
+\font\seventeenrm=cmr17
+\font\seventeenbf=cmbx12 scaled\magstep2
+\font\seventeenit=cmti12 scaled\magstep2
+\font\seventeensl=cmsl12 scaled\magstep2
+\font\seventeeni=cmmi12 scaled\magstep2
+\font\seventeentt=cmtt12 scaled\magstep2
+\font\seventeensy=cmsy10 scaled\magstep3
+\font\seventeenss=cmss17
+\font\seventeenssbf=cmssbx10 scaled\magstep3
+\font\seventeenssit=cmssi17
+%SMALLERFONTS
+\def\smallerfonts{\fontsize=0\ifnum\fontmode=0%
+\textfont0=\fiverm \scriptfont0=\threerm \scriptscriptfont0=\threerm%
+\def\rm{\fam0 \fiverm}%
+\def\it{\fam\itfam\fiveit}\textfont\itfam=\fiveit%
+\scriptfont\itfam=\threeit \scriptscriptfont\itfam=\threeit%
+\def\bf{\fam\bffam\fivebf}\textfont\bffam=\fivebf%
+\scriptfont\bffam=\threebf \scriptscriptfont\bffam=\threebf%
+\else\ifnum\fontmode<0%
+\textfont0=\fivess \scriptfont0=\threess \scriptscriptfont0=\threess%
+\def\rm{\fam0 \fivess}%
+\else% Small caps now
+\textfont0=\fivesc \scriptfont0=\threerm \scriptscriptfont0=\threerm%
+\def\rm{\fam0 \fivesc}%
+\fi\def\it{\fam\itfam\fivessit}\textfont\itfam=\fivessit%
+\scriptfont\itfam=\threessit \scriptscriptfont\itfam=\threessit%
+\def\bf{\fam\bffam\fivessbf}\textfont\bffam=\fivessbf%
+\scriptfont\bffam=\threebf \scriptscriptfont\bffam=\threebf%
+\fi%
+\textfont1=\fivei \scriptfont1=\threei \scriptscriptfont1=\threei%
+\def\mit{\fam1 }\def\oldstyle{\fam1 \fivei}%
+\textfont2=\fivesy \scriptfont2=\threesy \scriptscriptfont2=\threesy%
+\def\cal{\fam2}%
+\textfont3=\tenex \scriptfont3=\tenex \scriptscriptfont3=\tenex%
+\def\sl{\fam\slfam\fivesl}\textfont\slfam=\fivesl%
+\scriptfont\slfam=\threesl \scriptscriptfont\slfam=\threesl%
+\def\tt{\fam\ttfam\fivett}\textfont\ttfam=\fivett%
+\scriptfont\ttfam=\threett \scriptscriptfont\ttfam=\threett%
+\currentlineskip=8pt\setbaselineskip\rm%
+}
+%SMALLFONTS
+\def\smallfonts{\fontsize=1\ifnum\fontmode=0%
+\textfont0=\sevenrm \scriptfont0=\fiverm \scriptscriptfont0=\threerm%
+\def\rm{\fam0 \sevenrm}%
+\def\it{\fam\itfam\sevenit}\textfont\itfam=\sevenit%
+\scriptfont\itfam=\fiveit \scriptscriptfont\itfam=\threeit%
+\def\bf{\fam\bffam\sevenbf}\textfont\bffam=\sevenbf%
+\scriptfont\bffam=\fivebf \scriptscriptfont\bffam=\threebf%
+\else\ifnum\fontmode<0%
+\textfont0=\sevenss \scriptfont0=\fivess \scriptscriptfont0=\threess%
+\def\rm{\fam0 \sevenss}%
+\else% Small caps now
+\textfont0=\sevensc \scriptfont0=\fivesc \scriptscriptfont0=\threerm%
+\def\rm{\fam0 \sevensc}%
+\fi\def\it{\fam\itfam\sevenssit}\textfont\itfam=\sevenssit%
+\scriptfont\itfam=\fivessit \scriptscriptfont\itfam=\threessit%
+\def\bf{\fam\bffam\sevenssbf}\textfont\bffam=\sevenssbf%
+\scriptfont\bffam=\fivessbf \scriptscriptfont\bffam=\threebf%
+\fi%
+\textfont1=\seveni \scriptfont1=\fivei \scriptscriptfont1=\threei%
+\def\mit{\fam1 }\def\oldstyle{\fam1 \seveni}%
+\textfont2=\sevensy \scriptfont2=\fivesy \scriptscriptfont2=\threesy%
+\def\cal{\fam2}%
+\textfont3=\tenex \scriptfont3=\tenex \scriptscriptfont3=\tenex%
+\def\sl{\fam\slfam\sevensl}\textfont\slfam=\sevensl%
+\scriptfont\slfam=\fivesl \scriptscriptfont\slfam=\threesl%
+\def\tt{\fam\ttfam\seventt}\textfont\ttfam=\seventt%
+\scriptfont\ttfam=\fivett \scriptscriptfont\ttfam=\threett%
+\currentlineskip=10pt\setbaselineskip\rm%
+}
+%STANDARDSIZEFONTS
+\def\standardsizefonts{\fontsize=2\ifnum\fontmode=0%
+\textfont0=\tenrm\scriptfont0=\sevenrm\scriptscriptfont0=\fiverm%
+\def\rm{\fam0\tenrm}%
+\def\it{\fam\itfam\tenit}\textfont\itfam=\tenit%
+\scriptfont\itfam=\sevenit\scriptscriptfont\itfam=\fiveit%
+\def\bf{\fam\bffam\tenbf}\textfont\bffam=\tenbf%
+\scriptfont\bffam=\sevenbf\scriptscriptfont\bffam=\fivebf%
+\else\ifnum\fontmode<0%
+\textfont0=\tenss\scriptfont0=\sevenss\scriptscriptfont0=\fivess%
+\def\rm{\fam0\tenss}%
+\else% Small caps now
+\textfont0=\tensc\scriptfont0=\sevensc\scriptscriptfont0=\fivesc%
+\def\rm{\fam0\tensc}%
+\fi\def\it{\fam\itfam\tenssit}\textfont\itfam=\tenssit%
+\scriptfont\itfam=\sevenssit\scriptscriptfont\itfam=\fivessit%
+\def\bf{\fam\bffam\tenssbf}\textfont\bffam=\tenssbf%
+\scriptfont\bffam=\sevenssbf\scriptscriptfont\bffam=\fivessbf%
+\fi%
+\textfont1=\teni\scriptfont1=\seveni\scriptscriptfont1=\fivei%
+\def\mit{\fam1}\def\oldstyle{\fam1\teni}%
+\textfont2=\tensy\scriptfont2=\sevensy\scriptscriptfont2=\fivesy%
+\def\cal{\fam2}%
+\textfont3=\tenex\scriptfont3=\tenex\scriptscriptfont3=\tenex%
+\def\sl{\fam\slfam\tensl}\textfont\slfam=\tensl%
+\scriptfont\slfam=\sevensl\scriptscriptfont\slfam=\fivesl%
+\def\tt{\fam\ttfam\tentt}\textfont\ttfam=\tentt%
+\scriptfont\ttfam=\seventt\scriptscriptfont\ttfam=\fivett%
+\currentlineskip=12pt\setbaselineskip\rm%
+}
+%LARGEFONTS
+\def\largefonts{\fontsize=3\ifnum\fontmode=0%
+\textfont0=\twelverm\scriptfont0=\tenrm\scriptscriptfont0=\sevenrm%
+\def\rm{\fam0\twelverm}%
+\def\it{\fam\itfam\twelveit}\textfont\itfam=\twelveit%
+\scriptfont\itfam=\tenit\scriptscriptfont\itfam=\sevenit%
+\def\bf{\fam\bffam\twelvebf}\textfont\bffam=\twelvebf%
+\scriptfont\bffam=\tenbf\scriptscriptfont\bffam=\sevenbf%
+\else\ifnum\fontmode<0%
+\textfont0=\twelvess \scriptfont0=\tenss \scriptscriptfont0=\sevenss%
+\def\rm{\fam0 \twelvess}%
+\else% Small caps now
+\textfont0=\twelvesc\scriptfont0=\tensc\scriptscriptfont0=\sevensc%
+\def\sc{\fam0\twelvesc}%
+\fi\def\it{\fam\itfam\twelvessit}\textfont\itfam=\twelvessit%
+\scriptfont\itfam=\tenssit \scriptscriptfont\itfam=\sevenssit%
+\def\bf{\fam\bffam\twelvessbf}\textfont\bffam=\twelvessbf%
+\scriptfont\bffam=\tenssbf \scriptscriptfont\bffam=\sevenssbf%
+\fi%
+\textfont1=\twelvei\scriptfont1=\teni\scriptscriptfont1=\seveni%
+\def\mit{\fam1 }\def\oldstyle{\fam1\twelvei}%
+\textfont2=\twelvesy\scriptfont2=\tensy\scriptscriptfont2=\sevensy%
+\def\cal{\fam2}%
+\textfont3=\tenex\scriptfont3=\tenex\scriptscriptfont3=\tenex%
+\def\sl{\fam\slfam\twelvesl}\textfont\slfam=\twelvesl%
+\scriptfont\slfam=\tensl\scriptscriptfont\slfam=\sevensl%
+\def\tt{\fam\ttfam\twelvett}\textfont\ttfam=\twelvett%
+\scriptfont\ttfam=\tentt\scriptscriptfont\ttfam=\seventt%
+\currentlineskip=15pt\setbaselineskip\rm%
+}
+%LARGERFONTS
+\def\largerfonts{\fontsize=4% Note no sans-serif font in this size
+\ifnum\fontmode=0%
+\textfont0=\seventeenrm\scriptfont0=\twelverm\scriptscriptfont0=\tenrm%
+\def\rm{\fam0\seventeenrm}%
+\def\it{\fam\itfam\seventeenit}\textfont\itfam=\seventeenit%
+\scriptfont\itfam=\twelveit\scriptscriptfont\itfam=\tenit%
+\def\bf{\fam\bffam\seventeenbf}\textfont\bffam=\seventeenbf%
+\scriptfont\bffam=\twelvebf\scriptscriptfont\bffam=\tenbf%
+\else\ifnum\fontmode<0%
+\textfont0=\seventeenss\scriptfont0=\twelvess\scriptscriptfont0=\tenss%
+\def\rm{\fam0\seventeenss}
+\else% Small caps now
+\textfont0=\seventeensc\scriptfont0=\twelvesc\scriptscriptfont0=\tensc%
+\def\rm{\fam0\seventeensc}%
+\fi\def\it{\fam\itfam\seventeenssit}\textfont\itfam=\seventeenssit%
+\scriptfont\itfam=\twelvessit \scriptscriptfont\itfam=\tenssit%
+\def\bf{\fam\bffam\seventeenssbf}\textfont\bffam=\seventeenssbf%
+\scriptfont\bffam=\twelvessbf \scriptscriptfont\bffam=\tenssbf%
+\fi%
+\textfont1=\seventeeni\scriptfont1=\twelvei\scriptscriptfont1=\teni%
+\def\mit{\fam1 }\def\oldstyle{\fam1\seventeeni}%
+\textfont2=\seventeensy\scriptfont2=\twelvesy\scriptscriptfont2=\tensy%
+\def\cal{\fam2}%
+\textfont3=\tenex\scriptfont3=\tenex\scriptscriptfont3=\tenex%
+\def\sl{\fam\slfam\seventeensl}\textfont\slfam=\seventeensl%
+\scriptfont\slfam=\twelvesl\scriptscriptfont\slfam=\tensl%
+\def\tt{\fam\ttfam\seventeentt}\textfont\ttfam=\seventeentt%
+\scriptfont\ttfam=\twelvett\scriptscriptfont\ttfam=\tentt%
+\currentlineskip=19pt\setbaselineskip\rm%
+}
+%  Change font family
+\def\sansserif{\fontmode=-1%
+\ifcase\fontsize\smallerfonts\or\smallfonts\or\standardsizefonts%
+\or\largefonts\else\largerfonts\fi}
+\def\standardfamily{\fontmode=0%
+\ifcase\fontsize\smallerfonts\or\smallfonts\or\standardsizefonts%
+\or\largefonts\else\largerfonts\fi}
+\def\smallcaps{\fontmode=1%
+\ifcase\fontsize\smallerfonts\or\smallfonts\or\standardsizefonts%
+\or\largefonts\else\largerfonts\fi}
+%  Change font style with \rm, \it, \bf, \tt, \sl as usual
+\fontsize=2
+\standardfamily
+\let\bottomsize=\standardsizefonts
+\let\bottomstyle=\standardfamily

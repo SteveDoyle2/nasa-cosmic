@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+When the Bar key is pressed from the Graphics Mode of the milestone chart, the
+prompt asks for the date at which to start the bar.  The date can be entered in
+the dd/mm/yy format or if the cursor is on the exact location, just pressing
+a return will use the date at that location.  Remember the cursor must be on
+the line where the bar is to be drawn.  After the first date is entered, the
+prompt asks for the ending date which is entered in the same manner as the
+first.  The bar will then draw and will be unfilled.  Use F5(Fill Bar) to fill
+it.
+
+To change a bar which has already been drawn, place the cursor on the bar and
+press return.  The old starting date will be displayed with the cursor at the
+beginning.  Change the starting date and press return.  The old ending date
+will be displayed with the cursor at the end of the bar.  Change the ending
+date and press return.  The new bar will be drawn.
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

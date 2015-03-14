@@ -1,0 +1,312 @@
+	CARE3MENU Commands -
+
+	The following commands are currently supported by CARE3MENU.
+	With these commands, as with most other string keywords, the
+	shortest possible non-ambiguous abbreviation can always be
+	used:
+
+		ENter - Enter a Model - causes CARE3MENU to proceed
+			to the menu processing mode which obtains input
+			data from the user and stores it in memory.
+			Command will not return to the command level
+			until the model is entered.
+
+		Store -	CARE3MENU will prompt for filename; then
+			format and store the model data in the
+			specified file.
+
+		EXit -	Exit CARE3MENU
+.page
+
+				CARE3MENU
+
+		A Menu-Driven Data Preprocessor for CARE III
+
+	CARE3MENU is a user-friendly data preprocessor for the CARE III 
+	system.  This program will use a series of "screen menus" to ask 
+	you for the data needed to build an input model for CARE III.
+	It will then process the information you have entered into a
+	form which is compatible with CARE III and store the data in
+	a file.
+
+	During this process, you will be able to obtain help for a
+	menu if you do not understand what is required for a response.
+	This help is stored in files which CARE3MENU reads and displays
+	on your terminal when you request help.  Since these files
+	can be changed, your system administrator can adapt these files
+	to meet your needs.  In fact, you are currently reading one of
+	these help files!
+.page
+	CARE3MENU may need to inform you of an error if any of your
+	input is incorrect.  A message will usually appear on the bottom
+	line of your CRT screen, and the message will be displayed
+	with "reverse video" for emphasis.  Messages will typically
+	indicate one of two things:  first, that you entered a value
+	which has an incorrect "data type" (e.g., a text string where
+	the display really wanted a number), second, that the value
+	you entered (while of correct data type) was out of the
+	allowable range.
+
+	You are currently located at the command level of CARE3MENU,
+	which is itself just another screen menu.  The remainder of
+	this help is a tutorial introduction to CARE III.
+.page
+                         CARE III  Tutorial -
+
+        The VAX user friendly menu-driven interface was designed to 
+        provide the user with a communication mechanism that follows and 
+        prompts the user thought processes for performing a reliability
+        assessment, and further, the user friendly interface does some 
+        processing of input data to relieve the user burden of linking
+        fault occurrence and fault-handling data for system stages.  The
+        user friendly interface provides user assistance through the
+        availability of help files associated with the various menus,
+        checks for out of range input values, and provides a flexible
+        editor for making changes or corrections.  The conclusion of a
+        session with the user friendly interface results in the creation
+        of an input file for CARE III that utilizes the Fortran NAMELIST  
+        extension.  Because of the breadth of the CARE III capability, it
+        is not recommended that a novice attempt to use the user friendly
+        interface for serious assessments.
+.page
+                         Tutorial Continued -
+
+        A thorough understanding of the CARE III capability should
+        be obtained from the user's guide (NASA TM - 86404, April 1985)
+        and other documents.  The user friendly interface was not designed
+        to be a learning tool but rather an aid to enhance the production
+        of reliable data entry.  Most users would formulate some sort of sketch
+        of the system's primary elements similiar to a fault tree
+        diagram and/or a fault-handling model before addressing the user
+        friendly interface.
+                      
+
+
+                         CARE III OVERVIEW
+
+        CARE III is a novel system reliability predictor applicable
+        to very large, highly reliable fault-tolerant systems that utilize
+        digital computers and replicated hardware to achieve fault 
+        tolerance and increased system reliability.
+.page
+                         Tutorial Continued -
+
+
+        CARE III's outstanding attributes are as follows:
+
+        o   Its ability to model very large, highly reliable systems on
+            the order of millions of states in the markov model sense.
+            This capability was achieved by computationally exploiting
+            the wide separation of time constants in the fault-handling
+            model, (1.0E-6 hour), and the fault-occurrence model,
+            (1.0E+4 hours).
+
+        o   A powerful and flexible fault-handling model that accounts
+            for fault latency, error propagation, and fault and error   
+            detection.  The fault-handling model spans the spectrum of
+            single point failures to near coincident paired failures.
+.page
+                         Tutorial Continued -
+
+        o   Its ability to handle exponential or Weibully distributed
+            fault/error-occurrences that cover permanent, transient, and
+            intermittent faults or software errors.  The Weibull option
+            permits a more accurate treatment of wearout failures common
+            to mechanical, hydraulic, and some electronic devices.
+
+        o   A flexible user-defined system success/failure configuration
+            language based on the fault tree notation.  The user-defined
+            tree logic enables the description of large complex system
+            failure configurations to define mission failure/success,
+            system or function abort, and functional readiness probabilities.
+            The configuration can be the common series parallel arrangement
+            or nonseries parallel and may include functional (common mode)
+            faults.  Modeling sequence dependent failures are possible also.
+            
+.page
+                         Tutorial Continued -
+
+        o   Computational decoupling of the fault-handling and fault
+            occurrence models.  This capability is a direct result of the 
+            first listed attribute and allows the user to exercise the
+            fault-handling model irrespective of the fault occurrence 
+            model and can be very useful for system fault-handling analyses.
+
+                         
+
+                         FAILURE, FAULT, ERROR VIEW
+
+        CARE III treats the terminology of failures, faults, and errors
+        in a precise way.  The word failure is used to mean loss of system
+        function.  A fault is a condition which temporarily or permanently 
+        affects the ability of a module to perform its function.  An error
+        is a condition in which a module is incorrectly performing its
+        function.
+.page
+                         Tutorial Continued -
+
+        A software error and a hardware fault have some subtle differences.
+        Most often, hardware is assumed to be fault free at the beginning of
+        a reliability assessment.  Hardware design defects that would cause
+        hardware faults are assumed to be nonexistent.  Software on the other
+        hand does not have physical failure mechanisms like hardware, but
+        software can cease to function properly and hence produce errors. 
+        The cause of the software error is of course a design defect; however,
+        its manifestation appears to occur stochastically much like a hardware
+        fault.  For software, the error occurrence must be viewed as time to
+        error manifestation rather than the time from the creation of the
+        design defect.  There is another important difference between hardware
+        and software anomalies, i.e., fault occurrences are typically assumed
+        to occur independently of the software being executed, while software
+        error manifestation appears to be dependent on the code being
+        executed.  A fault may or may not produce on error -- an undesirable
+        deviation in information processing.  Like a software error, a
+        fault producing an error is dependent on the code being executed.
+.page
+                         Tutorial Continued -
+
+                         ARCHITECTURAL VIEW
+
+        CARE III is composed of two basic models:  a fault occurrence
+        and a fault-handling model.  Because of the mathematical structure
+        of CARE III, these two models are treated independently, in that 
+        the fault occurrence model can be processed without initial regard
+        to system fault handling; and likewise, fault handling can be
+        processed without regard to fault occurrences.  The final results 
+        of the reliability assessment integrates the results of the two 
+        models to form composite solutions as if fault occurrence and fault
+        handling were treated together all along.
+.page
+                         Tutorial Continued -
+
+                         Fault Occurrence Model
+
+        CARE III views a system as a collection of subsystems called
+        stages.  A stage may comprise one or more modules where each
+        module has an identical failure rate or Weibull failure distri-
+        bution (fault occurrence model).  A stage may be composed of
+        hardware/software modules or may represent a function such as 
+        an aircraft elevator math model that is implemented by a computer
+        or a replicated group of computers for fault tolerance.  If a 
+        stage has replicated modules configured for fault tolerance,
+        CARE III treats that stage as an M out of N subsystem, where N
+        is the maximum number of modules needed and M is the minimum
+        number needed for stage survival.  N and M are user definable
+        for each system stage.  Stages may also be redundant for achieving
+        additional fault tolerance.  The relationship between stages 
+        is defined by the system failure configuration tree.  The user
+        describes this relationship by using the CARE III fault tree language.
+        System failure configurations are described by a system tree.
+.page
+                         Tutorial Continued -
+
+        
+        For describing system trees, CARE III supports AND, OR, M out of N,
+        INVERT, and input gates; and as many as 2000 total events and 70
+        basic failure events.  Basic events are the lowest level gate
+        inputs, while other events are higher level gate inputs and outputs.
+.page
+                         Tutorial Continued -
+
+                         Fault-Handling Model
+
+        A stage may also fail due to system fault-handling problems;
+        however, the system may or may not fail as a result, depending
+        on the redundancy described by the system tree.  There may
+        be cases on the other hand where the system may fail even 
+        though there is sufficient hardware redundancy remaining.  This
+        situation arises when the system is susceptible to certain
+        critically coupled failures occurring.  Such known critically
+        coupled modules may be permitted to remain in a fault-tolerant
+        system provided that their joint failure occurrence is less probable
+        than the desired mission failue probability.  The paths to
+        system failure are threefold:  depletion of hardware, the 
+        single point fault-handling path, and the double critical pair
+        failure path yet to be described.  The latter two failure paths 
+        may not exist in certain system models. 
+.page
+                         Tutorial Continued -
+
+                         Single Fault Model
+
+        The fault/error handling model is comprised of a single
+        fault model and a double fault model.  The parameters for
+        the single fault model are user specified, whereas the 
+        parameters of the double fault model are determined from
+        the single fault model and, therefore, require no user 
+        specification.  The user is optionally required, however,
+        to identify pairs of modules which would cause system failure
+        if near coincident faults occurred in them-- more on
+        that subject later.  Details and parameter interpretation
+        can be obtained from available CARE III documentation.
+.page
+                         Tutorial Continued -
+
+                         Double Fault Model      
+
+        With the inclusion of a double fault model, CARE III
+        captures the notion of system failure due to near coincident 
+        faults occurring in critically coupled modules.  Highly
+        reliable fault-tolerant systems are commonly designed
+        without single point failure mechanisms, or perhaps more 
+        realistically, an extremely low probability of single point
+        failure occurrence.  Often, the dominant system failure cause 
+        is a critically coupled double module failure.  In these systems,
+        most double faults are tolerated by the system; however,
+        certain groupings of near coincident double faults are often
+        not tolerated by the system and will cause system failure.  It
+        is the aim of these system designs to make critically coupled
+        near coincident failures less probable than the desired mission 
+        unreliability.  An illustrative example of a critically coupled
+        failure is the occurrence of two faults in two different voting or 
+        comparison monitoring computers performing the same flight
+.page
+                         Tutorial Continued -
+
+        crucial control computations.  A double fault in the same 
+        computer in a voting triad, however, would not be critically
+        coupled.
+           The user specification of the critically coupled failures
+        is accomplished by the user defining a critical pair tree.
+        The critical pair tree specification utilizes a subset of
+        the fault tree language used to define the system failure
+        configuration tree.  The critical pair for a voting triad
+        is simply a 2 out of 3 logic gate.  In more practical systems,
+        the critical pair tree can become quite complex as critical
+        pair failures may occur not only within a stage such as the
+        voting triad but also across stages as well.  An example of 
+        the latter application would be a critically coupled failure
+        between a CPU (central processing unit) stage and the CPU
+        bus stage.  Such a double fault may cause the faulty CPU
+        to capture the CPU bus when a CPU bus fault also occurs
+        (bus babbling).
+.page
+                         Tutorial Continued -
+
+           The precise nature of the critical failures is defined
+        by the double fault model.  In order to keep the model within
+        computational feasibility, CARE III makes the implicit 
+        conservative assumption that all critically coupled (user
+        specified if any) latent faults will cause system failure.
+        Thus any paired combination of critically coupled faults
+        occupying states A, AE, or BE in the single fault model will
+        constitute system failure irrespective of whether of not the
+        system still has sufficient operational units left to meet
+        the M out of N stage requirements.  In addition, CARE III
+        supports a double intermittent critically coupled fault model.
+        In the event the user defines the single fault model to 
+        represent the system behavior resulting from the occurrence
+        of one or more intermittent failures, the double intermittent
+        fault model will be invoked.  System failure will occur as a
+        result of the double fault model if two benign faults become 
+        active, an active fault propagates an error, or a fault is 
+        detected as nonpermanent.
+.page
+                         Tutorial Continued -
+        
+           The user is alerted to the need to apply ingenuity in
+        interpretation or reinterpretation of the transition 
+        parameters associated with the fault-handling model, after
+        all, these are but stochastic models.  The interpretation 
+        of the transition parameters, in many cases, is no easy 
+        task. 

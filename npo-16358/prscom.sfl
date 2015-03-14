@@ -1,0 +1,587 @@
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        PRSCOM                29-SEP-83      15:33:25      PAGE    1
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+    1              SUBROUTINE PRSCOM(LINE,LENLIN,ICOM,NUMFLG,ANUMB,MINFLG,NDEF,NSYM)                                                
+    2       C                                       CDM   This routine parses a command line.                                       
+    3       C                                       CDM                                                                             
+    4       C                                       CDM   Programmer - Jon Vavrus  26 AUG 1981                                      
+    5       C                                       CDM   Revised    - Jon Vavrus   3 SEP 1981                                      
+    6       C                                       CDM   Revised    - Jon Vavrus  23 SEP 1981                                      
+    7       C                                       CDM   Revised    - Jon Vavrus  30 DEC 1981 (put LED #1 turn-on in DOIT)         
+    8       C                                       CDM   Revised    - Jon Vavrus   4 MAY 1982 (non-advanced video VT100's)         
+    9       C                                       CDM   Revised    - Jon Vavrus  18 AUG 1982 (bigger arrays)                      
+   10       C                                       CDM   Revised    - Jon Vavrus   9 SEP 1982                                      
+   11       C                                       CDM   Revised    - Jon Vavrus  30 NOV 1982                                      
+   12       C                                       CDM   Revised    - Jon Vavrus  28 MAY 1983 (Allow real scroll speeds)           
+   13       C                                       CDM   Revised    - Jon Vavrus   7 SEP 1983                                      
+   14       C                                       CDM   Revised    - Jon Vavrus  21 SEP 1983                                      
+   15       C                                       CM                                                                              
+   16       C                                       CM         The routine parses a command line.  It is passed the command line    
+   17       C                                       CM    in LINE its length in LENLIN.  The command number is returned in          
+   18       C                                       CM    ICOM, if it is "minussed" the flag MINFLG is set, if there is a number    
+   19       C                                       CM    preceding it the number is stored in ANUMB and the flag NUMFLG is         
+   20       C                                       CM    set.  If ICOM = 0 then no command was found/legal (error "beep" +         
+   21       C                                       CM    LED 3 are taken care of).  If a defined symbol is found its commands      
+   22       C                                       CM    are executed and ICOM = -1.  After execution the procedure sets LINE      
+   23       C                                       CM    and LENLIN to the after parse values.  Note:  If a definition symbol      
+   24       C                                       CM    encountered, it's internal commands will be executed should NDEF or       
+   25       C                                       CM    NSYM be zero, otherwise its definition will be inserted into the          
+   26       C                                       CM    definition arrays  beginning at command NDEF of definition NSYM.          
+   27       C                                       C                                                                               
+   28       C                                       C***   CALLED ROUTINES                                                          
+   29       C                                       C                                                                               
+   30       C                                       CC    DOIT    Executes commands                                                 
+   31       C                                       C                                                                               
+   32       C                                       C***   COMMON AREAS                                                             
+   33       C                                       C                                                                               
+   34       C                                       CS    CHARS   Used to pass character variables; contains LINES a character      
+   35       C                                       CS            array of the output lines, and SRCHBF the search buffer, and      
+   36       C                                       CS            CRLF which contains <CR><LF>, and REVVID + REGVID which are       
+   37       C                                       CS            the VT100 control sequences to set/unset reverse video            
+   38       C                                       C                                                                               
+   39       C                                       CS    DOITNM  Contains information transferred from the main program:           
+   40       C                                       CS                 INCHAN - input channel of the terminal                       
+   41       C                                       CS                 TIME   - scrolling speed in -10000000*seconds/line           
+   42       C                                       CS                 SBFFLG - flag indicating whether there is a string           
+   43       C                                       CS                          in the search buffer                                
+   44       C                                       CS                 DIRECT - flag for reverse (-1 for reverse, else 1)           
+   45       C                                       CS                 EBK    - EBK of input file                                   
+   46       C                                       CS                 SBFLEN - length of string(s) in search buffer(s)             
+   47       C                                       CS                 RECBLK - number of bytes used per block in FIX-BLK files     
+   48       C                                       CS                 RANGE  - beginning and ending block numbers and pointers     
+   49       C                                       CS                          of the print range                                  
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        PRSCOM                29-SEP-83      15:33:25      PAGE    2
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+   50       C                                       CS                 VT100  - flag set .TRUE. if terminal is VT100.               
+   51       C                                       CS                 LRL    - length of the longest record in input file.         
+   52       C                                       CS                 LENLMT - maximum output length (if <0 then WRAP set)         
+   53       C                                       CS                 PAGEND - line number of last line output to screen           
+   54       C                                       CS                 PAGLEN - number of lines per page                            
+   55       C                                       CS                 COMLIN - line number for command input (bottom of screen)    
+   56       C                                       CS                 VT100A - flag set .TRUE. if VT100 has advanced video option  
+   57       C                                       C                                                                               
+   58       C                                       CS    INPUTC  Contains the input character buffer INLINE and the defined        
+   59       C                                       CS            symbols SYMS and the definition search buffers DEFBUF             
+   60       C                                       C                                                                               
+   61       C                                       CS    INPUTN  Contains the input character buffer length LENSAV, and the        
+   62       C                                       CS            symbol definitions DEFS, the number of such definitions           
+   63       C                                       CS            (NDEFS), the definition flags DEFFLG, and the definition          
+   64       C                                       CS            numbers NUMDEF                                                    
+   65       C                                       C                                                                               
+   66       C                                       CS    PRSCHR  Contains the current symbol's search buffers (CURBUF)             
+   67       C                                       C                                                                               
+   68       C                                       CS    PRSNUM  Contains the current symbol's definitions (CUR), flags            
+   69       C                                       CS            (CURFLG), and associated numbers (NUMCUR)                         
+   70       C                                       C                                                                               
+   71       C                                       C***   OUTPUT UNITS                                                             
+   72       C                                       C                                                                               
+   73       C                                       CW    9       Output to terminal.  Carriage-control LIST if file is either      
+   74       C                                       CW            CR, FTN, or PRN; otherwise no carriage-control.                   
+   75       C                                       C                                                                               
+   76              CHARACTER*(*) LINE                                                                                               
+   77              CHARACTER*132 LINES(600)                                                                                         
+   78              CHARACTER*128 INLINE                                                                                             
+   79              CHARACTER*30 SRCHBF(10),DEFBUF(10,10,60),CURBUF(10,10)                                                           
+   80              CHARACTER*11 SWIT                                                                                                
+   81              CHARACTER*8 NARROW                                                                                               
+   82              CHARACTER*4 REVVID,REGVID,WRAP                                                                                   
+   83              CHARACTER*3 BOX                                                                                                  
+   84              CHARACTER*2 CRLF                                                                                                 
+   85              CHARACTER*1 SYMS(60),COMAND(13),QUOTE                                                                            
+   86              REAL*4 NUMDEF(10,60),NUMCUR(10)                                                                                  
+   87              INTEGER*4 INCHAN,TIME,EBK,RANGE(2,2),PAGEND                                                                      
+   88              INTEGER*2 DIRECT,SBFLEN(10),RECBLK,DEFS(11,10,60),LENLMT,LENSAV,                                                 
+   89            1       PAGLEN,CUR(11,10),COMLIN                                                                                   
+   90              LOGICAL*1 SBFFLG,NUMFLG,MINFLG,ESC,VT100,BELL,DEFFLG(3,10,60),                                                   
+   91            1       CURFLG(3,10),VT100A                                                                                        
+   92                                                                                                                               
+   93              COMMON /DOITNM/INCHAN,TIME,SBFFLG,DIRECT,EBK,SBFLEN,RECBLK,RANGE,                                                
+   94            1       VT100,LRL,LENLMT,PAGEND,PAGLEN,COMLIN,VT100A                                                               
+   95              COMMON /CHARS/LINES,SRCHBF,CRLF,REVVID,REGVID                                                                    
+   96              COMMON /INPUTC/INLINE,SYMS,DEFBUF                                                                                
+   97              COMMON /INPUTN/LENSAV,DEFS,NDEFS,DEFFLG,NUMDEF                                                                   
+   98              COMMON /PRSNUM/CUR,NUMCUR,CURFLG                                                                                 
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        PRSCOM                29-SEP-83      15:33:25      PAGE    3
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+   99              COMMON /PRSCHR/CURBUF                                                                                            
+  100                                                                                                                               
+  101              DATA NUMCOM,COMAND/13,'$','%','^','!','#','(',')','*',' ','&','@',                                               
+  102            1       '+','<'/                                                                                                   
+  103              DATA BELL,ESC/7,27/                                                                                              
+  104       C                                       C                                                                               
+  105       C                                       C***   Setup things                                                             
+  106       C                                       C                                                                               
+  107              NSRCH = 0                                                                                                        
+  108     *        IF (SBFFLG)                                                                                                      
+                     +--------------------------------------------------------------------------------------------------------------
+  109   1 *          |DO FOR I=1,10                                                                                                 
+  110   2 *          |   UNDO IF (SBFLEN(I) .EQ. 0)                                                                                 
+                     <----                                                                                                          
+  111   2            |   NSRCH = NSRCH + 1                                                                                          
+  112   1 *          |END DO FOR                                                                                                    
+                     +--------------------------------------------------------------------------------------------------------------
+  113     *        ENDIF                                                                                                            
+  114              NUMFLG = .FALSE.                                                                                                 
+  115              MINFLG = .FALSE.                                                                                                 
+  116                                                                                                                               
+                  +-----------------------------------------------------------------------------------------------------------------
+  117     * 100   |DO FOREVER                                                                                                       
+  118       C     |                                 C                                                                               
+  119       C     |                                 C***   Trim leading blanks                                                      
+  120       C     |                                 C                                                                               
+  121   1 *       |   IF (LENLIN .GT. 0)                                                                                            
+  122   2         |      K = LIB$SKPC(' ',LINE(:LENLIN))                                                                            
+  123   2 *       |      IF (K .EQ. 0)                                                                                              
+  124   3         |         LENLIN = 0                                                                                              
+  125   2 *       |      ELSE                                                                                                       
+  126   3         |         LINE = LINE(K:LENLIN)                                                                                   
+  127   3         |         LENLIN = LENLIN - K + 1                                                                                 
+  128   2 *       |      ENDIF                                                                                                      
+  129   1 *       |   ENDIF                                                                                                         
+  130   1 *       |   IF (LENLIN .EQ. 0)                                                                                            
+  131   2 *       |      EXECUTE (NO_COMMAND)                                                                                       
+  132   1 *       |   ENDIF                                                                                                         
+  133       C     |                                 C                                                                               
+  134       C     |                                 C***   Check for " or '                                                         
+  135       C     |                                 C                                                                               
+  136   1 *       |   IF (LINE(1:1) .EQ. '"')                                                                                       
+  137   2 *       |      IF (LENLIN .EQ. 1)                                                                                         
+  138   3 *       |         EXECUTE (INVALID_COMMAND)                                                                               
+  139   2 *       |      ENDIF                                                                                                      
+  140   2         |      K = 1                                                                                                      
+                  |     +-----------------------------------------------------------------------------------------------------------
+  141   2 *       |     |DO FOREVER                                                                                                 
+  142   3         |     |   J = INDEX(LINE(K+1:LENLIN),'"') + K                                                                     
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        PRSCOM                29-SEP-83      15:33:25      PAGE    4
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  143   3 *       |     |   IF (K .EQ. J)                                                                                           
+  144   4 *       |     |      EXECUTE (INVALID_COMMAND)                                                                            
+  145   3 *       |     |   ENDIF                                                                                                   
+  146   3 *       |     |   IF (LINE(J+1:J+1) .NE. '"')                                                                             
+  147   4         |     |      NSRCH = 1                                                                                            
+  148   4 *       |     |      EXECUTE (INSERT_SEARCH_STRING)                                                                       
+  149   4 *       |     |      UNDO                                                                                                 
+                  |     <-------                                                                                                    
+  150   3 *       |     |   ENDIF                                                                                                   
+  151   3         |     |   K = J + 1                                                                                               
+  152   2 *       |     |END DO FOREVER                                                                                             
+                  |     +-----------------------------------------------------------------------------------------------------------
+  153   1 *       |   ELSE IF (LINE(1:1) .EQ. '''')                                                                                 
+  154   2 *       |      IF (LENLIN .EQ. 1)                                                                                         
+  155   3 *       |         EXECUTE (INVALID_COMMAND)                                                                               
+  156   2 *       |      ENDIF                                                                                                      
+  157   2         |      K = 1                                                                                                      
+                  |     +-----------------------------------------------------------------------------------------------------------
+  158   2 *       |     |DO FOREVER                                                                                                 
+  159   3         |     |   J = INDEX(LINE(K+1:LENLIN),'''') + K                                                                    
+  160   3 *       |     |   IF (K .EQ. J)                                                                                           
+  161   4 *       |     |      EXECUTE (INVALID_COMMAND)                                                                            
+  162   3 *       |     |   ENDIF                                                                                                   
+  163   3 *       |     |   IF (LINE(J+1:J+1) .NE. '''')                                                                            
+  164   4         |     |      NSRCH = NSRCH + 1                                                                                    
+  165   4 *       |     |      EXECUTE (INSERT_SEARCH_STRING)                                                                       
+  166   4 *       |     |      UNDO                                                                                                 
+                  |     <-------                                                                                                    
+  167   3 *       |     |   ENDIF                                                                                                   
+  168   3         |     |   K = J + 1                                                                                               
+  169   2 *       |     |END DO FOREVER                                                                                             
+                  |     +-----------------------------------------------------------------------------------------------------------
+  170       C     |                                 C                                                                               
+  171       C     |                                 C***   Check for minus sign                                                     
+  172       C     |                                 C                                                                               
+  173   1 *       |   ELSE IF (LINE(1:1) .EQ. '-')                                                                                  
+  174   2 *       |      IF (LENLIN .EQ. 1)                                                                                         
+  175   3 *       |         EXECUTE (NO_COMMAND)                                                                                    
+  176   2 *       |      ENDIF                                                                                                      
+  177   2         |      I = LIB$SKPC(' ',LINE(2:LENLIN)) + 1                                                                       
+  178   2 *       |      IF (I .EQ. 1)                                                                                              
+  179   3 *       |         EXECUTE (NO_COMMAND)                                                                                    
+  180   2 *       |      ENDIF                                                                                                      
+  181       C     |                                 C                                                                               
+  182       C     |                                 C---   Check for --&                                                            
+  183       C     |                                 C                                                                               
+  184   2 *       |      IF (LINE(I:I) .EQ. '-')                                                                                    
+  185   3 *       |         IF (LENLIN .EQ. I)                                                                                      
+  186   4 *       |            EXECUTE (NO_COMMAND)                                                                                 
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        PRSCOM                29-SEP-83      15:33:25      PAGE    5
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  187   3 *       |         ENDIF                                                                                                   
+  188   3         |         J = LIB$SKPC(' ',LINE(I+1:LENLIN)) + I                                                                  
+  189   3 *       |         IF (I .EQ. J)                                                                                           
+  190   4 *       |            EXECUTE (NO_COMMAND)                                                                                 
+  191   3 *       |         ENDIF                                                                                                   
+  192   3 *       |         IF (LINE(J:J) .EQ. '&')                                                                                 
+  193   4         |            ICOM = 9                                                                                             
+  194   4         |            LINE = LINE(J+1:LENLIN)                                                                              
+  195   4         |            LENLIN = LENLIN - J                                                                                  
+  196   4         |            RETURN                                                                                               
+              <-----------------                                                                                                    
+  197   3 *       |         ELSE                                                                                                    
+  198   4         |            MINFLG = .NOT.MINFLG                                                                                 
+  199   4         |            LINE = LINE(I:LENLIN)                                                                                
+  200   4         |            LENLIN = LENLIN - I + 1                                                                              
+  201   3 *       |         ENDIF                                                                                                   
+  202       C     |                                 C                                                                               
+  203       C     |                                 C---   Check for number                                                         
+  204       C     |                                 C                                                                               
+  205   2 *       |      ELSE IF (ICHAR(LINE(I:I)) .GE. ICHAR('0') .AND.                                                            
+  206            1|            ICHAR(LINE(I:I)) .LE. ICHAR('9'))                                                                    
+  207   3 *       |         EXECUTE (GET_NUMBER)                                                                                    
+  208   2 *       |      ELSE                                                                                                       
+  209       C     |                                 C                                                                               
+  210       C     |                                 C---   Otherwise it is minus flag                                               
+  211       C     |                                 C                                                                               
+  212   3         |         MINFLG = .NOT.MINFLG                                                                                    
+  213   3         |         LINE = LINE(I:LENLIN)                                                                                   
+  214   3         |         LENLIN = LENLIN - I + 1                                                                                 
+  215   2 *       |      ENDIF                                                                                                      
+  216       C     |                                 C                                                                               
+  217       C     |                                 C***   Check for number                                                         
+  218       C     |                                 C                                                                               
+  219   1 *       |   ELSE IF (ICHAR(LINE(1:1)) .GE. ICHAR('0') .AND.                                                               
+  220            1|         ICHAR(LINE(1:1)) .LE. ICHAR('9'))                                                                       
+  221   2 *       |      EXECUTE (GET_NUMBER)                                                                                       
+  222   1 *       |   ELSE IF (LINE(1:1) .EQ. '+')                                                                                  
+  223   2 *       |      IF (LENLIN .EQ. 1)                                                                                         
+  224   3         |         ICOM = 12                                                                                               
+  225   3         |         LENLIN = 0                                                                                              
+  226   3         |         RETURN                                                                                                  
+              <--------------                                                                                                       
+  227   2 *       |      ENDIF                                                                                                      
+  228   2         |      I = LIB$SKPC(' ',LINE(2:LENLIN)) + 1                                                                       
+  229   2 *       |      IF (I .EQ. 1)                                                                                              
+  230   3         |         ICOM = 12                                                                                               
+  231   3         |         LENLIN = 0                                                                                              
+  232   3         |         RETURN                                                                                                  
+              <--------------                                                                                                       
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        PRSCOM                29-SEP-83      15:33:25      PAGE    6
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  233   2 *       |      ENDIF                                                                                                      
+  234   2 *       |      IF (ICHAR(LINE(I:I)) .LE. ICHAR('9') .AND.                                                                 
+  235            1|            ICHAR(LINE(I:I)) .GE. ICHAR('0'))                                                                    
+  236   3 *       |         EXECUTE (GET_NUMBER)                                                                                    
+  237   2 *       |      ELSE                                                                                                       
+  238   3         |         LINE = LINE(I:LENLIN)                                                                                   
+  239   3         |         LENLIN = LENLIN - I + 1                                                                                 
+  240   3         |         ICOM = 12                                                                                               
+  241   3         |         RETURN                                                                                                  
+              <--------------                                                                                                       
+  242   2 *       |      ENDIF                                                                                                      
+  243   1 *       |   ELSE                                                                                                          
+  244       C     |                                 C                                                                               
+  245       C     |                                 C***   Otherwise it must be a command                                           
+  246       C     |                                 C                                                                               
+                  |     +-----------------------------------------------------------------------------------------------------------
+  247   2 *       |     |DO FOR ICOM=1,NUMCOM                                                                                       
+  248   3 *       |     |   IF (LINE(1:1) .EQ. COMAND(ICOM))                                                                        
+  249   4         |     |      LINE = LINE(2:)                                                                                      
+  250   4         |     |      LENLIN = LENLIN - 1                                                                                  
+  251   4         |     |      RETURN                                                                                               
+              <-----------------                                                                                                    
+  252   3 *       |     |   ENDIF                                                                                                   
+  253   2 *       |     |END DO FOR                                                                                                 
+                  |     +-----------------------------------------------------------------------------------------------------------
+  254       C     |                                 C                                                                               
+  255       C     |                                 C***   Not a command symbol, check for definition                               
+  256       C     |                                 C                                                                               
+                  |     +-----------------------------------------------------------------------------------------------------------
+  257   2 *       |     |DO FOR J=1,NDEFS                                                                                           
+  258   3 *       |     |   IF (SYMS(J) .EQ. LINE(1:1))                                                                             
+  259   4 *       |     |      IF (NUMFLG)                                                                                          
+  260   5         |     |         NUMBER = ANUMB                                                                                    
+  261   4 *       |     |      ELSE                                                                                                 
+  262   5         |     |         NUMBER = 1                                                                                        
+  263   4 *       |     |      ENDIF                                                                                                
+  264   4         |     |      LINE = LINE(2:LENLIN)                                                                                
+  265   4         |     |      LENLIN = LENLIN - 1                                                                                  
+  266   4 *       |     |      IF (NDEF .EQ. 0 .OR. NSYM .EQ. 0)                                                                    
+  267       C     |     |                           C                                                                               
+  268       C     |     |                           C---   Executable definition                                                    
+  269       C     |     |                           C                                                                               
+                  |     |        +--------------------------------------------------------------------------------------------------
+  270   5 *       |     |        |DO FOR L=1,NUMBER                                                                                 
+                  |     |        |  +-----------------------------------------------------------------------------------------------
+  271   6 *       |     |        |  |DO FOR K=1,10                                                                                  
+  272   7 *       |     |        |  |   UNDO IF (DEFS(1,K,J) .EQ. 0)                                                                
+                  |     |        |  <----                                                                                           
+  273   7 *       |     |        |  |   IF (DEFFLG(3,K,J))                                                                          
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        PRSCOM                29-SEP-83      15:33:25      PAGE    7
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+                  |     |        |  |     +-----------------------------------------------------------------------------------------
+  274   8 *       |     |        |  |     |DO FOR JJ=1,10                                                                           
+  275   9         |     |        |  |     |   SRCHBF(JJ) = DEFBUF(JJ,K,J)                                                           
+  276   9         |     |        |  |     |   SBFLEN(JJ) = DEFS(1+JJ,K,J)                                                           
+  277   9 *       |     |        |  |     |   UNDO IF (SBFLEN(JJ) .EQ. 0)                                                           
+                  |     |        |  |     <----                                                                                     
+  278   8 *       |     |        |  |     |END DO FOR                                                                               
+                  |     |        |  |     +-----------------------------------------------------------------------------------------
+  279   8         |     |        |  |      SBFFLG = .TRUE.                                                                          
+  280   7 *       |     |        |  |   ENDIF                                                                                       
+  281   7         |     |        |  |   CALL DOIT(DEFS(1,K,J),DEFFLG(1,K,J),NUMDEF(K,J),                                            
+  282            1|     |        |  |         DEFFLG(2,K,J))                                                                        
+  283   6 *       |     |        |  |END DO FOR                                                                                     
+                  |     |        |  +-----------------------------------------------------------------------------------------------
+  284   5 *       |     |        |END DO FOR                                                                                        
+                  |     |        +--------------------------------------------------------------------------------------------------
+  285   5         |     |         ICOM = -1                                                                                         
+  286   5         |     |         RETURN                                                                                            
+              <--------------------                                                                                                 
+  287   4 *       |     |      ELSE                                                                                                 
+  288       C     |     |                           C                                                                               
+  289       C     |     |                           C---   Definition insertion                                                     
+  290       C     |     |                           C                                                                               
+                  |     |        +--------------------------------------------------------------------------------------------------
+  291   5 *       |     |        |DO FOR L=1,NUMBER                                                                                 
+  292   6 *       |     |        |   IF (J .EQ. NSYM) THEN                                                                          
+  293       C     |     |        |                  C                                                                               
+  294       C     |     |        |                  C===   If symbol is the one being defined then use current stuff                
+  295       C     |     |        |                  C                                                                               
+                  |     |        |     +--------------------------------------------------------------------------------------------
+  296   7 *       |     |        |     |DO FOR JJ=1,10                                                                              
+  297   8 *       |     |        |     |   IF (NDEF .GT. 10)                                                                        
+  298   9         |     |        |     |      ICOM = 0                                                                              
+  299   9         |     |        |     |      RETURN                                                                                
+              <--------------------------------                                                                                     
+  300   8 *       |     |        |     |   ENDIF                                                                                    
+  301   8         |     |        |     |   DEFS(1,NDEF,NSYM) = CUR(1,JJ)                                                            
+  302   8 *       |     |        |     |   UNDO IF (CUR(1,JJ) .EQ. 0)                                                               
+                  |     |        |     <----                                                                                        
+  303   8         |     |        |     |   NUMDEF(NDEF,NSYM) = NUMCUR(JJ)                                                           
+  304   8         |     |        |     |   DEFFLG(1,NDEF,NSYM) = CURFLG(1,JJ)                                                       
+  305   8         |     |        |     |   DEFFLG(2,NDEF,NSYM) = CURFLG(2,JJ)                                                       
+  306   8         |     |        |     |   DEFFLG(3,NDEF,NSYM) = CURFLG(3,JJ)                                                       
+                  |     |        |     |  +-----------------------------------------------------------------------------------------
+  307   8 *       |     |        |     |  |DO FOR K=1,10                                                                            
+  308   9         |     |        |     |  |   DEFS(1+K,NDEF,NSYM) = CUR(1+K,JJ)                                                     
+  309   9 *       |     |        |     |  |   UNDO IF (CUR(1+K,JJ) .EQ. 0)                                                          
+                  |     |        |     |  <----                                                                                     
+  310   9         |     |        |     |  |   DEFBUF(K,NDEF,NSYM) = CURBUF(K,JJ)                                                    
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        PRSCOM                29-SEP-83      15:33:25      PAGE    8
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  311   8 *       |     |        |     |  |END DO FOR                                                                               
+                  |     |        |     |  +-----------------------------------------------------------------------------------------
+  312   8         |     |        |     |   NDEF = NDEF + 1                                                                          
+  313   7 *       |     |        |     |END DO FOR                                                                                  
+                  |     |        |     +--------------------------------------------------------------------------------------------
+  314   6 *       |     |        |   ELSE                                                                                           
+                  |     |        |     +--------------------------------------------------------------------------------------------
+  315   7 *       |     |        |     |DO FOR K=1,10                                                                               
+  316   8 *       |     |        |     |   IF (NDEF .GT. 10)                                                                        
+  317   9         |     |        |     |      ICOM = 0                                                                              
+  318   9         |     |        |     |      RETURN                                                                                
+              <--------------------------------                                                                                     
+  319   8 *       |     |        |     |   ENDIF                                                                                    
+  320   8 *       |     |        |     |   UNDO IF (DEFS(1,K,J) .EQ. 0)                                                             
+                  |     |        |     <----                                                                                        
+  321   8         |     |        |     |   DEFFLG(1,NDEF,NSYM) = DEFFLG(1,K,J)                                                      
+  322   8         |     |        |     |   DEFFLG(2,NDEF,NSYM) = DEFFLG(2,K,J)                                                      
+  323   8         |     |        |     |   DEFFLG(3,NDEF,NSYM) = DEFFLG(3,K,J)                                                      
+                  |     |        |     |  +-----------------------------------------------------------------------------------------
+  324   8 *       |     |        |     |  |DO FOR JJ=1,10                                                                           
+  325   9         |     |        |     |  |   DEFBUF(JJ,NDEF,NSYM) = DEFBUF(JJ,K,J)                                                 
+  326   9         |     |        |     |  |   DEFS(1+JJ,NDEF,NSYM) = DEFS(1+JJ,K,J)                                                 
+  327   9 *       |     |        |     |  |   UNDO IF (DEFS(1+JJ,NDEF,NSYM) .EQ. 0)                                                 
+                  |     |        |     |  <----                                                                                     
+  328   8 *       |     |        |     |  |END DO FOR                                                                               
+                  |     |        |     |  +-----------------------------------------------------------------------------------------
+  329   8         |     |        |     |   NUMDEF(NDEF,NSYM) = NUMDEF(K,J)                                                          
+  330   8         |     |        |     |   DEFS(1,NDEF,NSYM) = DEFS(1,K,J)                                                          
+  331   8         |     |        |     |   NDEF = NDEF + 1                                                                          
+  332   7 *       |     |        |     |END DO FOR                                                                                  
+                  |     |        |     +--------------------------------------------------------------------------------------------
+  333   6 *       |     |        |   ENDIF                                                                                          
+  334   5 *       |     |        |END DO FOR                                                                                        
+                  |     |        +--------------------------------------------------------------------------------------------------
+  335   5 *       |     |         CYCLE 100                                                                                         
+                  |<---------------                                                                                                 
+  336   4 *       |     |      ENDIF                                                                                                
+  337   3 *       |     |   ENDIF                                                                                                   
+  338   2 *       |     |END DO FOR                                                                                                 
+                  |     +-----------------------------------------------------------------------------------------------------------
+  339       C     |                                 C                                                                               
+  340       C     |                                 C***   If it gets here it didn't match anything                                 
+  341       C     |                                 C                                                                               
+  342   2 *       |      EXECUTE (INVALID_COMMAND)                                                                                  
+  343   1 *       |   ENDIF                                                                                                         
+  344     *       |END DO FOREVER                                                                                                   
+                  +-----------------------------------------------------------------------------------------------------------------
+  345       C                                       C                                                                               
+  346       C                                       C************************************************************************       
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        PRSCOM                29-SEP-83      15:33:25      PAGE    9
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  347       C                                       C********************   HERE FOLLOW THE PROCEDURES   ********************       
+  348       C                                       C************************************************************************       
+  349       C                                       C                                                                               
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        PRSCOM                29-SEP-83      15:33:25      PAGE   10
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  350     *        PROCEDURE (GET_NUMBER)                                                                                           
+  351       C                                       CP    This procedure converts the number which starts the line into a           
+  352       C                                       CP    real (floating point) number in ANUMB.                                    
+  353   1 *           IF (LENLIN .EQ. 1)                                                                                            
+  354   2 *              EXECUTE (NO_COMMAND)                                                                                       
+  355   1 *           ELSE                                                                                                          
+                        +-----------------------------------------------------------------------------------------------------------
+  356   2 *             |DO FOR I=2,LENLIN                                                                                          
+  357   3 *             |   UNDO IF (.NOT.(LINE(I:I) .EQ. ' ' .OR. (ICHAR(LINE(I:I))                                                
+  358            1      |         .GE. ICHAR('0') .AND. ICHAR(LINE(I:I)) .LE. ICHAR('9'))                                           
+  359            2      |         .OR. LINE(I:I) .EQ. '.'))                                                                         
+                        <----                                                                                                       
+  360   2 *             |END DO FOR                                                                                                 
+                        +-----------------------------------------------------------------------------------------------------------
+  361   2                READ (UNIT=LINE(:I-1),FMT=200,IOSTAT=J) ANUMB                                                              
+  362   2   200          FORMAT (F<I-1>.0)                                                                                          
+  363   2 *              IF (J .EQ. 0)                                                                                              
+  364   3                   LINE = LINE(I:LENLIN)                                                                                   
+  365   3                   LENLIN = LENLIN - I + 1                                                                                 
+  366   3                   NUMFLG = .TRUE.                                                                                         
+  367   2 *              ELSE                                                                                                       
+  368   3 *                 EXECUTE (INVALID_COMMAND)                                                                               
+  369   2 *              ENDIF                                                                                                      
+  370   1 *           ENDIF                                                                                                         
+  371     *        END PROCEDURE                                                                                                    
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        PRSCOM                29-SEP-83      15:33:25      PAGE   11
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  372     *        PROCEDURE (INSERT_SEARCH_STRING)                                                                                 
+  373       C                                       CP    This procedure inserts a search string (LINE(2:J-1)) in the search        
+  374       C                                       CP    buffers as string NSRCH.                                                  
+  375       C                                       C                                                                               
+  376       C                                       C***   Only ten strings                                                         
+  377       C                                       C                                                                               
+  378   1 *           IF (NSRCH .GT. 10)                                                                                            
+                        +-----------------------------------------------------------------------------------------------------------
+  379   2 *             |DO FOR I=1,9                                                                                               
+  380   3               |   SRCHBF(I) = SRCHBF(I+1)                                                                                 
+  381   3               |   SBFLEN(I) = SBFLEN(I+1)                                                                                 
+  382   2 *             |END DO FOR                                                                                                 
+                        +-----------------------------------------------------------------------------------------------------------
+  383   2                NSRCH = 10                                                                                                 
+  384   1 *           ENDIF                                                                                                         
+  385   1             SRCHBF(NSRCH) = LINE(2:J-1)                                                                                   
+  386   1             SBFLEN(NSRCH) = J - 2                                                                                         
+  387   1             LENLIN = LENLIN - J                                                                                           
+  388   1             QUOTE = LINE(1:1)                                                                                             
+  389   1             IF (LENLIN .GT. 0) LINE = LINE(J+1:)                                                                          
+  390       C                                       C                                                                               
+  391       C                                       C***   Get rid of double quotes                                                 
+  392       C                                       C                                                                               
+  393   1             J = 1                                                                                                         
+                     +--------------------------------------------------------------------------------------------------------------
+  394   1 *          |DO FOREVER                                                                                                    
+  395   2            |   I = INDEX(SRCHBF(NSRCH)(J:SBFLEN(NSRCH)),QUOTE) + J - 1                                                    
+  396   2 *          |   UNDO IF (I .EQ. (J - 1))                                                                                   
+                     <----                                                                                                          
+  397   2            |   SRCHBF(NSRCH) = SRCHBF(NSRCH)(:I)//SRCHBF(NSRCH)(I+2:)                                                     
+  398   2            |   SBFLEN(NSRCH) = SBFLEN(NSRCH) - 1                                                                          
+  399   2            |   J = I + 1                                                                                                  
+  400   1 *          |END DO FOREVER                                                                                                
+                     +--------------------------------------------------------------------------------------------------------------
+  401   1             SBFLEN(NSRCH+1) = 0                                                                                           
+  402   1             SBFFLG = .TRUE.                                                                                               
+  403     *        END PROCEDURE                                                                                                    
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        PRSCOM                29-SEP-83      15:33:25      PAGE   12
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  404     *        PROCEDURE (INVALID_COMMAND)                                                                                      
+  405       C                                       CP    This procedure takes care of invalid command syntax.                      
+  406   1             CALL LIB$PUT_SCREEN(CHAR(BELL))                                                                               
+  407   1 *           IF (VT100)                                                                                                    
+  408   2                CALL LIB$PUT_SCREEN(CHAR(ESC)//'[3q')                                                                      
+  409   1 *           ENDIF                                                                                                         
+  410   1             ICOM = 0                                                                                                      
+  411   1             RETURN                                                                                                        
+              <--------                                                                                                             
+  412     *        END PROCEDURE                                                                                                    
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        PRSCOM                29-SEP-83      15:33:25      PAGE   13
+
+
+ LINE NST
+  NUM LVL S INPUT S-FORTRAN STATEMENT
+
+  413     *        PROCEDURE (NO_COMMAND)                                                                                           
+  414       C                                       CP    This procedure handles a "empty" line.                                    
+  415   1             ICOM = 0                                                                                                      
+  416   1             LENLIN = 0                                                                                                    
+  417   1             RETURN                                                                                                        
+              <--------                                                                                                             
+  418     *        END PROCEDURE                                                                                                    
+  419              END                                                                                                              
+ 
+ CFG, INC.      S-FORTRAN PROCESSOR VERSION 1.6(9)        PRSCOM                29-SEP-83      15:33:25      PAGE   14
+
+
+                                        PROCEDURE CROSS-REFERENCE TABLE
+
+ LINE   PROCEDURE NAME                              REFERENCE LINES
+
+  350  GET_NUMBER                     
+                                207   221   236 
+
+  372  INSERT_SEARCH_STRING           
+                                148   165 
+
+  404  INVALID_COMMAND                
+                                138   144   155   161   342   368 
+
+  413  NO_COMMAND                     
+                                131   175   179   186   190   354 
+
+       0 DIAGNOSTICS GENERATED

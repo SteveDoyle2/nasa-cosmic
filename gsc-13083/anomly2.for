@@ -1,0 +1,93 @@
+      DOUBLE PRECISION FUNCTION ANOMLY2(IND,ANGLE,ECC,IERPNT,IERR)
+      IMPLICIT REAL*8 (A-H,O-Z)
+C
+C  THIS ROUTINE COMPUTES ECCENTRIC ANOMALY GIVEN TRUE ANOMALY AND
+C  VIS-VERSA.
+C
+C  VAR    DIM TYPE  I/O  DESCRIPTION
+C  ---    --- ----  ---  -----------
+C
+C  IND     1  I*4    I   INDICATOR ON ANGLE TYPE.
+C
+C                        =ZERO OR POSITIVE. ECCENTRIC ANOMALY INPUT,
+C                         TRUE ANOMALY OUTPUT.
+C                        =NEGATIVE. TRUE ANOMALY INPUT, ECCENTRIC
+C                         OUTPUT.
+C
+C  ANGLE   1  R*8    I   ANGLE TO BE CONVERTED. ECCENTRIC OR TRUE
+C                        ANOMALY, DEPENDING ON VALUE OF IND INPUT.
+C                        RADIANS.
+C
+C  ECC     1  R*8    I   ECCENTRICITY. MUST BE ZERO OR POSITIVE AND
+C                        LESS THAN 1.D0
+C
+C  IERPNT  1  I*4    I   FORTRAN UNIT FOR ERROR MESSAGE. USED WHEN AN
+C                        INVALID ECC HAS BEEN INPUT.
+C                        =0 MEANS NO ERROR MESSAGE IS TO BE GIVEN.
+C
+C  IERR    1  I*4    O   ERROR RETURN FLAG.
+C                        =0, NO ERROR.  =1, ERROR.
+C
+C***********************************************************************
+C
+C  BY C PETRUZZO/GSFC/742      10/85.
+C        MODIFIED......
+C
+C***********************************************************************
+C
+      REAL*8 TWOPI/  6.283185307179586D0    /
+C
+C
+C  EQUATIONS ARE FROM THE ORBITAL FLIGHT HANDBOOK(MARTIN CO., 1963.)
+C  VOL I, PAGE III-21, EQNS 2-6,2-7 AND PAGE III-23, EQNS 2-57,2-59.
+C
+      IERR = 0
+C
+C ERROR CHECK.
+C
+      IF(ECC.LT.0.D0 .OR. ECC.GE.1.D0) THEN
+        IERR = 1
+        ANOMLY2 = 0.D0
+        IF(IERPNT.NE.0) WRITE(IERPNT,1500) IND,ANGLE,ECC
+ 1500   FORMAT('0ANOMLY2. BIG ERROR. ECCENTRICITY NOT FOR AN ELLIPSE.'/,
+     *         '    IND,ANGLE,ECC=',I3,2G20.10)
+        GO TO 9000
+        END IF
+C
+C INITIALIZE ANG1 AND DIF2PI. DIF2PI IS USED IN CASE ANG1 IS OUTSIDE
+C OF THE 0 TO TWOPI RANGE.
+C
+      TEMP = DABS(ANGLE)
+      ANG1 = DMOD(TEMP,TWOPI)
+      DIF2PI = TEMP - ANG1
+C
+C COMPUTE THE OUTPUT ANGLE.
+C
+      IF(IND.GE.0) THEN
+C
+C  >> GET TRUE ANOMALY FROM ECCENTRIC ANOMALY <<
+        ECANOM = ANG1
+        COSE = DCOS(ECANOM)
+        SINE = DSIN(ECANOM)
+        X = COSE-ECC                          ! FROM EQN 2-57
+        Y = SINE*DSQRT(1.D0-ECC*ECC)          ! FROM EQN 2-59
+        TRUANM = DATAN2(Y,X)
+        ANG2 = EQVANG( TRUANM )
+C
+      ELSE
+C  >> GET ECCENTRIC ANOMALY FROM TRUE ANOMALY <<
+        TRUANM = ANG1
+        COSTRU = DCOS(TRUANM)
+        SINTRU = DSIN(TRUANM)
+        X = ECC+COSTRU                        ! FROM EQN 2-7
+        Y = SINTRU*DSQRT(1.D0-ECC*ECC)        ! FROM EQN 2-6
+        ECANOM = DATAN2(Y,X)
+        ANG2 = EQVANG( ECANOM )
+        END IF
+C
+      ANG2 = ANG2 + DIF2PI
+      IF(ANGLE.LT.0.D0) ANG2 = -ANG2
+      ANOMLY2 = ANG2
+C
+ 9000 RETURN
+      END

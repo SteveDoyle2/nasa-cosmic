@@ -1,0 +1,35 @@
+
+
+
+
+
+
+
+
+
+
+Pressing the delete key when in the Milestone/Footnote screen of the milestone
+chart will allow the user to delete a milestone id.  To delete a milestone id
+the cursor must first be on a milestone id.  When the delete key is pressed,
+the prompt asks for the number of the milestone to be deleted.  Enter the 
+desired number or if the cursor is on the desired milestone just press the
+return key.  The desired milestone will be deleted and all the milestones below
+will be shifted up one field with a blank field being added to the end.  The
+shift will also affect the bars and triangles on those lines by moving them up.
+To stop the delete once it has begun, press F1(Cancel).
+
+
+
+
+
+
+
+
+To continue, press the desired function key.
+
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

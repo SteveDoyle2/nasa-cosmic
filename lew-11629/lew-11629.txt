@@ -1,0 +1,59 @@
+ GASP - THERMODYNAMIC AND TRANSPORT PROPERTIES OF HELIUM, METHANE, NEON,
+NITROGEN, CARBON MONOXIDE, CARBON DIOXIDE, OXYGEN, AND ARGON
+
+( NASA Lewis Research Center )
+
+     A computer program, GASP, has been written to calculate the thermo-
+dynamic and transport properties of argon, carbon dioxide, carbon monox-
+ide, fluorine, methane, neon, nitrogen, and oxygen. GASP accepts any two
+of pressure, temperature, or density as input. In addition, entropy and en-
+thalpy are possible inputs. Outputs are temperature, density, pressure,
+entropy, enthalpy, specific heats, expansion coefficient, sonic velocity,
+viscosity, thermal conductivity, and surface tension. A special technique
+is provided to estimate the thermal conductivity near the thermodynamic
+critical point.
+
+     GASP is a group of FORTRAN subroutines. The user typically would write
+a main program that invoked GASP to provide only the described outputs.
+Subroutines are structured so that the user may call only those subroutines
+needed for his particular calculations.
+
+     Allowable pressures range from 0.l atmosphere to 100 to l,000 atmo-
+spheres, depending on the fluid. Similarly, allowable pressures range from
+the triple point of each substance to 300 degrees K to 2000 degrees K, de-
+pending on the substance.
+
+     The GASP package was developed to be used with heat transfer and fluid
+flow applications. It is particularly useful in applications of cryogenic
+fluids. Some problems associated with the liquefication, storage, and
+gasification of liquefied natural gas and liquefied petroleum gas can also
+be studied using GASP.
+
+     This program is written in FORTRAN IV for batch execution and is avail-
+able for implementation on IBM 7000 series computers. GASP was developed in
+1971.
+
+     COSMIC, and the COSMIC logo are registered trademarks of the National
+Aeronautics and Space Administration. All other brands and product names
+are the trademarks of their respective holders.
+
+
+
+LANGUAGE: FORTRAN IV
+
+MACHINE REQUIREMENTS: IBM 7000 SERIES
+
+PROGRAM SIZE: APPROXIMATELY 2,183 SOURCE STATEMENTS
+
+DISTRIBUTION MEDIA: 9 Track 1600 BPI EBCDIC Card Image Format Magnetic Tape
+
+PROGRAM NUMBER: LEW-11629
+
+DOMESTIC - DOCUMENTATION PRICE: $17.00    PROGRAM PRICE: $500.00
+
+INTERNATIONAL - DOCUMENTATION PRICE: $34.00   PROGRAM PRICE: $1000.00
+
+
+
+                                        1
+

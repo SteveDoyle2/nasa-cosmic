@@ -1,0 +1,19 @@
+\output={\setbox0=\box255\deadcycles=0}
+\newtoks\output
+\frenchspacing
+\hbadness=10000
+\newcount\a
+\chardef\other=12
+\catcode`\&=\other
+\obeyspaces
+\openin5=USER$DISK:[pjs.tex.viewgraph]fmtnotice.txt
+{\loop
+\b=0
+\read5 to\text
+\ifeof5\a=1\relax\else\a=0\fi
+\ifnum\a=0
+\catcode`\\=\other
+\message{\text}
+\repeat
+}\closein5
+\end

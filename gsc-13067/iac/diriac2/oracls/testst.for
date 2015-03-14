@@ -1,0 +1,79 @@
+      SUBROUTINE TESTST(A,NA,ALPHA,DISC,STABLE,IOP,DUMMY)
+C 
+C   PURPOSE:
+C      Compute and test the eigenvalues of a constant real matrix A for
+C      stability relative to a parameter 'alpha' in either the continu-
+C      ous or digital sense.
+C 
+C   Subroutines employed by TESTST: EIGEN, EQUATE, JUXTC, LNCNT, PRNT
+C   Subroutines employing TESTST: ASYREG
+C 
+      IMPLICIT REAL*8 (A-H,O-Z)
+      DIMENSION A(1),DUMMY(1)
+      DIMENSION NA(2),NDUM1(2),NDUM2(2)
+      LOGICAL  DISC,STABLE
+C 
+      STABLE = .FALSE.
+C 
+      CALL EQUATE(A,NA,DUMMY,NA)
+      N1= NA(1)**2 + 1
+      N2= N1+NA(1)
+      N3= N2+NA(1)
+      ISV = 0
+      CALL EIGEN(NA(1),NA(1),DUMMY,DUMMY(N1),DUMMY(N2),ISV,ISV,V,DUMMY(N
+     13),IERR)
+      NEVL = NA(1)
+      IF( IERR .EQ. 0 ) GO TO 200
+      CALL LNCNT(4)
+      WRITE(6,100) IERR
+  100 FORMAT(BZ,//' IN TESTST, THE ',I5,' EIGENVALUE OF A HAS NOT BEEN
+     1FOUND AFTER 30 ITERATIONS'/)
+      RETURN
+C 
+  200 CONTINUE
+      NDUM1(1) = NEVL
+      NDUM1(2) = 1
+      CALL JUXTC(DUMMY(N1),NDUM1,DUMMY(N2),NDUM1,DUMMY,NDUM2)
+C 
+      IF( DISC ) GO TO 400
+      DO 300 I=1,NEVL
+      IF( DUMMY(I) .GE. ALPHA ) GO TO 600
+  300 CONTINUE
+      GO TO 550
+  400 CONTINUE
+      N = NDUM2(1)*NDUM2(2)+1
+      DO 500 I =1,NEVL
+      K = I + NEVL
+      L=N +I -1
+      DUMMY(L) = DSQRT((DUMMY(I)**2)+(DUMMY(K)**2))
+  500 CONTINUE
+C 
+      IF( DUMMY(L) .GE. ALPHA ) GO TO 600
+C 
+  550 CONTINUE
+      STABLE =.TRUE.
+  600 CONTINUE
+      IF( IOP .EQ. 0 ) RETURN
+      CALL LNCNT(4)
+      WRITE(6,700)
+  700 FORMAT(//' PROGRAM TO TEST THE RELATIVE STABILITY OF THE MATRIX A
+     1'/)
+      CALL PRNT(A,NA,' A  ',1)
+      CALL LNCNT(4)
+  750 FORMAT(//' EIGENVALUES OF A '/)
+      CALL PRNT(DUMMY,NDUM2,'EVLA',1)
+      IF(  .NOT. DISC ) GO TO 850
+      CALL LNCNT(4)
+      WRITE(6,800)
+  800 FORMAT(//' MODULI OF EIGENVALUES OF A'/)
+      CALL PRNT(DUMMY(N),NDUM1,'MODA',1)
+C 
+  850 CONTINUE
+      CALL LNCNT(4)
+      IF(STABLE) WRITE(6,900) ALPHA
+      IF( .NOT. STABLE) WRITE(6,950) ALPHA
+  900 FORMAT(//' MATRIX A  IS STABLE RELATIVE TO ',D16.8,/)
+  950 FORMAT(//' MATRIX A  IS UNSTABLE RELATIVE TO ' ,D16.8,/)
+C 
+      RETURN
+      END

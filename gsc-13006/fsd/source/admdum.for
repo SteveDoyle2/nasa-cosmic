@@ -1,0 +1,242 @@
+      SUBROUTINE ADMDUM(N,DELTAT,DEP,DER,UPBND,DNBND,FACTOR,FRQ
+     1                 ,TTSTP,LSAVE,T,DELMIT)
+C
+C     'ADMDUM' COMPUTES STATE VECTOR WITHOUT INTEGRATION IE NO MOTION
+C
+      IMPLICIT REAL*8 (A-H,O-Z)
+C
+      COMMON/CENVRN/ GGMOM(3),SPMOM(3),ADMOM(3),HUBSPM(3),HUBADM(3)
+C
+      COMMON/CONSTS/ PI,TWOPI,RADIAN
+C
+      COMMON/CNBODY/ ZJ2,ZJ3,ZJ4,ZJ22,ZJ20,ZMU,WWO,FLAT,AEARTH
+C
+      COMMON/CSTVAL/ TSTART,ZLDUM(40)
+C
+      COMMON/IMAIN1/ IDATE,ISAVE,INOPT,IPLOT,NUMEQS,IPLTPE,IORB,ITAPE
+C
+      COMMON/IPOOL1/ IGRAV,IDAMP,IK,K1,ITIM,IAB,IAPS,IBB,IBPS,NK(10),
+     .               LK(10),LLK(10)
+C
+      COMMON/INOMOT/ NOINTG,NOIOUT(20)
+C
+      COMMON/KNERGY/ S,OMC,BT
+C
+      COMMON/LIBDPR/ ZK1D,ZK2D,PHIS,PHILD,DPHILD,BETLD,GAMLD,ZMDO
+     *              ,ZMDBO,CNV,DECAY
+C
+      COMMON/ORBNEW/ ROD(3),VOD(3),TST
+C
+      COMMON/OUTTHR/ SMAGB(3)
+C
+      COMMON/RMGNTC/ SMAGI(3)
+C
+      COMMON/RPOOL1/ RHOK(10),TIME,SA(3,3),FM1(3,3),ZLK(10),OMEG(3),
+     .               ZLKP(10),ZLKDP(10),CMAT(3,3),GBAR(3,3),YBCM(3),
+     .               ZBZK(3,10),FCM(3,3),DTO,PHID,PHI
+C
+      COMMON/RPOOL2/ PO,SD(3),DUMRP2(72),SD1(3),DT1,P1,AERO,DTO1,YZK(3)
+     .              ,PO1
+C
+      COMMON/RPOOL6/ FM(3,3),CIY(3,3),CIZ(3,3),SAT(3,3),SZ1,SZ2,SZ3
+C
+      COMMON/SUNVTR/ SDBODY(3)
+C
+      COMMON/VECTRS/ XSAT(3),XSATDT(3),AD(3)
+C
+      COMMON/XIN2  / ALFAE,BETAE,GAMAE,OMBC(3),ITEST2
+C
+C
+C
+      DIMENSION S(3,3),ST(3,3),BS(3,3),BT(3,3),OMC(3),SXOMC(3)
+     .          ,DEPEND(150),DEP(150),DER(150),UPBND(150),DNBND(150)
+     .          ,SSPM(3),SADM(3)
+C
+      REAL*4 BUFF(450)
+C
+      IF(NOINTG.NE.0) GO TO 2
+C
+      CALL ADMIMP(N,DELTAT,DEP,DER,UPBND,DNBND,FACTOR,FRQ
+     1           ,TTSTP,LSAVE,T,DELMIT)
+C
+      DO 1 I=1,3
+      SSPM(I)=SPMOM(I) + HUBSPM(I)
+      SADM(I)=ADMOM(I) + HUBADM(I)
+    1 CONTINUE
+C
+      RETURN
+C
+    2 CONTINUE
+C
+C
+      IF(LSAVE.EQ.1) GO TO 100
+C
+C     INCREASE TIME TO NEXT PRINT TIME
+C
+      T=T+FRQ
+C
+      LSAVE=1
+C
+      IF(INOPT.EQ.1) GO TO 100
+C
+      CALL XFIND(ROD,VOD,ZMU,TSTART,T,XSAT,XSATDT)
+C
+      RADIUS=0.D0
+      DO 5 I=1,3
+    5 RADIUS=RADIUS + XSAT(I)*XSAT(I)
+      RADIUS=DSQRT(RADIUS)
+C
+      ALFAE=ALFAE*RADIAN
+      BETAE=BETAE*RADIAN
+      GAMAE=GAMAE*RADIAN
+C
+      SALFAE=DSIN(ALFAE)
+      CALFAE=DCOS(ALFAE)
+      SBETAE=DSIN(BETAE)
+      CBETAE=DCOS(BETAE)
+      SGAMAE=DSIN(GAMAE)
+      CGAMAE=DCOS(GAMAE)
+C
+      ANG1=CBETAE*CGAMAE
+      ANG2=CBETAE*SGAMAE
+      ANG3=SBETAE*SGAMAE
+      ANG4=SBETAE*CGAMAE
+C
+      S(1,1)= ANG1 + SALFAE*ANG3
+      S(2,1)=-ANG2 + SALFAE*ANG4
+      S(3,1)= CALFAE*SBETAE
+C
+      S(1,2)= CALFAE*SGAMAE
+      S(2,2)= CALFAE*CGAMAE
+      S(3,2)=-SALFAE
+C
+      S(1,3)=-ANG4 + SALFAE*ANG2
+      S(2,3)= ANG3 + SALFAE*ANG1
+      S(3,3)= CALFAE*CBETAE
+C
+      DO 10 I=1,3
+      DO 10 J=1,3
+   10 ST(I,J)=S(J,I)
+C
+      DO 20 I=1,3
+   20 BS(3,I)=XSAT(I)/RADIUS
+      YZ=XSAT(2)*XSATDT(3) - XSAT(3)*XSATDT(2)
+      ZX=XSAT(3)*XSATDT(1) - XSAT(1)*XSATDT(3)
+      XY=XSAT(1)*XSATDT(2) - XSAT(2)*XSATDT(1)
+C
+      RXVMAG=DSQRT(YZ*YZ + ZX*ZX + XY*XY)
+C
+      BS(2,1)=YZ/RXVMAG
+      BS(2,2)=ZX/RXVMAG
+      BS(2,3)=XY/RXVMAG
+C
+      BS(1,1)=BS(2,2)*BS(3,3)-BS(2,3)*BS(3,2)
+      BS(1,2)=BS(2,3)*BS(3,1)-BS(2,1)*BS(3,3)
+      BS(1,3)=BS(2,1)*BS(3,2)-BS(2,2)*BS(3,1)
+C
+      DO 30 I=1,3
+      DO 30 J=1,3
+   30 BT(I,J)=BS(J,I)
+C
+      CALL MATMPY(BT,ST,SA,3,3)
+C
+      DO 40 I=1,3
+      DO 40 J=1,3
+   40 SAT(I,J)=SA(J,I)
+C
+C
+      ALFAE=ALFAE/RADIAN
+      BETAE=BETAE/RADIAN
+      GAMAE=GAMAE/RADIAN
+C
+      L=0
+      DO 80 I=1,2
+      DO 80 J=1,3
+      L=L + 1
+   80 DEP(L)  = SA(I,J)
+C
+C
+C
+  100 CONTINUE
+C
+C
+      IF(LSAVE.NE.1) GO TO 110
+C
+      DO 105 I = 1,3
+      ROD(I) =  XSAT(I)
+      VOD(I) =  XSATDT(I)
+  105 CONTINUE
+C
+      TSTART=T
+      TST = TSTART
+  110 CONTINUE
+C
+C
+C
+      CALL ADMIMP(N,DELTAT,DEP,DER,UPBND,DNBND,FACTOR,FRQ
+     1           ,TTSTP,LSAVE,T,DELMIT)
+C
+C
+C
+      DO 120 I=1,3
+      SSPM(I)=SPMOM(I) + HUBSPM(I)
+      SADM(I)=ADMOM(I) + HUBADM(I)
+  120 CONTINUE
+C
+C
+C
+      RETURN
+C
+C   *************************************************************
+      ENTRY ADMWRP(BUFF,INDEX)
+C   *************************************************************
+C
+C     CALLED FROM GPPLOT
+C
+      DO 201 I=1,3
+      I1=INDEX + I - 1
+      I2=I1 + 3
+      I3=I2 + 3
+      BUFF(I1)=GGMOM(I)
+      BUFF(I2)= SSPM(I)
+      BUFF(I3)= SADM(I)
+  201 CONTINUE
+C
+C
+      RETURN
+C
+C
+C   *************************************************************
+      ENTRY ADMPRN
+C   *************************************************************
+C
+C     CALLED FROM GPSOUT
+C
+      DATA I8/',A8,'/
+C
+      IF(NOIOUT(1).EQ.0) GO TO 315
+C
+      DO 310 I=1,3
+      CALL SET('GG MOM  ',I,0,GGMOM(I),I8)
+  310 CONTINUE
+C
+  315 CONTINUE
+C
+      IF(NOIOUT(2).EQ.0) GO TO 325
+C
+      DO 320 I=1,3
+      CALL SET('SP MOM  ',I,0,SSPM(I) ,I8)
+  320 CONTINUE
+C
+  325 CONTINUE
+C
+      IF(NOIOUT(3).EQ.0) GO TO 335
+C
+      DO 330 I=1,3
+      CALL SET('AD MOM  ',I,0,SADM(I) ,I8)
+  330 CONTINUE
+C
+  335 CONTINUE
+C
+      RETURN
+      END

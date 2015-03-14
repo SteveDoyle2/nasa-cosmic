@@ -1,0 +1,3807 @@
+(*$L+*) 
+(*$E-*)         (*$U-*) 
+PROGRAM FLOWCHARTER (INPUT, OUTPUT, TABLEFILE) ;
+  
+CONST 
+  
+    CLOCK = 0 ;                                                    (*ANTISTATS*)
+  
+   BOXNO = 4; 
+   BOXNOP1 = 5; (* MUST BE BOXNO + 1 *) 
+   IDENTMAX = 20 ; (* MAX NO. OF CHARS IN AN IDENT; 
+                      DEFINES THE TYPES STRING20 + UNSTRING20 *)
+   CCHRSIZE = 10 ; (* MAX NO. OF CHARS IN A COMPOUND CHAR;
+                      DEFINES THE TYPES CCHR + UNCCHR *)
+  
+   CCHRMAX  = 10 ; (* MAX NO. OF CCHR ALLOWED *)
+   RITESIZE = 12 ; (* MAX NO. OF ITEMS AT THE RIGHT SIDE OF A BNCF RULE *)
+   BSFSIZE  = 18 ; (* MAX NO. OF BSF ITEMS IN A TEMPLATE *) 
+                   (* NOTE THAT BSFSIZE MUST BE >= RITESIZE *)
+  
+   RULESMAX  = 400 ; (* MAX NO. OF PRODUCTION RULES *)
+   TSYMMAX   = 130 ; (* MAX NO. OF TERMINAL SYMBOLS (INCLUDING 6 BUILT-INS) *)
+   BSFLITMAX = 255 ; (* MAX NO. OF BSF LITERALS, MUST > TSYMMAX *)
+   NTSYMMAX  = 150 ; (* MAX NO. OF NON-TERMINAL SYMBOLS *)
+   STATEMAX  = 680 ; (* MAX NO. OF STATES *)
+  
+   CPOOLSIZE = 50 ;   (* DLIST + A FEW OTHERS *)
+   SPOOLSIZE = 256 ;  (* TERM SYMS, BSF LITERALS, BUILT-IN FUNCS + CONS *)
+   NPOOLSIZE = 10 ;   (* GLUELEFT + GLUERITE *) 
+  
+   ACTPLSZ   = 4000 ; (* ACTION TABLE *)
+   GOTOPLSZ  =  550 ; (* GOTO TABLE *)
+  
+      ANYDEX = 0 ;
+     GLUEDEX = 1 ;
+      EOFDEX = 2 ;
+     EOLNDEX = 3 ;
+   STRINGDEX = 4 ;
+   DIGITSDEX = 5 ;
+    CHUNKDEX = 6 ;
+   BTSYMDIFF = 6 ; (* NO. OF DIFFERENT BUILT-IN TERMINAL SYMBOLS *) 
+  
+   BNCFDIFF = 15 ; (* NO. OF DIFFERENT INTERNAL BNCF SYMBOLS *) 
+   METADIFF = 19 ; (* NO. OF DIFFERENT META SYMBOLS *)
+   ACTDIFF  =  4 ; (* NO. OF DIFFERENT ACTION TYPES *)
+  
+   QUOTE = '''' ; 
+  
+   BLANK20 = '                    ' ; (* EMPTY STRING20 *)
+    BLANK10 = '          '; 
+  
+   CALLS20 = 'CALLS%              ' ; 
+   LOCAL20 = 'LOCAL VARIABLES%    ' ; 
+   ASSD20 =  'ASSIGNED VARIABLES% ' ; 
+   DEFS20 =  ' DEFINED IN%        ' ; 
+   REF20   = 'REFERENCEDVARIABLES%' ; 
+  
+   TOPLEVEL = '******TOPLEVEL******' ; (* FOR INITIALIZING DEFSTACK *)
+  
+   EOFCCHR  = 'EOF       ' ;
+   EOLNCCHR = 'EOLN      ' ;
+  
+   NONMETASEMICOLON  =  ';                   '   ;
+  
+   (* BELOW ARE THE META SYMBOLS *) 
+  
+      COMMA = '                   ,' ;
+      ARROW = '                   _' ;
+  SEMICOLON = '                   ;' ;
+    UPTRIAN = '                   &' ;
+  DOWNTRIAN = '                   !' ;
+     BLKBEG = '                   [' ;
+     BLKEND = '                   ]' ;
+     CONBEG = '                   (' ;
+     CONEND = '                   )' ;
+     ITNBEG = '                   <' ;
+     ITNEND = '                   >' ;
+     PALBEG = '                  (-' ;
+     PALEND = '                  -)' ;
+     PDFBEG = '                  <-' ;
+     PDFEND = '                  ->' ;
+     LABBEG = '                  /-' ;
+     LABEND = '                  -/' ;
+     PRMBEG = '                  /*' ;
+     PRMEND = '                  */' ;
+  
+     LOCBEG = '                  ((' ;
+     LOCEND = '                  ))' ;
+     ASSBEG = '                  [[' ;
+     ASSEND = '                  ]]' ;
+  
+   LINESIZE = 120 ; (* FOR DISPLAY OF INPUT PROGRAM INCASE OF AN ERROR *) 
+  
+   NCOLS = 136 ;
+  
+    (* THE FOLLOWING CONSTANTS SPECIFY THE OPERATING SYSTEM *)
+  
+    WASTED = 0; 
+    NOS = TRUE; 
+    SCOPE = FALSE;
+(*$H+*) (*$L**) 
+TYPE
+  
+   STRING20 = PACKED ARRAY [ 1..IDENTMAX ] OF CHAR ;
+    STRING10 = PACKED ARRAY [ 1..10 ] OF CHAR ; 
+   UNSTRING20 = ARRAY [ 1..IDENTMAX ] OF CHAR ; 
+  
+   CCHR = PACKED ARRAY [1..CCHRSIZE] OF CHAR ;
+   UNCCHR = ARRAY [1..CCHRSIZE] OF CHAR ; 
+  
+   CHAR2 = PACKED ARRAY [ 1..2 ] OF CHAR ;
+  
+   SUBLIST = RECORD 
+       BEG % INTEGER ;
+       MAX % INTEGER
+       END ;
+  
+   TOKEN = RECORD 
+     INDEX % INTEGER ;
+     CHARS % STRING20 
+       END ;
+  
+   IDENTPTR = ^ IDENT ; 
+   IDENT = RECORD 
+      NAME % STRING20 ; 
+      NEXT % IDENTPTR 
+       END ;
+  
+   PRBLKPTR = ^ PRBLK ; 
+   PRBLK = RECORD 
+     PROCNAME % STRING20 ;
+        PRIDS % IDENTPTR ;
+     NEXTPROC % PRBLKPTR
+          END ; 
+  
+   BNFTYPE = (PROCDEF, PROCNAME, IDEN, OTHERS, PACKIT, BNFEND) ;
+   BCFTYPE = (NOTHING, LOCAL, ASSIGNED, NOTID) ;
+   BSFTYPE = (BSFMETA, BSFLIT, BSFNUM, BSFEND) ;
+  
+   BSF1 = PACKED RECORD 
+      CASE BSFTYP % BSFTYPE OF
+          BSFMETA % (META % 1..METADIFF) ;
+           BSFLIT % (LIT % 1..BSFLITMAX) ;
+           BSFNUM % (NUM % 1..BSFSIZE) ;
+           BSFEND % ()
+   END ;
+  
+   BNFTUPLE = ARRAY [ 1..RITESIZE ] OF BNFTYPE ;
+   BCFTUPLE = ARRAY [ 1..RITESIZE ] OF BCFTYPE ;
+  
+   ACTIONTYPE = (SHIFT, REDUCE, DONE, BADSYNTAX) ;
+  
+   TABLES = RECORD
+  
+      CCTAB % ARRAY [1..CCHRMAX, 1..CCHRSIZE] OF CHAR ; 
+      CCTABSIZE % INTEGER ; 
+  
+      IGNORE % SUBLIST ;
+      SLIST, SELIST, ELIST % SUBLIST ;
+      CLIST, CELIST % SUBLIST ; 
+      DLIST % SUBLIST ; 
+      TSYMLIST % SUBLIST ;
+      BSFLITLIST % SUBLIST ;
+      BIFLIST, BICLIST% SUBLIST ; 
+      GLUELEFT, GLUERITE % SUBLIST ;
+  
+      CCHRPOOL % ARRAY [1..CPOOLSIZE] OF CCHR ; 
+      STR20POOL % ARRAY [1..SPOOLSIZE] OF STRING20 ;
+      NUMPOOL % ARRAY [1..NPOOLSIZE] OF INTEGER ; 
+  
+      BNF % PACKED ARRAY [1..RULESMAX] OF PACKED RECORD 
+         LEFTSIDE % 1..NTSYMMAX ; 
+         RITESIDE % PACKED ARRAY [1..RITESIZE] OF BNFTYPE 
+      END ; 
+  
+      BCF % PACKED ARRAY [1..RULESMAX, 1..RITESIZE] OF BCFTYPE ;
+  
+      BSF % PACKED ARRAY [1..RULESMAX, 1..BSFSIZE] OF BSF1 ;
+  
+      ACTAB % PACKED ARRAY [1..STATEMAX] OF 1..ACTPLSZ ;
+      GOTAB % PACKED ARRAY [1..NTSYMMAX] OF 1..GOTOPLSZ ; 
+  
+      ACTPOOL % PACKED ARRAY [1..ACTPLSZ] OF PACKED RECORD
+           TSYM % 0..TSYMMAX ;
+         ACTTYP % ACTIONTYPE ;
+         ACTNUM % 1..STATEMAX (* MAX (STATEMAX, RULESMAX) *)
+      END ; 
+  
+      GOTOPOOL % PACKED ARRAY [1..GOTOPLSZ] OF PACKED RECORD
+         OLDSTATE % 0..STATEMAX ; 
+         NEWSTATE % 1..STATEMAX 
+      END 
+  
+   END ;
+  
+   TABFILE = FILE OF TABLES ; 
+  
+   INTPTR = ^ INTEGER ;                                                (*STATS*)
+   STATSPTR = ^ STATISTICS ;                                           (*STATS*)
+   STATISTICS = RECORD                                                 (*STATS*)
+      NUM % RECORD                                                     (*STATS*)
+         PRBLKS, STACKS, IDENTS % INTEGER ;                            (*STATS*)
+      END ;                                                            (*STATS*)
+      TIME % RECORD                                                    (*STATS*)
+         EQ20,                                                         (*STATS*)
+         ANALYSIS, PARSE, NEXTTOKEN, NEXTCCHR,                         (*STATS*)
+         DOSHIFT, DOREDUCE, SUBSTITUTE, FILL,                          (*STATS*)
+         LOOKGOTO, LOOKACTION,                                         (*STATS*)
+         COLLATE,                                                      (*STATS*)
+         REARRANGE, COUNT, PRINT, PRINTCONC,                           (*STATS*)
+         FILLAPP,                                                      (*STATS*)
+         PLOT,                                                         (*STATS*)
+         TOTAL % INTEGER                                               (*STATS*)
+      END ;                                                            (*STATS*)
+      HIGHEST, LOWEST % INTPTR                                         (*STATS*)
+   END ;                                                               (*STATS*)
+  
+VAR 
+  
+  
+   NUMBOXES % INTEGER;
+   DEBUG % BOOLEAN ;
+   PBUG % BOOLEAN ; 
+   DOSTATS % BOOLEAN; 
+   LONGCONC % BOOLEAN ; 
+   FLUSHSEMI % BOOLEAN; 
+   NOPLOT % BOOLEAN ;                                                  (*DEBUG*)
+  
+   MEMBER % INTEGER ; 
+  
+   TABLEFILE % TABFILE ;
+  
+   LEFTMARGIN % INTEGER ; 
+  
+   BTSYMINDEX % ARRAY [1..BTSYMDIFF] OF PACKED ARRAY [1..8] OF CHAR ; 
+   METAINDEX % ARRAY [1..METADIFF] OF STRING20 ;
+  
+   THETREE % IDENTPTR ; 
+   THECONCORDANCE % PRBLKPTR ;
+   THEPCALLS % PRBLKPTR ; 
+   THEPSET % IDENTPTR ; 
+  
+   DEADIDENT % IDENTPTR ; 
+   FREEPR % PRBLKPTR ;
+  
+   STATS % STATSPTR ;                                                  (*STATS*)
+   IP % INTPTR ;                                                       (*STATS*)
+  
+(*$H+*) (*$L**) 
+  
+PROCEDURE GETPARAMS ; 
+  
+CONST 
+  
+   PRMBLKSIZE = 10 ; (* MAX NUMBER OF PARAMETERS *) 
+   FIELDSIZE = 7 ; (* SIZE OF PARAM NAMES AND VALUES *) 
+  
+   PLUSIGN    = '+      ' ; 
+   MINUSIGN   = '-      ' ; 
+   BLANKFIELD = '       ' ; 
+  
+TYPE
+  
+   FIELD = PACKED ARRAY [1..FIELDSIZE] OF CHAR ;
+   PRMBLK = ARRAY [1..PRMBLKSIZE] OF RECORD 
+      NAME% FIELD ; 
+      VAL% FIELD
+   END ;
+  
+VAR 
+  
+   PRMBLOCK% PRMBLK ; 
+    BOX% FIELD; 
+    I,PDEX% INTEGER;
+  
+  
+  
+PROCEDURE GETPRMBLOCK (VAR PRMBLOCK% PRMBLK) ;
+  
+CONST 
+  
+   CARDSIZE = 80 ;
+   CARDADDR = 56 ; (* 70B *)
+  
+TYPE
+  
+   KARD = ARRAY [1..CARDSIZE] OF CHAR ; 
+   KARDETTE = PACKED ARRAY [1..CARDSIZE] OF CHAR ;
+  
+VAR 
+  
+   ENDERS, DELIMS% SET OF 'A'..'<' ; (* SHOULD REALLY BE CONSTANTS *) 
+  
+   I% INTEGER ; 
+   STOP% BOOLEAN ;
+   CARD% KARD ; 
+   CARDLEN, CDEX% INTEGER ; 
+   PDEX% INTEGER ;
+  
+  
+PROCEDURE GETCARD (VAR CARD% KARD) ;
+  
+VAR 
+  
+   POINTER % RECORD CASE INTEGER OF 
+      1 % (INT % INTEGER) ; 
+      2 % (PTR % ^KARDETTE) 
+   END ;
+  
+BEGIN 
+  
+   POINTER.INT %= CARDADDR  ; 
+   (*$T-*)
+   UNPACK (POINTER.PTR^, CARD, 1) ; 
+   (*$T+*)
+  
+END (* GETCARD *) ; 
+  
+  
+  
+PROCEDURE GETFIELD (VAR F% FIELD) ; 
+  
+VAR 
+  
+   BUF% ARRAY [1..FIELDSIZE] OF CHAR ;
+   STOP% BOOLEAN ;
+   I, BDEX% INTEGER ; 
+  
+BEGIN 
+  
+   BDEX %= 0 ;
+   STOP %= FALSE ;
+  
+   WHILE (CDEX <= CARDLEN) AND NOT (STOP) DO BEGIN
+      STOP %= (CARD[CDEX] IN DELIMS) OR (CARD[CDEX] IN ['+','-','=']) ; 
+      IF NOT (STOP) THEN
+         BEGIN
+         BDEX %= BDEX + 1 ; 
+         IF (BDEX <= FIELDSIZE) THEN BUF[BDEX] %= CARD[CDEX] ;
+         CDEX %= CDEX + 1 ; 
+         END ;
+   END ;
+  
+   FOR I %= BDEX+1 TO FIELDSIZE DO BUF[I] %= ' ' ;
+   PACK (BUF, 1, F) ; 
+  
+END (* GETFIELD *) ;
+  
+  
+  
+BEGIN (* GETPRMBLOCK *) 
+  
+   ENDERS %= ['.', ')'] ; 
+   DELIMS %= [',', '/'] ; 
+   GETCARD (CARD) ; 
+  
+   I %= 1 ; 
+   STOP %= FALSE ;
+   WHILE NOT (STOP) AND (I <= CARDSIZE) DO BEGIN
+      STOP %= (CARD [I] IN ENDERS) ;
+      I %= I + 1 ;
+   END ;
+   CDEX %= I ;
+  
+   STOP %= FALSE ;
+   WHILE NOT (STOP) AND (I <= CARDSIZE) DO BEGIN
+      STOP %= (CARD [I] IN ENDERS) ;
+      I %= I + 1 ;
+   END ;
+   CARDLEN %= I - 2 ; 
+  
+   PDEX %= 0 ;
+  
+   WHILE (CDEX <= CARDLEN) DO BEGIN 
+  
+      PDEX %= PDEX + 1 ;
+      IF (PDEX > PRMBLKSIZE) THEN 
+         BEGIN
+         MESSAGE ('* PARAM LIST TOO LONG *') ;
+         HALT ; 
+         END ;
+  
+      GETFIELD (PRMBLOCK[PDEX].NAME) ;
+  
+      IF (CDEX <= CARDLEN) THEN 
+         IF (CARD[CDEX] = '=') THEN 
+            BEGIN 
+            CDEX %= CDEX + 1 ;
+            GETFIELD (PRMBLOCK[PDEX].VAL) ; 
+            END 
+         ELSE IF (CARD[CDEX] = '+') THEN
+            BEGIN 
+            CDEX %= CDEX + 1 ;
+            PRMBLOCK[PDEX].VAL %= PLUSIGN ; 
+            END 
+         ELSE IF (CARD[CDEX] = '-') THEN
+            BEGIN 
+            CDEX %= CDEX + 1 ;
+            PRMBLOCK[PDEX].VAL %= MINUSIGN ;
+            END ; 
+  
+      IF (CDEX <= CARDLEN) THEN 
+         IF (CARD[CDEX] IN DELIMS)
+            THEN CDEX %= CDEX + 1 
+            ELSE BEGIN MESSAGE ('** BAD PARAM LIST **') ; HALT END ;
+  
+   END ;
+  
+END (* GETPRMBLOCK *) ; 
+  
+  
+  
+FUNCTION GETPMBOOL (VAR PRMBLOCK% PRMBLK; NAME% FIELD; DEFAULT% BOOLEAN)
+                      % BOOLEAN ; 
+  
+VAR 
+  
+   MATCH% BOOLEAN ; 
+   PDEX% INTEGER ;
+  
+BEGIN 
+  
+   PDEX %= 1 ;
+  
+   REPEAT 
+      MATCH %= (PRMBLOCK[PDEX].NAME = NAME) ; 
+      IF NOT (MATCH) THEN PDEX %= PDEX + 1 ;
+   UNTIL (MATCH) OR (PDEX > PRMBLKSIZE) ; 
+  
+        IF NOT (MATCH) THEN 
+           GETPMBOOL %= DEFAULT 
+   ELSE IF (PRMBLOCK[PDEX].VAL = PLUSIGN) OR
+           (PRMBLOCK[PDEX].VAL = BLANKFIELD) OR 
+           (PRMBLOCK[PDEX].VAL = 'TRUE   ') OR
+           (PRMBLOCK[PDEX].VAL = 'T      ') THEN
+           GETPMBOOL %= TRUE
+   ELSE IF (PRMBLOCK[PDEX].VAL = MINUSIGN) OR 
+           (PRMBLOCK[PDEX].VAL = 'FALSE  ') OR
+           (PRMBLOCK[PDEX].VAL = 'F      ') THEN
+           GETPMBOOL %= FALSE 
+      ELSE BEGIN
+           MESSAGE ('* PARAM LIST IN BAD FORMAT *') ; 
+           HALT ; 
+           END ;
+  
+END (* GETPMBOOL *) ; 
+  
+  
+  
+BEGIN  (* GETPARAMS *)
+  
+   FOR PDEX %= 1 TO PRMBLKSIZE DO BEGIN 
+      PRMBLOCK[PDEX].NAME %= BLANKFIELD ; 
+      PRMBLOCK[PDEX].VAL  %= BLANKFIELD ; 
+   END ;
+  
+   GETPRMBLOCK (PRMBLOCK) ; 
+   FLUSHSEMI %= NOT GETPMBOOL (PRMBLOCK, 'SEMI   ', FALSE); 
+   DOSTATS %= GETPMBOOL(PRMBLOCK,'STATS  ', FALSE); 
+   DEBUG %= GETPMBOOL (PRMBLOCK, 'DEBUG  ', FALSE) ;
+   PBUG %= GETPMBOOL ( PRMBLOCK, 'PBUG   ', FALSE) ;
+   LONGCONC %= GETPMBOOL (PRMBLOCK, 'LONGC  ', TRUE) ;
+   NOPLOT %= GETPMBOOL (PRMBLOCK, 'NOPLOT ', FALSE) ;                  (*DEBUG*)
+  
+   BOX %= 'BOX1   ' ; 
+   NUMBOXES %= 3; 
+   FOR I %= 1 TO 9 DO BEGIN 
+      IF GETPMBOOL(PRMBLOCK,BOX,FALSE) THEN 
+         NUMBOXES %= I; 
+      BOX[4] %= SUCC(BOX[4]); 
+   END; 
+  
+END (* GETPARAMS *) ; 
+  
+(*$H+*) (*$L**) 
+  
+FUNCTION MIN (X, Y% INTEGER) % INTEGER ;
+  
+BEGIN 
+  
+   IF (X <= Y) THEN MIN %= X
+               ELSE MIN %= Y ;
+  
+END (* MIN *) ; 
+  
+  
+  
+FUNCTION MAX (X, Y% INTEGER) % INTEGER ;
+  
+BEGIN 
+  
+   IF (X >= Y) THEN MAX %= X
+               ELSE MAX %= Y ;
+  
+END (* MAX *) ; 
+  
+  
+  
+PROCEDURE INDENT ;
+  
+VAR I% INTEGER ;
+  
+BEGIN 
+  
+   FOR I %= 1 TO MAX ( 1 , LEFTMARGIN MOD 60 ) DO WRITE ( ' ' ) ; 
+  
+END (* INDENT *) ;
+  
+  
+  
+  
+FUNCTION UNKLUDGE (STR% STRING20) % INTEGER ; 
+  
+VAR 
+  
+   THECHAMELEON % RECORD CASE INTEGER OF
+      1 % (INT % ARRAY [1..2] OF INTEGER) ; 
+      2 % (STR % STRING20)
+   END ;
+  
+BEGIN 
+  
+   THECHAMELEON.STR %= STR ;
+   UNKLUDGE %= THECHAMELEON.INT[1] ;
+  
+END (* UNKLUDGE *) ;
+  
+  
+  
+PROCEDURE KLUDGE (VAR STR% STRING20; INT% INTEGER) ;
+  
+VAR 
+  
+   THECHAMELEON % RECORD CASE INTEGER OF
+      1 % (INT % ARRAY [1..2] OF INTEGER) ; 
+      2 % (STR % STRING20)
+   END ;
+  
+BEGIN 
+  
+   THECHAMELEON.INT[1] %= INT ; 
+   THECHAMELEON.INT[2] %= 0 ; 
+   STR %= THECHAMELEON.STR ;
+  
+END (* KLUDGE *) ;
+  
+  
+  
+FUNCTION EQ20 (S1, S2% STRING20) % BOOLEAN ;
+  
+VAR 
+  
+   CHAM1, CHAM2 % RECORD CASE INTEGER OF
+      1 % (ALF % ARRAY [1..2] OF ALFA) ;
+      2 % (STR % STRING20)
+   END ;
+  
+BEGIN 
+  
+   STATS^.TIME.EQ20 %= STATS^.TIME.EQ20 - CLOCK ;                      (*STATS*)
+   CHAM1.STR %= S1 ;
+   CHAM2.STR %= S2 ;
+   EQ20 %= (CHAM1.ALF[1] = CHAM2.ALF[1]) AND (CHAM1.ALF[2] = CHAM2.ALF[2]) ;
+   STATS^.TIME.EQ20 %= STATS^.TIME.EQ20 + CLOCK ;                      (*STATS*)
+  
+END (* EQ20 *) ;
+  
+  
+  
+FUNCTION NE20( S1 % STRING20 ; S2 % STRING20 ) % BOOLEAN  ; 
+  
+BEGIN NE20 %= NOT( EQ20( S1, S2 ) ) 
+END  ;  (*   NE20   *)
+  
+(*$H+*) (*$L**) 
+FUNCTION METABEG ( P%IDENTPTR ) % BOOLEAN;
+  
+(* RETURN TRUE IFF P POINTS TO A BEGINNING METASYNBOL *)
+  
+BEGIN 
+   METABEG %= TRUE; 
+   IF NE20(P^.NAME,CONBEG) THEN 
+   IF NE20(P^.NAME,ITNBEG) THEN 
+   IF NE20(P^.NAME,BLKBEG) THEN 
+   IF NE20(P^.NAME,PDFBEG) THEN 
+   IF NE20(P^.NAME,PALBEG) THEN 
+      METABEG %= FALSE; 
+END; (* METABEG *)
+  
+  
+FUNCTION METASYMBOL ( P % IDENTPTR ) % BOOLEAN ;
+(* RETURNS TRUE IFF P POINTS TO A METASYMBOL *) 
+  
+BEGIN (* METASYMBOL *)
+   METASYMBOL %= ( P^.NAME[1] = ' ')
+END; (* METASYMBOL *) 
+  
+  
+PROCEDURE PRINTONEIDENT ( P % IDENTPTR ); 
+  
+VAR 
+   I % INTEGER; 
+   CHAM % RECORD CASE INTEGER OF
+      1%(PTR % IDENTPTR); 
+      2% (OCT% PACKED ARRAY[1..20] OF 0..7);
+   END; 
+  
+BEGIN (* PRINTONEIDENT *) 
+   IF P = NIL THEN
+      WRITE(' <<NIL>> ', BLANK20) 
+   ELSE BEGIN 
+      CHAM.PTR %= P;
+      IF DEBUG THEN FOR I%=15 TO 20 DO WRITE(CHAM.OCT[I]%1);
+      IF METASYMBOL(P)
+         THEN WRITE(' META% ',QUOTE,P^.NAME[19],P^.NAME[20],QUOTE,BLANK10)
+         ELSE WRITE(' ', P^.NAME);
+      END;
+END; (* PRINTONEIDENT *)
+  
+  
+  
+PROCEDURE FORMATIDENT ( ROW % INTEGER;  J  % INTEGER ; P % IDENTPTR); 
+  
+(* PRINTS IDENTS IN GIVEN NUMBER OF ROWS AND COLUMNS *) 
+  
+VAR COL % INTEGER;
+  
+BEGIN 
+   WHILE (ROW > 0) AND (P<>NIL) DO BEGIN
+      WRITELN; WRITE(' ');
+      COL %= J; 
+      WHILE (COL > 0) AND (P<>NIL) DO BEGIN 
+         PRINTONEIDENT(P);
+         P %= P^.NEXT;
+         COL %= COL - 1 
+      END;
+      ROW %= ROW - 1
+   END
+END; (* FORMATIDENT *)
+  
+  
+PROCEDURE PRINTIDENT (P% IDENTPTR) ;
+(* PRONTS IDENTS IN ONE COLUMN, UNTIL NIL *)
+  
+BEGIN 
+   FORMATIDENT(MAXINT,1,P); 
+END (* PRINTIDENT *) ;
+  
+  
+  
+FUNCTION NEWIDENT( LNAME% STRING20 ; LNEXT % IDENTPTR ) % IDENTPTR ;
+  
+VAR P % IDENTPTR; 
+  
+BEGIN 
+  
+    IF DEADIDENT = NIL
+       THEN BEGIN 
+  
+            NEW (P) ; 
+            STATS^.NUM.IDENTS %= STATS^.NUM.IDENTS + 1 ;               (*STATS*)
+            END 
+       ELSE BEGIN 
+            P %= DEADIDENT ;
+            DEADIDENT %= DEADIDENT^.NEXT ;
+            END ; 
+  
+    P^.NAME %= LNAME ;
+    P^.NEXT %= LNEXT ;
+    NEWIDENT %= P 
+  
+END  (* NEWIDENT *)  ;
+  
+  
+  
+PROCEDURE FLSIDENT( VAR P% IDENTPTR );
+VAR Q% IDENTPTR ; 
+BEGIN Q %= P^.NEXT; 
+    P^.NEXT %= DEADIDENT ;
+    DEADIDENT %= P ;
+    P %= Q
+END  (* FLSIDENT *)  ;
+  
+  
+  
+PROCEDURE APPEND( VAR OLD% IDENTPTR; NEW% IDENTPTR ) ;
+VAR P % IDENTPTR; 
+BEGIN IF OLD = NIL THEN OLD %= NEW
+    ELSE BEGIN P %= OLD ; 
+        WHILE P^.NEXT <> NIL DO P %= P^.NEXT ;
+        P^.NEXT %= NEW
+    END 
+END  (* APPEND  *)  ; 
+  
+  
+  
+FUNCTION ADD1( NEWNAME% STRING20; OLD% IDENTPTR ) % IDENTPTR ;
+VAR P% IDENTPTR ; FLAG% BOOLEAN;
+BEGIN FLAG %= TRUE ;
+    P %= OLD; 
+    WHILE( ( P <> NIL ) AND FLAG ) DO 
+        IF EQ20 (P^.NAME, NEWNAME)
+           THEN FLAG %= FALSE 
+           ELSE P %= P^.NEXT ;
+    IF FLAG THEN OLD %= NEWIDENT ( NEWNAME, OLD ) ; 
+    ADD1 %= OLD 
+END  (*  ADD1  *)  ;
+  
+  
+  
+FUNCTION MEMIDENT (STR% STRING20; P% IDENTPTR) % BOOLEAN ;
+  
+VAR MATCH% BOOLEAN ;
+  
+BEGIN 
+  
+   MATCH %= FALSE ; 
+   WHILE NOT (MATCH) AND (P <> NIL) DO BEGIN
+      MATCH %= EQ20 (STR, P^.NAME) ;
+      P %= P^.NEXT ;
+   END ;
+   MEMIDENT %= MATCH ;
+  
+END (* MEMIDENT *) ;
+  
+  
+  
+PROCEDURE SUBIDENT (VAR P1% IDENTPTR; P2% IDENTPTR) ; 
+  
+VAR NP1% IDENTPTR ; 
+  
+BEGIN 
+   NP1 %= NIL ; 
+   WHILE (P1 <> NIL) DO BEGIN 
+      IF NOT (MEMIDENT (P1^.NAME, P2)) THEN NP1 %= NEWIDENT (P1^.NAME, NP1) ; 
+      FLSIDENT (P1) ; 
+   END ;
+   P1 %= NP1 ;
+  
+END (* SUBIDENT *) ;
+  
+  
+  
+FUNCTION INTIDENT (P1, P2% IDENTPTR) % IDENTPTR ; 
+  
+VAR P% IDENTPTR ; 
+  
+BEGIN 
+  
+   P %= NIL ; 
+   WHILE (P1 <> NIL) DO BEGIN 
+      IF (MEMIDENT (P1^.NAME, P2)) THEN P %= NEWIDENT (P1^.NAME, P) ; 
+      P1 %= P1^.NEXT ;
+   END ;
+   INTIDENT %= P ;
+  
+END (* INTIDENT *) ;
+  
+  
+  
+PROCEDURE PACKIDS (VAR P% IDENTPTR) ; 
+  
+VAR 
+  
+   BUF, STR% UNSTRING20 ; 
+   BUFDEX, STRDEX, I% INTEGER ; 
+   BUFEMPTY% BOOLEAN ;
+  
+BEGIN 
+  
+   STRDEX %= 0 ;
+   WHILE ((P <> NIL) AND (STRDEX <= IDENTMAX)) DO BEGIN 
+      UNPACK (P^.NAME, BUF, 1) ;
+      BUFDEX %= IDENTMAX ;
+      BUFEMPTY %= FALSE ; 
+      WHILE ((BUFDEX > 0) AND NOT (BUFEMPTY)) DO BEGIN
+         IF ((STRDEX+BUFDEX <= IDENTMAX) AND (BUF[BUFDEX] <> ' '))
+            THEN BEGIN
+                 FOR I %= BUFDEX DOWNTO 1 DO STR [STRDEX+I] %= BUF [I] ;
+                 STRDEX %= STRDEX + BUFDEX ;
+                 BUFEMPTY %= TRUE ; 
+                 END
+            ELSE BUFDEX %= BUFDEX-1 ; 
+      END ; 
+      FLSIDENT (P) ;
+   END ;
+  
+   WHILE (P <> NIL) DO FLSIDENT (P) ; 
+   P %= NEWIDENT (BLANK20, NIL) ; 
+   FOR I %= STRDEX+1 TO IDENTMAX DO STR [I] %= ' ' ;
+   PACK (STR, 1, P^.NAME) ; 
+  
+END (* PACKIDS *) ; 
+  
+  
+  
+PROCEDURE COPY (OHEAD, OTAIL% IDENTPTR; VAR NHEAD, NTAIL% IDENTPTR) ; 
+  
+BEGIN 
+  
+   NHEAD %= NEWIDENT (BLANK20, NIL) ; 
+   NTAIL %= NHEAD ; 
+  
+   WHILE (OHEAD <> NIL) AND (OHEAD <> OTAIL) DO BEGIN 
+      NTAIL^.NEXT %= NEWIDENT (OHEAD^.NAME, NIL) ;
+      NTAIL %= NTAIL^.NEXT ;
+      OHEAD %= OHEAD^.NEXT ;
+   END ;
+  
+   IF (OHEAD <> NIL) THEN 
+      BEGIN 
+      NTAIL^.NEXT %= NEWIDENT (OHEAD^.NAME, NIL) ;
+      NTAIL %= NTAIL^.NEXT ;
+      END ; 
+  
+   FLSIDENT (NHEAD) ; 
+   IF (NHEAD = NIL) THEN NTAIL %= NIL ; 
+  
+END (* COPY *) ;
+  
+  
+  
+PROCEDURE SUBSTITUTE (TEM, STR% IDENTPTR; INDEX% INTEGER) ; 
+  
+   (* SUBSTITUTE MODIFIES  THE 2ND ARGUMENT *)
+  
+VAR 
+  
+   INDEXSTR% STRING20 ; 
+   ATLEASTONCE% BOOLEAN ; 
+   FOUND1% BOOLEAN ;
+   LAST% IDENTPTR ; 
+  
+BEGIN 
+  
+   STATS^.TIME.SUBSTITUTE %= STATS^.TIME.SUBSTITUTE - CLOCK ;          (*STATS*)
+  
+   KLUDGE (INDEXSTR, INDEX) ; 
+   ATLEASTONCE %= FALSE ; 
+  
+   WHILE (TEM <> NIL) DO BEGIN
+  
+      FOUND1 %= FALSE ; 
+  
+      IF (TEM^.NEXT <> NIL) THEN
+      IF EQ20 (TEM^.NEXT^.NAME, BLANK20) AND (TEM^.NEXT^.NEXT <> NIL) THEN
+      IF EQ20 (TEM^.NEXT^.NEXT^.NAME, INDEXSTR) THEN
+  
+         BEGIN
+         FOUND1 %= TRUE ; 
+         FLSIDENT (TEM^.NEXT) ; 
+         FLSIDENT (TEM^.NEXT) ; 
+         IF (STR <> NIL) THEN 
+            BEGIN 
+            IF NOT (ATLEASTONCE)
+               THEN BEGIN 
+                    ATLEASTONCE %= TRUE ; 
+                    LAST %= STR ; 
+                    WHILE (LAST^.NEXT <> NIL) DO LAST %= LAST^.NEXT ; 
+                    END 
+               ELSE COPY (STR, LAST, STR, LAST) ; 
+            LAST^.NEXT %= TEM^.NEXT ; 
+            TEM^.NEXT %= STR ;
+            TEM %= LAST ; 
+            END ; 
+         END ;
+  
+      IF NOT (FOUND1) THEN TEM %= TEM^.NEXT ; 
+  
+   END ;
+  
+   IF NOT (ATLEASTONCE) THEN WHILE (STR <> NIL) DO FLSIDENT (STR) ; 
+   STATS^.TIME.SUBSTITUTE %= STATS^.TIME.SUBSTITUTE + CLOCK ;          (*STATS*)
+  
+END (* SUBSTITUTE *) ;
+(*$H+*) (*$L**) 
+  
+FUNCTION NEWPRBLK (NAME2% STRING20; NEXT2A% PRBLKPTR; NEXT2B% IDENTPTR) % 
+                   PRBLKPTR ; 
+  
+VAR RETPTR2% PRBLKPTR ; 
+  
+BEGIN 
+  
+   IF (FREEPR = NIL)
+       THEN BEGIN 
+            NEW (RETPTR2) ; 
+            STATS^.NUM.PRBLKS %= STATS^.NUM.PRBLKS + 1 ;               (*STATS*)
+            END 
+       ELSE BEGIN 
+            RETPTR2 %= FREEPR ; 
+            FREEPR %= FREEPR^.NEXTPROC ;
+            END ; 
+  
+    RETPTR2^.PROCNAME %= NAME2; 
+    RETPTR2^.NEXTPROC %= NEXT2A;
+    RETPTR2^.PRIDS %= NEXT2B; 
+    NEWPRBLK %= RETPTR2 
+  
+END (* NEWPRBLK *) ;
+  
+  
+  
+PROCEDURE FREEPRBLK (VAR PBPTR% PRBLKPTR) ; 
+  
+VAR 
+  
+   PB% PRBLKPTR ; 
+   P% IDENTPTR ;
+  
+BEGIN 
+  
+   PB %= PBPTR ;
+   PBPTR %= PBPTR^.NEXTPROC ; 
+   P %= PB^.PRIDS ; 
+   WHILE (P <> NIL) DO FLSIDENT (P) ; 
+   PB^.PRIDS %= NIL ; 
+   PB^.NEXTPROC %= FREEPR ; 
+   FREEPR %= PB ; 
+  
+END (* FREEPRBLK *) ; 
+  
+(*$H+*) (*$L**) 
+  
+PROCEDURE ANALYSIS (VAR INFILE% TEXT; VAR TABS% TABLES; LONGCONC% BOOLEAN;
+                    VAR THETREE% IDENTPTR; VAR THECONCORDANCE% PRBLKPTR;
+                    VAR THEPCALLS% PRBLKPTR; VAR THEPSET% IDENTPTR) ; 
+  
+TYPE
+  
+   DEFPTR = ^ DEF ; 
+   DEF = RECORD 
+     PROCNAME % STRING20 ;
+       PARENT % STRING20 ;
+      NEXTDEF % DEFPTR
+          END ; 
+  
+   CONCPTR = ^ CONC ; 
+   CONC = RECORD
+       ID % PRBLKPTR ;
+       AS % PRBLKPTR ;
+       LO % PRBLKPTR ;
+       PC % PRBLKPTR ;
+       DF % DEFPTR ;
+       PS % IDENTPTR
+      END ; 
+  
+VAR 
+  
+   LINECNT % INTEGER ;
+   LINE% ARRAY [1..LINESIZE] OF CHAR ;
+   LDEX, OLDEX% INTEGER ; 
+  
+   EOLNFLAG % BOOLEAN ; 
+   BUF % UNSTRING20 ; 
+   POINT % INTEGER ;
+  
+   PCCHR % CCHR ; 
+   UNPCCHR % UNCCHR ; 
+   PCCHRSIZE % INTEGER ;
+  
+   PTOKEN % TOKEN ; 
+   TOKENFLAG % BOOLEAN ;
+   WATCHGLUE % BOOLEAN; 
+  
+   THECONC% CONCPTR ; 
+  
+(*$H+*) (*$L**) 
+  
+FUNCTION MEMCCHR (CC% CCHR; WHERE% SUBLIST) % BOOLEAN ; 
+  
+VAR I% INTEGER; MATCH% BOOLEAN ;
+  
+BEGIN 
+  
+   I %= 1 ; 
+   MATCH %= FALSE ; 
+   WHILE (I <= WHERE.MAX) AND NOT (MATCH) DO BEGIN
+      MATCH %= (CC = TABS.CCHRPOOL [I+WHERE.BEG-1]) ; 
+      I %= I + 1 ;
+   END ;
+   MEMBER %= I - 1 ;
+   MEMCCHR %= MATCH ; 
+  
+END (* MEMCCHR *) ; 
+  
+  
+  
+FUNCTION MEMSTR20 (STR% STRING20; WHERE% SUBLIST) % BOOLEAN ; 
+  
+VAR I% INTEGER ; MATCH% BOOLEAN ; 
+  
+BEGIN 
+  
+   I %= 1 ; 
+   MATCH %= FALSE ; 
+   WHILE (I <= WHERE.MAX) AND NOT (MATCH) DO BEGIN
+      MATCH %= EQ20 (STR, TABS.STR20POOL [I+WHERE.BEG-1]) ; 
+      I %= I + 1 ;
+   END ;
+   MEMBER %= I - 1 ;
+   MEMSTR20 %= MATCH ;
+  
+END (* MEMSTR20 *) ;
+  
+  
+  
+FUNCTION MEMNUM (NUM% INTEGER; WHERE% SUBLIST) % BOOLEAN ;
+  
+VAR I% INTEGER ; MATCH% BOOLEAN ; 
+  
+BEGIN 
+  
+   I %= 1 ; 
+   MATCH %= FALSE ; 
+   WHILE (I <= WHERE.MAX) AND NOT (MATCH) DO BEGIN
+      MATCH %= (NUM = TABS.NUMPOOL [I+WHERE.BEG-1]) ; 
+      I %= I + 1 ;
+   END ;
+   MEMBER %= I - 1 ;
+   MEMNUM %= MATCH ;
+  
+END (* MEMNUM *) ;
+  
+  
+  
+PROCEDURE NTHCCHR (VAR CC% CCHR; WHERE% SUBLIST; INDEX% INTEGER) ;
+  
+BEGIN 
+  
+   CC %= TABS.CCHRPOOL [WHERE.BEG+INDEX-1] ;
+  
+END (* NTHCCHR *) ; 
+  
+  
+  
+PROCEDURE NTHSTR20 (VAR STR% STRING20; WHERE% SUBLIST; INDEX% INTEGER) ;
+  
+BEGIN 
+  
+   STR %= TABS.STR20POOL [WHERE.BEG+INDEX-1] ;
+  
+END (* NTHSTR20 *) ;
+  
+  
+  
+FUNCTION MAKEIDENT (LIST% SUBLIST) % IDENTPTR ; 
+  
+VAR 
+  
+   P% IDENTPTR ;
+   I, N% INTEGER ;
+  
+BEGIN 
+  
+   P %= NIL ; 
+   I %= LIST.BEG ;
+   N %= LIST.MAX ;
+   WHILE (N > 0) DO BEGIN 
+      P %= NEWIDENT (TABS.STR20POOL[I], P) ;
+      N %= N - 1 ;
+      I %= I + 1 ;
+   END ;
+   MAKEIDENT %= P ; 
+  
+END (* MAKEIDENT *) ; 
+  
+  
+  
+PROCEDURE GETBNCF (VAR LEFT% INTEGER; VAR RIGHT% BNFTUPLE;
+                   VAR BCFTUP% BCFTUPLE; RULENUM% INTEGER) ;
+  
+BEGIN 
+  
+   WITH TABS.BNF [RULENUM] DO 
+        BEGIN 
+        LEFT %= LEFTSIDE ;
+        UNPACK (RITESIDE, RIGHT, 1) ; 
+        END ; 
+   UNPACK (TABS.BCF [RULENUM], BCFTUP, 1) ; 
+  
+END (* GETBNCF *) ; 
+  
+  
+  
+FUNCTION GETBSF (RULENUM% INTEGER) % IDENTPTR ; 
+  
+VAR 
+  
+   I% INTEGER ; 
+   BSF% ARRAY [1..BSFSIZE] OF BSF1 ;
+   B% BSF1 ;
+   P% IDENTPTR ;
+  
+BEGIN 
+  
+   UNPACK (TABS.BSF [RULENUM], BSF, 1) ;
+   P %= NEWIDENT (BLANK20, NIL) ; 
+   GETBSF %= P ;
+  
+   I %= 0 ; 
+   REPEAT 
+      I %= I + 1 ;
+      B %= BSF [I] ;
+      CASE B.BSFTYP OF
+           BSFNUM % BEGIN 
+                    P^.NEXT %= NEWIDENT (BLANK20, NIL) ;
+                    P %= P^.NEXT ;
+                    P^.NEXT %= NEWIDENT (BLANK20, NIL) ;
+                    P %= P^.NEXT ;
+                    KLUDGE (P^.NAME, B.NUM) ; 
+                    END ; 
+          BSFMETA % BEGIN 
+                    P^.NEXT %= NEWIDENT (METAINDEX [B.META], NIL) ; 
+                    P %= P^.NEXT ;
+                    END ; 
+           BSFLIT % BEGIN 
+                    P^.NEXT %= NEWIDENT (BLANK20, NIL) ;
+                    P %= P^.NEXT ;
+                    NTHSTR20 (P^.NAME, TABS.BSFLITLIST, B.LIT) ;
+                    END ; 
+           BSFEND % 
+      END ; 
+   UNTIL (B.BSFTYP = BSFEND) OR (I = BSFSIZE) ; 
+  
+END (* GETBSF *) ;
+  
+  
+  
+  
+PROCEDURE LOOKACTION (VAR NUM% INTEGER; VAR ACTT% ACTIONTYPE; 
+                      TSYMBOL, STATE% INTEGER) ;
+  
+VAR EXIT% BOOLEAN ; I% INTEGER ;
+  
+BEGIN 
+  
+  STATS^.TIME.LOOKACTION %= STATS^.TIME.LOOKACTION - CLOCK ;           (*STATS*)
+  
+   I %= TABS.ACTAB [STATE] ;
+   EXIT %= FALSE ;
+   REPEAT 
+      WITH TABS.ACTPOOL[I] DO 
+           IF (TSYMBOL = TSYM) OR (TSYM = ANYDEX) 
+              THEN BEGIN
+                   EXIT %= TRUE ; 
+                   NUM %= ACTNUM ;
+                   ACTT %= ACTTYP ; 
+                   END
+              ELSE I %= I + 1 ; 
+   UNTIL EXIT ; 
+  
+  STATS^.TIME.LOOKACTION %= STATS^.TIME.LOOKACTION + CLOCK ;           (*STATS*)
+  
+END (* LOOKACTION *) ;
+  
+  
+  
+FUNCTION LOOKGOTO (NTSYM, OSTATE% INTEGER) % INTEGER ;
+  
+VAR EXIT% BOOLEAN ; I% INTEGER ;
+  
+BEGIN 
+  
+  STATS^.TIME.LOOKGOTO %= STATS^.TIME.LOOKGOTO - CLOCK ;               (*STATS*)
+  
+   I %= TABS.GOTAB [NTSYM] ;
+   EXIT %= FALSE ;
+   REPEAT 
+      WITH TABS.GOTOPOOL[I] DO
+           IF (OLDSTATE = OSTATE) OR (OLDSTATE = 0) 
+              THEN BEGIN
+                   EXIT %= TRUE ; 
+                   LOOKGOTO %= NEWSTATE ; 
+                   END
+              ELSE I %= I + 1 ; 
+   UNTIL EXIT ; 
+  
+  STATS^.TIME.LOOKGOTO %= STATS^.TIME.LOOKGOTO + CLOCK ;               (*STATS*)
+  
+END (* LOOKGOTO *) ;
+  
+(*$H+*) (*$L**) 
+  
+PROCEDURE NEXTCCHR ;
+  
+VAR 
+  
+   EXIT, MATCH % BOOLEAN ;
+   N, I% INTEGER ;
+   C% CHAR ;
+  
+  
+  
+FUNCTION GETOUT % CHAR ;
+  
+VAR C% CHAR ; 
+  
+BEGIN 
+  
+        IF POINT > 0 THEN 
+           BEGIN
+           C %= BUF [POINT] ; 
+           POINT %= POINT - 1 ; 
+           END
+  
+   ELSE IF EOF(INFILE) THEN 
+           C %= ' ' 
+  
+      ELSE BEGIN
+           IF EOLN (INFILE) THEN
+              BEGIN 
+              EOLNFLAG %= TRUE ;
+              LINECNT %= LINECNT + 1 ;
+              END ; 
+           C %= INFILE^ ; 
+           GET (INFILE) ; 
+           END ;
+  
+   PCCHRSIZE %= PCCHRSIZE + 1 ; 
+   UNPCCHR [PCCHRSIZE] %= C ; 
+   GETOUT %= C ;
+  
+END (* GETOUT *) ;
+  
+  
+  
+PROCEDURE PUTBACK ; 
+  
+BEGIN 
+  
+   POINT %= POINT + 1 ; 
+   BUF [POINT] %= UNPCCHR [PCCHRSIZE] ; 
+   PCCHRSIZE %= PCCHRSIZE - 1 ; 
+  
+END (* PUTBACK *) ; 
+  
+  
+  
+BEGIN 
+  
+   STATS^.TIME.NEXTCCHR %= STATS^.TIME.NEXTCCHR - CLOCK ;              (*STATS*)
+  
+        IF EOF (INFILE) THEN
+           BEGIN
+           PCCHR %= EOFCCHR ; 
+           OLDEX %= LDEX ;
+           LDEX %= 0 ;
+           END
+  
+   ELSE IF (EOLNFLAG) AND (POINT=1) THEN
+           BEGIN
+           PCCHR %= EOLNCCHR ;
+           POINT %= 0 ; 
+           EOLNFLAG %= FALSE ;
+           OLDEX %= LDEX ;
+           LDEX %= 0 ;
+           END
+  
+   ELSE IF (EOLN (INFILE)) AND (POINT=0) THEN 
+           BEGIN
+           GET (INFILE) ; 
+           LINECNT %= LINECNT + 1 ; 
+           PCCHR %= EOLNCCHR ;
+           OLDEX %= LDEX ;
+           LDEX %= 0 ;
+           END
+  
+      ELSE BEGIN
+           PCCHRSIZE %= 0 ; 
+           C %= GETOUT ;
+           MATCH %= FALSE ; 
+           N %= 0 ; 
+           WHILE (N < TABS.CCTABSIZE) AND (NOT (MATCH)) DO BEGIN
+              N %= N + 1 ;
+              IF TABS.CCTAB [N,1] = C THEN
+                 BEGIN
+                 PCCHRSIZE %= 1 ; 
+                 EXIT %= FALSE ;
+                 REPEAT 
+                         IF (PCCHRSIZE = CCHRSIZE) THEN 
+                            BEGIN 
+                            EXIT %= TRUE ;
+                            MATCH %= TRUE ; 
+                            END 
+                    ELSE IF (TABS.CCTAB [N, PCCHRSIZE+1] = ' ') THEN
+                            BEGIN 
+                            EXIT %= TRUE ;
+                            MATCH %= TRUE ; 
+                            END 
+                    ELSE IF (GETOUT <> TABS.CCTAB [N, PCCHRSIZE]) THEN
+                            BEGIN 
+                            EXIT %= TRUE ;
+                            WHILE (PCCHRSIZE > 1) DO PUTBACK ;
+                            END ; 
+                 UNTIL EXIT ; 
+                 END ;
+           END ;
+           FOR I %= 1 TO MIN (LINESIZE-LDEX, PCCHRSIZE) DO BEGIN
+               LDEX %= LDEX + 1 ; 
+               LINE [LDEX] %= UNPCCHR [I] ; 
+           END ;
+           FOR I %= PCCHRSIZE+1 TO CCHRSIZE DO UNPCCHR [I] %= ' ' ; 
+           PACK (UNPCCHR, 1, PCCHR) ; 
+           END ;
+  
+   STATS^.TIME.NEXTCCHR %= STATS^.TIME.NEXTCCHR + CLOCK ;              (*STATS*)
+  
+END (* NEXTCCHR *) ;
+  
+  
+  
+PROCEDURE NEXTTOKEN (VAR THETOKEN% TOKEN) ; 
+  
+VAR GLUEFLAG% BOOLEAN ; 
+  
+  
+  
+FUNCTION SPACENEXT % BOOLEAN ;
+  
+VAR ENDER% CCHR ; EXIT% BOOLEAN ; 
+  
+BEGIN 
+  
+   SPACENEXT %= FALSE ; 
+   EXIT %= FALSE ;
+  
+   REPEAT 
+      IF (MEMCCHR (PCCHR, TABS.CLIST)) THEN 
+         BEGIN
+         NTHCCHR (ENDER, TABS.CELIST, MEMBER) ; 
+         REPEAT NEXTCCHR UNTIL (PCCHR = ENDER) ;
+         NEXTCCHR ; 
+         SPACENEXT %= TRUE ;
+         END
+      ELSE IF (MEMCCHR (PCCHR, TABS.IGNORE)) THEN 
+         BEGIN
+         NEXTCCHR ; 
+         SPACENEXT %= TRUE ;
+         END
+      ELSE
+         EXIT %= TRUE ; 
+   UNTIL EXIT ; 
+  
+END (* SPACENEXT *) ; 
+  
+  
+  
+PROCEDURE PEEKTOKEN (VAR PTOKEN% TOKEN) ; 
+  
+VAR ENDER% CCHR ; 
+  
+  
+  
+PROCEDURE FILLSTRING (VAR STR% STRING20; ENDER% CCHR) ; 
+  
+VAR 
+  
+   I, J, LASTFILL% INTEGER ;
+   DONE, ESCAPE, FIRSTIME, ENDONCE% BOOLEAN ; 
+   SELFQUOTE% BOOLEAN ; 
+   BUF% UNSTRING20 ;
+  
+BEGIN 
+  
+   SELFQUOTE %= (MEMCCHR (ENDER, TABS.ELIST)) OR (TABS.ELIST.MAX = 0) ; 
+  
+   IF (SELFQUOTE) 
+      THEN BEGIN FIRSTIME %= TRUE ; ENDONCE %= FALSE END
+      ELSE ESCAPE %= TRUE (* TO RETAIN STARTING QUOTE *) ;
+  
+   LASTFILL %= 0 ;
+   REPEAT 
+      J %= MIN (IDENTMAX-LASTFILL, PCCHRSIZE) ; 
+      FOR I%= 1 TO J DO BUF [I+LASTFILL] %= UNPCCHR [I] ; 
+      LASTFILL %= LASTFILL + J ;
+      IF (SELFQUOTE)
+         THEN BEGIN 
+              DONE %= (ENDONCE) AND (PCCHR <> ENDER) ;
+              ENDONCE %= NOT (FIRSTIME) AND NOT (ENDONCE) AND (PCCHR = ENDER) ; 
+              IF (DONE) 
+                 THEN FOR I %= LASTFILL DOWNTO LASTFILL-J+1 DO BUF [I] %= ' ' 
+                 ELSE NEXTCCHR ;
+              FIRSTIME %= FALSE ; 
+              END 
+         ELSE BEGIN 
+              DONE %= NOT (ESCAPE) AND (PCCHR = ENDER) ;
+              ESCAPE %= NOT (ESCAPE) AND (MEMCCHR (PCCHR, TABS.ELIST)) ;
+              NEXTCCHR ;
+              END ; 
+   UNTIL DONE ; 
+  
+   FOR I %= LASTFILL+1 TO IDENTMAX DO BUF [I] %= ' ' ;
+  
+   IF (BUF [IDENTMAX] <> ' ') THEN
+      BEGIN 
+      DONE %= FALSE ; 
+      J %= CCHRSIZE ; 
+      WHILE NOT (DONE) AND (J > 0) DO BEGIN 
+         DONE %= (ENDER [J] <> ' ') ; 
+         IF NOT (DONE) THEN J %= J - 1 ;
+      END ; 
+      FOR I %= 1 TO J DO BUF [IDENTMAX+I-J] %= ENDER [I] ;
+      END ; 
+  
+   PACK (BUF, 1, STR) ; 
+  
+END (* FILLSTRING *) ;
+  
+  
+  
+PROCEDURE FILLCHUNK (VAR STR% STRING20) ; 
+  
+VAR 
+  
+   I, J, LASTFILL% INTEGER ;
+   BUF% UNSTRING20 ;
+  
+BEGIN 
+  
+   LASTFILL %= 0 ;
+   REPEAT 
+      J %= MIN (IDENTMAX-LASTFILL, PCCHRSIZE) ; 
+      FOR I%= 1 TO J DO BUF [I+LASTFILL] %= UNPCCHR [I] ; 
+      LASTFILL %= LASTFILL + J ;
+      NEXTCCHR ;
+   UNTIL (MEMCCHR (PCCHR, TABS.DLIST)) ;
+   FOR I %= LASTFILL+1 TO IDENTMAX DO BUF [I] %= ' ' ;
+   PACK (BUF, 1, STR) ; 
+  
+END (* FILLCHUNK *) ; 
+  
+  
+  
+PROCEDURE FILLDELIM (VAR STR% STRING20) ; 
+  
+VAR I% INTEGER ; BUF% UNSTRING20 ;
+  
+BEGIN 
+  
+   FOR I %= 1 TO CCHRSIZE DO BUF [I] %= UNPCCHR [I] ; 
+   FOR I %= CCHRSIZE+1 TO IDENTMAX DO BUF [I] %= ' ' ;
+   PACK (BUF, 1, STR) ; 
+  
+END (* FILLDELIM *) ; 
+  
+  
+  
+PROCEDURE FILLDIGITS (VAR STR% STRING20) ;
+  
+VAR I, J% INTEGER ; BUF% UNSTRING20 ; 
+  
+BEGIN 
+  
+   I %= 0 ; 
+   REPEAT 
+      I %= I + 1 ;
+      IF I <= IDENTMAX THEN BUF [I] %= UNPCCHR [1] ;
+      NEXTCCHR ;
+   UNTIL (NOT (UNPCCHR [1] IN ['0'..'9'])) ;
+   FOR J %= I + 1 TO IDENTMAX DO BUF [J] %= ' ' ; 
+   PACK (BUF, 1, STR) ; 
+  
+END (* FILLDIGITS *) ;
+  
+  
+  
+BEGIN 
+  
+        IF (PCCHR = EOFCCHR) THEN 
+           BEGIN
+           PTOKEN.INDEX %= EOFDEX ; 
+           PTOKEN.CHARS %= BLANK20 ;
+           END
+  
+   ELSE IF (PCCHR = EOLNCCHR) THEN
+           BEGIN
+           PTOKEN.INDEX %= EOLNDEX ;
+           PTOKEN.CHARS %= BLANK20 ;
+           NEXTCCHR ; 
+           END
+  
+   ELSE IF (MEMCCHR (PCCHR, TABS.SLIST)) THEN 
+           BEGIN
+           NTHCCHR (ENDER, TABS.SELIST, MEMBER) ; 
+           FILLSTRING (PTOKEN.CHARS, ENDER) ; 
+           PTOKEN.INDEX %= STRINGDEX ;
+           END
+  
+   ELSE IF (UNPCCHR[1] IN ['0'..'9']) THEN
+           BEGIN
+           FILLDIGITS (PTOKEN.CHARS) ;
+           PTOKEN.INDEX %= DIGITSDEX ;
+           END
+  
+      ELSE BEGIN
+           IF (MEMCCHR (PCCHR, TABS.DLIST)) 
+              THEN BEGIN FILLDELIM (PTOKEN.CHARS) ; NEXTCCHR END
+              ELSE FILLCHUNK (PTOKEN.CHARS) ; 
+           IF (MEMSTR20 (PTOKEN.CHARS, TABS.TSYMLIST))
+              THEN PTOKEN.INDEX %= BTSYMDIFF + MEMBER 
+              ELSE PTOKEN.INDEX %= CHUNKDEX ; 
+           END ;
+  
+END (* PEEKTOKEN *) ; 
+  
+  
+  
+BEGIN (* NEXTTOKEN *) 
+  
+   STATS^.TIME.NEXTTOKEN %= STATS^.TIME.NEXTTOKEN - CLOCK ;            (*STATS*)
+  
+   IF TOKENFLAG 
+  
+      THEN BEGIN
+           TOKENFLAG %= FALSE ; 
+           THETOKEN %= PTOKEN ; 
+           END
+  
+      ELSE BEGIN
+           GLUEFLAG %= NOT (SPACENEXT) ;
+           PEEKTOKEN (PTOKEN) ; 
+           IF GLUEFLAG AND
+              (WATCHGLUE OR (MEMNUM (PTOKEN.INDEX, TABS.GLUELEFT))) 
+              THEN BEGIN
+                   THETOKEN.INDEX %= GLUEDEX ;
+                   THETOKEN.CHARS %= BLANK20 ;
+                   TOKENFLAG %= TRUE ;
+                   END
+              ELSE THETOKEN %= PTOKEN ; 
+           WATCHGLUE %= MEMNUM (PTOKEN.INDEX, TABS.GLUERITE) ;
+           END ;
+  
+   STATS^.TIME.NEXTTOKEN %= STATS^.TIME.NEXTTOKEN + CLOCK ;            (*STATS*)
+  
+END (* NEXTTOKEN *) ; 
+  
+(*$H+*) (*$L**) 
+  
+PROCEDURE PARSE (VAR THECONC% CONCPTR; VAR THETREE% IDENTPTR) ; 
+  
+TYPE
+  
+   STACKPTR = ^ STACK ; 
+   STACK = RECORD 
+     NTSYM % INTEGER; 
+       TEM % IDENTPTR ; 
+       IDS % IDENTPTR ; 
+     STATE % INTEGER ;
+      PRVS % STACKPTR 
+       END ;
+  
+VAR 
+  
+   STACKTOP% STACKPTR ; (* POINTS TO TOP OF STACK *)
+    DEADSTK% STACKPTR;  (* CHAIN OF FREE STACK ELEMENTS *)
+   DEFSTACK% IDENTPTR ; (* TOP OF PROC DEFINITION STACK *)
+   THETOKEN% TOKEN ;
+   ACTION% ACTIONTYPE ; 
+   NUM% INTEGER ; 
+  
+  
+  
+PROCEDURE PUSHSTACK( VAR STACKTOP% STACKPTR; LNTSYM% INTEGER ;
+    LTEM, LIDS% IDENTPTR; LSTATE% INTEGER );
+  
+VAR P% STACKPTR;
+  
+BEGIN 
+  
+    IF (DEADSTK = NIL)
+       THEN BEGIN 
+            NEW (P) ; 
+            STATS^.NUM.STACKS %= STATS^.NUM.STACKS + 1 ;               (*STATS*)
+            END 
+       ELSE BEGIN 
+            P %= DEADSTK ;
+            DEADSTK %= DEADSTK^.PRVS ;
+            END ; 
+  
+    P^.NTSYM %= LNTSYM; 
+    P^.TEM %= LTEM ;
+    P^.IDS %= LIDS ;
+    P^.STATE %= LSTATE ;
+    P^.PRVS %= STACKTOP ; 
+    STACKTOP %= P 
+  
+END  (* PUSHSTACK *)  ; 
+  
+  
+  
+PROCEDURE POPSTACK( VAR STACKTOP % STACKPTR ) ; 
+  
+VAR P% IDENTPTR ; Q% STACKPTR ; 
+  
+BEGIN 
+  
+    Q %= STACKTOP^.PRVS ; 
+    STACKTOP^.PRVS %= DEADSTK ; 
+    DEADSTK %= STACKTOP ; 
+    STACKTOP %= Q 
+  
+END  (* POPSTACK *)  ;
+  
+  
+  
+PROCEDURE PRINT1STACK (STK% STACKPTR) ; 
+  
+BEGIN 
+  
+   INDENT ; 
+   WRITE ('NON-TERMINAL SYMBOL = ') ; 
+   WRITE (STK^.NTSYM%1) ; 
+   WRITELN ;
+   WRITELN ;
+   INDENT ; 
+   WRITE ('STATE = ') ; 
+   WRITE (STK^.STATE%1) ; 
+   WRITELN ;
+   WRITELN ;
+   INDENT ; 
+   WRITE ('TEMPLATE =') ; 
+   WRITELN ;
+   WRITELN ;
+   LEFTMARGIN %= LEFTMARGIN+5 ; 
+   PRINTIDENT (STK^.TEM) ;
+   LEFTMARGIN %= LEFTMARGIN-5 ; 
+   WRITELN ;
+   INDENT ; 
+   WRITE ('IDENTIFIERS =') ;
+   WRITELN ;
+   WRITELN ;
+   LEFTMARGIN %= LEFTMARGIN+5 ; 
+   PRINTIDENT (STK^.IDS) ;
+   LEFTMARGIN %= LEFTMARGIN-5 ; 
+   WRITELN ;
+   INDENT ; 
+   WRITE ('-----------') ;
+   WRITELN ;
+  
+END (* PRINT1STACK *) ; 
+  
+  
+  
+PROCEDURE ERROR ; 
+  
+VAR STK% STACKPTR ; I% INTEGER ;
+  
+BEGIN 
+  
+   PAGE (OUTPUT) ;
+  
+   INDENT ; 
+   WRITE ('A SYNTAX ERROR WAS DETECTED DURING PARSING.') ;
+   WRITELN ;
+   WRITELN ;
+   WRITELN ;
+  
+   IF (LDEX = 0) THEN 
+      BEGIN 
+      LINECNT %= LINECNT - 1 ;
+      LDEX %= OLDEX ; 
+      END ; 
+  
+   INDENT ; 
+   WRITE ('ERROR SOURCE%') ;
+   WRITELN ;
+   INDENT ; 
+   WRITE ('-------------') ;
+   WRITELN ;
+   WRITELN ;
+   LEFTMARGIN %= LEFTMARGIN+5 ; 
+   INDENT ; 
+   WRITE  ('LINE NUMBER = ') ;
+   WRITE (LINECNT%1) ;
+   WRITELN ;
+   WRITELN ;
+   INDENT ; 
+   WRITE ('LINE =  ') ; 
+   FOR I %= 1 TO LDEX DO WRITE (LINE[I]) ;
+   FOR I %= POINT DOWNTO 2 DO WRITE (BUF [I]) ; 
+   IF NOT (EOLNFLAG) AND (POINT <> 0) THEN WRITE (BUF [1]) ;
+   WHILE NOT (EOLN (INFILE)) DO BEGIN WRITE (INFILE^) ; GET (INFILE) END ;
+   WRITELN ;
+   INDENT ; 
+   WRITE ('       ') ;
+   FOR I %= 1 TO (MAX (LDEX-PCCHRSIZE, 0)) DO WRITE (' ') ; 
+   WRITE ('^') ;
+   WRITELN ;
+   LEFTMARGIN %= LEFTMARGIN-5 ; 
+   WRITELN ;
+   WRITELN ;
+  
+   INDENT ; 
+   WRITE ('TOKEN STATUS%') ;
+   WRITELN ;
+   INDENT ; 
+   WRITE ('-------------') ;
+   WRITELN ;
+   WRITELN ;
+   LEFTMARGIN %= LEFTMARGIN+5 ; 
+   INDENT ; 
+   WRITE ('TOKEN.CHARS = ') ; 
+   WRITE (THETOKEN.CHARS) ; 
+   WRITELN ;
+   INDENT ; 
+   WRITE ('TOKEN.INDEX = ') ; 
+   IF (THETOKEN.INDEX <= BTSYMDIFF) 
+      THEN WRITE (BTSYMINDEX [THETOKEN.INDEX])
+      ELSE WRITE (THETOKEN.INDEX%1) ; 
+   WRITELN ;
+   LEFTMARGIN %= LEFTMARGIN-5 ; 
+   WRITELN ;
+   WRITELN ;
+  
+   INDENT ; 
+   WRITE ('STACK STATUS%') ;
+   WRITELN ;
+   INDENT ; 
+   WRITE ('-------------') ;
+   WRITELN ;
+   WRITELN ;
+   LEFTMARGIN %= LEFTMARGIN+5 ; 
+   STK %= STACKTOP ;
+   REPEAT 
+      PRINT1STACK (STK) ; 
+      WRITELN ; 
+      STK %= STK^.PRVS ;
+   UNTIL (STK = NIL) ;
+   LEFTMARGIN %= LEFTMARGIN-5 ; 
+   WRITELN ;
+   WRITELN ;
+  
+  
+   PAGE (OUTPUT) ;
+   HALT ; 
+  
+END (* ERROR *) ; 
+  
+  
+  
+PROCEDURE DOSHIFT (NEWSTATE% INTEGER; CHARS% STRING20; VAR THETOKEN% TOKEN) ; 
+  
+BEGIN 
+  
+   STATS^.TIME.DOSHIFT %= STATS^.TIME.DOSHIFT - CLOCK ;                (*STATS*)
+   PUSHSTACK( STACKTOP, 0, NEWIDENT( CHARS, NIL ), NIL, NEWSTATE ) ;
+   NEXTTOKEN (THETOKEN) ; 
+   STATS^.TIME.DOSHIFT %= STATS^.TIME.DOSHIFT + CLOCK ;                (*STATS*)
+  
+END (*DOSHIFT*) ; 
+  
+  
+  
+PROCEDURE DOREDUCE(RULENUM%INTEGER) ; 
+  
+VAR 
+  
+   BCF% BCFTUPLE ;
+   LEFTSIDE% INTEGER ;
+   RITESIDE% BNFTUPLE ; 
+   TEMPLATE% IDENTPTR ; 
+     IDENTS% IDENTPTR ; 
+  
+  
+  
+PROCEDURE CYCLE (VAR STACKTOP%STACKPTR; VAR TEMPLATE%IDENTPTR;
+                 VAR IDENTS%IDENTPTR; 
+                     RITESIDE% BNFTUPLE; BCF% BCFTUPLE) ; 
+  
+VAR 
+  
+   N% INTEGER ; 
+   BNF1% BNFTYPE ;
+   IDS% IDENTPTR ;
+   IDSTAIL% IDENTPTR ;
+  
+  
+  
+PROCEDURE DOBCF (VAR IDENTS% IDENTPTR; IDS% IDENTPTR; BCF1% BCFTYPE) ;
+  
+BEGIN 
+  
+   CASE BCF1 OF 
+          NOTID% WHILE (IDS <> NIL) DO FLSIDENT (IDS) ; 
+          LOCAL% BEGIN
+                 APPEND (IDS, NEWIDENT (LOCEND, NIL)) ; 
+                 APPEND (IDENTS, NEWIDENT (LOCBEG, IDS)) ;
+                 END ;
+       ASSIGNED% BEGIN
+                 APPEND (IDS, NEWIDENT (ASSEND, NIL)) ; 
+                 APPEND (IDENTS, NEWIDENT (ASSBEG, IDS)) ;
+                 END ;
+        NOTHING% APPEND (IDENTS, IDS) 
+   END ;
+  
+END (* DOBCF *) ; 
+  
+  
+  
+PROCEDURE DOPROCNAME (NAME%STRING20) ;
+  
+VAR DFPTR% DEFPTR ; 
+  
+BEGIN 
+   NEW (DFPTR) ;
+   DFPTR^.PROCNAME %= NAME ;
+   DFPTR^.PARENT %= DEFSTACK^.NAME ;
+   DFPTR^.NEXTDEF %= THECONC^.DF ;
+   THECONC^.DF %= DFPTR ; 
+   THECONC^.PS %= NEWIDENT (NAME, THECONC^.PS) ;
+   DEFSTACK %= NEWIDENT (NAME, DEFSTACK) ;
+  
+  
+END (* DOPROCNAME *) ;
+  
+  
+  
+PROCEDURE FILL (NAME% STRING20; VAR IDENTS% IDENTPTR) ; 
+  
+VAR 
+  
+   ID, LO, AS% IDENTPTR ; 
+   IDP, LOP, ASP% PRBLKPTR ;
+   IDBLKPTR, LOBLKPTR, ASBLKPTR% PRBLKPTR ; 
+   DFP, DFPTR% DEFPTR ; 
+   PSP, PSPTR% IDENTPTR ; 
+   LOCFLG, ASSFLG% INTEGER ;
+   IDEN1% IDENT ; 
+  
+BEGIN 
+  
+   STATS^.TIME.FILL %= STATS^.TIME.FILL - CLOCK ;                      (*STATS*)
+  
+   IDBLKPTR %= NEWPRBLK (NAME, NIL, NIL) ;
+   LOBLKPTR %= NEWPRBLK (NAME, NIL, NIL) ;
+   ASBLKPTR %= NEWPRBLK (NAME, NIL, NIL) ;
+  
+   ID %= NIL ;
+   LO %= NIL ;
+   AS %= NIL ;
+  
+   LOCFLG %= 0 ;
+   ASSFLG %= 0 ;
+  
+   WHILE IDENTS <> NIL DO BEGIN 
+  
+      IDEN1 %= IDENTS^ ;
+  
+      IF EQ20 (IDEN1.NAME, LOCBEG) THEN LOCFLG %= LOCFLG +1 ELSE
+      IF EQ20 (IDEN1.NAME, LOCEND) THEN LOCFLG %= LOCFLG -1 ELSE
+      IF EQ20 (IDEN1.NAME, ASSBEG) THEN ASSFLG %= ASSFLG +1 ELSE
+      IF EQ20 (IDEN1.NAME, ASSEND) THEN ASSFLG %= ASSFLG -1 ELSE
+  
+        BEGIN IF LOCFLG <> 0 THEN LO %= ADD1 (IDEN1.NAME,LO) ;
+              IF ASSFLG <> 0 THEN AS %= ADD1 (IDEN1.NAME,AS) ;
+              ID %= ADD1 (IDEN1.NAME,ID) END ;
+  
+      FLSIDENT (IDENTS) (* IDENTS IS 'RESTED' HERE *) ; 
+  
+   END ;
+  
+   IDBLKPTR^.PRIDS %= ID ;
+   LOBLKPTR^.PRIDS %= LO ;
+   ASBLKPTR^.PRIDS %= AS ;
+  
+   (* DOPROCNAME ADDS THINGS (TO THECONC^.DF AND THECONC^.PS) 
+      AT THE FRONT END; WHILE FILL ADDS THINGS (TO THECONC^.ID ET AL) 
+      AT THE BACK. FILL ALSO MOVES THE MATCHING DATA (IN THECONC^.DF
+      AND THECONC^.PS) TO THE BACK. *)
+  
+   IF (THECONC^.ID = NIL) 
+      THEN BEGIN
+           THECONC^.ID %= IDBLKPTR ;
+           THECONC^.LO %= LOBLKPTR ;
+           THECONC^.AS %= ASBLKPTR ;
+           END
+      ELSE BEGIN
+           IDP %= THECONC^.ID ; 
+           LOP %= THECONC^.LO ; 
+           ASP %= THECONC^.AS ; 
+           WHILE (IDP^.NEXTPROC <> NIL) DO IDP %= IDP^.NEXTPROC ; 
+           WHILE (LOP^.NEXTPROC <> NIL) DO LOP %= LOP^.NEXTPROC ; 
+           WHILE (ASP^.NEXTPROC <> NIL) DO ASP %= ASP^.NEXTPROC ; 
+           IDP^.NEXTPROC %= IDBLKPTR ;
+           LOP^.NEXTPROC %= LOBLKPTR ;
+           ASP^.NEXTPROC %= ASBLKPTR ;
+           END ;
+  
+   DFPTR %= THECONC^.DF ; 
+   DFP %= THECONC^.DF ; 
+   WHILE (DFP^.NEXTDEF <> NIL) DO DFP %= DFP^.NEXTDEF ; 
+   DFP^.NEXTDEF %= DFPTR ;
+   THECONC^.DF %= DFPTR^.NEXTDEF ;
+   DFPTR^.NEXTDEF %= NIL ;
+  
+   PSPTR %= THECONC^.PS ; 
+   PSP %= THECONC^.PS ; 
+   WHILE (PSP^.NEXT <> NIL) DO PSP %= PSP^.NEXT ; 
+   PSP^.NEXT %= PSPTR ; 
+   THECONC^.PS %= PSPTR^.NEXT ; 
+   PSPTR^.NEXT %= NIL ; 
+  
+   STATS^.TIME.FILL %= STATS^.TIME.FILL + CLOCK ;                      (*STATS*)
+  
+END (* FILL *) ;
+  
+  
+  
+BEGIN (* CYCLE *) ; 
+  
+   N%=1 ; 
+  
+   REPEAT 
+  
+      BNF1 %= RITESIDE [N] ;
+  
+      IF (BNF1 = PROCNAME) THEN 
+         BEGIN
+         DOPROCNAME (STACKTOP^.TEM^.NAME) ; 
+         SUBSTITUTE (TEMPLATE, STACKTOP^.TEM, N) ;
+         DOBCF (IDENTS, STACKTOP^.IDS, BCF[N]) ;
+         POPSTACK (STACKTOP) ;
+         END ELSE 
+      IF (BNF1 = IDEN) THEN 
+         BEGIN
+         COPY (STACKTOP^.TEM, NIL, IDS, IDSTAIL) ;
+         SUBSTITUTE (TEMPLATE, STACKTOP^.TEM, N) ;
+         DOBCF (IDENTS, IDS, BCF[N]) ;
+         POPSTACK (STACKTOP) ;
+         END ELSE 
+      IF (BNF1 = OTHERS) THEN 
+         BEGIN
+         SUBSTITUTE (TEMPLATE, STACKTOP^.TEM, N) ;
+         DOBCF (IDENTS, STACKTOP^.IDS, BCF[N]) ;
+         POPSTACK (STACKTOP) ;
+         END ;
+  
+     N %= N+1 ; 
+  
+   UNTIL (BNF1=PROCDEF) OR (BNF1=PACKIT) OR (BNF1=BNFEND) OR (N>RITESIZE) ; 
+  
+   FLSIDENT (TEMPLATE) ; (* GET RID OF DUMMY FIRST ELEMENT IN TEMPLATE *) 
+  
+      IF (BNF1 = PROCDEF) THEN
+         BEGIN
+         FILL (DEFSTACK^.NAME, IDENTS) ;
+         FLSIDENT (DEFSTACK) ;
+         END ELSE 
+      IF (BNF1 = PACKIT) THEN 
+         PACKIDS (TEMPLATE) ; 
+  
+END (*CYCLE*) ; 
+  
+  
+  
+BEGIN (* DOREDUCE *)
+  
+   STATS^.TIME.DOREDUCE %= STATS^.TIME.DOREDUCE - CLOCK ;              (*STATS*)
+   GETBNCF (LEFTSIDE, RITESIDE, BCF, RULENUM) ; 
+   TEMPLATE %= GETBSF (RULENUM) ; 
+   IDENTS %= NIL ;
+  
+   CYCLE (STACKTOP, TEMPLATE, IDENTS, RITESIDE, BCF) ;
+   PUSHSTACK (STACKTOP, LEFTSIDE, TEMPLATE, IDENTS, 
+              LOOKGOTO (LEFTSIDE,STACKTOP^.STATE)) ;
+   STATS^.TIME.DOREDUCE %= STATS^.TIME.DOREDUCE + CLOCK ;              (*STATS*)
+  
+END (*DOREDUCE*) ;
+  
+  
+  
+BEGIN (* PARSE *) 
+  
+   STATS^.TIME.PARSE %= STATS^.TIME.PARSE - CLOCK ;                    (*STATS*)
+  
+   NEW( STACKTOP ) ;
+   STACKTOP^.NTSYM %= 0 ; 
+   STACKTOP^.TEM %= NEWIDENT (TOPLEVEL, NIL) ;
+   STACKTOP^.IDS %= NIL ; 
+   STACKTOP^.STATE %= 1 ; 
+   STACKTOP^.PRVS %= NIL ;
+   DEADSTK %= NIL ; 
+  
+   DEFSTACK %= NEWIDENT (TOPLEVEL, NIL) ; 
+  
+   NEXTTOKEN (THETOKEN) ; 
+  
+   REPEAT 
+     LOOKACTION (NUM, ACTION, THETOKEN.INDEX, STACKTOP^.STATE) ;
+     CASE ACTION OF 
+            DONE % ;
+       BADSYNTAX % ERROR ; (* DO SOME ERROR ANNOUNCING *) 
+           SHIFT % DOSHIFT (NUM, THETOKEN.CHARS, THETOKEN) ;
+          REDUCE % DOREDUCE (NUM) 
+     END  ; 
+   UNTIL ACTION = DONE ;
+  
+   THETREE %= STACKTOP^.TEM ; 
+  
+   STATS^.TIME.PARSE %= STATS^.TIME.PARSE + CLOCK ;                    (*STATS*)
+  
+END (*PARSE*) ; 
+  
+(*$H+*) (*$L**) 
+  
+FUNCTION COLLATE (THECONC% CONCPTR; LONGCONC% BOOLEAN) % PRBLKPTR ; 
+  
+VAR 
+  
+   ALLPROCS% IDENTPTR ; 
+   BLTINCONS% IDENTPTR ;
+   W % INTEGER ; (* THIS IS REALLY UNTASTEFUL *)
+  
+  
+  
+PROCEDURE SUB1PRBLK (PB% PRBLKPTR; P% IDENTPTR) ; 
+  
+BEGIN 
+  
+   WHILE (PB <> NIL) DO BEGIN 
+      SUBIDENT (PB^.PRIDS, P) ; 
+      PB %= PB^.NEXTPROC ;
+   END ;
+  
+END (* SUB1PRBLK *) ; 
+  
+  
+  
+PROCEDURE SUBPRBLK (PB1, PB2% PRBLKPTR) ; 
+  
+BEGIN 
+  
+   WHILE (PB1 <> NIL) AND (PB2 <> NIL) DO BEGIN 
+      SUBIDENT (PB1^.PRIDS, PB2^.PRIDS) ; 
+      PB1 %= PB1^.NEXTPROC ;
+      PB2 %= PB2^.NEXTPROC ;
+   END ;
+  
+END (* SUBPRBLK *) ;
+  
+  
+  
+FUNCTION INT1PRBLK (PB% PRBLKPTR; P% IDENTPTR) % PRBLKPTR ; 
+  
+VAR NEWPBHEAD, NEWPBTAIL% PRBLKPTR ;
+  
+BEGIN 
+  
+   NEWPBHEAD %= NEWPRBLK (BLANK20, NIL, NIL) ;
+   NEWPBTAIL %= NEWPBHEAD ; 
+   WHILE (PB <> NIL) DO BEGIN 
+      NEWPBTAIL^.NEXTPROC %=
+         NEWPRBLK (PB^.PROCNAME, NIL, INTIDENT (PB^.PRIDS, P)) ;
+      NEWPBTAIL %= NEWPBTAIL^.NEXTPROC ;
+      PB %= PB^.NEXTPROC ;
+   END ;
+   FREEPRBLK (NEWPBHEAD) ;
+   INT1PRBLK %= NEWPBHEAD ; 
+  
+END (* INT1PRBLK *) ; 
+  
+  
+  
+FUNCTION INVOCATIONS (CON%CONCPTR; W%INTEGER)% PRBLKPTR;
+  
+(*INVOCATIONS IS THE FUNCTION WHICH ACTUALLY CREATES THE STRINGS (AS ARRAYS 
+OF CHARACTERS AS PASCAL HAS NO FORMAL STRINGS).  IT IS PASSED THE CONCORDANCE 
+TREE WHICH WAS PASSED TO COLLATE BUT WHICH WAS MODIFIED BY SUB AND INT TO 
+REMOVE MULTIPLE OCCURRENCES (OF VARIABLES) BETSEEN CORRESPONDING LISTS. 
+IF W IS 0, THE SHORT CONCORDANCE IS WRITTEN, OTHERWISE THE LONG FORM IS WRITTEN.
+THE FIVE PARTS TO A LONG CONCORDANCE ARE% 1) WHAT PROCEDURE THE PROCEDURE 
+BEING EXAMINED IS DEFINED IN, 2) WHICH PROCEDURES THE PROCEDURE BEING EXAMINED
+CALLS, 3) WHICH VARIABLES ARE LOCAL TO THE PROCEDURE BEING EXAMINED, 4) WHICH 
+VARIABLES ARE ASSIGNED TO (HAVE THEIR VALUE CHANGED) IN THE PROCEDURE AND 5)
+WHICH VARIABLES (THAT ARE NOT LOCAL TO OR ASSIGNED TO IN THE PROCEDURE) ARE 
+REFERENCED BY THE PROCEDURE.  IN THE SHORT FORM, ONLY THE FIRST PART IS 
+WRITTEN*) 
+  
+   VAR TEXF, NEWCON,LASTCON% PRBLKPTR;
+       COMMONIDENTPTR, NEXTSTMT, LASTSTMT% IDENTPTR;
+       L, L1, L2, L3% PRBLKPTR; 
+       A, B, DEF1% UNSTRING20 ; 
+       C, P, PAR% STRING20 ;
+       DPTR% DEFPTR;
+       I, M, J, K, D, T, T1, X% INTEGER;
+       FS, SPECIAL% BOOLEAN;
+  
+  
+  
+PROCEDURE ADDELEMENTS 
+               (ITERS%INTEGER; CHARAC%CHAR; VAR ARR%UNSTRING20; 
+                VAR FIRST%BOOLEAN; VAR ENDPTR%IDENTPTR; 
+                VAR INDEX%INTEGER; VAR LSTCONPRD%IDENTPTR); 
+  
+(*ADDELEMENTS TAKES A CHARACTER, AN INTEGER, AND AN ARRAY (OF CHARACTERS) 
+AND ADDS THE CHARACTER TO THE ARRAY THE INTEGER NUMBER OF TIMES.  IF THE
+ARRAY GETS FILLED, THEN THE FILLED ARRAY AS LINKED TO THE END OF A LIST 
+(A POINTER TO WHICH IS ALSO GIVEN AS A PARAMETER) AND THE PROCEDURE 
+FINISHES FILLING AN EMPTY ARRAY WITH THE CHARACTER*)
+  
+   VAR NEXTSTMT%IDENTPTR; 
+       C% STRING20; 
+       I% INTEGER;
+  
+   BEGIN (*ADDELEMENTS*)
+  
+      FOR I %= 1 TO ITERS DO BEGIN
+         ARR[INDEX] %= CHARAC;
+         INDEX %= INDEX + 1;
+         IF INDEX = 21 THEN BEGIN 
+            PACK(ARR,1,C);
+            UNPACK(BLANK20,ARR,1) ; 
+            NEXTSTMT %= NEWIDENT(C,NIL);
+            IF FIRST THEN ENDPTR^.NEXT %= NEXTSTMT
+                     ELSE LSTCONPRD %= NEXTSTMT;
+            ENDPTR %= NEXTSTMT; 
+            INDEX %= 1; 
+            FIRST %= TRUE 
+            END 
+         END
+  
+END (* ADDELEMENTS *) ; 
+  
+  
+  
+PROCEDURE ADDCHARACTERS(ITERS%INTEGER; VAR AARRAY%UNSTRING20; VAR 
+                        BARRAY%UNSTRING20; VAR INDEX%INTEGER; VAR 
+                        FIRST%BOOLEAN; VAR LSTCONPRD%IDENTPTR;
+                        VAR LASTMT%IDENTPTR); 
+  
+(*ADDCHARACTERS TAKES TWO ARRAYS AND AN INTEGER N AND ADDS THE FIRST N
+CHARACTERS OF THE SECOND ARRAY TO THE FIRST.  IF THE FIRST ARRAY GETS FILLED
+THEN IT IS ADDED TO A LINKED LIST (AS IN ADDELEMENTS) AND A NEW ARRAY 
+IS FILLED WITH THE REMAINDER OF THE CHARACTERS IN THE SECOND ARRAY*)
+  
+   VAR I%INTEGER; 
+       NEWLINE% BOOLEAN;
+       C% STRING20; 
+       NEXTSTMT% IDENTPTR;
+  
+   BEGIN (*ADDCHARACTERS*)
+  
+      NEWLINE %= TRUE;
+      FOR I %= 1 TO ITERS DO BEGIN
+         IF NEWLINE = FALSE THEN BEGIN
+            ADDELEMENTS(1,'/',BARRAY,FIRST,LASTMT,INDEX,LSTCONPRD); 
+            NEWLINE %= TRUE 
+            END;
+         IF AARRAY[I] <> ' ' THEN BEGIN 
+            BARRAY[INDEX] %= AARRAY[I]; 
+            IF AARRAY[I] = '/' THEN NEWLINE %= FALSE; 
+            AARRAY[I] %= ' '; 
+            INDEX %= INDEX + 1
+            END;
+         IF INDEX = 21 THEN BEGIN 
+            PACK(BARRAY,1,C); 
+            UNPACK(BLANK20,BARRAY,1); 
+            NEXTSTMT %= NEWIDENT(C,NIL);
+            IF FIRST THEN LASTMT^.NEXT %= NEXTSTMT
+                     ELSE LSTCONPRD %= NEXTSTMT;
+            LASTMT %= NEXTSTMT; 
+            INDEX %= 1; 
+            FIRST %= TRUE 
+            END 
+         END
+  
+END (* ADDCHARACTERS *) ; 
+  
+  
+  
+BEGIN (* INVOCATIONS *) 
+  
+      LASTSTMT %= NIL;
+      L %= CON^.PC; 
+      L1%= CON^.LO; 
+      L2%= CON^.AS; 
+      L3%= CON^.ID; 
+      SPECIAL %= FALSE; 
+      DPTR %= CON^.DF;
+      T1 %= 0;
+  
+      UNPACK(DEFS20,DEF1,1);
+      J %= 1; 
+  
+      WHILE (L <> NIL) DO BEGIN 
+  
+         FS %= FALSE; 
+  
+         P %= L^.PROCNAME;
+         NEWCON %= NEWPRBLK(P,NIL,NIL); 
+         IF T1 = 0 THEN BEGIN 
+                   TEXF %= NEWCON;
+                   T1 %= 1
+                   END
+                ELSE LASTCON^.NEXTPROC %= NEWCON; 
+         LASTCON %= NEWCON; 
+         ADDELEMENTS(1, ' ', B, FS, LASTSTMT, J, LASTCON^.PRIDS); 
+         UNPACK(P,A,1); 
+         FOR I %= 1 TO 20 DO BEGIN
+            IF A[I] <> ' ' THEN BEGIN 
+               B[J] %= A[I];
+               A[I] %= ' '; 
+               J %= J + 1 
+               END
+            END;
+         IF J = 21 THEN BEGIN 
+            PACK(B,1,C);
+            UNPACK(BLANK20,B,1);
+            NEXTSTMT %= NEWIDENT(C,NIL);
+            LASTCON^.PRIDS %= NEXTSTMT; 
+            LASTSTMT %= NEXTSTMT; 
+            J %= 1; 
+            FS %= TRUE
+            END;
+         FOR I %= 1 TO 13 DO BEGIN
+            B[J] %= DEF1[I];
+            J %= J + 1; 
+            IF J = 21 THEN BEGIN
+               PACK(B,1,C); 
+               UNPACK(BLANK20,B,1); 
+               NEXTSTMT %= NEWIDENT(C,NIL); 
+               IF FS  THEN LASTSTMT^.NEXT %= NEXTSTMT 
+                            ELSE LASTCON^.PRIDS %= NEXTSTMT;
+               LASTSTMT %= NEXTSTMT;
+               J %= 1;
+               FS %= TRUE 
+               END
+            END;
+         PAR %= DPTR^.PARENT; 
+         UNPACK(PAR,A,1); 
+         ADDCHARACTERS(20,A,B,J,FS,LASTCON^.PRIDS,LASTSTMT);
+         ADDELEMENTS(1,'/',B,FS,LASTSTMT,J,LASTCON^.PRIDS); 
+         ADDELEMENTS(1,'*',B,FS, LASTSTMT, J, LASTCON^.PRIDS);
+         IF W <> 0 THEN BEGIN 
+            FOR M %= 1 TO 4 DO BEGIN
+               IF M = 1 THEN BEGIN
+                  COMMONIDENTPTR %= L^.PRIDS; 
+                  X %= 7; 
+                  UNPACK(CALLS20,A,1);
+                  END;
+               IF M = 2 THEN BEGIN
+                  COMMONIDENTPTR %= L1^.PRIDS;
+                  X %= 17;
+                  UNPACK(LOCAL20,A,1);
+                  END;
+               IF M = 3 THEN BEGIN
+                  COMMONIDENTPTR %= L2^.PRIDS;
+                  X %= 20;
+                  UNPACK(ASSD20,A,1); 
+                  END;
+               IF M = 4 THEN BEGIN
+                  COMMONIDENTPTR %= L3^.PRIDS;
+                  X %= 20;
+                  UNPACK(REF20,A,1);
+                  END;
+               ADDELEMENTS(3,' ',B,FS,LASTSTMT,J,LASTCON^.PRIDS); 
+               ADDCHARACTERS(X,A,B,J,FS,LASTCON^.PRIDS,LASTSTMT); 
+               ADDELEMENTS(1,'/',B,FS,LASTSTMT,J,LASTCON^.PRIDS); 
+               ADDELEMENTS(1,'*',B,FS,LASTSTMT,J,LASTCON^.PRIDS); 
+               T %= 1;
+               WHILE (COMMONIDENTPTR <> NIL) DO BEGIN 
+                  UNPACK(COMMONIDENTPTR^.NAME,A,1); 
+                  IF T = 1 THEN ADDELEMENTS(6,' ',B,FS,LASTSTMT,
+                                            J,LASTCON^.PRIDS);
+                  IF (T=2) OR (T=3) THEN ADDELEMENTS(30-D,' ',B,FS,LASTSTMT,
+                                         J,LASTCON^.PRIDS); 
+                  D %= 0; 
+                  FOR I %= 1 TO 20 DO BEGIN 
+                     IF SPECIAL THEN ADDELEMENTS(1,'/',B,FS,LASTSTMT, 
+                                     J,LASTCON^.PRIDS); 
+                     SPECIAL %= FALSE;
+                     IF A[I] <> ' ' THEN BEGIN
+                        IF A[I] = '/' THEN SPECIAL %= TRUE; 
+                        B[J] %= A[I]; 
+                        J %= J + 1; 
+                        A[I] %= ' ';
+                        D %= D + 1
+                        END;
+                     IF J = 21 THEN BEGIN 
+                        PACK(B,1,C);
+                        UNPACK(BLANK20,B,1);
+                        NEXTSTMT %= NEWIDENT(C,NIL);
+                        IF FS THEN LASTSTMT^.NEXT %= NEXTSTMT 
+                                     ELSE LASTCON^.PRIDS %= NEXTSTMT; 
+                        LASTSTMT %= NEXTSTMT; 
+                        J %= 1; 
+                        FS %= TRUE
+                        END 
+                     END; 
+                  T %= T + 1; 
+                  IF T = 4 THEN BEGIN 
+                     IF COMMONIDENTPTR^.NEXT <> NIL THEN BEGIN
+                        ADDELEMENTS(1,'/',B,FS,LASTSTMT,J,LASTCON^.PRIDS);
+                        ADDELEMENTS(1,'*',B,FS,LASTSTMT,J,LASTCON^.PRIDS);
+  
+                        END;
+                     T %= 1 
+                     END; 
+                  COMMONIDENTPTR %= COMMONIDENTPTR^.NEXT
+                  END;
+               ADDELEMENTS(1,'/',B,FS,LASTSTMT,J,LASTCON^.PRIDS); 
+               ADDELEMENTS(1,'*',B,FS,LASTSTMT,J,LASTCON^.PRIDS); 
+               END
+            END 
+          ELSE BEGIN
+                  COMMONIDENTPTR %= L^.PRIDS; 
+                  X %= 7; 
+                  UNPACK(CALLS20,A,1);
+               ADDELEMENTS(3,' ',B,FS,LASTSTMT,J,LASTCON^.PRIDS); 
+               ADDCHARACTERS(X,A,B,J,FS,LASTCON^.PRIDS,LASTSTMT); 
+               ADDELEMENTS(1,'/',B,FS,LASTSTMT,J,LASTCON^.PRIDS); 
+               ADDELEMENTS(1,'*',B,FS,LASTSTMT,J,LASTCON^.PRIDS); 
+               T %= 1;
+               WHILE (COMMONIDENTPTR <> NIL) DO BEGIN 
+                  UNPACK(COMMONIDENTPTR^.NAME,A,1); 
+                  IF T = 1 THEN ADDELEMENTS(6,' ',B,FS,LASTSTMT,
+                                            J,LASTCON^.PRIDS);
+                  IF (T=2) OR (T=3) THEN ADDELEMENTS(30-D,' ',B,FS,LASTSTMT,
+                                         J,LASTCON^.PRIDS); 
+                  D %= 0; 
+                  FOR I %= 1 TO 20 DO BEGIN 
+                     IF SPECIAL THEN ADDELEMENTS(1,'/',B,FS,LASTSTMT, 
+                                     J,LASTCON^.PRIDS); 
+                     SPECIAL %= FALSE;
+                     IF A[I] <> ' ' THEN BEGIN
+                        IF A[I] = '/' THEN SPECIAL %= TRUE; 
+                        B[J] %= A[I]; 
+                        J %= J + 1; 
+                        A[I] %= ' ';
+                        D %= D + 1
+                        END;
+                     IF J = 21 THEN BEGIN 
+                        PACK(B,1,C);
+                        UNPACK(BLANK20,B,1);
+                        NEXTSTMT %= NEWIDENT(C,NIL);
+                        IF FS THEN LASTSTMT^.NEXT %= NEXTSTMT 
+                                     ELSE LASTCON^.PRIDS %= NEXTSTMT; 
+                        LASTSTMT %= NEXTSTMT; 
+                        J %= 1; 
+                        FS %= TRUE
+                        END 
+                     END; 
+                  T %= T + 1; 
+                  IF T = 4 THEN BEGIN 
+                     IF COMMONIDENTPTR^.NEXT <> NIL THEN BEGIN
+                        ADDELEMENTS(1,'/',B,FS,LASTSTMT,J,LASTCON^.PRIDS);
+                        ADDELEMENTS(1,'*',B,FS,LASTSTMT,J,LASTCON^.PRIDS);
+  
+                        END;
+                     T %= 1 
+                     END; 
+                  COMMONIDENTPTR %= COMMONIDENTPTR^.NEXT
+                  END;
+               ADDELEMENTS(1,'/',B,FS,LASTSTMT,J,LASTCON^.PRIDS); 
+               ADDELEMENTS(1,'*',B,FS,LASTSTMT,J,LASTCON^.PRIDS); 
+               END; 
+         FOR I %= 1 TO 3 DO BEGIN 
+            ADDELEMENTS(1,'/',B,FS,LASTSTMT,J,LASTCON^.PRIDS);
+            ADDELEMENTS(1,'*',B,FS,LASTSTMT,J,LASTCON^.PRIDS) 
+            END;
+         ADDELEMENTS(((20-J)+1),' ',B,FS,LASTSTMT,J,LASTCON^.PRIDS);
+  
+         L %= L^.NEXTPROC ; 
+         FREEPRBLK (L1) ; 
+         FREEPRBLK (L2) ; 
+         FREEPRBLK (L3) ; 
+  
+         DPTR %= DPTR^.NEXTDEF
+  
+         END; 
+  
+      INVOCATIONS %= TEXF 
+  
+END (* INVOCATIONS *) ; 
+  
+  
+  
+BEGIN (* COLLATE *) 
+  
+   ALLPROCS %= MAKEIDENT (TABS.BIFLIST) ; 
+   APPEND (ALLPROCS, THECONC^.PS) ; 
+   BLTINCONS %= MAKEIDENT (TABS.BICLIST) ;
+  
+   THECONC^.PC %= INT1PRBLK (THECONC^.ID, ALLPROCS) ; 
+   SUBPRBLK (THECONC^.AS, THECONC^.LO) ;
+   SUBPRBLK (THECONC^.PC, THECONC^.AS) ;
+   SUBPRBLK (THECONC^.ID, THECONC^.LO) ;
+   SUBPRBLK (THECONC^.ID, THECONC^.PC) ;
+   SUB1PRBLK (THECONC^.ID, BLTINCONS) ; 
+  
+   WHILE (ALLPROCS <> THECONC^.PS) DO FLSIDENT (ALLPROCS) ; 
+   WHILE (BLTINCONS <> NIL) DO FLSIDENT (BLTINCONS) ; 
+  
+   IF (LONGCONC) THEN W%=1 ELSE W %= 0 ;
+   COLLATE %= INVOCATIONS (THECONC, W) ;
+  
+END (* COLLATE *) ; 
+  
+(*$H+*) (*$L**) 
+  
+BEGIN (* ANALYSIS *)
+  
+  
+   STATS^.TIME.ANALYSIS %= STATS^.TIME.ANALYSIS - CLOCK ;              (*STATS*)
+  
+   RESET (INFILE) ; 
+   LINECNT %= 1 ; 
+   LDEX %= 0 ;
+   OLDEX %= 0 ; 
+  
+   POINT %= 0 ; 
+   EOLNFLAG %= FALSE ;
+   NEXTCCHR ; 
+  
+   TOKENFLAG %= FALSE ; 
+   WATCHGLUE %= FALSE ; 
+  
+   NEW ( THECONC ) ;
+   THECONC^.ID %= NIL ; 
+   THECONC^.AS %= NIL ; 
+   THECONC^.LO %= NIL ; 
+   THECONC^.PC %= NIL ; 
+   THECONC^.DF %= NIL ; 
+   THECONC^.PS %= NIL ; 
+  
+   PARSE (THECONC, THETREE) ; 
+   THECONCORDANCE %= COLLATE (THECONC, LONGCONC) ;
+   THEPCALLS %= THECONC^.PC ; 
+   THEPSET %= THECONC^.PS ; 
+  
+   STATS^.TIME.ANALYSIS %= STATS^.TIME.ANALYSIS + CLOCK ;              (*STATS*)
+  
+END (* ANALYSIS *) ;
+  
+  
+  
+  
+  
+(*$H+*) (*$L**) 
+(**)
+PROCEDURE      PLOT( TREE % IDENTPTR ; CONC % PRBLKPTR ; PROCS10 % PRBLKPTR ; 
+        PROCSET10 % IDENTPTR ) ;
+  
+CONST 
+  
+  (*   THE FOLLOWING ARE FROM PRINT   *)
+   (* THEY ARE DECLARED HERE BECAUSE THEY ARE COMMON TO INIT AND PRINT *) 
+  
+   (* MARGINS FOR TEXT *) 
+   NMARGIN = 2.0; 
+   SMARGIN = 2.0; 
+   EMARGIN = 1.0; 
+   WMARGIN = 2.0; 
+  
+   (* POSSIBLE PEN STATES *)
+   DRAW = 2;
+   MOVE = 3;
+   DONE = 999;
+  
+   (* OTHER CONSTANTS *)
+   SIZECHARACTER = 0.1; 
+   LINEFEED = 0.15; 
+  
+TYPE
+   BOXTYPE = (UNDEF, RECTANG, CONDBOX, ITNBOX, UPTRI, DOWNTRI, BLKCIRCL,
+           PROCBOX,OVERBOX);
+  
+    TREEBKPTR = ^TREEBK;
+    TREEBK = RECORD 
+        TEXTP % IDENTPTR; 
+        LABELP % IDENTPTR ; 
+        BOXTYP % BOXTYPE; 
+        APPROACH % TREEBKPTR; 
+        NAPPROACH % TREEBKPTR;
+        DROP % TREEBKPTR
+    END;
+    TRLSTLPTR = ^TRLSTL;
+    TRLSTL = RECORD 
+        OVLABEL % STRING10; 
+        TREE % TREEBKPTR; 
+        NEXT % TRLSTLPTR
+    END;
+(*$H+*) (*$L**) 
+ (*   THE FOLLOWING ARE FROM PRINT  *)
+  
+   TEXTBUFFER = PACKED ARRAY[0..NCOLS] OF CHAR; 
+   POINT = RECORD 
+      X% REAL;
+      Y% REAL 
+      END;
+   APPTYPE = (NONE, APPROACH, DROP, NAPPROACH); 
+   OVERCELLPTR = ^OVERCELL; 
+   OVERCELL = RECORD
+      TREE% TREEBKPTR;
+      NEXTOVER% OVERCELLPTR;
+      END;
+  
+    NOTEXTINDX = UPTRI..BLKCIRCL ; (*  UPTRI, DOWNTRI, BLKCIRCL CONTIGUOUS  *)
+  
+VAR 
+    DEADTREEBK % TREEBKPTR; 
+    DEADTRLSTL % TRLSTLPTR; 
+  
+    TR % TREEBKPTR; 
+    PROCNAME % STRING20 ; 
+    P % IDENTPTR ;
+  
+   (*  THE FOLLOWING ARE FROM PRINT  *) 
+  
+   NN,N,NW,NE,E,EE,SE,S,SS,SW,W,WW,T% ARRAY[RECTANG..OVERBOX] OF POINT; 
+   NUMCHARS% ARRAY[RECTANG..OVERBOX] OF INTEGER;
+   NUMAPP% ARRAY[RECTANG..OVERBOX] OF INTEGER;
+   START % POINT; 
+   HERE% POINT; 
+   OVERNAME % STRING20; 
+   INDENTLEVEL % INTEGER; 
+   XMAX % REAL; 
+    BUF % TEXTBUFFER; 
+   FIRSTOVER, LASTOVER% OVERCELLPTR;
+   OVTOKEN% STRING20; 
+  (**)
+(*$H+*) (*$L**) 
+PROCEDURE ERROR( I % INTEGER ) ;
+  
+BEGIN HALT END   (*  ERROR  *) ;
+  
+  
+  
+FUNCTION NEWTREEBK( TEXTP % IDENTPTR ; LABLP % IDENTPTR ; 
+      BOXTYP % BOXTYPE ; APPROACH % TREEBKPTR ; 
+      NAPPROACH% TREEBKPTR; DROP% TREEBKPTR ) % TREEBKPTR;
+  
+VAR P% TREEBKPTR; 
+  
+BEGIN IF DEADTREEBK = NIL THEN NEW( P ) 
+        ELSE BEGIN P %= DEADTREEBK; 
+            DEADTREEBK %= DEADTREEBK^.APPROACH END; 
+    P^.TEXTP %= TEXTP;
+    P^.LABELP %= LABLP ;
+    P^.BOXTYP %= BOXTYP;
+    P^.APPROACH %= APPROACH;
+    P^.NAPPROACH %= NAPPROACH;
+    P^.DROP %= DROP;
+    NEWTREEBK %= P
+END   (*   NEWTREEBK   *)  ;
+  
+  
+  
+FUNCTION NEWTREK( TEXTP % IDENTPTR ; LABLP % IDENTPTR   ; 
+      BOXTYP % BOXTYPE ) % TREEBKPTR ;
+  
+BEGIN 
+    NEWTREK %= NEWTREEBK( TEXTP, LABLP, BOXTYP, NIL, NIL, NIL ) 
+END   (*   NEWTREK    *)   ;
+  
+(*$H+*) (*$L**) 
+PROCEDURE REARRANGE( TREE % IDENTPTR ) ;
+  
+(*   WHEN PARSE PASSES ITS OUTPUT LIST TO PLOT, SUBPROCEDURES MAY BE NESTED IN
+      THE MAIN PROCEDURE AND IN OTHER PROCEDURES ETC.  REARRANGE DE-NEXTS ALL 
+      OF THE PROCEDURES SO THAT NO PROCEDURE IS NESTED IN ANY OTHER.   *) 
+  
+VAR 
+    TREEPTR, NTREE, STREETAIL % IDENTPTR ;
+  
+PROCEDURE RARRANGE( PRESPTR % IDENTPTR ; VAR NTREE % IDENTPTR ; 
+      VAR STREETAIL % IDENTPTR ) ;
+  
+VAR 
+    SAVEH, SAVET, RELINK, SUBTAIL % IDENTPTR ;
+  
+BEGIN 
+    SAVEH %= NEWIDENT( BLANK20, NIL ) ; 
+    SAVET %= SAVEH ;
+    WHILE  NE20( PRESPTR^.NEXT^.NAME, PDFEND ) DO 
+        IF NE20( PRESPTR^.NEXT^.NAME, PDFBEG )
+            THEN PRESPTR %= PRESPTR^.NEXT 
+            ELSE BEGIN
+                RARRANGE( PRESPTR^.NEXT, RELINK, SUBTAIL ) ;
+                SAVET^.NEXT %= PRESPTR^.NEXT ;
+                SAVET %= SUBTAIL ;
+                PRESPTR^.NEXT %= RELINK 
+              END ; 
+    IF ( SAVET <> SAVEH ) 
+        THEN STREETAIL %= SAVET 
+        ELSE STREETAIL %= PRESPTR^.NEXT ; 
+    NTREE %= PRESPTR^.NEXT^.NEXT ;
+    PRESPTR^.NEXT^.NEXT %= SAVEH^.NEXT ;
+    FLSIDENT( SAVEH ) 
+END ;   (*   RARRANGE   *)
+  
+BEGIN  (*   REARRANGE   *)
+  STATS^.TIME.REARRANGE %= STATS^.TIME.REARRANGE - CLOCK ;             (*STATS*)
+    TREEPTR %= TREE ; 
+    WHILE ( TREEPTR <> NIL ) DO 
+        BEGIN 
+            RARRANGE( TREEPTR, NTREE, STREETAIL ) ; 
+            STREETAIL^.NEXT %= NTREE ;
+            TREEPTR %= NTREE
+          END 
+  ; STATS^.TIME.REARRANGE %= STATS^.TIME.REARRANGE + CLOCK             (*STATS*)
+END ;   (*   REARRANGE   *) 
+  
+  
+(*$L*) (*$H+*)
+FUNCTION COUNT( VAR P % IDENTPTR; VAR PROCNAME % STRING20 ) % TREEBKPTR;
+  
+(* COUNT IS PASSED A LINEAR LIST, AND CONSTRUCTS A TREE FROM IT.  THE POINTER 
+   P IS GLOBAL, AND ALWAYS POINTS TO THE HEAD OF THE LIST.
+*)
+  
+VAR TREE % TREEBKPTR; 
+  
+PROCEDURE CONSTRUCT ( VAR NEWBOX % TREEBKPTR ) ; FORWARD ;
+  
+  
+PROCEDURE ERROR ( N % INTEGER );
+(* ERROR CODES > 100 ARE ONLY WARNINGS.  *) 
+  
+BEGIN (* ERROR *) 
+   IF (N < 100) OR DEBUG THEN BEGIN 
+      WRITELN; INDENT;
+      WRITE('*** ERROR DETECTED BY COUNT MODULE% ');
+      CASE N OF 
+         1% WRITE('MISSING & OR !.'); 
+         2% WRITE('UNMATCHED DELIMITERS.'); 
+         3% WRITE('MISSING PROCEDURE NAME.'); 
+       101% WRITE('COMMA AT START OF CLIST'); 
+       102% WRITE('COMMA AT START OF SLIST'); 
+       103% WRITE('COMMA IN BREAK');
+       104% WRITE('MISSING COMMA IN CLIST');
+      END;
+      WRITELN; INDENT;
+      WRITE('*** WITH P = '); PRINTONEIDENT(P); 
+      END;
+   IF N < 100 THEN BEGIN
+      WRITELN; INDENT;
+      WRITE('*** IN PROCEDURE ',PROCNAME);
+      FORMATIDENT(5,3,P); 
+      HALT; 
+      END;
+END; (* ERROR *)
+  
+PROCEDURE ENTER ( PROC % ALFA );
+BEGIN 
+   IF DEBUG THEN BEGIN
+      LEFTMARGIN %= LEFTMARGIN + 3; 
+      WRITELN;
+      INDENT; 
+      WRITE('>>', PROC, (LEFTMARGIN DIV 3)%2, ' '); 
+      PRINTONEIDENT ( P ) ; 
+      END 
+END;
+  
+  
+PROCEDURE EXIT ( PROC % ALFA ); 
+BEGIN 
+   IF DEBUG THEN BEGIN
+      WRITELN; INDENT;
+      WRITE('<<', PROC, (LEFTMARGIN DIV 3)%2, ' '); 
+      PRINTONEIDENT ( P );
+      LEFTMARGIN %= LEFTMARGIN - 3; 
+      END 
+END;
+  
+PROCEDURE FLUSH(SYMBOL % STRING20); 
+(* FLUSH ADVANCES P EXACTLY ONE TOKEN.  IF P IS NOT POINTING AT THE PROPER
+   SYMBOL, AN ERROR OCCURS.  *) 
+  
+BEGIN (* FLUSH *) 
+   IF NE20(SYMBOL, P^.NAME) THEN ERROR(2);
+   FLSIDENT(P); 
+END; (* FLUSH *)
+  
+  
+FUNCTION HEAD( SYMBOL % STRING20 ) % BOOLEAN; 
+  
+(* HEAD COMPARES THE HEAD OF THE P-LIST WITH THE GIVEN SYMBOL. IFF THEY ARE 
+   EQUAL, HEAD RETURNS TRUE, AND ADVANCES P. *) 
+  
+VAR COMPARE % BOOLEAN;
+  
+BEGIN (* HEAD *)
+   COMPARE %= EQ20(SYMBOL, P^.NAME);
+   IF COMPARE THEN FLSIDENT(P); 
+   HEAD %= COMPARE; 
+END; (* HEAD *) 
+  
+FUNCTION BREAK( SYMBOL % STRING20 ) % IDENTPTR; 
+  
+(* BREAK IS RESPONSIBLE FOR BREAKING OFF A PIECE OF TEXT FROM THE P-LIST. IT
+   ADVANCES TO THE PROPER META-SYMBOL, SKIPPING COMMAS ALONG THE WAY, AND 
+   REPORTING AN ERROR IF ANOTHER METASYMBOL IS FOUND.  BREAK LEAVES P ONE TOKEN 
+   PAST THE GIVEN SYMBOL, AND RETURNS A POINTER TO THE TOP OF TEXT. 
+*)
+  
+VAR OLDP % IDENTPTR;
+  
+BEGIN (* BREAK *) 
+   ENTER('BREAK     '); 
+   WHILE HEAD(COMMA) DO ERROR(103); 
+   OLDP %= NIL; 
+   IF EQ20(P^.NAME,SYMBOL)
+      THEN BREAK %= NIL 
+      ELSE BREAK %= P;
+   WHILE NOT METASYMBOL(P) DO BEGIN 
+      OLDP %= P;
+      P %= P^.NEXT; 
+      WHILE HEAD(COMMA) DO ERROR(103);
+      OLDP^.NEXT %= P;
+   END; 
+   IF OLDP <> NIL THEN OLDP^.NEXT %= NIL; 
+   FLUSH(SYMBOL); 
+   EXIT ('BREAK     '); 
+END; (* BREAK *)
+(*$H+*)  (*$L**)
+  
+PROCEDURE SIMPLIST; 
+(* THIS PROCEDURE ADVANCES P TO THE END OF A LIST OF SIMPLE STATEMENTS. 
+   THERE ARE FIVE CASES THAT CAN OCCUR% 
+  
+   CASE  %   [A,[B]]    [A,,[B]]    [A]    [A,B]    [A,,B]
+   ACTION%    /&         /X&         /&       &       X&
+   WHERE & IS POSITION OF P,   / IS NIL POINTER,   X IS SYMBOL FLUSHED. 
+  
+   THIS ROUTINE IS TRICKY BECAUSE MULTIPLE COMMAS MUST BE REDUCED TO ONE, 
+   AND BECAUSE FINAL COMMAS MUST BE LEFT FOR CLIST TO PARSE, WHILE
+   IMBEDDED COMMAS ARE PARSED BY SIMPLIST.
+*)
+  
+VAR OLDP % IDENTPTR;
+  
+BEGIN (* SIMPLIST *)
+   ENTER('SIMPLIST  '); 
+   REPEAT 
+      OLDP %= P;
+      P %= P^.NEXT; 
+   UNTIL METASYMBOL(P); 
+  
+   IF EQ20(P^.NAME, COMMA) THEN 
+   WHILE EQ20(P^.NAME, COMMA) AND EQ20(P^.NEXT^.NAME,COMMA) DO FLUSH(COMMA);
+   OLDP^.NEXT %= P; 
+  
+   IF EQ20(P^.NAME,COMMA) THEN IF METASYMBOL(P^.NEXT) THEN
+      OLDP^.NEXT %= NIL 
+   ELSE BEGIN 
+      P %= P^.NEXT; 
+      SIMPLIST; 
+      END 
+   ELSE OLDP^.NEXT %= NIL;
+   EXIT ('SIMPLIST  '); 
+END; (* SIMPLIST *) 
+  
+  
+  
+PROCEDURE CLIST ( VAR NEWBOX % TREEBKPTR ); 
+(* CLIST PARSES A LIST OF CONSTRUCTS, SEPARATED BY COMMAS *)
+  
+BEGIN (* CLIST *) 
+   ENTER('CLIST     '); 
+   WHILE HEAD(COMMA) DO ERROR(101); 
+   CONSTRUCT(NEWBOX); 
+   IF HEAD(COMMA) AND (NEWBOX<>NIL) THEN
+      CLIST(NEWBOX^.DROP) 
+   ELSE IF METABEG(P) OR NOT METASYMBOL(P) THEN BEGIN 
+      ERROR(104); 
+      CLIST(NEWBOX^.DROP);
+      END;
+   EXIT ('CLIST     '); 
+END; (* CLIST *)
+  
+  
+PROCEDURE SLIST ( VAR NEWBOX % TREEBKPTR ); 
+(* SLIST PARSES A LIST OF CLISTS, SEPARATED BY SEMICOLONS *)
+  
+VAR NEWLABEL % IDENTPTR;
+  
+BEGIN (* SLIST *) 
+   ENTER('SLIST     '); 
+   WHILE HEAD(COMMA) DO ERROR(102); 
+   IF HEAD(LABBEG)
+      THEN NEWLABEL %= BREAK(LABEND)
+      ELSE NEWLABEL %= NIL; 
+   CLIST(NEWBOX); 
+   IF (NEWBOX <> NIL) OR (NEWLABEL <> NIL) THEN BEGIN 
+      IF NEWBOX = NIL 
+         THEN NEWBOX %= NEWTREK(NIL,NEWLABEL,RECTANG) 
+         ELSE NEWBOX^.LABELP %= NEWLABEL; 
+      IF HEAD(SEMICOLON)
+         THEN SLIST(NEWBOX^.NAPPROACH); 
+      END;
+   WHILE HEAD(SEMICOLON) DO (* FLUSH IT *) ;
+  
+   EXIT ('SLIST     '); 
+END; (* SLIST *)
+(*$H+*)  (*$L**)
+  
+PROCEDURE CONSTRUCT (* VAR NEWBOX % TREEBKPTR *); 
+(* CONSTRUCT IS THE HEART OF COUNT.  IT PARSES ONE CONSTRUCT FROM THE P-LIST
+   AND CONSTRUCTS A REPRESENTATION OF THE GRAPHICAL FORMAT.  THIS IS DONE BY
+   RECURSIVE DESCENT; CALLING THE ROUTINES SLIST AND CLIST, WHICH IN TURN 
+   CALLS CONSTRUCT.  A PARTIAL BNF OF THE METALANGUAGE IS%  
+  
+   CONSTRUCT %= <- NAME /* PARMS */ CLIST ->
+              ! < PREDICATE _ CLIST > 
+              ! [ CLIST ] 
+              ! ( PREDICATE _ SLIST ) 
+              ! (- & SLIST -) 
+              ! (- ! SLIST -) 
+              ! SIMPLE-LIST 
+              ! NIL 
+  
+   CLIST     %= CONSTRUCT 
+              ! CONSTRUCT , CLIST 
+  
+   SLIST     %= LABEL CLIST 
+              ! LABEL CLIST ; SLIST 
+  
+   SIMPLIST  %= TEXT
+              ! TEXT, SIMPLIST
+  
+   LABEL     %= /- TEXT -/
+              ! NIL 
+*)
+  
+VAR 
+   TEXTPTR % IDENTPTR; (* POINTS TO TEXT THAT WILL APPEAR IN BOX *) 
+   PARMPTR % IDENTPTR; (* POITS TO PARAMETERS TO BE PRINTED *)
+  
+BEGIN (* CONSTRUCT *) 
+   ENTER('CONSTRUCT '); 
+  
+IF NOT METASYMBOL(P) THEN BEGIN (* ELEMENTRY STATEMENT *) 
+   NEWBOX %= NEWTREK(P, NIL, RECTANG);
+   SIMPLIST;
+   END
+  
+ELSE IF HEAD(CONBEG) THEN BEGIN (* CONDITIONAL STATEMENT *) 
+   TEXTPTR %= BREAK(ARROW); 
+   NEWBOX %= NEWTREK(TEXTPTR, NIL, CONDBOX);
+   SLIST(NEWBOX^.APPROACH); 
+   FLUSH(CONEND); 
+   END
+  
+(*$H+*)  (*$L**)
+ELSE IF HEAD(ITNBEG) THEN BEGIN (* ITERATIVE STATEMENT *) 
+   TEXTPTR %= BREAK(ARROW); 
+   NEWBOX %= NEWTREK(TEXTPTR, NIL, ITNBOX); 
+   CLIST(NEWBOX^.APPROACH); 
+   FLUSH(ITNEND); 
+   END
+  
+ELSE IF HEAD(BLKBEG) THEN BEGIN (* BLOCK STATEMENT *) 
+   NEWBOX %= NEWTREK(NIL, NIL, BLKCIRCL); 
+   CLIST(NEWBOX^.APPROACH); 
+   FLUSH(BLKEND); 
+   END
+  
+ELSE IF HEAD(PDFBEG) THEN BEGIN (* PROGRAM DEFINITION STATEMENT *)
+   IF METASYMBOL(P) THEN ERROR(3);
+   PROCNAME %= P^.NAME; 
+   TEXTPTR %= BREAK(PRMBEG);
+   PARMPTR %= BREAK(PRMEND);
+   NEWBOX %= NEWTREK(TEXTPTR, PARMPTR, PROCBOX);
+   CLIST(NEWBOX^.DROP); 
+   FLUSH(PDFEND); 
+   END
+  
+ELSE IF HEAD(PALBEG) THEN BEGIN (* PARALLEL STATEMENTS *) 
+   IF HEAD(UPTRIAN) THEN
+      NEWBOX %= NEWTREK(NIL, NIL, UPTRI)
+   ELSE IF HEAD(DOWNTRIAN) THEN 
+      NEWBOX%= NEWTREK(NIL, NIL, DOWNTRI) 
+   ELSE 
+      ERROR(1); 
+   SLIST(NEWBOX^.APPROACH); 
+   FLUSH(PALEND); 
+   END
+  
+ELSE (* THE EMPTY STATEMENT *)
+   NEWBOX %= NIL; 
+  
+   EXIT ('CONSTRUCT '); 
+END; (* CONSTRUCT *)
+  
+  
+BEGIN (* COUNT *) 
+   STATS^.TIME.COUNT %= STATS^.TIME.COUNT - CLOCK;
+   CONSTRUCT(TREE); 
+   COUNT %= TREE; 
+   STATS^.TIME.COUNT %= STATS^.TIME.COUNT + CLOCK;
+END; (* COUNT *)
+(**)
+(*$L*) (*$H+*)
+PROCEDURE LET (VAR P%POINT; X%REAL; Y%REAL);
+(* LET P EQUAL THE GIVEN COORDINATES *) 
+BEGIN 
+   P.X %= X;
+   P.Y %= Y;
+END; (* SET *)
+  
+  
+  
+PROCEDURE SETP ( VAR P % POINT ; Q % POINT ); 
+(* SET THE POINT P EQUAL TO Q *)
+BEGIN 
+   P.X %= Q.X;
+   P.Y %= Q.Y;
+END; (* SETP *) 
+  
+  
+FUNCTION MAX ( A%REAL ; B%REAL) % REAL; 
+(* FIND MAXIMUM VALUE *)
+BEGIN 
+   IF A>B   THEN MAX %= A      ELSE MAX %= B; 
+END; (* MAX *)
+(*$H+*) (*$L**) 
+PROCEDURE INIT; 
+  
+CONST 
+   OB = -1.0; (* OVERFLOW BOX DISPLACEMENT *) 
+   TINY = 0.25; (* BLKCIRCL EDGE SIZE *)
+   HYP = 0.1768; (* BLKCIRCL EDGE SIZE * SQRT(2) / 2 *) 
+VAR 
+   B% BOXTYPE;
+   WIDTH % REAL;
+  
+PROCEDURE PSEUDO; FORTRAN;
+  
+BEGIN 
+  
+   OVERNAME %= 'A                   '  ;
+   LASTOVER %= NIL; 
+   FIRSTOVER %= NIL;
+   INDENTLEVEL %= 1;
+   XMAX %= 0.0; 
+   WIDTH %= (7.0/7.0) * SIZECHARACTER;    (* WIDTH OF A CHARACTER *)
+   LET(HERE,0.0,0.0); 
+   LET(START,1.0,0.2);
+   BUF[0] %= ' '; 
+   PSEUDO ; 
+  
+   (* INITIALIZE THE SHAPES OF THE BOXES *) 
+  
+   LET(E[RECTANG],0.0,1.0); 
+   LET(W[RECTANG],0.0,-1.0);
+  
+   LET(E[CONDBOX],0.0,1.2); 
+   SETP(W[CONDBOX],W[RECTANG]); 
+  
+   SETP(E[ITNBOX],E[CONDBOX]);
+   LET(W[ITNBOX],0.0,-0.8); 
+  
+   LET(N[UPTRI],-TINY,0.0); 
+   LET(S[UPTRI],0.0,0.0); 
+   LET(E[UPTRI],0.0,TINY);
+   LET(W[UPTRI],0.0,-TINY); 
+  
+   LET(N[DOWNTRI],0.0,0.0); 
+   LET(S[DOWNTRI],TINY,0.0);
+   SETP(E[DOWNTRI],E[UPTRI]); 
+   SETP(W[DOWNTRI],W[UPTRI]); 
+  
+   LET(N[OVERBOX],N[UPTRI].X,N[UPTRI].Y+OB);
+   LET(S[OVERBOX],S[DOWNTRI].X,S[DOWNTRI].Y+OB);
+   LET(E[OVERBOX],E[UPTRI].X,E[UPTRI].Y+OB);
+   LET(W[OVERBOX],W[UPTRI].X,W[UPTRI].Y+OB);
+  
+   FOR B %= RECTANG TO OVERBOX DO BEGIN 
+  
+      LET(NN[B],-0.75,0.0); 
+      LET(SS[B],0.75,0.0);
+      LET(WW[B],0.0,-1.7);
+      LET(EE[B],0.0,1.3); 
+(*$L*) (*$H+*)
+      CASE B OF 
+  
+      RECTANG, ITNBOX, CONDBOX% BEGIN 
+         LET(NW[B],-0.5,-1.0);
+         LET(NE[B],-0.5,1.0); 
+         LET(SW[B],0.5,-1.0); 
+         LET(SE[B],0.5,1.0);
+         LET(N[B],-0.5,0.0);
+         LET(S[B],0.5,0.0); 
+         END; 
+  
+      UPTRI, DOWNTRI, OVERBOX% BEGIN
+         SETP(NE[B],E[B]);
+         SETP(SE[B],E[B]);
+         SETP(NW[B],W[B]);
+         SETP(SW[B],S[B]);
+         END; 
+  
+      BLKCIRCL% BEGIN 
+         LET(N[B],-TINY,0.0); 
+         LET(S[B],TINY,0.0);
+         LET(E[B],0.0,TINY);
+         LET(W[B],0.0,-TINY); 
+         LET(SE[B],HYP,HYP);
+         LET(NE[B],-HYP,HYP); 
+         LET(SW[B],HYP,-HYP); 
+         LET(NW[B],-HYP,-HYP);
+         END; 
+  
+      PROCBOX% BEGIN
+         SETP(S[B],SS[B]);
+         SETP(N[B],NN[B]);
+         SETP(E[B],EE[B]);
+         SETP(W[B],WW[B]);
+         LET(SE[B],S[B].X,E[B].Y);
+         LET(SW[B],S[B].X,W[B].Y);
+         LET(NE[B],N[B].X,E[B].Y);
+         LET(NW[B],N[B].X,W[B].Y);
+         END; 
+  
+      END; (* CASE OF B *)
+  
+      LET(T[B],NW[B].X + WIDTH * (NMARGIN+1.0), 
+               MAX(NW[B].Y,W[B].Y) + WIDTH * (WMARGIN-1.0) ); 
+      NUMAPP[B] %= TRUNC( (W[B].Y-WW[B].Y) / WIDTH ) - 1; 
+      NUMCHARS[B] %= TRUNC((NE[B].Y-T[B].Y-EMARGIN*WIDTH)/WIDTH) - 1; 
+  
+   END; (* FOR B LOOP *)
+  
+   LET(T[OVERBOX],0.0,OB-2*WIDTH);
+   SETP(T[PROCBOX],T[RECTANG]); 
+   NUMCHARS[PROCBOX] %= NUMCHARS[RECTANG];
+END; (* INIT *) 
+(*$L*) (*$H+*)
+PROCEDURE TRACE(MSG%ALFA);
+BEGIN 
+   IF PBUG THEN BEGIN LEFTMARGIN %= 5*INDENTLEVEL;
+   WRITELN; INDENT; WRITE(MSG,' AT% ', HERE.X%7%3, HERE.Y%7%3); END;
+END;
+  
+  
+  
+  
+PROCEDURE CALPLT(X%REAL; Y%REAL; PEN%INTEGER); FORTRAN; 
+  
+
+PROCEDURE FIN;
+(* INDICATE WE ARE FINISHED WITH CALCOMP ROUTINES *)
+BEGIN 
+   CALPLT(0.0, 0.0, DONE);
+END;
+
+
+
+PROCEDURE PRINT ( TREE % TREEBKPTR ) ;
+
+(* PLOT A CALCOMP REPRESENTATION OF THE TREE *) 
+
+  
+  
+  
+PROCEDURE P ( PEN % INTEGER ; P % POINT ; Q % POINT ) ; 
+  
+(* DRAW OR MOVE FROM CURRENT POSITION BY A DISPLACEMENT VECTOR OF [Q-P].
+   THE CURRENT POSITION IS ALWAYS 'HERES   *) 
+  
+BEGIN 
+   HERE.X %= HERE.X + ( Q.X - P.X ) ; 
+   HERE.Y %= HERE.Y + ( Q.Y - P.Y ) ; 
+   CALPLT ( HERE.X, HERE.Y, PEN ) ; 
+END; (* P *)
+  
+  
+PROCEDURE DRAWDROP ( DISTANCE % REAL ) ;
+  
+(* DRAW A LINE STRAIGHT SOUTH FOR THE GIVEN DISTANCE *) 
+  
+BEGIN 
+   TRACE('DRAWDROP  '); 
+   IF PBUG THEN WRITE('DISTANCE% ',DISTANCE%7%3); 
+   HERE.X %= HERE.X + DISTANCE; 
+   CALPLT ( HERE.X, HERE.Y, DRAW ) ;
+END; (* DRAWDROP *) 
+  
+(*$L*) (*$H+*)
+FUNCTION  NEWOVERNAME  %  IDENTPTR; 
+ VAR   NAME % IDENTPTR; 
+ BEGIN
+   NAME %= NEWIDENT(OVERNAME,NIL);
+   IF OVERNAME[1] = 'Z' THEN BEGIN
+      OVERNAME[1] %= 'A'; 
+      IF OVERNAME[2] IN [' ','Z'] THEN
+         OVERNAME[2] %= 'A' 
+      ELSE OVERNAME[2] %= SUCC(OVERNAME[2]);
+      END 
+   ELSE OVERNAME[1] %= SUCC(OVERNAME[1]); 
+   NEWOVERNAME %= NAME; 
+END;
+  
+  
+PROCEDURE  PATCHINOVERBLOCK  (VAR TREE%TREEBKPTR);
+ VAR
+    OVER % TREEBKPTR; 
+    OVERBEGIN % TREEBKPTR;
+    NEWOVERCELL % OVERCELLPTR;
+    OVERNAME % IDENTPTR;
+ BEGIN
+  
+   (* THE OVERFLOW TREE *)
+    OVERNAME %= NEWOVERNAME;
+   OVERBEGIN %= NEWTREK(OVERNAME,NIL,OVERBOX);
+   IF TREE^.NAPPROACH = NIL 
+      THEN OVERBEGIN^.DROP %= TREE (* DROP FROM OVERBOX *)
+      ELSE OVERBEGIN^.APPROACH %= TREE; (* APPROACH FROM OVERBOX *) 
+  
+   (* THE OVERFLOW MARKER BOX *)
+   OVER %= NEWTREK(OVERNAME,TREE^.LABELP,OVERBOX);
+   TREE %= OVER;
+  
+                   NEW(NEWOVERCELL);
+                   NEWOVERCELL^.TREE %= OVERBEGIN;
+                   NEWOVERCELL^.NEXTOVER %= NIL;
+  
+   IF LASTOVER = NIL
+      THEN FIRSTOVER %= NEWOVERCELL 
+      ELSE LASTOVER^.NEXTOVER %= NEWOVERCELL; 
+   LASTOVER %= NEWOVERCELL; 
+  
+ END;   (* PATCHINOVERBLOCK *)
+(*$L*) (*$H+*)
+FUNCTION ADDBUF(TOKEN%STRING20; VAR POS%INTEGER; MAXPOS%INTEGER;
+          NUMCHAR%INTEGER) % BOOLEAN; 
+(* ADD TOKEN TO BUFFER, POSSIBLY OVERFLOWING INTO OVTOKEN *)
+  
+VAR 
+   LENGTH,I % INTEGER;
+   FILLED % BOOLEAN;
+  
+BEGIN 
+  
+   (* FIND LENGTH OF TOKEN *) 
+   LENGTH %= IDENTMAX;
+   IF EQ20(TOKEN,BLANK20) THEN
+      LENGTH %= 0 
+   ELSE WHILE (LENGTH>1) AND (TOKEN[LENGTH] = ' ') DO LENGTH %= LENGTH - 1; 
+  
+   (* ADD A BLANK IF TWO ALPHANUMERICS COME TOGETHER *) 
+   IF (BUF[POS-1] IN ['A'..'Z' , '0'..'9']) AND 
+      (TOKEN[1] IN ['A'..'Z', '0'..'9']) THEN POS %= POS+1; 
+  
+   (* DECIDE HOW TO PROCESS TOKEN *)
+   IF EQ20(TOKEN,COMMA) THEN BEGIN
+      FILLED %= POS > MAXPOS-NUMCHAR + 1;  (* FILLED UNLESS LINE IS EMPTY *)
+      OVTOKEN %= BLANK20; 
+      END 
+  
+   ELSE IF (LENGTH > NUMCHAR) AND (POS < MAXPOS) THEN BEGIN 
+      FILLED %= TRUE; 
+      (* SPLIT UP THE TOKEN *)
+         FOR I %= POS TO MAXPOS-1 DO BUF[I] %= TOKEN[I+1-POS];
+         BUF[MAXPOS] %= '^' ; 
+         OVTOKEN %= BLANK20;
+         FOR I %= 1 TO LENGTH-MAXPOS+POS DO OVTOKEN[I] %= TOKEN[I+MAXPOS-POS];
+      END 
+  
+   ELSE IF POS+LENGTH > MAXPOS+1 THEN BEGIN 
+      (* PUT IT ON A NEW LINE *)
+      OVTOKEN %= TOKEN; 
+      FILLED %= TRUE; 
+      END 
+  
+   ELSE BEGIN 
+      (* ADD TOKEN TO BUFFER *) 
+      FOR I %= 1 TO LENGTH DO BUF[I+POS-1] %= TOKEN[I]; 
+      POS %= POS + LENGTH;
+      OVTOKEN %= BLANK20; 
+      FILLED %= (POS > MAXPOS); 
+      END;
+  
+   ADDBUF %= FILLED;
+  
+END; (* ADDBUF *) 
+(*$H+*) (*$L**) 
+PROCEDURE PUTTEXT (VAR TEXT%IDENTPTR; POS%INTEGER; MAXPOS%INTEGER); 
+  
+(* PUT ONE LINE OF TEXT INTO THE BUFFER *)
+  
+VAR FILLED % BOOLEAN; 
+   NUMCHAR % INTEGER; 
+   I % INTEGER; 
+  
+BEGIN 
+   NUMCHAR %= MAXPOS - POS + 1; 
+   FOR I %= POS TO MAXPOS DO BUF[I] %= ' '; 
+   REPEAT FILLED %= ADDBUF(OVTOKEN,POS,MAXPOS,NUMCHAR)
+   UNTIL FILLED OR EQ20(OVTOKEN,BLANK20); 
+   WHILE (TEXT <> NIL) AND NOT FILLED DO BEGIN
+      FILLED %= ADDBUF(TEXT^.NAME, POS,MAXPOS,NUMCHAR); 
+      TEXT %= TEXT^.NEXT; 
+   END; 
+END; (* PUTTEXT *)
+  
+  
+  
+PROCEDURE PLOTTEXT(N%INTEGER; TEXT%IDENTPTR); 
+(* PLOT AN ARBITRARY NUMBER OF LINES OF TEXT *) 
+  
+VAR 
+   CR % POINT;  (* POINT TO RETURN TO AFTER END OF LINE *)
+   I % INTEGER; 
+  
+  
+PROCEDURE NOTATE (X%REAL; Y%REAL; HEIGHT%REAL; STRING%TEXTBUFFER; 
+                  THETA%REAL; NUMCHARS%INTEGER); FORTRAN; 
+  
+  
+BEGIN 
+   SETP(CR, HERE);
+   OVTOKEN %= BLANK20;
+   WHILE (TEXT <> NIL) OR NE20(OVTOKEN,BLANK20) DO BEGIN
+      PUTTEXT(TEXT, 1, N);
+      TRACE('NOTATE%   ');IF PBUG THEN FOR I%=0 TO N DO WRITE(BUF[I]);
+      NOTATE(CR.X, CR.Y, SIZECHARACTER, BUF, 90.0, N+1);
+      CR.X %= CR.X + LINEFEED;
+   END; 
+   SETP(HERE, CR);
+   (* N.B. 'HERE' IS NOW INCORRECT-- FORTUNATELY WE HAVE SWPOINT TO GO TO *)
+END; (* PLOTTEXT *) 
+(*$L*) (*$H+*)
+PROCEDURE PLOTAPPLINE (TREE%TREEBKPTR; APP%APPTYPE; VAR SWPOINT%POINT;
+                      VAR NAPOINT%POINT); 
+(* DRAW APPROACH TO CURRENT BOX, DEFINE NAPPROACH POINT, AND MOVE TO TEXTPOINT*)
+  
+VAR 
+   LABSTART,NEWSTART % POINT; 
+    BOX  % BOXTYPE; 
+  
+BEGIN 
+   BOX %= TREE^.BOXTYP; 
+  
+   CASE APP OF
+  
+   DROP% BEGIN
+      P(DRAW,NN[BOX],N[BOX]); 
+      P(MOVE,N[BOX],T[BOX]);
+      END;
+  
+   NAPPROACH,APPROACH% BEGIN
+      IF APP=NAPPROACH THEN  DRAWDROP(WW[BOX].X-NN[BOX].X); 
+      SETP(NAPOINT, HERE);
+      IF TREE^.LABELP <> NIL THEN BEGIN 
+         LET(LABSTART,HERE.X+(SIZECHARACTER-LINEFEED)/2.0,HERE.Y);
+         P(MOVE,HERE,LABSTART); 
+         PLOTTEXT(NUMAPP[BOX],TREE^.LABELP);
+         P(MOVE,HERE,NAPOINT);
+         END; 
+      P(DRAW,WW[BOX],W[BOX]); 
+      P(MOVE,W[BOX],T[BOX]);
+      END;
+  
+   NONE% BEGIN
+      LET(NEWSTART,XMAX+START.X+T[BOX].X-N[BOX].X,START.Y+T[BOX].Y-WW[BOX].Y);
+      P(MOVE,HERE,NEWSTART);
+      END;
+  
+   END; 
+  
+   (* COMPUTE WHRE THE SW CORNER SHOULD BE *) 
+   LET(SWPOINT, HERE.X + (SW[BOX].X - T[BOX].X),
+                 HERE.Y + (SW[BOX].Y - T[BOX].Y));
+  
+END; (* PLOTAPPLINE *)
+(*$L*) (*$H+*)
+PROCEDURE PLOTBOX ( B % BOXTYPE; SWPOINT%POINT; VAR APOINT%POINT; 
+                    VAR DPOINT%POINT; VAR XMAX%REAL );
+  
+(* DRAW A BOX AROUND PREVIOUSLY PLOTTED TEXT.  START AT SW CORNER, AND GO 
+   CLOCKWISE, PLOTTING FROM ONE POINT TO THE NEXT.  IF THE TEXT STRETCHES 
+   BEYOND THE NORMAL EXTENT OF THE BOX, AN EXTENSION IS DRAWN.
+   THE DROP POINT IS THE S CORNER, THE APPROACH POINT IS THE E CRNER. 
+   XMAX IS SET TO THE MAXIMUM, OVER ALL BOXES, OF THE HYPOTHETICAL SS POINT.  *)
+  
+CONST FUZZ = 0.0001;
+VAR 
+   ENDTEXT,D1,D2 % POINT; (* D1,D2 ARE DUMMIES *) 
+   EXTENSION % REAL;
+  
+BEGIN 
+   SETP(ENDTEXT,HERE);
+   EXTENSION %= MAX(0.0, HERE.X-SWPOINT.X+(SMARGIN*SIZECHARACTER)); 
+   IF B IN [UPTRI,DOWNTRI,BLKCIRCL,OVERBOX] THEN EXTENSION %= 0.0;
+   P(MOVE,HERE,SWPOINT);
+   P(DRAW,SW[B],W[B]);
+   TRACE('W POINT   '); 
+   P(DRAW,W[B],NW[B]);
+   P(DRAW,NW[B],N[B]);
+   TRACE('N POINT   '); 
+   P(DRAW,N[B],NE[B]);
+   P(DRAW,NE[B],E[B]);
+   TRACE('E POINT   '); 
+   SETP(APOINT,HERE); 
+   P(DRAW,E[B],SE[B]);
+  
+   (* ITNBOX GETS EXTRA LINE *) 
+   IF B = ITNBOX THEN BEGIN 
+      P(DRAW,SE[ITNBOX],NE[ITNBOX]);
+      P(DRAW,NE[ITNBOX],SE[ITNBOX]);
+      END;
+  
+   IF EXTENSION > FUZZ THEN DRAWDROP(EXTENSION);
+   P(DRAW,SE[B],S[B]);
+   SETP(DPOINT,HERE); 
+   XMAX %= MAX(XMAX,HERE.X+SS[B].X-S[B].X); 
+   TRACE('S POINT   '); 
+   P(DRAW,S[B],SW[B]);
+   IF EXTENSION > FUZZ THEN DRAWDROP(-EXTENSION); 
+  
+   (* PROCBOX GETS EXTRA BOX *) 
+   IF  B = PROCBOX THEN BEGIN 
+      P(MOVE,HERE,ENDTEXT); 
+      LET(SWPOINT,SWPOINT.X+SW[RECTANG].X-SW[PROCBOX].X+EXTENSION,
+                  SWPOINT.Y+SW[RECTANG].Y-SW[PROCBOX].Y); 
+      PLOTBOX(RECTANG,SWPOINT,D1,D2,XMAX) 
+      END;
+  
+END; (* PLOTBOX *)
+  
+  
+(*$L*) (*$H+*)
+PROCEDURE PLOTBOXES(TREE%TREEBKPTR; APP%APPTYPE); 
+(* PLOT A WHOLE TREE OF BOXES *)
+  
+VAR 
+   BOX% BOXTYPE;
+   SWPOINT,APOINT,NAPOINT,DPOINT % POINT; 
+BEGIN 
+  
+   IF INDENTLEVEL > NUMBOXES THEN PATCHINOVERBLOCK(TREE); 
+   BOX %= TREE^.BOXTYP; 
+   IF BOX = PROCBOX THEN APPEND(TREE^.TEXTP, TREE^.LABELP); 
+  
+   IF PBUG THEN BEGIN 
+   WRITELN; TRACE('>>NEW BOX '); WRITE(' BOX', ORD(BOX)%2, ' APP ', ORD(APP)%2 )
+   ; WRITE(' NC ', NUMCHARS[BOX]%2, ' NA ', NUMAPP[BOX]%2 );
+   END; 
+                                                 (* LEAVE PEN AT%  *) 
+   PLOTAPPLINE(TREE,APP, SWPOINT, NAPOINT);      (* TEXTPOINT      *) 
+   PLOTTEXT(NUMCHARS[BOX], TREE^.TEXTP);         (* END OF TEXT    *) 
+   PLOTBOX(BOX, SWPOINT, APOINT, DPOINT, XMAX);  (* SW CORNER      *) 
+  
+   IF TREE^.APPROACH <> NIL THEN BEGIN
+      P(MOVE,HERE,APOINT);
+      P(DRAW,E[BOX],EE[BOX]); 
+      INDENTLEVEL %= INDENTLEVEL + 1; 
+      PLOTBOXES(TREE^.APPROACH, APPROACH);
+      INDENTLEVEL %= INDENTLEVEL - 1; 
+      END;
+  
+   IF TREE^.DROP <> NIL THEN BEGIN
+      P(MOVE, HERE, DPOINT);
+      DRAWDROP(XMAX-HERE.X);
+      PLOTBOXES(TREE^.DROP, DROP ); 
+      END;
+  
+   IF TREE^.NAPPROACH <> NIL THEN BEGIN 
+      P(MOVE,HERE,NAPOINT); 
+      DRAWDROP(XMAX-HERE.X);
+      PLOTBOXES(TREE^.NAPPROACH,NAPPROACH); 
+      END;
+END; (* PLOTBOXES *)
+  
+  
+  
+BEGIN (* PRINT *) 
+   PLOTBOXES(TREE, NONE); 
+   WHILE FIRSTOVER <> NIL DO BEGIN
+      WRITELN; TRACE('----------'); 
+      PLOTBOXES(FIRSTOVER^.TREE, NONE); 
+      FIRSTOVER %= FIRSTOVER^.NEXTOVER; 
+   END; 
+END; (* PRINT *)
+  (**)
+  
+  
+  
+  
+  
+  
+  
+(*$H+*) (*$L**) 
+  
+PROCEDURE SEMIKLUDGE ( TREE % IDENTPTR ); 
+  
+  
+(* THIS LITTLE PATCH TAKES THE ALLEGED TREE PARSED FROM THE INPUT AND PRUNES
+   IT BY ELIMINATING SUPERFLUOUS SEMICOLONS. *) 
+  
+VAR 
+   CHASEPTR % IDENTPTR; 
+   NEXTPTR % IDENTPTR;
+  
+BEGIN 
+   CHASEPTR %= TREE;
+   REPEAT 
+      NEXTPTR %= CHASEPTR^.NEXT;
+      IF (CHASEPTR^.NAME[1] = ' ') AND (NEXTPTR <> NIL) THEN
+         IF EQ20 (NEXTPTR^.NAME, NONMETASEMICOLON) THEN BEGIN 
+            FLSIDENT ( NEXTPTR ); 
+            CHASEPTR^.NEXT %= NEXTPTR;
+            END;
+      CHASEPTR %= NEXTPTR;
+   UNTIL CHASEPTR = NIL;
+  
+END; (* SEMIKLUDGE *) 
+  
+(*$H+*) (*$L**) 
+  
+PROCEDURE PRINTCONC ((*OUTFILE*) NAME%STRING20; CON%PRBLKPTR; PROCS10%PRBLKPTR; 
+                     PROCSET10%IDENTPTR); 
+  
+   VAR GG,CC,ENDGG,ENDCC,PROCSET % IDENTPTR;
+       BIT % BOOLEAN; 
+       PROCS,CN % PRBLKPTR; 
+       V3 % STRING20; 
+  
+  
+  
+FUNCTION CHECKITEM (CURID%IDENTPTR; V3NAME%STRING20) % BOOLEAN; 
+  
+   VAR RET % BOOLEAN; 
+  
+BEGIN 
+  
+      RET %= FALSE; 
+      WHILE (CURID <> NIL) DO 
+         IF EQ20(CURID^.NAME, V3NAME) THEN BEGIN
+            RET %= TRUE;
+            CURID %= NIL
+            END 
+         ELSE CURID %= CURID^.NEXT; 
+      CHECKITEM %= RET; 
+  
+END (* CHECKITEM *) ; 
+  
+  
+  
+PROCEDURE WRITECONC ((*OUTFILE*) BLOCKPTR%IDENTPTR);
+  
+   VAR INDEX % INTEGER; 
+       BLOCK % STRING20;
+       TEXTBLOCK % UNSTRING20 ; 
+       SPECIAL % BOOLEAN; 
+  
+BEGIN 
+  
+      SPECIAL %= FALSE; 
+      WHILE (BLOCKPTR <> NIL) DO BEGIN
+         BLOCK %= BLOCKPTR^.NAME; 
+         UNPACK(BLOCK,TEXTBLOCK,1); 
+         FOR INDEX %= 1 TO 20 DO
+            IF SPECIAL THEN BEGIN 
+               IF TEXTBLOCK[INDEX] = '/' THEN WRITE((*OUTFILE*) '/'); 
+               IF TEXTBLOCK[INDEX] = '*' THEN BEGIN WRITELN ; INDENT END ;
+  
+               SPECIAL %= FALSE 
+               END
+            ELSE
+               IF TEXTBLOCK[INDEX] = '/' THEN SPECIAL %= TRUE 
+               ELSE WRITE ((*OUTFILE*) TEXTBLOCK[INDEX]); 
+         BLOCKPTR %= BLOCKPTR^.NEXT 
+         END; 
+      WRITELN ; 
+  
+END (* WRITECONC *) ; 
+  
+  
+  
+PROCEDURE ADDPROCS (VAR ENDPTR%IDENTPTR; LISTPTR%IDENTPTR; VAR FIRSTPTR%  
+                    IDENTPTR);
+  
+BEGIN 
+  
+      WHILE (LISTPTR <> NIL) DO BEGIN 
+         IF FIRSTPTR = NIL THEN BEGIN 
+            FIRSTPTR %= NEWIDENT(LISTPTR^.NAME,NIL);
+            ENDPTR %= FIRSTPTR
+            END 
+         ELSE BEGIN 
+            ENDPTR^.NEXT %= NEWIDENT(LISTPTR^.NAME,NIL);
+            ENDPTR %= ENDPTR^.NEXT
+            END;
+         LISTPTR %= LISTPTR^.NEXT 
+         END
+  
+END (* ADDPROCS *) ;
+  
+  
+  
+BEGIN (* PRINTCONC *) 
+  
+  STATS^.TIME.PRINTCONC %= STATS^.TIME.PRINTCONC - CLOCK ;             (*STATS*)
+  
+      GG %= NIL;
+      CC %= NIL;
+      BIT %= FALSE; 
+      GG %= NEWIDENT(NAME,NIL); 
+      ENDGG %= GG;
+      ENDCC %= NIL; 
+      WHILE (GG <> NIL) DO BEGIN
+         PROCSET %= PROCSET10;
+        PROCS %= PROCS10; 
+         CN %= CON; 
+         V3 %= GG^.NAME;
+         GG %= GG^.NEXT;
+         IF GG = NIL THEN ENDGG %= NIL; 
+         BIT %= CHECKITEM(CC,V3); 
+         IF NOT BIT THEN BEGIN
+            CC %= NEWIDENT(V3,CC);
+            WHILE (PROCSET <> NIL) DO 
+               IF EQ20(PROCSET^.NAME, V3) THEN BEGIN
+                  WRITECONC((*OUTFILE*) CN^.PRIDS); 
+                  ADDPROCS(ENDGG,PROCS^.PRIDS,GG);
+                  PROCSET %= NIL
+                  END 
+               ELSE BEGIN 
+                  PROCSET %= PROCSET^.NEXT; 
+                  PROCS %= PROCS^.NEXTPROC; 
+                  CN %= CN^.NEXTPROC
+                  END 
+            END 
+         END; 
+      FLSIDENT( CC ) ;
+  STATS^.TIME.PRINTCONC %= STATS^.TIME.PRINTCONC + CLOCK               (*STATS*)
+END (* PRINTCONC *) ; 
+  
+(*$H+*) (*$L**) 
+BEGIN   (*   PLOT   *)
+  
+   STATS^.TIME.PLOT %= STATS^.TIME.PLOT - CLOCK ;                      (*STATS*)
+  
+    DEADTREEBK %= NIL;
+    DEADTRLSTL %= NIL;
+    REARRANGE( TREE ) ; 
+    IF FLUSHSEMI THEN SEMIKLUDGE ( TREE );
+    P %= TREE;
+   IF DEBUG THEN FORMATIDENT(MAXINT, 4, P); 
+   INIT;
+    REPEAT
+        TR %= COUNT ( P, PROCNAME );
+        PRINT( TR );
+        PAGE ( OUTPUT );
+        PRINTCONC( PROCNAME, CONC, PROCS10, PROCSET10 ) 
+    UNTIL P = NIL ; 
+   FIN; 
+  
+   STATS^.TIME.PLOT %= STATS^.TIME.PLOT + CLOCK ;                      (*STATS*)
+  
+END ;   (*   PLOT   *)
+(*$H+*) (*$L**) 
+PROCEDURE PRINTSTATS (STATS% STATSPTR) ;
+  
+TYPE
+  
+   STRING10 = PACKED ARRAY [1..10] OF CHAR ;
+  
+VAR 
+  
+   CHAM% RECORD CASE INTEGER OF 
+      1% (IPT% INTPTR) ;
+      2% (INT% INTEGER) ; 
+      3% (OCT% PACKED ARRAY [1..20] OF 0..7)
+   END ;
+  
+   HIGHADDR, LOWADDR% INTEGER ; 
+   WORDSTOTAL% INTEGER ;
+   TIMETOTAL% INTEGER ; 
+  
+  
+  
+PROCEDURE PRINTOCT (N% INTEGER; AAA, ZZZ% INTEGER) ;
+  
+VAR I% INTEGER ;
+  
+BEGIN 
+  
+   CHAM.INT %= N ;
+   FOR I %= AAA TO ZZZ DO WRITE (CHAM.OCT[I]%1) ; 
+   WRITE (' (OCT)') ; 
+  
+END (* PRINTOCT *) ;
+  
+  
+  
+PROCEDURE PRINTTIME (NAME% STRING10; TIM% INTEGER) ;
+  
+BEGIN 
+  
+   INDENT ; 
+   WRITE ('TIME SPENT IN ') ; 
+   WRITE (NAME) ; 
+   WRITE (' = ') ;
+   WRITE (TIM/1000%8%3) ; 
+   WRITE (' SEC; PERCENTAGE = ') ;
+   WRITE (100*TIM/TIMETOTAL%6%2) ;
+   WRITE ('.') ;
+   WRITELN ;
+  
+END (* PRINTTIME *) ; 
+  
+  
+  
+PROCEDURE PRINTNUM (NAME% STRING10; NUM, SIZE% INTEGER) ; 
+  
+BEGIN 
+  
+   SIZE %= SIZE + WASTED ;
+   INDENT ; 
+   WRITE ('NUMBER OF ') ; 
+   WRITE (NAME) ; 
+   WRITE (' = ') ;
+   WRITE (NUM%5) ;
+   WRITE ('; OCCUPY ') ;
+   PRINTOCT (NUM*SIZE, 15, 20) ;
+   WRITE (' WORDS; PERCENTAGE OF FREE STORAGE = ') ;
+   WRITE (NUM*SIZE*100/WORDSTOTAL%6%2) ;
+   WRITE ('.') ;
+   WRITELN ;
+  
+END (* PRINTNUM *) ;
+  
+  
+  
+FUNCTION COUNTID (IP% IDENTPTR) % INTEGER ; 
+  
+VAR I% INTEGER ;
+  
+BEGIN 
+  
+   I %= 0 ; 
+   WHILE (IP <> NIL) DO BEGIN 
+      I %= I + 1 ;
+      IP %= IP^.NEXT ;
+   END ;
+   COUNTID %= I ; 
+  
+END (* COUNTID *) ; 
+  
+  
+  
+BEGIN (* PRINTSTATS *)
+  
+   CHAM.IPT %= STATS^.HIGHEST ; 
+   HIGHADDR %= CHAM.INT MOD (256*1024) ;
+   CHAM.IPT %= STATS^.LOWEST ;
+   LOWADDR %= CHAM.INT MOD (256*1024) - WASTED ;
+   WORDSTOTAL %= HIGHADDR - LOWADDR + 1 ; 
+   TIMETOTAL %= STATS^.TIME.TOTAL ; 
+  
+   PAGE (OUTPUT) ;
+   INDENT ; 
+   WRITE ('INTERNAL STATISTICS') ;
+   WRITELN ;
+   INDENT ; 
+   WRITE ('-------------------') ;
+   WRITELN ;
+   WRITELN ;
+  
+   INDENT ; 
+   WRITE ('STORAGE') ;
+   WRITELN ;
+   INDENT ; 
+   WRITE ('-------') ;
+   WRITELN ;
+   WRITELN ;
+   INDENT ; 
+   WRITE ('HIGHEST ADDR OF FREE STORAGE = ') ;
+   PRINTOCT (HIGHADDR, 15, 20) ;
+   WRITE ('.') ;
+   WRITELN ;
+   INDENT ; 
+   WRITE (' LOWEST ADDR OF FREE STORAGE = ') ;
+   PRINTOCT (LOWADDR, 15, 20) ; 
+   WRITE ('.') ;
+   WRITELN ;
+   INDENT ; 
+   WRITE ('TOTAL NUMBER OF WORDS USED = ') ;
+   PRINTOCT (WORDSTOTAL, 15, 20) ;
+   WRITE ('.') ;
+   WRITELN ;
+   WRITELN ;
+  
+   PRINTNUM ('IDENT     ', STATS^.NUM.IDENTS, 3) ;
+   PRINTNUM ('FREEIDENT ', COUNTID (DEADIDENT), 3) ;
+   PRINTNUM ('STK TOKEN ', STATS^.NUM.STACKS, 5) ;
+   PRINTNUM ('PRBLK     ', STATS^.NUM.PRBLKS, 3) ;
+   WRITELN ;
+  
+   INDENT ; 
+   WRITE ('TIME') ; 
+   WRITELN ;
+   INDENT ; 
+   WRITE ('----') ; 
+   WRITELN ;
+   WRITELN ;
+  
+   PRINTTIME ('EQ20      ', STATS^.TIME.EQ20) ; 
+   PRINTTIME ('ANALYSIS  ', STATS^.TIME.ANALYSIS) ; 
+   PRINTTIME ('PARSE     ', STATS^.TIME.PARSE) ;
+   PRINTTIME ('NEXTTOKEN ', STATS^.TIME.NEXTTOKEN) ;
+   PRINTTIME ('NEXTCCHR  ', STATS^.TIME.NEXTCCHR) ; 
+   PRINTTIME ('DOSHIFT   ', STATS^.TIME.DOSHIFT) ;
+   PRINTTIME ('DOREDUCE  ', STATS^.TIME.DOREDUCE) ; 
+   PRINTTIME ('SUBSTITUTE', STATS^.TIME.SUBSTITUTE) ; 
+   PRINTTIME ('FILL      ', STATS^.TIME.FILL) ; 
+   PRINTTIME ('LOOKGOTO  ', STATS^.TIME.LOOKGOTO) ; 
+   PRINTTIME ('LOOKACTION', STATS^.TIME.LOOKACTION) ; 
+   PRINTTIME ('COLLATE   ', STATS^.TIME.COLLATE) ;
+   PRINTTIME ('REARRANGE ', STATS^.TIME.REARRANGE) ;
+   PRINTTIME ('COUNT     ', STATS^.TIME.COUNT) ;
+   PRINTTIME ('PRINT     ', STATS^.TIME.PRINT) ;
+   PRINTTIME ('FILLAPP   ', STATS^.TIME.FILLAPP) ;
+   PRINTTIME ('PRINTCONC ', STATS^.TIME.PRINTCONC) ;
+   PRINTTIME ('PLOT      ', STATS^.TIME.PLOT) ; 
+   WRITELN ;
+  
+   PAGE (OUTPUT) ;
+  
+END (* PRINTSTATS *) ;
+  
+(*$H+*) (*$L**) 
+  
+BEGIN (* PROGRAM *) ; 
+  
+   NEW (IP) ;                                                          (*STATS*)
+   NEW (STATS) ;                                                       (*STATS*)
+   STATS^.TIME.TOTAL %= -CLOCK ;                                       (*STATS*)
+   STATS^.HIGHEST %= IP ;                                              (*STATS*)
+  
+   STATS^.NUM.PRBLKS     %= 0 ;                                        (*STATS*)
+   STATS^.NUM.STACKS     %= 0 ;                                        (*STATS*)
+   STATS^.NUM.IDENTS     %= 0 ;                                        (*STATS*)
+  
+   STATS^.TIME.EQ20       %= 0 ;                                       (*STATS*)
+   STATS^.TIME.ANALYSIS   %= 0 ;                                       (*STATS*)
+   STATS^.TIME.PARSE      %= 0 ;                                       (*STATS*)
+   STATS^.TIME.NEXTTOKEN  %= 0 ;                                       (*STATS*)
+   STATS^.TIME.NEXTCCHR   %= 0 ;                                       (*STATS*)
+   STATS^.TIME.DOSHIFT    %= 0 ;                                       (*STATS*)
+   STATS^.TIME.DOREDUCE   %= 0 ;                                       (*STATS*)
+   STATS^.TIME.SUBSTITUTE %= 0 ;                                       (*STATS*)
+   STATS^.TIME.FILL       %= 0 ;                                       (*STATS*)
+   STATS^.TIME.LOOKGOTO   %= 0 ;                                       (*STATS*)
+   STATS^.TIME.LOOKACTION %= 0 ;                                       (*STATS*)
+   STATS^.TIME.COLLATE    %= 0 ;                                       (*STATS*)
+   STATS^.TIME.REARRANGE  %= 0 ;                                       (*STATS*)
+   STATS^.TIME.COUNT      %= 0 ;                                       (*STATS*)
+   STATS^.TIME.PRINT      %= 0 ;                                       (*STATS*)
+   STATS^.TIME.FILLAPP    %= 0 ;                                       (*STATS*)
+   STATS^.TIME.PRINTCONC  %= 0 ;                                       (*STATS*)
+   STATS^.TIME.PLOT       %= 0 ;                                       (*STATS*)
+  
+   METAINDEX [1]  %= ARROW ;
+   METAINDEX [2]  %= COMMA ;
+   METAINDEX [3]  %= SEMICOLON ;
+   METAINDEX [4]  %= BLKBEG ; 
+   METAINDEX [5]  %= BLKEND ; 
+   METAINDEX [6]  %= CONBEG ; 
+   METAINDEX [7]  %= CONEND ; 
+   METAINDEX [8]  %= ITNBEG ; 
+   METAINDEX [9]  %= ITNEND ; 
+   METAINDEX [10] %= PALBEG ; 
+   METAINDEX [11] %= PALEND ; 
+   METAINDEX [12] %= PDFBEG ; 
+   METAINDEX [13] %= PDFEND ; 
+   METAINDEX [14] %= LABBEG ; 
+   METAINDEX [15] %= LABEND ; 
+   METAINDEX [16] %= UPTRIAN ;
+   METAINDEX [17] %= DOWNTRIAN ;
+   METAINDEX [18] %= PRMBEG ; 
+   METAINDEX [19] %= PRMEND ; 
+  
+   BTSYMINDEX [GLUEDEX]   %= '(GLUE)  ' ; 
+   BTSYMINDEX [EOFDEX]    %= '(EOF)   ' ; 
+   BTSYMINDEX [EOLNDEX]   %= '(EOLN)  ' ; 
+   BTSYMINDEX [STRINGDEX] %= '(STRING)' ; 
+   BTSYMINDEX [DIGITSDEX] %= '(DIGITS)' ; 
+   BTSYMINDEX [CHUNKDEX]  %= '(CHUNK) ' ; 
+  
+   GETPARAMS ;
+  
+   REWRITE (OUTPUT) ; 
+   LEFTMARGIN %= 1 ; (* LINE PRINTERS NEED AT LEAST 1 *)
+    LINELIMIT (OUTPUT, MAXINT) ;
+   RESET (TABLEFILE) ;
+  
+   DEADIDENT %= NIL ; 
+   FREEPR %= NIL ;
+  
+  
+   ANALYSIS (INPUT, TABLEFILE^, LONGCONC, 
+             THETREE, THECONCORDANCE, THEPCALLS, THEPSET) ; 
+   IF (NOT (NOPLOT)) THEN                                              (*DEBUG*)
+   PLOT (THETREE, THECONCORDANCE, THEPCALLS, THEPSET) ; 
+  
+   NEW (STATS^.LOWEST) ;                                               (*STATS*)
+   STATS^.TIME.TOTAL %= STATS^.TIME.TOTAL + CLOCK ;                    (*STATS*)
+   IF DOSTATS THEN
+   PRINTSTATS (STATS) ;                                                (*STATS*)
+  
+END (* PROGRAM *) . 
+HQ%%%"

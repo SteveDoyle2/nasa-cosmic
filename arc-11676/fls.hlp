@@ -1,0 +1,35 @@
+1 FLS
+ The FLS command submits a job to do a FORTRAN compile and LINK in batch
+ mode. 
+
+ Syntax:
+         FLS filespec [option [,option...]]
+
+ where filespec is the name of the FORTRAN file to compile.
+
+ The user will receive a message at his terminal giving the status of the
+ job when it has completed.  
+
+ The FLS uses the following convention for subdirectory specification: if the
+ user specifies a subdirectory in the filespec (eg,[JONES.STUFF]FILE1 ), 
+ that will be the default subdirectory; otherwise, the default directory
+ is the subdirectory from which the FLS command was issued. 
+
+ If the compile step executes satisfactorily, the program will be linked 
+ with the default options (see HELP LINK) and no libraries.  If you wish 
+ to link in other libraries, use the FS command to compile and link in 
+ command mode (ie, issue the LINK command from the terminal).
+
+ See also, HELP FS.
+2 Options
+ The options consist of qualifiers to the FORTRAN command (eg, /LIST or
+ /MAP) and an optional queue name(SHORT, LONG, or XLONG... MEDIUM is the
+ default).  A maximum of 5 FORTRAN qualifiers (seperated by spaces) can 
+ be added, but they can be combined if more than 5 options are desired 
+ (eg, /MAP/LIST ).  
+
+ At present, no options are added to the LINK command.  If you want to
+ do anything but a straight LINK, use FS and link the program seperately.
+
+ See HELP FORTRAN for a full list of FORTRAN qualifiers and HELP BATCHQ
+ to see the CPU time limits on each batch queue.

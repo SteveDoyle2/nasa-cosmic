@@ -1,0 +1,35 @@
+nsqdel.hlp
+edit.hlp
+nsqins.hlp
+ 
+
+
+
+
+
+
+Text Mode displays the fields which are to be edited.  Some of the fields for
+the N-square chart may not fit on the screen at one time so the screen will
+scroll through different areas of the chart when editing a large chart.  To
+change the information in the fields, type the new information and it will
+replace the old information.  To insert characters in the middle of the field,
+press the insert key and what is typed will be inserted.  What is on the screen
+when a function key or the return key is pressed is what will be saved. For a
+circle connector, no text is ever entered in the circle.
+ 
+To obtain help for any of the following subjects,  press the function key next
+to the desired subject.
+
+        F1  Delete
+        F2  Edit
+        F3  Insert Connector
+ 
+
+
+ 
+        F8  Return to Previous Menu
+ 
+        F10 Exit from Help
+
+Press F8 to return to the last menu screen or F10 to leave the help mode
+

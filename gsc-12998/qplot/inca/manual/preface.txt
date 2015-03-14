@@ -1,0 +1,36 @@
+
+                              Preface
+
+
+For a quick overview and a guided tour of INCA's basic capabilities
+read the INCA Primer (Volume I).  Use the INCA Reference Manual
+(Volume II) for more information on INCA's versatile capabilities, or
+if a description of a specific command is required.  The INCA Theory
+Manual (Volume III) provides descriptions of the analytic algorithms
+and the program architecture. 
+
+This program was originally based on LSAP (Linear Systems Analysis
+Program) developed by D. J. Duven at Iowa State University.  That
+program was written in PL/I and was limited for use on IBM machines. 
+
+A second version of LSAP was created in PASCAL by T. P. Weis with help
+from D. J. Balaban, H. R. Brand, S. M. Lanning, and R. K. Yamauchi.
+The control system engineer responsible for the development was C. J.
+Herget. The effort was supported by the enzyme Research Project at
+Lawrence Livermore Laboratory under the direction of J. W. Frazier. 
+
+The present program was rewritten and greatly expanded for use on the
+VAX computer at Goddard Space Flight Center by J. P. Downing (Old
+Dominion Systems, Inc.).  The control system engineer responsible for
+the development was F. H. Bauer (Code_712.4).  This project was
+carried out by Old Dominion Systems under contracts NAS5-27242 and
+NAS5-29177 under the direction of J. D. Azzolini (Code_712.1).  We
+would also like to thank M. D. Femiano (Code_712.3) and G. E. Morduch
+(ODS) for mathematical help in developing the Z domain algorithms, A.
+H. Forbes (ODS) for developing many of the terminal drivers, and C. J.
+Thorpe for developing the INCA version 2.0x conversion routines, the
+screen editor and the hardcopy drivers.  We would like to thank Tobin 
+C. Anthony for the describing function capabilities.  In addition, we
+would also like to thank the other members of the Guidance and Control
+Branch (Code_712) for their help, ideas, comments, and debugging aid. 
+

@@ -1,0 +1,160 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STANDARD',
+               'QLIBHOME:MATH',
+               'QLIBHOME:STRING',
+               'QLIBHOME:FIG',
+               'QLIBHOME:COLOR',
+               'QLIBHOME:TERM_VAX',
+               'QLIBHOME:TERM_ANSI',
+               'QLIBHOME:TERM_REGIS'),
+  ENVIRONMENT ('QLIBHOME:VT240.TEN') ]
+MODULE term_VT240;
+{=============================================================================}
+{-- PROCEDURES FOR TERMINAL TYPE VT240 ---------------------------------------}
+{=============================================================================}
+[ GLOBAL ]
+FUNCTION termname_VT240 (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0: termname_VT240 := '1';
+   1: termname_VT240 := 'VT240   ';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE colorsetup_VT240;
+BEGIN
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE executecom_VT240;
+VAR
+   hlsa : hlsa_type;
+BEGIN
+WITH plotitem DO CASE ins OF
+   I_col:  BEGIN
+           bufferempty_REGIS;
+           hlsa := hlsaofcolor (st);
+           IF      hlsa.lightness < 20 THEN env.buffer := 'W(I0)'
+           ELSE IF hlsa.lightness < 50 THEN env.buffer := 'W(I1)'
+           ELSE IF hlsa.lightness < 80 THEN env.buffer := 'W(I2)'
+           ELSE                             env.buffer := 'W(I3)';
+           bufferempty_REGIS;
+           END;
+   I_pan:  ;
+   I_clo:  ;
+   I_pos:  BEGIN
+           bufferempty_REGIS;
+           env.pos.ix := ix;
+           env.pos.iy := iy;
+           END;
+   I_dra:  draw_REGIS (ix,iy,bufferempty_REGIS);
+   I_siz:  ;
+   I_mar:  ;
+   I_pri:  IF env.visible AND (st <> '') 
+            THEN 
+             BEGIN
+             bufferempty_REGIS;
+             env.pos.iy := env.pos.iy + config.ch.height 
+                                      - config.ch.linespacing;
+             env.buffer := 'P' + strofpos_REGIS + 'T(S1)"' + st + '"';
+             env.pos.iy := env.pos.iy - config.ch.height
+                                      + config.ch.linespacing;
+             bufferempty_REGIS;
+             END;
+   I_emp:  bufferempty_REGIS;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE writeterm_VT240 (str : VARYING [l2] OF char);
+BEGIN
+IF env.mode = M_PLOT
+ THEN
+  BEGIN
+  env.mode := M_DUAL;
+  qiowwrite (ESC + '\' + ESC + '[21;24r' + ESC + '[24;1H' + CRLF);
+  END;
+qiowwritevirtual (str);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE readterm_VT240 (VAR outstr : VARYING [l2] OF char);  
+BEGIN
+readterm_vax (outstr);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screenerase_VT240;
+BEGIN
+screenerase_REGIS;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screencopy_VT240;
+BEGIN
+screencopy_REGIS;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE gin_VT240 (VAR key : char;  VAR ipt : ipoint;  color : color_type);
+VAR
+   tbuffer,posstr : VARYING [80] OF char;
+BEGIN
+IF env.mode IN [M_TEXT,M_DUAL]
+ THEN qiowwrite (ESC + 'Pp');
+qiowwrite (ESC + '\' + ESC + '[2h' + ESC + 'Pp'); {Lock keyboard}
+env.mode := M_PLOT;
+tbuffer := '';
+qiowreadnoechopurge(tbuffer,0);
+qiowwrite ('P' + REGIS_control.ginpos); 
+qiowwrite (ESC + '\' + ESC + '[2l' + ESC + 'Pp'); {Unlock keyboard}
+qiowwrite ('R(P(I))'); 
+
+posstr := '    ';
+qiowreadnoecho (posstr,4);
+REPEAT
+   tbuffer := ' ';
+   qiowreadnoecho (tbuffer,1);
+   posstr := posstr + tbuffer[1];
+   UNTIL (tbuffer[1] IN [']']) OR (length (posstr) > 24);
+
+key := posstr[1];
+ipt := posofstr_REGIS (substr (posstr,2,length(posstr)-1));
+REGIS_control.ginpos := '[' + strofi_REGIS
+                        (ipt.ix DIV REGIS_control.xresolution)
+                      + ',' + strofi_REGIS
+                        (ipt.iy DIV REGIS_control.yresolution) + ']';
+END;
+{-----------------------------------------------------------------------------}
+[GLOBAL]
+FUNCTION readmenu_VT240 (default : char;  toplevel : boolean;
+   helpprefix : anystring) : command_type;
+BEGIN
+readmenu_VT240 := readmenu_ansi (default,toplevel,helpprefix,true);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE termconfig_VT240 (configcontrol : configcontrol_type);
+BEGIN
+CASE configcontrol OF
+   CON:  BEGIN
+         config_REGIS (800,500);
+         qiowwrite (ESC + '>');
+         config.ch.width       := REGIS_control.xresolution * 10;
+         config.ch.height      := REGIS_control.yresolution * 20;
+         config.ch.charspacing := REGIS_control.xresolution * 3;
+         config.ch.linespacing := REGIS_control.yresolution * 6;
+         config.resolution     := imax (REGIS_control.xresolution,
+                                        REGIS_control.yresolution);
+         config.dotsize        := config.resolution;
+         config.starsize       := config.resolution*3;
+         config.ansi364        := true;
+         config.drawblack      := true;
+         END;
+   QUE:  ;
+   REP:  ;
+   END;
+END;
+{=============================================================================}
+END.

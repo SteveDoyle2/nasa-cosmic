@@ -1,0 +1,46 @@
+;
+;  Continuous and discrete terms, prefilter in;
+;  both 0.512 and 0.128 samplers in
+;
+Set nearness 1d-5
+Function Compute 
+WBW = 0.003
+WG = 12.57
+WF = 3.14
+WC = 0.3
+TAU = 0.128
+ZETA = 0.707
+KT = 0.0138
+IXX = 11890.0
+KR = 60312.0
+KP = 1266.5
+KI = 8.87
+KD = 0.021
+;
+;  Define wheel, spacecraft and gyro dynamics
+;  S from second zero-order hold is included in plant
+;
+WHEEL = KT*S/(S+WBW)
+SC = 1/(IXX*S^2)
+GYRO = WG^2/(S^2 + 2*ZETA*WG*S + WG^2)
+GP = WHEEL*SC*GYRO/S
+;
+;  Define controller in z-domain
+;
+ZI = 1/Z
+NUMPRE = WF*(1 + ZI)
+DENPRE = ZI*(WF - 2/TAU) + (WF + 2/TAU)
+GPRE = (NUMPRE/DENPRE)^2
+ZOH = (1 - ZI^4)/(4*TAU)
+GR = KR*((1 - ZI^4)/(4*TAU))
+GI = KI*4*TAU/2*((1 + ZI^4)/(1 - ZI^4))
+GD = KD*(4*TAU/2*((1 + ZI^4)/(1 - ZI^4)))^2
+GFNUM = WC*(1 + ZI^4)
+GFDEN = ZI^4*(WC - 2/(4*TAU)) + (WC + 2/(4*TAU))
+GF = (GFNUM/GFDEN)^2
+GC1 = GPRE*ZOH*(GR + KP + GI + GD)*GF
+GC = $Z(GC1,TAU)
+
+Analyze Frequency_response Star 
+GP
+GC

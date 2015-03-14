@@ -1,0 +1,28 @@
+   interface;
+      unit evapict ( skeleeva, picture, chartinfo, get_list, format );
+
+      uses getparam;
+
+      uses utility;
+
+
+   procedure skeleeva (      color : integer; var xy supinteger );
+  
+   procedure picture   ( var first : entity;  var xy : supinteger ) ;
+
+   procedure chartinfo (     code   : byte;
+			 var first  : entity;
+			 var xy     : supinteger );
+
+   procedure get_list  ( var first  : entity;
+			 var total  : byte;
+ 			 var xy	    : supinteger );
+ 
+   procedure format ( var inkey 	 : byte;
+		      var current, first : entity);
+
+begin
+end;
+
+
+

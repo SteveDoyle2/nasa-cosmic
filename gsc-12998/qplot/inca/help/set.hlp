@@ -1,0 +1,173 @@
+1 SET               
+
+     This command may be used to change INCA parameters. The audit
+file will contain a status report on the changed parameter. 
+
+     The quantity to be changed is given by the required modifier. The
+new value is given by the parameter.  If the parameter is omitted or
+is incorrect you will be asked to enter the new parameter.  Just
+pressing <RETURN> will cause the old value to be retained.  The input
+to many qualfiiers is either ON or OFF.  In these cases, if both ON
+and OFF are entered an error will result.  In addition, INCA keys on
+the second letter only.  Thus "ON", "ONE", "EN" and "ANNIE_OAKLEY"
+will all be interpreted as the ON parameter. 
+
+     Format:     SET  modifier  [parameter]
+
+2 BOUNDARY_GRID     
+
+     This modifier controls whether the stability boundary lines are
+drawn on root locus and frequency response plots. 
+
+     Format:     SET  BOUNDARY_GRID  [ON]  [OFF]
+     Default:    ON
+
+2 CLOSENESS_TO_ZERO 
+
+     When new functions are created, INCA checks to ensure that there
+are no errors, and that like zeroes and poles are collected and
+cancelled.  The CLOSENESS_TO_ZERO criteria is the minimum absolute
+value of a root for it to be considered distinct from (0,0). 
+
+     Format:     SET  CLOSENESS_TO_ZERO  real-number
+     Default:    1d-12
+
+2 DB                
+
+     When a frequency response calculation is done, a certain
+magnitude scale is used if the user does not specify it in the PLOT
+command.  Options are the dB scale or the magnitude scale, which is
+set by turning dB OFF. 
+
+     Format:     SET  DB  [ON]  [OFF]
+     Default:    ON
+
+2 EDIT_FORMAT       
+
+     When functions are edited, a certain format is used if the user
+does not specify a format in the EDIT command modifier. The edit
+format is a letter indicating the default format.  Valid formats
+are given in the discussion of the EDIT command modifiers. 
+
+     Format:     SET  EDIT_FORMAT  edit-format
+     Default:    Roots
+
+2 FREQUENCY_PLOT    
+
+     When a frequency response calculation is done, a certain plot
+type, magnitude scale and frequency scale is used if the user does not
+specify it in the FREQUENCY_RESPONSE command modifier.  Valid plot
+types are Bode, Magnitude(Bode), Phase(Bode), Nyquist, 
+C-Nichols, V-Popov and Strip-Bode. 
+
+     Format:     SET  FREQUENCY_PLOT  plot-type
+     Default:    Bode
+
+2 LOGARITHMIC_FREQ  
+
+     When a frequency response calculation is done, a certain
+frequency scale is used if the user does not specify it in the PLOT
+command.  Options are the logarithmic frequency scale or the linear
+frequency scale, which is set by turning this flag OFF. 
+
+     Format:     SET  LOGARITHMIC_FREQ  [ON]  [OFF]
+     Default:    ON
+
+2 HERTZ             
+
+     When a frequency response calculation is done, a certain
+frequency scale is used if the user does not specify it in the PLOT
+command.  Options are the Hertz scale or the radians per second scale, which is
+set by turning Hertz OFF. 
+
+     Format:     SET  HERTZ  [ON]  [OFF]
+     Default:    OFF
+
+2 LOGO_SHOW         
+
+     This modifier controls whether the INCA logo is written on
+each plot.
+
+     Format:     SET  LOGO_SHOW  [ON]  [OFF]
+     Default:    ON
+
+2 NEARNESS          
+
+     When new functions are created, INCA checks to ensure that there
+are no errors, and that near equal zeroes and poles are collected and
+canceled.  The nearness criteria is the minimum relative closeness of
+two zeroes/poles for them to be considered separate.  
+
+     Format:     SET  NEARNESS  real-number
+     Default:    1d-6
+
+2 QZ_ADD_CUTOFF     
+
+     When functions in INCA are added together as part of a function 
+evaluation, it is done in one of two ways.  If the order of the 
+addends is small, the addition is done by multiplying the denominators 
+together to find the new denominator, and the creating the numerator
+as a sum of unfactored polynimials created by multiplying out each 
+numerator by all but one of the denominators.  The unfactored 
+numerator polynomial is the rooted using the Jenkins algorithm.  As an
+alternative, the QZ algorithm can be used to evaluate the numerator
+factors.  The QZ_ADD_CUTOFF modifier determines the minimum order at
+which the QZ algoritm is used. 
+
+     Format:     SET  QZ_ADD_CUTOFF  real-number
+     Default:    5
+
+2 ROOT_MAXIMUM      
+
+     When a polynomial is to be factored (rooted), the Jenkins
+polynomial rooter is used.  This routine does not work above 50th
+order, and can be unrealiable above 20th order.  This modifier is used
+to control the maximum order which can be rooted without error. 
+
+     Format:     SET  ROOT_MAXIMUM  integer
+     Default:    20
+
+2 SEARCH_CIRCLE     
+
+     This parameter controls the size of the search circle used in the 
+'F' graphics mode command (for frequency response and time response 
+only).  When the 'F' key is pressed, all curves are searched for the 
+calculated data point closest to the cursor point.  If the point is 
+not within the search circle, the find is not successful.  The default 
+search circle size is 4096, which is twice the length of the tick 
+marks, and 1/16 of the width of the screen.
+
+     Format:     SET  SEARCH_CIRCLE  integer]
+     Default:    4096
+
+2 TOP_RIGHT_LABEL   
+
+     This modifier controls a parameter in QPLOT, which is the
+graphics package used by INCA.  This particular parameter controls
+whether labels are to be displayed on all four sides of the plot or
+not.  
+
+     Format:     SET  TOP_RIGHT_LABEL  [ON]  [OFF]
+     Default:    OFF
+
+2 WRAP              
+
+     When a frequency response calculation is done, the phase is 
+measured in degrees.  The degrees are displayed over a band with a 
+width of 360 degrees.  The start of this band can be set using this 
+modifier.
+
+     Format:     SET  WRAP  angle-in-degrees
+     Default:    0
+
+2 ZAGGING           
+
+     This command is used to change the quality of the infinity circle
+visible on Nyquist plots.  This circle appears when a pole lies
+exactly on the imaginary axis.  Setting this parameter different from
+zero will result in the circle having a jagged appearance.  A good
+value for attractive zagging is 30 (dB). 
+
+     Format:     SET  ZAGGING  real-number
+     Default:    0
+

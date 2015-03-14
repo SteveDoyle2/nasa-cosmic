@@ -1,0 +1,273 @@
+[ IDENT       ('QPLOT'),
+  INHERIT     ('QLIBHOME:STANDARD',
+               'QLIBHOME:IO',
+               'QLIBHOME:STRING',
+               'QLIBHOME:COLOR',
+               'QLIBHOME:FIG',
+               'QLIBHOME:TERM_VAX',
+               'QLIBHOME:TERM_ANSI',
+               'QLIBHOME:TERM_4100',
+               'QLIBHOME:TEK4510.TEN'),
+  ENVIRONMENT ('QLIBHOME:TEK4106.TEN') ]
+MODULE term_TEK4106;
+{=============================================================================}
+{-- PROCEDURES FOR TERMINAL TYPE TEK4106 -------------------------------------}
+{=============================================================================}
+[ HIDDEN ] VAR
+   panelopen     : boolean := false;
+   termfig       : RECORD;
+                   dialoglines   : integer;
+                   harddevice    : char;
+                   tek469Xsize   : char;
+                   tek4510source : char;
+                   tek4510copy   : char;
+                   END 
+                 := (30,'A','L','V','N');
+{=============================================================================}
+[ GLOBAL ]
+FUNCTION termname_TEK4106 (i : integer) : devname_type;
+BEGIN
+CASE i OF
+   0: termname_TEK4106 := '1';
+   1: termname_TEK4106 := 'TEK4106 ';
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE colorsetup_TEK4106;
+BEGIN
+colorsetup_4100 (16,4,true);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE executecom_TEK4106;
+VAR
+   ii,j          : integer;
+   oldpos        : ipoint;
+{------------------------------}
+PROCEDURE bufferempty;
+{ Purpose -- empty software plotting buffer }
+BEGIN
+CASE env.mode OF
+   M_TEXT:  BEGIN
+            qiowwrite (ESC + '%!0'      { CODE TEK               }
+                     + ESC + 'LV0'      { DIALOG AREA INVISIBLE  }
+                     + ESC + 'TM3');    { SET COLOR DEFINE MODE  }
+            env.mode := M_PLOT;
+            colorsetup_TEK4106;
+            IF config.overlaykill
+             THEN qiowwrite (ESC + 'LV0');  { DIALOG AREA INVISIBLE  }
+            END;
+   M_DUAL:  IF config.overlaykill
+             THEN qiowwrite (ESC + 'LV0');  { DIALOG AREA INVISIBLE  }
+   M_PLOT:  ;
+   END;
+env.mode := M_PLOT;
+IF length (env.buffer) <> 0 
+ THEN 
+  BEGIN
+  qiowwrite (env.buffer + CRLF);
+  env.buffer := '';
+  END;
+END;
+{------------------------------}
+BEGIN
+WITH plotitem DO CASE ins OF
+   I_col:  BEGIN
+           bufferempty;
+           IF env.visible
+            THEN 
+             BEGIN
+             j := getcolorindex_4100 (termpalette,st,bufferempty);
+             env.buffer := ESC + 'ML' + strofi_4100 (j-1)
+                         + ESC + 'MT' + strofi_4100 (j-1);
+             END;
+           bufferempty;
+           END;
+   I_pan:  BEGIN
+           bufferempty;
+           j := getcolorindex_4100 (termpalette,st,bufferempty);
+           panelopen := j > 0;
+           IF panelopen 
+            THEN env.buffer := ESC + 'MP' + strofi_4100 (1-j);
+           bufferempty;
+           END;
+   I_clo:  BEGIN
+           bufferempty;
+           env.buffer := ESC + 'LE';
+           bufferempty;
+           END;
+   I_pos:  BEGIN
+           bufferempty;
+           env.pos.ix := ix;
+           env.pos.iy := iy;
+           END;
+   I_dra:  draw_4100 (ix,iy,panelopen,bufferempty);
+   I_siz:  ;
+   I_mar:  ;
+   I_pri:  IF env.visible AND (st <> '') 
+            THEN 
+             BEGIN
+             bufferempty;
+             env.buffer := ESC + ';' + ESC + 'MC' 
+               + strofi_4100((env.curch.width -env.curch.charspacing) DIV 16)
+               + strofi_4100((env.curch.height-env.curch.linespacing) DIV 16)
+               + strofi_4100 (env.curch.charspacing DIV 16);
+             bufferempty;
+             env.buffer := chr(29) + strofpos_4100 (env.pos) 
+                         + ESC + 'LT' + strofi_4100 (length(st)) 
+                         + st;
+             bufferempty;
+             END;
+   I_emp:  bufferempty;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE writeterm_TEK4106 (str : VARYING [l2] OF char);
+BEGIN
+writeterm_4100 (str,termfig.dialoglines);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE readterm_TEK4106 (VAR outstr : VARYING [l2] OF char);  
+BEGIN
+readterm_vax (outstr);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screenerase_TEK4106;
+BEGIN
+env.mode := M_TEXT;
+qiowwrite (ESC + '%!0'      { CODE TEK               }
+         + ESC + 'TM3');    { SET COLOR DEFINE MODE  }
+colorsetup_TEK4106;
+qiowwrite (ESC + 'KA0'      { DIALOG AREA DISABLE    }
+         + ESC + 'LZ'       { DIALOG AREA CLEAR      }
+         + ESC + FF);
+qiowwrite (ESC + '%!2');
+screenerase_ansi;
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE screencopy_TEK4106;
+VAR
+   i    : integer;
+   line : anystring;
+BEGIN
+env.mode := M_PLOT;
+CASE termfig.harddevice OF
+   'A':  BEGIN
+         qiowwrite (ESC + 'LV0' + ESC + 'LZ');
+         CASE termfig.tek469Xsize OF
+            'L':  qiowwrite (ESC + 'QA0' + ESC + 'KH1' + CRLF);
+            'S':  qiowwrite (ESC + 'QA1' + ESC + 'KH1' + CRLF);
+            'C':  qiowwrite (ESC + 'KH1' + CRLF);
+            END;
+         qiowwrite (ESC + 'QA0' + CRLF);
+         END;
+   'B':  CASE termfig.tek4510source OF
+            'S':  BEGIN
+                  qiowwrite (ESC + 'PL2TO3P0:');
+                  IF termfig.tek4510copy = 'C'
+                   THEN qiowwrite (chr(27) + 'KH1');
+                  END;
+            'V':  BEGIN
+                  qiowwrite (ESC + 'JC3HO:2TO3P0:' + CRLF);
+                  qiowwrite (chr(27) + chr(12) + CRLF);
+                  hardmake_TEK4510;
+                  IF termfig.tek4510copy = 'C'
+                   THEN qiowwrite (chr(27) + 'KH1');
+                  qiowwrite (chr(26) + CRLF);
+                  END;
+            END;
+   'Z':  writeline (out,'Hardcopy device not implemented' + CRLF);
+   END;
+IF config.overlaykill 
+ THEN qiowwrite (ESC + 'LV0');    { DIALOG AREA INVISIBLE  }
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE gin_TEK4106 (VAR key : char;  VAR ipt : ipoint;  color : color_type);
+BEGIN
+IF env.mode = M_TEXT THEN qiowwrite (ESC + '%!0');
+gin_4100 (key,ipt,color);
+END;
+{-----------------------------------------------------------------------------}
+[GLOBAL]
+FUNCTION readmenu_TEK4106 (default : char;  toplevel : boolean;
+   helpprefix : anystring) : command_type;
+BEGIN
+readmenu_TEK4106 := readmenu_ansi (default,toplevel,helpprefix,true);
+END;
+{-----------------------------------------------------------------------------}
+[ GLOBAL ]
+PROCEDURE termconfig_TEK4106 (configcontrol : configcontrol_type);
+BEGIN
+WITH termfig DO CASE configcontrol OF
+   CON:  BEGIN
+         qiowwrite (ESC + '%!0'      { CODE TEK               }
+                  + ESC + 'TM3');    { SET COLOR DEFINE MODE  }
+         colorsetup_TEK4106;
+         qiowwrite (ESC + '%!2');     { CODE EDIT              }
+         config.ch := ch_type (614,1024,198,400);
+         config.resolution := 104;
+         config.dotsize    := 0;
+         config.starsize   := 416;
+         config.ansi364    := true;
+         config.drawblack  := true;
+         IF terminal.name = 'TGRAF' 
+          THEN dialoglines := 5
+          ELSE dialoglines := 30;
+         END;
+   QUE:  BEGIN
+         readint ('ENTER DIALOG LINES    : ',dialoglines,3,100,dialoglines);
+         writeline (out,'A=TEK469x, B=TEK4510, Z=none');
+         readch  ('ENTER HARDCOPY DEVICE : ',harddevice,'ABZ',harddevice);
+         CASE harddevice OF
+            'A':  BEGIN
+                  writeline (out,'S=SMALL, L=LARGE, C=CURRENT');
+                  readch  ('ENTER TEK469x SIZE    : ',
+                            tek469Xsize,'SLC',tek469Xsize);
+                  END;
+            'B':  BEGIN
+                  writeline (out,'S=SEGMENT, V=VAX');
+                  readch  ('ENTER TEK4510 SOURCE  : ',
+                            tek4510source,'SV',tek4510source);
+                  writeline (out,'C=COPY NEEDED, N=NO COPY (PASSIGN P1: 4510)');
+                  readch  ('ENTER TEK4510 COPY    : ',
+                            tek4510copy,'CN',tek4510copy);
+                  hardconfig_TEK4510 (configcontrol);
+                  END;
+            END;
+         END;
+   REP:  BEGIN
+         writeline (out,'NUMBER OF DIALOG LINES IS ' + strofi(dialoglines,3));
+         CASE harddevice OF
+            'A':  BEGIN
+                  writeline (out,'Local hardcopy device is A=TEK469x');
+                  CASE tek469Xsize OF
+                     'S':  writeline (out,'Hardcopy size is SMALL');
+                     'L':  writeline (out,'Hardcopy size is LARGE');
+                     'C':  writeline (out,'Hardcopy size is CURRENT');
+                     END;
+                  END;
+            'B':  BEGIN
+                  writeline (out,'Local hardcopy device is B=TEK4510');
+                  CASE tek4510source OF
+                     'S':  writeline (out,'Hardcopy source is segmant memory');
+                     'V':  writeline (out,'Hardcopy source is VAX memory');
+                     END;
+                  CASE tek4510copy OF
+                     'N':  writeline (out,'Hardcopy print command sent by terminal');
+                     'C':  writeline (out,'Hardcopy print command sent by VAX');
+                     END;
+                  hardconfig_TEK4510 (configcontrol);
+                  END;
+            'Z':  writeline (out,'No local hardcopy device');
+            END;
+         END;
+   END;
+END;
+{-----------------------------------------------------------------------------}
+END.

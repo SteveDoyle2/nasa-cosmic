@@ -1,0 +1,1085 @@
+C                                                                        COLDARC
+C     ***************************************************************    COLDARC
+C     *                                                             *    COLDARC
+C     *          B. A. MILLER'S  PLASMA COLD ARC PROGRAM            *    COLDARC
+C     *                                                             *    COLDARC
+C     *          MARCH 13, 1981                                     *    COLDARC
+C     *          PROGRAMMER : JAB                                   *    COLDARC
+C     *                                                             *    COLDARC
+C     ***************************************************************    COLDARC
+C                                                                        COLDARC
+C          PTOT      TOTAL PRESSURE                  PSF                 COLDARC
+C          HTOT      TOTAL ENTHALPY                  BTU/LB              COLDARC
+C          E         A/A*                                                COLDARC
+C          EMIS      EMISSIVITY                                          COLDARC
+C          WDOT      FLOW RATE                       LB/SEC              COLDARC
+C          AEX       AREA AT NOZZLE EXIT             FT2                 COLDARC
+C          TW        SURFACE TEMP OF TEST ARTICLE    DEGREES R           COLDARC
+C          PL2       SURFACE PRES OF TEST ARTICLE    PSF                 COLDARC
+C          ETA       CATALYTICITY                                        COLDARC
+C                                                                        COLDARC
+      PROGRAM COLDRC (INPUT,OUTPUT,TAPE5=INPUT,TAPE6=OUTPUT,             COLDARC
+     *                TAPE7=OUTPUT)                                      COLDARC
+C                                                                        COLDARC
+      REAL NOZMOM,KEBL,LEQUIV,MRAT53,MRAT54,MRAT55,MRAT56,MRAT57,        COLDARC
+     *     MRAT58,MRAT59,MOMEN,KESL,INTESL,MOMSL1,MOMSL2,MOMSL           COLDARC
+C                                                                        COLDARC
+      DATA CON467,CON530/0.467E-12,530.0/                                COLDARC
+C                                                                        COLDARC
+      NCASE = 1                                                          COLDARC
+    1 READ (5,*) PTOT,HTOT,E,EMIS,WDOT,AEX,TW,PL2,ETA,PSI                COLDARC
+      IF (EOF(5)) 999,2                                                  COLDARC
+C                                                                        COLDARC
+C   INPUT INITIAL VALUE OF TTOT                                          COLDARC
+C                                                                        COLDARC
+    2 TTOT = 8300.0                                                      COLDARC
+C                                                                        COLDARC
+      CALL PHGETT (PTOT,HTOT,TTOT)                                       COLDARC
+      ZF = (HTOT + 7380.0 - .2744 * TTOT) / (7380.0 + 0.0343 * TTOT)     COLDARC
+      IF (ZF.LE.1.21) GO TO 5                                            COLDARC
+C                                                                        COLDARC
+      ZF = (HTOT - 0.2744 * TTOT + 15365.8) / (13980.0 + 0.0343 * TTOT)  COLDARC
+    5 GAMF = (ZF + 8.0) / (8.0 - ZF)                                     COLDARC
+C                                                                        COLDARC
+C   FROZEN CP WITH VIB. DEGREE OF FREEDOM FULLY ACTIVE                   COLDARC
+C                                                                        COLDARC
+      CPF = 0.0686 * (0.5 * ZF + 4.0)                                    COLDARC
+C                                                                        COLDARC
+      IF (ZF.GT.1.21) GO TO 10                                           COLDARC
+      HD = 7380.0 * (ZF - 1.0)                                           COLDARC
+      GO TO 20                                                           COLDARC
+C                                                                        COLDARC
+   10 IF (ZF.GT.2.0) GO TO 15                                            COLDARC
+      HD = 1550.0 + 13980.0 * (ZF - 1.21)                                COLDARC
+      GO TO 20                                                           COLDARC
+C                                                                        COLDARC
+C  IONIZATION                                                            COLDARC
+C                                                                        COLDARC
+   15 HD = 12595.0                                                       COLDARC
+C                                                                        COLDARC
+C  FIND THE LOCAL MACH NO. AT NOZZLE EXIT                                COLDARC
+C                                                                        COLDARC
+   20 RM = 0.5                                                           COLDARC
+   30 CALL TEMPE (RM,ET,GAMF,ZF)                                         COLDARC
+      IF (E-ET) 45,40,35                                                 COLDARC
+C                                                                        COLDARC
+   35 RM = RM + 0.5                                                      COLDARC
+      GO TO 30                                                           COLDARC
+C                                                                        COLDARC
+   40 RML1 = RM                                                          COLDARC
+      GO TO 60                                                           COLDARC
+C                                                                        COLDARC
+   45 RMOLD = RM - 0.5                                                   COLDARC
+      RMNEW = RM                                                         COLDARC
+   47 RM = (RMOLD + RMNEW) / 2.0                                         COLDARC
+      CALL TEMPE (RM,ET,GAMF,ZF)                                         COLDARC
+      IF ((ABS(E-ET)).LT.0.01) GO TO 60                                  COLDARC
+      IF (E-ET) 50,40,55                                                 COLDARC
+C                                                                        COLDARC
+   50 RMNEW = RM                                                         COLDARC
+      GO TO 47                                                           COLDARC
+C                                                                        COLDARC
+   55 RMOLD = RM                                                         COLDARC
+      GO TO 47                                                           COLDARC
+C                                                                        COLDARC
+   60 RML1 = RM                                                          COLDARC
+C                                                                        COLDARC
+      PART1 = (1.28586 * WDOT) / (RML1 * AEX)                            COLDARC
+      PART2 = ((HTOT - HD) * ZF/GAMF) ** 0.5                             COLDARC
+      PART3 = (CPF + ZF * GAMF * 0.0342 * (RML1**2.0)) ** 0.5            COLDARC
+      PL1 = PART1 * (PART2 / PART3)                                      COLDARC
+C                                                                        COLDARC
+      TL1 = (0.6048 * GAMF / ZF) * ((AEX * PL1 * RML1 / WDOT) ** 2.0)    COLDARC
+      HL1 = HTOT - 0.0342 * GAMF * ZF * TL1 * (RML1 ** 2.0)              COLDARC
+      UL1 = 223.84 * ((HTOT - HL1) ** 0.5)                               COLDARC
+      RHOL1 = PL1 / (1716.0 * ZF * TL1)                                  COLDARC
+C                                                                        COLDARC
+      PART1 = (PL2 - PL1) ** 2.0                                         COLDARC
+      PART2 = 2.0 * (PL2 - PL1) -PL2                                     COLDARC
+      PART3 = (UL1 ** 2.0) * RHOL1                                       COLDARC
+      SIN2TH = (PART1 / PART2) / PART3                                   COLDARC
+      SINTH = SQRT(SIN2TH)                                               COLDARC
+      SHOCK = 57.3 * ASIN(SINTH)                                         COLDARC
+C                                                                        COLDARC
+      PART1 = TL1 * (PL2/PL1)                                            COLDARC
+      PART2 = 1.0 - (PL2/PL1 - 1.0) / (RML1**2.0 * SIN2TH * GAMF)        COLDARC
+      TL2 = PART1 * PART2                                                COLDARC
+C                                                                        COLDARC
+      PART1 = 0.03425 * GAMF * TL1 * ZF * (RML1 ** 2.0) * SIN2TH         COLDARC
+      PART2 = 1.0 - (((TL2/TL1) / (PL2/PL1)) ** 2.0)                     COLDARC
+      HL2 = PART1 * PART2 + HL1                                          COLDARC
+      HL2 = CPF * TL2 + HD                                               COLDARC
+C                                                                        COLDARC
+      UL2 =223.84 * (HTOT - HL2) ** 0.5                                  COLDARC
+      RHOL2 = PL2 / (1716.0 * ZF * TL2)                                  COLDARC
+      RML2 = UL2 / ((GAMF * 1716.0 * TL2 * ZF) ** 0.5)                   COLDARC
+C                                                                        COLDARC
+      CALL TVSPR (PTOT,HTOT,TTOT,VISC,PRF)                               COLDARC
+C                                                                        COLDARC
+      UC = VISC / 32.174                                                 COLDARC
+      OF = ((TL2/TTOT) ** 1.5) * ((TTOT + 202.0)/(TL2 + 202.0))          COLDARC
+      UF = UC * OF                                                       COLDARC
+C                                                                        COLDARC
+      CALL TNP (PL2,TW,HWEQ)                                             COLDARC
+C                                                                        COLDARC
+      HWNE = CPF * TW + ETA * HD                                         COLDARC
+C                                                                        COLDARC
+      HAWEQ = (UL2 ** 2.0) * (PRF ** 0.33) / 50103.0 + HL2               COLDARC
+C                                                                        COLDARC
+C   ENTHALPY DIFFERENCES                                                 COLDARC
+C                                                                        COLDARC
+      DELHEQ = HAWEQ - HWEQ                                              COLDARC
+      DELHNE = HAWEQ - HWNE                                              COLDARC
+C                                                                        COLDARC
+C   REYNOLDS ANALOGY FACTOR                                              COLDARC
+C                                                                        COLDARC
+      FAC = 32.174 / (UL2 * (PRF ** 0.67))                               COLDARC
+C                                                                        COLDARC
+      MOMEN = RHOL2 * (UL2 ** 2.0)                                       COLDARC
+C                                                                        COLDARC
+C   TURBULENT BOUNDARY LAYER THICKNESS, FLAT PLATE                       COLDARC
+C                                                                        COLDARC
+      REX = RHOL2 * UL2 * PSI / UF                                       COLDARC
+      DELTA = 0.37 * PSI / (REX ** 0.2)                                  COLDARC
+C                                                                        COLDARC
+C   ECKERT'S REFERENCE ENTHALPY                                          COLDARC
+C                                                                        COLDARC
+      HSTARF = HL2 + 0.5 * (HWNE - HL2) + 0.22 * (HAWEQ - HL2)           COLDARC
+      TSTARF = (HSTARF - HD) / CPF                                       COLDARC
+C                                                                        COLDARC
+C   ECKERT'S TURBULENT, FLAT PLATE, CF/2                                 COLDARC
+C                                                                        COLDARC
+      PART1 = ((HL2 - HD)/(HSTARF - HD)) ** 0.8                          COLDARC
+      PART2 = (TSTARF / TL2) ** 0.3                                      COLDARC
+      PART3 = ((TL2 + 202.0)/(TSTARF + 202.0)) ** 0.2                    COLDARC
+      CFD2EC = 0.0296 /  (REX ** 0.2) * PART1 * PART2 * PART3            COLDARC
+C                                                                        COLDARC
+C   BARTZ'S TURBULENT, WITH PRESSURE GRADIENT, PRIMARILY FOR NOZZLES     COLDARC
+C                                                                        COLDARC
+      PART1 = (UC * TSTARF / (UL2 * DELTA * RHOL2 * TL2)) ** 0.25        COLDARC
+      PART2 = (2.0 * TL2 / (TW + TL2)) ** 0.6                            COLDARC
+      PART3 = (TL2 / TTOT) ** 0.15                                       COLDARC
+      CFD2BT = 0.0228 * PART1 * PART2 * PART3                            COLDARC
+C                                                                        COLDARC
+C   H. SCHLICHTING'S TURBULENT, FLAT PLATE, CF/2                         COLDARC
+C   REPLACED BY SPALDING ) CHI    4/30/81                                COLDARC
+C                                                                        COLDARC
+      A = TW/TL2                                                         COLDARC
+      G = (GAMF - 1.0) * RML2**2.0                                       COLDARC
+      C1 = -0.5 * PRF ** (0.333 * G)                                     COLDARC
+      B = 1.0 - C1 - A                                                   COLDARC
+      FC = (1.0 /(-C1)** 0.5 * (ASIN(-(2.0 * C1 + B)/                    COLDARC
+     *      SQRT(ABS(B) ** 2.0 - 4.0 * A * C1)) - ASIN(-B /              COLDARC
+     *      SQRT(ABS(B) ** 2.0 - 4.0 * A * C1))))                        COLDARC
+      IF (FC.NE.0.0) FC = 1.0 / FC**2.0                                  COLDARC
+      IF (FC.EQ.0.0) FC = 1.0E+35                                        COLDARC
+      TAW = (HAWEQ - HD) / CPF                                           COLDARC
+      FRO = A ** (-0.702) * (TAW / TW) ** 0.772                          COLDARC
+      FRX = FRO / FC                                                     COLDARC
+      C = ALOG (FRX * REX)                                               COLDARC
+      CFEXP = 9.280864 + C * (-4.734 + C * (6.685E-01 + C *              COLDARC
+     *       (-4.1876E-02 + C * (-5.505E-04 + C * (2.837E-04 +           COLDARC
+     *        C * (-2.1249E-05 + C * (8.0167E-07 + C * (-1.59E-08 +      COLDARC
+     *        C * (1.323E-10)))))))))                                    COLDARC
+      CFD2SH = 0.5 * (EXP(CFEXP) / FC)                                   COLDARC
+C                                                                        COLDARC
+C   TABLES IN INTERP DONE BY WILSON, TURBULENT FLAT PLATE                COLDARC
+C                                                                        COLDARC
+      CALL INTERP (RML2,DELSDO,DELDO)                                    COLDARC
+C                                                                        COLDARC
+C   SQUIRE ) YOUNG, TURBULENT FLAT PLATE                                 COLDARC
+C                                                                        COLDARC
+      THETA = DELTA / DELDO                                              COLDARC
+      DELSTR = DELSDO * THETA                                            COLDARC
+C                                                                        COLDARC
+      CFD2SY = 0.0288 / ((ALOG10(4.075 * REX * THETA /PSI)) ** 2.0)      COLDARC
+C                                                                        COLDARC
+C   PRANDTL'S TURBULENT FLAT PLATE                                       COLDARC
+C                                                                        COLDARC
+      CFD2PL = 0.0128 / ((REX * THETA / PSI) ** 0.25)                    COLDARC
+C                                                                        COLDARC
+C   FALKNER'S TURBULENT FLAT PLATE                                       COLDARC
+C                                                                        COLDARC
+      PART1 = ((2.0 * TL2) / (TL2 + TW)) ** 0.715                        COLDARC
+      CFD2FK = 0.0131 / (REX ** 0.143) * PART1                           COLDARC
+C                                                                        COLDARC
+C   FRANKL ) VOISHEL TURBULENT FLAT PLATE                                COLDARC
+C                                                                        COLDARC
+      PART1 = 1.0 - 1.12/ALOG10(REX)                                     COLDARC
+      PART2 = (ALOG10(REX)) ** (-2.58)                                   COLDARC
+      PART3 = (TL2/TW) ** 0.467                                          COLDARC
+      CFD2FV = 0.236 * PART1 * PART2 * PART3                             COLDARC
+C                                                                        COLDARC
+C  CALCULATE SHEAR = CF/2 * MOMENTUM                                     COLDARC
+C                                                                        COLDARC
+      TAUECK = MOMEN * CFD2EC                                            COLDARC
+      TAUBTZ = MOMEN * CFD2BT                                            COLDARC
+      TAUSHG = MOMEN * CFD2SH                                            COLDARC
+      TAUSY  = MOMEN * CFD2SY                                            COLDARC
+      TAUPTL = MOMEN * CFD2PL                                            COLDARC
+      TAUFLK = MOMEN * CFD2FK                                            COLDARC
+      TAUFKV = MOMEN * CFD2FV                                            COLDARC
+C                                                                        COLDARC
+C   USING SHEAR AND REYNOLD'S ANALOGY, COMPUTE HEAT FLUXES               COLDARC
+C                                                                        COLDARC
+      QNEECK = FAC * DELHNE * TAUECK                                     COLDARC
+      QNEBTZ = FAC * DELHNE * TAUBTZ                                     COLDARC
+      QNESHG = FAC * DELHNE * TAUSHG                                     COLDARC
+      QNESY  = FAC * DELHNE * TAUSY                                      COLDARC
+      QNEPTL = FAC * DELHNE * TAUPTL                                     COLDARC
+      QNEFLK = FAC * DELHNE * TAUFLK                                     COLDARC
+      QNEFKV = FAC * DELHNE * TAUFKV                                     COLDARC
+C                                                                        COLDARC
+C   HEAT FLUX INFERRED BY WALL TEMPERATURE MEASUREMENT                   COLDARC
+C                                                                        COLDARC
+      QNERAD = CON467 * (TW ** 4.0 - CON530 ** 4.0) * EMIS               COLDARC
+C                                                                        COLDARC
+C   AN EFFECTIVE LENGTH USED TO COMPUTE AREAS                            COLDARC
+C                                                                        COLDARC
+      LEQUIV = SQRT (AEX / 0.785)                                        COLDARC
+C                                                                        COLDARC
+C   BOUNDARY LAYER FLOW RATE                                             COLDARC
+C                                                                        COLDARC
+      WDOTBL = LEQUIV * (DELTA - DELSTR) * UL2 * RHOL2 * 32.174          COLDARC
+C                                                                        COLDARC
+C   BOUNDARY LAYER KINETIC ENERGY USING AN INTEGRAL AVERAGE OVER DELTA   COLDARC
+C                                                                        COLDARC
+      KEBL   = WDOTBL * ((0.83 * UL2) ** 2.0) / 50103.0                  COLDARC
+C                                                                        COLDARC
+C   POTENTIAL ENERGY                                                     COLDARC
+C                                                                        COLDARC
+      ENGINT = WDOTBL * HL2                                              COLDARC
+C                                                                        COLDARC
+C   TOTAL FLOW ENERGY PRODUCED BY ARC AT ENTRANCE TO TEST SECTION        COLDARC
+C                                                                        COLDARC
+      ENGNOZ = WDOT * HTOT                                               COLDARC
+C                                                                        COLDARC
+      BLMOM  = WDOTBL * UL2 * 0.83 / 32.174 + PL2 * DELTA * LEQUIV       COLDARC
+      AREAS  = LEQUIV * PSI                                              COLDARC
+C                                                                        COLDARC
+C        SHOCK LAYER DATA                                                COLDARC
+C                                                                        COLDARC
+      PART1 = (GAMF-1.0) * (RML1**2.0) * SIN2TH + 2.0                    COLDARC
+      PART2 = 2.0 * GAMF * (RML1**2.0) * SIN2TH - (GAMF-1.0)             COLDARC
+      SIN2DT = (PART1/PART2) / (RML2**2.0)                               COLDARC
+C                                                                        COLDARC
+      DELANG = ATAN(ASIN(SQRT(SIN2DT)))                                  COLDARC
+C                                                                        COLDARC
+C   FLOW RATE - SL                                                       COLDARC
+C                                                                        COLDARC
+C     WDOTSL = LEQUIV * (PSI * DELANG - DELTA) * RHOL2 * UL2 * 32.174    COLDARC
+      WDOTSL = WDOT-WDOTBL                                               COLDARC
+C                                                                        COLDARC
+C   KINETIC ENERGY - SL                                                  COLDARC
+C                                                                        COLDARC
+      KESL = WDOTSL * (UL2**2.0) / 50103.0                               COLDARC
+C                                                                        COLDARC
+C   INTERNAL ENERGY - SL                                                 COLDARC
+C                                                                        COLDARC
+      INTESL = HL2 * WDOTSL                                              COLDARC
+      ENGSL  = INTESL + KESL                                             COLDARC
+C                                                                        COLDARC
+C   SHOCK LAYER MOMENTUM                                                 COLDARC
+C                                                                        COLDARC
+      MOMSL1 = WDOTSL * UL2 / 32.174                                     COLDARC
+      MOMSL2 = PL2 * LEQUIV * (PSI * DELANG - DELTA)                     COLDARC
+      MOMSL  = MOMSL1 + MOMSL2                                           COLDARC
+C                                                                        COLDARC
+C   CHECK ON SOL. ACC. W.R.T. TOTAL AVERAGE ENERGY                       COLDARC
+C                                                                        COLDARC
+      ERAT61 = (KEBL + ENGINT + AREAS * QNEECK) / ENGNOZ + ENGSL/ENGNOZ  COLDARC
+      ERAT62 = (KEBL + ENGINT + AREAS * QNEBTZ) / ENGNOZ + ENGSL/ENGNOZ  COLDARC
+      ERAT63 = (KEBL + ENGINT + AREAS * QNESHG) / ENGNOZ + ENGSL/ENGNOZ  COLDARC
+      ERAT64 = (KEBL + ENGINT + AREAS * QNESY ) / ENGNOZ + ENGSL/ENGNOZ  COLDARC
+      ERAT65 = (KEBL + ENGINT + AREAS * QNEPTL) / ENGNOZ + ENGSL/ENGNOZ  COLDARC
+      ERAT66 = (KEBL + ENGINT + AREAS * QNEFLK) / ENGNOZ + ENGSL/ENGNOZ  COLDARC
+      ERAT67 = (KEBL + ENGINT + AREAS * QNEFKV) / ENGNOZ + ENGSL/ENGNOZ  COLDARC
+C                                                                        COLDARC
+      NOZMOM = WDOT * UL1 / 32.174 + PL1 * AEX                           COLDARC
+C                                                                        COLDARC
+C   MOMENTUM CHECK                                                       COLDARC
+C                                                                        COLDARC
+      MRAT53 = (BLMOM + AREAS * TAUECK) / NOZMOM + MOMSL/NOZMOM          COLDARC
+      MRAT54 = (BLMOM + AREAS * TAUBTZ) / NOZMOM + MOMSL/NOZMOM          COLDARC
+      MRAT55 = (BLMOM + AREAS * TAUSHG) / NOZMOM + MOMSL/NOZMOM          COLDARC
+      MRAT56 = (BLMOM + AREAS * TAUSY ) / NOZMOM + MOMSL/NOZMOM          COLDARC
+      MRAT57 = (BLMOM + AREAS * TAUPTL) / NOZMOM + MOMSL/NOZMOM          COLDARC
+      MRAT58 = (BLMOM + AREAS * TAUFLK) / NOZMOM + MOMSL/NOZMOM          COLDARC
+      MRAT59 = (BLMOM + AREAS * TAUFKV) / NOZMOM + MOMSL/NOZMOM          COLDARC
+C                                                                        COLDARC
+C        WRITE STATEMENTS WILL GO HERE                                   COLDARC
+C                                                                        COLDARC
+      WRITE (7,1000)                                                     COLDARC
+      WRITE (7,1010) NCASE                                               COLDARC
+      WRITE (7,1020) PTOT,HTOT,E,EMIS,WDOT,AEX,TW,PL2,ETA,PSI            COLDARC
+      WRITE (7,1030)                                                     COLDARC
+      WRITE (7,1040) RML1,RML2,UL1,UL2,PL1,PL2,TL1,TL2,                  COLDARC
+     *               RHOL1,RHOL2,HL1,HL2,HWEQ                            COLDARC
+      WRITE (7,1060) HWNE,DELTA,DELSTR,THETA,SHOCK                       COLDARC
+      WRITE (7,1070) TAUECK,TAUBTZ,TAUSHG,TAUSY,TAUPTL,TAUFLK,TAUFKV,    COLDARC
+     *               QNEECK,QNEBTZ,QNESHG,QNESY,QNEPTL,QNEFLK,QNEFKV,    COLDARC
+     *               MRAT53,MRAT54,MRAT55,MRAT56,MRAT57,MRAT58,MRAT59,   COLDARC
+     *               ERAT61,ERAT62,ERAT63,ERAT64,ERAT65,ERAT66,ERAT67    COLDARC
+      WRITE (7,1110) ZF,CPF,GAMF,PRF,HAWEQ,HD,TTOT                       COLDARC
+      WRITE (7,1120) WDOTBL,KEBL,ENGINT,QNERAD,WDOTSL,KESL,INTESL        COLDARC
+      NCASE = NCASE + 1                                                  COLDARC
+      GO TO 1                                                            COLDARC
+  999 STOP                                                               COLDARC
+ 1000 FORMAT ("1",33X,"***  PLASMA COLD ARC RESULTS  ***"33X,"PAGE 1"//) COLDARC
+ 1010 FORMAT (39X,"INPUT DATA     CASE ",I2/)                            COLDARC
+ 1020 FORMAT(1X,109("_")/1X,"!  PTOT   !   HTOT   !   A/A*   !   EMIS",  COLDARC
+     *       "   !   WDOT   !    AEX   !    TW    !    PL2   !    ETA",  COLDARC
+     *       "   !   PSI"/1X,"!  PSF    !  BTU/LB  !",3(10X,"!"),4X,     COLDARC
+     *       "FT2   !  DEG. R  !    PSF   !",10X,"!"/1X,"!_________",    COLDARC
+     *       9("!__________")/1X,"!",9X,9("!          ")/                COLDARC
+     *       1X,"!",F7.0,2X,"!",F8.0,2X,"!",F7.0,3X,"!",F7.2,3X,"!",     COLDARC
+     *       F7.2,3X,"!",F8.3,2X,"!",F8.0,2X,"!",F7.0,3X,"!",F8.3,2X,    COLDARC
+     *       "!",F6.1/1X,"!_________",9("!__________")///)               COLDARC
+ 1030 FORMAT (45X,"OUTPUT DATA"/4X,103("_")/4X,"!",46X,"!  PRESHOCK",    COLDARC
+     *       "/NOZZLE EXIT",5X,"!",5X,"POSTSHOCK/B.L. EDGE  !"/4X,       COLDARC
+     *       "!",46("_"),"!",27("_"),"!",26("_"),"!"/                    COLDARC
+     *       4X,"!",46X,"!",27X,"]",26X,"]")                             COLDARC
+ 1040 FORMAT (4X,"!LOCAL MACH NO.",21X,"---",8X,"!",5X,1PE11.4,11X,"!",  COLDARC
+     *       8X,1PE11.4,7X,"!"/                                          COLDARC
+     *       4X,"!LOCAL VELOCITY",21X,"FPS",8X,"!",5X,1PE11.4,11X,"!",   COLDARC
+     *       8X,1PE11.4,7X,"!"/                                          COLDARC
+     *       4X,"!LOCAL PRESSURE",21X,"PSF",8X,"!",5X,1PE11.4,11X,"!",   COLDARC
+     *       8X,1PE11.4,7X,"!"/                                          COLDARC
+     *       4X,"!LOCAL TEMPERATURE",18X,"DEG. R",5X,"!",5X,1PE11.4,11X, COLDARC
+     *   "!",8X,1PE11.4,7X,"!"/                                          COLDARC
+     *       4X,"!LOCAL DENSITY",22X,"S/FT2",6X,"!",5X,1PE11.4,11X,"!",  COLDARC
+     *       8X,1PE11.4,7X,"!"/                                          COLDARC
+     *       4X,"!LOCAL ENTHALPY",21X,"BTU/LB",5X,"!",5X,1PE11.4,11X,    COLDARC
+     *       "!",8X,1PE11.4,7X,"!"/                                      COLDARC
+     *       4X,"!EQUILIBRIUM WALL ENTHALPY",10X,"BTU/LB",5X,"!",27X,    COLDARC
+     *       "!",8X,1PE11.4,7X,"!")                                      COLDARC
+ 1060 FORMAT(4X,"!NONEQUILIBRIUM WALL ENTHALPY       BTU/LB",5X,"!",     COLDARC
+     *       27X,"!",8X,1PE11.4,7X,"!"/                                  COLDARC
+     *       4X,"!DELTA",30X,"FT",9X,"!",27X,"!",8X,1PE11.4,7X,"!"/      COLDARC
+     *       4X,"!DELTA *",28X,"FT",9X,"!",27X,"!",8X,1PE11.4,7X,"!"/    COLDARC
+     *       4X,"!MOMENTUM THICKNESS",17X,"FT",9X,"!",27X,"!",8X,        COLDARC
+     *       1PE11.4,7X,"!"/                                             COLDARC
+     *       4X,"!SHOCK ANGLE",24X,"DEGREES",4X,"!",27X,"!",8X,          COLDARC
+     *       1PE11.4,7X,"!"/4X,"!",46("_"),"!",27("_"),"!",26("_"),"!")  COLDARC
+ 1070 FORMAT ("1",99X,"PAGE 2"//1X,103("_")/1X,"!",17X,"!  ECKERT   !",  COLDARC
+     *       "   BARTZ   ! SPALDING  !   SQUIRE  !  PRANDTL  !",         COLDARC
+     *       "  FALKNER  !  FRANKL   !"/1X,"!",17X,"!",11X,"!",11X,      COLDARC
+     *       "!   CHI     ]   YOUNG   !",11X,"!",11X,"!  VOISHEL  !"/    COLDARC
+     *       1X,"!",17("_"),"!",7("___________!")/                       COLDARC
+     *       1X,"!",17X,"!",7(11X,"!")/                                  COLDARC
+     *       1X,"!SHEAR ",8(11X,"!")/                                    COLDARC
+     *       1X,"!  LB/FT2",9X,"!",7(1PE10.3," !")/                      COLDARC
+     *       1X,"!",17X,"!",7(11X,"!")/                                  COLDARC
+     *       1X,"!NONEQ. QDOT/A",4X,"!",7(11X,"!")/                      COLDARC
+     *       1X,"!  BTU/FT2-SEC    !",7(1PE10.3," !")/                   COLDARC
+     *       1X,"!",17X,"!",7(11X,"!")/                                  COLDARC
+     *       1X,"!CONSERVATION EST.!",7(11X,"!")/                        COLDARC
+     *       1X,"!  BLMOM/NOZMOM   !",7(1PE10.3," !")/                   COLDARC
+     *       1X,"!",17X,"!",7(11X,"!")/                                  COLDARC
+     *       1X,"!  BLENER/NOZENER !",7(1PE10.3," !")/                   COLDARC
+     *       1X,"!",17("_"),"!",7("___________!")///)                    COLDARC
+ 1110 FORMAT (41X,"FROZEN PROPERTIES/MEAS. VALUES *"//1X,99("_")/        COLDARC
+     *       1X,"!",7(13X,"!")/                                          COLDARC
+     *       1X,"!",6X,"ZF",5X,"!     CPF     !",                        COLDARC
+     *       5X,"GAMF    !     PRF     !     HAW     !      HD"          COLDARC
+     *       5X,"!     TTOT    !"/1X,"!",7("_____________!")/            COLDARC
+     *       1X,"!",7(13X,"!")/                                          COLDARC
+     *       1X,"!"F10.4,3X,"!",F10.5,3X,"!",F10.4,3X,"!",F10.5,3X,      COLDARC
+     *       "!",F10.1,3X,"!",F10.1,3X,"!",F10.1,3X,"!"/                 COLDARC
+     *       1X,"!",7("_____________!"))                                 COLDARC
+ 1120 FORMAT (///1X,99("_")/1X,"!",7(13X,"!")/                           COLDARC
+     *       1X,"!    WDOTBL   !    KEBL     !    ENGINT   !    QNERAD", COLDARC
+     *       "   !    WDOTSL   !    KESL     !    INTESL   ]"/           COLDARC
+     *       1X,"!",7("_____________!")/1X,"!",7(13X,"!")/               COLDARC
+     *       1X,"!",7(1PE12.5," !")/1X,"!",7("_____________!"))          COLDARC
+      END                                                                COLDARC
+C                                                                        COLDARC
+      SUBROUTINE TEMPE (RM,ET,GAMF,ZF)                                   COLDARC
+      EXPO   = 0.5 * (GAMF + 1.0) / (GAMF - 1.0)                         COLDARC
+      PART1  = (2.0 + (GAMF - 1.0) * (RM ** 2.0)) / (GAMF + 1.0)         COLDARC
+      ET     = (SQRT(ZF)/ RM) * (PART1 ** EXPO)                          COLDARC
+      RETURN                                                             COLDARC
+      END                                                                COLDARC
+C                                                                        COLDARC
+      SUBROUTINE INTERP (RM,SI,SISTR)                                    COLDARC
+      DIMENSION FSM(51),S1(51),S2(51)                                    COLDARC
+      DATA S1/    1.286,     1.304,     1.358,     1.447,                COLDARC
+     *            1.573,     1.734,     1.930,     2.163,                COLDARC
+     *            2.430,     2.733,     3.071,     3.444,                COLDARC
+     *            3.852,     4.294,     4.770,     5.284,                COLDARC
+     *            5.831,     6.413,     7.029,     7.680,                COLDARC
+     *            8.365,     9.085,     9.839,    10.627,                COLDARC
+     *           11.451,    12.308,    13.200,    14.126,                COLDARC
+     *           15.091,    16.082,    17.112,    18.175,                COLDARC
+     *           19.273,    20.400,    21.573,    22.775,                COLDARC
+     *           24.010,    25.279,    26.584,    27.922,                COLDARC
+     *           29.295,    30.702,    32.144,    33.620,                COLDARC
+     *           35.130,    36.675,    38.254,    39.867,                COLDARC
+     *           41.515,    43.197,    44.914/                           COLDARC
+      DATA S2/   10.286,    10.314,    10.399,    10.540,                COLDARC
+     *           10.735,    10.984,    11.282,    11.634,                COLDARC
+     *           12.031,    12.475,    12.963,    13.494,                COLDARC
+     *           14.067,    14.680,    15.328,    16.023,                COLDARC
+     *           16.752,    17.517,    18.319,    19.157,                COLDARC
+     *           20.030,    20.938,    21.881,    22.858,                COLDARC
+     *           23.869,    24.914,    25.993,    27.105,                COLDARC
+     *           28.259,    29.431,    30.644,    31.889,                COLDARC
+     *           33.168,    34.471,    35.825,    37.205,                COLDARC
+     *           38.615,    40.059,    41.536,    43.046,                COLDARC
+     *           44.589,    46.165,    47.774,    49.416,                COLDARC
+     *           51.091,    52.799,    54.539,    56.313,                COLDARC
+     *           58.119,    59.959,    61.832/                           COLDARC
+      A = 0.0                                                            COLDARC
+      DO 10 I=1,51                                                       COLDARC
+      FSM(I) = A                                                         COLDARC
+      A = A + 0.2                                                        COLDARC
+   10 CONTINUE                                                           COLDARC
+C                                                                        COLDARC
+      DO 20 I=1,51                                                       COLDARC
+      IF (RM.LE.FSM(I)) GO TO 25                                         COLDARC
+   20 CONTINUE                                                           COLDARC
+      I=50                                                               COLDARC
+   25 F = (RM - FSM(I)) / (FSM(I+1) - FSM(I))                            COLDARC
+      SI = F * (S1(I+1) - S1(I)) + S1(I)                                 COLDARC
+      SISTR = F * (S2(I+1) - S2(I)) + S2(I)                              COLDARC
+      RETURN                                                             COLDARC
+      END                                                                COLDARC
+C                                                                        COLDARC
+      SUBROUTINE TNP (P,T,H)                                             COLDARC
+C ENTER WITH P IN CR(1) AND T IN CR(2)                                   COLDARC
+C EXITS WITH.. SOR IN CR(3), H IN CR(4), Z IN CR(5), RHO IN CR(66)       COLDARC
+C                                                                        COLDARC
+C     ENTER WITH P IN CR(1) AND T IN CR(2)                               COLDARC
+C     EXIT WITH SOR IN CR(3), H IN CR(4), Z IN CR(5), RHO IN CR(6)       COLDARC
+      REAL LPF8,LPF10,LPF2,LPF24                                         COLDARC
+      COMMON CR                                                          COLDARC
+      DIMENSION CR(200),PF(40)                                           COLDARC
+      EQUIVALENCE                                                        COLDARC
+     *   (CR(3 ),SOR ) ,                  (CR(5 ),Z   ) , (CR(6 ),RHO )  COLDARC
+     * , (CR(7 ),GAM ) , (CR(8 ),VIS )  , (CR(9 ),PRTH) , (CR(10),A   )  COLDARC
+     * , (CR(11),CON ) , (CR(12),CONTH) , (CR(13),CP  ) , (CR(14),CV  )  COLDARC
+     * , (CR(15),PR  ) , (CR(16),CI  )  , (CR(17),SQCI) , (CR(18),CII )  COLDARC
+     * , (CR(19),CIII) , (CR(20),SIG )  , (CR(21),TLN ) , (CR(22),ZE  )  COLDARC
+     * , (CR(23),ZO  ) , (CR(24),ZOI )  , (CR(25),ZO2 ) , (CR(26),ZOPL)  COLDARC
+     * , (CR(27),ZN  ) , (CR(28),ZN2 )  , (CR(29),ZNII) , (CR(30),ZNPL)  COLDARC
+     * , (CR(31),PF(1)), (CR(68),DP5 )  , (CR(69),DP25) , (CR(70),DP26)  COLDARC
+     * , (CR(92),IERR)                                                   COLDARC
+C                                                                        COLDARC
+      IF (P) 2,2,1                                                       COLDARC
+    1 IF (T) 2,2,5                                                       COLDARC
+    2 WRITE         (6,3)P,T                                             COLDARC
+    3 FORMAT(30H0SUBROUTINE TNP ABORT EXIT, P=1E13.5,4H  T=1E13.5    )   COLDARC
+      IERR = 1                                                           COLDARC
+      GO TO  9999                                                        COLDARC
+    5 DEL=P/2116.2169                                                    COLDARC
+      DLN= ALOG(DEL)                                                     COLDARC
+      TLN= ALOG(T)                                                       COLDARC
+      CPF11=.0671+.02584*TLN                                             COLDARC
+      ARG =     8.1-55500./T-DLN*.5                                      COLDARC
+      IF ( ABS(ARG) - 88.028) 20,25,25                                   COLDARC
+   20 SQCI =  EXP(ARG)                                                   COLDARC
+      IF(SQCI-1.0E-20)25,30,30                                           COLDARC
+   25 SQCI = 0.                                                          COLDARC
+      Z = 1.                                                             COLDARC
+      ZO = 0.                                                            COLDARC
+      ZN = 0.                                                            COLDARC
+      ZOPL = 0.                                                          COLDARC
+      ZNPL = 0.                                                          COLDARC
+      ZE = 0.                                                            COLDARC
+      CI = 0.                                                            COLDARC
+      CII = 0.                                                           COLDARC
+      CIII = 0.                                                          COLDARC
+      ZNII = 0.                                                          COLDARC
+      ZO2 = .2095                                                        COLDARC
+      ZN2 = .7808                                                        COLDARC
+      IF (300. - T) 26,27,27                                             COLDARC
+   26 PF(4) = PF4 (T)                                                    COLDARC
+      PF(6) = PF6 (T)                                                    COLDARC
+      PF(8) = LPF8 (TLN)                                                 COLDARC
+      PF(10) = LPF10 (TLN)                                               COLDARC
+      SOR = .520655 + .2095 * PF(8) + .7808 * PF(10) + CPF11 - DLN       COLDARC
+      H = .0686 * T * (.2095 * PF(4) + .7808 * PF(6) + .024 )            COLDARC
+      GO TO 230                                                          COLDARC
+   27 H = .24 * T                                                        COLDARC
+      SOR = 3.49 * TLN + 2. - DLN                                        COLDARC
+      GO TO 230                                                          COLDARC
+C                                                                        COLDARC
+   30 IF(SQCI-.244949E-1)40,40,50                                        COLDARC
+C                                                                        COLDARC
+   40 ZOI=.4575*SQCI                                                     COLDARC
+      GOTO60                                                             COLDARC
+   50 CI=SQCI**2                                                         COLDARC
+      ZOI=2.*( SQRT((.3657*CI+.8378)*CI)-.3953*CI)/(4.+CI)               COLDARC
+      IF(ZOI-.22)60,60,70                                                COLDARC
+C                                                                        COLDARC
+   60 Z=1.+.5*ZOI                                                        COLDARC
+      ZO=ZOI                                                             COLDARC
+      ZO2=.2095-.5*ZO                                                    COLDARC
+      ZN2=.7808                                                          COLDARC
+      ZN=0.                                                              COLDARC
+      ZOPL=0.                                                            COLDARC
+      ZNPL=0.                                                            COLDARC
+      ZE=0.                                                              COLDARC
+      CII=0.                                                             COLDARC
+      CIII=0.                                                            COLDARC
+      ZNII = 0.                                                          COLDARC
+      PF(3)=PF3 (T)                                                      COLDARC
+      PF(4)=PF4 (T)                                                      COLDARC
+      PF(6)=PF6 (T)                                                      COLDARC
+      PF(7)=3.42+2.54*TLN                                                COLDARC
+      PF(8)=LPF8 (TLN)                                                   COLDARC
+      PF(10)=LPF10 (TLN)                                                 COLDARC
+      SOR=ZO*(PF(7)- ALOG(ZO))+ZO2*(PF(8)- ALOG(ZO2))+.7808*PF(10)+CPF11 COLDARC
+     *+.193198-Z* ALOG(DEL/Z)                                            COLDARC
+      H=3665.*ZO+.0686*T*(ZO*PF(3)+ZO2*PF(4)+.7808*PF(6)+.024)           COLDARC
+      GOTO230                                                            COLDARC
+C                                                                        COLDARC
+   70 PF(2)=LPF2 (TLN)                                                   COLDARC
+      CII= EXP(PF(2)-204000./T)/DEL                                      COLDARC
+      IF(CII-.0001)80,80,90                                              COLDARC
+C                                                                        COLDARC
+   80 ZNII= SQRT(.7808*(1.+.5*ZOI)*CII)                                  COLDARC
+      GOTO100                                                            COLDARC
+   90 ZNII=2.*( SQRT((.9903*CII+3.778)*CII)-.2143*CII)/(4.+CII)          COLDARC
+      IF(ZNII-.7)100,100,105                                             COLDARC
+C                                                                        COLDARC
+  100 ZO2=.2095-.5*ZOI                                                   COLDARC
+      PF(4)=PF4 (T)                                                      COLDARC
+      PF(8)=LPF8 (TLN)                                                   COLDARC
+      CIII=0.                                                            COLDARC
+      ZEII=9.55E-6* SQRT(ZOI*ZNII)* EXP(.784*TLN-28500./T)               COLDARC
+      SZO2=ZO2*(PF(8)- ALOG(ZO2))                                        COLDARC
+      HZO2=ZO2*PF(4)                                                     COLDARC
+      GOTO130                                                            COLDARC
+C                                                                        COLDARC
+  105 IF(ZNII-1.5616)120,120,110                                         COLDARC
+  110 ZNII=1.5616                                                        COLDARC
+  120 PF(24)=LPF24 (TLN)                                                 COLDARC
+      ZO2=0.                                                             COLDARC
+      CIII= EXP(PF(24)-300000./T)/DEL                                    COLDARC
+      ZEIII=1.99* SQRT(CIII/(1.+CIII))                                   COLDARC
+      ZEII=9.55E-6* SQRT(ZOI*ZNII)* EXP(.784*TLN-28500./T)               COLDARC
+      IF(ZEII-ZEIII)140,125,125                                          COLDARC
+C                                                                        COLDARC
+  125 SZO2=0.                                                            COLDARC
+      HZO2=0.                                                            COLDARC
+  130 PF(3)=PF3 (T)                                                      COLDARC
+      ZN2=.7808-.5*ZNII                                                  COLDARC
+      ZOPL=0.                                                            COLDARC
+      ZNPL=0.                                                            COLDARC
+      DP5=DELPF5 (T)                                                     COLDARC
+      ZO=ZOI                                                             COLDARC
+      ZE=ZEII                                                            COLDARC
+      Z=1.+.5*(ZOI+ZNII)+ZEII                                            COLDARC
+      PF(5)=2.5+DP5                                                      COLDARC
+      ZN=ZNII                                                            COLDARC
+      PF(7)=3.42+2.54*TLN                                                COLDARC
+      PF(9)=3.*TLN-1.5                                                   COLDARC
+      PF(10)=LPF10 (TLN)                                                 COLDARC
+      PF(33)=2.5*TLN-13.21                                               COLDARC
+      PF(6)=PF6 (T)                                                      COLDARC
+      SOR=ZOI*(PF(7)- ALOG(ZOI))+SZO2+ZNII*(PF(9)- ALOG(ZNII))+ZN2*(PF(1 COLDARC
+     *0)- ALOG(ZN2))+ZEII*(PF(33)- ALOG(ZEII))+CPF11     -Z* ALOG(DEL/Z) COLDARC
+      H=3665.*ZOI+6993.*ZNII+14600.*ZEII+.0686*T*(ZOI*PF(3)+HZO2+ZNII*PF COLDARC
+     *(5)+ZN2*PF(6)+2.5*ZEII+.024)                                       COLDARC
+      GOTO230                                                            COLDARC
+C                                                                        COLDARC
+  140 PF(37)=PF37 (T)                                                    COLDARC
+      CIIIPR= EXP(PF(37)-19500./T)                                       COLDARC
+      F1=1.-CIIIPR                                                       COLDARC
+      F2=CIIIPR*ZNII+.419+ZEIII*F1                                       COLDARC
+C                                                                        COLDARC
+      IF(CIIIPR-.98)170,160,150                                          COLDARC
+  150 IF(CIIIPR-1.02)160,160,170                                         COLDARC
+C                                                                        COLDARC
+  160 ZOPL=.419/F2*ZEIII                                                 COLDARC
+      GOTO180                                                            COLDARC
+C                                                                        COLDARC
+  170 ZOPL=.5/F1*(F2- SQRT(F2**2-1.676*ZEIII*F1))                        COLDARC
+  180 IF(ZOPL-ZOI)200,200,190                                            COLDARC
+  190 ZOPL=ZOI                                                           COLDARC
+  200 ZNPL=ZEIII-ZOPL                                                    COLDARC
+      IF(ZNPL-ZNII)220,220,210                                           COLDARC
+  210 ZNPL=ZNII                                                          COLDARC
+  220 ZN2=.7808-.5*ZNII                                                  COLDARC
+      ZO=ZOI-ZOPL                                                        COLDARC
+      ZN=ZNII-ZNPL                                                       COLDARC
+      Z=1.+.5*(ZNII+ZOI)+ZEIII                                           COLDARC
+      ZE=ZEIII                                                           COLDARC
+      PF(3)=PF3 (T)                                                      COLDARC
+      DP5=DELPF5 (T)                                                     COLDARC
+      PF(5)=2.5+DP5                                                      COLDARC
+      PF(6)=PF6 (T)                                                      COLDARC
+      PF(7)=3.42+2.54*TLN                                                COLDARC
+      PF(9)=3.*TLN-1.5                                                   COLDARC
+      PF(10)=LPF10 (TLN)                                                 COLDARC
+      DP25=DEPF25 (T)                                                    COLDARC
+      PF(25)=2.5+DP25                                                    COLDARC
+      DP26=DEPF26 (T)                                                    COLDARC
+      PF(26)=2.5+DP26                                                    COLDARC
+      PF(31)=2.87*TLN-.47                                                COLDARC
+      PF(32)=1.5+2.73*TLN                                                COLDARC
+      PF(33)=2.5*TLN-13.21                                               COLDARC
+      SOR = CPF11 -Z*ALOG(DEL/Z)                                         COLDARC
+      IF (ZO    .GT. 0.)  SOR = SOR + ZO*(PF(7) - ALOG(ZO))              COLDARC
+      IF (ZN    .GT. 0.)  SOR = SOR + ZN*(PF(9) - ALOG(ZN))              COLDARC
+      IF (ZN2   .GT. 0.)  SOR = SOR + ZN2*(PF(10) - ALOG(ZN2))           COLDARC
+      IF (ZOPL  .GT. 0.)  SOR = SOR + ZOPL*(PF(31) - ALOG(ZOPL))         COLDARC
+      IF (ZNPL  .GT. 0.)  SOR = SOR + ZNPL*(PF(32)-ALOG(ZNPL))           COLDARC
+      IF (ZEIII .GT. 0.)  SOR = SOR + ZEIII*(PF(33) - ALOG(ZEIII))       COLDARC
+      H=3665.*ZOI+6993.*ZNII+20600.*ZEIII+.0686*T*(ZO*PF(3)+ZN*PF(5)+ZN2 COLDARC
+     **PF(6)+ZOPL*PF(25)+ZNPL*PF(26)+2.5*ZEIII+.024)                     COLDARC
+C                                                                        COLDARC
+  230 SIG=491.68/Z*DEL/T                                                 COLDARC
+      RHO=P/Z/T/1716.48272                                               COLDARC
+ 9999 RETURN                                                             COLDARC
+      END                                                                COLDARC
+C                                                                        COLDARC
+      SUBROUTINE TVSPR (P,H,T,VIS,PR)                                    COLDARC
+C     CALCULATE MISCELLANEOUS (REMAINING) AIR PROPERTIES, MU, K,         COLDARC
+C     C(P)/R, C(V)/R, GAMMA, A, PR                                       COLDARC
+C                                                                        COLDARC
+      COMMON CR                                                          COLDARC
+      DIMENSION CR(200),PF(40)                                           COLDARC
+      EQUIVALENCE                                                        COLDARC
+     *   (CR(3 ),SOR ) ,                  (CR(5 ),Z   ) , (CR(6 ),RHO )  COLDARC
+     * , (CR(7 ),GAM ) ,                  (CR(9 ),PRTH) , (CR(10),A   )  COLDARC
+     * , (CR(11),CON ) , (CR(12),CONTH) , (CR(13),CP  ) , (CR(14),CV  )  COLDARC
+     * ,                 (CR(16),CI  )  , (CR(17),SQCI) , (CR(18),CII )  COLDARC
+     * , (CR(19),CIII) , (CR(20),SIG )  , (CR(21),TLN ) , (CR(22),ZE  )  COLDARC
+     * , (CR(23),ZO  ) , (CR(24),ZOI )  , (CR(25),ZO2 ) , (CR(26),ZOPL)  COLDARC
+     * , (CR(27),ZN  ) , (CR(28),ZN2 )  , (CR(29),ZNII) , (CR(30),ZNPL)  COLDARC
+     * , (CR(31),PF(1)), (CR(68),DP5 )  , (CR(69),DP25) , (CR(70),DP26)  COLDARC
+     * , (CR(72),ZOM ),(CR(89),INST)                                     COLDARC
+      CONR= SQRT(T)/(1.+202./T)                                          COLDARC
+      VISR=7.33E-7*CONR                                                  COLDARC
+      CONR=2.39E-7*CONR                                                  COLDARC
+      PF(21) = 2.15 - .179 * TLN                                         COLDARC
+      F111T=111000./T                                                    COLDARC
+C                                                                        COLDARC
+      CPII=0.                                                            COLDARC
+      CPIII=0.                                                           COLDARC
+      CVII=0.                                                            COLDARC
+      CVIII=0.                                                           COLDARC
+      CONII=0.                                                           COLDARC
+      CONIII=0.                                                          COLDARC
+      IF (SQCI - .0244949) 1,1,12                                        COLDARC
+C                                                                        COLDARC
+    1 IF (T - 300.) 2,2,3                                                COLDARC
+    2 CVOR = 2.5                                                         COLDARC
+      CPOR = 3.5                                                         COLDARC
+      VISRAT = 1.                                                        COLDARC
+      CONTH = 1.                                                         COLDARC
+      CONRAT = 1.                                                        COLDARC
+      GAM = CPOR / CVOR                                                  COLDARC
+      GO TO 290                                                          COLDARC
+C                                                                        COLDARC
+    3 F1=5600./T                                                         COLDARC
+      F2= EXP(F1)                                                        COLDARC
+      F3=(F1/(F2-1.))**2*F2                                              COLDARC
+      CVTH=2.5+F3                                                        COLDARC
+      CPTH=CVTH+1.                                                       COLDARC
+      CVI=SQCI/T                                                         COLDARC
+      COT=13.6E8/T                                                       COLDARC
+      CPI=CVI*(COT+12700.)                                               COLDARC
+      CVI=CVI*(COT-12230.)                                               COLDARC
+      CPOR=CPTH+CPI                                                      COLDARC
+      CVOR=CVTH+CVI                                                      COLDARC
+      GAM=CPOR/CVOR                                                      COLDARC
+C                                                                        COLDARC
+      IF (T - 1800.) 5,5,6                                               COLDARC
+C                                                                        COLDARC
+    5 PF(36) = 1.                                                        COLDARC
+      GO TO 7                                                            COLDARC
+    6 PF(36) = 2.05 - .14 * TLN                                          COLDARC
+    7 VISRAT = 1.0 / PF(36)                                              COLDARC
+      CONTH = (1.0+(.209*F3))/PF(36)                                     COLDARC
+      CONI=.0358*SQCI/PF(21)*(F111T+1.)**2                               COLDARC
+      CONRAT=CONTH+CONI                                                  COLDARC
+      GOTO290                                                            COLDARC
+C                                                                        COLDARC
+   12 ZA=ZO+ZN                                                           COLDARC
+      IF(ZA)14,14,16                                                     COLDARC
+   14 ZM=0.                                                              COLDARC
+      GOTO20                                                             COLDARC
+   16 ZM = 1.0 - (ZOI + ZNII) / 2.0                                      COLDARC
+   20 PF(12)=PF12 (T)                                                    COLDARC
+C                                                                        COLDARC
+      IF (T-1800.) 21,21,23                                              COLDARC
+C                                                                        COLDARC
+   21 PF(36) = 1.0                                                       COLDARC
+      GO TO 24                                                           COLDARC
+   23 PF(36) = 2.05 - .14 * TLN                                          COLDARC
+   24 PF(4)=PF4 (T)                                                      COLDARC
+      PF(13)=PF13 (T)                                                    COLDARC
+      PF(38)=DELPF5 (T)                                                  COLDARC
+      PF(6)=PF6 (T)                                                      COLDARC
+      PF(14)=PF14 (T,PF(38))                                             COLDARC
+      PF(3)=PF3 (T)                                                      COLDARC
+      PF(5)=2.5+PF(38)                                                   COLDARC
+      PF(15)=PF15 (T)                                                    COLDARC
+      PF(18)=2.*PF(3)-PF(4)                                              COLDARC
+      PF(19)=2.*PF(5)-PF(6)                                              COLDARC
+      PF(20) = .8 - 1.6 * T / 100000.0                                   COLDARC
+      PF(22) = 1.0/3.0 + 1600.0/(T+2400.0)                               COLDARC
+      PF(23)=1.852-.1516*TLN                                             COLDARC
+      PF(39)=DEPF25 (T)                                                  COLDARC
+      PF(25)=2.5+PF(39)                                                  COLDARC
+      PF(40)=DEPF26 (T)                                                  COLDARC
+      PF(26)=2.5+PF(40)                                                  COLDARC
+      PF(27)=PF27 (T,PF(39))                                             COLDARC
+      PF(28)=PF28 (T)                                                    COLDARC
+      PF(30)=.21*(PF(25)-PF(3))+.79*(PF(26)-PF(5))                       COLDARC
+      PF(34) = 40.0* T **(-.39)                                          COLDARC
+      IF (ZE) 300,300,301                                                COLDARC
+C     SIMULATED INFINITY VALUE IS NOT USED                               COLDARC
+  300 PF(35) =-.9E38                                                     COLDARC
+      GO TO 302                                                          COLDARC
+  301 PF(35)=3.6E9*( ALOG(T**3/SIG/ZE)*.5-14.17)/(T**2+(202.*T))         COLDARC
+  302 CVTH=ZO*PF(12)+ZO2*PF(13)+ZN*PF(14)+ZN2*PF(15)+ZOPL*PF(27)+ZNPL*PF COLDARC
+     *(28)+1.5*ZE+.014                                                   COLDARC
+      CPTH=CVTH+Z                                                        COLDARC
+      FI=CI/(4.+CI)*((.4189+.3657*CI)/ SQRT((.3657*CI+.8378)*CI)-.3953-Z COLDARC
+     *OI/2.)                                                             COLDARC
+      CPI=F111T**2*FI                                                    COLDARC
+      CG1=FI/(FI+Z)*(F111T-1.)                                           COLDARC
+      CVI=Z*CG1*(F111T-1.)                                               COLDARC
+      CG4=FI*F111T/Z                                                     COLDARC
+      ZAPL=ZOPL+ZNPL                                                     COLDARC
+C                                                                        COLDARC
+      IF(ZM)22,22,25                                                     COLDARC
+C                                                                        COLDARC
+   22 CU1=0.                                                             COLDARC
+      CK1=0.                                                             COLDARC
+      FKU5=0.                                                            COLDARC
+      FMM= 40.                                                           COLDARC
+      FKU11=0.                                                           COLDARC
+      GOTO26                                                             COLDARC
+C                                                                        COLDARC
+   25 FMM =(28.967-(14.01*ZNII)-(16.0*ZOI))/ ZM                          COLDARC
+      SQMM= SQRT(FMM)                                                    COLDARC
+      FU1=.2625*ZM*SQMM                                                  COLDARC
+      FKU2=1.414*ZM                                                      COLDARC
+      FKU5=PF(20)*ZM                                                     COLDARC
+      FK1=3.6*ZM+1.6*(ZO2*PF(13)+ZN2*PF(15))                             COLDARC
+      FKU11=1.264*ZM                                                     COLDARC
+C                                                                        COLDARC
+   26 IF(ZA)30,30,40                                                     COLDARC
+C                                                                        COLDARC
+   30 CU2=0.                                                             COLDARC
+      CK2=0.                                                             COLDARC
+      FMA=0.                                                             COLDARC
+      FKU8=0.                                                            COLDARC
+C                                                                        COLDARC
+      IF(ZM)50,50,35                                                     COLDARC
+C                                                                        COLDARC
+   35 CU1=FU1/FKU2                                                       COLDARC
+      CK1=FK1/SQMM/FKU2                                                  COLDARC
+      GOTO50                                                             COLDARC
+C                                                                        COLDARC
+   40 FMA=(16.*ZO+14.*ZN)/ZA                                             COLDARC
+      SQMA= SQRT(FMA)                                                    COLDARC
+      FKU8=PF(22)*ZA                                                     COLDARC
+      FKU11=ZA+FKU11                                                     COLDARC
+C                                                                        COLDARC
+      IF(ZM)44,44,42                                                     COLDARC
+C                                                                        COLDARC
+   42 FKU5=FKU5* SQRT(1.+FMA/FMM)                                        COLDARC
+      CU1 = FKU2*PF(36)+(ZA*PF(20)+ZAPL*PF(34))* SQRT(1.0+FMM/FMA)       COLDARC
+      CK1 = (FK1+.0233) / (CU1*SQMM)                                     COLDARC
+      CU1 = FU1/CU1                                                      COLDARC
+   44 CU2 = FKU5+1.414*(ZA*PF(22)+ZAPL*PF(34))                           COLDARC
+      CK2 =(3.6*ZA+1.6*(ZO*PF(12)+ZN*PF(14)))/(CU2*SQMA)                 COLDARC
+      CU2 = .2625*ZA*SQMA/CU2                                            COLDARC
+   50 IF (ZE) 55,55,70                                                   COLDARC
+   55 CK3 = 0.                                                           COLDARC
+   60 CU3 = 0.                                                           COLDARC
+      GO TO 130                                                          COLDARC
+   70 CK3 = 255.9 * ZE/(.31*(ZA+ZM) + ZE*PF(35))                         COLDARC
+   80 IF (ZA) 60,60,90                                                   COLDARC
+   90 CU3 = ZAPL/(1.414 * ZA * PF(34) + PF(35)*ZAPL)                     COLDARC
+C                                                                        COLDARC
+  130 VISRAT=CU1+CU2+CU3                                                 COLDARC
+      CONTH =CK1+CK2+CK3                                                 COLDARC
+      ZOZO2=ZO*ZO2                                                       COLDARC
+      ZNZN2=ZN*ZN2                                                       COLDARC
+      ZAZAPL=ZA*ZAPL                                                     COLDARC
+      CONI=0.                                                            COLDARC
+      F204TP=204000./T+PF(19)                                            COLDARC
+      F3TP=300000./T+PF(30)                                              COLDARC
+C                                                                        COLDARC
+      IF(ZOZO2)160,160,150                                               COLDARC
+C                                                                        COLDARC
+  150 CONI=.179*ZOZO2/(PF(21)*(.101+1.8*ZO2)+.552*ZO)*F111T**2           COLDARC
+C                                                                        COLDARC
+  160 IF(ZNZN2)190,190,180                                               COLDARC
+C                                                                        COLDARC
+  180 CONII=.179*ZNZN2/(PF(21)*(1.41+.242*ZN)+.838*PF(23)*ZN2)*F204TP**2 COLDARC
+C                                                                        COLDARC
+  190 IF(ZAZAPL)220,220,210                                              COLDARC
+C                                                                        COLDARC
+  210 CONIII = 10.3385 * ZAZAPL / (115.*PF(34)) * (F3TP + 2.5)**2        COLDARC
+C                                                                        COLDARC
+  220 IF(CII)230,230,240                                                 COLDARC
+  230 CG2=0.                                                             COLDARC
+      CG5=0.                                                             COLDARC
+      GOTO250                                                            COLDARC
+  240 FII=CII/(4.+CII)*((1.887+.9903*CII)/ SQRT((.9903*CII+3.774)*CII)-. COLDARC
+     *2143-ZNII/2.)                                                      COLDARC
+      CPII=FII*F204TP                                                    COLDARC
+      CVII=F204TP-1.                                                     COLDARC
+      CG2=FII/(FII+Z)*CVII                                               COLDARC
+      CVII=Z*CG2*CVII                                                    COLDARC
+      CG5=CPII/Z                                                         COLDARC
+      CPII=CPII*F204TP                                                   COLDARC
+C                                                                        COLDARC
+  250 IF(CIII)260,260,270                                                COLDARC
+C                                                                        COLDARC
+  260 CG3=0.                                                             COLDARC
+      CG6=0.                                                             COLDARC
+      GOTO280                                                            COLDARC
+  270 SQC9=.99* SQRT(CIII)                                               COLDARC
+      SQC3=1.+CIII                                                       COLDARC
+      SQC3= SQRT(SQC3)*SQC3                                              COLDARC
+      CG6=SQC9/SQC3*(F3TP+2.5)                                           COLDARC
+      CPIII=CG6*(F3TP+2.5)                                               COLDARC
+      CG6=CG6/Z                                                          COLDARC
+      CG3=SQC9/(Z*SQC3+SQC9)*(F3TP+1.5)                                  COLDARC
+      CVIII=Z*CG3*(F3TP+1.5)                                             COLDARC
+C                                                                        COLDARC
+  280 CPOR=CPTH+CPI+CPII+CPIII                                           COLDARC
+      CVOR=CVTH+CVI+CVII+CVIII                                           COLDARC
+      CONRAT=CONTH+CONI+CONII+CONIII                                     COLDARC
+      GAM=CPOR/CVOR*(1.+CG1+CG2+CG3)/(1.+CG4+CG5+CG6)                    COLDARC
+  290 VIS=VISRAT*VISR                                                    COLDARC
+      CON=CONRAT*CONR                                                    COLDARC
+      AA=1716.*GAM*T*Z                                                   COLDARC
+      A= SQRT(AA)                                                        COLDARC
+      CP=.0686*CPOR                                                      COLDARC
+      CV=.0686*CVOR                                                      COLDARC
+      PR=.210526*CPOR/CONRAT*VISRAT                                      COLDARC
+      PRTH=.210526*CPTH/CONTH*VISRAT                                     COLDARC
+C               DIMENSIONED FORM                                         COLDARC
+      CONTH = CONTH * CONR                                               COLDARC
+      IF(T .LT. 180.) RETURN                                             COLDARC
+      TK = T/1.8                                                         COLDARC
+      DELFA = -3.030993 * (1.-ALOG(TK))                                  COLDARC
+      DELFB = -1.309476E-4*TK                                            COLDARC
+      DELFC = +1.725756E-9*TK**2                                         COLDARC
+      DELFD = + .4235962E-13*TK**3                                       COLDARC
+      DELFS = DELFA+DELFB+DELFC+DELFD+DELFE-14.75022                     COLDARC
+      DELTAF = -1.9865*TK*DELFS-3.22788E+4                               COLDARC
+      EXPK = EXP(DELTAF/(1.9865*TK))                                     COLDARC
+      ZCPL = 0.0                                                         COLDARC
+      SUMPL = ZNPL + ZOPL + ZCPL                                         COLDARC
+      CONRHO = 0.5154/28.966*RHO                                         COLDARC
+      ZOM = 82.05*TK*CONRHO*EXPK*SUMPL*ZO                                COLDARC
+      RETURN                                                             COLDARC
+      END                                                                COLDARC
+C                                                                        COLDARC
+      FUNCTION PFS(T)                                                    COLDARC
+      ENTRY LPF2                                                         COLDARC
+      PFS  = 9.17 * EXP (.06 * T)                                        COLDARC
+      GO TO 50                                                           COLDARC
+      ENTRY PF3                                                          COLDARC
+      A = EXP(-41000./T)                                                 COLDARC
+      B = EXP(-410./T)                                                   COLDARC
+      PFS = (190000.* A + 1500.* B) / (T *(5.*(A +1.)+ 3.* B))+ 2.5      COLDARC
+      GO TO 50                                                           COLDARC
+      ENTRY PF4                                                          COLDARC
+      PFS=3.5+((4090./(EXP(4090./T)-1.)+20000.*EXP(-21500./T))/T)        COLDARC
+      GO TO 50                                                           COLDARC
+      ENTRY DELPF5                                                       COLDARC
+      IF (T- 4500.)5,10,10                                               COLDARC
+    5 PFS    = 0.                                                        COLDARC
+      GO TO 50                                                           COLDARC
+   10 PFS    = 120000. * (EXP (-49000./ T) / T)                          COLDARC
+      GO TO 50                                                           COLDARC
+      ENTRY PF6                                                          COLDARC
+      A = 6100. / T                                                      COLDARC
+      PFS = 3.5 + A /(EXP(A)-1.)                                         COLDARC
+      GO TO 50                                                           COLDARC
+      ENTRY LPF8                                                         COLDARC
+      IF ( T   .LT. 7.2) GO TO 15                                        COLDARC
+      PFS  = 4.5 *( T -1.)                                               COLDARC
+      GO TO 50                                                           COLDARC
+   15 PFS  = 3.5 * T + 2.7                                               COLDARC
+      GO TO 50                                                           COLDARC
+      ENTRY LPF10                                                        COLDARC
+      IF(T.LT.7.32) GO TO 20                                             COLDARC
+      PFS   = 4.325 *T-5.                                                COLDARC
+      GO TO 50                                                           COLDARC
+   20 PFS   = 3.5 * T + 1.04                                             COLDARC
+      GO TO 50                                                           COLDARC
+      ENTRY PF12                                                         COLDARC
+      IF (T.GE. 4100.) GO TO 25                                          COLDARC
+      PFS  = 1.5                                                         COLDARC
+      GO TO 50                                                           COLDARC
+   30 PFS  = 1.4 * EXP (T/60000.)                                        COLDARC
+      GO TO 50                                                           COLDARC
+   25 IF(T.LT. 14400.) GO TO 30                                          COLDARC
+      PFS  = 1.78                                                        COLDARC
+      GO TO 50                                                           COLDARC
+      ENTRY PF13                                                         COLDARC
+      A = EXP(4090. /T)                                                  COLDARC
+      PFS = 2.5 + ((4090./(1.-A)   )**2 * A + 4.3 * 10.E7 * EXP(-21500.  COLDARC
+     */T)) / T**2                                                        COLDARC
+      GO TO 50                                                           COLDARC
+      ENTRY PF15                                                         COLDARC
+      A = EXP ( 6100. /T)                                                COLDARC
+      PFS  =2.5+(6100.   /(T*(A-1.))) **2 * A                            COLDARC
+      GO TO 50                                                           COLDARC
+      ENTRY LPF24                                                        COLDARC
+      PFS = .62 *EXP(.275*T)                                             COLDARC
+      GO TO 50                                                           COLDARC
+      ENTRY DEPF25                                                       COLDARC
+      IF (T.LE. 7000.) GO TO 35                                          COLDARC
+      PFS    = (190000.*EXP (-70000./T))/ T                              COLDARC
+      GO TO 50                                                           COLDARC
+   35 PFS    = 0.                                                        COLDARC
+      GO TO 50                                                           COLDARC
+      ENTRY DEPF26                                                       COLDARC
+      IF(T.GE. 8100.) GO TO 40                                           COLDARC
+      PFS    = .04                                                       COLDARC
+      GO TO 50                                                           COLDARC
+   40 PFS    = (T/90000.) - .05                                          COLDARC
+      GO TO 50                                                           COLDARC
+      ENTRY PF28                                                         COLDARC
+      IF(T.LE. 5400.) GO TO 45                                           COLDARC
+      PFS  = 1.5 + .35 * (1.- EXP(-.00015 * T))                          COLDARC
+      GO TO 50                                                           COLDARC
+   45 PFS  = 1.5                                                         COLDARC
+      GO TO 50                                                           COLDARC
+      ENTRY PF37                                                         COLDARC
+      PFS  = 1.58 - 4.2 * EXP(-70000. /T)                                COLDARC
+   50 RETURN                                                             COLDARC
+      END                                                                COLDARC
+      FUNCTION PFSS(T,D)                                                 COLDARC
+      ENTRY PF27                                                         COLDARC
+      A = EXP(-69500. /T)                                                COLDARC
+      B = EXP(-104900. /T)                                               COLDARC
+      PFSS = 1.5 + (((241. * A) + 330. * B) / ( 2.+ 3. * B + 5. * A)) *  COLDARC
+     *10.E7 /T**2 -D**2                                                  COLDARC
+      GO TO 50                                                           COLDARC
+      ENTRY PF14                                                         COLDARC
+      A = EXP(-49900. /T)                                                COLDARC
+      B = EXP(-74800. /T)                                                COLDARC
+      PFSS = (  1.E+8 / T**2) * (124.1 * A + 167.5 * B ) / ( 5.* A + 3.  COLDARC
+     * * B + 2.) -(D)**2 + 1.5                                           COLDARC
+   50 RETURN                                                             COLDARC
+      END                                                                COLDARC
+C                                                                        COLDARC
+      SUBROUTINE PHGETT (P,H,T)                                          COLDARC
+C     S.N.GREENSCHLAG - RESPONSIBLE PROGRAMMER                           COLDARC
+C                                                                        COLDARC
+      COMMON CR(200)                                                     COLDARC
+      EQUIVALENCE                                                        COLDARC
+     *   (CR(   3),  SORC   ),                                           COLDARC
+     *   (CR(  92),  IERR   )                                            COLDARC
+      DATA EPS/1.0E-05/                                                  COLDARC
+C                                                                        COLDARC
+      IF (P) 2,2,1                                                       COLDARC
+    1 IF (T) 2,2,5                                                       COLDARC
+    2 WRITE         (6,3)P,T                                             COLDARC
+    3 FORMAT(33H0SUBROUTINE PHGETT ABORT EXIT, P=1E13.5,4H T=1E13.5    ) COLDARC
+      IERR = 1                                                           COLDARC
+      GO TO  9999                                                        COLDARC
+    5 IC = 0                                                             COLDARC
+  490 PC=P                                                               COLDARC
+      KC = 0                                                             COLDARC
+      TI=T                                                               COLDARC
+C                                                                        COLDARC
+  500 IC=IC+1                                                            COLDARC
+      TC=TI                                                              COLDARC
+      IP=-1                                                              COLDARC
+C                                                                        COLDARC
+  510 CALL TNP (PC,TC,HC)                                                COLDARC
+      IF(IERR .NE. 0)GO TO 2                                             COLDARC
+      F=HC-H                                                             COLDARC
+C                                                                        COLDARC
+C*****ITERATION VALUES CLOSEST TO THE ROOT ARE SAVED                     COLDARC
+      IF(IC.GT.1) GO TO 512                                              COLDARC
+      FSAV1=0.0                                                          COLDARC
+      TSAV1=0.0                                                          COLDARC
+      FSAV2=0.0                                                          COLDARC
+      TSAV2=0.0                                                          COLDARC
+  512 IF(F.LT.0.0) GO TO 515                                             COLDARC
+      IF(ABS(F).GE.ABS(FSAV1).AND.FSAV1.NE.0.0) GO TO 520                COLDARC
+      FSAV1 = F                                                          COLDARC
+      TSAV1 = TC                                                         COLDARC
+      GO TO 520                                                          COLDARC
+  515 IF(ABS(F).GE.ABS(FSAV2).AND.FSAV2.NE.0.0) GO TO 520                COLDARC
+      FSAV2 = F                                                          COLDARC
+      TSAV2 = TC                                                         COLDARC
+  520 IF(ABS(F/H)-EPS) 530,530,540                                       COLDARC
+C                                                                        COLDARC
+  530 SOR=SORC                                                           COLDARC
+      T=TC                                                               COLDARC
+      GOTO1000                                                           COLDARC
+  540 IF(IC.GE.25) GO TO 800                                             COLDARC
+C                                                                        COLDARC
+      IF(IP) 580,680,680                                                 COLDARC
+  580 IF(IC-1)620,620,590                                                COLDARC
+C                                                                        COLDARC
+  590 IF(DFDT)600,620,600                                                COLDARC
+C                                                                        COLDARC
+  600 DT=-F/DFDT                                                         COLDARC
+      GOTO630                                                            COLDARC
+C                                                                        COLDARC
+  620 DT=-F                                                              COLDARC
+C                                                                        COLDARC
+  630 IF( ABS(DT)-.01*TI)640,670,650                                     COLDARC
+C                                                                        COLDARC
+  640 DT= SIGN(.01*TI,DT)                                                COLDARC
+      GOTO670                                                            COLDARC
+C                                                                        COLDARC
+  650 IF( ABS(DT)-.9*TI)670,670,660                                      COLDARC
+  660 DT= SIGN(.9*TI,DT)                                                 COLDARC
+C                                                                        COLDARC
+  670 TII=TI+DT                                                          COLDARC
+      FI=F                                                               COLDARC
+      IP=1                                                               COLDARC
+      TC=TII                                                             COLDARC
+      GOTO510                                                            COLDARC
+C                                                                        COLDARC
+  680 DFDT=(F-FI)/DT                                                     COLDARC
+C                                                                        COLDARC
+      IF(DFDT)700,690,700                                                COLDARC
+C                                                                        COLDARC
+  690 TI=TII                                                             COLDARC
+      GOTO500                                                            COLDARC
+C                                                                        COLDARC
+  700 DT=-FI/DFDT                                                        COLDARC
+  710 IF( ABS(DT)-.9*TI)730,720,720                                      COLDARC
+C                                                                        COLDARC
+  720 DT= SIGN(.9*TI,DT)                                                 COLDARC
+C                                                                        COLDARC
+  730 TI=TI+DT                                                           COLDARC
+      GOTO500                                                            COLDARC
+C*****SECOND ATTEMPT AT CONVERGING ON A ROOT USING A SEARCHING METHOD    COLDARC
+  800 TU = TSAV1                                                         COLDARC
+      IF(TSAV1.EQ.0.0) TU = 27000.0                                      COLDARC
+      TL = TSAV2                                                         COLDARC
+      GM = (SQRT(5.0)-1.0)/2.0                                           COLDARC
+  805 KC = KC +1                                                         COLDARC
+      DELRT = (TU-TL)*GM                                                 COLDARC
+      TC = TL + DELRT                                                    COLDARC
+      CALL TNP (PC,TC,HC)                                                COLDARC
+      F = HC - H                                                         COLDARC
+      IF(ABS(F/H).GT.EPS) GO TO 810                                      COLDARC
+      GO TO 530                                                          COLDARC
+  810 IF(F) 815,815,820                                                  COLDARC
+  815 TL = TC                                                            COLDARC
+      GO TO 825                                                          COLDARC
+  820 TU = TC                                                            COLDARC
+  825 IF(KC.LT.45) GO TO 805                                             COLDARC
+      FOH = F/H                                                          COLDARC
+      IKCT = IC + KC                                                     COLDARC
+      WRITE(6,850) IKCT,TC,F,FOH,P,H,SOR,T,EPS                           COLDARC
+  850 FORMAT(20H0PASSES IN PHGETT = I3, 13H TC, F, FOH =  ,3E20.8    /   COLDARC
+     *  33H INITIAL ARGUMENT P,H,SOR,T,EPS =,5E14.6     )                COLDARC
+      SOR = SORC                                                         COLDARC
+      T = TC                                                             COLDARC
+ 1000 ICNTR = IC + KC                                                    COLDARC
+ 9999 RETURN                                                             COLDARC
+      END                                                                COLDARC
