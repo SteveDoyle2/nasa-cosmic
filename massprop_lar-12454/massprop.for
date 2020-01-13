@@ -22,7 +22,7 @@ C     LATEST DIRCOS IN MAIN DECK AND 13 SHAPES 12/20/72
       IF(EOF(5))1009,1010
  1009 IMAX=I-1
       WRITE(6,271)
-  271 FORMAT(1H0* INPUT DATA LISTED BELOW*//)
+  271 FORMAT("0* INPUT DATA LISTED BELOW*")
       WRITE(6,103)(ITEM(I),DES(1,I),DES(2,I),SHAPE(I),RHO(I),A(I),B(I),
      1C(I),D(I),F(I),     XI(I),YI(I),ZI(I),XJ(I),YJ(I),ZJ(I),XK(I),
      2YK(I),ZK(I),I=1,IMAX)
@@ -34,9 +34,9 @@ C     LATEST DIRCOS IN MAIN DECK AND 13 SHAPES 12/20/72
       WRITE(6,261)
   261 FORMAT(3X9HCOMPONENT2X4HDATA2X6HLISTED2X5HBELOW//)
       WRITE(6,250)
-  250 FORMAT(1H0* ITEM       DESCRIPTION          WT         IXXCO
-     1 IYYCO     IZZCO     XCGCO      YCGCO    ZCGCO    IXYCO     IYZCO
-     2  IXZCO*//)
+  250 FORMAT('* ITEM       DESCRIPTION          WT         IXXCO      '
+     c  '  IYYCO     IZZCO     XCGCO      YCGCO    ZCGCO    IXYCO     '
+     c  '  IYZCO     IXZCO*')
       TW=0.
       XMOM=0.
       YMOM=0.
@@ -466,8 +466,8 @@ C     COMPUTE SYSTEM C.G. COORDINATES
       YBAR=YMOM/TW
       ZBAR=ZMOM/TW
       WRITE(6,262)
-  262 FORMAT(1H0* SYSTEM DATA LISTED BELOW (WT=LBS, INERTIAS=SLUGS FT SQ
-     1UARED, C.G.=INS, SECOND MOMENT=SLUG FT SQUARED)*//)
+  262 FORMAT("0* SYSTEM DATA LISTED BELOW (WT=LBS, INERTIAS=SLUGS FT "
+     c "SQUARED, C.G.=INS, SECOND MOMENT=SLUG FT SQUARED)*")
       WRITE(6,100)TW,IXXO,IYYO,IZZO,XBAR,YBAR,ZBAR
   100 FORMAT(11X3HSYS1X2HWT12X4HIXXO14X4HIYYO14X4HIZZO16X4HXBAR14X4HYBAR
      114X4HZBAR/7F18.3)
@@ -491,33 +491,39 @@ C     COMPUTE INERTIAS (EIGENVALUES) ABOUT PRINCIPAL AXES AND EACH AXIS
 C     DIRECTION COSINES (EIGENVECTORS) AND WRITE OUT
 
 
-      PRINT 340
-  340 FORMAT(/1X,*INERTIAS (EIGENVALUES) ABOUT SYSTEM PRINCIPAL AXES WIT
-     1H AXIS DIRECTION COSINES (EIGENVECTORS) RELATING THE PRINCIPAL AXE
-     1S*/1X,*TO THE X, Y, AND Z SYSTEM AXES IN THAT SEQUENCE*///)
+  340 FORMAT('*INERTIAS (EIGENVALUES) ABOUT SYSTEM PRINCIPAL AXES '
+     c  'WITH AXIS DIRECTION COSINES (EIGENVECTORS) RELATING THE '
+     c  'PRINCIPAL AXES *TO THE X, Y, AND Z SYSTEM AXES IN THAT '
+     c  'SEQUENCE*')
+      WRITE(*,340)
       MAX=3
       N=3
       ARR(1,1)=IXX
-      ARR(2,1)=ARR(1,2)=IXY
-      ARR(1,3)=ARR(3,1)=IXZ
+      ARR(2,1)=IXY
+      ARR(1,2)=IXY
+      ARR(1,3)=IXZ
+      ARR(3,1)=IXZ
       ARR(2,2)=IYY
-      ARR(3,2)=ARR(2,3)=IYZ
+      ARR(3,2)=IYZ
+      ARR(2,3)=IYZ
       ARR(3,3)=IZZ
       CALL SYMQL(MAX,N,ARR,E,CRR,IERR)
       IF(IERR .NE. 0) GO TO 332
       DO 336 J=1,3
-      PRINT 337,J,E(J)
-  337 FORMAT(1X,*EIGENVALUE(*I1*) = *E12.5//)
-      PRINT 339,J
-  339 FORMAT(1X,*EIGENVECTOR(*I1*)*/)
+      WRITE(*,337) J,E(J)
+      WRITE(*, 339) J
       PRINT 338,(ARR(I,J),I=1,3)
-  338 FORMAT(1X,3(E14.6,5X)////)
+  337 FORMAT(" ",*EIGENVALUE(*I1*) = *E12.5//)
+  339 FORMAT(" ",*EIGENVECTOR(*I1*)*/)
+  338 FORMAT(" ",3(E14.6,5X)////)
   336 CONTINUE
       GO TO 334
-  332 PRINT 333,IERR
-  333 FORMAT(1X,*ERROR -- IERR = *I5)
+  332 WRITE(*,333) IERR
+  333 FORMAT(" ",*ERROR -- IERR = *I5)
   334 STOP
       END
+
+C------------------------------------------------------------------------------
       SUBROUTINE SYMQL (MAX, N, A, E, WK, IERR)
 C ****
 C   FUNCTION             - COMPUTES ALL THE EIGENVALUES AND EIGENVECTORS
@@ -553,6 +559,8 @@ C ****
       CALL TQL2 (MAX,N,E,WK,A,IERR)
       RETURN
       END
+
+C------------------------------------------------------------------------------
       SUBROUTINE TRED2 (NM, N, A, D, E, Z)
 C ****
 C   FUNCTION            - REDUCES REAL SYMMETRIC MATRIX TO SYMMETRIC
@@ -578,112 +586,113 @@ C   DATE RELEASED       - OCT. 19, 1972
 C   LATEST REVISION     - FEB. 28, 1973
 C
 C ****
-      INTEGER I,J,K,L,N,II,NM,JP1                                       78215006
-      REAL A(NM,N),D(N),E(N),Z(NM,N)                                    78215007
-      REAL F,G,H,HH,SCALE                                               78215008
-      DO 100 I = 1, N                                                   78215047
-C                                                                       78215048
-         DO 100 J = 1, I                                                78215049
-            Z(I,J) = A(I,J)                                             78215050
-  100 CONTINUE                                                          78215051
-C                                                                       78215052
-      IF (N .EQ. 1) GO TO 320                                           78215053
-C     ********** FOR I=N STEP -1 UNTIL 2 DO -- **********               78215054
-      DO 300 II = 2, N                                                  78215055
-         I = N + 2 - II                                                 78215056
-         L = I - 2                                                      78215057
-         H = 0.0                                                        78215058
-         SCALE = 0.0                                                    78215059
-         IF (L .LT. 1) GO TO 130                                        78215060
-C     ********** SCALE ROW (ALGOL TOL THEN NOT NEEDED) **********       78215061
-         DO 120 K = 1, L                                                78215062
-  120    SCALE = SCALE + ABS(Z(I,K))                                    78215063
-C                                                                       78215064
-         IF (SCALE .NE. 0.0) GO TO 140                                  78215065
-  130    E(I) = Z(I,L+1)                                                78215066
-         GO TO 290                                                      78215067
-C                                                                       78215068
-  140    L = L + 1                                                      78215069
-         SCALE = SCALE + ABS(Z(I,L))                                    78215069
-         DO 150 K = 1, L                                                78215069
-            Z(I,K) = Z(I,K) / SCALE                                     78215070
-            H = H + Z(I,K) * Z(I,K)                                     78215071
-  150    CONTINUE                                                       78215072
-C                                                                       78215073
-         F = Z(I,L)                                                     78215074
-         G = -SIGN(SQRT(H),F)                                           78215075
-         E(I) = SCALE * G                                               78215076
-         H = H - F * G                                                  78215077
-         Z(I,L) = F - G                                                 78215078
-         F = 0.0                                                        78215079
-C                                                                       78215080
-         DO 240 J = 1, L                                                78215081
-            Z(J,I) = Z(I,J) / (SCALE * H)                               78215082
-            G = 0.0                                                     78215083
-C     ********** FORM ELEMENT OF A*U **********                         78215084
-            DO 180 K = 1, J                                             78215085
-  180       G = G + Z(J,K) * Z(I,K)                                     78215086
-C                                                                       78215087
-            JP1 = J + 1                                                 78215088
-            IF (L .LT. JP1) GO TO 220                                   78215089
-C                                                                       78215090
-            DO 200 K = JP1, L                                           78215091
-  200       G = G + Z(K,J) * Z(I,K)                                     78215092
-C     ********** FORM ELEMENT OF P **********                           78215093
-  220       E(J) = G / H                                                78215094
-            F = F + E(J) * Z(I,J)                                       78215095
-  240    CONTINUE                                                       78215096
-C                                                                       78215097
-         HH = F / (H + H)                                               78215098
-C     ********** FORM REDUCED A **********                              78215099
-         DO 260 J = 1, L                                                78215100
-            F = Z(I,J)                                                  78215101
-            G = E(J) - HH * F                                           78215102
-            E(J) = G                                                    78215103
-C                                                                       78215104
-            DO 260 K = 1, J                                             78215105
-               Z(J,K) = Z(J,K) - F * E(K) - G * Z(I,K)                  78215106
-  260    CONTINUE                                                       78215107
-C                                                                       78215108
-         DO 280 K = 1, L                                                78215109
-  280    Z(I,K) = SCALE * Z(I,K)                                        78215110
-C                                                                       78215111
-  290    D(I) = H                                                       78215112
-  300 CONTINUE                                                          78215113
-C                                                                       78215114
-  320 D(1) = 0.0                                                        78215115
-      E(1) = 0.0                                                        78215116
-C     ********** ACCUMULATION OF TRANSFORMATION MATRICES **********     78215117
-      DO 500 I = 1, N                                                   78215118
-         L = I - 1                                                      78215119
-         IF (D(I) .EQ. 0.0) GO TO 380                                   78215120
-C                                                                       78215121
-         DO 360 J = 1, L                                                78215122
-            G = 0.0                                                     78215123
-C                                                                       78215124
-            DO 340 K = 1, L                                             78215125
-  340       G = G + Z(I,K) * Z(K,J)                                     78215126
-C                                                                       78215127
-            DO 360 K = 1, L                                             78215128
-               Z(K,J) = Z(K,J) - G * Z(K,I)                             78215129
-  360    CONTINUE                                                       78215130
-C                                                                       78215131
-  380    D(I) = Z(I,I)                                                  78215132
-         Z(I,I) = 1.0                                                   78215133
-         IF (L .LT. 1) GO TO 500                                        78215134
-C                                                                       78215135
-         DO 400 J = 1, L                                                78215136
-            Z(I,J) = 0.0                                                78215137
-            Z(J,I) = 0.0                                                78215138
-  400    CONTINUE                                                       78215139
-C                                                                       78215140
-  500 CONTINUE                                                          78215141
-C                                                                       78215142
-      RETURN                                                            78215143
-C     ********** LAST CARD OF TRED2 **********                          78215144
-      END                                                               78215145
-C                                                                        TQL2
-C     ------------------------------------------------------------------ TQL2
+      INTEGER I,J,K,L,N,II,NM,JP1
+      REAL A(NM,N),D(N),E(N),Z(NM,N)
+      REAL F,G,H,HH,SCALE
+      DO I = 1, N
+C
+         DO J = 1, I
+            Z(I,J) = A(I,J)
+  100    ENDDO
+  101 ENDDO
+C
+      IF (N .EQ. 1) GO TO 320
+C     ********** FOR I=N STEP -1 UNTIL 2 DO -- **********
+      DO 300 II = 2, N
+         I = N + 2 - II
+         L = I - 2
+         H = 0.0
+         SCALE = 0.0
+         IF (L .LT. 1) GO TO 130
+C     ********** SCALE ROW (ALGOL TOL THEN NOT NEEDED) **********
+         DO K = 1, L
+  120        SCALE = SCALE + ABS(Z(I,K))
+         ENDDO
+C
+         IF (SCALE .NE. 0.0) GO TO 140
+  130    E(I) = Z(I,L+1)
+         GO TO 290
+C
+  140    L = L + 1
+         SCALE = SCALE + ABS(Z(I,L))
+         DO 150 K = 1, L
+            Z(I,K) = Z(I,K) / SCALE
+            H = H + Z(I,K) * Z(I,K)
+  150    CONTINUE
+C
+         F = Z(I,L)
+         G = -SIGN(SQRT(H),F)
+         E(I) = SCALE * G
+         H = H - F * G
+         Z(I,L) = F - G
+         F = 0.0
+C
+         DO 240 J = 1, L
+            Z(J,I) = Z(I,J) / (SCALE * H)
+            G = 0.0
+C     ********** FORM ELEMENT OF A*U **********
+            DO 180 K = 1, J
+  180       G = G + Z(J,K) * Z(I,K)
+C
+            JP1 = J + 1
+            IF (L .LT. JP1) GO TO 220
+C
+            DO 200 K = JP1, L
+  200       G = G + Z(K,J) * Z(I,K)
+C     ********** FORM ELEMENT OF P **********
+  220       E(J) = G / H
+            F = F + E(J) * Z(I,J)
+  240    CONTINUE
+C
+         HH = F / (H + H)
+C     ********** FORM REDUCED A **********
+         DO 260 J = 1, L
+            F = Z(I,J)
+            G = E(J) - HH * F
+            E(J) = G
+C
+            DO 260 K = 1, J
+               Z(J,K) = Z(J,K) - F * E(K) - G * Z(I,K)
+  260    CONTINUE
+C
+         DO 280 K = 1, L
+  280    Z(I,K) = SCALE * Z(I,K)
+C
+  290    D(I) = H
+  300 CONTINUE
+C
+  320 D(1) = 0.0
+      E(1) = 0.0
+C     ********** ACCUMULATION OF TRANSFORMATION MATRICES **********
+      DO 500 I=1, N
+         L = I - 1
+         IF (D(I) .EQ. 0.0) GO TO 380
+
+         DO 360 J = 1, L
+            G = 0.0
+
+            DO 340 K = 1, L
+  340       G = G + Z(I,K) * Z(K,J)
+
+            DO 360 K = 1, L
+               Z(K,J) = Z(K,J) - G * Z(K,I)
+  360    CONTINUE
+
+  380    D(I) = Z(I,I)
+         Z(I,I) = 1.0
+         IF (L .LT. 1) GO TO 500
+
+         DO 400 J = 1, L
+            Z(I,J) = 0.0
+            Z(J,I) = 0.0
+  400    CONTINUE
+  500 CONTINUE
+      RETURN
+
+C     ********** LAST CARD OF TRED2 **********
+      END
+
+C     ------------------------------------------------------------------
 C                                                                        TQL2
       SUBROUTINE TQL2(NM,N,D,E,Z,IERR)                                   TQL2
 C                                                                        TQL2
@@ -751,28 +760,28 @@ C                **********                                              TQL2
       MACHEP = 2.**(-47)                                                 TQL2
 C                                                                        TQL2
       IERR = 0                                                           TQL2
-      IF (N .EQ. 1) GO TO 1001                                           TQL2
+      IF (N .EQ. 1) GO TO 2001                                           TQL2
 C                                                                        TQL2
-      DO 100 I = 2, N                                                    TQL2
-  100 E(I-1) = E(I)                                                      TQL2
+      DO 1100 I = 2, N                                                   TQL2
+ 1100 E(I-1) = E(I)                                                      TQL2
 C                                                                        TQL2
       F = 0.0                                                            TQL2
       B = 0.0                                                            TQL2
       E(N) = 0.0                                                         TQL2
 C                                                                        TQL2
-      DO 240 L = 1, N                                                    TQL2
+      DO 1240 L = 1, N                                                   TQL2
          J = 0                                                           TQL2
          H = MACHEP * (ABS(D(L)) + ABS(E(L)))                            TQL2
          IF (B .LT. H) B = H                                             TQL2
 C     ********** LOOK FOR SMALL SUB-DIAGONAL ELEMENT **********          TQL2
-         DO 110 M = L, N                                                 TQL2
-            IF (ABS(E(M)) .LE. B) GO TO 120                              TQL2
+         DO 1110 M = L, N                                                TQL2
+            IF (ABS(E(M)) .LE. B) GO TO 1120                             TQL2
 C     ********** E(N) IS ALWAYS ZERO, SO THERE IS NO EXIT                TQL2
 C                THROUGH THE BOTTOM OF THE LOOP **********               TQL2
-  110    CONTINUE                                                        TQL2
+ 1110    CONTINUE                                                        TQL2
 C                                                                        TQL2
-  120    IF (M .EQ. L) GO TO 220                                         TQL2
-  130    IF (J .EQ. 30) GO TO 1000                                       TQL2
+ 1120    IF (M .EQ. L) GO TO 1220                                        TQL2
+ 1130    IF (J .EQ. 30) GO TO 2000                                       TQL2
          J = J + 1                                                       TQL2
 C     ********** FORM SHIFT **********                                   TQL2
          L1 = L + 1                                                      TQL2
@@ -782,8 +791,8 @@ C     ********** FORM SHIFT **********                                   TQL2
          D(L) = E(L) / (P + SIGN(R,P))                                   TQL2
          H = G - D(L)                                                    TQL2
 C                                                                        TQL2
-         DO 140 I = L1, N                                                TQL2
-  140    D(I) = D(I) - H                                                 TQL2
+         DO 1140 I = L1, N                                               TQL2
+ 1140    D(I) = D(I) - H                                                 TQL2
 C                                                                        TQL2
          F = F + H                                                       TQL2
 C     ********** QL TRANSFORMATION **********                            TQL2
@@ -792,66 +801,66 @@ C     ********** QL TRANSFORMATION **********                            TQL2
          S = 0.0                                                         TQL2
          MML = M - L                                                     TQL2
 C     ********** FOR I=M-1 STEP -1 UNTIL L DO -- **********              TQL2
-         DO 200 II = 1, MML                                              TQL2
+         DO 1200 II = 1, MML                                             TQL2
             I = M - II                                                   TQL2
             G = C * E(I)                                                 TQL2
             H = C * P                                                    TQL2
-            IF (ABS(P) .LT. ABS(E(I))) GO TO 150                         TQL2
+            IF (ABS(P) .LT. ABS(E(I))) GO TO 1150                        TQL2
             C = E(I) / P                                                 TQL2
             R = SQRT(C*C+1.0)                                            TQL2
             E(I+1) = S * P * R                                           TQL2
             S = C / R                                                    TQL2
             C = 1.0 / R                                                  TQL2
-            GO TO 160                                                    TQL2
-  150       C = P / E(I)                                                 TQL2
+            GO TO 1160                                                   TQL2
+ 1150       C = P / E(I)                                                 TQL2
             R = SQRT(C*C+1.0)                                            TQL2
             E(I+1) = S * E(I) * R                                        TQL2
             S = 1.0 / R                                                  TQL2
             C = C * S                                                    TQL2
-  160       P = C * D(I) - S * G                                         TQL2
+ 1160       P = C * D(I) - S * G                                         TQL2
             D(I+1) = H + S * (C * G + S * D(I))                          TQL2
 C     ********** FORM VECTOR **********                                  TQL2
-            DO 180 K = 1, N                                              TQL2
+            DO 1180 K = 1, N                                             TQL2
                H = Z(K,I+1)                                              TQL2
                Z(K,I+1) = S * Z(K,I) + C * H                             TQL2
                Z(K,I) = C * Z(K,I) - S * H                               TQL2
-  180       CONTINUE                                                     TQL2
+ 1180       CONTINUE                                                     TQL2
 C                                                                        TQL2
-  200    CONTINUE                                                        TQL2
+ 1200    CONTINUE                                                        TQL2
 C                                                                        TQL2
          E(L) = S * P                                                    TQL2
          D(L) = C * P                                                    TQL2
-         IF (ABS(E(L)) .GT. B) GO TO 130                                 TQL2
-  220    D(L) = D(L) + F                                                 TQL2
-  240 CONTINUE                                                           TQL2
+         IF (ABS(E(L)) .GT. B) GO TO 1130                                TQL2
+ 1220    D(L) = D(L) + F                                                 TQL2
+ 1240  CONTINUE                                                          TQL2
 C     ********** ORDER EIGENVALUES AND EIGENVECTORS **********           TQL2
-      DO 300 II = 2, N                                                   TQL2
+      DO 1300 II = 2, N                                                  TQL2
          I = II - 1                                                      TQL2
          K = I                                                           TQL2
          P = D(I)                                                        TQL2
 C                                                                        TQL2
-         DO 260 J = II, N                                                TQL2
-            IF (D(J) .GE. P) GO TO 260                                   TQL2
+         DO 1260 J = II, N                                               TQL2
+            IF (D(J) .GE. P) GO TO 1260                                  TQL2
             K = J                                                        TQL2
             P = D(J)                                                     TQL2
-  260    CONTINUE                                                        TQL2
+ 1260    CONTINUE                                                        TQL2
 C                                                                        TQL2
-         IF (K .EQ. I) GO TO 300                                         TQL2
+         IF (K .EQ. I) GO TO 1300                                        TQL2
          D(K) = D(I)                                                     TQL2
          D(I) = P                                                        TQL2
 C                                                                        TQL2
-         DO 280 J = 1, N                                                 TQL2
+         DO 1280 J = 1, N                                                TQL2
             P = Z(J,I)                                                   TQL2
             Z(J,I) = Z(J,K)                                              TQL2
             Z(J,K) = P                                                   TQL2
-  280    CONTINUE                                                        TQL2
+ 1280    CONTINUE                                                        TQL2
 C                                                                        TQL2
-  300 CONTINUE                                                           TQL2
+ 1300 CONTINUE                                                           TQL2
 C                                                                        TQL2
-      GO TO 1001                                                         TQL2
+      GO TO 2001                                                         TQL2
 C     ********** SET ERROR -- NO CONVERGENCE TO AN                       TQL2
 C                EIGENVALUE AFTER 30 ITERATIONS **********               TQL2
- 1000 IERR = L                                                           TQL2
- 1001 RETURN                                                             TQL2
+ 2000 IERR = L                                                           TQL2
+ 2001 RETURN                                                             TQL2
 C     ********** LAST CARD OF TQL2 **********                            TQL2
       END                                                                TQL2
