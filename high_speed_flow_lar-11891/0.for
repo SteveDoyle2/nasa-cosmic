@@ -96,15 +96,15 @@ C*IBM REAL*8 CPNTNM,COMPNM,ARCNAM,PNTNAM,BLANK2,ZMAPNM,ARCNM
       DIMENSION SHAPE(4)
       DIMENSION TYPE(5),ASPEC(2),ISET(2)
       DIMENSION PNTNAM(3),ARCNM(2)
-      DATA SHAPE(1)/4HLINE/,SHAPE(2)/4HCIRC/,SHAPE(3)/4HELLI/ 
-      DATA SHAPE(4)/4HELLO/ 
-      DATA TYPE(1)/4HPIEC/,TYPE(2)/4HFLIN/,TYPE(3)/4HALIN/
-      DATA TYPE(4)/4HPATC/,TYPE(5)/4HFILE/
-      DATA BLANK2/8H        / 
-      DATA AY/1HY/,AZ/1HZ/,AH/1HH/,AB/1H /,BEE/1HB/,TEE/1HT/
-      KCOMP=0 
-      KCPNT=0 
-C     IFLT=-1 
+      DATA SHAPE(1)/'LINE'/,SHAPE(2)/'CIRC'/,SHAPE(3)/'ELLI'/ 
+      DATA SHAPE(4)/'ELLO'/ 
+      DATA TYPE(1)/'PIEC'/,TYPE(2)/'FLIN'/,TYPE(3)/'ALIN'/
+      DATA TYPE(4)/'PATC'/,TYPE(5)/'FILE'/
+      DATA BLANK2/'        '/ 
+      DATA AY/'Y'/,AZ/'Z'/,AH/'H'/,AB/' '/,BEE/'B'/,TEE/'T'/
+      KCOMP=0
+      KCPNT=0
+C     IFLT=-1
 C*****   SET BLANK AS FIRST CODE WORD IN CONTROL POINT NAME TABLE 
       CALL DSETUP(CPNTNM,KCPNT,BLANK2,IDUMY,INEW) 
       READ(IREAD,1)NCSM 
@@ -200,11 +200,11 @@ C*IBM REAL*8 CPNTNM,COMPNM,ARCNAM,PNTNAM,BLANK2,ZMAPNM,ARCNM
       DIMENSION SHAPE(4)
       DIMENSION TYPE(5) 
       DIMENSION PNTNAM(3),ARCNM(2)
-      DATA SHAPE(1)/4HLINE/,SHAPE(2)/4HCIRC/,SHAPE(3)/4HELLI/ 
-      DATA SHAPE(4)/4HELLO/ 
-      DATA TYPE(1)/4HPIEC/,TYPE(2)/4HFLIN/,TYPE(3)/4HALIN/
-      DATA TYPE(4)/4HPATC/,TYPE(5)/4HFILE/
-      DATA BLANK2/8H        / 
+      DATA SHAPE(1)/'LINE'/,SHAPE(2)/'CIRC'/,SHAPE(3)/'ELLI'/ 
+      DATA SHAPE(4)/'ELLO'/ 
+      DATA TYPE(1)/'PIEC'/,TYPE(2)/'FLIN'/,TYPE(3)/'ALIN'/
+      DATA TYPE(4)/'PATC'/,TYPE(5)/'FILE'/
+      DATA BLANK2/'        '/ 
       WRITE(IRITE,7)VTITLE
     7 FORMAT(1X,15A4) 
       WRITE(IRITE,8)
@@ -1142,8 +1142,8 @@ C*IBM REAL*8 XLAB,HLAB,GLAB(9),DLAB(17)
      3DLAB(13)/8H  RXH   /, 
      4DLAB(14)/8H RXSUBH /, 
      5DLAB(15)/8H DXSUBH /, 
-     6XLAB/8HSTATION /, 
-     7HLAB/8H  THETA /, 
+     6XLAB/'STATION '/, 
+     7HLAB/''  THETA /, 
      8DLAB(16)/8H ZXMAP  /, 
      9DLAB(17)/8H ZXXMAP /
       IFMT=33 
@@ -1273,62 +1273,62 @@ C*IBM REAL*8 GLAB(9),DLAB(17),XLAB,HLAB
 C*IBM REAL*8 ZLAB(9),CLAB(14) 
       DIMENSION GLAB(9),DLAB(17),ZLAB(9),CLAB(14) 
       DATA HEPSIL/.00001/ 
-      DATA GLAB(1)/8H  THETA /, 
-     1GLAB(2)/8H RADIUS /,
-     2GLAB(3)/8H THETAG /,
-     3GLAB(4)/8H  RAD-G /,
-     4GLAB(5)/8H Y-CORD /,
-     5GLAB(6)/8H Z-CORD /,
-     6GLAB(7)/8H ZGCORD /,
-     7GLAB(8)/8H X-CORD /,
-     8GLAB(9)/8H  ZMAP  / 
+      DATA GLAB(1)/'  THETA '/, 
+     1GLAB(2)/' RADIUS '/,
+     2GLAB(3)/' THETAG '/,
+     3GLAB(4)/'  RAD-G '/,
+     4GLAB(5)/' Y-CORD '/,
+     5GLAB(6)/' Z-CORD '/,
+     6GLAB(7)/' ZGCORD '/,
+     7GLAB(8)/' X-CORD '/,
+     8GLAB(9)/'  ZMAP  '/ 
       DATA DLAB(1)/8H   RX   /, 
-     1DLAB(2)/8H   RH   /,
-     2DLAB(3)/8H  RSUBX /,
-     3DLAB(4)/8H  RSUBH /,
-     4 DLAB(5)/8H  DSUBX /, 
-     5DLAB(6)/8H  DSUBH /,
-     6DLAB(7)/8H  RXX   /,
-     7DLAB(8)/8H RXSUBX /,
-     8DLAB(9)/8H DXSUBX / 
-      DATA DLAB(10)/8H RSUBXX /,
-     1DLAB(11)/8H DSUBXX /, 
-     2DLAB(12)/8H  DXX   /, 
-     3DLAB(13)/8H  RXH   /, 
-     4DLAB(14)/8H RXSUBH /, 
-     5DLAB(15)/8H DXSUBH /, 
-     6XLAB/8HSTATION /, 
-     7HLAB/8H  THETA /, 
-     8DLAB(16)/8H ZXMAP  /, 
-     9DLAB(17)/8H ZXXMAP /
+     1DLAB(2)/'   RH   '/,
+     2DLAB(3)/'  RSUBX '/,
+     3DLAB(4)/'  RSUBH '/,
+     4DLAB(5)/'  DSUBX '/, 
+     5DLAB(6)/'  DSUBH '/,
+     6DLAB(7)/'  RXX   '/,
+     7DLAB(8)/' RXSUBX '/,
+     8DLAB(9)/' DXSUBX '/ 
+      DATA DLAB(10)/,' RSUBXX '/,
+     1DLAB(11)/' DSUBXX '/, 
+     2DLAB(12)/'  DXX   '/, 
+     3DLAB(13)/'  RXH   '/, 
+     4DLAB(14)/' RXSUBH '/, 
+     5DLAB(15)/' DXSUBH '/, 
+     6XLAB/'STATION '/, 
+     7HLAB/'  THETA '/, 
+     8DLAB(16)/' ZXMAP  '/, 
+     9DLAB(17)/' ZXXMAP '/
       DATA
-     1ZLAB(1)/8H  ZBCL  /,
-     2ZLAB(2)/8H ZBCLX  /,
-     3ZLAB(3)/8H ZBCLXX /,
-     4ZLAB(4)/8H  ZTCL  /,
-     5ZLAB(5)/8H ZTCLX  /,
-     6ZLAB(6)/8H ZTCLXX /,
-     7ZLAB(7)/8H  ZMAP  /,
-     8ZLAB(8)/8H ZMAPX  /,
-     9ZLAB(9)/8H ZMAPXX / 
+     1ZLAB(1)/'  ZBCL  '/,
+     2ZLAB(2)/' ZBCLX  '/,
+     3ZLAB(3)/' ZBCLXX '/,
+     4ZLAB(4)/'  ZTCL  '/,
+     5ZLAB(5)/' ZTCLX  '/,
+     6ZLAB(6)/' ZTCLXX '/,
+     7ZLAB(7)/'  ZMAP  '/,
+     8ZLAB(8)/' ZMAPX  '/,
+     9ZLAB(9)/' ZMAPXX '/ 
       PI=3.14159265358979 
       PIHALF=PI/2.
       PIOVR4=PI/4.
       DATA
-     1CLAB(1)/8HU/THETA1/,
-     2CLAB(2)/8HU/THETA2/,
-     3CLAB(3)/8H   RO   /,
-     4CLAB(4)/8H  ROX   /,
-     5CLAB(5)/8H  ROXX  /,
-     6CLAB(6)/8H   HO   /,
-     7CLAB(7)/8H  HOX   /,
-     8CLAB(8)/8H  HOXX  /,
-     9CLAB(9)/8H   AA   /,
-     ACLAB(10)/8H  AAX   /, 
-     BCLAB(11)/8H  AAXX  /, 
-     CCLAB(12)/8H   BB   /, 
-     DCLAB(13)/8H  BBX   /, 
-     ECLAB(14)/8H  BBXX  /
+     1CLAB(1)/'U/THETA1'/,
+     2CLAB(2)/'U/THETA2'/,
+     3CLAB(3)/'   RO   '/,
+     4CLAB(4)/'  ROX   '/,
+     5CLAB(5)/'  ROXX  '/,
+     6CLAB(6)/'   HO   '/,
+     7CLAB(7)/'  HOX   '/,
+     8CLAB(8)/'  HOXX  '/,
+     9CLAB(9)/'   AA   '/,
+     ACLAB(10)/'  AAX   '/, 
+     BCLAB(11)/'  AAXX  '/, 
+     CCLAB(12)/'   BB   '/, 
+     DCLAB(13)/'  BBX   '/, 
+     ECLAB(14)/'  BBXX  '/
       RTOD=57.29577951
       DTOR=.0174532925
       HNOWR=0.
@@ -1422,34 +1422,34 @@ C***********************************************************************
       DIMENSION ZMAP(101),ZXMAP(101),ZXXMAP(101)
 C*IBM REAL*8 XLAB,HLAB,GLAB(9),DLAB(17) 
       DIMENSION GLAB(9),DLAB(17)
-      DATA GLAB(1)/8H  THETA /, 
-     1GLAB(2)/8H RADIUS /,
-     2GLAB(3)/8H THETAG /,
-     3GLAB(4)/8H  RAD-G /,
-     4GLAB(5)/8H Y-CORD /,
-     5GLAB(6)/8H Z-CORD /,
-     6GLAB(7)/8H ZGCORD /,
-     7GLAB(8)/8H X-CORD /,
-     8GLAB(9)/8H  ZMAP  / 
-      DATA DLAB(1)/8H   RX   /, 
-     1DLAB(2)/8H   RH   /,
-     2DLAB(3)/8H  RSUBX /,
-     3DLAB(4)/8H  RSUBH /,
-     4 DLAB(5)/8H  DSUBX /, 
-     5DLAB(6)/8H  DSUBH /,
-     6DLAB(7)/8H  RXX   /,
-     7DLAB(8)/8H RXSUBX /,
-     8DLAB(9)/8H DXSUBX / 
-      DATA DLAB(10)/8H RSUBXX /,
-     1DLAB(11)/8H DSUBXX /, 
-     2DLAB(12)/8H  DXX   /, 
-     3DLAB(13)/8H  RXH   /, 
-     4DLAB(14)/8H RXSUBH /, 
-     5DLAB(15)/8H DXSUBH /, 
-     6XLAB/8HSTATION /, 
-     7HLAB/8H  THETA /, 
-     8DLAB(16)/8H ZXMAP  /, 
-     9DLAB(17)/8H ZXXMAP /
+      DATA GLAB(1)/'  THETA '/, 
+     1GLAB(2)/' RADIUS '/,
+     2GLAB(3)/' THETAG '/,
+     3GLAB(4)/'  RAD-G '/,
+     4GLAB(5)/' Y-CORD '/,
+     5GLAB(6)/' Z-CORD '/,
+     6GLAB(7)/' ZGCORD '/,
+     7GLAB(8)/' X-CORD '/,
+     8GLAB(9)/'  ZMAP  '/ 
+      DATA DLAB(1)/'   RX   '/, 
+     1DLAB(2)/'   RH   '/,
+     2DLAB(3)/'  RSUBX '/,
+     3DLAB(4)/'  RSUBH '/,
+     4 DLAB(5)/'  DSUBX '/, 
+     5DLAB(6)/'  DSUBH '/,
+     6DLAB(7)/'  RXX   '/,
+     7DLAB(8)/' RXSUBX '/,
+     8DLAB(9)/' DXSUBX '/ 
+      DATA DLAB(10)/' RSUBXX' /,
+     1DLAB(11)/' DSUBXX '/, 
+     2DLAB(12)/'  DXX   '/, 
+     3DLAB(13)/'  RXH   '/, 
+     4DLAB(14)/' RXSUBH '/, 
+     5DLAB(15)/' DXSUBH '/, 
+     6XLAB/'STATION '/, 
+     7HLAB/'  THETA '/, 
+     8DLAB(16)/' ZXMAP  '/, 
+     9DLAB(17)/' ZXXMAP '/
       IFMT=33 
       PI=3.14159265358979 
       PIHALF=PI/2.
@@ -1545,19 +1545,19 @@ C***********************************************************************
       COMMON/NORML/UNX,UNY,UNZ
 C*IBM REAL*8 XLAB,GLAB(9),NLAB(3) 
       DIMENSION GLAB(9),NLAB(3) 
-      DATA XLAB/8HSTATION / 
-      DATA NLAB(1)/8H NORM-X /, 
-     1     NLAB(2)/8H NORM-Y /, 
-     2     NLAB(3)/8H NORM-Z /
-      DATA GLAB(1)/8H  THETA /, 
-     1GLAB(2)/8H RADIUS /,
-     2GLAB(3)/8H THETAG /,
-     3GLAB(4)/8H  RAD-G /,
-     4GLAB(5)/8H Y-CORD /,
-     5GLAB(6)/8H Z-CORD /,
-     6GLAB(7)/8H ZGCORD /,
-     7GLAB(8)/8H X-CORD /,
-     8GLAB(9)/8H  ZMAP  / 
+      DATA XLAB/'STATION '/ 
+      DATA NLAB(1)/' NORM-X '/, 
+     1     NLAB(2)/' NORM-Y '/, 
+     2     NLAB(3)/' NORM-Z '/
+      DATA GLAB(1)/'  THETA '/, 
+     1GLAB(2)/' RADIUS '/,
+     2GLAB(3)/' THETAG '/,
+     3GLAB(4)/'  RAD-G '/,
+     4GLAB(5)/' Y-CORD '/,
+     5GLAB(6)/' Z-CORD '/,
+     6GLAB(7)/' ZGCORD '/,
+     7GLAB(8)/' X-CORD '/,
+     8GLAB(9)/'  ZMAP  '/ 
       IFMT=33 
       RTOD=57.29577951
       DTOR=.0174532925
@@ -2920,10 +2920,10 @@ C*****     SOLVE FOR RADIUS ( R ) AS A FUNCTION OF THETA ( H )
      1AA,BB,RO,HO 
       IF(RFACT.LT.0..AND.IRITE.NE.ICRITE) WRITE(ICRITE,101) RFACT,X,
      1MODEL,INXARC,H,R,RA,RB,AA,BB,RO,HO
-  101 FORMAT(/41H CSCALC:  SQRT TAKEN OF NEGATIVE NUMBER (,F10.4, 
-     116H) FOR ELLIPSE AT,/5H X = ,F10.5,11H  ON MODEL ,I2,7H , ARC , 
-     2I2,14H , AT THETA = ,F10.4,20H WITH RESULT -- R = ,F10.4, 
-     3/21H RA,RB,AA,BB,RO,HO = ,6F12.4) 
+  101 FORMAT(/'41H CSCALC:  SQRT TAKEN OF NEGATIVE NUMBER (',F10.4, 
+     116H) FOR ELLIPSE AT,/' X = ',F10.5,'  ON MODEL ',I2,' , ARC ', 
+     2I2,' , AT THETA = ',F10.4,' WITH RESULT -- R = ',F10.4, 
+     3/' RA,RB,AA,BB,RO,HO = ',6F12.4) 
  1500 CONTINUE
       IF(NDERV.EQ.0) GO TO 5000 
 C*****    SET UP FOR DERIVATIVE CALCULATIONS
