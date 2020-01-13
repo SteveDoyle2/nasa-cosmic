@@ -217,7 +217,8 @@ C        SELECTED DEFAULT VALUES.                                       S1041   
       IRCDGR=0                                                          S1041      190
       NCODE=0                                                           S1041      191
       JTCODE=0                                                          S1041      192
-      ISOT=ISTP=1                                                       S1041      193
+      ISOT=1                                                            S1041
+      ISTP=1                                                            S1041
       IROT=0                                                            S1041      194
       IBAL=0                                                            S1041      195
       ISEARCH=0                                                         S1041      196
@@ -233,7 +234,10 @@ C        SELECTED DEFAULT VALUES.                                       S1041   
       DTFAR=2.0                                                         S1041      206
       ATRTOT=0.0                                                        S1041      207
       ATRDT=0.0                                                         S1041      208
-      S=ESF=WOSSLS=TOWSLS=0.0                                           S1041      209
+      S=0.0                                                             S1041
+      ESF=0.0                                                           S1041
+      WOSSLS=0.0                                                        S1041
+      TOWSLS=0.0                                                        S1041
       DCBLIMH=700.                                                      S1041      210
       REFRHO=.00237689                                                  S1041      211
       CONV1=6076.                                                       S1041      212
@@ -252,13 +256,30 @@ C        SELECTED DEFAULT VALUES.                                       S1041   
 C        ZERO SUMMARY ARRAYS.                                           S1041      225
       IPA=0                                                             S1041      226
       DO 52 JS=1,20                                                     S1041      227
-      CE(JS)=CA(JS)=0.0                                                 S1041      228
+      CE(JS)=0.0                                                        S1041
+      CA(JS)=0.0                                                        S1041 
    52 CONTINUE                                                          S1041      229
       DO 10 IS=1,50                                                     S1041      230
-      C1(IS)=C2(IS)=C3(IS)=C4(IS)=C5(IS)=0.0                            S1041      231
-      C6(IS)=C7(IS)=C8(IS)=C9(IS)=C10(IS)=0.0                           S1041      232
-      C11(IS)=C12(IS)=C13(IS)=C14(IS)=C15(IS)=0.0                       S1041      233
-      C16(IS)=C17(IS)=C18(IS)=C19(IS)=C20(IS)=0.0                       S1041      234
+      C1(IS)=0.0                                                        S1041
+      C2(IS)=0.0                                                        S1041
+      C3(IS)=0.0                                                        S1041
+      C4(IS)=0.0                                                        S1041
+      C5(IS)=0.0                                                        S1041                  
+      C6(IS)=0.0                                                        S1041
+      C7(IS)=0.0                                                        S1041
+      C8(IS)=0.0                                                        S1041
+      C9(IS)=0.0                                                        S1041
+      C10(IS)=0.0                                                       S1041             
+      C11(IS)=0.0                                                       S1041
+      C12(IS)=0.0                                                       S1041
+      C13(IS)=0.0                                                       S1041
+      C14(IS)=0.0                                                       S1041
+      C15(IS)=0.0                                                       S1041                       
+      C16(IS)=0.0                                                       S1041
+      C17(IS)=0.0                                                       S1041
+      C18(IS)=0.0                                                       S1041
+      C19(IS)=0.0                                                       S1041
+      C20(IS)=0.0                                                       S1041                       
    10 CONTINUE                                                          S1041      235
       IF(ISIN.EQ.2) GO TO 151                                           S1041      236
 C       DEFAULT NAMELIST ITEMS IN FPS UNITS.                            S1041      237
@@ -455,8 +476,19 @@ C     ASPARE(1)=TOW 10 / TOW 8                                          S1041   
      17.2,2X,4H****,50X,5H F104//)                                      S1041      428
   106 IF(NCODE.EQ.0) GO TO 150                                          S1041      429
       DO 148 IB=1,60                                                    S1041      430
-      ET(IB)=EH(IB)=EX(IB)=EV(IB)=EG(IB)=EA(IB)=EW(IB)=EF(IB)=0.0       S1041      431
-      ECL(IB)=ELD(IB)=EDG(IB)=ETN(IB)=ESP(IB)=0.0                       S1041      432
+      ET(IB)=0.0
+      EH(IB)=0.0
+      EX(IB)=0.0
+      EV(IB)=0.0
+      EG(IB)=0.0
+      EA(IB)=0.0
+      EW(IB)=0.0
+      EF(IB)=0.0                                                        S1041      431
+      ECL(IB)=0.0
+      ELD(IB)=0.0
+      EDG(IB)=0.0
+      ETN(IB)=0.0
+      ESP(IB)=0.0                                                       S1041      432
   148 CONTINUE                                                          S1041      433
   150 IF(ILAND.EQ.2) GO TO 700                                          S1041      434
  1005 IR=IR+1                                                           S1041      435
@@ -465,9 +497,12 @@ C     ASPARE(1)=TOW 10 / TOW 8                                          S1041   
       IF(IR.GE.2.AND.IROT.EQ.0) GO TO 700                               S1041      438
       IF(VROTKT(IR).EQ.0.0) GO TO 700                                   S1041      439
       IF(IR.EQ.10) GO TO 700                                            S1041      440
- 1006 SVLOF=SWLOF=0.0                                                   S1041      441
-      SVOBS=SWOBS=0.0                                                   S1041      442
-      VLOF=VOBS=0.0                                                     S1041      443
+ 1006 SVLOF=0.0
+      SWLOF=0.0                                                
+      SVOBS=0.0
+      SWOBS=0.0                                                 
+      VLOF=0.0
+      VOBS=0.0                                                   
       DOBX115=0.0                                                       S1041      444
       ICBDIST=0                                                         S1041      445
       CBALT=SCBALT                                                      S1041      446
@@ -546,7 +581,10 @@ C                                                                       S1041   
       ICBCT=0                                                           S1041      519
       IFLAP=0                                                           S1041      520
       IGRW=0                                                            S1041      521
-      IQ1=IQ2=IQ3=IQ4=0                                                 S1041      522
+      IQ1=0
+      IQ2=0
+      IQ3=0
+      IQ4=0                                                             S1041      522
       IATR=0                                                            S1041      523
       KPRINT=1                                                          S1041      524
       DISTPLT=0.0                                                       S1041      525
@@ -587,7 +625,9 @@ C                                                                       S1041   
       WRITE(6,161) TOT                                                  S1041      560
   161 FORMAT(4X,12HQANT4 AT 161,2X,4HTOT=F6.4)                          S1041      561
       IQ1=1                                                             S1041      562
-      IQ2=IQ3=IQ4=0                                                     S1041      563
+      IQ2=0
+      IQ3=0
+      IQ4=0                                                             S1041      563
   162 CONTINUE                                                          S1041      564
       IF(ISPARE(3).NE.0) WRITE(6,126) FLAPT(1)                          S1041      565
   126 FORMAT(2X,43H****  MODIFIED FLAP SCHEDULE, INITIAL FLAP=F6.2,     S1041      566
@@ -787,7 +827,9 @@ C        AT LAST ALTITUDE COMPUTE CBPERT FOR CUTBACK GRADIENT.          S1041   
       WRITE(6,163) TOT                                                  S1041      760
   163 FORMAT(4X,12HQANT4 AT 163,2X,4HTOT=F6.4)                          S1041      761
       IQ2=1                                                             S1041      762
-      IQ1=IQ3=IQ4=0                                                     S1041      763
+      IQ1=0
+      IQ3=0
+      IQ4=0                                                             S1041      763
   164 CONTINUE                                                          S1041      764
       AMACH=MACH(K)                                                     S1041      765
       CALL CUTBACK                                                      S1041      766
@@ -887,9 +929,11 @@ C      ONE CALL TO QANT4 ASSUMES FAILING ENG. IS OPERATING AT ATR ALSO. S1041   
       IF(LOC.EQ.1000) GO TO 146                                         S1041      860
       IF(ISPARE(7).EQ.0.OR.IQ3.EQ.1) GO TO 166                          S1041      861
       WRITE(6,165) TOT                                                  S1041      862
-  165 FORMAT(4X,12HQANT4 AT 165,2X,4HTOT=F6.4)                          S1041      863
+  165 FORMAT(4X,12HQANT4 AT 165,2X,'TOT=',F6.4)                         S1041      863
       IQ3=1                                                             S1041      864
-      IQ1=IQ2=IQ4=0                                                     S1041      865
+      IQ1=0
+      IQ2=0
+      IQ4=0                                                             S1041      865
   166 CONTINUE                                                          S1041      866
       AMACH=MACH(K)                                                     S1041      867
       HALT=H(K)                                                         S1041      868
@@ -920,7 +964,9 @@ C        SET UP 100 PERCENT REF. FOR C/B THRUST.                        S1041   
       WRITE(6,167) TOT                                                  S1041      893
   167 FORMAT(4X,12HQANT4 AT 167,2X,4HTOT=F6.4)                          S1041      894
       IQ4=1                                                             S1041      895
-      IQ1=IQ2=IQ3=0                                                     S1041      896
+      IQ1=0
+      IQ2=0
+      IQ3=0                                                             S1041      896
   168 CONTINUE                                                          S1041      897
       AMACH=MACH(K)                                                     S1041      898
       IF(JCODE.NE.7) GO TO 510                                          S1041      899
@@ -1139,7 +1185,10 @@ C      FORCE DTASS TO MEET ALPHA                                        S1041   
       IF(IGAMLIM.GE.1.AND.GAMLIM.LT.49.) GAMMA(K)=GAMLIM                S1041     1112
       IF(GAMMA(K).LE.GAMLIM) GO TO 243                                  S1041     1113
       IF(H(K).GT.((1.0+TLHOBS)*HOBS)) GO TO 243                         S1041     1114
-      IF(GAMLIM.LT.49.) IGAMLIM=IGAMLIM=1                               S1041     1115
+      IF(GAMLIM.LT.49.) THEN
+        IGAMLIM=1
+        IGAMLIM=1
+      END IF
       IF(IGAMLIM.LT.5) GO TO 242                                        S1041     1116
       WRITE(6,241) K,H(K)                                               S1041     1117
   241 FORMAT(6X,10H*** AT PT.,I3,2X,5HH(K)=F10.2,2X,                    S1041     1118
@@ -1644,7 +1693,7 @@ C      LCODE=2, EQUATIONS FOR DELVEL DURING LIFTOFF TO HOBS             S1041   
    50 DELVEL=VSTEP2*CONV3                                               S1041     1617
       IF(ICODE.EQ.1) GO TO 84                                           S1041     1618
       IF(ICODE.EQ.3) GO TO 56                                           S1041     1619
-      IF(ALPHA(K).NE.ALFROT) GO TO 58                                   S1041     1620
+      IF(alpha(K).NE.ALFROT) GO TO 58                                   S1041     1620
       ICODE=3                                                           S1041     1621
    58 DTASS=DELVEL/(TACC(K)*GZERO)                                      S1041     1622
       IF(ICODE.EQ.3) GO TO 56                                           S1041     1623
@@ -1900,7 +1949,13 @@ C        INTERPOLATE FOR VFAILKT FOR UNBAL=0.0                          S1041   
       IF(C10(IPA).NE.0.0) C10(IPA)=-1.0*C10(IPA)                        S1041     1873
       IF(C10(IPA).EQ.0.0) C10(IPA)=-1.0                                 S1041     1874
       IF(ISEARCH.NE.2)GO TO 80                                          S1041     1875
-      C6(IPA)=C7(IPA)=C8(IPA)=C9(IPA)=C16(IPA)=C11(IPA)=C12(IPA)=0.0    S1041     1876
+      C6(IPA)=0.0
+      C7(IPA)=0.0
+      C8(IPA)=0.0
+      C9(IPA)=0.0
+      C16(IPA)=0.0
+      C11(IPA)=0.0
+      C12(IPA)=0.0                                                      S1041     1876
       GO TO 810                                                         S1041     1877
   920 IF(IBAL.LE.1) GO TO 80                                            S1041     1878
       WRITE(6,4015)                                                     S1041     1879
@@ -1985,7 +2040,9 @@ C       CALC. FLARE TO ST. OF GROUND ROLL.                              S1041   
       V(1)=APVKT2*CONV3                                                 S1041     1958
 C         AT THIS LOCATION, INSERT MORE DETAILED VERSION                S1041     1959
 C          (WITH FLARE, TOUCHDOWN, ROTATE)  LATER.                      S1041     1960
-      APPRDX=APPRDT=APPRRS=0.0                                          S1041     1961
+      APPRDX=0.0
+      APPRDT=0.0
+      APPRRS=0.0 
       IF(GLIDE2.EQ.0.0) GO TO 715                                       S1041     1962
       APPRDX=HOBSL/TAN(GLIDE2/57.2958)                                  S1041     1963
       APPRRS=V(1)*SIN(GLIDE2/57.2958)                                   S1041     1964
@@ -1999,7 +2056,10 @@ C          (WITH FLARE, TOUCHDOWN, ROTATE)  LATER.                      S1041   
       DIST(1)=APPRDX                                                    S1041     1972
       TIME(1)=APPRDT                                                    S1041     1973
       ALPHA(1)=ALFROLL                                                  S1041     1974
-      TACC(1)=NACC(1)=TFF(1)=GAMMA(1)=0.0                               S1041     1975
+      TACC(1)=0.0
+      NACC(1)=0.0
+      TFF(1)=0.0
+      GAMMA(1)=0.0                                                      S1041     1975
       JCODE=1                                                           S1041     1976
       JTCODE=0                                                          S1041     1977
       ICODE=10                                                          S1041     1978
@@ -2055,19 +2115,19 @@ C        WRITE SUMMARY ARRAYS.                                          S1041   
       WRITE(6,5) WHAT,TODAY                                             S1041     2028
       WRITE(6,2002) FICASE-1.000                                        S1041     2029
 C        CASE SUMMARY IS NEAR .1858                                     S1041     2030
- 2002 FORMAT(25X,30HSUMMARY OF TAKEOFF RESULTS FOR,F6.0,6H CASES//      S1041     2031
-     13X,37HCASE   GW    W/S   T/W  TOFLP  VROT  ,                      S1041     2032
+ 2002 FORMAT(25X,'SUMMARY OF TAKEOFF RESULTS FOR',F6.0,6H CASES//       S1041     2031
+     13X,'CASE   GW    W/S   T/W  TOFLP  VROT  ',                       S1041     2032
      226HALROT  VLOF  ALLOF  VOBS  ,                                    S1041     2033
      332HTO F.L. VFAIL  BALF.L. FARF.L.  ,                              S1041     2034
      432HH,C/B  D,C/B  V,C/B T/TNOR H,3.5)                              S1041     2035
       IF(ISOT.EQ.1) WRITE(6,2001)                                       S1041     2036
- 2001 FORMAT(8X,120HLBF/K   PSF    -    DEG    KT    DEG    KT    DEG   S1041     2037
-     1 KT     FT     KT      FT      FT       FT    FT     KT     -     S1041     2038
-     2FT)                                                               S1041     2039
+ 2001 FORMAT(8X,'LBF/K   PSF    -    DEG    KT    DEG    KT    DEG    ' S1041     2037
+     1 'KT     FT     KT      FT      FT       FT    FT     KT     -  ' S1041     2038
+     2 '   FT)')                                                        S1041     2039
       IF(ISOT.EQ.2) WRITE(6,2003)                                       S1041     2040
- 2003 FORMAT(10X,117HKN    KPA    -    DEG   M/S    DEG   M/S    DEG   MS1041     2041
-     1/S      M     M/S       M       M       M     M    M/S     -     MS1041     2042
-     2)                                                                 S1041     2043
+ 2003 FORMAT(10X,'KN    KPA    -    DEG   M/S    DEG   M/S    DEG   '   S1041     2041
+     c 'M1/S      M     M/S       M       M       M     M    M/S     '  S1041     2042
+     c  '-     M2)')                                                    S1041     2043
       WRITE(6,2005)                                                     S1041     2044
  2005 FORMAT(22X,3H(1),23X,23H(2)   (2)    (2)    (3),                  S1041     2045
      114H    (4)    (5),41X,3H(6))                                      S1041     2046
@@ -2340,7 +2400,8 @@ C         COMPUTE EVENTS FROM FAILURE POINT                             S1041   
       EVENT(8)=EVENT(4)+DTTR                                            S1041     2259
       EVENT(9)=EVENT(4)+DTTR+TRDT/2.0                                   S1041     2260
       EVENT(10)=EVENT(4)+DTTR+TRDT                                      S1041     2261
-      EVENT(11)=EVENT(12)=0.0                                           S1041     2262
+      EVENT(11)=0.0                                                     S1041
+      EVENT(12)=0.0                                                     S1041                         
       DO 902 NE=1,11                                                    S1041     2263
       JE=NE+1                                                           S1041     2264
       DO 902 ME=JE,12                                                   S1041     2265
@@ -2383,7 +2444,7 @@ C        EVENTS (NON-ZERO, NON-RECURRING) NOW IN ORDER                  S1041   
   850 FORMAT(4X,33HREFTM IS TIME INTERVAL IN SECONDS,                   S1041     2302
      122H FROM START OF ROLL (=,F6.2,3H ).)                             S1041     2303
   852 WRITE(6,907) REFTM,DELTIME                                        S1041     2304
-  907 FORMAT(24X,6HREFTM=F8.4,4X,8HDELTIME=F8.4,58X,6H  F907)           S1041     2305
+  907 FORMAT(24X,'REFTM=',F8.4,4X,'DELTIME=',F8.4,58X,'  F907')         S1041
   908 ALPHA(K)=ALPHA(L)                                                 S1041     2306
       LSAVE=L                                                           S1041     2307
       KSAVE=K                                                           S1041     2308
@@ -2722,7 +2783,8 @@ C                                                                       S1041   
 C        COMPUTE 1ST AND 2ND SEGMENT ENGINE OUT CLIMB GRADIENTS         S1041     2614
       IGRAD=1                                                           S1041     2615
       MISGRAD=0                                                         S1041     2616
-      C1STGR=C2NDGR=0.0                                                 S1041     2617
+      C1STGR=0.0                                                        S1041
+      C2NDGR=0.0                                                        S1041                      
       IGRDCAL=1                                                         S1041     2618
       IF(VLOF.LE.0.0) GO TO 70                                          S1041     2619
       V(K)=VLOF                                                         S1041     2620
@@ -3636,7 +3698,9 @@ C                                                                       S1041   
       REAL MENGT,MPENGT1                                                S1041     3447
 C                                                                       S1041     3448
 C                                                                       S1041     3449
-      NEIM=NEJM=NPJM=5                                                  S1041     3450
+      NEIM=5
+      NEJM=5
+      NPJM=5                                                            S1041     3450
       NPIM=10                                                           S1041     3451
       DO 2 J=1,NEJM                                                     S1041     3452
       MENGT(J)=0.0                                                      S1041     3453
@@ -3938,7 +4002,8 @@ C  AS OF 12/78, BEING USED TO CALC. FULL G.E.POLARS, DEYOUNG/AST        S1041   
       PHI=1.-1./DNOM                                                    S1041     3695
                                                                         S1041     3696
       DO 10 I=1,NTOP                                                    S1041     3697
-      TALPTOG(I,J)=ALF=TALPHTO(I,J)                                     S1041     3698
+      TALPTOG(I,J)=TALPHTO(I,J)
+      ALF=TALPHTO(I,J)                                                  S1041     3698
       D=(ALF-ALFMIN)*RAD                                                S1041     3699
       CL=TCLTO(I,J)                                                     S1041     3700
       CD1=CDMIN+D*(CL-CLMIN)                                            S1041     3701
