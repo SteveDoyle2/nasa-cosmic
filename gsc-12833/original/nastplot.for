@@ -1,9 +1,8 @@
       PROGRAM NASTPLOT
       IMPLICIT INTEGER (A-Z)
       REAL XFACT,YFACT
-      CHARACTER FILNAM*35,REQFIL*4,REQSUM*4
+      CHARACTER FILNAM*35
       LOGICAL CHRSET,LINSET,AXSSET,LPLOT,ANYPLT,LSTOP,LIBM
-
       DIMENSION PLTREC(750)
       COMMON CMND,CNTRL,R,S,T,U,  XFACT,YFACT,
      *       XMAX,YMAX,  XHI,YHI,XLO,YLO,
@@ -12,19 +11,16 @@ C
 C     INITIALIZE COUNTERS, FLAGS, & PLOT-FILE/PLOTTER LOG. UNIT NOS.
           DATA RECCNT,CMDCNT,NULCNT,SKPCNT,PLTCNT /5*0/
           DATA CHRSET,LINSET,AXSSET,LSTOP /4*.FALSE./
-!          DATA PLTFIL, LDEV  /13, 14/
-          INTEGER*4 PLTFIL, LDEV
-          PLTFIL = 13
-          LDEV = 14
+          DATA PLTFIL, LDEV  /13, 14/
 C
 C     GET INPUT FILENAME & TYPE (VAX OR IBM)
-10    CALL NAMTYP(FILNAM,LIBM)
+10	  CALL NAMTYP(FILNAM,LIBM)
 C     SELECT EXECUTION OPTION (ALL PLOTS, ONE PLOT, SUMMARY ONLY)
           CALL OPTION(LPLOT,SELECT,ANYPLT)
 C     OPEN PLOT FILE AND SUMMARY FILE
           OPEN(UNIT=PLTFIL,
-     *         FILE=FILNAM,ERR=300,
-     *         STATUS='OLD',
+     *         NAME=FILNAM,ERR=300,
+     *         TYPE='OLD',
 !    *         ACCESS='SEQUENTIAL',
 !    *         RECORDTYPE='FIXED',
 !    *         RECORDSIZE=3000,
@@ -32,8 +28,8 @@ C     OPEN PLOT FILE AND SUMMARY FILE
 !    *         CARRIAGECONTROL='NONE',
 !    *         FORM='FORMATTED',
 !    *         ORGANIZATION='SEQUENTIAL',
-     *         ACTION='READ')
-          OPEN(UNIT=20,FILE='NASTPLOT.SUM')
+     *         READONLY)
+          OPEN(UNIT=20,NAME='NASTPLOT.SUM')
 C     INITIALIZE PLOTTER
           IF (ANYPLT)  CALL PLOTS(0,0,LDEV)
 C
@@ -41,7 +37,7 @@ C
 C         GET NEXT NASTPLT RECORD  ( ON E-O-F, PRINT SUMMARY & EXIT )
               READ(PLTFIL,1000,END=250) PLTREC
 C             CONVERT IBM RECORD
-              IF (LIBM) CALL CNVIBM(PLTREC)
+		  IF (LIBM) CALL CNVIBM(PLTREC)
               RECCNT = RECCNT + 1
           DO 100 J=1,100
 C             GET NEXT COMMAND (TOTAL OF 100 COMMANDS / NASTPLT RECORD)
@@ -71,14 +67,13 @@ C
 C     NASTPLT END-OF-FILE; PRINT SUMMARY & EXIT
 250       IF (.NOT. LSTOP) CALL SUMPRT(RECCNT,CMDCNT,NULCNT,SKPCNT,
      *                                 PLTCNT,LPLOT,SELECT,LDEV,LSTOP)
-C             CLOSE PLOT FILE
+C         CLOSE PLOT FILE
               CLOSE(UNIT=PLTFIL)
-
-C             CLOSE SUMMARY FILE
+C         CLOSE SUMMARY FILE
               WRITE(6,2000)
               READ(5,3000) REQSUM
               IF ((REQSUM .EQ. 'NO') .OR. (REQSUM .EQ. 'N'))  THEN
-                  CLOSE (UNIT=20,STATUS='DELETE')
+                  CLOSE (UNIT=20,DISP='DELETE')
                   WRITE(6,4000)
               ELSE
                   CLOSE (UNIT=20)
@@ -88,12 +83,12 @@ C         CLOSE PLOTTER
           STOP
 C
 C     PLOT FILE NOT FOUND; TRY AGAIN ?
-300       WRITE(*, *) 'ERROR OPENING FILE', FILNAM
-          WRITE(*,5000)
-          READ 3000, REQFIL
-          IF (REQFIL .EQ. 'NO')  STOP  'NO OTHER FILE REQUESTED'
-          IF (REQFIL .EQ. 'N')  STOP  'NO OTHER FILE REQUESTED'
-          GOTO 10
+300       TYPE *, 'ERROR OPENING FILE', FILNAM
+	  TYPE 5000
+	  ACCEPT 3000, REQFIL
+	  IF (REQFIL .EQ. 'NO')  STOP  'NO OTHER FILE REQUESTED'
+	  IF (REQFIL .EQ. 'N')  STOP  'NO OTHER FILE REQUESTED'
+	  GOTO 10
 C
 C
 1000  FORMAT(750A4)
@@ -103,13 +98,11 @@ C
 5000  FORMAT(' DO YOU WANT A DIFFERENT FILE ? (YES OR NO): ',$)
 8000  FORMAT(' **** UNKNOWN COMMAND: P= ',I6,' ****')
       END
-
-C------------------------------------------------------------------------------
+
       SUBROUTINE BGNPLT(PLTCNT,LPLOT,SELECT,LDEV,LSTOP)
       IMPLICIT INTEGER (A-Z)
       REAL XFACT,YFACT,XSIZE,YSIZE,XDEF,YDEF
       LOGICAL LPLOT,ONEPLT,ANYPLT,LSTOP
-      CHARACTER SUMREQ*4,GO*4
       COMMON CMND,CNTRL,R,S,T,U,  XFACT,YFACT,
      *       XMAX,YMAX,  XHI,YHI,XLO,YLO,
      *       PENCHG,PENNO(100),PENCNT,OLDPEN
@@ -158,18 +151,18 @@ C         IF OPTION IS "ONE PLOT", GET X,Y AXES' LENGTHS;
 C                               OTHERWISE USE DEFAULT AXIS LENGTHS
               IF (ONEPLT .AND. LPLOT) THEN
                   CALL GETSIZ(XSIZE,YSIZE)
-                  XFACT = XSIZE/FLOAT(XMAX)
-                  YFACT = YSIZE/FLOAT(YMAX)
+		  XFACT = XSIZE/FLOAT(XMAX)
+		  YFACT = YSIZE/FLOAT(YMAX)
               ELSE
                   XSIZE = XDEF
                   YSIZE = YDEF
-                  IF (XMAX .GT. YMAX)  THEN
-                      XFACT = XSIZE/FLOAT(XMAX)
-                      YFACT = XFACT
-                  ELSE
-                      YFACT = YSIZE/FLOAT(YMAX)
-                      XFACT = YFACT
-                  ENDIF
+		  IF (XMAX .GT. YMAX)  THEN
+		      XFACT = XSIZE/FLOAT(XMAX)
+		      YFACT = XFACT
+		  ELSE
+		      YFACT = YSIZE/FLOAT(YMAX)
+		      XFACT = YFACT
+		  ENDIF
               END IF
           XHI = 0
           YHI = 0
@@ -183,14 +176,14 @@ C                               OTHERWISE USE DEFAULT AXIS LENGTHS
 C     SET NEW ORIGIN  2 INCHES TO THE LEFT OF PREVIOUS PLOT,
 C     EXCEPT, EVERY 3RD PLOT MOVE ORIGIN BACK TO RIGHT SIDE AND
 C     ADVANCE PAPER (IF OPTION = "ALL PLOTS")
-      IF (.NOT. ONEPLT)  PLTTOT = PLTTOT + 1
-      IF ((PLTTOT.GT.1) .AND. (.NOT.ONEPLT)) THEN
-        IF (MOD(PLTTOT-1,3) .NE. 0) THEN
-            CALL PLOT(0.0, YSIZE+2.0, -3)
-        ELSE
-            CALL PLOT(XSIZE+2.0, -2.0*(YSIZE+2.0), -3)
-        END IF
-      END IF
+	  IF (.NOT. ONEPLT)  PLTTOT = PLTTOT + 1
+          IF ((PLTTOT.GT.1) .AND. (.NOT.ONEPLT)) THEN
+              IF (MOD(PLTTOT-1,3) .NE. 0) THEN
+                  CALL PLOT(0.0, YSIZE+2.0, -3)
+              ELSE
+                  CALL PLOT(XSIZE+2.0, -2.0*(YSIZE+2.0), -3)
+              END IF
+          END IF
       RETURN
 C
 2000  FORMAT(' START PLOT #',I6,' ; (XMAX,YMAX) = (',I5,','I5,')',/,
@@ -207,8 +200,7 @@ C
      *                       1X,T20,'NO. OF DIFFERENT PENS = ',I5,/
      *                       1X,T20,'PEN ID''S =',9(1X,T30,12(1X,I3)/))
       END
-
-C------------------------------------------------------------------------------
+
       SUBROUTINE CNVIBM(RECORD)
       INTEGER RECORD(750)
       BYTE BYTE(4), BTEMP(4)
@@ -226,8 +218,7 @@ C     REVERSE THE ORDER OF THE BYTES IN EACH WORD OF THE RECORD
 100           CONTINUE
       RETURN
       END
-
-C------------------------------------------------------------------------------
+
       SUBROUTINE DRWAXS(AXSSET,LPLOT)
       IMPLICIT INTEGER (A-Z)
       REAL XFACT,YFACT,X,Y
@@ -293,7 +284,7 @@ C
 6000  FORMAT(5X,'DRAW AXES: ',I6,' AXES WERE DRAWN')
 6100  FORMAT(1X,T20,'**** NO INITIAL P=16 COMMAND ****')
       END
-C------------------------------------------------------------------------------
+
       SUBROUTINE DRWCHR(CHRSET,LPLOT)
       IMPLICIT INTEGER (A-Z)
       REAL XFACT,YFACT,X,Y,ANGLE,HITE
@@ -372,7 +363,7 @@ C
 5200  FORMAT(1X,T23,A57)
 5300  FORMAT(10X,I5,' CHARACTERS WERE DRAWN; ',I5,' UNKNOWN CHARACTERS')
       END
-C------------------------------------------------------------------------------
+
       SUBROUTINE DRWLIN(LINSET,LPLOT)
       IMPLICIT INTEGER (A-Z)
       REAL XFACT,YFACT,X,Y,OLDX,OLDY
@@ -444,7 +435,7 @@ C
 6000  FORMAT(5X,'DRAW LINES: ',I6,' LINES WERE DRAWN')
 6100  FORMAT(1X,T20,'**** NO INITIAL P=15 COMMAND ****')
       END
-C------------------------------------------------------------------------------
+
       SUBROUTINE GETCMD(PLTREC)
       IMPLICIT INTEGER (A-Z)
       DIMENSION PLTREC(750),Q(30),MASK(4)
@@ -486,13 +477,12 @@ C     CALCULATE CMND,CNTRL,R,S,T,&U
 1500  FORMAT(' **** BAD INTEGER IN NEXT COMMAND: Q(',I2,') ****',
      *       3(/,1X,10(I6,1X)))
       END
-C------------------------------------------------------------------------------
+
       SUBROUTINE GETSIZ(XSIZE,YSIZE)
 C     THIS ROUTINE WILL READ FROM THE INTERACTIVE USER'S TERMINAL,
 C     THE DESIRED LENGTHS OF THE X AND Y AXES FOR THE CURRENT PLOT.
 C     MAXIMUM LENGTH ALLOWED FOR Y-AXIS IS 32.0 INCHES .
 C
-      CHARACTER GO*4
           WRITE(6,2100)
           READ(5,*) XSIZE
           WRITE(6,2200)
@@ -511,25 +501,25 @@ C
 2300  FORMAT(' SET PLOTTER ORIGIN.  TYPE "GO" WHEN READY:  ',$)
 2400  FORMAT(A4)
       END
-C------------------------------------------------------------------------------
-      SUBROUTINE NAMTYP(FILNAM, LIBM)
-      CHARACTER FILNAM*(*), QFLAG*1
+
+      SUBROUTINE NAMTYP(FILNAM,LIBM)
+      CHARACTER FILNAM*(*) , QFLAG*1
       LOGICAL LIBM
 C
 C     GET INPUT FILENAME
-          WRITE(*,1000)
-          READ 2000, FILNAM
+          TYPE 1000
+	  ACCEPT 2000, FILNAM
 C     IS THIS AN IBM FORMAT FILE ?
-10    WRITE(*,3000)
-      READ 4000, QFLAG
-      IF (QFLAG .EQ. 'Y') THEN
-        LIBM = .TRUE.
-      ELSE IF (QFLAG .EQ. 'N') THEN
-        LIBM = .FALSE.
-      ELSE
-C       INPUT ERROR; TRY AGAIN
-        GOTO 10
-      ENDIF
+10	  TYPE 3000
+	  ACCEPT 4000, QFLAG
+	  IF (QFLAG .EQ. 'Y') THEN
+	      LIBM = .TRUE.
+          ELSE IF (QFLAG .EQ. 'N') THEN
+              LIBM = .FALSE.
+	  ELSE
+C	      INPUT ERROR; TRY AGAIN
+	      GOTO 10
+	  ENDIF
       RETURN
 C
 1000  FORMAT(' ENTER NAME OF INPUT PLT2 FILE: ',$)
@@ -537,8 +527,7 @@ C
 3000  FORMAT(' CONVERT FILE FROM IBM FORMAT ? (Y OR N): ',$)
 4000  FORMAT(A1)
       END
-
-C------------------------------------------------------------------------------
+
       SUBROUTINE NEWSET(CHRSET,LINSET,AXSSET)
       LOGICAL CHRSET,LINSET,AXSSET
       COMMON ICMND
@@ -562,11 +551,9 @@ C
 C
 1700  FORMAT(' BAD CALL TO NEWSET; COMMAND = ',I6)
       END
-
-C------------------------------------------------------------------------------
+
       SUBROUTINE OPTION(LPLOT,SELECT,ANYPLT)
       IMPLICIT INTEGER (A-Z)
-      character(len=4) :: hwmny
       LOGICAL LPLOT,ANYPLT
 C
 C     CHECK TO SEE IF ALL, ONE, OR NO PLOTS ARE TO BE PLOTTED
@@ -601,8 +588,7 @@ C
 1400  FORMAT(' SUMMARY ONLY; NO PLOTS WILL BE DRAWN')
 1500  FORMAT(' INCORRECT INPUT: TYPE "ALL", "ONE", OR "NONE"')
       END
-
-C------------------------------------------------------------------------------
+
       SUBROUTINE SELCAM
       CHARACTER*20 OPTION(4)
       COMMON ICMD,ICNTRL
@@ -620,8 +606,7 @@ C
 C
 3000  FORMAT(5X,'SELECT CAMERA # ',I5,' OR ',A20)
       END
-
-C------------------------------------------------------------------------------
+
       SUBROUTINE SKPFRM(SKPCNT)
       IMPLICIT INTEGER (A-Z)
       COMMON CMND,CNTRL
@@ -632,8 +617,7 @@ C
 C
 4000  FORMAT(5X,'SKIP TO NEW FRAME # ',I4,'; CAMERA OPTION = ',I5)
       END
-
-C------------------------------------------------------------------------------
+
       SUBROUTINE SUMPRT(RECCNT,CMDCNT,NULCNT,SKPCNT,PLTCNT,
      *                  LPLOT,SELECT,LDEV,LSTOP)
       IMPLICIT INTEGER (A-Z)

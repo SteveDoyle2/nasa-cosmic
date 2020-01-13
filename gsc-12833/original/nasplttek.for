@@ -52,7 +52,7 @@ C
 1000  FORMAT(1X,A25,1X,$)
 2000  FORMAT(750A4)
       END
-C------------------------------------------------------------------------------
+
       SUBROUTINE BGNPLT(LSKIP)
 C
       CHARACTER*1 YESNO
@@ -95,7 +95,7 @@ C
 1000  FORMAT(1X,A15,' (PLOT NO.',I4,')',A11,1X,$)
 2000  FORMAT(A1)
       END
-C------------------------------------------------------------------------------
+
       SUBROUTINE CNVIBM(RECORD)
       INTEGER RECORD(750)
       BYTE BYTE(4), BTEMP(4)
@@ -113,7 +113,7 @@ C     REVERSE THE ORDER OF THE BYTES IN EACH WORD OF THE RECORD
 100           CONTINUE
       RETURN
       END
-C------------------------------------------------------------------------------
+
       SUBROUTINE DRWCHR
 C
 C     THIS (CHARACTER-TYPING) CAPABILITY IS NOT YET IMPLEMENTED
@@ -121,7 +121,7 @@ C     FOR THIS PLOTTING PROGRAM.
 C
       RETURN
       END
-C------------------------------------------------------------------------------
+
       SUBROUTINE DRWLIN
 C
       COMMON /NASTCOM/ ICMND,ICNTRL,IR,IS,IT,IU
@@ -136,7 +136,7 @@ C     DRAW LINE FROM STARTING POINT TO END POINT
 	  CALL DRAWA(XFINAL,YFINAL)
       RETURN
       END
-C------------------------------------------------------------------------------
+
       SUBROUTINE GETCMD(PLTREC)
       IMPLICIT INTEGER (A-Z)
       DIMENSION PLTREC(750),Q(30),MASK(4)
@@ -175,7 +175,7 @@ C     CALCULATE CMND,CNTRL,R,S,T,&U
           U = U0 + 10*U1 + 100*U2 + 1000*U3 + 10000*U4
       RETURN
       END
-C------------------------------------------------------------------------------
+
       SUBROUTINE NAMTYP(FILNAM,LIBM)
       CHARACTER FILNAM*(*) , QFLAG*1
       LOGICAL LIBM
